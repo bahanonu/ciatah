@@ -5,7 +5,7 @@ Code and MATLAB class for analyzing one- and two-photon calcium imaging datasets
 
 Contact Biafra Ahanonu (bahanonu [at] alum.mit.edu) for questions about code or usage.
 
-Note:
+Repository notes:
 - Covers preprocessing of calcium imaging videos, cell and activity trace extraction (with PCA-ICA), manual sorting of cell extraction outputs, cross-session alignment of cells, and more.
 - This repository is code used in "An amygdalar neural ensemble encoding the unpleasantness of pain" and similar code was used to process data in `Parker, J. G., Marshall, J. D., Ahanonu, B., Wu, Y. W., Kim, T. H., Grewe, B. F., ... & Schnitzer, M. J. (2018). Diametric neural ensemble dynamics in parkinsonian and dyskinetic states. Nature, 557(7704), 177.`
 - Code developed while in Prof. Mark Schnitzer's lab at Stanford University.
@@ -31,8 +31,9 @@ Download zip or clone the `calciumImagingAnalysis` repository.
 - Place in folder where MATLAB will have write permissions, as it also creates a `private` subdirectory to store some user information.
 - Unzip `file_exchange.zip`. This contains File Exchange functions used by `calciumImagingAnalysis`.
 - In general, it is best to set the MATLAB startup directory to the `calciumImagingAnalysis` folder. This allows `java.opts` and `startup.m` to set the correct Java memory requirements and load the correct folders into the MATLAB path.
+- Run `loadBatchFxns.m` before using functions in the directory. This adds all directories and sub-directories to the MATLAB path.
 
-This `calciumImagingAnalysis` has been tested on Windows `MATLAB 2017a`.
+This version of `calciumImagingAnalysis` has been tested on Windows `MATLAB 2017a`.
 
 ### Test data
 
@@ -57,6 +58,29 @@ Saleae
 
 - Download 1.2.26: https://support.saleae.com/logic-software/legacy-software/older-software-releases#1-2-26-download.
 
+### Repository organization
+Below are a list of the top-level directories and what types of functions or files are within.
+
+- __@calciumImagingAnalysis__ - Contains `calciumImagingAnalysis` class and associated methods for calcium imaging analysis.
+- __file\_exchange__ - Contains any outside code from MATLAB's File Exchange that are dependencies in repository functions.
+- ___overloaded__ - Functions that overload core MATLAB functions to add functionality or fix display issues.
+- __behavior__ - Processing of behavior files (e.g. accelerometer data, Saleae files, etc.).
+- __classification__ - Classification of cells, e.g. manual classification of cell extraction outputs or cross-session grouping of cells.
+- __hdf5__ - Functions concerned with HDF5 input/output.
+- __image__ - Functions concerned with processing images (or [x y] matrices).
+- __io__ - Contains functions concerned with file or function input-output.
+- __neighbor__ - Detection and display of neighboring cell information.
+- __pre\_processing__ - Functions concerned with preprocessing calcium imaging videos, e.g. spatial filtering, downsampling, etc.
+- __pre_processing\Motion\_Correction\_Turboreg__ - Functions concerned with motion correction.
+- __python__ - Python code, e.g. for processing Saleae data.
+- __serial__ - Code for saving and processing serial port data, e.g. Arduino streaming data.
+- __settings__ - Functions concerned with settings for other functions.
+- __signal\_extraction__ - Functions related to cell extraction, e.g. running PCA-ICA.
+- __signal\_processing__ - Functions to process cell activity traces.
+- __tracking__ - ImageJ and MATLAB functions to track animal location in behavior movies.
+- __video__ - Functions to manipulate or process videos, e.g. making movie montages or adding dropped frames.
+- __view__ - Functions concerned with displaying data or information to the user, normally do not process data.
+
 ******************************************
 
 ## Data
@@ -68,13 +92,12 @@ The naming convention in general is below. Both TIF and AVI raw files are conver
 ### Input and output files
 - Raw: `concat_.*.(h5|tif)`
 - Processed: `folderName_(processing steps).h5`, where `folderName` is the directory name where the calcium imaging movies are located.
-- HDF5
 - Main files output by `calciumImagingAnalysis`. Below, `.*` normally indicates the folder name prefixed to the filename.
-- `.*_pcaicaAnalysis.mat`: Where PCA-ICA outputs are stored.
-- `.*_ICdecisions_.*.mat`: Where decisions for cell (=1) and not cell (=0) are stored in a `valid` variable.
-- `.*_regionModSelectUser.mat`: A mask of the region (=1) to include in further analyses.
-- `.*_turboreg_crop_dfof_1.h5`: Processed movie, in this case motion corrected, cropped, and Δ_F/F_.
-- `processing_info`: a folder containing preprocessing information.
+	- `.*_pcaicaAnalysis.mat`: Where PCA-ICA outputs are stored.
+	- `.*_ICdecisions_.*.mat`: Where decisions for cell (=1) and not cell (=0) are stored in a `valid` variable.
+	- `.*_regionModSelectUser.mat`: A mask of the region (=1) to include in further analyses.
+	- `.*_turboreg_crop_dfof_1.h5`: Processed movie, in this case motion corrected, cropped, and Δ_F/F_.
+	- `processing_info`: a folder containing preprocessing information.
 
 ### Preferred folder naming format
 
@@ -86,27 +109,26 @@ Folders should following the format `YYYY_MM_DD_pXXX_mXXX_assayXX_trialXX` where
 -   `trialXX` = the trial number of the current assay session, only applicable if multiple trials in the same assay session.
 
 ### Videos
-- HDF5: `[x y t]` matrix
-	 - x and y being height/width of video, t = number of frames
-	 - `/1` as the name for directory containing movie data
-	 - HDF can be read in using Fiji, see http://lmb.informatik.uni-freiburg.de/resources/opensource/imagej_plugins/hdf5.html
-	 - 	Each HDF5 file should contain imaging data in a dataset name, e.g. `/1` is the default datasetname for `[x y frames]` 2D calcium imaging movies in this repository.
-	- Most functions have a `inputDatasetName` option to specify the dataset name.
+- HDF5: 
+	- Saved as a `[x y t]` 3D matrix where `x` and `y` are the height and width of video while `t` is number of frames.
+	- `/1` as the name for directory containing movie data.
+	- HDF can be read in using Fiji, see http://lmb.informatik.uni-freiburg.de/resources/opensource/imagej_plugins/hdf5.html.
+	- Each HDF5 file should contain imaging data in a dataset name, e.g. `/1` is the default datasetname for `[x y frames]` 2D calcium imaging movies in this repository.
+	- Most functions have a `inputDatasetName` option to specify the dataset name if different from `/1`.
  - TIF
 	- Normal `[x y frames]` tif.
 - AVI
 	- Raw uncompressed grayscale `[x y frames]` avi.
 
 ### Cell images
-- PC/IC filters: [x y n] matrix
- - x and y being height/width of video and n = number of PCs/ICs output
+- IC filters from PCA-ICA
+	- `[x y n]` matrix
+	- `x` and `y` being height/width of video and `n` is number of ICs output.
 
 ### Cell traces
-- PC/IC traces: [n f] matrix
- - n = number of PCs/ICs output and f = frames (of the movie)
-
-
-
+- IC traces from PCA-ICA
+	- `[n f]` matrix.
+	- `n` is number of ICs output and `f` is number of movie frames.
 
 ******************************************
 
@@ -116,11 +138,10 @@ The general pipeline for processing calcium imaging data is below. This reposito
 
 ![image](https://user-images.githubusercontent.com/5241605/49833336-03ede980-fd4e-11e8-8022-9aa3dedfd5ab.png)
 
-
 To start using the `calciumImagingAnalysis` class, enter the following into the MATLAB command window.
 
 ```Matlab
-% Load the class into an object
+% Loads the class into an object.
 obj = calciumImagingAnalysis;
 
 % Open the class menu
@@ -183,7 +204,7 @@ The algorithm will then run all the requested preprocessing steps and presented 
 
 ## Manual movie cropping with `modelModifyMovies`
 
-If users need to eliminate specific regions of their movie before running cell extraction, that option is provided.
+If users need to eliminate specific regions of their movie before running cell extraction, that option is provided. Users select a region using an ImageJ interface and select `done` when they want to move onto the next movie or start the cropping. Movies have `NaNs` or `0s` added in the cropped region rather than changing the dimensions of the movie.
 
 ![image](https://user-images.githubusercontent.com/5241605/49829899-8f627d00-fd44-11e8-96fb-2e909b4f0d78.png)
 
