@@ -8,8 +8,8 @@ Contact Biafra Ahanonu (bahanonu [at] alum.mit.edu) for questions about code or 
 Repository notes:
 - Covers preprocessing of calcium imaging videos, cell and activity trace extraction (with PCA-ICA [class supports additional algorithms as well]), manual sorting of cell extraction outputs, cross-session alignment of cells, and more.
 - This repository consists of code used in 
-  - `Corder, G.*, Ahanonu, B.*, Grewe, B. F., Wang, D., Schnitzer M. J., Scherrer, G. An amygdalar neural ensemble encoding the unpleasantness of painful experiences. _Science_ (in press).`
-  - and similar code was used to process data in `Parker, J. G., Marshall, J. D., Ahanonu, B., Wu, Y. W., Kim, T. H., Grewe, B. F., ... & Schnitzer, M. J. (2018). Diametric neural ensemble dynamics in parkinsonian and dyskinetic states. Nature, 557(7704), 177.`
+  - `Corder, G.*, Ahanonu, B.*, Grewe, B. F., Wang, D., Schnitzer M. J., Scherrer, G. An amygdalar neural ensemble encoding the unpleasantness of painful experiences. Science (in press).`
+  - and similar code helped process data in `Parker, J. G., Marshall, J. D., Ahanonu, B., Wu, Y. W., Kim, T. H., Grewe, B. F., ... & Schnitzer, M. J. (2018). Diametric neural ensemble dynamics in parkinsonian and dyskinetic states. Nature, 557(7704), 177.`
 - Code developed while in [Prof. Mark Schnitzer's lab](http://pyramidal.stanford.edu/) at Stanford University.
 
 ***
