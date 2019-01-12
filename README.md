@@ -1,6 +1,8 @@
 
 # calciumImagingAnalysis
 
+<img src="https://user-images.githubusercontent.com/5241605/51067927-b0c8ba00-15cb-11e9-883b-d4c73f42f462.png" align="center">
+
 Code and MATLAB class for analyzing one- and two-photon calcium imaging datasets. Includes code for determining animal locations (e.g. in open-field assay).
 
 Contact Biafra Ahanonu (bahanonu [at] alum.mit.edu) for questions about code or usage.
