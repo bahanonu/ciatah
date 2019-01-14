@@ -1,5 +1,5 @@
 function [outputData] = computeSaleaeOutput(matfile,varargin)
-	% Processes Saleae output files
+	% Processes Saleae output files.
 	% Biafra Ahanonu
 	% started: 2014.01.03 [19:13:01]
 	% inputs

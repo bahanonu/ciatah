@@ -1,9 +1,9 @@
 function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
-    % Registers images to a set trial then matches objs between trials to one another and outputs the alignment indicies. all images cropped to the minimum x,y dimension among all the input sets.
+    % Registers images to a set imaging session then matches objs between sessions to one another and outputs the alignment indicies for a single global cell across sessions. All images cropped to the minimum x,y dimension among all the input imaging session datasets.
     % Biafra Ahanonu
     % started: 2013.10.31
     % inputs
-    %   inputImages - cell array of [nFilters x y] matrices containing each set of filters, e.g. {imageSet1, imageSet2,...}
+    %   inputImages - cell array of [x y nFilters] matrices containing each set of filters, e.g. {imageSet1, imageSet2,...}
     % options
     %   inputSignals - cell array of [nFilters frames] matrices containing each set of filter traces
     % outputs
@@ -29,7 +29,7 @@ function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
     %========================
     % 'pairwise' or 'clustering'
     options.analysisType = 'pairwise';
-    % which trial to start alignment on, just make it
+    % which session to start alignment on, just make it
     options.trialToAlign = 1;
     % distance in pixels between centroids for them to be grouped
     % options.maxDistance = 2.5126;%6um
@@ -40,7 +40,7 @@ function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
     options.threshold = 0.5;
     %
     options.inputSignals = [];
-    % cell array of cell arrays with matrices [nFilters x y] containing each set of filters, e.g. {imageSet1, imageSet2,...}
+    % cell array of cell arrays with matrices [x y nFilters] containing each set of filters, e.g. {imageSet1, imageSet2,...}
     options.additionalAlignmentImages = [];
     %
     options.trialIDs = [];
@@ -48,8 +48,8 @@ function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
     options.runMotionCorrection = 1;
     % images to register that are not the main ones
     options.altInputImagesToRegister = [];
-    % 3 = rotation and iso scaling, 2 = rotation no iso scaling
-    options.RegisTypeFinal = 3;
+    % 3 = rotation/translation and iso scaling; 2 = rotation/translation, no iso scaling
+    options.RegisTypeFinal = 2;
     %
     options = getOptions(options,varargin);
     %========================

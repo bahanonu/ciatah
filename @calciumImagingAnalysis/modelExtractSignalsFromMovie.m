@@ -1,5 +1,5 @@
 function obj = modelExtractSignalsFromMovie(obj,varargin)
-	% Runs signal extraction algorithms and associated saving/other functions
+	% Runs signal extraction algorithms and associated saving/other functions.
 	% Biafra Ahanonu
 	% started: 2015.01.05 (date might be wrong, likely late 2014)
 	% inputs
@@ -33,7 +33,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	scnsize = get(0,'ScreenSize');
 	signalExtractionMethodStr = {'PCAICA','PCAICA_old','EM','EXTRACT','CNMF','CNMFE','ROI'};
 	currentIdx = find(strcmp(signalExtractionMethodStr,obj.signalExtractionMethod));
-	signalExtractionMethodDisplayStr = {'PCAICA (Mukamel, 2009) | updated version','PCAICA (Mukamel, 2009) | old version','CELLMax (Lacey/Biafra)','EXTRACT (Hakan)','CNMF (Pnevmatikakis, 2016)','CNMF-E (Zhou, 2018)','ROI - only do after running either PCAICA, CELLMax, EXTRACT, or CNMF'};
+	signalExtractionMethodDisplayStr = {'PCAICA (Mukamel, 2009) | Hakan/Tony version','PCAICA (Mukamel, 2009) | Jerome version','CELLMax (Lacey/Biafra)','EXTRACT (Hakan)','CNMF (Pnevmatikakis, 2016)','CNMF-E (Zhou, 2018)','ROI - only do after running either PCAICA, CELLMax, EXTRACT, or CNMF'};
 	[signalIdxArray, ok] = listdlg('ListString',signalExtractionMethodDisplayStr,'ListSize',[scnsize(3)*0.4 scnsize(4)*0.4],'Name','which signal extraction method?','InitialValue',currentIdx);
 	% signalIdxArray
 	signalExtractionMethod = signalExtractionMethodStr(signalIdxArray);
@@ -49,6 +49,28 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			case 'PCAICA_old'
 				oldPCAICA = 1;
 				signalExtractionMethod = {'PCAICA'};
+			case 'EM'
+				if exist('CELLMax_Wrapper.m','file')~=2
+					pathToCELLMax = uigetdir('\.','Enter path to CELLMax root folder (e.g. from github)');
+					if ischar(pathToCELLMax)
+						privateLoadBatchFxnsPath = 'private\privateLoadBatchFxns.m';
+						if exist(privateLoadBatchFxnsPath,'file')~=0
+							fid = fopen(privateLoadBatchFxnsPath,'at')
+							fprintf(fid, '\npathtoMiji = ''%s'';\n', pathToCELLMax);
+							fclose(fid);
+						end
+						pathList = genpath(pathToCELLMax);
+						pathListArray = strsplit(pathList,pathsep);
+						pathFilter = cellfun(@isempty,regexpi(pathListArray,[filesep '.git']));
+						pathListArray = pathListArray(pathFilter);
+						cellfun(@disp,pathListArray)
+						pathList = strjoin(pathListArray,pathsep);
+						fprintf('Adding folders: %s\n',pathList)
+						addpath(pathList);
+					end
+				end
+			case 'EXTRACT'
+				% Do nothing
 			otherwise
 		end
 	end
@@ -66,6 +88,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			'Input HDF5 dataset name',...
 			'Use default options (1 = yes, 0 = no)',...
 			'Runtime Matlab profiler (1 = yes, 0 = no)',...
+			'Regular expression for alternative movie (e.g. non-downsampled)',...
 		},...
 		'Cell extraction parameters for all algorithms',1,...
 		{...
@@ -76,6 +99,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			obj.inputDatasetName,...
 			'0',...
 			'0',...
+			obj.fileFilterRegexpAlt,...
 		}...
 	);setNo = 1;
 	obj.fileFilterRegexp = movieSettings{setNo};setNo = setNo+1;
@@ -85,6 +109,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	obj.inputDatasetName = movieSettings{setNo};setNo = setNo+1;
 	options.defaultOptions = str2num(movieSettings{setNo});setNo = setNo+1;
 	options.profiler = str2num(movieSettings{setNo});setNo = setNo+1;
+	obj.fileFilterRegexpAlt = movieSettings{setNo};setNo = setNo+1;
 
 	% get files to process
 	[fileIdxArray idNumIdxArray nFilesToAnalyze nFiles] = obj.getAnalysisSubsetsToAnalyze();
@@ -195,6 +220,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			display([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ' (' num2str(fileNum) '/' num2str(nFiles) '): ' obj.fileIDNameArray{obj.fileNum}]);
 
 			fileFilterRegexp = obj.fileFilterRegexp;
+			fileFilterRegexpAlt = obj.fileFilterRegexpAlt;
 			if iscell(signalExtractionMethod)
 				nSignalExtractMethods = length(signalExtractionMethod);
 			else
@@ -254,7 +280,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				display(['saving temporary: ' savestring])
 				tmpVar = 'Peace is our Profession.';
 				% save(savestring,saveVariable{i},'-v7.3','emOptions');
-				save(savestring,'tmpVar');
+				save(savestring,'tmpVar','-v7.3');
 
 				switch signalExtractionMethod{signalExtractNo}
 					case 'ROI'
@@ -520,6 +546,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 							'CELLMax | runMovieImageCorrThreshold?',...
 							'CELLMax | movieImageCorrThreshold?',...
 							'CELLMax | loadPreviousChunks?',...
+							'CELLMax | saveIterMovie?',...
 						},...
 						dlgStr,1,...
 						{...
@@ -542,6 +569,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 							'0.3',...
 							'1',...
 							'0.15',...
+							'0',...
 							'0',...
 						}...
 					);setNo = 1;
@@ -567,6 +595,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 					options.CELLMax.movieImageCorrThreshold = str2num(movieSettings{setNo});setNo = setNo+1;
 
 					options.CELLMax.loadPreviousChunks = str2num(movieSettings{setNo});setNo = setNo+1;
+
+					options.CELLMax.saveIterMovie = str2num(movieSettings{setNo});setNo = setNo+1;
 
 				case 'EXTRACT'
 					movieSettings = inputdlg({...
@@ -666,7 +696,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		for i=1:length(saveID)
 			savestring = [thisDirSaveStr saveID{i}];
 			display(['saving: ' savestring])
-			save(savestring,saveVariable{i},'tracesSaveDimOrder','roiAnalysisOutput');
+			save(savestring,saveVariable{i},'tracesSaveDimOrder','roiAnalysisOutput','-v7.3');
 		end
 		% =======
 	end
@@ -752,10 +782,276 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			for i=1:length(saveID)
 				savestring = [thisDirSaveStr saveID{i}];
 				display(['saving: ' savestring])
-				save(savestring,saveVariable{i});
+				save(savestring,saveVariable{i},'','-v7.3');
 			end
 		end
 		% =======
+	end
+	function [cnmfOptions] = runCNMFSignalFinder()
+
+		% if cvx is not in the path, ask user
+		if isempty(which('cvx_begin'))
+			cvxSetupPathDefault = ['private' filesep 'cvx-w64' filesep 'cvx' filesep 'cvx_setup.m'];
+			if exist(cvxSetupPathDefault,'file')==2
+				cvxSetupPath = cvxSetupPathDefault;
+			else
+				[filePath,folderPath,~] = uigetfile(['*.*'],'select cvx_setup.m');
+				cvxSetupPath = [folderPath filesep filePath];
+			end
+			fprintf('cvx_setup.m at %s\n',cvxSetupPath);
+			run(cvxSetupPath);
+		end
+
+		switch pcaicaPCsICsSwitchStr
+			case 'Subject'
+				nPCsnICs = obj.numExpectedSignals.(obj.signalExtractionMethod).(obj.subjectStr{obj.fileNum})
+				nPCsnICs = nPCsnICs(1);
+			case 'Folder'
+				nPCsnICs = obj.numExpectedSignals.(obj.signalExtractionMethod).Folders{obj.fileNum}
+				nPCsnICs = nPCsnICs(1);
+			otherwise
+				% body
+		end
+
+		movieList = getFileList(obj.inputFolders{obj.fileNum}, fileFilterRegexp);
+
+		% Y = loadMovieList(movieList,'convertToDouble',0,'frameList',[],'inputDatasetName',obj.inputDatasetName,'treatMoviesAsContinuous',1);
+
+		% whether to use parallel processing
+		% cnmfOptions.use_parallel = 1;
+		cnmfOptions.nonCNMF.parallel = 1;
+
+		% Merging threshold (positive between 0  and 1)
+		cnmfOptions.merge_thr = 0.85;
+		% Range of normalized frequencies over which to average PSD (2 x1 vector)
+		cnmfOptions.noise_range = [0.10,0.6];
+		% Size of 2-d median filter (2 x 1 array of positive integers)
+		cnmfOptions.medw = [2,2];
+		% cnmfOptions.medw = [3,3];
+		% Energy threshold (positive between 0 and 1)
+		% cnmfOptions.nrgthr = 0.97;
+		cnmfOptions.nrgthr = 0.85;
+		% Morphological closing operator for post-processing (binary image)
+		cnmfOptions.clos_op = strel('disk',3,0);
+		% Flag for computing noise values sequentially for memory reasons
+		cnmfOptions.split_data = 0;
+		% Spatial down-sampling factor (scalar >= 1)
+		cnmfOptions.ssub = options.CNMF.ssub;
+		% Temporal down-sampling factor (scalar >= 1)
+		cnmfOptions.tsub = options.CNMF.tsub;
+		% Maximum number of sparse NMF iterations
+		cnmfOptions.snmf_max_iter = 200;
+		% Weight on squared L1 norm of spatial components
+		cnmfOptions.beta = 0.5;
+		% Weight on frobenius norm of temporal components * max(Y)^2
+		cnmfOptions.eta = 1;
+		% Relative change threshold for stopping sparse_NMF
+		cnmfOptions.err_thr = 1e-4; %1e-5
+		% Maximum number of HALS iterations
+		cnmfOptions.maxIter = 5;
+		% Expansion factor for HALS localized updates
+		cnmfOptions.bSiz = 3; %1e-5
+
+		% Standard deviation of Gaussian kernel for initialization
+		cnmfOptions.otherCNMF.tau = 9;
+		% cnmfOptions.otherCNMF.tau = [3 2 1; 3 2 1]';
+		% Order of autoregressive system (p = 0 no dynamics, p=1 just decay, p = 2, both rise and decay)
+		cnmfOptions.otherCNMF.p = 2;
+
+		if options.CNMF.onlyRunInitialization==1
+			% run only initialization algorithm
+			cnmfOptions.nonCNMF.onlyRunInitialization = 1;
+		else
+			% run only initialization algorithm
+			cnmfOptions.nonCNMF.onlyRunInitialization = 0;
+		end
+
+		% set of parameters to vary
+		if options.CNMF.iterateOverParameterSpace==1
+			paramSet = paramSetMaster;
+		else
+			paramSet.beta = {0.1};
+			paramSet.maxIter = {5};
+			paramSet.bSiz = {1};
+		end
+
+		% make a list of all possible combinations
+		paramNames = fieldnames(paramSet);
+		nParams = length(paramNames);
+		paramStr = 'paraSpace = combvec(';
+		for paramNo = 1:nParams
+			paramStr = [paramStr '1:' num2str(length(paramSet.(paramNames{paramNo})))];
+			if paramNo~=nParams
+				paramStr = [paramStr ','];
+			end
+		end
+		paramStr = [paramStr ');'];
+		eval(paramStr);
+
+		for paramNo = 1:nParams
+			paramIdx = paraSpace(paramNo,:);
+			paramSet.(paramNames{paramNo}) = paramSet.(paramNames{paramNo})(paramIdx(:));
+		end
+		% [p,q,r] = meshgrid(1:length(paramSet.merge_thr),1:length(paramSet.noise_range),1:length(paramSet.nrgthr));
+		% paraSpace = [p(:) q(:) r(:)];
+		% paraSpace = combvec(1:2,1:4,1:3);
+		% paramSet.merge_thr = paramSet.merge_thr(p(:));
+		% paramSet.noise_range = paramSet.noise_range(q(:));
+		% paramSet.nrgthr = paramSet.nrgthr(r(:));
+
+		% paramSet.tau = {};
+		% paramSet.p = {};
+		nParameterSets = size(paraSpace,2);
+		% decide whether to iterate over new parameters
+		iterateParameters = 0;
+		saveParams.null = 1;
+
+		if iterateParameters==0
+			nParameterSets = 1;
+		end
+		for parameterSetNo = 1:nParameterSets
+			try
+				display(repmat('*',1,14))
+				% display([num2str(fileNum) '/' num2str(nFolders) ': ' obj.fileIDNameArray{obj.fileNum}]);
+				display(['parameter set:' num2str(parameterSetNo) '/' num2str(nParameterSets)]);
+
+				if iterateParameters==1
+					% add the iterated parameter here
+					paramNames = fieldnames(paramSet);
+					nParams = length(paramNames);
+					for paramNo = 1:nParams
+						cnmfOptions.(paramNames{paramNo}) = paramSet.(paramNames{paramNo}){parameterSetNo};
+						saveParams.(paramNames{paramNo}) = paramSet.(paramNames{paramNo}){parameterSetNo};
+					end
+					saveParams
+				end
+
+				startTime = tic;
+				cnmfAnalysisOutput = [];
+				% [cnmfAnalysisOutput] = computeCnmfSignalExtraction(movieList,obj.numExpectedSignals.(obj.signalExtractionMethod).(obj.subjectStr{obj.fileNum}),'options',cnmfOptions);
+
+				numExpectedComponents = obj.numExpectedSignals.(obj.signalExtractionMethod).(obj.subjectStr{obj.fileNum});
+				originalPath = [options.signalExtractionRootPath filesep 'cnmf_original'];
+				currentPath = [options.signalExtractionRootPath filesep 'cnmf_current'];
+				switch options.CNMF.originalCurrentSwitch
+					case 'original'
+						% Add and remove necessary CNMF directories from path
+						fprintf('Remove %s\n Add %s\n',currentPath,originalPath);
+						rmpath(genpath(currentPath));
+						addpath(genpath(originalPath));
+						[cnmfAnalysisOutput] = computeCnmfSignalExtractionOriginal(movieList,numExpectedComponents,'options',cnmfOptions);
+					case 'current'
+						% Add and remove necessary CNMF directories from path
+						fprintf('Remove %s\n Add %s\n',originalPath,currentPath);
+						rmpath(genpath(originalPath));
+						addpath(genpath(currentPath));
+						[cnmfAnalysisOutput] = computeCnmfSignalExtraction_v2(movieList,numExpectedComponents,'options',cnmfOptions);
+					otherwise
+						% do nothing
+				end
+
+				% [cnmfAnalysisOutput] = computeCnmfSignalExtractionOriginal(movieList,obj.numExpectedSignals.(obj.signalExtractionMethod).(obj.subjectStr{obj.fileNum}),'options',cnmfOptions);
+				% [cnmfAnalysisOutput] = computeCnmfSignalExtractionOriginal(movieList,nPCsnICs,'options',cnmfOptions);
+
+				[figHandle figNo] = openFigure(1337, '');hold off;
+				obj.modelSaveImgToFile([],'initializationROIs_',1337,[obj.folderBaseSaveStr{obj.fileNum} '_run0' num2str(parameterSetNo)]);
+				[figHandle figNo] = openFigure(1339, '');hold off;
+				obj.modelSaveImgToFile([],'cellmapContours_',1339,[obj.folderBaseSaveStr{obj.fileNum} '_run0' num2str(parameterSetNo)]);
+
+				cnmfAnalysisOutput.time.startTime = startTime;
+				cnmfAnalysisOutput.time.endTime = tic;
+				cnmfAnalysisOutput.time.totalTime = toc(startTime);
+
+				cnmfAnalysisOutput.versionOutput = options.CNMF.originalCurrentSwitch;
+
+				% save ICs
+				if options.CNMF.saveEachRunNewDirSwitch==0
+					saveID = {obj.rawCNMFStructSaveStr,'_paramSet.mat'};
+					saveVariable = {'cnmfAnalysisOutput','saveParams'};
+					thisDirSaveStr = [obj.inputFolders{obj.fileNum} filesep obj.date{obj.fileNum} '_' obj.protocol{obj.fileNum} '_' obj.fileIDArray{obj.fileNum}];
+				else
+					saveID = {obj.rawCNMFStructSaveStr,'_paramSet.mat'};
+					saveVariable = {'cnmfAnalysisOutput','saveParams'};
+					thisDirSaveStr = [obj.inputFolders{obj.fileNum} filesep 'run0' num2str(parameterSetNo) filesep];
+					if (~exist(thisDirSaveStr,'dir')) mkdir(thisDirSaveStr); end;
+					thisDirSaveStr = [thisDirSaveStr obj.date{obj.fileNum} '_' obj.protocol{obj.fileNum} '_' obj.fileIDArray{obj.fileNum}];
+				end
+
+				% =======
+				for i=1:length(saveID)
+					savestring = [thisDirSaveStr saveID{i}];
+					display(['saving: ' savestring])
+					% save(savestring,saveVariable{i},'-v7.3','emOptions');
+					save(savestring,saveVariable{i},'-v7.3');
+				end
+				% =======
+			catch err
+				display(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				display(repmat('@',1,7))
+			end
+		end
+	end
+	function [cnmfeOptions] = runCNMFESignalFinder()
+
+		% % if cvx is not in the path, ask user
+		% if isempty(which('cvx_begin'))
+		% 	[filePath,folderPath,~] = uigetfile(['*.*'],'select cvx_setup.m');
+		% 	run([folderPath filesep filePath]);
+		% end
+
+		% if cvx is not in the path, ask user
+		if isempty(which('cvx_begin'))
+			[filePath,folderPath,~] = uigetfile(['*.*'],'select cvx_setup.m');
+			run([folderPath filesep filePath]);
+		end
+
+		% switch pcaicaPCsICsSwitchStr
+		% 	case 'Subject'
+		% 		nPCsnICs = obj.numExpectedSignals.(obj.signalExtractionMethod).(obj.subjectStr{obj.fileNum})
+		% 	case 'Folder'
+		% 		nPCsnICs = obj.numExpectedSignals.(obj.signalExtractionMethod).Folders{obj.fileNum}
+		% 	otherwise
+		% 		% body
+		% end
+
+		movieList = getFileList(obj.inputFolders{obj.fileNum}, fileFilterRegexp);
+
+		cnmfeOptions.gSiz = gridWidth.(obj.subjectStr{obj.fileNum});
+		cnmfeOptions.gSig = ceil(gridWidth.(obj.subjectStr{obj.fileNum})/4);
+		cnmfeOptions.ssub = options.CNMFE.ssub;
+		cnmfeOptions.tsub = options.CNMFE.tsub;
+
+		try
+			display(repmat('*',1,14))
+			startTime = tic;
+			cnmfeAnalysisOutput = [];
+			[cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(movieList{1},'options',cnmfeOptions);
+
+			% [figHandle figNo] = openFigure(1337, '');hold off;
+			% obj.modelSaveImgToFile([],'initializationROIs_',1337,[obj.folderBaseSaveStr{obj.fileNum} '_run0' num2str(parameterSetNo)]);
+			% [figHandle figNo] = openFigure(1339, '');hold off;
+			% obj.modelSaveImgToFile([],'cellmapContours_',1339,[obj.folderBaseSaveStr{obj.fileNum} '_run0' num2str(parameterSetNo)]);
+
+			cnmfeAnalysisOutput.time.startTime = startTime;
+			cnmfeAnalysisOutput.time.endTime = tic;
+			cnmfeAnalysisOutput.time.totalTime = toc(startTime);
+			cnmfeAnalysisOutput.obj.cnmfeOptions = cnmfeOptions;
+
+			% save CNMF-E components
+			% =======
+			for i=1:length(saveID)
+				savestring = [thisDirSaveStr saveID{i}];
+				display(['saving: ' savestring])
+				% save(savestring,saveVariable{i},'-v7.3','emOptions');
+				save(savestring,saveVariable{i},'-v7.3');
+			end
+			% =======
+		catch err
+			display(repmat('@',1,7))
+			disp(getReport(err,'extended','hyperlinks','on'));
+			display(repmat('@',1,7))
+		end
 	end
 	function [gridWidth gridSpacing] = subfxnSignalSizeSpacing()
 		subjectList = unique(obj.subjectStr(fileIdxArray));

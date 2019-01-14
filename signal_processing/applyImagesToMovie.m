@@ -1,5 +1,5 @@
 function [outputSignal] = applyImagesToMovie(inputImages,inputMovie, varargin)
-    % Applies images to a 3D movie matrix in order to get a signal based on a thresholded version of the image (ROI).
+    % Applies images to a 3D movie matrix in order to get a signal based on a thresholded version of the image.
     % Biafra Ahanonu
     % started: 2013.10.11
     % inputs

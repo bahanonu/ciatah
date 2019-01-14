@@ -1,5 +1,5 @@
 function obj = computeMatchObjBtwnTrials(obj)
-	% Match cells across imaging sessions
+	% Match cells across imaging sessions.
 	% Biafra Ahanonu
 	% branched from controllerAnalysis: 2014.08.01 [16:09:16]
 	% inputs

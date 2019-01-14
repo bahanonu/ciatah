@@ -1,5 +1,5 @@
 function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanImageStruct] = createPeakTriggeredImages(inputMovie, inputImages, inputSignals, varargin)
-	% Gets event triggered average image from an input movie based on cell images located in input image and trace matrix
+	% Gets event triggered average image from an input movie based on cell images located in input image and trace matrix.
 	% Biafra Ahanonu
 	% started: 2015.09.28, abstracted from behaviorAnalysis
 	% inputs

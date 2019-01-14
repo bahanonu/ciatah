@@ -1,5 +1,5 @@
 function [success] = writeHDF5Data(inputData,saveDir,varargin)
-	% Saves input data to a HDF5 file, tries to preserve datatype
+	% Saves input data to a HDF5 file, tries to preserve datatype.
 	% Biafra Ahanonu
 	% started: 2013.11.01
 	%

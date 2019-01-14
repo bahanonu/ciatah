@@ -11,7 +11,6 @@ function obj = getVideoRegexp(obj)
 	    %
 	% TODO
 	    %
-
 	switch videoTrialRegExpIdx
 		case 1
 			videoTrialRegExp = [obj.date{obj.fileNum} '_' obj.protocol{obj.fileNum} '_' obj.fileIDArray{obj.fileNum} '.*' videoCameraId];

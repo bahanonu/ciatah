@@ -1,5 +1,5 @@
 function setFigureDefaults()
-	% Sets preferred figure defaults
+	% Sets preferred figure defaults.
 	% Biafra Ahanonu
 	% started: 2013.10.29
 	% inputs
@@ -63,7 +63,6 @@ function setFigureDefaults()
 	);
 
 	iptsetpref('ImshowInitialMagnification', 'fit')
+	% set(gca, 'Position', get(gca, 'OuterPosition') - ...
+	%     get(gca, 'TightInset') * [-1 0 1 0; 0 -1 0 1; 0 0 1 0; 0 0 0 1]);
 end
-
-% set(gca, 'Position', get(gca, 'OuterPosition') - ...
-%     get(gca, 'TightInset') * [-1 0 1 0; 0 -1 0 1; 0 0 1 0; 0 0 0 1]);

@@ -364,7 +364,7 @@ function [optionsOut] = computePeakForSignalOptions(varargin)
 end
 function [testpeaks] = computePeakForSignal(inputSignal, options)
     % identifies peaks in an input signal given a particular threshold and other parameters.
-    % Biafra Ahanonu
+    % biafra ahanonu
     % started: 2013.10.28
     % adapted from Lacey Kitch's and Laurie Burns' code
     % inputs

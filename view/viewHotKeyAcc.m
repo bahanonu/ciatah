@@ -1,6 +1,17 @@
 function viewHotKeyAcc(figNo)
-	% Biafra Ahanonu
 	% Allows hotkeys to be added to the current figure for manipulation
+	% Biafra Ahanonu
+	% started: 2017.04.12
+	% inputs
+	    %
+	% outputs
+	    %
+	% changelog
+	    %
+	% TODO
+	    % add options for how much to offset
+
+	% allows hotkeys to be added to the current figure for manipulation
 	% A figure
 	% fig = figure('menubar','none');
 	fig = figure(figNo);

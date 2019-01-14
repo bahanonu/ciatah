@@ -1,6 +1,6 @@
 function [inputMovies] = createMontageMovie(inputMovies,varargin)
-	% Creates a movie montage from a cell array of movies.
-	% adapted from my signalSorter and other subfunction.
+	% Creates a movie montage from a cell array of movies
+	% adapted from signalSorter and other subfunction.
 	% Biafra Ahanonu
 	% started: 2015.04.09
 	%========================

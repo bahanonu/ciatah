@@ -1,5 +1,5 @@
 function obj = viewMovieCreateSideBySide(obj)
-	% align signal to a stimulus and display images
+	% Align signal to a stimulus and display images.
 	% Biafra Ahanonu
 	% branched from controllerAnalysis: 2014.08.01 [16:09:16]
 	% inputs

@@ -1,5 +1,5 @@
 function [imgStats] = computeImageFeatures(inputImages, varargin)
-    % Computes various measures based on input cell images.
+    % Filters large and small objects in an set of images, returns filtered matricies along with vector with decisions and sizes.
     % Biafra Ahanonu
     % 2013.10.31
     % based on SpikeE code

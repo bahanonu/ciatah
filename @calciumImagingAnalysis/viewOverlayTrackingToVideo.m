@@ -123,6 +123,9 @@ function obj = viewOverlayTrackingToVideo(obj)
 			saveTrackingVideo = 1;
 			if saveTrackingVideo==1
 
+				% movieFilePath = getFileList(obj.videoDir,obj.folderBaseSaveStr{obj.fileNum});
+				% saveMoviePath = [obj.videoSaveDir filesep obj.folderBaseSaveStr{obj.fileNum}];
+
 				movieFilePath = getFileList(obj.videoDir,videoTrialRegExp);
 				saveMoviePath = [obj.videoSaveDir filesep videoTrialRegExp];
 

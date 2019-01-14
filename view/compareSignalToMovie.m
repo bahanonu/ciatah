@@ -1,5 +1,5 @@
 function [croppedPeakImages] = compareSignalToMovie(inputMovie, inputImages, inputSignal, varargin)
-	% Shows a cropped version of inputMovie for each inputImages and aligns it to inputSignal peaks to make sure detection is working
+	% Shows a cropped version of inputMovie for each inputImages and aligns it to inputSignal peaks to make sure detection is working.
 	% Biafra Ahanonu
 	% started: 2013.11.04 [18:40:45]
 	% inputs

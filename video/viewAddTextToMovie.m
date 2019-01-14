@@ -1,7 +1,17 @@
 function [movieTmp] = viewAddTextToMovie(movieTmp,inputText,fontSize)
 	% Adds text to movie matrix.
 	% Biafra Ahanonu
-	% 2016.07.01 [15:05:03] - improved
+	% inputs
+		% inputSignal - input signal (or matrix)
+	% outputs
+		%
+
+	% changelog
+		% 2016.07.01 [15:05:03] - improved
+		%
+	% TODO
+		%
+
 	nFrames = size(movieTmp,3);
 	maxVal = nanmax(movieTmp(:));
 	minVal = nanmin(movieTmp(:));

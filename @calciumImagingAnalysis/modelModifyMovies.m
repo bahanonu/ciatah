@@ -23,6 +23,8 @@ function obj = modelModifyMovies(obj)
 				'input HDF5 dataset name',...
 				'output HDF5 dataset name',...
 				'load movie in equal parts (0 = disable feature):'...
+				'alt file regexp:',...
+				'alt replacement file regexp:',...
 			},...
 			'copy files to /archive/ folder',1,...
 			{...
@@ -34,6 +36,8 @@ function obj = modelModifyMovies(obj)
 				obj.inputDatasetName,...
 				obj.inputDatasetName,...
 				'10'...
+				obj.fileFilterRegexpAlt,...
+				'manualAltCut',...
 			}...
 		);
 		setNo = 1;
@@ -45,8 +49,14 @@ function obj = modelModifyMovies(obj)
 		inputDatasetName =  movieSettings{setNo};setNo = setNo+1;
 		outputDatasetName =  movieSettings{setNo};setNo = setNo+1;
 		loadMovieInEqualParts = str2num(movieSettings{setNo});setNo = setNo+1;
+
+		fileFilterRegexpAlt = movieSettings{setNo};setNo = setNo+1;
+		replaceFileFilterRegexpAlt = movieSettings{setNo};setNo = setNo+1;
+
 		% analyzeMovieFiles =  str2num(movieSettings{6});
 		obj.fileFilterRegexp = replaceFileFilterRegexp;
+		obj.fileFilterRegexpAlt = replaceFileFilterRegexpAlt;
+
 
         % get files to analyze
 		[fileIdxArray idNumIdxArray nFilesToAnalyze nFiles] = obj.getAnalysisSubsetsToAnalyze();
@@ -101,6 +111,8 @@ function obj = modelModifyMovies(obj)
 		                    MIJ.run('Select None');
 		                    MIJ.run('Make Substack...', 'delete slices=1');
 		                    movieMaskArray{thisFileNumIdx}{maskNo} = MIJ.getCurrentImage;
+		                    % Ensure that it is a binary mask, sometimes ImageJ would give out negative values
+		                    movieMaskArray{thisFileNumIdx}{maskNo} = movieMaskArray{thisFileNumIdx}{maskNo}>0;
 		                    MIJ.run('Close All Without Saving');
 		                catch err
 		                    movieMaskArray{thisFileNumIdx}{maskNo} = [];
@@ -159,24 +171,27 @@ function obj = modelModifyMovies(obj)
 	            % figure;
 	            	subplot(2,2,2);imagesc(movieMask);title(obj.folderBaseDisplayStr{obj.fileNum});axis equal tight;colorbar;
 
-	            % load entire movie and crop
-	            movieList = getFileList(obj.inputFolders{obj.fileNum}, fileFilterRegexp);
-				moviePath = movieList{1};
-				[frameListSaveTmp] = subfxnVerifyFrameList(frameListSave,moviePath,inputDatasetName,loadMovieInEqualParts);
-				[primaryMovie] = loadMovieList(moviePath,'convertToDouble',0,'frameList',frameListSaveTmp,'inputDatasetName',inputDatasetName,'largeMovieLoad',1);
-				primaryMovie = bsxfun(@times,primaryMovie,movieMask);
+	            subfxnEditMovies(obj.inputFolders{obj.fileNum},fileFilterRegexp,replaceFileFilterRegexp,frameListSave,inputDatasetName,outputDatasetName,loadMovieInEqualParts,movieMask,obj.folderBaseDisplayStr{obj.fileNum},3);
 
-					subplot(2,2,3);imagesc(primaryMovie(:,:,round(end/2)));title(obj.folderBaseDisplayStr{obj.fileNum});axis equal tight;colorbar; colormap gray;
-					% colormap(customColormap([]))
+	            subfxnEditMovies(obj.inputFolders{obj.fileNum},fileFilterRegexpAlt,replaceFileFilterRegexpAlt,frameListSave,inputDatasetName,outputDatasetName,loadMovieInEqualParts,movieMask,obj.folderBaseDisplayStr{obj.fileNum},4);
+	   %          % load entire movie and crop
+	   %          movieList = getFileList(obj.inputFolders{obj.fileNum}, fileFilterRegexp);
+				% moviePath = movieList{1};
+				% [frameListSaveTmp] = subfxnVerifyFrameList(frameListSave,moviePath,inputDatasetName,loadMovieInEqualParts);
+				% [primaryMovie] = loadMovieList(moviePath,'convertToDouble',0,'frameList',frameListSaveTmp,'inputDatasetName',inputDatasetName,'largeMovieLoad',1);
+				% primaryMovie = bsxfun(@times,primaryMovie,movieMask);
 
-				% save the file in the new location
-				[PATHSTR,NAME,EXT] = fileparts(moviePath);
-				% newPathFile = [PATHSTR filesep NAME '_manualCrop' EXT];
-				newPathFile = [PATHSTR filesep strrep(NAME,fileFilterRegexp,replaceFileFilterRegexp) EXT];
-				% [output] = writeHDF5Data(primaryMovie,newPathFile,'datasetname',				outputDatasetName);
-				% make a copy of the file then append the modified movie inside, preserved movie setting information
-				copyfile(moviePath,newPathFile);
-				[output] = writeHDF5Data(primaryMovie,newPathFile,'datasetname',				outputDatasetName,'writeMode','append');
+				% 	subplot(2,2,3);imagesc(primaryMovie(:,:,round(end/2)));title(obj.folderBaseDisplayStr{obj.fileNum});axis equal tight;colorbar; colormap gray;
+				% 	% colormap(customColormap([]))
+
+				% % save the file in the new location
+				% [PATHSTR,NAME,EXT] = fileparts(moviePath);
+				% % newPathFile = [PATHSTR filesep NAME '_manualCrop' EXT];
+				% newPathFile = [PATHSTR filesep strrep(NAME,fileFilterRegexp,replaceFileFilterRegexp) EXT];
+				% % [output] = writeHDF5Data(primaryMovie,newPathFile,'datasetname',				outputDatasetName);
+				% % make a copy of the file then append the modified movie inside, preserved movie setting information
+				% copyfile(moviePath,newPathFile);
+				% [output] = writeHDF5Data(primaryMovie,newPathFile,'datasetname',outputDatasetName,'writeMode','append');
 			catch err
 			    movieMaskArray{thisFileNumIdx} = [];
 			    display(repmat('@',1,7))
@@ -191,6 +206,26 @@ function obj = modelModifyMovies(obj)
 		display(repmat('@',1,7))
 	end
 
+end
+function subfxnEditMovies(inputFolderHere,fileFilterRegexp,replaceFileFilterRegexp,frameListSave,inputDatasetName,outputDatasetName,loadMovieInEqualParts,movieMask,folderBaseDisplayStr,subplotNo)
+	% load entire movie and crop
+	movieList = getFileList(inputFolderHere, fileFilterRegexp);
+	moviePath = movieList{1};
+	[frameListSaveTmp] = subfxnVerifyFrameList(frameListSave,moviePath,inputDatasetName,loadMovieInEqualParts);
+	[primaryMovie] = loadMovieList(moviePath,'convertToDouble',0,'frameList',frameListSaveTmp,'inputDatasetName',inputDatasetName,'largeMovieLoad',1);
+	primaryMovie = bsxfun(@times,primaryMovie,movieMask);
+
+		subplot(2,2,subplotNo);imagesc(primaryMovie(:,:,round(end/2)));title(folderBaseDisplayStr);axis equal tight;colorbar; colormap gray;
+		% colormap(customColormap([]))
+
+	% save the file in the new location
+	[PATHSTR,NAME,EXT] = fileparts(moviePath);
+	% newPathFile = [PATHSTR filesep NAME '_manualCrop' EXT];
+	newPathFile = [PATHSTR filesep strrep(NAME,fileFilterRegexp,replaceFileFilterRegexp) EXT];
+	% [output] = writeHDF5Data(primaryMovie,newPathFile,'datasetname',				outputDatasetName);
+	% make a copy of the file then append the modified movie inside, preserved movie setting information
+	copyfile(moviePath,newPathFile);
+	[output] = writeHDF5Data(primaryMovie,newPathFile,'datasetname',outputDatasetName,'writeMode','append');
 end
 function [frameListTmp] = subfxnVerifyFrameList(frameList,moviePath,inputDatasetName,loadMovieInEqualParts)
 	if isempty(frameList)
