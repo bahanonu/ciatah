@@ -1,15 +1,17 @@
-
 # calciumImagingAnalysis
+
+<img src="https://user-images.githubusercontent.com/5241605/51068051-78c27680-15cd-11e9-9434-9d181b00ef8e.png" align="center">
 
 Code and MATLAB class for analyzing one- and two-photon calcium imaging datasets. Includes code for determining animal locations (e.g. in open-field assay).
 
 Contact Biafra Ahanonu (bahanonu [at] alum.mit.edu) for questions about code or usage.
 
 Repository notes:
-- Covers preprocessing of calcium imaging videos, cell and activity trace extraction (with PCA-ICA, CNMF, and CNMF-E), manual sorting of cell extraction outputs, cross-session alignment of cells, and more.
-- This repository is code used in "An amygdalar neural ensemble encoding the unpleasantness of pain" and similar code was used to process data in `Parker, J. G., Marshall, J. D., Ahanonu, B., Wu, Y. W., Kim, T. H., Grewe, B. F., ... & Schnitzer, M. J. (2018). Diametric neural ensemble dynamics in parkinsonian and dyskinetic states. Nature, 557(7704), 177.`
-- Code developed while in Prof. Mark Schnitzer's lab at Stanford University.
-
+- Covers preprocessing of calcium imaging videos, cell and activity trace extraction (with PCA-ICA, CNMF, and CNMF-E), manual and automated sorting of cell extraction outputs, cross-session alignment of cells, and more.
+- This repository consists of code used in
+  - `Corder, G.*, Ahanonu, B.*, Grewe, B. F., Wang, D., Schnitzer M. J., Scherrer, G. An amygdalar neural ensemble encoding the unpleasantness of painful experiences. Science (in press).`
+  - and similar code helped process data in `Parker, J. G., Marshall, J. D., Ahanonu, B., Wu, Y. W., Kim, T. H., Grewe, B. F., ... & Schnitzer, M. J. (2018). Diametric neural ensemble dynamics in parkinsonian and dyskinetic states. Nature, 557(7704), 177.`
+- Code developed while in [Prof. Mark Schnitzer's lab](http://pyramidal.stanford.edu/) at Stanford University.
 ***
 ## Contents
 - [Installation](#installation)
@@ -62,22 +64,23 @@ Saleae
 Below are a list of the top-level directories and what types of functions or files are within.
 
 - __@calciumImagingAnalysis__ - Contains `calciumImagingAnalysis` class and associated methods for calcium imaging analysis.
-- __file\_exchange__ - Contains any outside code from MATLAB's File Exchange that are dependencies in repository functions.
 - ___overloaded__ - Functions that overload core MATLAB functions to add functionality or fix display issues.
-- __behavior__ - Processing of behavior files (e.g. accelerometer data, Saleae files, etc.).
+<!-- - __behavior__ - Processing of behavior files (e.g. accelerometer data, Saleae files, etc.). -->
 - __classification__ - Classification of cells, e.g. manual classification of cell extraction outputs or cross-session grouping of cells.
+- __file\_exchange__ - Contains any outside code from MATLAB's File Exchange that are dependencies in repository functions.
 - __hdf5__ - Functions concerned with HDF5 input/output.
 - __image__ - Functions concerned with processing images (or [x y] matrices).
 - __io__ - Contains functions concerned with file or function input-output.
 - __neighbor__ - Detection and display of neighboring cell information.
-- __pre\_processing__ - Functions concerned with preprocessing calcium imaging videos, e.g. spatial filtering, downsampling, etc.
-- __pre_processing\Motion\_Correction\_Turboreg__ - Functions concerned with motion correction.
-- __python__ - Python code, e.g. for processing Saleae data.
-- __serial__ - Code for saving and processing serial port data, e.g. Arduino streaming data.
+- __movie_processing__ - Functions concerned with preprocessing calcium imaging videos, e.g. spatial filtering, downsampling, etc.
+- __motion_correction__ - Functions concerned with motion correction.
+<!-- - __python__ - Python code, e.g. for processing Saleae data. -->
+<!-- - __serial__ - Code for saving and processing serial port data, e.g. Arduino streaming data. -->
 - __settings__ - Functions concerned with settings for other functions.
 - __signal\_extraction__ - Functions related to cell extraction, e.g. running PCA-ICA.
 - __signal\_processing__ - Functions to process cell activity traces.
 - __tracking__ - ImageJ and MATLAB functions to track animal location in behavior movies.
+- __unit_tests__ - Functions to validate specific repository functions.
 - __video__ - Functions to manipulate or process videos, e.g. making movie montages or adding dropped frames.
 - __view__ - Functions concerned with displaying data or information to the user, normally do not process data.
 
@@ -212,7 +215,11 @@ If users need to eliminate specific regions of their movie before running cell e
 
 ## Extracting cells with `modelExtractSignalsFromMovie`
 
-Users can run PCA-ICA by following the below set of option screens. We normally estimate the number of PCs and ICs on the high end, manually sort to get an estimate of the number of cells, then run PCA-ICA again with IC 1.5-3x the number of cells and PCs 1-1.5x number of ICs.
+Users can run PCA-ICA, CNMF, and CNMF-E by following the below set of option screens.
+
+We normally estimate the number of PCs and ICs on the high end, manually sort to get an estimate of the number of cells, then run PCA-ICA again with IC 1.5-3x the number of cells and PCs 1-1.5x number of ICs.
+
+To run CNMF and CNMF-E, place the respective repositories in `signal_extraction\cnmf_current` and `signal_extraction\cnmfe`, respectively.
 
 ![image](https://user-images.githubusercontent.com/5241605/49830421-fa608380-fd45-11e8-8d9a-47a3d2921111.png)
 
