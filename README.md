@@ -6,7 +6,7 @@ Code and MATLAB class for analyzing one- and two-photon calcium imaging datasets
 Contact Biafra Ahanonu (bahanonu [at] alum.mit.edu) for questions about code or usage.
 
 Repository notes:
-- Covers preprocessing of calcium imaging videos, cell and activity trace extraction (with PCA-ICA), manual sorting of cell extraction outputs, cross-session alignment of cells, and more.
+- Covers preprocessing of calcium imaging videos, cell and activity trace extraction (with PCA-ICA, CNMF, and CNMF-E), manual sorting of cell extraction outputs, cross-session alignment of cells, and more.
 - This repository is code used in "An amygdalar neural ensemble encoding the unpleasantness of pain" and similar code was used to process data in `Parker, J. G., Marshall, J. D., Ahanonu, B., Wu, Y. W., Kim, T. H., Grewe, B. F., ... & Schnitzer, M. J. (2018). Diametric neural ensemble dynamics in parkinsonian and dyskinetic states. Nature, 557(7704), 177.`
 - Code developed while in Prof. Mark Schnitzer's lab at Stanford University.
 
@@ -109,7 +109,7 @@ Folders should following the format `YYYY_MM_DD_pXXX_mXXX_assayXX_trialXX` where
 -   `trialXX` = the trial number of the current assay session, only applicable if multiple trials in the same assay session.
 
 ### Videos
-- HDF5: 
+- HDF5:
 	- Saved as a `[x y t]` 3D matrix where `x` and `y` are the height and width of video while `t` is number of frames.
 	- `/1` as the name for directory containing movie data.
 	- HDF can be read in using Fiji, see http://lmb.informatik.uni-freiburg.de/resources/opensource/imagej_plugins/hdf5.html.
