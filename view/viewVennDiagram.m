@@ -1,37 +1,41 @@
 function viewVennDiagram(circleAreas,overlapAreas,totalArea,varargin)
-	% Makes Venn diagram plot
+	% Makes Venn diagram plot.
 	% Biafra Ahanonu
-	% started: 2018.04.28 [15:50:00]
+	% originally started: 2017.03.08 [22:29:33]
+		% branched 2018.04.28 [15:50:00], taken from older calciumImagingAnalysis method.
 	% inputs
-		% circleAreas = [c1 c2 c3];
-		% overlapAreas = [i12 i13 i23 i123];
+		% circleAreas
+			% A [c1 c2 c3] integer or float vector containing the areas for each of the three circles, leave c3 blank if only two circles.
+		% overlapAreas
+			 % [i12 i13 i23 i123] integer or float containing intersect area of indicated circles, e.g. i12 is interspect of circles 1 and 2 or i123 is the insersect of circles 1, 2, and 3. Only input i12 if only two circles are used for circleAreas.
 	% outputs
-		%
+		% None, only plotting.
 
 	% changelog
-		%
+		% 2017.08.14 [11:09:32] - modified to use circles created by viscircles, which are better for editing in Adobe Illustrator.
 	% TODO
 		%
 
 	%========================
-	% whether to display text on diagrams
+	% Binary: 1 = display text on diagrams, 0 = no display.
 	options.displayText = 1;
-	% whether to round text display numbers
+	% Binary: 1 = round text display numbers.
 	options.roundSwitch = 1;
-	% various other options
-	options.circleAreasOriginal = [];
-	options.overlapAreasOriginal = [];
-	options.xPlot = [];
-	options.yPlot = [];
+	% Cell array of strings or vectors: cell array where each cell contains a str or vector specifying the color for that venn diagram.
+	options.fixedColors = {[0 148 68]/255, [190 30 45]/255, [0 114 189]/255}; % {'r','g','b','cyan','yellow'}; {[1 0 0],[0 1 0],[0 0 1],'cyan','yellow'};
+	% Vector of integers or floats: indicate the SEM for each circle's area, not used if empty (default).
+	options.circleAreasSem = [];
+	% Cell array of strings: Name to place next to each Venn diagram.
+	options.circleNames = {};
+	% DEPRECIATED OPTIONS, DO NOT USE
+	options.overlapAreasSem = [];
 	options.idPairNo = [];
 	options.idPairsFixed = [];
 	options.nCells = [];
-	% options.fixedColors = {'r','g','b','cyan','yellow'};
-	% options.fixedColors = {[1 0 0],[0 1 0],[0 0 1],'cyan','yellow'};
-	options.fixedColors = {[0 148 68]/255, [190 30 45]/255, [0 114 189]/255};
-	options.circleAreasSem = [];
-	options.overlapAreasSem = [];
-	options.circleNames = '';
+	options.xPlot = [];
+	options.yPlot = [];
+	options.circleAreasOriginal = [];
+	options.overlapAreasOriginal = [];
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -42,14 +46,15 @@ function viewVennDiagram(circleAreas,overlapAreas,totalArea,varargin)
 	% end
 	%========================
 
-	% 2017.08.14 [11:09:32] - modified to have the viscircles circles which are better for editing in illustrator
 
 	% subplot(xPlot,yPlot,idPairNo)
 		% [c1 c2 c3]
 		% [i12 i13 i23 i123]
 
-	% make square so circles look proper
+	% make axis square so circles look proper
 	axis square
+
+	% Plot the circles using venn, mainly to get calculations and locations
 	try
 		[H S] = venn(circleAreas,overlapAreas,'ErrMinMode','TotalError');
 	catch
@@ -63,6 +68,7 @@ function viewVennDiagram(circleAreas,overlapAreas,totalArea,varargin)
 		end
 	end
 
+	% Delete all the created circles and handle
 	hh = get(gca,'child');
 	delete(hh)
 	% % hh
@@ -72,12 +78,16 @@ function viewVennDiagram(circleAreas,overlapAreas,totalArea,varargin)
 	% if idPairNo == 1
 	% 	title(nCells)
 	% end
+
 	axis off
+
+	% Determine limits, can change later
 	sqSizes = sqrt(totalArea/pi)+3;
 	xlim([-sqSizes sqSizes]);ylim([-sqSizes sqSizes]);
 	centerPos = nanmean(S.Position,1);
 	xlim([centerPos(1)-sqSizes centerPos(1)+sqSizes]);ylim([centerPos(2)-sqSizes centerPos(2)+sqSizes]);
 
+	% Plot the total area circle
 	% viscircles([0 0],[sqrt((totalArea)/pi)]);
 	viscircles(nanmean(S.Position,1),[sqrt((totalArea)/pi)],'Color','k','EnhanceVisibility',false);
 
@@ -91,6 +101,7 @@ function viewVennDiagram(circleAreas,overlapAreas,totalArea,varargin)
 	% xlim([boxMin(1) boxMax(1)]);
 	% ylim([boxMin(2) boxMax(2)]);
 
+	% For each circle, plot it based on venn output
 	for circNo = 1:length(circleAreas)
 		viscircles(S.Position(circNo,:),S.Radius(circNo),'Color',options.fixedColors{circNo},'EnhanceVisibility',false);
 		if ~isempty(options.circleAreasSem)
@@ -103,10 +114,11 @@ function viewVennDiagram(circleAreas,overlapAreas,totalArea,varargin)
 		end
 	end
 
-	% str1 = sprintf('%d | %0.1f | %0.1f',idPairsFixed(idPairNo,1), circleAreasOriginal(1),circleAreas(1));
-	% str2 = sprintf('%d | %0.1f | %0.1f',idPairsFixed(idPairNo,2), circleAreasOriginal(2),circleAreas(2));
-	% str3 = sprintf('%d | %0.1f | %0.1f',idPairsFixed(idPairNo,3), circleAreasOriginal(3),circleAreas(3));
+	% Plot text indicating the exact numbers for each area of overlap
 	if options.displayText==1
+		% str1 = sprintf('%d | %0.1f | %0.1f',idPairsFixed(idPairNo,1), circleAreasOriginal(1),circleAreas(1));
+		% str2 = sprintf('%d | %0.1f | %0.1f',idPairsFixed(idPairNo,2), circleAreasOriginal(2),circleAreas(2));
+		% str3 = sprintf('%d | %0.1f | %0.1f',idPairsFixed(idPairNo,3), circleAreasOriginal(3),circleAreas(3));
 		roundSwitch = options.roundSwitch;
 		for circNo = 1:length(circleAreas)
 			if roundSwitch
@@ -115,12 +127,12 @@ function viewVennDiagram(circleAreas,overlapAreas,totalArea,varargin)
 					str1 = [options.circleNames{circNo} ' | ' str1];
 				end
 				if ~isempty(options.circleAreasSem)
-					str1 = sprintf('%s ± %d',str1,round(options.circleAreasSem(circNo)));
+					str1 = sprintf(['%s ' char(177) ' %d'],str1,round(options.circleAreasSem(circNo)));
 				end
 			else
 				str1 = sprintf('%0.1f',circleAreas(circNo));
 				if ~isempty(options.circleAreasSem)
-					str1 = sprintf('%s ± %0.1f',str1,options.circleAreasSem(circNo));
+					str1 = sprintf(['%s ' char(177) ' %0.1f'],str1,options.circleAreasSem(circNo));
 				end
 			end
 			if length(circleAreas)==3
@@ -130,6 +142,7 @@ function viewVennDiagram(circleAreas,overlapAreas,totalArea,varargin)
 			end
 		end
 		hold on;
+
 		% if roundSwitch
 		% 	str1 = sprintf('%d',round(circleAreas(1)));
 		% 	str2 = sprintf('%d',round(circleAreas(2)));
@@ -171,6 +184,7 @@ function viewVennDiagram(circleAreas,overlapAreas,totalArea,varargin)
 		% i23 = overlapAreasOriginal(3);
 		% i123 = overlapAreasOriginal(4);
 
+		% Plot additional details if there is a third circle in the diagram
 		if length(circleAreas)==3
 			i12 = overlapAreas(1);
 			i13 = overlapAreas(2);

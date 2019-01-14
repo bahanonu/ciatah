@@ -133,7 +133,7 @@ function [success] = downsampleHdf5Movie(inputFilePath, varargin)
 
 	function downsampleMovieNested(varargin)
 		% downsamples a movie in either space or time, uses floor to calculate downsampled dimensions.
-		% Biafra Ahanonu
+		% biafra ahanonu
 		% started 2013.11.09 [09:31:32]
 		%
 		% inputs

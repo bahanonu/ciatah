@@ -1,5 +1,5 @@
 function [inputSnr, inputMse, inputSnrSignal, inputSnrNoise, outputSignal, outputNoise] = computeSignalSnr(inputSignals,varargin)
-	% Obtains an approximate SNR for an input signal.
+	% Obtains an approximate SNR for an input signal
 	% Biafra Ahanonu
 	% started: 2013.11.04 [11:54:09]
 	% inputs

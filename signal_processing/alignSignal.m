@@ -1,5 +1,5 @@
 function [alignedSignal] = alignSignal(responseSignal, alignmentSignal,timeSeq,varargin)
-	% Aligns values in a response signal (can be multiple response signals) to binary points in an alignment signal (e.g. 1=align to this time-point, 0=don't align)
+	% Aligns values in a response signal (can be multiple response signals) to binary points in an alignment signal (e.g. 1=align to this time-point, 0=don't align).
 	% Biafra Ahanonu
 	% started: 2013.11.13 [23:47:34]
 	% inputs

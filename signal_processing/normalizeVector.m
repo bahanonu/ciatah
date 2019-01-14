@@ -1,5 +1,5 @@
 function [outputVector] = normalizeVector(inputVector,varargin)
-    % Normalizes a vector or matrix (2D or 3D) using the method specified.
+    % Normalizes a vector or matrix (2D or 3D) using the method specified
     % Biafra Ahanonu
     % started: 2014.01.14 [23:42:58]
     % inputs

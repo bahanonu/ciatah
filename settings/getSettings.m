@@ -1,5 +1,5 @@
 function [options] = getSettings(functionName)
-    % Send back default options to getOptions
+    % Send back default options to getOptions.
     % Biafra Ahanonu
     % started: 2014.12.10
     %

@@ -1,5 +1,5 @@
 function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSignals,varargin)
-    % Displays a GUI for sorting images and their associated signals, also does preliminary sorting based on image/signal properties
+    % Displays a GUI for sorting images and their associated signals, also does preliminary sorting based on image/signal properties.
     % Biafra Ahanonu
     % started: 2013.10.08
     % Dependent code

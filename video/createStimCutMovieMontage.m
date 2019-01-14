@@ -1,6 +1,6 @@
 function [k] = createStimCutMovieMontage(inputMovie,nAlignPts,timeVector,varargin)
 	% Creates a montage movie aligned to specific timepoints.
-	% biafra ahanonu
+	% Biafra Ahanonu
 	% fxn started: 2014.08.13 - broke off from controllerAnalysis script from ~2014.03
 	% inputs
 		% inputMovie - path to movie file, in cell array, e.g. {'path.h5'}

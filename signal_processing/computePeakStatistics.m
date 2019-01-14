@@ -1,5 +1,5 @@
 function [peakOutputStat] = computePeakStatistics(inputSignals,varargin)
-	% Get slope ratio, the average trace from detected peaks, and other peak-related statistics.
+	% Get slope ratio, the average trace from detected peaks, and other peak-related statistics
 	% Biafra Ahanonu
 	% started: 2013.12.09
 	% inputs

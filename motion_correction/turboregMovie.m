@@ -2,7 +2,7 @@ function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	% Motion corrects (using turboreg) a movie; both turboreg (to get 2D translation coordinates) and registering images have been parallelized. Can also turboreg to one set of images and apply the registration to another set (e.g. for cross-day alignment).
 	% Biafra Ahanonu
 	% started 2013.11.09 [11:04:18]
-	% Modified from parallel code update by Biafra Ahanonu and code created by Jerome Lecoq in 2011.
+	% modified from code created by Jerome Lecoq in 2011 and parallel code update by biafra ahanonu
 
 	% changelog
 		% 2013.03.29 - parallelizing turboreg v1

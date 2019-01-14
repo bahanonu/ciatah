@@ -1,5 +1,5 @@
 function [reverseStr] = cmdWaitbar(i,nItems,reverseStr,varargin)
-	% Puts a txt waitbar into the cmd window, less intrusive than pop-up waitbar
+	% Puts a txt waitbar into the cmd window, less intrusive than pop-up waitbar.
 	% Biafra Ahanonu
 	% started: 2014.01.14
 	% thanks to:
