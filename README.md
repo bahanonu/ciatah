@@ -12,7 +12,6 @@ Repository notes:
   - `Corder, G.*, Ahanonu, B.*, Grewe, B. F., Wang, D., Schnitzer M. J., Scherrer, G. An amygdalar neural ensemble encoding the unpleasantness of painful experiences. Science (in press).`
   - and similar code helped process data in `Parker, J. G., Marshall, J. D., Ahanonu, B., Wu, Y. W., Kim, T. H., Grewe, B. F., ... & Schnitzer, M. J. (2018). Diametric neural ensemble dynamics in parkinsonian and dyskinetic states. Nature, 557(7704), 177.`
 - Code developed while in [Prof. Mark Schnitzer's lab](http://pyramidal.stanford.edu/) at Stanford University.
-
 ***
 ## Contents
 - [Installation](#installation)
@@ -32,7 +31,7 @@ Repository notes:
 
 Download zip or clone the `calciumImagingAnalysis` repository.
 - Place in folder where MATLAB will have write permissions, as it also creates a `private` subdirectory to store some user information.
-- Unzip `file_exchange.zip`. This contains File Exchange functions used by `calciumImagingAnalysis`.
+- `file_exchange` folder contains File Exchange functions used by `calciumImagingAnalysis`. If does not exist, unzip `file_exchange.zip`.
 - In general, it is best to set the MATLAB startup directory to the `calciumImagingAnalysis` folder. This allows `java.opts` and `startup.m` to set the correct Java memory requirements and load the correct folders into the MATLAB path.
 - Run `loadBatchFxns.m` before using functions in the directory. This adds all directories and sub-directories to the MATLAB path.
 
@@ -60,6 +59,12 @@ ImageJ
 Saleae
 
 - Download 1.2.26: https://support.saleae.com/logic-software/legacy-software/older-software-releases#1-2-26-download.
+
+CNMF and CNMF-E
+
+- Download repositories by running `downloadCnmfGithubRepositories.m`.
+- CNMF: https://github.com/flatironinstitute/CaImAn-MATLAB.
+- CNMF-E: https://github.com/zhoupc/CNMF_E.
 
 ### Repository organization
 Below are a list of the top-level directories and what types of functions or files are within.
