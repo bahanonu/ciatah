@@ -12,7 +12,6 @@ Repository notes:
   - `Corder, G.*, Ahanonu, B.*, Grewe, B. F., Wang, D., Schnitzer M. J., Scherrer, G. An amygdalar neural ensemble encoding the unpleasantness of painful experiences. Science (in press).`
   - and similar code helped process data in `Parker, J. G., Marshall, J. D., Ahanonu, B., Wu, Y. W., Kim, T. H., Grewe, B. F., ... & Schnitzer, M. J. (2018). Diametric neural ensemble dynamics in parkinsonian and dyskinetic states. Nature, 557(7704), 177.`
 - Code developed while in [Prof. Mark Schnitzer's lab](http://pyramidal.stanford.edu/) at Stanford University.
-
 ***
 ## Contents
 - [Installation](#installation)
@@ -60,6 +59,11 @@ ImageJ
 Saleae
 
 - Download 1.2.26: https://support.saleae.com/logic-software/legacy-software/older-software-releases#1-2-26-download.
+
+CNMF and CNMF-E
+
+- CNMF: https://github.com/flatironinstitute/CaImAn-MATLAB.
+- CNMF-E: https://github.com/zhoupc/CNMF_E.
 
 ### Repository organization
 Below are a list of the top-level directories and what types of functions or files are within.
