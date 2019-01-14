@@ -62,6 +62,7 @@ Saleae
 
 CNMF and CNMF-E
 
+- Download repositories by running `downloadCnmfGithubRepositories.m`.
 - CNMF: https://github.com/flatironinstitute/CaImAn-MATLAB.
 - CNMF-E: https://github.com/zhoupc/CNMF_E.
 
