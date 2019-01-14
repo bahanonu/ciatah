@@ -1,8 +1,7 @@
 classdef calciumImagingAnalysis < dynamicprops
-	% Performs analysis on calcium imaging data.
+	% Performs analysis on calcium imaging data. Also performs analysis on behavior (response signals) compared to stimulus or other continuous signals during an imaging session.
 	% Biafra Ahanonu
-	% Started: 2014.07.31
-	% updated: 2017.01.15 [01:31:54]
+	% started: 2014.07.31
 	% This is a re-write of my old code from controllerAnalysis. Encapsulating the functions and variables as methods and properties in a class should allow easier maintenance/flexibility.
 	% inputs
 		%
@@ -10,6 +9,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		%
 
 	% changelog
+		% updated: 2017.01.15 [01:31:54]
 		%
 	% TODO
 		%
@@ -25,7 +25,7 @@ classdef calciumImagingAnalysis < dynamicprops
 
 		defaultObjDir = pwd;
 		serverPath = '';
-		classVersion = 'v3.20181211';
+		classVersion = 'v3.20190113';
 		% place where functions can temporarily story user settings
 		functionSettings = struct(...
 			'null', NaN...
@@ -49,6 +49,8 @@ classdef calciumImagingAnalysis < dynamicprops
 		discreteStimuliToAnalyze = [];
 		% io settings
 		fileFilterRegexp = 'crop';
+		% Regular expression for alternative file
+		fileFilterRegexpAlt = 'crop';
 		% raw movie
 		fileFilterRegexpRaw = 'concat';
 		% behavior video regexp
@@ -594,346 +596,6 @@ classdef calciumImagingAnalysis < dynamicprops
 		function obj = checkToolboxes(obj)
 			license('inuse')
 		end
-
-		function obj = runPipeline(obj,varargin)
-			setFigureDefaults();
-			set(0, 'DefaultUICOntrolFontSize', 14)
-			close all;clc;
-
-			fxnsToRun = {...
-			'=======setup=======',
-			'showVars',
-			'showFolders',
-			'modelAddNewFolders',
-			'saveObj',
-			'initializeObj',
-			'setMainSettings',
-			'=======preprocess=======',
-			'modelGetFileInfo',
-			'modelVerifyDataIntegrity',
-			'modelBatchCopyFiles',
-			'===',
-			'modelDownsampleRawMovies',
-			'viewMovieFiltering',
-			'viewMovieRegistrationTest',
-			'modelPreprocessMovie',
-			'modelModifyMovies',
-			'modelExtractSignalsFromMovie',
-			'===',
-			'modelVarsFromFiles',
-			'=======signal sorting=======',
-			'computeManualSortSignals',
-			'modelModifyRegionAnalysis',
-			'=======preprocess verification=======',
-			'viewMovie',
-			'viewSubjectMovieFrames'
-			'viewMovieCreateSideBySide',
-			'viewCreateObjmaps',
-			'=======tracking=======',
-			'modelTrackingData',
-			'viewOverlayTrackingToVideo',
-			'=======across session analysis: compute/view=======',
-			'viewSubjectMovieFrames',
-			'computeMatchObjBtwnTrials',
-			'viewMatchObjBtwnSessions',
-			'computeCellDistances',
-			'computeCrossDayDistancesAlignment'
-			};
-			%========================
-			options.fxnsToRun = fxnsToRun;
-			% get options
-			options = getOptions(options,varargin);
-			% display(options)
-			% unpack options into current workspace
-			% fn=fieldnames(options);
-			% for i=1:length(fn)
-			%	eval([fn{i} '=options.' fn{i} ';']);
-			% end
-			%========================
-			fxnsToRun = options.fxnsToRun;
-			% initialDir = pwd;
-			% set back to initial directory in case exited early
-			% restoredefaultpath;
-			% loadBatchFxns();
-			if strcmp(obj.defaultObjDir,pwd)~=1
-				cd(obj.defaultObjDir);
-			end
-
-			if ischar(obj.videoDir)
-				obj.videoDir = {obj.videoDir};
-			end
-
-			% ensure private folders are set
-			if ~exist(obj.picsSavePath,'dir');mkdir(obj.picsSavePath);end
-			if ~exist(obj.dataSavePath,'dir');mkdir(obj.dataSavePath);end
-			if ~exist(obj.logSavePath,'dir');mkdir(obj.logSavePath);end
-
-			props = properties(obj);
-			totSize = 0;
-			% for ii=1:length(props)
-			%	  currentProperty = getfield(obj, char(props(ii)));
-			%	  s = whos('currentProperty');
-			%	  totSize = totSize + s.bytes;
-			% end
-			% sprintf('%.f',totSize*1.0e-6)
-			% fprintf(1, '%d bytes\n', totSize*1.0e-6);
-			% runs all currently implemented view functions
-
-			scnsize = get(0,'ScreenSize');
-			dlgSize = [scnsize(3)*0.8 scnsize(4)*0.8];
-
-			currentIdx = find(strcmp(fxnsToRun,obj.currentMethod));
-			[idNumIdxArray, ok] = listdlg('ListString',fxnsToRun,'InitialValue',currentIdx(1),'ListSize',dlgSize,'Name','Sir! I have a plan!');
-			if ok==0; return; end
-
-			excludeList = {'showVars','showFolders','setMainSettings','modelAddNewFolders','saveObj','setStimulusSettings','modelDownsampleRawMovies'};
-
-			excludeListVer2 = {'modelEditStimTable','behaviorProtocolLoad','modelPreprocessMovie','modelModifyMovies','modelExtractSignalsFromMovie','computeManualSortSignals'};
-
-			excludeListStimuli = {'modelVarsFromFiles'};
-
-			if isempty(intersect(fxnsToRun,excludeList))&isempty(intersect(fxnsToRun,excludeListVer2))
-				[guiIdx, ok] = listdlg('ListString',{'Yes','No'},'InitialValue',1,'ListSize',dlgSize,'Name','GUI Enabled?');
-				if ok==0; return; end
-				% idNumIdxArray
-				% turn off gui elements, run in batch
-				obj.guiEnabled = guiIdx==1;
-			end
-
-
-			fxnsToRun = {fxnsToRun{idNumIdxArray}};
-			obj.currentMethod = fxnsToRun{1};
-
-			if isempty(intersect(fxnsToRun,excludeList))
-				scnsize = get(0,'ScreenSize');
-				usrIdxChoiceStr = obj.usrIdxChoiceStr;
-				usrIdxChoiceDisplay = obj.usrIdxChoiceDisplay;
-				% use current string as default
-				currentIdx = find(strcmp(usrIdxChoiceStr,obj.signalExtractionMethod));
-				[sel, ok] = listdlg('ListString',usrIdxChoiceDisplay,'InitialValue',currentIdx,'ListSize',dlgSize,'Name','Cell extraction algorithm to use for analysis');
-				if ok==0; return; end
-				% (Americans love a winner)
-				usrIdxChoiceList = {2,1};
-				obj.signalExtractionMethod = usrIdxChoiceStr{sel};
-			end
-			if ~isempty(obj.inputFolders)&isempty(intersect(fxnsToRun,excludeList))&isempty(intersect(fxnsToRun,excludeListVer2))
-				if isempty(obj.protocol)
-					obj.modelGetFileInfo();
-				end
-				folderNumList = strsplit(num2str(1:length(obj.inputFolders)),' ');
-				selectList = strcat(folderNumList(:),'/',num2str(length(obj.inputFolders)),' | ',obj.date(:),' _ ',obj.protocol(:),' _ ',obj.fileIDArray(:),' | ',obj.inputFolders(:));
-				% set(0, 'DefaultUICOntrolFontSize', 16)
-				% select subjects to analyze
-				subjectStrUnique = unique(obj.subjectStr);
-				[subjIdxArray, ok] = listdlg('ListString',subjectStrUnique,'ListSize',dlgSize,'Name','which subjects to analyze?');
-				if ok==0; return; end
-				subjToAnalyze = subjectStrUnique(subjIdxArray);
-				subjToAnalyze = find(ismember(obj.subjectStr,subjToAnalyze));
-				% get assays to analyze
-				assayStrUnique = unique(obj.assay(subjToAnalyze));
-				[assayIdxArray, ok] = listdlg('ListString',assayStrUnique,'ListSize',dlgSize,'Name','which assays to analyze?');
-				if ok==0; return; end
-				assayToAnalyze = assayStrUnique(assayIdxArray);
-				assayToAnalyze = find(ismember(obj.assay,assayToAnalyze));
-				% filter for folders chosen by the user
-				validFoldersIdx = intersect(subjToAnalyze,assayToAnalyze);
-				% if isempty(validFoldersIdx)
-				%	  continue;
-				% end
-				useAltValid = {'no additional filter','manual index entry','manually sorted folders','not manually sorted folders','manual classification already in obj',['has ' obj.signalExtractionMethod ' extracted cells'],['missing ' obj.signalExtractionMethod ' extracted cells'],'fileFilterRegexp','valid auto',['has ' obj.fileFilterRegexp ' movie file']};
-				useAltValidStr = {'no additional filter','manual index entry','manually sorted folders','not manually sorted folders','manual classification already in obj',['has extracted cells'],'missing extracted cells','fileFilterRegexp','valid auto','movie file'};
-				[choiceIdx, ok] = listdlg('ListString',useAltValid,'ListSize',dlgSize,'Name','Choose additional folder sorting filters');
-				if ok==0; return; end
-
-				if ok==1
-					useAltValid = useAltValidStr{choiceIdx};
-				else
-					useAltValid = 0;
-				end
-				% useAltValid = 0;
-				switch useAltValid
-					case 'manual index entry'
-					 theseSettings = inputdlg({...
-							 'list (separated by commas) of indexes'
-						 },...
-						 'Folders to process',1,...
-						 {...
-							 '1'
-						 }...
-					 );
-					 validFoldersIdx = str2num(theseSettings{1});
-					case 'missing extracted cells'
-						switch obj.signalExtractionMethod
-							case 'PCAICA'
-								missingRegexp = {obj.rawPCAICAStructSaveStr,obj.rawICfiltersSaveStr};
-							case 'EM'
-								missingRegexp = obj.rawEMStructSaveStr;
-							case 'EXTRACT'
-								missingRegexp = obj.rawEXTRACTStructSaveStr;
-							case 'CNMF'
-							    missingRegexp = obj.rawCNMFStructSaveStr;
-							otherwise
-								missingRegexp = {obj.rawPCAICAStructSaveStr,obj.rawICfiltersSaveStr};
-						end
-						missingRegexp = strrep(missingRegexp,'.mat','');
-						validFoldersIdx2 = [];
-						for folderNo = 1:length(obj.dataPath)
-							filesToLoad = getFileList(obj.dataPath{folderNo},missingRegexp);
-							if isempty(filesToLoad)
-								display(['no extracted signals: ' obj.dataPath{folderNo}])
-								validFoldersIdx2(end+1) = folderNo;
-							end
-						end
-						validFoldersIdx = intersect(validFoldersIdx,validFoldersIdx2)
-					case 'has extracted cells'
-						switch obj.signalExtractionMethod
-							case 'PCAICA'
-								cellRegexp = {obj.rawPCAICAStructSaveStr,obj.rawICfiltersSaveStr};
-							case 'EM'
-								cellRegexp = obj.rawEMStructSaveStr;
-							case 'EXTRACT'
-								cellRegexp = obj.rawEXTRACTStructSaveStr;
-							case 'CNMF'
-							    cellRegexp = obj.rawCNMFStructSaveStr;
-							otherwise
-								cellRegexp = {obj.rawPCAICAStructSaveStr,obj.rawICfiltersSaveStr};
-						end
-						cellRegexp = strrep(cellRegexp,'.mat','');
-						validFoldersIdx2 = [];
-						for folderNo = 1:length(obj.dataPath)
-							filesToLoad = getFileList(obj.dataPath{folderNo},cellRegexp);
-							if ~isempty(filesToLoad)
-								display(['has extracted signals: ' obj.dataPath{folderNo}])
-								validFoldersIdx2(end+1) = folderNo;
-							end
-						end
-						validFoldersIdx = intersect(validFoldersIdx,validFoldersIdx2)
-					case 'movie file'
-						movieRegexp = obj.fileFilterRegexp;
-						validFoldersIdx2 = [];
-						for folderNo = 1:length(obj.dataPath)
-							filesToLoad = getFileList(obj.dataPath{folderNo},movieRegexp);
-							if ~isempty(filesToLoad)
-								display(['has movie file: ' obj.dataPath{folderNo}])
-								validFoldersIdx2(end+1) = folderNo;
-							end
-						end
-						validFoldersIdx = intersect(validFoldersIdx,validFoldersIdx2)
-					case 'fileFilterRegexp'
-						validFoldersIdx2 = [];
-						for folderNo = 1:length(obj.dataPath)
-							filesToLoad = getFileList(obj.dataPath{folderNo},obj.fileFilterRegexp);
-							if isempty(filesToLoad)
-								validFoldersIdx2(end+1) = folderNo;
-								display(['missing dfof: ' obj.dataPath{folderNo}])
-							end
-						end
-						validFoldersIdx = intersect(validFoldersIdx,validFoldersIdx2)
-					case 'valid auto'
-						validFoldersIdx = find(cell2mat(cellfun(@isempty,obj.validAuto,'UniformOutput',0)));
-					case 'not manually sorted folders'
-						switch obj.signalExtractionMethod
-							case 'PCAICA'
-								missingRegexp = obj.sortedICdecisionsSaveStr;
-							case 'EM'
-								missingRegexp = obj.sortedEMStructSaveStr;
-							case 'EXTRACT'
-								missingRegexp = obj.sortedEXTRACTStructSaveStr;
-							case 'CNMF'
-							    missingRegexp = obj.sortedCNMFStructSaveStr;
-							otherwise
-								missingRegexp = obj.sortedICdecisionsSaveStr;
-						end
-						validFoldersIdx = [];
-						missingRegexp = strrep(missingRegexp,'.mat','');
-						display(['missingRegexp: ' missingRegexp])
-						for folderNo = 1:length(obj.inputFolders)
-							filesToLoad = getFileList(obj.inputFolders{folderNo},missingRegexp);
-							% filesToLoad
-							%filesToLoad
-							if isempty(filesToLoad)
-								validFoldersIdx(end+1) = folderNo;
-								display(['not manually sorted: ' obj.dataPath{folderNo}])
-							else
-								display(['manually sorted: ' obj.dataPath{folderNo}])
-							end
-						end
-					case 'manually sorted folders'
-						switch obj.signalExtractionMethod
-							case 'PCAICA'
-								missingRegexp = obj.sortedICdecisionsSaveStr;
-							case 'EM'
-								missingRegexp = obj.sortedEMStructSaveStr;
-							case 'EXTRACT'
-								missingRegexp = obj.sortedEXTRACTStructSaveStr;
-							case 'CNMF'
-							    missingRegexp = obj.sortedCNMFStructSaveStr;
-							otherwise
-								missingRegexp = obj.sortedICdecisionsSaveStr;
-						end
-						validFoldersIdx = [];
-						missingRegexp = strrep(missingRegexp,'.mat','');
-						display(['missingRegexp: ' missingRegexp])
-						for folderNo = 1:length(obj.inputFolders)
-							filesToLoad = getFileList(obj.inputFolders{folderNo},missingRegexp);
-							%filesToLoad
-							if ~isempty(filesToLoad)
-								validFoldersIdx(end+1) = folderNo;
-								display(['manually sorted: ' obj.dataPath{folderNo}])
-							end
-						end
-					case 'manual classification already in obj'
-						validFoldersIdx = find(arrayfun(@(x) ~isempty(x{1}),obj.validManual));
-					otherwise
-						% body
-				end
-				[fileIdxArray, ok] = listdlg('ListString',selectList,'ListSize',dlgSize,'Name','which folders to analyze?','InitialValue',validFoldersIdx);
-				if ok==0; return; end
-
-				obj.foldersToAnalyze = fileIdxArray;
-				if isempty(obj.stimulusNameArray)|~isempty(intersect(fxnsToRun,excludeListVer2))|~isempty(intersect(fxnsToRun,excludeListStimuli))
-					obj.discreteStimuliToAnalyze = [];
-				else
-					[idNumIdxArray, ok] = listdlg('ListString',obj.stimulusNameArray,'ListSize',dlgSize,'Name','which stimuli to analyze?');
-					if ok==0; return; end
-
-					obj.discreteStimuliToAnalyze = idNumIdxArray;
-				end
-			elseif ~isempty(intersect(fxnsToRun,excludeListVer2))
-				folderNumList = strsplit(num2str(1:length(obj.inputFolders)),' ');
-				selectList = strcat(folderNumList(:),'/',num2str(length(obj.inputFolders)),' | ',obj.date(:),' _ ',obj.protocol(:),' _ ',obj.fileIDArray(:),' | ',obj.inputFolders(:));
-				[fileIdxArray, ok] = listdlg('ListString',selectList,'ListSize',dlgSize,'Name','which folders to analyze?','InitialValue',1);
-				if ok==0; return; end
-
-				obj.foldersToAnalyze = fileIdxArray;
-			end
-			for thisFxn=fxnsToRun
-				try
-					display(repmat('!',1,21))
-					display(['Running: obj.' thisFxn{1}]);
-					obj.(thisFxn{1});
-				catch err
-					display(repmat('@',1,7))
-					disp(getReport(err,'extended','hyperlinks','on'));
-					display(repmat('@',1,7))
-					if strcmp(obj.defaultObjDir,pwd)~=1
-						restoredefaultpath;
-						cd(obj.defaultObjDir);
-						loadBatchFxns();
-						% cnmfVersionDirLoad('current','displayOutput',0);
-					end
-				end
-			end
-			obj.guiEnabled = 1;
-			obj.foldersToAnalyze = [];
-			% set back to initial directory in case exited early
-			% restoredefaultpath;
-			% loadBatchFxns();
-			if strcmp(obj.defaultObjDir,pwd)~=1
-				cd(obj.defaultObjDir);
-			end
-		end
-
 		function GetSize(obj)
 			props = properties(obj);
 			totSize = 0;
@@ -1193,6 +855,344 @@ classdef calciumImagingAnalysis < dynamicprops
 				% warning('no signal data input!!!')
 			end
 			% load stimulus tables
+		end
+		function obj = runPipeline(obj,varargin)
+			setFigureDefaults();
+			set(0, 'DefaultUICOntrolFontSize', 14)
+			close all;clc;
+
+			fxnsToRun = {...
+			'=======setup=======',
+			'showVars',
+			'showFolders',
+			'modelAddNewFolders',
+			'saveObj',
+			'initializeObj',
+			'setMainSettings',
+			'=======preprocess=======',
+			'modelGetFileInfo',
+			'modelVerifyDataIntegrity',
+			'modelBatchCopyFiles',
+			'===',
+			'modelDownsampleRawMovies',
+			'viewMovieFiltering',
+			'viewMovieRegistrationTest',
+			'modelPreprocessMovie',
+			'modelModifyMovies',
+			'modelExtractSignalsFromMovie',
+			'===',
+			'modelVarsFromFiles',
+			'=======signal sorting=======',
+			'computeManualSortSignals',
+			'modelModifyRegionAnalysis',
+			'=======preprocess verification=======',
+			'viewMovie',
+			'viewSubjectMovieFrames'
+			'viewMovieCreateSideBySide',
+			'viewCreateObjmaps',
+			'=======tracking=======',
+			'modelTrackingData',
+			'viewOverlayTrackingToVideo',
+			'=======across session analysis: compute/view=======',
+			'viewSubjectMovieFrames',
+			'computeMatchObjBtwnTrials',
+			'viewMatchObjBtwnSessions',
+			'computeCellDistances',
+			'computeCrossDayDistancesAlignment'
+			};
+			%========================
+			options.fxnsToRun = fxnsToRun;
+			% get options
+			options = getOptions(options,varargin);
+			% display(options)
+			% unpack options into current workspace
+			% fn=fieldnames(options);
+			% for i=1:length(fn)
+			%	eval([fn{i} '=options.' fn{i} ';']);
+			% end
+			%========================
+			fxnsToRun = options.fxnsToRun;
+			% initialDir = pwd;
+			% set back to initial directory in case exited early
+			% restoredefaultpath;
+			% loadBatchFxns();
+			if strcmp(obj.defaultObjDir,pwd)~=1
+				cd(obj.defaultObjDir);
+			end
+
+			if ischar(obj.videoDir)
+				obj.videoDir = {obj.videoDir};
+			end
+
+			% ensure private folders are set
+			if ~exist(obj.picsSavePath,'dir');mkdir(obj.picsSavePath);end
+			if ~exist(obj.dataSavePath,'dir');mkdir(obj.dataSavePath);end
+			if ~exist(obj.logSavePath,'dir');mkdir(obj.logSavePath);end
+
+			props = properties(obj);
+			totSize = 0;
+			% for ii=1:length(props)
+			%	  currentProperty = getfield(obj, char(props(ii)));
+			%	  s = whos('currentProperty');
+			%	  totSize = totSize + s.bytes;
+			% end
+			% sprintf('%.f',totSize*1.0e-6)
+			% fprintf(1, '%d bytes\n', totSize*1.0e-6);
+			% runs all currently implemented view functions
+
+			scnsize = get(0,'ScreenSize');
+			dlgSize = [scnsize(3)*0.8 scnsize(4)*0.8];
+
+			currentIdx = find(strcmp(fxnsToRun,obj.currentMethod));
+			[idNumIdxArray, ok] = listdlg('ListString',fxnsToRun,'InitialValue',currentIdx(1),'ListSize',dlgSize,'Name','Sir! I have a plan! Select a calcium imaging analysis method or procedure to run:');
+			if ok==0; return; end
+
+			excludeList = {'showVars','showFolders','setMainSettings','modelAddNewFolders','saveObj','setStimulusSettings','modelDownsampleRawMovies'};
+
+			excludeListVer2 = {'modelEditStimTable','behaviorProtocolLoad','modelPreprocessMovie','modelModifyMovies','modelExtractSignalsFromMovie','computeManualSortSignals'};
+
+			excludeListStimuli = {'modelVarsFromFiles'};
+
+			if isempty(intersect(fxnsToRun,excludeList))&isempty(intersect(fxnsToRun,excludeListVer2))
+				[guiIdx, ok] = listdlg('ListString',{'Yes','No'},'InitialValue',1,'ListSize',dlgSize,'Name','GUI Enabled?');
+				if ok==0; return; end
+				% idNumIdxArray
+				% turn off gui elements, run in batch
+				obj.guiEnabled = guiIdx==1;
+			end
+
+
+			fxnsToRun = {fxnsToRun{idNumIdxArray}};
+			obj.currentMethod = fxnsToRun{1};
+
+			if isempty(intersect(fxnsToRun,excludeList))
+				scnsize = get(0,'ScreenSize');
+				usrIdxChoiceStr = obj.usrIdxChoiceStr;
+				usrIdxChoiceDisplay = obj.usrIdxChoiceDisplay;
+				% use current string as default
+				currentIdx = find(strcmp(usrIdxChoiceStr,obj.signalExtractionMethod));
+				[sel, ok] = listdlg('ListString',usrIdxChoiceDisplay,'InitialValue',currentIdx,'ListSize',dlgSize,'Name','Cell extraction algorithm to use for analysis');
+				if ok==0; return; end
+				% (Americans love a winner)
+				usrIdxChoiceList = {2,1};
+				obj.signalExtractionMethod = usrIdxChoiceStr{sel};
+			end
+			if ~isempty(obj.inputFolders)&isempty(intersect(fxnsToRun,excludeList))&isempty(intersect(fxnsToRun,excludeListVer2))
+				if isempty(obj.protocol)
+					obj.modelGetFileInfo();
+				end
+				folderNumList = strsplit(num2str(1:length(obj.inputFolders)),' ');
+				selectList = strcat(folderNumList(:),'/',num2str(length(obj.inputFolders)),' | ',obj.date(:),' _ ',obj.protocol(:),' _ ',obj.fileIDArray(:),' | ',obj.inputFolders(:));
+				% set(0, 'DefaultUICOntrolFontSize', 16)
+				% select subjects to analyze
+				subjectStrUnique = unique(obj.subjectStr);
+				[subjIdxArray, ok] = listdlg('ListString',subjectStrUnique,'ListSize',dlgSize,'Name','which subjects to analyze?');
+				if ok==0; return; end
+				subjToAnalyze = subjectStrUnique(subjIdxArray);
+				subjToAnalyze = find(ismember(obj.subjectStr,subjToAnalyze));
+				% get assays to analyze
+				assayStrUnique = unique(obj.assay(subjToAnalyze));
+				[assayIdxArray, ok] = listdlg('ListString',assayStrUnique,'ListSize',dlgSize,'Name','which assays to analyze?');
+				if ok==0; return; end
+				assayToAnalyze = assayStrUnique(assayIdxArray);
+				assayToAnalyze = find(ismember(obj.assay,assayToAnalyze));
+				% filter for folders chosen by the user
+				validFoldersIdx = intersect(subjToAnalyze,assayToAnalyze);
+				% if isempty(validFoldersIdx)
+				%	  continue;
+				% end
+				useAltValid = {'no additional filter','manual index entry','manually sorted folders','not manually sorted folders','manual classification already in obj',['has ' obj.signalExtractionMethod ' extracted cells'],['missing ' obj.signalExtractionMethod ' extracted cells'],'fileFilterRegexp','valid auto',['has ' obj.fileFilterRegexp ' movie file']};
+				useAltValidStr = {'no additional filter','manual index entry','manually sorted folders','not manually sorted folders','manual classification already in obj',['has extracted cells'],'missing extracted cells','fileFilterRegexp','valid auto','movie file'};
+				[choiceIdx, ok] = listdlg('ListString',useAltValid,'ListSize',dlgSize,'Name','Choose additional folder sorting filters');
+				if ok==0; return; end
+
+				if ok==1
+					useAltValid = useAltValidStr{choiceIdx};
+				else
+					useAltValid = 0;
+				end
+				% useAltValid = 0;
+				switch useAltValid
+					case 'manual index entry'
+					 theseSettings = inputdlg({...
+							 'list (separated by commas) of indexes'
+						 },...
+						 'Folders to process',1,...
+						 {...
+							 '1'
+						 }...
+					 );
+					 validFoldersIdx = str2num(theseSettings{1});
+					case 'missing extracted cells'
+						switch obj.signalExtractionMethod
+							case 'PCAICA'
+								missingRegexp = {obj.rawPCAICAStructSaveStr,obj.rawICfiltersSaveStr};
+							case 'EM'
+								missingRegexp = obj.rawEMStructSaveStr;
+							case 'EXTRACT'
+								missingRegexp = obj.rawEXTRACTStructSaveStr;
+							case 'CNMF'
+							    missingRegexp = obj.rawCNMFStructSaveStr;
+							otherwise
+								missingRegexp = {obj.rawPCAICAStructSaveStr,obj.rawICfiltersSaveStr};
+						end
+						missingRegexp = strrep(missingRegexp,'.mat','');
+						validFoldersIdx2 = [];
+						for folderNo = 1:length(obj.dataPath)
+							filesToLoad = getFileList(obj.dataPath{folderNo},missingRegexp);
+							if isempty(filesToLoad)
+								display(['no extracted signals: ' obj.dataPath{folderNo}])
+								validFoldersIdx2(end+1) = folderNo;
+							end
+						end
+						validFoldersIdx = intersect(validFoldersIdx,validFoldersIdx2)
+					case 'has extracted cells'
+						switch obj.signalExtractionMethod
+							case 'PCAICA'
+								cellRegexp = {obj.rawPCAICAStructSaveStr,obj.rawICfiltersSaveStr};
+							case 'EM'
+								cellRegexp = obj.rawEMStructSaveStr;
+							case 'EXTRACT'
+								cellRegexp = obj.rawEXTRACTStructSaveStr;
+							case 'CNMF'
+							    cellRegexp = obj.rawCNMFStructSaveStr;
+							otherwise
+								cellRegexp = {obj.rawPCAICAStructSaveStr,obj.rawICfiltersSaveStr};
+						end
+						cellRegexp = strrep(cellRegexp,'.mat','');
+						validFoldersIdx2 = [];
+						for folderNo = 1:length(obj.dataPath)
+							filesToLoad = getFileList(obj.dataPath{folderNo},cellRegexp);
+							if ~isempty(filesToLoad)
+								display(['has extracted signals: ' obj.dataPath{folderNo}])
+								validFoldersIdx2(end+1) = folderNo;
+							end
+						end
+						validFoldersIdx = intersect(validFoldersIdx,validFoldersIdx2)
+					case 'movie file'
+						movieRegexp = obj.fileFilterRegexp;
+						validFoldersIdx2 = [];
+						for folderNo = 1:length(obj.dataPath)
+							filesToLoad = getFileList(obj.dataPath{folderNo},movieRegexp);
+							if ~isempty(filesToLoad)
+								display(['has movie file: ' obj.dataPath{folderNo}])
+								validFoldersIdx2(end+1) = folderNo;
+							end
+						end
+						validFoldersIdx = intersect(validFoldersIdx,validFoldersIdx2)
+					case 'fileFilterRegexp'
+						validFoldersIdx2 = [];
+						for folderNo = 1:length(obj.dataPath)
+							filesToLoad = getFileList(obj.dataPath{folderNo},obj.fileFilterRegexp);
+							if isempty(filesToLoad)
+								validFoldersIdx2(end+1) = folderNo;
+								display(['missing dfof: ' obj.dataPath{folderNo}])
+							end
+						end
+						validFoldersIdx = intersect(validFoldersIdx,validFoldersIdx2)
+					case 'valid auto'
+						validFoldersIdx = find(cell2mat(cellfun(@isempty,obj.validAuto,'UniformOutput',0)));
+					case 'not manually sorted folders'
+						switch obj.signalExtractionMethod
+							case 'PCAICA'
+								missingRegexp = obj.sortedICdecisionsSaveStr;
+							case 'EM'
+								missingRegexp = obj.sortedEMStructSaveStr;
+							case 'EXTRACT'
+								missingRegexp = obj.sortedEXTRACTStructSaveStr;
+							case 'CNMF'
+							    missingRegexp = obj.sortedCNMFStructSaveStr;
+							otherwise
+								missingRegexp = obj.sortedICdecisionsSaveStr;
+						end
+						validFoldersIdx = [];
+						missingRegexp = strrep(missingRegexp,'.mat','');
+						display(['missingRegexp: ' missingRegexp])
+						for folderNo = 1:length(obj.inputFolders)
+							filesToLoad = getFileList(obj.inputFolders{folderNo},missingRegexp);
+							% filesToLoad
+							%filesToLoad
+							if isempty(filesToLoad)
+								validFoldersIdx(end+1) = folderNo;
+								display(['not manually sorted: ' obj.dataPath{folderNo}])
+							else
+								display(['manually sorted: ' obj.dataPath{folderNo}])
+							end
+						end
+					case 'manually sorted folders'
+						switch obj.signalExtractionMethod
+							case 'PCAICA'
+								missingRegexp = obj.sortedICdecisionsSaveStr;
+							case 'EM'
+								missingRegexp = obj.sortedEMStructSaveStr;
+							case 'EXTRACT'
+								missingRegexp = obj.sortedEXTRACTStructSaveStr;
+							case 'CNMF'
+							    missingRegexp = obj.sortedCNMFStructSaveStr;
+							otherwise
+								missingRegexp = obj.sortedICdecisionsSaveStr;
+						end
+						validFoldersIdx = [];
+						missingRegexp = strrep(missingRegexp,'.mat','');
+						display(['missingRegexp: ' missingRegexp])
+						for folderNo = 1:length(obj.inputFolders)
+							filesToLoad = getFileList(obj.inputFolders{folderNo},missingRegexp);
+							%filesToLoad
+							if ~isempty(filesToLoad)
+								validFoldersIdx(end+1) = folderNo;
+								display(['manually sorted: ' obj.dataPath{folderNo}])
+							end
+						end
+					case 'manual classification already in obj'
+						validFoldersIdx = find(arrayfun(@(x) ~isempty(x{1}),obj.validManual));
+					otherwise
+						% body
+				end
+				[fileIdxArray, ok] = listdlg('ListString',selectList,'ListSize',dlgSize,'Name','which folders to analyze?','InitialValue',validFoldersIdx);
+				if ok==0; return; end
+
+				obj.foldersToAnalyze = fileIdxArray;
+				if isempty(obj.stimulusNameArray)|~isempty(intersect(fxnsToRun,excludeListVer2))|~isempty(intersect(fxnsToRun,excludeListStimuli))
+					obj.discreteStimuliToAnalyze = [];
+				else
+					[idNumIdxArray, ok] = listdlg('ListString',obj.stimulusNameArray,'ListSize',dlgSize,'Name','which stimuli to analyze?');
+					if ok==0; return; end
+
+					obj.discreteStimuliToAnalyze = idNumIdxArray;
+				end
+			elseif ~isempty(intersect(fxnsToRun,excludeListVer2))
+				folderNumList = strsplit(num2str(1:length(obj.inputFolders)),' ');
+				selectList = strcat(folderNumList(:),'/',num2str(length(obj.inputFolders)),' | ',obj.date(:),' _ ',obj.protocol(:),' _ ',obj.fileIDArray(:),' | ',obj.inputFolders(:));
+				[fileIdxArray, ok] = listdlg('ListString',selectList,'ListSize',dlgSize,'Name','which folders to analyze?','InitialValue',1);
+				if ok==0; return; end
+
+				obj.foldersToAnalyze = fileIdxArray;
+			end
+			for thisFxn=fxnsToRun
+				try
+					display(repmat('!',1,21))
+					display(['Running: obj.' thisFxn{1}]);
+					obj.(thisFxn{1});
+				catch err
+					display(repmat('@',1,7))
+					disp(getReport(err,'extended','hyperlinks','on'));
+					display(repmat('@',1,7))
+					if strcmp(obj.defaultObjDir,pwd)~=1
+						restoredefaultpath;
+						cd(obj.defaultObjDir);
+						loadBatchFxns();
+						% cnmfVersionDirLoad('current','displayOutput',0);
+					end
+				end
+			end
+			obj.guiEnabled = 1;
+			obj.foldersToAnalyze = [];
+			% set back to initial directory in case exited early
+			% restoredefaultpath;
+			% loadBatchFxns();
+			if strcmp(obj.defaultObjDir,pwd)~=1
+				cd(obj.defaultObjDir);
+			end
 		end
 	end
 end

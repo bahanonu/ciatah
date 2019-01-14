@@ -307,7 +307,12 @@ function obj = viewCreateObjmaps(obj,varargin)
 
 					% add concatenated movie
 					movieList = getFileList(obj.inputFolders{obj.fileNum}, obj.fileFilterRegexp);
-					movieFrameProc = loadMovieList(movieList{1},'convertToDouble',0,'frameList',userVideoFrames,'inputDatasetName',obj.inputDatasetName);
+					movieDims = loadMovieList(movieList{1},'getMovieDims',1,'inputDatasetName',obj.inputDatasetName);
+					if movieDims.three<nanmax(userVideoFrames)
+						movieFrameProc = loadMovieList(movieList{1},'convertToDouble',0,'frameList',[],'inputDatasetName',obj.inputDatasetName);
+					else
+						movieFrameProc = loadMovieList(movieList{1},'convertToDouble',0,'frameList',userVideoFrames,'inputDatasetName',obj.inputDatasetName);
+					end
 					[movieFrameProc] = downsampleMovie(movieFrameProc,'downsampleX',size(inputImages,1),'downsampleY',size(inputImages,2),'downsampleDimension','space');
 					movieFrameProc = squeeze(max(movieFrameProc,[],3));
 					movieFrameProc = normalizeVector(double(movieFrameProc),'normRange','zeroToOne')/2;
@@ -334,7 +339,7 @@ function obj = viewCreateObjmaps(obj,varargin)
 						Comb(:,:,1) = E;
 					else
 						% [thresholdedImages boundaryIndices] = thresholdImages(inputImages(:,:,validRegion==0),'binary',1,'getBoundaryIndex',1,'threshold',userThreshold,'imageFilter','median','imageFilterBinary','median');
-						[thresholdedImages boundaryIndices] = thresholdImages(inputImagesTmp(:,:,validRegion==0),'binary',1,'getBoundaryIndex',1,'threshold',userThreshold,'imageFilter',options.medianFilterImages,'imageFilterBinary',options.medianFilterImages);
+						[thresholdedImages boundaryIndices] = thresholdImages(inputImages(:,:,validRegion==0),'binary',1,'getBoundaryIndex',1,'threshold',userThreshold,'imageFilter',options.medianFilterImages,'imageFilterBinary',options.medianFilterImages);
 						colorObjMaps{1}([boundaryIndices{:}]) = 0.5;
 						colorObjMaps{1} = normalizeVector(double(colorObjMaps{1}),'normRange','zeroToOne');
 						Comb(:,:,1) = E+colorObjMaps{1}; % red
@@ -375,6 +380,9 @@ function obj = viewCreateObjmaps(obj,varargin)
 
 					% create overlap with new images
 					inputImagesThresholdedTmp = inputImagesThresholded(:,:,sortedIdx);
+					if nSignalsShow>size(inputImagesThresholdedTmp,3)
+						nSignalsShow = size(inputImagesThresholdedTmp,3);
+					end
 					inputImagesThresholdedTmp = inputImagesThresholdedTmp(:,:,1:nSignalsShow);
 					inputImagesTmp2 = inputImagesTmp(:,:,sortedIdx);
 					inputImagesTmp2 = inputImagesTmp2(:,:,1:nSignalsShow);
@@ -484,6 +492,9 @@ function obj = viewCreateObjmaps(obj,varargin)
 						else
 							if ~isempty(cutIdx)
 								tmpSignal = squeeze(sortedinputSignals(signalNo,:))';
+								% Remove cutIdx that are out of bounds
+								cutIdx(cutIdx>length(tmpSignal)) = [];
+								cutIdx(cutIdx<1) = [];
 								if options.filterShownTraces==1
 									inputSignalMedian=medfilt1(tmpSignal,options.medianFilterLength);
 									tmpSignal = tmpSignal - inputSignalMedian;

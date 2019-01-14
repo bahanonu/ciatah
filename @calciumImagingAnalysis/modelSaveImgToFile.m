@@ -1,5 +1,5 @@
 function obj = modelSaveImgToFile(obj,saveFile,thisFigName,thisFigNo,thisFileID,varargin)
-	% Saves the current open figure to a file
+	% Saves the current open figure to a file.
 	% Biafra Ahanonu
 	% branched from controllerAnalysis: 2014.08.01 [16:09:16]
 	% inputs

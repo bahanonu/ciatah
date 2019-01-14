@@ -1,5 +1,5 @@
 function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
-	% Controller for pre-processing movies, mainly aimed at miniscope data
+	% Controller for pre-processing movies, mainly aimed at miniscope data.
 	% Biafra Ahanonu
 	% started 2013.11.09 [10:46:23]
 
@@ -192,6 +192,17 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		defaultSaveIdx = find(ismember(analysisOptionList,defaultSaveList));
 	end
 	% ========================
+
+	movieSettings = inputdlg({...
+			'Regular expression for raw files: '...
+		},...
+		'view movie settings',1,...
+		{...
+			obj.fileFilterRegexpRaw...
+		}...
+	);
+	obj.fileFilterRegexpRaw = movieSettings{1};
+
 	% ask user for options if particular analysis selected
 	% if sum(ismember({analysisOptionList{analysisOptionsIdx}},'turboreg'))==1
 	options.turboreg = obj.getRegistrationSettings('processing options');
@@ -294,8 +305,13 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			ostruct.folderList{fileNum} = thisDir;
 
 			optionsSaveStr = [thisDir filesep 'processing_info' filesep '\preprocessingOptions_' currentDateTimeStr '.mat'];
-			turboRegCoordsTmp2 = turboRegCoords{fileNum};
-			save(optionsSaveStr, 'options','turboRegCoordsTmp2');
+
+			if sum(strcmp(analysisOptionList(analysisOptionsIdx),'turboreg'))>0
+				turboRegCoordsTmp2 = turboRegCoords{fileNum};
+				save(optionsSaveStr, 'options','turboRegCoordsTmp2');
+			else
+				save(optionsSaveStr, 'options');
+			end
 
 			% get the movie
 			% [thisMovie ostruct options] = getCurrentMovie(movieList,options,ostruct);
@@ -1373,7 +1389,10 @@ function [ostruct options] = getPcaIcaParams(ostruct,options)
 
 			numFramesPerPart = 50;
 			numParts = 10;
-			thisMovieArray{fileNum} = loadMovieList(movieList,'convertToDouble',0,'frameList',[],'loadMovieInEqualParts',[numParts numFramesPerPart]);
+
+			% check for size
+
+			thisMovieArray{fileNum} = loadMovieList(movieList,'convertToDouble',0,'frameList',[],'loadMovieInEqualParts',[numParts numFramesPerPart],'inputDatasetName',options.datasetName);
 			% thisMovieArray{fileNum} = loadMovieList(movieList,'convertToDouble',0,'frameList',options.frameList,'loadMovieInEqualParts',[numParts numFramesPerPart]);
 
 		catch err

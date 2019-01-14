@@ -1,5 +1,5 @@
 function obj = modelBatchCopyFiles(obj)
-	% Copies files from folders to a specific other folder
+	% Copies files from folders to a specific other folder.
 	% Biafra Ahanonu
 	% 2015.09.01 [21:36:38]
 	%

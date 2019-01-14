@@ -1,5 +1,5 @@
 function obj = help(obj)
-	% display information on various functions
+	% Display information on various functions.
 	% Biafra Ahanonu
 	% started: 2014.10.08
 	% inputs

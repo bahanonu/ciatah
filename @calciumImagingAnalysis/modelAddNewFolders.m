@@ -1,5 +1,5 @@
 function obj = modelAddNewFolders(obj,varargin)
-	% Add folders to the class
+	% Add folders to the class.
 	% Biafra Ahanonu
 	% started: 2014.12.22 (probably before)
 	%========================
