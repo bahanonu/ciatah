@@ -32,7 +32,7 @@ Repository notes:
 
 Download zip or clone the `calciumImagingAnalysis` repository.
 - Place in folder where MATLAB will have write permissions, as it also creates a `private` subdirectory to store some user information.
-- Unzip `file_exchange.zip`. This contains File Exchange functions used by `calciumImagingAnalysis`.
+- `file_exchange` folder contains File Exchange functions used by `calciumImagingAnalysis`. If does not exist, unzip `file_exchange.zip`.
 - In general, it is best to set the MATLAB startup directory to the `calciumImagingAnalysis` folder. This allows `java.opts` and `startup.m` to set the correct Java memory requirements and load the correct folders into the MATLAB path.
 - Run `loadBatchFxns.m` before using functions in the directory. This adds all directories and sub-directories to the MATLAB path.
 
