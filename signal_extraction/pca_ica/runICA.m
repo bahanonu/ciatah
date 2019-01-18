@@ -1,5 +1,5 @@
 function [IcaFilters IcaTraces] = runICA(PcaFilters, PcaTraces, inputID, nICs, PCAsuffix, varargin)
-    % runs ICA on input PCA filters/traces
+    % Runs ICA on input PCA filters/traces.
     % Biafra Ahanonu
     % started: 2013.10.08
     % based on SpikeE script

@@ -54,7 +54,7 @@ function [success] = saveMatrixToFile(inputMatrix,savePath,varargin)
 		movieClass = class(inputMatrix);
 		switch options.saveType
 			case 'avi'
-				fprintf('Saving to: %s',savePath);
+				fprintf('Saving to: %s\n',savePath);
 				%
 				nFrames = size(inputMatrix,3);
 				writerObj = VideoWriter(savePath,options.aviSaveType);
@@ -79,10 +79,10 @@ function [success] = saveMatrixToFile(inputMatrix,savePath,varargin)
 			case 'tiff'
 				tiffOptions.comp = 'no';
 				tiffOptions.overwrite = true;
-				fprintf('Saving to: %s',savePath);
+				fprintf('Saving to: %s\n',savePath);
 				saveastiff(inputMatrix, savePath, tiffOptions);
 			case 'hdf5'
-				fprintf('Saving to: %s',savePath);
+				fprintf('Saving to: %s\n',savePath);
 				[output] = writeHDF5Data(inputMatrix,savePath,'datasetname',options.inputDatasetName,'addInfo',options.addInfo,'addInfoName',options.addInfoName,'writeMode',options.writeMode,'deflateLevel',options.deflateLevel);
 			otherwise
 				%

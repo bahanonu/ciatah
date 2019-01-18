@@ -1,5 +1,5 @@
 function [CovEvals PcaTraces PcaFilters nPCs] = calculatePCA(inputMovie,nPCs)
-    % Runs PCA on inputMovie and looks for a specific number of ICs
+    % Runs PCA on inputMovie and looks for a specific number of ICs.
     % created by Jerome Lecoq in 2011
     % Biafra Ahanonu
     % started updating: 2013.10.31

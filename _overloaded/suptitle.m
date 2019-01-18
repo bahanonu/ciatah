@@ -1,7 +1,7 @@
 function hout=suptitle(str,varargin)
-    % This is an overloaded suptitle to remove focus stealing
-    % Biafra Ahanonu
+    % biafra ahanonu
     % started updating: 2016.03.10
+    % this is an overloaded suptitle to remove focus stealing
 
     %SUPTITLE puts a title above all subplots.
     %

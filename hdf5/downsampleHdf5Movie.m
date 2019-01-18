@@ -77,7 +77,8 @@ function [success] = downsampleHdf5Movie(inputFilePath, varargin)
 			offset = [0 0 currentSubsetLocation-1];
 			block = [dataDim.x dataDim.y lengthSubset];
 			display('---')
-			display(sprintf(['current location: ' num2str(round(currentSubsetLocation/dataDim.z*100)) '% | ' num2str(currentSubsetLocation) '/' num2str(dataDim.z) '\noffset: ' num2str(offset) '\nblock: ' num2str(block)]));
+			% display(sprintf(['current location: ' num2str(round(currentSubsetLocation/dataDim.z*100)) '% | ' num2str(currentSubsetLocation) '/' num2str(dataDim.z) '\noffset: ' num2str(offset) '\nblock: ' num2str(block)]));
+			fprintf('current location: %d%% | %d/%d \noffset: %s \nblock: %s\n',round(currentSubsetLocation/dataDim.z*100),currentSubsetLocation,dataDim.z,mat2str(offset),mat2str(block));
 			% load subset of HDF5 file into memory
 			inputMovie = readHDF5Subset(inputFilePath,offset,block,'datasetName',options.inputDatasetName);
 			% split into second movie if need be

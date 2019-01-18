@@ -43,7 +43,6 @@ function [success] = modelAddOutsideDependencies(dependencyName,varargin)
 							fprintf(fid, '\npathtoMiji = ''%s'';\n', pathToMiji);
 							fclose(fid);
 						end
-						fprintf('Adding Miji to path: %s\n',pathToMiji);
 						addpath(pathToMiji);
 					end
 				end

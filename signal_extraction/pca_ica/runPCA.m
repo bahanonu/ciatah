@@ -1,5 +1,5 @@
 function [PcaFilters PcaTraces] = runPCA(inputMatrix, inputID, numberPCs, fileRegExp, varargin)
-    % runs PCA on an input 3D matrix aiming to output number of PCs specified in input
+    % Runs PCA on an input 3D matrix aiming to output number of PCs specified in input.
     % Biafra Ahanonu
     % updated starting: 2013.10.08
     % Written by Maggie Carr April 2013, based on code by Eran Mukamel, Jerome Lecoq, and Lacey Kitch
@@ -188,7 +188,7 @@ function [PcaFilters PcaTraces] = runPCA(inputMatrix, inputID, numberPCs, fileRe
     function [CovEvals PcaTraces PcaFilters nPCs] = calculatePCAInternal(inputMatrix,nPCs,inputMatrixPath,options,DFOFsize)
         % Runs PCA on inputMovie and looks for a specific number of ICs
         % created by Jerome Lecoq in 2011
-        % Biafra Ahanonu
+        % biafra ahanonu
         % started updating: 2013.10.31
         % inputs
             %

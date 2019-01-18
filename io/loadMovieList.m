@@ -38,6 +38,7 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 		% 2017.07.06 [20:13:53] improved getHdf5Info() subfxn to handle Jessica's HDF5 format in a more automatic fashion, e.g. if there is behavior or other group level data in the HDF5 file
 		% 2018.02.16 [14:48:24] Fixed frame-by-frame HDF5 load being inefficient by using tmpMovie instead of loading directly into said movie
 		% 2018.09.28 [16:49:29] HDF5 non-contiguous frame reading is faster, no looping since select multiple hyperslabs at once, see readHDF5Subset for more
+		% 2019.01.16 [07:51:01] Added ISXD support (Inscopix format for v3+).
 	% TODO
 		% Allow fallbacks for HDF5 dataset name, e.g. if can't find /1, look for /images
 		% MAKE tiff loading recognize frameList input
@@ -49,7 +50,7 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 		% add ability to degrade gracefully with HDF5 dataset names, so try several backup datasetnames if one doesn't work
 
 	% ========================
-	options.supportedTypes = {'.h5','.hdf5','.tif','.tiff','.avi'};
+	options.supportedTypes = {'.h5','.hdf5','.tif','.tiff','.avi','.isxd'};
 	% movie type
 	options.movieType = 'tiff';
 	% hierarchy name in hdf5 where movie is
@@ -194,6 +195,17 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 				dims.two(iMovie) = xyloObj.Width;
 				dims.three(iMovie) = xyloObj.NumberOfFrames;
 				tmpFrame = read(xyloObj, 1);
+			case 'isxd'
+				inputMovieIsx = isx.Movie.read(thisMoviePath);
+				nFrames = inputMovieIsx.timing.num_samples;
+				xyDims = inputMovieIsx.spacing.num_pixels;
+				dims.x(iMovie) = xyDims(1);
+				dims.y(iMovie) = xyDims(2);
+				dims.z(iMovie) = nFrames;
+				dims.one(iMovie) = xyDims(1);
+				dims.two(iMovie) = xyDims(2);
+				dims.three(iMovie) = nFrames;
+				tmpFrame = inputMovieIsx.get_frame_data(0);
 		end
 		if isempty(options.loadSpecificImgClass)
 			imgClass = class(tmpFrame);
@@ -489,6 +501,45 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 		    		iframe = iframe + 1;
 				end
 			% ========================
+			case 'isxd'
+				% Setup movie class
+				inputMovieIsx = isx.Movie.read(thisMoviePath);
+				nFramesHere = inputMovieIsx.timing.num_samples;
+				xyDims = inputMovieIsx.spacing.num_pixels;
+
+				if isempty(thisFrameList)
+					nFrames = nFramesHere;
+					framesToGrab = 1:nFrames;
+				else
+					nFrames = length(thisFrameList);
+					framesToGrab = thisFrameList;
+				end
+				vidHeight = xyDims(1);
+				vidWidth = xyDims(2);
+
+				% Preallocate movie structure.
+				tmpMovie = zeros(vidHeight, vidWidth, nFrames, imgClass);
+
+				% Read one frame at a time.
+				reverseStr = '';
+				iframe = 1;
+				nFrames = length(framesToGrab);
+				for iframe = 1:nFrames
+					readFrame = framesToGrab(iframe);
+					tmpAviFrame = inputMovieIsx.get_frame_data(readFrame-1);
+					% tmpAviFrame = read(xyloObj, readFrame);
+					% check if frame is RGB or grayscale, if RGB only take one channel (since they will be identical for RGB grayscale)
+					% if size(tmpAviFrame,3)==3
+					% 	tmpAviFrame = squeeze(tmpAviFrame(:,:,1));
+					% end
+				    tmpMovie(:,:,iframe) = tmpAviFrame;
+		            % reduce waitbar access
+		            if options.displayInfo==1
+		    			reverseStr = cmdWaitbar(iframe,nFrames,reverseStr,'inputStr','loading ISXD','waitbarOn',options.waitbarOn,'displayEvery',50);
+		    		end
+		    		iframe = iframe + 1;
+				end
+			% ========================
 			otherwise
 				% let's just not deal with this for now
 				return;
@@ -591,6 +642,8 @@ function [movieType supported] = getMovieFileType(thisMoviePath)
 		movieType = 'tiff';
 	elseif strcmp(ext,'.avi')
 		movieType = 'avi';
+	elseif strcmp(ext,'.isxd')
+		movieType = 'isxd';
 	else
 		movieType = '';
 		supported = 0;
