@@ -38,7 +38,7 @@ function obj = computeMatchObjBtwnTrials(obj)
 	% 	usrIdxChoice = userDefaults;
 	% end
 	scnsize = get(0,'ScreenSize');
-	userDefaults = {'1','5','0.4','','3'};
+	userDefaults = {'1','5','0.4','','2'};
 	usrIdxChoice = inputdlg({...
 		'number of rounds to register images',...
 		'distance to match (px)',...
@@ -132,6 +132,7 @@ function obj = computeMatchObjBtwnTrials(obj)
 			% alignmentStruct = matchObjBtwnTrials(rawImages,'inputSignals',rawSignals,'trialToAlign',trialToAlign,'additionalAlignmentImages',additionalAlignmentImages,'nCorrections',nCorrections);
 			alignmentStruct = matchObjBtwnTrials(rawImages,'inputSignals',rawSignals,'trialToAlign',trialToAlign,'additionalAlignmentImages',[],'nCorrections',nCorrections,'maxDistance',maxDistance,'threshold',imageThreshold,'RegisTypeFinal',RegisTypeFinal);
 			obj.globalIDs.(thisSubjectStr) = alignmentStruct.globalIDs;
+			obj.globalIDs.alignmentStruct.(thisSubjectStr) = alignmentStruct;
 			obj.globalIDCoords.(thisSubjectStr).localCoords = alignmentStruct.coords;
 			obj.globalIDCoords.(thisSubjectStr).globalCoords = alignmentStruct.coordsGlobal;
 			obj.globalRegistrationCoords.(thisSubjectStr) = alignmentStruct.registrationCoords;

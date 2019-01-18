@@ -468,6 +468,7 @@ function [inputSignals inputImages signalPeaks signalPeaksArray valid] = modelGe
 								fn=fieldnames(globalRegCoords{iterationNo});
 								for i=1:length(fn)
 									localCoords = globalRegCoords{iterationNo}.(fn{i});
+									% playMovie(inputImages);
 									[inputImages, localCoords] = turboregMovie(inputImages,'precomputedRegistrationCooords',localCoords);
 								end
 							end

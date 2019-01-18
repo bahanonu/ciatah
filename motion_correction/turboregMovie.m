@@ -17,6 +17,7 @@ function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		% 2014.08.28 [15:01:04] - nested functions for turboreg and register
 		% 2016.01.16 [19:38:08] - Added additional normalization options
 		% 2016.09.xx - parallel switch now forces parfor to not open up a parallel pool of workers if switch = 0
+		% 2019.01.15 [15:59:21] - Remove NaNs from inputMovie when using precomputedRegistrationCooords.
 
 	% ========================
 	% using a compiled version of the ANSI C code developed by Philippe Thevenaz.
@@ -195,6 +196,8 @@ function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 			ResultsOutTemp{resultNo} = ResultsOut{options.altMovieRegisterNum};
 		end
 		ResultsOut = ResultsOutTemp;
+		% Remove NaNs from inputMovie so transfturboreg doesn't run into issue.
+		inputMovie(isnan(inputMovie)) = 0;
 		convertInputMovieToCell();
 		% size(inputMovie)
 		% class(inputMovie)
