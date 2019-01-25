@@ -13,6 +13,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% 2015.01.05 [20:00:26] turboreg options uses uicontrol now instead of pulldown and is more dynamic.
 		% 2015.01.19 [20:43:49] - changed how turboreg is passed to function to improve memory usage, also moved dfof and downsample directly into function to reduce memory footprint there as well.
 		% 2016.06.22 [13:20:43] small code change to choosing what steps to perform
+		% 2019.01.23 [09:15:39] Added support for 2018b due to change in findjobj and uicontrol.
 	% TODO
 		% Insert NaNs or mean of the movie into dropped frame location, see line 260
 		% Allow easy switching between analyzing all files in a folder together and each file in a folder individually
@@ -129,17 +130,6 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	%========================
 	% allow user to choose steps in the processing
 	scnsize = get(0,'ScreenSize');
-
-
-	analysisOptionList = {'medianFilter','spatialFilter','turboreg','fft_highpass','crop','dfof','dfstd','medianFilter','downsampleTime','downsampleSpace','fft_lowpass'};
-	defaultChoiceList = {'turboreg','crop','dfof','downsampleTime'};
-	%defaultChoiceIdx = find(cellfun(@(x) sum(strcmp(x,defaultChoiceList)),analysisOptionList));
-	defaultChoiceIdx = find(ismember(analysisOptionList,defaultChoiceList));
-	% [analysisOptionsIdx, ok] = listdlg('ListString',analysisOptionList,'InitialValue',defaultChoiceIdx,...
-	%     'Name','the red pill...',...
-	%     'PromptString',['select analysis steps to perform. will be analyzed top to bottom, with top first'],...
-	%     'ListSize',[scnsize(3)*0.4 scnsize(4)*0.3]);
-	ok = 1;
 	USAflagStr = ['Made in USA' 10 ...
 			'* * * * * * * * * * =========================' 10 ...
 			'* * * * * * * * * * :::::::::::::::::::::::::' 10 ...
@@ -155,14 +145,32 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			':::::::::::::::::::::::::::::::::::::::::::::' 10 ...
 			'=============================================' 10];
 
-	[figHandle figNo] = openFigure(1776, '');clf;
-	[hListbox jListbox jScrollPane jDND] = reorderableListbox('String',analysisOptionList,'Units','normalized','Position',[0.5 0 0.5 0.95],'Max',Inf,'Min',0,'Value',defaultChoiceIdx);
-	uicontrol('Style','Text','String',['We can know only that we know nothing. And that is the highest degree of human wisdom.' 10 10 '1: Click items to select' 10 '2: Drag to re-order analysis ' 10 '3: Click command window and press ENTER to continue'],'Units','normalized','Position',[0 0.4 0.5 0.60],'BackgroundColor','white','HorizontalAlignment','Left');
-	uicontrol('Style','Text','String',USAflagStr,'Units','normalized','Position',[0 0 0.5 0.3],'BackgroundColor','white','HorizontalAlignment','Left','FontName','FixedWidth','FontSize',8,'HorizontalAlignment','left');
-	% hListbox.String(hListbox.Value)
-	pause
-	analysisOptionsIdx = hListbox.Value;
-	analysisOptionList = hListbox.String;
+
+	analysisOptionList = {'medianFilter','spatialFilter','turboreg','fft_highpass','crop','dfof','dfstd','medianFilter','downsampleTime','downsampleSpace','fft_lowpass'};
+	defaultChoiceList = {'turboreg','crop','dfof','downsampleTime'};
+	%defaultChoiceIdx = find(cellfun(@(x) sum(strcmp(x,defaultChoiceList)),analysisOptionList));
+	defaultChoiceIdx = find(ismember(analysisOptionList,defaultChoiceList));
+	try
+		ok = 1;
+		[figHandle figNo] = openFigure(1776, '');clf;
+		[hListbox jListbox jScrollPane jDND] = reorderableListbox('String',analysisOptionList,'Units','normalized','Position',[0.5 0 0.5 0.95],'Max',Inf,'Min',0,'Value',defaultChoiceIdx);
+		uicontrol('Style','Text','String',['We can know only that we know nothing. And that is the highest degree of human wisdom.' 10 10 '1: Click items to select' 10 '2: Drag to re-order analysis ' 10 '3: Click command window and press ENTER to continue'],'Units','normalized','Position',[0 0.4 0.5 0.60],'BackgroundColor','white','HorizontalAlignment','Left');
+		uicontrol('Style','Text','String',USAflagStr,'Units','normalized','Position',[0 0 0.5 0.3],'BackgroundColor','white','HorizontalAlignment','Left','FontName','FixedWidth','FontSize',8,'HorizontalAlignment','left');
+		pause
+		% hListbox.String(hListbox.Value)
+		analysisOptionsIdx = hListbox.Value;
+		analysisOptionList = hListbox.String;
+	catch err
+		display(repmat('@',1,7))
+		disp(getReport(err,'extended','hyperlinks','on'));
+		display(repmat('@',1,7))
+		display('BACKUP DIALOG')
+		[analysisOptionsIdx, ok] = listdlg('ListString',analysisOptionList,'InitialValue',defaultChoiceIdx,...
+		    'Name','the red pill...',...
+		    'PromptString',['select analysis steps to perform. will be analyzed top to bottom, with top first'],...
+		    'ListSize',[scnsize(3)*0.4 scnsize(4)*0.3]);
+		% pause
+	end
 
 	if ok~=1
 		return
@@ -170,19 +178,27 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	% defaultSaveList = {'downsampleTime'};
 	defaultSaveList = analysisOptionList{analysisOptionsIdx(end)};
 	defaultSaveIdx = find(ismember(analysisOptionList,defaultSaveList));
-	% [saveIdx, ok] = listdlg('ListString',analysisOptionList,'InitialValue',defaultSaveIdx,...
-	%     'Name','Gentlemen, you can not fight in here! This is the War Room.',...
-	%     'PromptString','select at which stages to save a file. if option not selected for analysis, will be ignored',...
-	%     'ListSize',[scnsize(3)*0.4 scnsize(4)*0.3]);
 
-	[figHandle figNo] = openFigure(1776, '');clf;
-	[hListbox jListbox jScrollPane jDND] = reorderableListbox('String',analysisOptionList,'Units','normalized','Position',[0.5 0 0.5 0.95],'Max',Inf,'Min',0,'Value',defaultSaveIdx);
-	uicontrol('Style','Text','String',['Gentlemen, you can not fight in here! This is the War Room.' 10 10 '1: Click items to select' 10 '2: Click command window and press ENTER to continue'],'Units','normalized','Position',[0 0.4 0.5 0.60],'BackgroundColor','white','HorizontalAlignment','Left');
-	uicontrol('Style','Text','String',USAflagStr,'Units','normalized','Position',[0 0 0.5 0.3],'BackgroundColor','white','HorizontalAlignment','Left','FontName','FixedWidth','FontSize',8,'HorizontalAlignment','left');
-	pause
-	saveIdx = hListbox.Value;
-	% close(1776);
-	[figHandle figNo] = openFigure(1776, '');clf;
+	try
+		[figHandle figNo] = openFigure(1776, '');clf;
+		[hListbox jListbox jScrollPane jDND] = reorderableListbox('String',analysisOptionList,'Units','normalized','Position',[0.5 0 0.5 0.95],'Max',Inf,'Min',0,'Value',defaultSaveIdx);
+		uicontrol('Style','Text','String',['Gentlemen, you can not fight in here! This is the War Room.' 10 10 '1: Click items to select' 10 '2: Click command window and press ENTER to continue'],'Units','normalized','Position',[0 0.4 0.5 0.60],'BackgroundColor','white','HorizontalAlignment','Left');
+		uicontrol('Style','Text','String',USAflagStr,'Units','normalized','Position',[0 0 0.5 0.3],'BackgroundColor','white','HorizontalAlignment','Left','FontName','FixedWidth','FontSize',8,'HorizontalAlignment','left');
+		pause
+		saveIdx = hListbox.Value;
+		% close(1776);
+		[figHandle figNo] = openFigure(1776, '');clf;
+	catch err
+		display(repmat('@',1,7))
+		disp(getReport(err,'extended','hyperlinks','on'));
+		display(repmat('@',1,7))
+		display('BACKUP DIALOG')
+		[saveIdx, ok] = listdlg('ListString',analysisOptionList,'InitialValue',defaultSaveIdx,...
+		    'Name','Gentlemen, you can not fight in here! This is the War Room.',...
+		    'PromptString','select at which stages to save a file. if option not selected for analysis, will be ignored',...
+		    'ListSize',[scnsize(3)*0.4 scnsize(4)*0.3]);
+	end
+
 	if ok~=1
 		return
 	end
@@ -194,9 +210,9 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	% ========================
 
 	movieSettings = inputdlg({...
-			'Regular expression for raw files: '...
+			'Regular expression for raw files (e.g. if raw files all have "concat" in the name, put "concat"): '...
 		},...
-		'view movie settings',1,...
+		'view movie settings',[1 100],...
 		{...
 			obj.fileFilterRegexpRaw...
 		}...

@@ -25,7 +25,7 @@ classdef calciumImagingAnalysis < dynamicprops
 
 		defaultObjDir = pwd;
 		serverPath = '';
-		classVersion = 'v3.20190113';
+		classVersion = 'v3.20190124';
 		% place where functions can temporarily story user settings
 		functionSettings = struct(...
 			'null', NaN...
@@ -107,8 +107,8 @@ classdef calciumImagingAnalysis < dynamicprops
 		% Region analysis
 		regionModSaveStr = '_regionModSelectUser.mat'
 
-		usrIdxChoiceStr = {'PCAICA','EM','EXTRACT','CNMF','CNMFE','ROI'};
-		usrIdxChoiceDisplay = {'PCAICA (Mukamel, 2009)','CELLMax (Kitch/Ahanonu)','EXTRACT (Inan, 2017)','CNMF (Pnevmatikakis, 2016)','CNMF-E (Zhou, 2018)','ROI'};
+		usrIdxChoiceStr = {'EM','PCAICA','EXTRACT','CNMF','CNMFE','ROI'};
+		usrIdxChoiceDisplay = {'CELLMax (Kitch/Ahanonu)','PCAICA (Mukamel, 2009)','EXTRACT (Inan, 2017)','CNMF (Pnevmatikakis, 2016)','CNMF-E (Zhou, 2018)','ROI'};
 		extractionMethodStructSaveStr = struct(...
 			'PCAICA', '_pcaicaAnalysis.mat',...
 			'EM', '_emAnalysis.mat',...
@@ -185,7 +185,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		classifierCNMFStructSaveStr = '_cnmfAnalysisClassifierDecisions.mat';
 		validCNMFStructVarname = 'validCNMF';
 		structCNMRVarname = 'cnmfAnalysisOutput';
-		% PCAICA, EM, EXTRACT, CNMF
+		% PCAICA, EM, EXTRACT, CNMF, CNMFE
 		signalExtractionMethod = 'PCAICA';
 
 		settingOptions = struct(...
@@ -211,9 +211,9 @@ classdef calciumImagingAnalysis < dynamicprops
 		);
 
 		downsampleRawOptions = struct(...
-			'folderListInfo','A:\data\processing\',...
-			'downsampleSaveFolder','B:\data\processing\',...
-			'downsampleSrcFolder','E:\data\raw\',...
+			'folderListInfo','USER_PATH',...
+			'downsampleSaveFolder','USER_PATH',...
+			'downsampleSrcFolder','USER_PATH',...
 			'downsampleFactor','4',...
 			'fileFilterRegexp','recording.*.hdf5',...
 			'datasetName','/images',...
@@ -408,9 +408,12 @@ classdef calciumImagingAnalysis < dynamicprops
 			% CLASS CONSTRUCTOR
 			warning on;
 			clc
+			% ' Calcium Imaging Analysis Class
 			display([...
-			'S-Lab Calcium Imaging Analysis Class | Version ' obj.classVersion 10 ...
-			'Biafra Ahanonu <<a href="emailto:bahanonu@gmail.com">bahanonu@gmail.com</a>>' 10 10 ...
+			'calciumImagingAnalysis' 10 ...
+			'A software package for analyzing one- and two-photon calcium imaging datasets.' 10 ...
+			'Version ' obj.classVersion 10 ...
+			'Biafra Ahanonu <<a href="emailto:bahanonu@alum.mit.edu">bahanonu@alum.mit.edu</a>>' 10 10 ...
 			'Made in USA' 10 ...
 			'* * * * * * * * * * =========================' 10 ...
 			'* * * * * * * * * * :::::::::::::::::::::::::' 10 ...
@@ -426,7 +429,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			':::::::::::::::::::::::::::::::::::::::::::::' 10 ...
 			'=============================================' 10])
 			display(repmat('#',1,7))
-			display('Constructing imaging analysis object...')
+			display('Constructing calciumImagingAnalysis imaging analysis object...')
 
 			% Because the obj
 			%========================
@@ -447,10 +450,14 @@ classdef calciumImagingAnalysis < dynamicprops
 			display(repmat('#',1,7))
 
 			display([...
-			'Run processing pipeline by typing into command window:' 10 ...
-			'<a href="">obj.runPipelineProcessing</a>' 10 ...
-			'or for advanced features: ' 10 ...
-			'<a href="">obj.runPipeline</a>' 10])
+			'Run processing pipeline by typing below (or clicking link) into command window (no semi-colon!):' 10 ...
+			'<a href="matlab: obj">obj</a>'])
+
+			% display([...
+			% 'Run processing pipeline by typing into command window:' 10 ...
+			% '<a href="">obj.runPipelineProcessing</a>' 10 ...
+			% 'or for advanced features: ' 10 ...
+			% '<a href="">obj.runPipeline</a>' 10])
 		end
 		% getter and setter functions
 		function dataPath = get.dataPath(obj)
@@ -493,6 +500,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		% compute methods, performs some computation and returns calculation to class property
 		obj = computeMatchObjBtwnTrials(obj)
 		obj = computeManualSortSignals(obj)
+		obj = computeClassifyTrainSignals(obj)
 
 		% just need stimulus files
 
@@ -550,13 +558,15 @@ classdef calciumImagingAnalysis < dynamicprops
 		obj = setMainSettings(obj)
 
 		function obj = display(obj)
-
+			% Overload display method so can run object by just typing 'obj' in command window.
             obj.runPipeline;
 			% display('hello');
 		end
+
 		function obj = showVars(obj)
 			obj.disp;
 		end
+
 		function obj = showProtocolSubjectsSessions(obj)
 			protocolList = unique(obj.protocol);
 			for i = 1:length(protocolList)
@@ -566,11 +576,13 @@ classdef calciumImagingAnalysis < dynamicprops
 				% disp([num2str(i) ' | ' obj.inputFolders{i}])
 			end
 		end
+
 		function obj = showFolders(obj)
 			for i = 1:length(obj.inputFolders)
 				disp([num2str(i) ' | ' obj.inputFolders{i}])
 			end
 		end
+
 		function valid = getValid(obj,validType)
 			try
 				fprintf('Getting %s identifications...\n',validType)
@@ -580,6 +592,7 @@ classdef calciumImagingAnalysis < dynamicprops
 				valid=[];
 			end
 		end
+
 		function obj = changeCaxis(obj)
 			xxx = inputdlg('CAXIS min max');str2num(xxx{1});
 			S = findobj(gcf,'Type','Axes');
@@ -588,14 +601,17 @@ classdef calciumImagingAnalysis < dynamicprops
 			% C = [-1 7];
 			set(S,'CLim',C);
 		end
+
 		function obj = changeFont(obj)
 			xxx = inputdlg('New font');
 			xxx = str2num(xxx{1});
 			set(findall(gcf,'-property','FontSize'),'FontSize',xxx);
 		end
+
 		function obj = checkToolboxes(obj)
 			license('inuse')
 		end
+
 		function GetSize(obj)
 			props = properties(obj);
 			totSize = 0;
@@ -606,6 +622,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			end
 			fprintf(1, '%d bytes\n', totSize);
 		end
+
 		function makeFolderDirs(obj)
 			% ensure private folders are set
 			if ~exist(obj.picsSavePath,'dir');mkdir(obj.picsSavePath);end
@@ -613,6 +630,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			if ~exist(obj.logSavePath,'dir');mkdir(obj.logSavePath);end
 			% save the current object instance
 		end
+
 		function obj = saveObj(obj)
 
 			if isempty(obj.objSaveLocation)
@@ -786,6 +804,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		function obj = initializeObj(obj)
 			% load dependencies.
 			loadBatchFxns();
+			cnmfVersionDirLoad('none','displayOutput',0);
 			% [success] = cnmfVersionDirLoad('cnmfe');
 
 			% Ensure date paths are up to date
@@ -797,6 +816,14 @@ classdef calciumImagingAnalysis < dynamicprops
 			if ~exist(obj.picsSavePath,'dir');mkdir(obj.picsSavePath);end
 			if ~exist(obj.dataSavePath,'dir');mkdir(obj.dataSavePath);end
 			if ~exist(obj.logSavePath,'dir');mkdir(obj.logSavePath);end
+
+			% load user specific settings
+			loadUserSettings = ['private' filesep 'settings' filesep 'calciumImagingAnalysisInitialize.m'];
+			if exist(loadUserSettings,'file')~=0
+				run(loadUserSettings);
+			else
+				% create privateLoadBatchFxns.m
+			end
 
 			% if use puts in a single folder or a path to a txt file with folders
 			if ~isempty(obj.rawSignals)&strcmp(class(obj.rawSignals),'char')
@@ -817,7 +844,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			if ~isempty(obj.dataPath)
 				obj.modelGetFileInfo();
 			else
-				display('No folder paths input, run <a href="">modelAddNewFolders</a> method.');
+				display('No folder paths input, run <a href="matlab: obj.currentMethod=''modelAddNewFolders'';obj">modelAddNewFolders</a> method to add new folders.');
 				% warning('Input data paths for all files!!! option: dataPath')
 			end
 			if ~isempty(obj.discreteStimulusTable)&~strcmp(class(obj.discreteStimulusTable),'table')
@@ -851,11 +878,12 @@ classdef calciumImagingAnalysis < dynamicprops
 			if isempty(obj.signalPeaks)&~isempty(obj.rawSignals)
 				% obj.computeSignalPeaksFxn();
 			else
-				display('No folder data specified, load data with <a href="">modelVarsFromFiles</a> method.');
+				display('No folder data specified, load data with <a href="matlab: obj.currentMethod=''modelVarsFromFiles'';obj">modelVarsFromFiles</a> method.');
 				% warning('no signal data input!!!')
 			end
 			% load stimulus tables
 		end
+
 		function obj = runPipeline(obj,varargin)
 			setFigureDefaults();
 			set(0, 'DefaultUICOntrolFontSize', 14)
@@ -1193,6 +1221,10 @@ classdef calciumImagingAnalysis < dynamicprops
 			if strcmp(obj.defaultObjDir,pwd)~=1
 				cd(obj.defaultObjDir);
 			end
+
+			display([10 10 ...
+			'Run processing pipeline by typing below (or clicking link) into command window (no semi-colon!):' 10 ...
+			'<a href="matlab: obj">obj</a>'])
 		end
 	end
 end
