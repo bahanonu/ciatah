@@ -2,16 +2,20 @@
 
 <img src="https://user-images.githubusercontent.com/5241605/51068051-78c27680-15cd-11e9-9434-9d181b00ef8e.png" align="center">
 
-Code and MATLAB class for analyzing one- and two-photon calcium imaging datasets. Includes code for determining animal locations (e.g. in open-field assay).
+Code and MATLAB class for analyzing one- and two-photon calcium imaging datasets. Includes a GUI to allow users to do large-scale batch analysis, the underlying functions can also be used to create GUI-less analysis pipelines. Includes code for determining animal locations (e.g. in open-field assay).
 
 Contact Biafra Ahanonu (bahanonu [at] alum.mit.edu) for questions about code or usage.
 
 Repository notes:
-- Covers preprocessing of calcium imaging videos, cell and activity trace extraction (with PCA-ICA, CNMF, and CNMF-E), manual and automated sorting of cell extraction outputs, cross-session alignment of cells, and more.
+- Covers preprocessing of calcium imaging videos, cell and activity trace extraction (with PCA-ICA, CELLMax, EXTRACT, CNMF, and CNMF-E), manual and automated sorting of cell extraction outputs, cross-session alignment of cells, and more.
+- Supports `PCA-ICA`, `CNMF`, and `CNMF-E` cell extraction methods publicly along with `CELLMax` and `EXTRACT` for Schnitzer Lab collaborators. Additional methods can be integrated upon request.
+- Most extensively tested on MATLAB `2015b` and `2017a`. Moderate testing on `2018b`. Individual functions and `calciumImagingAnalysis` class should work on other MATLAB versions after `2015b`, but submit an issue if errors occur.
 - This repository consists of code used in
   - G. Corder*, __B. Ahanonu*__, B. F. Grewe, D. Wang, M. J. Schnitzer, and G. Scherrer (2019). An amygdalar neural ensemble encoding the unpleasantness of painful experiences. _Science_, 363, 276-281. http://science.sciencemag.org/content/363/6424/276.
   - and similar code helped process data in: J.G. Parker*, J.D. Marshall*, __B. Ahanonu__, Y.W. Wu, T.H. Kim, B.F. Grewe, Y. Zhang, J.Z. Li, J.B. Ding, M.D. Ehlers, and M.J. Schnitzer (2018). Diametric neural ensemble dynamics in parkinsonian and dyskinetic states. _Nature_, 557, 177–182. https://doi.org/10.1038/s41586-018-0090-6.
 - Code developed while in [Prof. Mark Schnitzer's lab](http://pyramidal.stanford.edu/) at Stanford University.
+- Please check the 'Wiki' for further instructions on specific processing/analysis steps and additional information of software used by this package.
+
 ***
 ## Contents
 - [Installation](#installation)
@@ -35,7 +39,7 @@ Download zip or clone the `calciumImagingAnalysis` repository.
 - In general, it is best to set the MATLAB startup directory to the `calciumImagingAnalysis` folder. This allows `java.opts` and `startup.m` to set the correct Java memory requirements and load the correct folders into the MATLAB path.
 - Run `loadBatchFxns.m` before using functions in the directory. This adds all directories and sub-directories to the MATLAB path.
 
-This version of `calciumImagingAnalysis` has been tested on Windows `MATLAB 2017a`.
+This version of `calciumImagingAnalysis` has been tested on Windows MATLAB `2015b`, `2017a`, and `2018b`.
 
 ### Test data
 
@@ -53,8 +57,9 @@ MATLAB dependencies (toolboxes used)
 
 ImageJ
 
-- Download Fiji: https://fiji.sc/.
+- Download Fiji: https://imagej.net/Fiji/Downloads.
 - Make sure have Miji in Fiji installation: http://bigwww.epfl.ch/sage/soft/mij/.
+- This is used as an alternative to the `calciumImagingAnalysis` `playMovie.m` function for viewing movies and is needed for some movie modification steps.
 
 Saleae
 
@@ -76,6 +81,7 @@ Below are a list of the top-level directories and what types of functions or fil
 - __file\_exchange__ - Contains any outside code from MATLAB's File Exchange that are dependencies in repository functions.
 - __hdf5__ - Functions concerned with HDF5 input/output.
 - __image__ - Functions concerned with processing images (or [x y] matrices).
+- __inscopix__ - Functions concerned with Inscopix-specific data processing (e.g. using the ISX MATLAB API).
 - __io__ - Contains functions concerned with file or function input-output.
 - __neighbor__ - Detection and display of neighboring cell information.
 - __movie_processing__ - Functions concerned with preprocessing calcium imaging videos, e.g. spatial filtering, downsampling, etc.
@@ -168,6 +174,7 @@ The general order of functions that users should run is:
 	- For example, if users ran `example_downloadTestData.m`, then add the folder `[githubRepoPath]\data\2014_04_01_p203_m19_check01_raw` where `githubRepoPath` is the absolute path to the current `calciumImagingAnalysis` repository.
 - `viewMovie`
 	- Users should check that calciumImagingAnalysis loads their movies correctly and that Miji is working.
+	- Remember to check that `Imaging movie regexp:` (regular expression class uses to find user movies within given folders) setting matches name of movies currently in repository.
 - `modelPreprocessMovie`
 	- Main processing method for calciumImagingAnalysis. Performs motion correction, spatial filtering, cropping, down-sampling, and relative fluorescence calculations. If using Inscopix nVista 1.0 or 2.0, also will correct for dropped frames.
 - `modelModifyMovies`

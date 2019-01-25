@@ -88,6 +88,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
 %    Please send to Yair Altman (altmany at gmail dot com)
 %
 % Change log:
+%    2018-09-21: Fix for R2018b suggested by Eddie (FEX); speedup suggested by Martin Lehmann (FEX); alert if trying to use with uifigure
 %    2017-04-13: Fixed two edge-cases (one suggested by H. Koch)
 %    2016-04-19: Fixed edge-cases in old Matlab release; slightly improved performance even further
 %    2016-04-14: Improved performance for the most common use-case (single input/output): improved code + allow inspecting groot
@@ -145,7 +146,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
 % referenced and attributed as such. The original author maintains the right to be solely associated with this work.
 
 % Programmed and Copyright by Yair M. Altman: altmany(at)gmail.com
-% $Revision: 1.50 $  $Date: 2017/04/13 20:47:08 $
+% $Revision: 1.51 $  $Date: 2018/09/21 14:27:18 $
 
     % Ensure Java AWT is enabled
     error(javachk('awt'));
@@ -185,6 +186,12 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
             elseif ishghandle(container) % && ~isa(container,'java.awt.Container')
                 container = container(1);  % another current limitation...
                 hFig = ancestor(container,'figure');
+                oldWarn = warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');  % R2008b compatibility
+                try hJavaFrame = get(hFig,'JavaFrame'); catch, hJavaFrame = []; end
+                warning(oldWarn);
+                if isempty(hJavaFrame)  % alert if trying to use with web-based (not Java-based) uifigure
+                    error('YMA:findjobj:NonJavaFigure', 'Findjobj only works with Java-based figures, not web-based (App Designer) uifigures');
+                end
                 origContainer = handle(container);
                 if isa(origContainer,'uimenu') || isa(origContainer,'matlab.ui.container.Menu')
                     % getpixelposition doesn't work for menus... - damn!
@@ -220,8 +227,7 @@ function [handles,levels,parentIdx,listing] = findjobj(container,varargin) %#ok<
                             jFig = mde.getClient(figName);
                             if isempty(jFig), error('dummy');  end
                         catch
-                            warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');  % R2008b compatibility
-                            jFig = get(get(hFig,'JavaFrame'),'FigurePanelContainer');
+                            jFig = get(hJavaFrame,'FigurePanelContainer');
                         end
                         pos = [];
                         try
@@ -3394,28 +3400,36 @@ function jControl = findjobj_fast(hControl, jContainer)
     end
     warning(oldWarn);
     jControl = [];
-    counter = 100;
-    oldTooltip = get(hControl,'Tooltip');
-    set(hControl,'Tooltip','!@#$%^&*');
+    counter = 20;  % 2018-09-21 speedup (100 x 0.001 => 20 x 0.005) - Martin Lehmann suggestion on FEX 2016-06-07
+    specialTooltipStr = '!@#$%^&*';
+    try  % Fix for R2018b suggested by Eddie (FEX comment 2018-09-19)
+        tooltipPropName = 'TooltipString';
+        oldTooltip = get(hControl,tooltipPropName);
+        set(hControl,tooltipPropName,specialTooltipStr);
+    catch
+        tooltipPropName = 'Tooltip';
+        oldTooltip = get(hControl,tooltipPropName);
+        set(hControl,tooltipPropName,specialTooltipStr);
+    end
     while isempty(jControl) && counter>0
         counter = counter - 1;
-        pause(0.001);
-        jControl = findTooltipIn(jContainer);
+        pause(0.005);
+        jControl = findTooltipIn(jContainer, specialTooltipStr);
     end
-    set(hControl,'Tooltip',oldTooltip);
+    set(hControl,tooltipPropName,oldTooltip);
     try jControl.setToolTipText(oldTooltip); catch, end
     try jControl = jControl.getParent.getView.getParent.getParent; catch, end  % return JScrollPane if exists
 end
-function jControl = findTooltipIn(jContainer)
+function jControl = findTooltipIn(jContainer, specialTooltipStr)
     try
         jControl = [];  % Fix suggested by H. Koch 11/4/2017
         tooltipStr = jContainer.getToolTipText;
-        %if strcmp(char(tooltipStr),'!@#$%^&*')
-        if ~isempty(tooltipStr) && tooltipStr.startsWith('!@#$%^&*')  % a bit faster
+        %if strcmp(char(tooltipStr),specialTooltipStr)
+        if ~isempty(tooltipStr) && tooltipStr.startsWith(specialTooltipStr)  % a bit faster
             jControl = jContainer;
         else
             for idx = 1 : jContainer.getComponentCount
-                jControl = findTooltipIn(jContainer.getComponent(idx-1));
+                jControl = findTooltipIn(jContainer.getComponent(idx-1), specialTooltipStr);
                 if ~isempty(jControl), return; end
             end
         end

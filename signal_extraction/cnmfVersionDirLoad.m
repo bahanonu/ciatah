@@ -8,7 +8,7 @@ function [success] = cnmfVersionDirLoad(cnmfVersion,varargin)
 		%
 
 	% changelog
-		%
+		% 2019.01.23 [09:14:54] - Added support for Matlab versions without `contains` function.
 	% TODO
 		%
 
@@ -54,7 +54,7 @@ function [success] = cnmfVersionDirLoad(cnmfVersion,varargin)
 				fprintf('Add %s\n',cnmfePath);
 				addpath(genpath(cnmfePath));
 			case 'none'
-				disp('Removing all CNMF dir from path')
+				disp('Removing all CNMF dir from path.')
 				% Add and remove necessary CNMF directories from path
 				subfxnRemovePathHere({currentPath,originalPath,cnmfePath},options);
 			otherwise
@@ -70,7 +70,14 @@ function subfxnRemovePathHere(listOfRootPaths,options)
 	for pathNo = 1:length(listOfRootPaths)
 		thisRootPath = listOfRootPaths{pathNo};
 		pathCell = regexp(path, pathsep, 'split');
-		matchIdx = contains(pathCell,thisRootPath);
+
+		if verLessThan('matlab','9.0')
+			matchIdx = ~cellfun(@isempty,regexpi(pathCell,thisRootPath));
+			% pathListArray = pathListArray(pathFilter&pathFilter1&pathFilter2);
+		else
+			matchIdx = contains(pathCell,thisRootPath);
+		end
+
 	  	onPath = any(matchIdx);
 		% if ispc  % Windows is not case-sensitive
 		%   onPath = any(contains(pathCell,thisRootPath));

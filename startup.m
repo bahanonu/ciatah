@@ -1,4 +1,4 @@
-% startup commands and defaults
+% Startup commands and graphics defaults
 % Biafra Ahanonu
 % started: 2013.12.07 [17:28:44]
 

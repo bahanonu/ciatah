@@ -961,7 +961,7 @@ function obj = viewCreateObjmaps(obj,varargin)
 		if size(sortedinputSignalsCut,1)==1
 			plot(sortedinputSignalsCut)
         else
-        	if sum(strcmp(obj.signalExtractionMethod,{'EM','CNMF'}))>0
+        	if sum(strcmp(obj.signalExtractionMethod,{'EM','CNMF','CNMFE'}))>0
 				plotSignalsGraph(sortedinputSignalsCut,'LineWidth',2.5,'incrementAmount',[],'newAxisColorOrder','red','smoothTrace',0,'maxIncrementPercent',0.4,'minAdd',0);
         	else
         		% plot(sortedinputSignalsCut)
