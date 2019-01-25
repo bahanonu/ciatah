@@ -57,7 +57,7 @@ MATLAB dependencies (toolboxes used)
 
 ImageJ
 
-- Download Fiji: https://imagej.net/Fiji/Downloads.
+- Download Fiji (preferably __2015 December 22__ version): https://imagej.net/Fiji/Downloads.
 - Make sure have Miji in Fiji installation: http://bigwww.epfl.ch/sage/soft/mij/.
 - This is used as an alternative to the `calciumImagingAnalysis` `playMovie.m` function for viewing movies and is needed for some movie modification steps.
 

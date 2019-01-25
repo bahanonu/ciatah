@@ -28,6 +28,7 @@ function loadBatchFxns()
 	pathtoMiji = '\Fiji.app\scripts\';
 	if exist(pathtoMiji,'dir')~=0
 		addpath(pathtoMiji);
+		fprintf('Added Miji to path: %s.\n',pathtoMiji)
 	else
 		clear pathtoMiji;
 	end
@@ -36,6 +37,7 @@ function loadBatchFxns()
 	if exist(loadLocalFunctions,'file')~=0
 		run(loadLocalFunctions);
 		addpath(pathtoMiji);
+		fprintf('Added Miji to path: %s.\n',pathtoMiji)
 	else
 		% create privateLoadBatchFxns.m
 	end
