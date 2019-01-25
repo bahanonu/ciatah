@@ -47,7 +47,7 @@ function [xCoords yCoords allCoords] = findCentroid(inputMatrix,varargin)
 	end
 
 	if options.runImageThreshold==1
-		inputMatrixThreshold = thresholdImages(inputMatrix,'waitbarOn',options.waitbarOn,'threshold',options.imageThreshold);
+		inputMatrixThreshold = thresholdImages(inputMatrix,'waitbarOn',options.waitbarOn,'threshold',options.imageThreshold,'removeUnconnected',1);
 	else
 		inputMatrixThreshold = inputMatrix;
 	end

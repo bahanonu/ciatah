@@ -1113,13 +1113,16 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 
                 % title(tmpTitle,'HandleVisibility','off');
 
+                loopImgHandle = imagesc(objCutMovie(:,:,frameNo),'AlphaData',imAlpha);
                 while strcmp(keyIn,'3')
                     keyIn = get(gcf,'CurrentCharacter');
                     if ~isempty(objCutMovie)
-                        imagesc(objCutMovie(:,:,frameNo),'AlphaData',imAlpha);
+                        % Use Cdata update instead of imagesc to improve drawnow speed, esp. on Matlab 2018b.
+                        set(loopImgHandle,'Cdata',squeeze(objCutMovie(:,:,frameNo)));
+                        % imagesc(objCutMovie(:,:,frameNo),'AlphaData',imAlpha);
                         set(gca, 'box','off','XTickLabel',[],'XTick',[],'YTickLabel',[],'YTick',[],'XColor',get(gcf,'Color'),'YColor',get(gcf,'Color'))
                         set(gca,'color',[0 0 0]);
-                        sigDig = 100;
+                        % sigDig = 100;
 
                         % title(strrep(options.inputStr,'_','\_'), 'HandleVisibility' , 'off' )
                         % if frameNo==1
@@ -1130,7 +1133,8 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                             caxis([-0.05 0.1]);
                         end
                         % axis off
-                        drawnow
+                        % drawnow;
+                        % drawnow limitrate
                     else
 
                     end
@@ -1240,7 +1244,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
         elseif isequal(reply, 113)
             % close(2);figure(mainFig);
                 % answer = inputdlg({'min','max'},'Movie min/max for contrast',1,{num2str(options.movieMin),num2str(options.movieMax)})
-                answer = inputdlg({'min','max'},'Movie min/max for contrast',1,{num2str(minHere),num2str(maxHere)});
+                answer = inputdlg({'min','max'},'Movie min/max for contrast',[1 100],{num2str(minHere),num2str(maxHere)});
                 if ~isempty(answer)
                     options.movieMin = str2num(answer{1});
                     options.movieMax = str2num(answer{2});
@@ -1248,7 +1252,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
         % 'W' to change the min/max used for traces
         elseif isequal(reply, 119)
             % close(2);figure(mainFig);
-                answer = inputdlg({'min','max'},'Signal trace min/max for plotting',1,{num2str(minValTraces),num2str(maxValTraces)});
+                answer = inputdlg({'min','max'},'Signal trace min/max for plotting',[1 100],{num2str(minValTraces),num2str(maxValTraces)});
                 if ~isempty(answer)
                     minValTraces = str2num(answer{1});
                     maxValTraces = str2num(answer{2});
@@ -1256,7 +1260,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
         % 'E' to change the FPS
         elseif isequal(reply, 101)
             % close(2);figure(mainFig);
-                answer = inputdlg({'fps'},'FPS for displaying movie',1,{num2str(options.fps)});
+                answer = inputdlg({'fps'},'FPS for displaying movie',[1 100],{num2str(options.fps)});
                 if ~isempty(answer)
                     options.fps = str2num(answer{1});
                 end
