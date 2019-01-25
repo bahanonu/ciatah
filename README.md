@@ -4,7 +4,7 @@
 
 Code and MATLAB class for analyzing one- and two-photon calcium imaging datasets. Includes a GUI to allow users to do large-scale batch analysis, the underlying functions can also be used to create GUI-less analysis pipelines. Includes code for determining animal locations (e.g. in open-field assay).
 
-Contact Biafra Ahanonu (bahanonu [at] alum.mit.edu) for questions about code or usage.
+Contact: Biafra Ahanonu (bahanonu [at] alum.mit.edu).
 
 Repository notes:
 - Covers preprocessing of calcium imaging videos, cell and activity trace extraction (with PCA-ICA, CELLMax, EXTRACT, CNMF, and CNMF-E), manual and automated sorting of cell extraction outputs, cross-session alignment of cells, and more.
@@ -15,6 +15,7 @@ Repository notes:
   - and similar code helped process data in: J.G. Parker*, J.D. Marshall*, __B. Ahanonu__, Y.W. Wu, T.H. Kim, B.F. Grewe, Y. Zhang, J.Z. Li, J.B. Ding, M.D. Ehlers, and M.J. Schnitzer (2018). Diametric neural ensemble dynamics in parkinsonian and dyskinetic states. _Nature_, 557, 177–182. https://doi.org/10.1038/s41586-018-0090-6.
 - Code developed while in [Prof. Mark Schnitzer's lab](http://pyramidal.stanford.edu/) at Stanford University.
 - Please check the 'Wiki' for further instructions on specific processing/analysis steps and additional information of software used by this package.
+- When issues are encountered, first check the `Common issues and fixes` Wiki page to see if a solution is there. Else, submit a new issue.
 
 ***
 ## Contents
@@ -236,9 +237,9 @@ To run CNMF and CNMF-E, place the respective repositories in `signal_extraction\
 
 ![image](https://user-images.githubusercontent.com/5241605/49830421-fa608380-fd45-11e8-8d9a-47a3d2921111.png)
 
-The resulting output at the end should look something like:
+The resulting output (on `Figure 43`) at the end should look something like:
 
-![image](https://user-images.githubusercontent.com/5241605/49832877-c0df4680-fd4c-11e8-9d22-e5d2dff3409f.png)
+![image](https://user-images.githubusercontent.com/5241605/51728907-c2c44700-2026-11e9-9614-1a57c3a60f5f.png)
 
 ******************************************
 

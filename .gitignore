@@ -2,6 +2,7 @@
 
 # ignore the private folder where user information is stored
 private/
+data/
 
 # Windows default autosave extension
 *.asv

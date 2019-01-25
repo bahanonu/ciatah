@@ -27,12 +27,25 @@ function obj = viewMovie(obj)
 	if strcmp(options.videoPlayer,'imagej')
 		modelAddOutsideDependencies('miji');
 	end
+
+	% Load folders to be analyzed.
+	[fileIdxArray idNumIdxArray nFilesToAnalyze nFiles] = obj.getAnalysisSubsetsToAnalyze();
+
+	% Check whether preprocessed movie is there by default in 1st folder. Else load standard regexp for raw movie.
+	defaultFileFilterRegexp = obj.fileFilterRegexp;
+    movieList = getFileList(obj.inputFolders{fileIdxArray(1)}, defaultFileFilterRegexp);
+    processedMovieFlag = 1;
+    if isempty(movieList)
+    	fprintf('No files with default obj.fileFilterRegexp (%s), using obj.fileFilterRegexpRaw (%s).\n',obj.fileFilterRegexp,obj.fileFilterRegexpRaw);
+    	processedMovieFlag = 0;
+    	defaultFileFilterRegexp = obj.fileFilterRegexpRaw;
+    end
 	% =====================
 	if iscell(obj.videoDir); videoDir = strjoin(obj.videoDir,','); else videoDir = obj.videoDir; end;
 	movieSettings = inputdlg({...
+			'char: Imaging movie regexp (IMPORTANT, make sure matches the movie you want to view):',...
 			'start:end frames (leave blank for all)',...
 			'behavior:movie sample rate (downsample factor): ',...
-			'char: Imaging movie regexp:',...
 			'video folder(s), separate multiple folders by a comma:',...
 			'side-by-side save folder:',...
 			'analyze specific folder (leave blank if no) ("same" = input folder)',...
@@ -45,9 +58,9 @@ function obj = viewMovie(obj)
 		},...
 		'view movie settings',[1 100],...
 		{...
+			defaultFileFilterRegexp,...
 			'1:500',...
 			num2str(obj.DOWNSAMPLE_FACTOR),...
-			obj.fileFilterRegexp,...
 			videoDir,....
 			obj.videoSaveDir,...
 			'',...
@@ -87,11 +100,14 @@ function obj = viewMovie(obj)
 	);
 	% concat the two
 	movieSettings = cat(1,movieSettings,movieSettings2);
-	frameList = str2num(movieSettings{1});
-	DOWNSAMPLE_FACTOR = str2num(movieSettings{2});
 	% obj.fileFilterRegexp = movieSettings{3};
 	% fileFilterRegexp = obj.fileFilterRegexp;
-	fileFilterRegexp = movieSettings{3}; obj.fileFilterRegexp = fileFilterRegexp;
+	fileFilterRegexp = movieSettings{1};
+	if processedMovieFlag==1
+		obj.fileFilterRegexp = fileFilterRegexp;
+	end
+	frameList = str2num(movieSettings{2});
+	DOWNSAMPLE_FACTOR = str2num(movieSettings{3});
 	% eval(['{''',movieSettings{4},'''}'])
 	obj.videoDir = strsplit(movieSettings{4},','); videoDir = obj.videoDir;
 	obj.videoSaveDir = movieSettings{5}; videoSaveDir = obj.videoSaveDir;
@@ -132,7 +148,6 @@ function obj = viewMovie(obj)
 	if strcmp(options.videoPlayer,'imagej')&saveCopyOfMovie==0
 		Miji;
 	end
-	[fileIdxArray idNumIdxArray nFilesToAnalyze nFiles] = obj.getAnalysisSubsetsToAnalyze();
 	if ~isempty(analyzeSpecificFolder)
 		nFilesToAnalyze = 1;
     end
@@ -208,6 +223,10 @@ function obj = viewMovie(obj)
 			end
 			if isempty(movieList)
 				display('No movie files found! Please check "Imaging movie regexp:" option that regular expression matches existing movie in the repository.')
+				if strcmp(options.videoPlayer,'imagej')&saveCopyOfMovie==0
+					MIJ.exit;
+				end
+				return;
 			end
 			if ischar(movieList)
 				display(movieList)

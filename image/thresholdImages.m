@@ -37,6 +37,8 @@ function [inputImages, boundaryIndices] = thresholdImages(inputImages,varargin)
     options.normalizationType = [];
     % Binary: 1 = normalize each filter with max set to 1
     options.normalize = 1;
+    % Binary: 1 = remove unconnected even when no binary thresholding
+    options.removeUnconnected = 0;
     % get options
     options = getOptions(options,varargin);
     % display(options)
@@ -161,7 +163,30 @@ function [inputImages, boundaryIndices] = thresholdImages(inputImages,varargin)
             % do nothing
         end
 
-            inputImages{imageNo} = thisFilt;
+        if options.removeUnconnected==1
+            thisFilt2 = thisFilt;
+            thisFilt2(thisFilt2>=cutoffVal)=1;
+            switch options_imageFilterBinary
+                case 'median'
+                    thisFilt2 = medfilt2(thisFilt2,[options_medianFilterNeighborhoodSize options_medianFilterNeighborhoodSize]);
+                otherwise
+                    % body
+            end
+            % Remove any pixels not connected to the image max value if there is a filter with max values at the edge, try...catch to get around errors
+            try
+                % [indx indy] = find(thisFilt==1); %Find the maximum
+                [B,nObjs] = bwlabeln(thisFilt2);
+                objsN = [];
+                for iii = 1:nObjs
+                   objsN(iii) = length(find(B==iii));
+                end
+                [~,idxH] = max(objsN);
+                thisFilt(B~=idxH) = 0;
+            catch
+            end
+        end
+
+        inputImages{imageNo} = thisFilt;
         % if cellLoad==1
         % else
             % inputImages(:,:,imageNo)=thisFilt;
