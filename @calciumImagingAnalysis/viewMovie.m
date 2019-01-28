@@ -147,6 +147,13 @@ function obj = viewMovie(obj)
 	% % =====================
 	if strcmp(options.videoPlayer,'imagej')&saveCopyOfMovie==0
 		% Miji;
+		% try
+		% 	MIJ.exit;
+		% catch
+		% 	clear MIJ miji Miji mij;
+		% 	resetMiji();
+		% 	Miji;
+		% end
 		MIJ.start;
 	end
 	if ~isempty(analyzeSpecificFolder)
