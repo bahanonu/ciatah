@@ -44,7 +44,8 @@ function obj = viewSubjectMovieFrames(obj)
 	normalizeMovieSwitch = str2num(movieSettings{setNo});setNo = setNo+1;
 	frameList = str2num(movieSettings{setNo});setNo = setNo+1;
 
-	Miji;
+	% Miji;
+	MIJ.start;
 
 	switch usrIdxChoiceType
 		case 1

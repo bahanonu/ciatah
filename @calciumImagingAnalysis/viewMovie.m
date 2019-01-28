@@ -146,7 +146,8 @@ function obj = viewMovie(obj)
 	end
 	% % =====================
 	if strcmp(options.videoPlayer,'imagej')&saveCopyOfMovie==0
-		Miji;
+		% Miji;
+		MIJ.start;
 	end
 	if ~isempty(analyzeSpecificFolder)
 		nFilesToAnalyze = 1;

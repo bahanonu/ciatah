@@ -162,7 +162,8 @@ function obj = viewMovieRegistrationTest(obj)
 		end
 
 		% view the movies
-		Miji
+		% Miji
+		MIJ.start;
 		for thisFileNumIdx = 1:nFilesToAnalyze
 			thisFileNum = fileIdxArray(thisFileNumIdx);
 			obj.fileNum = thisFileNum;

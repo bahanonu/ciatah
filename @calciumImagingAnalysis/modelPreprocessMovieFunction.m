@@ -1452,7 +1452,8 @@ function [ostruct options] = getPcaIcaParams(ostruct,options)
 		end
 	end
 	% inputdlg({'press OK to view a snippet of analyzed movies'},'...',1);
-	Miji;
+	% Miji;
+	MIJ.start
 	uiwait(msgbox('press OK to view a snippet of analyzed movies','Success','modal'));
 	% ask user for estimate of nPCs and nICs
 	for fileNum=1:nFiles

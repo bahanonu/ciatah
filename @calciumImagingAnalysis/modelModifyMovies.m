@@ -63,7 +63,8 @@ function obj = modelModifyMovies(obj)
 
 		% start Miji
 		modelAddOutsideDependencies('miji');
-		Miji;
+		% Miji;
+		MIJ.start;
 
 		% loop over all directories, get masks from user first then batch
 		% cropping whole movies
