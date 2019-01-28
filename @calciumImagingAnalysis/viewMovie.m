@@ -226,7 +226,8 @@ function obj = viewMovie(obj)
 				if strcmp(options.videoPlayer,'imagej')&saveCopyOfMovie==0
 					MIJ.exit;
 				end
-				return;
+				% return;
+				continue;
 			end
 			if ischar(movieList)
 				display(movieList)

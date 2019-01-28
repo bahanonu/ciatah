@@ -17,6 +17,8 @@ Repository notes:
 - Please check the 'Wiki' for further instructions on specific processing/analysis steps and additional information of software used by this package.
 - When issues are encountered, first check the `Common issues and fixes` Wiki page to see if a solution is there. Else, submit a new issue.
 
+![image](https://user-images.githubusercontent.com/5241605/49833336-03ede980-fd4e-11e8-8022-9aa3dedfd5ab.png)
+
 ***
 ## Contents
 - [Installation](#installation)
@@ -29,18 +31,23 @@ Repository notes:
 - [Removing cells not within brain region with  `modelModifyRegionAnalysis`](#removing-cells-not-within-brain-region-with-modelmodifyregionanalysis)
 - [Cross-session cell alignment with  `computeMatchObjBtwnTrials`](#cross-session-cell-alignment-with-computematchobjbtwntrials)
 - [ImageJ+MATLAB based mouse location tracking](#imagejmatlab-based-mouse-location-tracking)
+- [References](#references)
+- [Questions](#questions)
 
 ***
 
 ## Installation
 
-Download zip or clone the `calciumImagingAnalysis` repository.
+Clone the `calciumImagingAnalysis` repository or download a repository zip and unzip.
+- Point the MATLAB path to the `calciumImagingAnalysis` folder.
+- Run `loadBatchFxns.m` before using functions in the directory. This adds all directories and sub-directories to the MATLAB path.
+- Type `obj = calciumImagingAnalysis;` into MATLAB command window and follow instructions that appear after to add data and run analysis.
+
+Note
 - Place in folder where MATLAB will have write permissions, as it also creates a `private` subdirectory to store some user information.
 - `file_exchange` folder contains File Exchange functions used by `calciumImagingAnalysis`. If does not exist, unzip `file_exchange.zip`.
 - In general, it is best to set the MATLAB startup directory to the `calciumImagingAnalysis` folder. This allows `java.opts` and `startup.m` to set the correct Java memory requirements and load the correct folders into the MATLAB path.
-- Run `loadBatchFxns.m` before using functions in the directory. This adds all directories and sub-directories to the MATLAB path.
-
-This version of `calciumImagingAnalysis` has been tested on Windows MATLAB `2015b`, `2017a`, and `2018b`.
+- This version of `calciumImagingAnalysis` has been tested on Windows MATLAB `2015b`, `2017a`, and `2018b`.
 
 ### Test data
 
@@ -200,6 +207,7 @@ After users instantiate an object of the `calciumImagingAnalysis` class and ente
 - See below for a series of windows to get started, the options for motion correction, cropping unneeded regions, Δ_F/F_, and temporal downsampling were selected for use in the study associated with this repository.
 - If users have not specified the path to Miji, a window appears asking them to select the path to Miji's `scripts` folder.
 - If users are using the test dataset, it is recommended that they do not use temporal downsampling.
+- Vertical and horizontal stripes can be removed via `stripeRemoval` step. Remember to select correct `stripOrientationRemove`,`stripSize`, and `stripfreqLowExclude` options in the preprocessing options menu.
 
 
 ![image](https://user-images.githubusercontent.com/5241605/49827992-93d86700-fd3f-11e8-9936-d7143bbec3db.png)
@@ -352,3 +360,23 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+## References
+
+Please cite the [Corder/Ahanonu, et al. publication](http://science.sciencemag.org/content/363/6424/276.full) if you used this code to advance/help your research:
+
+```Latex
+@article{corderahanonu2019amygdalar,
+  title={An amygdalar neural ensemble that encodes the unpleasantness of pain},
+  author={Corder, Gregory and Ahanonu, Biafra and Grewe, Benjamin F and Wang, Dong and Schnitzer, Mark J and Scherrer, Gr{\'e}gory},
+  journal={Science},
+  volume={363},
+  number={6424},
+  pages={276--281},
+  year={2019},
+  publisher={American Association for the Advancement of Science}
+}
+```
+
+## Questions?
+Please email any additional questions not covered in the repository to `bahanonu [at] alum.mit.edu`.
