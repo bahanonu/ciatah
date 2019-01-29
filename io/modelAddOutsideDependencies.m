@@ -37,7 +37,7 @@ function [success] = modelAddOutsideDependencies(dependencyName,varargin)
 					% pathToMiji = pathToMiji{1};
 					pathToMiji = uigetdir('\.','Enter path to Miji.m in Fiji (e.g. \Fiji.app\scripts)');
 					if ischar(pathToMiji)
-						privateLoadBatchFxnsPath = 'private\privateLoadBatchFxns.m';
+						privateLoadBatchFxnsPath = 'private\settings\privateLoadBatchFxns.m';
 						if exist(privateLoadBatchFxnsPath,'file')~=0
 							fid = fopen(privateLoadBatchFxnsPath,'at')
 							fprintf(fid, '\npathtoMiji = ''%s'';\n', pathToMiji);
@@ -45,6 +45,9 @@ function [success] = modelAddOutsideDependencies(dependencyName,varargin)
 						end
 						addpath(pathToMiji);
 					end
+					% Load Miji so paths added to javaclasspath('-dynamic')
+					currP=pwd;Miji;cd(currP);
+					MIJ.exit;
 				end
 			otherwise
 				display('Incorrect option input.')

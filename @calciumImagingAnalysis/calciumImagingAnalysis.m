@@ -567,6 +567,23 @@ classdef calciumImagingAnalysis < dynamicprops
 			obj.disp;
 		end
 
+		function obj = loadDependencies(obj)
+			scnsize = get(0,'ScreenSize');
+			dependencyStr = {'downloadCnmfGithubRepositories','loadMiji','example_downloadTestData'};
+			[fileIdxArray, ok] = listdlg('ListString',dependencyStr,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','Which dependency to load?');
+			analysisType = dependencyStr{fileIdxArray};
+			switch analysisType
+			    case 'downloadCnmfGithubRepositories'
+					[success] = downloadCnmfGithubRepositories();
+			    case 'loadMiji'
+					modelAddOutsideDependencies('miji');
+			    case 'example_downloadTestData'
+					example_downloadTestData();
+		    	otherwise
+		    		% nothing
+		    end
+		end
+
 		function obj = showProtocolSubjectsSessions(obj)
 			protocolList = unique(obj.protocol);
 			for i = 1:length(protocolList)
@@ -894,6 +911,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			'showVars',
 			'showFolders',
 			'modelAddNewFolders',
+			'loadDependencies',
 			'saveObj',
 			'initializeObj',
 			'setMainSettings',
@@ -975,7 +993,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			[idNumIdxArray, ok] = listdlg('ListString',fxnsToRun,'InitialValue',currentIdx(1),'ListSize',dlgSize,'Name','Sir! I have a plan! Select a calcium imaging analysis method or procedure to run:');
 			if ok==0; return; end
 
-			excludeList = {'showVars','showFolders','setMainSettings','modelAddNewFolders','saveObj','setStimulusSettings','modelDownsampleRawMovies'};
+			excludeList = {'showVars','showFolders','setMainSettings','modelAddNewFolders','loadDependencies','saveObj','setStimulusSettings','modelDownsampleRawMovies'};
 
 			excludeListVer2 = {'modelEditStimTable','behaviorProtocolLoad','modelPreprocessMovie','modelModifyMovies','modelExtractSignalsFromMovie','computeManualSortSignals'};
 

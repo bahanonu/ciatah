@@ -18,10 +18,10 @@ function [success] = downloadCnmfGithubRepositories(varargin)
 	try
 		signalExtractionDir = 'signal_extraction';
 
-		gitNameDisp = {'CNMF-E','CNMF | CaImAn'};
-		gitRepos = {'https://github.com/zhoupc/CNMF_E/archive/master.zip','https://github.com/flatironinstitute/CaImAn-MATLAB/archive/master.zip'};
-		outputDir = {'cnmfe','cnmf_current'};
-		gitName = {'CNMF_E-master','CaImAn-MATLAB-master'};
+		gitNameDisp = {'CNMF-E','CNMF | CaImAn','cvx-rd'};
+		gitRepos = {'https://github.com/bahanonu/CNMF_E/archive/master.zip','https://github.com/flatironinstitute/CaImAn-MATLAB/archive/master.zip','http://web.cvxr.com/cvx/cvx-rd.zip'};
+		outputDir = {'cnmfe','cnmf_current','cvx_rd'};
+		gitName = {'CNMF_E-master','CaImAn-MATLAB-master','cvx'};
 		nRepos = length(outputDir);
 
 		for gitNo = 1:nRepos
@@ -34,7 +34,7 @@ function [success] = downloadCnmfGithubRepositories(varargin)
 			% Download git repo zip
 			rawSavePathDownload = [rawSavePathDownload filesep outputDir{gitNo} '.zip'];
 			if exist(rawSavePathDownload,'file')~=2
-				fprintf('Downloading file to %s\n',rawSavePathDownload)
+				fprintf('Downloading %s file to %s\n',gitRepos{gitNo},rawSavePathDownload)
 				websave(rawSavePathDownload,gitRepos{gitNo});
 			else
 				fprintf('Already downloaded %s\n',rawSavePathDownload)
@@ -50,6 +50,12 @@ function [success] = downloadCnmfGithubRepositories(varargin)
 			movefile([signalExtractionDir filesep gitName{gitNo}],[signalExtractionDir filesep outputDir{gitNo}]);
 
 			% fprintf('\n\n')
+		end
+
+		% if cvx is not in the path, ask user for file
+		if isempty(which('cvx_begin'))
+			[filePath,folderPath,~] = uigetfile(['*.*'],'Select cvx_setup.m (likely `calciumImagingAnalysis/signal_extraction/cvx_rd`');
+			run([folderPath filesep filePath]);
 		end
 
 		success = 1;

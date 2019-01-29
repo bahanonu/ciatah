@@ -8,6 +8,7 @@ function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(sign
         % signalPeaks: [nSignals frame] matrix. Binary matrix with 1 = peaks.
         % signalPeaksArray: {1 nSignals} cell array. Each cell contains [1 nPeaks] vector that stores the frame locations of each peak.
     % options
+        % See below.
         % % make a plot?
         % options.makePlots = 0;
         % % show waitbar?
@@ -189,16 +190,17 @@ function [inputSignal] = viewComputePeaksPlot(inputSignal,testpeaks,dotColor,mak
     if makePlots==1
         % setFigureDefaults()
         fig1 = figure(422); clf;
-        subplot(2,3,1)
+        subplot(4,3,1)
             % hist(inputSignal(testpeaks),20);
-            hist(inputSignal(testpeaks)/nanstd(inputSignal(:)),20);
+            hist((inputSignal(testpeaks) - nanmean(inputSignal(:)))/nanstd(inputSignal(:)),20);
             hold(holdVal);
             title(num2str(nanstd(inputSignal(:))))
+            xlabel('Peak amplitude (Z-score)');ylabel('Peak count')
             set(gca,'XMinorTick','on','TickDir','out');box off;
             % plot(histBins,histCounts);
             % set(gca,'yscale','log');
 
-        subplot(2,3,2)
+        subplot(4,3,2)
             peakROI = [-20:20];
             extractMatrix = bsxfun(@plus,testpeaks',peakROI);
             extractMatrix(extractMatrix<=0)=1;
@@ -206,18 +208,23 @@ function [inputSignal] = viewComputePeaksPlot(inputSignal,testpeaks,dotColor,mak
             spikeCenterTrace = reshape(inputSignal(extractMatrix),size(extractMatrix));
             plot(repmat(peakROI, [size(spikeCenterTrace,1) 1])', spikeCenterTrace','Color',[4 4 4]/8)
             set(gca,'TickDir','out');box off;
+            xlabel('Time (frames)');ylabel('Signal amplitude')
+            title('All peaks')
 
-        subplot(2,3,3)
+        subplot(4,3,3)
             peakSignalAmplitude = inputSignal(testpeaks(:));
             [peakSignalAmplitude peakIdx] = sort(spikeCenterTrace(:,round(end/2)+1),'descend');
             spikeCenterTrace = spikeCenterTrace(peakIdx,:);
             if size(spikeCenterTrace,1)>20
                 spikeCenterTrace = spikeCenterTrace(1:20,:);
             end
+            % xlabel('Time (frames)')
             plot(repmat(peakROI, [size(spikeCenterTrace,1) 1])', spikeCenterTrace','Color',[4 4 4]/8)
+            xlabel('Time (frames)');ylabel('Signal amplitude')
+            title('Top 20 peaks')
             set(gca,'TickDir','out');box off;
 
-        subplot(2,3,[4:6])
+        subplot(4,3,[4:12])
             set(gcf,'color','w');
             % scnsize = get(0,'ScreenSize');
             % position = get(fig1,'Position');
@@ -241,16 +248,18 @@ function [inputSignal] = viewComputePeaksPlot(inputSignal,testpeaks,dotColor,mak
             hold on;
             % axis([0 length(inputSignal) -0.1 0.5]);
             scatter(testpeaks, inputSignal(testpeaks),markersize, 'LineWidth',linewidth,'MarkerFaceColor',dotColor, 'MarkerEdgeColor',dotColor)
+            legend({'Raw signal','Raw signal minus rolling median filter'},'Location','northoutside')
             axis tight;
+            xlabel('Time (frames)');ylabel('Signal amplitude')
             % options.numStdsForThresh = options.numStdsForThreshTwo;
             % signalPeaksArray{signalNum} = computePeakForSignal(thisSignal, 'options', options);
 
             % [x,y,reply]=ginput(1);
             % close(fig1);
             hold(holdVal);
-            title(num2str(length(testpeaks)))
+            title(sprintf('%d peaks | Zoom is enabled for closer look at peaks',length(testpeaks)))
         zoom on
-        suptitle(sprintf('press ''e'' to exit | threshold = %d | cell %d/%d',numStdsForThresh,signalNum,nSignals))
+        suptitle(sprintf('Right arrow key to move to next signal | press ''e'' to exit | threshold = %0.2f | signal %d/%d',numStdsForThresh,signalNum,nSignals))
     end
 end
 function [Nhat] = computePeakForSignalOopsi(inputSignal,testpeaks, options, varargin)

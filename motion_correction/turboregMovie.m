@@ -651,7 +651,8 @@ function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 			end
 			mijiAlreadyOpen = 1;
 		catch
-			Miji;
+			% Miji;
+			MIJ.start;
 			switch inputMovieName
 				case 'inputMovie'
 					MIJ.createImage('result', inputMovie, true);

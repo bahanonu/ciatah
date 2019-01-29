@@ -157,7 +157,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				[gridWidth gridSpacing] = subfxnSignalSizeSpacing();
 			case 'CNMF'
 				% options.CNMFE.originalCurrentSwitch
-				[success] = cnmfVersionDirLoad(options.CNMFE.originalCurrentSwitch);
+				[success] = cnmfVersionDirLoad(options.CNMF.originalCurrentSwitch);
 
 				obj.signalExtractionMethod = signalExtractionMethod{signalExtractNo};
 				pcaicaPCsICsSwitchStr = subfxnNumExpectedSignals();
@@ -619,7 +619,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 						},...
 						dlgStr,1,...
 						{...
-							'original',...
+							'current',...
 							'0',...
 							'0',...
 							'0',...
@@ -1110,6 +1110,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				% display movie
 				maxProj=max(DFOF,[],3);
 				imagesc(squeeze(maxProj));
+				colormap gray;
 				% imellipse has different behavior depending on axis in 2015b and 2017a
         		% if verLessThan('matlab','9.0')
         		% 	axis equal;
@@ -1122,7 +1123,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
         		uimenu('Parent',mymenu,'Label','Zoom','Accelerator','z','Callback',@(src,evt)zoom(mainFig,'on'));
         		uimenu('Parent',mymenu,'Label','Zoom','Accelerator','x','Callback',@(src,evt)zoom(mainFig,'off'));
         		box off;
-        		title(sprintf('Select a region covering one cell (best to select one near another cell).\nDouble-click region to continue.\nEnable zoom with crtl+Z = zoom on, ctrl+x = zoom off. Turn off to re-enable cell size selection'))
+        		title(sprintf('Select (green) a region covering one cell (best to select one near another cell).\nDouble-click region to continue.\nEnable zoom with crtl+Z = zoom on, ctrl+x = zoom off. Turn off to re-enable cell size selection'))
 
 				% open up first picture
 				movieDims = size(DFOF);
@@ -1130,6 +1131,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				xH = movieDims(2);
 				yW = movieDims(1);
 				handle01 = imellipse(gca,round([min(xH,yW)/2 min(xH,yW)/2 min(xH,yW)/4 min(xH,yW)/4]));
+				setColor(handle01,'g');
 				addNewPositionCallback(handle01,@(p) title(sprintf('Select a region covering one cell (best to select one near another cell).\nDouble-click region to continue.\nEnable zoom with crtl+Z = zoom on, ctrl+x = zoom off. Turn off to re-enable cell size selection\nDiameter = %d px.',round(p(3)))));
 				setFixedAspectRatioMode(handle01,true);
 				fcn = makeConstrainToRectFcn('imellipse',get(gca,'XLim'),get(gca,'YLim'));
@@ -1138,8 +1140,9 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				pos1 = getPosition(handle01);
 				gridWidthTmp = round(pos1(3));
 
-				title(sprintf('Select the closest neighboring cell or place at location with average distance between cells.\n Double-click region to continue.\nEnable zoom with crtl+Z = zoom on, ctrl+x = zoom off. Turn off to re-enable cell size selection'))
+				title(sprintf('Select (red) the closest neighboring cell or place at location with average distance between cells.\n Double-click region to continue.\nEnable zoom with crtl+Z = zoom on, ctrl+x = zoom off. Turn off to re-enable cell size selection'))
 				handle02 = imellipse(gca,round([movieDims(1)/2 movieDims(2)/2 gridWidthTmp gridWidthTmp]));
+				setColor(handle02,'r');
 				% Create closure/anonymous function to calculate distance
 				distFunction = @(p) title(sprintf('Select the closest neighboring cell or place at location with average distance between cells.\n Double-click region to continue.\nEnable zoom with crtl+Z = zoom on, ctrl+x = zoom off. Turn off to re-enable cell size selection\n Diameter = %d px | Distance = %d.',gridWidthTmp,ceil(norm(pos1(1:2)-p(1:2)))+1));
 				addNewPositionCallback(handle02,distFunction);
@@ -1231,7 +1234,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				end
 
 				% ask user for nPCs/ICs
-				numExpectedSignalsArray = inputdlg(subjectList,'number of PCs/ICs to use [PCs ICs]',[1 100],defaultList);
+				numExpectedSignalsArray = inputdlg(subjectList,'number of PCs/ICs to use [PCs ICs] or for CNMF # of components [nComponents nComponents]',[1 100],defaultList);
 				for subjectNum = 1:length(subjectList)
 					obj.numExpectedSignals.(obj.signalExtractionMethod).(subjectList{subjectNum}) = str2num(numExpectedSignalsArray{subjectNum});
 				end

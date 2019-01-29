@@ -39,6 +39,8 @@ function [inputImages, boundaryIndices] = thresholdImages(inputImages,varargin)
     options.normalize = 1;
     % Binary: 1 = remove unconnected even when no binary thresholding
     options.removeUnconnected = 0;
+    % Binary: 1 = remove unconnected even when binary thresholding
+    options.removeUnconnectedBinary = 1;
     % get options
     options = getOptions(options,varargin);
     % display(options)
@@ -141,19 +143,21 @@ function [inputImages, boundaryIndices] = thresholdImages(inputImages,varargin)
                 otherwise
                     % body
             end
-            % Remove any pixels not connected to the image max value if there is a filter with max values at the edge, try...catch to get around errors
-            try
-                % [indx indy] = find(thisFilt==1); %Find the maximum
-                [B,nObjs] = bwlabeln(thisFilt);
-                objsN = [];
-                for iii = 1:nObjs
-                   objsN(iii) = length(find(B==iii));
+            if options.removeUnconnectedBinary==1
+                % Remove any pixels not connected to the image max value if there is a filter with max values at the edge, try...catch to get around errors
+                try
+                    % [indx indy] = find(thisFilt==1); %Find the maximum
+                    [B,nObjs] = bwlabeln(thisFilt);
+                    objsN = [];
+                    for iii = 1:nObjs
+                       objsN(iii) = length(find(B==iii));
+                    end
+                    [~,idxH] = max(objsN);
+                    thisFilt(B~=idxH) = 0;
+                    %thisFilt(B~=B(indx,indy)) = 0;
+                    % B = bwlabeln(thisFilt);
+                catch
                 end
-                [~,idxH] = max(objsN);
-                thisFilt(B~=idxH) = 0;
-                %thisFilt(B~=B(indx,indy)) = 0;
-                % B = bwlabeln(thisFilt);
-            catch
             end
 
         elseif options_normalize==1

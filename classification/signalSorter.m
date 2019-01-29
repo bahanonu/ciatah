@@ -36,6 +36,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
         % 2016.08.06 [20:51:02] - updated to make obj cut movie montage the default instead of static images, more useful.
         % 2018.10.08 [14:43:10] - good cells now will always be on top regardless of overlapping bad cells, option to widen selector line.
         % 2018.10.21 - Misc. changes to make it easier to look at overlapping cells.
+        % 2019.01.29 [11:19:10] - Changed how movie transient montages are created, no longer use the montage function and several other Cdata vs. imagesc related changes to improve speed, esp. in R2018b.
 
     % TODO
         % DONE: allow option to mark rest as bad signals
@@ -691,7 +692,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
         cellIDStr = ['#' num2str(i) '/' num2str(nImages)];
 
         if ~isempty(options.inputMovie)
-            subplot(subplotY,subplotX,inputMoviePlotLoc2)
+            inputMoviePlotLoc2Handle = subplot(subplotY,subplotX,inputMoviePlotLoc2);
                 % tic
 
                 oldPlotHere = 1;
@@ -699,12 +700,22 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                     testpeaks = signalPeakIdx{i};
                     if(~isempty(testpeaks))
                         try
+                            if i==1
+                                % imagesc(thisImage);
+                                % imagesc([1 1;1 1])
+                            end
+                            % montageHandle = imagesc(thisImage);
                             [croppedPeakImages croppedPeakImagesCellarray] = viewMontage(options.inputMovie,inputImages(:,:,i),options,thisTrace,[signalPeakIdx{i}],minValMovie,maxValMovie,options.cropSizeLength,i);
                             try
                                 % caxis([options.movieMin options.movieMax]);
                                 caxis([minHere maxHere]);
                             catch
                                 caxis([-0.05 0.1]);
+                            end
+                            if i==1
+                                s2Pos = get(gca,'position');
+                                cbh = colorbar(gca,'Location','eastoutside','Position',[s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)]);
+                                ylabel(cbh,'Fluorescence (e.g. \DeltaF/F or \DeltaF/\sigma)');
                             end
                         catch err
 
@@ -1176,7 +1187,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
         % waitforbuttonpress
         % reply = double(get(gcf,'CurrentCharacter'));
 
-        % 'E' make a montage of peak frames
+        % 'M' make a montage of peak frames
         if isequal(reply, 109)&~isempty(options.inputMovie)
             try
                 [croppedPeakImages] = viewMontage(options.inputMovie,inputImages(:,:,i),options,thisTrace,[signalPeakIdx{i}],minValMovie,maxValMovie,options.cropSizeLength,i);
@@ -1249,6 +1260,10 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                     options.movieMin = str2num(answer{1});
                     options.movieMax = str2num(answer{2});
                 end
+                colorbar(inputMoviePlotLoc2Handle,'off');
+                s2Pos = get(inputMoviePlotLoc2Handle,'position');
+                cbh = colorbar(inputMoviePlotLoc2Handle,'Location','eastoutside','Position',[s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)]);
+                ylabel(cbh,'Fluorescence (e.g. \DeltaF/F or \DeltaF/\sigma)');
         % 'W' to change the min/max used for traces
         elseif isequal(reply, 119)
             % close(2);figure(mainFig);
@@ -1505,7 +1520,7 @@ function [croppedPeakImages2 croppedPeakImages] = viewMontage(inputMovie,inputIm
     croppedPeakImages = cat(3,meanTransientImage,croppedPeakImages);
 
     croppedPeakImages222 = compareSignalToMovie(inputMovie, inputImage, thisTrace,'getOnlyPeakImages',1,'waitbarOn',0,'extendedCrosshairs',2,'crossHairVal',maxValMovie*options.crossHairPercent,'outlines',0,'signalPeakArray',signalPeakArray,'cropSize',cropSizeLength,'crosshairs',0,'addPadding',1,'xCoords',xCoords,'yCoords',yCoords,'outlineVal',NaN);
-    [thresholdedImages boundaryIndices] = thresholdImages(croppedPeakImages222(:,:,1),'binary',1,'getBoundaryIndex',1,'threshold',options.thresholdOutline);
+    [thresholdedImages boundaryIndices] = thresholdImages(croppedPeakImages222(:,:,1),'binary',1,'getBoundaryIndex',1,'threshold',options.thresholdOutline,'removeUnconnectedBinary',0);
     for imageNo = 1:size(croppedPeakImages,3)
         tmpImg = croppedPeakImages(:,:,imageNo);
         % tmpImg(boundaryIndices{1}) = tmpImg(boundaryIndices{1})+maxValMovie*options.crossHairPercent;
@@ -1527,16 +1542,41 @@ function [croppedPeakImages2 croppedPeakImages] = viewMontage(inputMovie,inputIm
     croppedPeakImages(:,1,:) = outlineValTmp;
     croppedPeakImages(:,end,:) = outlineValTmp;
 
+
+    [xPlot yPlot] = getSubplotDimensions(size(croppedPeakImages,3));
+    croppedPeakImagesCell = {};
+    for iii = 1:xPlot*yPlot
+        if iii>size(croppedPeakImages,3)
+            croppedPeakImagesCell{iii} = NaN(size(croppedPeakImages(:,:,1)));
+        else
+            croppedPeakImagesCell{iii} = croppedPeakImages(:,:,iii);
+        end
+    end
+
     croppedPeakImages2(:,:,:,1) = croppedPeakImages;
+
     if displayImg==1
         warning off
         sqSize = round(sqrt(options.maxSignalsToShow+1));
-        try
-            montage(permute(croppedPeakImages2(:,:,:,1),[1 2 4 3]),'Size',[sqSize sqSize])
-        catch
-            montage(permute(croppedPeakImages2(:,:,:,1),[1 2 4 3]))
+        % try
+        %     montage(permute(croppedPeakImages2(:,:,:,1),[1 2 4 3]),'Size',[sqSize sqSize])
+        % catch
+        %     montage(permute(croppedPeakImages2(:,:,:,1),[1 2 4 3]))
+        % end
+        % croppedPeakImages2 = getimage;
+
+        mNum = 1;
+        g = cell([xPlot 1]);
+        rowNum = 1;
+        for xNo = 1:xPlot
+            for yNo = 1:yPlot
+                g{rowNum} = cat(2,g{rowNum},croppedPeakImagesCell{mNum});
+                mNum = mNum + 1;
+            end
+            rowNum = rowNum + 1;
         end
-        croppedPeakImages2 = getimage;
+        croppedPeakImages2 = cat(1,g{:});
+        % [croppedPeakImages2] = createMontageMovie(croppedPeakImagesCell,'padSize',[],'padArrayValue',NaN,'displayInfo',0,'normalizeMovies',zeros([length(croppedPeakImagesCell) 1]),'numRowMontage',5);
         % change zeros to ones, fixes range of image display
         % croppedPeakImages2(croppedPeakImages2==0)=NaN;
         % croppedPeakImages2(croppedPeakImages2==0)=maxValMovie;
@@ -1548,7 +1588,16 @@ function [croppedPeakImages2 croppedPeakImages] = viewMontage(inputMovie,inputIm
         imAlpha = ones(size(croppedPeakImages2));
         imAlpha(isnan(croppedPeakImages2))=0;
         % imAlpha(croppedPeakImages2==mode(croppedPeakImages2(:))) = 0;
-        imagesc(croppedPeakImages2,'AlphaData',imAlpha);
+        % imagesc(croppedPeakImages2,'AlphaData',imAlpha);
+
+        if i==1
+            imagesc(croppedPeakImages2,'AlphaData',imAlpha);
+        end
+        montageHandle = findobj(gca,'Type','image');
+        % set(montageHandle,'Cdata',croppedPeakImages2,'AlphaData',imAlpha);
+        set(montageHandle,'Cdata',croppedPeakImages2,'AlphaData',imAlpha);
+
+
         set(gca,'color',[0 0 0]);
         % imagesc(croppedPeakImages2);
         colormap(options.colormap);
@@ -1561,9 +1610,9 @@ function [croppedPeakImages2 croppedPeakImages] = viewMontage(inputMovie,inputIm
         % clear croppedPeakImages2
         warning on
 
-        s2Pos = get(gca,'position');
-        cbh = colorbar(gca,'Location','eastoutside','Position',[s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)]);
-        ylabel(cbh,'Fluorescence (e.g. \DeltaF/F or \DeltaF/\sigma)');
+        % s2Pos = get(gca,'position');
+        % cbh = colorbar(gca,'Location','eastoutside','Position',[s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)]);
+        % ylabel(cbh,'Fluorescence (e.g. \DeltaF/F or \DeltaF/\sigma)');
         % set(s2,'position',s2Pos);
     end
 end

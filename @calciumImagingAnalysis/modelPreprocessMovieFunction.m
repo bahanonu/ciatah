@@ -146,7 +146,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			'=============================================' 10];
 
 
-	analysisOptionList = {'medianFilter','spatialFilter','turboreg','fft_highpass','crop','dfof','dfstd','medianFilter','downsampleTime','downsampleSpace','fft_lowpass'};
+	analysisOptionList = {'medianFilter','spatialFilter','stripeRemoval','turboreg','fft_highpass','crop','dfof','dfstd','medianFilter','downsampleTime','downsampleSpace','fft_lowpass'};
 	defaultChoiceList = {'turboreg','crop','dfof','downsampleTime'};
 	%defaultChoiceIdx = find(cellfun(@(x) sum(strcmp(x,defaultChoiceList)),analysisOptionList));
 	defaultChoiceIdx = find(ismember(analysisOptionList,defaultChoiceList));
@@ -154,7 +154,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		ok = 1;
 		[figHandle figNo] = openFigure(1776, '');clf;
 		[hListbox jListbox jScrollPane jDND] = reorderableListbox('String',analysisOptionList,'Units','normalized','Position',[0.5 0 0.5 0.95],'Max',Inf,'Min',0,'Value',defaultChoiceIdx);
-		uicontrol('Style','Text','String',['We can know only that we know nothing. And that is the highest degree of human wisdom.' 10 10 '1: Click items to select' 10 '2: Drag to re-order analysis ' 10 '3: Click command window and press ENTER to continue'],'Units','normalized','Position',[0 0.4 0.5 0.60],'BackgroundColor','white','HorizontalAlignment','Left');
+		uicontrol('Style','Text','String',['Analysis step selection and ordering' 10 '=======' 10 'We can know only that we know nothing.' 10 'And that is the highest degree of human wisdom.' 10 10 '1: Click items to select.' 10 '2: Drag to re-order analysis.' 10 '3: Click command window and press ENTER to continue.'],'Units','normalized','Position',[0 0.4 0.5 0.60],'BackgroundColor','white','HorizontalAlignment','Left');
 		uicontrol('Style','Text','String',USAflagStr,'Units','normalized','Position',[0 0 0.5 0.3],'BackgroundColor','white','HorizontalAlignment','Left','FontName','FixedWidth','FontSize',8,'HorizontalAlignment','left');
 		pause
 		% hListbox.String(hListbox.Value)
@@ -182,7 +182,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	try
 		[figHandle figNo] = openFigure(1776, '');clf;
 		[hListbox jListbox jScrollPane jDND] = reorderableListbox('String',analysisOptionList,'Units','normalized','Position',[0.5 0 0.5 0.95],'Max',Inf,'Min',0,'Value',defaultSaveIdx);
-		uicontrol('Style','Text','String',['Gentlemen, you can not fight in here! This is the War Room.' 10 10 '1: Click items to select' 10 '2: Click command window and press ENTER to continue'],'Units','normalized','Position',[0 0.4 0.5 0.60],'BackgroundColor','white','HorizontalAlignment','Left');
+		uicontrol('Style','Text','String',['Analysis steps to save' 10 '=======' 10 'Gentlemen, you can not fight in here! This is the War Room.' 10 10 '1: Click analysis steps to save output' 10 '2: Click command window and press ENTER to continue'],'Units','normalized','Position',[0 0.4 0.5 0.60],'BackgroundColor','white','HorizontalAlignment','Left');
 		uicontrol('Style','Text','String',USAflagStr,'Units','normalized','Position',[0 0 0.5 0.3],'BackgroundColor','white','HorizontalAlignment','Left','FontName','FixedWidth','FontSize',8,'HorizontalAlignment','left');
 		pause
 		saveIdx = hListbox.Value;
@@ -433,6 +433,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 								medianFilterInputMovie();
 							case 'spatialFilter'
 								spatialFilterInputMovie();
+							case 'stripeRemoval'
+								stripeRemovalInputMovie();
 							case 'movieProjections'
 								movieProjectionsInputMovie();
 							case 'fft_highpass'
@@ -1142,6 +1144,38 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		end
 		% thisMovie = normalizeMovie(thisMovie,'normalizationType','medianFilter');
 	end
+	function stripeRemovalInputMovie()
+		% number of frames to subset
+		subsetSize = options.turboregNumFramesSubset;
+		movieLength = size(thisMovie,3);
+		numSubsets = ceil(movieLength/subsetSize)+1;
+		subsetList = round(linspace(1,movieLength,numSubsets));
+		display(['Stripe removal sublists: ' num2str(subsetList)]);
+		% convert movie to single for turboreg
+		j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
+		% get reference frame before subsetting, so won't change
+		nSubsets = (length(subsetList)-1);
+		for thisSet = 1:nSubsets
+			subsetStartTime = tic;
+			subsetStartIdx = subsetList(thisSet);
+			subsetEndIdx = subsetList(thisSet+1);
+			display(repmat('$',1,7))
+			if thisSet==nSubsets
+				movieSubset = subsetStartIdx:subsetEndIdx;
+				display([num2str(subsetStartIdx) '-' num2str(subsetEndIdx) ' ' num2str(thisSet) '/' num2str(nSubsets)])
+			else
+				movieSubset = subsetStartIdx:(subsetEndIdx-1);
+				display([num2str(subsetStartIdx) '-' num2str(subsetEndIdx-1) ' ' num2str(thisSet) '/' num2str(nSubsets)])
+			end
+			display(repmat('$',1,7))
+		    j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
+
+		    thisMovie(:,:,movieSubset) = removeStripsFromMovie(single(thisMovie(:,:,movieSubset)),'stripOrientation',options.turboreg.stripOrientationRemove,'meanFilterSize',options.turboreg.stripSize,'freqLowExclude',options.turboreg.stripfreqLowExclude,'waitbarOn',1);
+
+			toc(subsetStartTime)
+		end
+		% thisMovie = normalizeMovie(thisMovie,'normalizationType','medianFilter');
+	end
 	function movieProjectionsInputMovie()
 
 		% get the max projection
@@ -1418,7 +1452,8 @@ function [ostruct options] = getPcaIcaParams(ostruct,options)
 		end
 	end
 	% inputdlg({'press OK to view a snippet of analyzed movies'},'...',1);
-	Miji;
+	% Miji;
+	MIJ.start
 	uiwait(msgbox('press OK to view a snippet of analyzed movies','Success','modal'));
 	% ask user for estimate of nPCs and nICs
 	for fileNum=1:nFiles

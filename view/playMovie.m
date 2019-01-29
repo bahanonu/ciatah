@@ -737,7 +737,8 @@ function subfxn_imageJ(inputMovie)
 		end
 	end
 
-	Miji;
+	% Miji;
+	MIJ.start;
 	MIJ.createImage('result', inputMovie, true);
 	% clear primaryMovie;
 	uiwait(msgbox('press OK to move onto next movie','Success','modal'));

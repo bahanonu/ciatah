@@ -291,7 +291,8 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		% MUST ADD \Fiji.app\scripts
 		% open imagej instance
 		% Miji(false);
-		Miji;
+		% Miji;
+		MIJ.start;
 		startTime = tic;
 		% pass matrix to imagej
 		MIJ.createImage('result', inputMovie, true);
@@ -333,7 +334,8 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		inputMovieDivide = {};
 		% size(inputImageTest)
 		% Miji(false);
-		Miji;
+		% Miji;
+		MIJ.start;
 		startTime = tic;
 		for freqNo = 1:nFreqs
 			lowFreq = lowFreqList(freqNo);

@@ -17,7 +17,7 @@ function obj = modelAddNewFolders(obj,varargin)
 	try
 		nExistingFolders = length(obj.inputFolders);
 		if isempty(options.folderCellArray)
-			newFolderList = inputdlg('one new line per folder path','add folders',[42 150]);
+			newFolderList = inputdlg('One new line per folder path. Enter folder path WITHOUT any single/double quotation marks around the path.','Adding folders to calciumImagingAnalysis object.',[21 150]);
 			newFolderList = newFolderList{1,1};
 			% size(newFolderList)
 			% class(newFolderList)

@@ -9,6 +9,7 @@ function [inputMovies] = createMontageMovie(inputMovies,varargin)
 	% font size for identifyingText
 	options.fontSize = 15;
 	% whether to normalize movies
+	% options.normalizeMovies = ones([length(inputMovies) 1]);
 	options.normalizeMovies = ones([length(inputMovies) 1]);
 	% if want the montage to be in a row
 	options.singleRowMontage = 0;
@@ -32,6 +33,10 @@ function [inputMovies] = createMontageMovie(inputMovies,varargin)
 	options.flipdimsText = [];
 	% Any value or NaN to pad array
 	options.padArrayValue = [];
+	% Int: [x y] pad array vector
+	options.padSize = [3 3];
+	% Binary: 1 = display info
+	options.displayInfo = 1;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -58,11 +63,11 @@ function [inputMovies] = createMontageMovie(inputMovies,varargin)
 				end
 			end
 			if options.rotateMovies==1
-				display('rotating...')
-				display(['pre-rotation dims: ' num2str(size(inputMovies{movieNo}))])
+				subfxnDisp('rotating...')
+				subfxnDisp(['pre-rotation dims: ' num2str(size(inputMovies{movieNo}))])
 				% inputMovies{movieNo} = permute(inputMovies{movieNo},[2 1 3]);
 				inputMovies{movieNo} = rot90(inputMovies{movieNo});
-				display(['post-rotation dims: ' num2str(size(inputMovies{movieNo}))])
+				subfxnDisp(['post-rotation dims: ' num2str(size(inputMovies{movieNo}))])
 			end
 		end
 
@@ -78,24 +83,26 @@ function [inputMovies] = createMontageMovie(inputMovies,varargin)
 				[inputMovies{movieNo}] = addText(inputMovies{movieNo},options.identifyingText{movieNo},options.fontSize);
 				% imagesc(inputMovies{movieNo}(:,:,1));pause;
 				if options.rotateMoviesText==1
-					display('rotating...')
-					display(['pre-rotation dims: ' num2str(size(inputMovies{movieNo}))])
+					subfxnDisp('rotating...')
+					subfxnDisp(['pre-rotation dims: ' num2str(size(inputMovies{movieNo}))])
 					% inputMovies{movieNo} = permute(inputMovies{movieNo},[2 1 3]);
 					inputMovies{movieNo} = rot90(inputMovies{movieNo});
-					display(['post-rotation dims: ' num2str(size(inputMovies{movieNo}))])
+					subfxnDisp(['post-rotation dims: ' num2str(size(inputMovies{movieNo}))])
 				end
 				if ~isempty(options.flipdimsText)
 					inputMovies{movieNo} = flipdim(inputMovies{movieNo},options.flipdimsText);
 				end
 			end
 		end
-		for movieNo = 1:nMovies
-			if isempty(options.padArrayValue)
-				padVal = nanmax(inputMovies{movieNo}(:));
-			else
-				padVal = options.padArrayValue;
+		if ~isempty(options.padSize)
+			for movieNo = 1:nMovies
+				if isempty(options.padArrayValue)
+					padVal = nanmax(inputMovies{movieNo}(:));
+				else
+					padVal = options.padArrayValue;
+				end
+				inputMovies{movieNo} = padarray(inputMovies{movieNo},options.padSize,padVal,'both');
 			end
-			inputMovies{movieNo} = padarray(inputMovies{movieNo},[3 3],padVal,'both');
 		end
 
 		if options.singleRowMontage==0
@@ -114,22 +121,22 @@ function [inputMovies] = createMontageMovie(inputMovies,varargin)
 		for xNo = 1:xPlot
 			for yNo = 1:yPlot
 				if inputMovieNo>length(inputMovies)
-					[behaviorMovie{xNo}] = createSideBySide(behaviorMovie{xNo},NaN(size(inputMovies{1})),'pxToCrop',[],'makeTimeEqualUsingNans',1,'normalizeMovies',0);
+					[behaviorMovie{xNo}] = createSideBySide(behaviorMovie{xNo},NaN(size(inputMovies{1})),'pxToCrop',[],'makeTimeEqualUsingNans',1,'normalizeMovies',0,'displayInfo',options.displayInfo);
 				elseif yNo==1
 					[behaviorMovie{xNo}] = inputMovies{inputMovieNo};
 				else
-					[behaviorMovie{xNo}] = createSideBySide(behaviorMovie{xNo},inputMovies{inputMovieNo},'pxToCrop',[],'makeTimeEqualUsingNans',1,'normalizeMovies',0);
+					[behaviorMovie{xNo}] = createSideBySide(behaviorMovie{xNo},inputMovies{inputMovieNo},'pxToCrop',[],'makeTimeEqualUsingNans',1,'normalizeMovies',0,'displayInfo',options.displayInfo);
 				end
-				size(behaviorMovie{xNo})
+				% size(behaviorMovie{xNo})
 				inputMovieNo = inputMovieNo+1;
 			end
 		end
-		display(['size behavior: ' num2str(size(behaviorMovie{1}))])
+		subfxnDisp(['size behavior: ' num2str(size(behaviorMovie{1}))])
 		behaviorMovie{1} = permute(behaviorMovie{1},[2 1 3]);
-		display(['size behavior: ' num2str(size(behaviorMovie{1}))])
-		display(repmat('-',1,7))
+		subfxnDisp(['size behavior: ' num2str(size(behaviorMovie{1}))])
+		subfxnDisp(repmat('-',1,7))
 		for concatNo = 2:length(behaviorMovie)
-			[behaviorMovie{1}] = createSideBySide(behaviorMovie{1},permute(behaviorMovie{concatNo},[2 1 3]),'pxToCrop',[],'makeTimeEqualUsingNans',1,'normalizeMovies',0);
+			[behaviorMovie{1}] = createSideBySide(behaviorMovie{1},permute(behaviorMovie{concatNo},[2 1 3]),'pxToCrop',[],'makeTimeEqualUsingNans',1,'normalizeMovies',0,'displayInfo',options.displayInfo);
 			behaviorMovie{concatNo} = {};
 			size(behaviorMovie{1});
 		end
@@ -141,7 +148,11 @@ function [inputMovies] = createMontageMovie(inputMovies,varargin)
 		disp(getReport(err,'extended','hyperlinks','on'));
 		display(repmat('@',1,7))
 	end
-
+	function subfxnDisp(txt)
+		if options.displayInfo==1
+			display(txt);
+		end
+	end
 end
 function [movieTmp] = addText(movieTmp,inputText,fontSize)
 	% 2016.07.01 [15:05:03] - improved
