@@ -157,7 +157,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				[gridWidth gridSpacing] = subfxnSignalSizeSpacing();
 			case 'CNMF'
 				% options.CNMFE.originalCurrentSwitch
-				[success] = cnmfVersionDirLoad(options.CNMFE.originalCurrentSwitch);
+				[success] = cnmfVersionDirLoad(options.CNMF.originalCurrentSwitch);
 
 				obj.signalExtractionMethod = signalExtractionMethod{signalExtractNo};
 				pcaicaPCsICsSwitchStr = subfxnNumExpectedSignals();
@@ -619,7 +619,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 						},...
 						dlgStr,1,...
 						{...
-							'original',...
+							'current',...
 							'0',...
 							'0',...
 							'0',...
@@ -1231,7 +1231,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				end
 
 				% ask user for nPCs/ICs
-				numExpectedSignalsArray = inputdlg(subjectList,'number of PCs/ICs to use [PCs ICs]',[1 100],defaultList);
+				numExpectedSignalsArray = inputdlg(subjectList,'number of PCs/ICs to use [PCs ICs] or for CNMF # of components [nComponents nComponents]',[1 100],defaultList);
 				for subjectNum = 1:length(subjectList)
 					obj.numExpectedSignals.(obj.signalExtractionMethod).(subjectList{subjectNum}) = str2num(numExpectedSignalsArray{subjectNum});
 				end

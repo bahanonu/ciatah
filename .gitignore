@@ -5,6 +5,11 @@ private/
 data/
 signal_extraction/cnmf_current
 signal_extraction/cnmfe
+signal_extraction/cvx_rd
+
+# Signal extraction dependency zips
+signal_extraction/*.zip
+/*.mat
 
 # Windows default autosave extension
 *.asv
