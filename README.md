@@ -42,7 +42,7 @@ Clone the `calciumImagingAnalysis` repository or download a repository zip and u
 - Point the MATLAB path to the `calciumImagingAnalysis` folder.
 - Run `loadBatchFxns.m` before using functions in the directory. This adds all directories and sub-directories to the MATLAB path.
 - Type `obj = calciumImagingAnalysis;` into MATLAB command window and follow instructions that appear after to add data and run analysis.
-- Run the method `loadDependencies` to add Fiji to path and download CNMF/CNMF-E repositories (or type `obj.loadDependencies` into command window).
+- Run the `calciumImagingAnalysis` class method `loadDependencies` or type `obj.loadDependencies` after initializing a `calciumImagingAnalysis` object into the command window to add Fiji to path, download CNMF/CNMF-E repositories, download/setup CVX (for CNMF/CNMF-E), and download example data.
 
 Note
 - Place in folder where MATLAB will have write permissions, as it also creates a `private` subdirectory to store some user information.
@@ -78,7 +78,10 @@ CNMF and CNMF-E
 
 - Download repositories by running `downloadCnmfGithubRepositories.m`.
 - CNMF: https://github.com/flatironinstitute/CaImAn-MATLAB.
-- CNMF-E: https://github.com/zhoupc/CNMF_E.
+- CNMF-E: https://github.com/bahanonu/CNMF_E
+  - forked from https://github.com/zhoupc/CNMF_E to fix HDF5, movies with NaNs, and other related bugs.
+- CVX: http://cvxr.com/cvx/download/.
+  - Download `All platforms` (_Redistributable: free solvers only_), e.g. http://web.cvxr.com/cvx/cvx-rd.zip.
 
 ### Repository organization
 Below are a list of the top-level directories and what types of functions or files are within.

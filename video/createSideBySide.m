@@ -38,6 +38,8 @@ function [outputMovie] = createSideBySide(primaryMovie,secondaryMovie,varargin)
 	options.rotatePrimaryMovie = 0;
 	%
 	options.increaseToLargestMovie = 0;
+	% Binary: 1 = display info
+	options.displayInfo = 1;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -68,7 +70,7 @@ function [outputMovie] = createSideBySide(primaryMovie,secondaryMovie,varargin)
 		primaryDimNum = length(size(primaryMovie));
 		secondaryDimNum = length(size(secondaryMovie));
 		if primaryDimNum==4|secondaryDimNum==4
-			display('4D movie detected...')
+			subfxnDisp('4D movie detected...')
 
 			% get size of 4th dim depending on which input is 4D
 			if secondaryDimNum==4&primaryDimNum~=4
@@ -78,8 +80,8 @@ function [outputMovie] = createSideBySide(primaryMovie,secondaryMovie,varargin)
 			end
 			sideBySideMatrix = {};
 			for colorNo = 1:nColorDims
-				display(repmat('=',1,21))
-				display(['color: ' num2str(colorNo) '/' num2str(nColorDims)])
+				subfxnDisp(repmat('=',1,21))
+				subfxnDisp(['color: ' num2str(colorNo) '/' num2str(nColorDims)])
 				if secondaryDimNum==4
 					if primaryDimNum==4
 						sideBySideMatrix{colorNo} = createSideBySide(squeeze(primaryMovie(:,:,:,colorNo)),squeeze(secondaryMovie(:,:,:,colorNo)),'options',options);
@@ -95,16 +97,16 @@ function [outputMovie] = createSideBySide(primaryMovie,secondaryMovie,varargin)
 		end
 
 		if options.rotatePrimaryMovie==1
-			display('rotating...')
-			display(['pre-rotation dims: ' num2str(size(primaryMovie))])
+			subfxnDisp('rotating...')
+			subfxnDisp(['pre-rotation dims: ' num2str(size(primaryMovie))])
 			primaryMovie = permute(primaryMovie,[2 1 3]);
-			display(['post-rotation dims: ' num2str(size(primaryMovie))])
+			subfxnDisp(['post-rotation dims: ' num2str(size(primaryMovie))])
 		end
 		if options.rotateSecondMovie==1
-			display('rotating...')
-			display(['pre-rotation dims: ' num2str(size(secondaryMovie))])
+			subfxnDisp('rotating...')
+			subfxnDisp(['pre-rotation dims: ' num2str(size(secondaryMovie))])
 			secondaryMovie = permute(secondaryMovie,[2 1 3]);
-			display(['post-rotation dims: ' num2str(size(secondaryMovie))])
+			subfxnDisp(['post-rotation dims: ' num2str(size(secondaryMovie))])
 		end
 
 		% ========================
@@ -113,7 +115,7 @@ function [outputMovie] = createSideBySide(primaryMovie,secondaryMovie,varargin)
 		% secondaryMovie = single(secondaryMovie);
 
 		% ========================
-		display('cropping primary movie...')
+		subfxnDisp('cropping primary movie...')
 		% Get the x and y corner coordinates as integers
 		if ~isempty(options.pxToCrop)
 			if size(primaryMovie,2)>=size(primaryMovie,1)
@@ -149,7 +151,7 @@ function [outputMovie] = createSideBySide(primaryMovie,secondaryMovie,varargin)
 			end
 		end
 		% ========================
-		display('making movies spatially and temporally identical...')
+		subfxnDisp('making movies spatially and temporally identical...')
 		% to generalize out downsampling, create cell arrays to call that contain the dimension information
 		dimensionList = {3, 2, 1};
 		dimensionNameList = {'time','space','space'};
@@ -160,15 +162,15 @@ function [outputMovie] = createSideBySide(primaryMovie,secondaryMovie,varargin)
 			thisDimName = dimensionNameList{i};
 			lengthPrimary = size(primaryMovie,thisDim);
 			lengthSecond = size(secondaryMovie,thisDim);
-			display(['length primary: ' num2str(lengthPrimary)])
-			display(['length secondary: ' num2str(lengthSecond)])
+			subfxnDisp(['length primary: ' num2str(lengthPrimary)])
+			subfxnDisp(['length secondary: ' num2str(lengthSecond)])
 			if options.makeTimeEqualUsingNans==1&strcmp(thisDimName,'time')
 				if lengthPrimary>lengthSecond
-					display('adding NaNs to end of second movie...')
+					subfxnDisp('adding NaNs to end of second movie...')
 					movieDiff = lengthPrimary-lengthSecond;
 					secondaryMovie(:,:,end+movieDiff) = NaN;
 				elseif lengthSecond>lengthPrimary
-					display('adding NaNs to end of first movie...')
+					subfxnDisp('adding NaNs to end of first movie...')
 					movieDiff = lengthSecond-lengthPrimary;
 					primaryMovie(:,:,end+movieDiff) = NaN;
 				end
@@ -197,7 +199,7 @@ function [outputMovie] = createSideBySide(primaryMovie,secondaryMovie,varargin)
 		%========================
 		% normalize movies between 0 and 1 so they display correctly together, better if their distributions are the same
 		if options.normalizeMovies==1
-			display('normalizing movies...')
+			subfxnDisp('normalizing movies...')
 			[primaryMovie] = normalizeVector(single(primaryMovie),'normRange','zeroToOne');
 			[primaryMovie] = normalizeMovie(primaryMovie,'normalizationType','meanSubtraction');
 			[secondaryMovie] = normalizeVector(single(secondaryMovie),'normRange','zeroToOne');
@@ -205,13 +207,13 @@ function [outputMovie] = createSideBySide(primaryMovie,secondaryMovie,varargin)
 		end
 		% ========================
 		% horizontally concat the movies
-		display('concatenating movies...')
-		display(['size primary: ' num2str(size(primaryMovie))])
-		display(['size secondary: ' num2str(size(secondaryMovie))])
+		subfxnDisp('concatenating movies...')
+		subfxnDisp(['size primary: ' num2str(size(primaryMovie))])
+		subfxnDisp(['size secondary: ' num2str(size(secondaryMovie))])
 		outputMovie = horzcat(primaryMovie,secondaryMovie);
 		clear primaryMovie secondaryMovie
 		if options.downsampleFactorFinal>1
-			display('downsampling final movie...')
+			subfxnDisp('downsampling final movie...')
 			outputMovie = downsampleMovie(outputMovie,'downsampleDimension','space','downsampleFactor',options.downsampleFactorFinal);
 		end
 
@@ -233,5 +235,11 @@ function [outputMovie] = createSideBySide(primaryMovie,secondaryMovie,varargin)
 		display(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));
 		display(repmat('@',1,7))
+	end
+	%% subfxnDisp: function description
+	function subfxnDisp(txt)
+		if options.displayInfo==1
+			display(txt)
+		end
 	end
 end
