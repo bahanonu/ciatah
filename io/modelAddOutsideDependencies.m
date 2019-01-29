@@ -45,6 +45,9 @@ function [success] = modelAddOutsideDependencies(dependencyName,varargin)
 						end
 						addpath(pathToMiji);
 					end
+					% Load Miji so paths added to javaclasspath('-dynamic')
+					currP=pwd;Miji;cd(currP);
+					MIJ.exit;
 				end
 			otherwise
 				display('Incorrect option input.')

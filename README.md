@@ -42,6 +42,7 @@ Clone the `calciumImagingAnalysis` repository or download a repository zip and u
 - Point the MATLAB path to the `calciumImagingAnalysis` folder.
 - Run `loadBatchFxns.m` before using functions in the directory. This adds all directories and sub-directories to the MATLAB path.
 - Type `obj = calciumImagingAnalysis;` into MATLAB command window and follow instructions that appear after to add data and run analysis.
+- Run the method `loadDependencies` to add Fiji to path and download CNMF/CNMF-E repositories (or type `obj.loadDependencies` into command window).
 
 Note
 - Place in folder where MATLAB will have write permissions, as it also creates a `private` subdirectory to store some user information.
