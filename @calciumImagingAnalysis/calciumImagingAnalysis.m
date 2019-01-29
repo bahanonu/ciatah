@@ -567,6 +567,21 @@ classdef calciumImagingAnalysis < dynamicprops
 			obj.disp;
 		end
 
+		function obj = loadDependencies(obj)
+			scnsize = get(0,'ScreenSize');
+			dependencyStr = {'downloadCnmfGithubRepositories','loadMiji'};
+			[fileIdxArray, ok] = listdlg('ListString',dependencyStr,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','Which dependency to load?');
+			analysisType = dependencyStr{fileIdxArray};
+			switch analysisType
+			    case 'downloadCnmfGithubRepositories'
+					[success] = downloadCnmfGithubRepositories();
+			    case 'loadMiji'
+					modelAddOutsideDependencies('miji');
+		    	otherwise
+		    		% nothing
+		    end
+		end
+
 		function obj = showProtocolSubjectsSessions(obj)
 			protocolList = unique(obj.protocol);
 			for i = 1:length(protocolList)
@@ -894,6 +909,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			'showVars',
 			'showFolders',
 			'modelAddNewFolders',
+			'loadDependencies',
 			'saveObj',
 			'initializeObj',
 			'setMainSettings',
