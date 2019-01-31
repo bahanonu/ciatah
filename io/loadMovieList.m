@@ -108,13 +108,15 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 
 	% ========================
 	% remove unsupported files
+	movieNo = 1;
 	for iMovie=1:length(movieList)
 		thisMoviePath = movieList{iMovie};
 		[options.movieType supported] = getMovieFileType(thisMoviePath);
 		if supported==0
 			subfxnDisplay(['removing unsupported file from list: ' thisMoviePath],options);
 		else
-			tmpMovieList{iMovie} = movieList{iMovie};
+			tmpMovieList{movieNo} = movieList{iMovie};
+			movieNo = movieNo + 1;
 		end
 	end
 	% if tmp doesn't exist, means no input files are valid, return
@@ -138,6 +140,9 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 	reverseStr = '';
 	for iMovie=1:numMovies
 		thisMoviePath = movieList{iMovie};
+		if options.displayInfo==1
+			fprintf('Getting movie info for %d\\%d: %s\n',iMovie,numMovies,thisMoviePath);
+		end
 		[options.movieType supported] = getMovieFileType(thisMoviePath);
 		if supported==0
 

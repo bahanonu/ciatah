@@ -24,8 +24,9 @@ classdef calciumImagingAnalysis < dynamicprops
 		MICRON_PER_PIXEL =  2.51;
 
 		defaultObjDir = pwd;
-		serverPath = '';
 		classVersion = 'v3.20190124';
+		serverPath = '';
+		privateSettingsPath = ['private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
 		% place where functions can temporarily story user settings
 		functionSettings = struct(...
 			'null', NaN...

@@ -50,27 +50,9 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				oldPCAICA = 1;
 				signalExtractionMethod = {'PCAICA'};
 			case 'EM'
-				if exist('CELLMax_Wrapper.m','file')~=2
-					pathToCELLMax = uigetdir('\.','Enter path to CELLMax root folder (e.g. from github)');
-					if ischar(pathToCELLMax)
-						privateLoadBatchFxnsPath = 'private\privateLoadBatchFxns.m';
-						if exist(privateLoadBatchFxnsPath,'file')~=0
-							fid = fopen(privateLoadBatchFxnsPath,'at')
-							fprintf(fid, '\npathtoMiji = ''%s'';\n', pathToCELLMax);
-							fclose(fid);
-						end
-						pathList = genpath(pathToCELLMax);
-						pathListArray = strsplit(pathList,pathsep);
-						pathFilter = cellfun(@isempty,regexpi(pathListArray,[filesep '.git']));
-						pathListArray = pathListArray(pathFilter);
-						cellfun(@disp,pathListArray)
-						pathList = strjoin(pathListArray,pathsep);
-						fprintf('Adding folders: %s\n',pathList)
-						addpath(pathList);
-					end
-				end
+				getAlgorithmRootPath('CELLMax_Wrapper.m','CELLMax',obj);
 			case 'EXTRACT'
-				% Do nothing
+				getAlgorithmRootPath('extractor.m','EXTRACT',obj);
 			otherwise
 		end
 	end
@@ -153,7 +135,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				% end
 			case 'EXTRACT'
 				obj.signalExtractionMethod = signalExtractionMethod{signalExtractNo};
-				pcaicaPCsICsSwitchStr = subfxnNumExpectedSignals();
+				% pcaicaPCsICsSwitchStr = subfxnNumExpectedSignals();
 				[gridWidth gridSpacing] = subfxnSignalSizeSpacing();
 			case 'CNMF'
 				% options.CNMFE.originalCurrentSwitch
@@ -329,6 +311,28 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	obj.guiEnabled = objGuiOld;
 	% ==========================================
 	% ==========================================
+
+	function getAlgorithmRootPath(algorithmFile,algorithmName,obj)
+		if exist(algorithmFile,'file')~=2
+			pathToAlgorithm = uigetdir('\.',sprintf('Enter path to %s root folder (e.g. from github)',algorithmName));
+			if ischar(pathToAlgorithm)
+				privateLoadBatchFxnsPath = obj.privateSettingsPath;
+				% if exist(privateLoadBatchFxnsPath,'file')~=0
+				% 	fid = fopen(privateLoadBatchFxnsPath,'at')
+				% 	fprintf(fid, '\nalgorithmPath.%s = ''%s'';\n', algorithmName, pathToAlgorithm);
+				% 	fclose(fid);
+				% end
+				pathList = genpath(pathToAlgorithm);
+				pathListArray = strsplit(pathList,pathsep);
+				pathFilter = cellfun(@isempty,regexpi(pathListArray,[filesep '.git']));
+				pathListArray = pathListArray(pathFilter);
+				cellfun(@disp,pathListArray)
+				pathList = strjoin(pathListArray,pathsep);
+				fprintf('Adding folders: %s\n',pathList)
+				addpath(pathList);
+			end
+		end
+	end
 	function saveRunTimes(algorithm)
 		% save algorithm runtimes to a CSV for later comparison
 
@@ -600,14 +604,20 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 
 				case 'EXTRACT'
 					movieSettings = inputdlg({...
-							'EXTRACT | Use GPU (''gpu'') or CPU (''cpu'')?'...
+							'EXTRACT | Use GPU (''gpu'') or CPU (''cpu'')?',...
+							'EXTRACT | avg_cell_radius (Avg. cell radius, also controls cell elimination)? Leave blank for GUI to estimate radius.',...
+							'EXTRACT | cellfind_min_snr (threshold on the max instantaneous per-pixel SNR in the movie for searching for cells)?'...
 						},...
 						dlgStr,1,...
 						{...
-							'gpu'...
+							'gpu',...
+							'',...
+							'2'...
 						}...
 					);setNo = 1;
 					options.EXTRACT.gpuOrCPU = movieSettings{setNo};setNo = setNo+1;
+					options.EXTRACT.avg_cell_radius = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.EXTRACT.cellfind_min_snr = str2num(movieSettings{setNo});setNo = setNo+1;
 				case 'CNMF'
 					movieSettings = inputdlg({...
 							'CNMF | Use original ("original") or most recent ("current") CNMF version?'...
@@ -1076,7 +1086,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			try
 				display(repmat('=',1,21))
 				thisSubjectStr = thisSubjectStr{1};
-				display(thisSubjectStr);
+				fprintf('Subject: %s\n',thisSubjectStr);
 				validFoldersIdx = find(strcmp(thisSubjectStr,obj.subjectStr));
 				% filter for folders chosen by the user
 				validFoldersIdx = intersect(validFoldersIdx,fileIdxArray);
@@ -1094,7 +1104,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			try
 				display(repmat('=',1,21))
 				thisSubjectStr = thisSubjectStr{1};
-				display(thisSubjectStr);
+				fprintf('Subject: %s\n',thisSubjectStr);
+				% display(thisSubjectStr);
 				validFoldersIdx = find(strcmp(thisSubjectStr,obj.subjectStr));
 				% filter for folders chosen by the user
 				validFoldersIdx = intersect(validFoldersIdx,fileIdxArray);
@@ -1192,8 +1203,11 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 
 			end
 		end
-		gridWidth
-		gridSpacing
+		try
+			fn_structdisp(gridWidth);
+			fn_structdisp(gridSpacing);
+		catch
+		end
 	end
 	% function dd
 	% 	h = imellipse(gca, [10 10 100 100]);
@@ -1270,6 +1284,10 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 
 			otherwise
 				% body
+		end
+		try
+			fn_structdisp(obj.numExpectedSignals)
+		catch
 		end
 	end
 end

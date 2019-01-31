@@ -112,6 +112,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		nFiles = length(folderList);
 	else
 		if strcmp(options.folderListPath,'manual')
+			display('Dialog box: select text file that points to analysis folders.')
 			[folderListPath,folderPath,~] = uigetfile('*.*','select text file that points to analysis folders','example.txt');
 			% exit if user picks nothing
 			if folderListPath==0

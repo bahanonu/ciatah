@@ -35,6 +35,7 @@ function [success] = modelAddOutsideDependencies(dependencyName,varargin)
 					% pathToMiji = inputdlg('Enter path to Miji.m in Fiji (e.g. \Fiji.app\scripts):',...
 					%              'Miji path', [1 100]);
 					% pathToMiji = pathToMiji{1};
+					display('Dialog box: Enter path to Miji.m in Fiji (e.g. \Fiji.app\scripts)')
 					pathToMiji = uigetdir('\.','Enter path to Miji.m in Fiji (e.g. \Fiji.app\scripts)');
 					if ischar(pathToMiji)
 						privateLoadBatchFxnsPath = 'private\settings\privateLoadBatchFxns.m';
