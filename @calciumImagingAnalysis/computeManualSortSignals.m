@@ -104,7 +104,8 @@ function obj = computeManualSortSignals(obj)
 			movieList = getFileList(currentFolderPath, fileFilterRegexp);
 			if strcmp(usrIdxChoiceMovie,'load movie')
 				if isempty(movieList)
-					[filePath,folderPath,~] = uigetfile([currentFolderPath filesep '*.*'],'select movie to load');
+					display('Dialog box: Select movie to load.')
+					[filePath,folderPath,~] = uigetfile([currentFolderPath filesep '*.*'],'Select movie to load.');
 					% exit if user picks nothing
 					% if folderListInfo==0; return; end
 					movieList = [folderPath filesep filePath];
@@ -118,6 +119,7 @@ function obj = computeManualSortSignals(obj)
 			% =======
 			if usrIdxChoiceAutoValid==2
 				dlgBoxMsg = sprintf('select previous decisions to load for %s',obj.fileIDNameArray{obj.fileNum});
+				display(['Dialog box: ' dlgBoxMsg])
 				[filePathDecisions,folderPathDecisions,~] = uigetfile(['.\private\tmp' filesep '*.*'],dlgBoxMsg);
 				% exit if user picks nothing
 				% if folderListInfo==0; return; end
@@ -127,6 +129,7 @@ function obj = computeManualSortSignals(obj)
 			end
 			if usrIdxChoiceAutoValid==4
 				dlgBoxMsg = sprintf('select previous decisions to load for %s',obj.fileIDNameArray{obj.fileNum});
+				display(['Dialog box: ' dlgBoxMsg])
 				[filePathDecisions,folderPathDecisions,~] = uigetfile([obj.inputFolders{obj.fileNum} filesep '*.*'],dlgBoxMsg);
 				% exit if user picks nothing
 				% if folderListInfo==0; return; end
@@ -234,6 +237,7 @@ function obj = computeManualSortSignals(obj)
 			if strcmp(usrIdxChoiceMovie,'load movie')
 				% load movies
 				if isempty(movieList)
+					display('Dialog box: select movie to load.')
 					[filePath,folderPath,~] = uigetfile([currentFolderPath filesep '*.*'],'select movie to load');
 					% exit if user picks nothing
 					% if folderListInfo==0; return; end

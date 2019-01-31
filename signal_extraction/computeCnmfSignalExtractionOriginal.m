@@ -109,6 +109,7 @@ function [cnmfAnalysisOutput] = computeCnmfSignalExtractionOriginal(inputMovie,n
 	try
 		% if cvx is not in the path, ask user for file
 		if isempty(which('cvx_begin'))
+			display('Dialog box: select cvx_setup.m.')
 			[filePath,folderPath,~] = uigetfile(['*.*'],'select cvx_setup.m');
 			run([folderPath filesep filePath]);
 		end

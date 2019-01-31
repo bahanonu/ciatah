@@ -54,6 +54,7 @@ function [success] = downloadCnmfGithubRepositories(varargin)
 
 		% if cvx is not in the path, ask user for file
 		if isempty(which('cvx_begin'))
+			display('Dialog box: Select cvx_setup.m (likely `calciumImagingAnalysis/signal_extraction/cvx_rd`')
 			[filePath,folderPath,~] = uigetfile(['*.*'],'Select cvx_setup.m (likely `calciumImagingAnalysis/signal_extraction/cvx_rd`');
 			run([folderPath filesep filePath]);
 		end

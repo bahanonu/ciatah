@@ -7,6 +7,7 @@ function loadBatchFxns()
 	pathList = genpath(pwd);
 	pathListArray = strsplit(pathList,pathsep);
 	pathFilter = cellfun(@isempty,regexpi(pathListArray,[filesep '.git']));
+	% pathFilter = cellfun(@isempty,regexpi(pathListArray,[filesep 'docs']));
 	pathListArray = pathListArray(pathFilter);
 
 	if verLessThan('matlab','9.0')
