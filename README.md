@@ -148,12 +148,12 @@ Folders should following the format `YYYY_MM_DD_pXXX_mXXX_assayXX_trialXX` where
 	- Raw uncompressed grayscale `[x y frames]` avi.
 
 ### Cell images
-- IC filters from PCA-ICA
+- IC filters from PCA-ICA and images from CNMF(-E).
 	- `[x y n]` matrix
 	- `x` and `y` being height/width of video and `n` is number of ICs output.
 
 ### Cell traces
-- IC traces from PCA-ICA
+- IC traces from PCA-ICA and images from CNMF(-E).
 	- `[n f]` matrix.
 	- `n` is number of ICs output and `f` is number of movie frames.
 
@@ -187,6 +187,10 @@ The general order of functions that users should run is:
 - `viewMovie`
 	- Users should check that calciumImagingAnalysis loads their movies correctly and that Miji is working.
 	- Remember to check that `Imaging movie regexp:` (regular expression class uses to find user movies within given folders) setting matches name of movies currently in repository.
+- `viewMovieRegistrationTest`
+	- Users can check different spatial filtering and registration settings.
+	- `tregRunX` folders (where `X` is a number) contain details of each run setting. Delete from analysis folder if don't need outputs later.
+	- Remember to adjust contrast in resulting montage movies since different filtering will change the absolute pixel values.
 - `modelPreprocessMovie`
 	- Main processing method for calciumImagingAnalysis. Performs motion correction, spatial filtering, cropping, down-sampling, and relative fluorescence calculations. If using Inscopix nVista 1.0 or 2.0, also will correct for dropped frames.
 - `modelModifyMovies`
@@ -203,6 +207,24 @@ The general order of functions that users should run is:
 	- Method to register cells across imaging sessions. Also includes visual check GUI in `viewMatchObjBtwnSessions` method.
 
 ******************************************
+
+## viewMovieRegistrationTest
+
+Users should spatially filter one-photon or other data with background noise (e.g. neuropil). To get a feel for how the different spatial filtering affects SNR/movie data before running the full processing pipeline, run `viewMovieRegistrationTest` module. Then select either `matlab divide by lowpass before registering` or `matlab bandpass before registering` then change `filterBeforeRegFreqLow` and `filterBeforeRegFreqHigh` settings, see below.
+
+![image](https://user-images.githubusercontent.com/5241605/52497447-f3f65880-2b8a-11e9-8875-c6b408e5c011.png)
+
+- You'll get an output like the below (top left is without any filtering, other 3 are with different bandpass filtering options).
+
+![image](https://user-images.githubusercontent.com/5241605/52153455-f3137300-262e-11e9-9858-45445f44e7f5.png)
+
+- Cell ΔF/F intensity profile from the raw movie:
+
+![image](https://user-images.githubusercontent.com/5241605/52153427-d7a86800-262e-11e9-983f-fa3879adca9a.png)
+
+- Same cell ΔF/F intensity profile from the bottom/left movie (not the y-axis is the same as above):
+
+![image](https://user-images.githubusercontent.com/5241605/52153392-ba739980-262e-11e9-8750-04ef2c11861b.png)
 
 ## Preprocessing calcium imaging movies with `modelPreprocessMovie`
 

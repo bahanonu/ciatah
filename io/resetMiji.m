@@ -47,6 +47,9 @@ function [success] = resetMiji(varargin)
 				disp('Empty Java dynamic path!')
 			end
 			clear MIJ miji Miji mij;
+			% Load Miji so paths added to javaclasspath('-dynamic')
+			currP=pwd;Miji;cd(currP);
+			MIJ.exit;
 			% pause(1);
 			% java.lang.Runtime.getRuntime().gc;
 			% Miji;
