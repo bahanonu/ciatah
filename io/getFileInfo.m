@@ -73,6 +73,7 @@ function [fileInfo] = getFileInfo(fileStr, varargin)
 	else
 		fileInfo.subject = 'm000';
 	end
+	fileInfo.subjectStr = fileInfo.subject;
 	% get subject number
 	tmpMatch = regexp(fileInfo.subject,options.subjectRegexp, 'tokens');
 	fileInfo.subjectNum = regexp(fileInfo.subject,'\d+', 'match');

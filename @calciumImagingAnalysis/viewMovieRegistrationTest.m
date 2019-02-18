@@ -183,7 +183,8 @@ function obj = viewMovieRegistrationTest(obj)
                 %     inputMovieRegAll{thisFileNumIdx}{1} = createSideBySide(inputMovieRegAll{thisFileNumIdx}{1},inputMovieReg);
                 % end
 			end
-			[inputMovieRegAll{thisFileNumIdx}{1}] = createMontageMovie(inputMovieRegAllTmp,'normalizeMovies',ones([length(inputMovieRegAll) 1]),'downsampleFactorSpace',montageDownsampleFactorSpace);
+			[inputMovieRegAll{thisFileNumIdx}{1}] = createMontageMovie(inputMovieRegAllTmp,'normalizeMovies',zeros([length(inputMovieRegAll) 1]),'downsampleFactorSpace',montageDownsampleFactorSpace);
+			[inputMovieRegAll{thisFileNumIdx}{2}] = dfofMovie(inputMovieRegAll{thisFileNumIdx}{1});
 
 		end
 		for thisFileNumIdx = 1:nFilesToAnalyze
@@ -191,15 +192,20 @@ function obj = viewMovieRegistrationTest(obj)
 			obj.fileNum = thisFileNum;
 			display(repmat('=',1,21))
 			display([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ' (' num2str(thisFileNum) '/' num2str(nFiles) '): ' obj.fileIDNameArray{obj.fileNum} 10 obj.inputFolders{obj.fileNum}]);
-            nTestToRun = 1;
+            nTestToRun = 2;
 			for testNo = 1:nTestToRun
 				display(repmat('*',1,14))
 				display([num2str(testNo) '/' num2str(nTestToRun)]);
 				MIJ.createImage([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ', ' num2str(testNo) '/' num2str(nTestToRun) ': ' obj.folderBaseSaveStr{obj.fileNum}],inputMovieRegAll{thisFileNumIdx}{testNo}, true);
+				msgbox('Goto Image->Adjust->Brightness/Contrast and then select different boxes to adjust contrast for easier viewing. Click on movie to open next dialog.','Note to user','modal')
 				MIJ.run('In [+]');
 				MIJ.run('In [+]');
 				MIJ.run('Start Animation [\]');
-				uiwait(msgbox('press OK to move onto next movie','Success','modal'));
+				if testNo==1
+					uiwait(msgbox('Press OK to move onto dfof version of the movie','Success','modal'));
+				else
+					uiwait(msgbox('Press OK to move onto next movie','Success','modal'));
+				end
 				MIJ.run('Close All Without Saving');
 			end
 		end

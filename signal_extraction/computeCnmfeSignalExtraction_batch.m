@@ -1,4 +1,4 @@
-function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(inputMovie,varargin)
+function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction_batch(inputMovie,varargin)
     % Wrapper function for CNMF-E, update for most recent versions.
     % Building off of demo_large_data_1p.m in CNMF-E github repo
     % Most recent commit tested on: https://github.com/epnev/ca_source_extraction/commit/187bbdbe66bca466b83b81861b5601891a95b8d1
@@ -31,6 +31,7 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(inputMovie,varargi
     options.gSiz = 11;          % pixel, neuron diameter
     options.ssub = 1;           % spatial downsampling factor
     options.tsub = 1;           % temporal downsampling factor
+    options.batch_frames = 1000;           % temporal downsampling factor
     % get options
     options = getOptions(options,varargin);
     % ========================
@@ -39,28 +40,20 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(inputMovie,varargi
     %% clear the workspace and select data
     % clear; clc; close all;
 
-    %% choose data
+    %% choose multiple datasets or just one
     inputFilename = inputMovie;
+
     neuron = Sources2D();
-    % nam = get_fullname('\\171.65.115.78\america\data\miniscope\test\2014_10_16_p215_m790_reversalAcq04_small_4\2014_10_16_p215_m790_reversalAcq04_turboreg_crop_dfof_downsample.h5');          % this demo data is very small, here we just use it as an example
-
-    nam = get_fullname(inputFilename);          % this demo data is very small, here we just use it as an example
-    nam = neuron.select_data(nam);  %if nam is [], then select data interactively
-
-    % nams = {inputFilename};          % you can put all file names into a cell array; when it's empty, manually select files
-    % nams = neuron.select_multiple_files(nams);  %if nam is [], then select data interactively
+    nams = {inputFilename};          % you can put all file names into a cell array; when it's empty, manually select files
+    nams = neuron.select_multiple_files(nams);  %if nam is [], then select data interactively
 
     %% parameters
     % -------------------------    COMPUTATION    -------------------------  %
     pars_envs = struct('memory_size_to_use', 8, ...   % GB, memory space you allow to use in MATLAB
-        'memory_size_per_patch', 0.6, ...   % GB, space for loading data within one patch
-        'patch_dims', [64, 64]);  %GB, patch size
-    % pars_envs = struct('memory_size_to_use', 8, ...   % GB, memory space you allow to use in MATLAB
-    %     'memory_size_per_patch', 0.5, ...   % GB, space for loading data within one patch
-    %     'patch_dims', [64, 64],...  %GB, patch size
-    %     'batch_frames', 1000);           % number of frames per batch
-
-    % -------------------------      SPATIAL      -------------------------  %
+        'memory_size_per_patch', 0.5, ...   % GB, space for loading data within one patch
+        'patch_dims', [64, 64],...  %GB, patch size
+        'batch_frames', options.batch_frames);           % number of frames per batch
+      % -------------------------      SPATIAL      -------------------------  %
     gSig = options.gSig;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
     gSiz = options.gSiz;          % pixel, neuron diameter
     ssub = options.ssub;           % spatial downsampling factor
@@ -77,7 +70,7 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(inputMovie,varargi
         updateA_bSiz = neuron.options.dist;
     end
     spatial_constraints = struct('connected', true, 'circular', false);  % you can include following constraints: 'circular'
-    spatial_algorithm = 'hals_thresh';
+    spatial_algorithm = 'hals';
 
     % -------------------------      TEMPORAL     -------------------------  %
     Fs = 10;             % frame rate
@@ -96,10 +89,10 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(inputMovie,varargi
     % -------------------------     BACKGROUND    -------------------------  %
     bg_model = 'ring';  % model of the background {'ring', 'svd'(default), 'nmf'}
     nb = 1;             % number of background sources for each patch (only be used in SVD and NMF model)
-    ring_radius = 18;  % when the ring model used, it is the radius of the ring used in the background model.
+    bg_neuron_factor = 1.4;
+    ring_radius = round(bg_neuron_factor * gSiz);  % when the ring model used, it is the radius of the ring used in the background model.
     %otherwise, it's just the width of the overlapping area
-    num_neighbors = []; % number of neighbors for each neuron
-    bg_ssub = 2;        % downsample background for a faster speed
+    num_neighbors = 50; % number of neighbors for each neuron
 
     % -------------------------      MERGING      -------------------------  %
     show_merge = false;  % if true, manually verify the merging step
@@ -119,7 +112,7 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(inputMovie,varargi
     save_initialization = false;    % save the initialization procedure as a video.
     use_parallel = true;    % use parallel computation for parallel computing
     show_init = true;   % show initialization results
-    choose_params = false; % manually choose parameters
+    choose_params = true; % manually choose parameters
     center_psf = true;  % set the value as true when the background fluctuation is large (usually 1p data)
     % set the value as false when the background fluctuation is small (2p)
 
@@ -137,9 +130,7 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(inputMovie,varargi
     kt = 3;                 % frame intervals
 
     % -------------------------    UPDATE ALL    -------------------------  %
-    neuron.updateParams(...
-        'save_intermediate',false,...
-        'gSig', gSig, ...       % -------- spatial --------
+    neuron.updateParams('gSig', gSig, ...       % -------- spatial --------
         'gSiz', gSiz, ...
         'ring_radius', ring_radius, ...
         'ssub', ssub, ...
@@ -156,7 +147,6 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(inputMovie,varargi
         'nb', nb, ...
         'ring_radius', ring_radius, ...
         'num_neighbors', num_neighbors, ...
-        'bg_ssub', bg_ssub, ...
         'merge_thr', merge_thr, ...             % -------- merging ---------
         'dmin', dmin, ...
         'method_dist', method_dist, ...
@@ -168,100 +158,31 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(inputMovie,varargi
     neuron.Fs = Fs;
 
     %% distribute data and be ready to run source extraction
-    neuron.getReady(pars_envs);
-    % neuron.getReady_batch(pars_envs);
+    neuron.getReady_batch(pars_envs);
 
-    %% initialize neurons from the video data within a selected temporal range
-    if choose_params
-        % change parameters for optimized initialization
-        [gSig, gSiz, ring_radius, min_corr, min_pnr] = neuron.set_parameters();
-    end
+    %% initialize neurons in batch mode
+    neuron.initComponents_batch(K, save_initialization, use_parallel);
 
-    [center, Cn, PNR] = neuron.initComponents_parallel(K, frame_range, save_initialization, use_parallel);
-    neuron.compactSpatial();
-    if show_init
-        figure();
-        ax_init= axes();
-        imagesc(Cn, [0, 1]); colormap gray;
-        hold on;
-        plot(center(:, 2), center(:, 1), '.r', 'markersize', 10);
-    end
+    %% udpate spatial components for all batches
+    neuron.update_spatial_batch(use_parallel);
 
-    %% estimate the background components
-    neuron.update_background_parallel(use_parallel);
-    neuron_init = neuron.copy();
+    %% udpate temporal components for all bataches
+    neuron.update_temporal_batch(use_parallel);
 
-    %%  merge neurons and update spatial/temporal components
-    neuron.merge_neurons_dist_corr(show_merge);
-    neuron.merge_high_corr(show_merge, merge_thr_spatial);
+    %% update background
+    neuron.update_background_batch(use_parallel);
 
-    %% update spatial components
+    %% delete neurons
 
-    %% pick neurons from the residual
-    [center_res, Cn_res, PNR_res] =neuron.initComponents_residual_parallel([], save_initialization, use_parallel, min_corr_res, min_pnr_res, seed_method_res);
-    if show_init
-        axes(ax_init);
-        plot(center_res(:, 2), center_res(:, 1), '.g', 'markersize', 10);
-    end
-    neuron_init_res = neuron.copy();
+    %% merge neurons
 
-    %% udpate spatial&temporal components, delete false positives and merge neurons
-    % update spatial
-    if update_sn
-        neuron.update_spatial_parallel(use_parallel, true);
-        udpate_sn = false;
-    else
-        neuron.update_spatial_parallel(use_parallel);
-    end
-    % merge neurons based on correlations
-    neuron.merge_high_corr(show_merge, merge_thr_spatial);
+    %% get the correlation image and PNR image for all neurons
+    neuron.correlation_pnr_batch();
 
-    for m=1:2
-        % update temporal
-        neuron.update_temporal_parallel(use_parallel);
+    %% concatenate temporal components
+    neuron.concatenate_temporal_batch();
+    % neuron.viewNeurons([],neuron.C_raw);
 
-        % delete bad neurons
-        neuron.remove_false_positives();
-
-        % merge neurons based on temporal correlation + distances
-        neuron.merge_neurons_dist_corr(show_merge);
-    end
-
-    %% add a manual intervention and run the whole procedure for a second time
-    neuron.options.spatial_algorithm = 'nnls';
-    if with_manual_intervention
-        show_merge = true;
-        neuron.orderROIs('snr');   % order neurons in different ways {'snr', 'decay_time', 'mean', 'circularity'}
-        neuron.viewNeurons([], neuron.C_raw);
-
-        % merge closeby neurons
-        neuron.merge_close_neighbors(true, dmin_only);
-
-        % delete neurons
-        tags = neuron.tag_neurons_parallel();  % find neurons with fewer nonzero pixels than min_pixel and silent calcium transients
-        ids = find(tags>0);
-        if ~isempty(ids)
-            neuron.viewNeurons(ids, neuron.C_raw);
-        end
-    end
-    %% run more iterations
-    neuron.update_background_parallel(use_parallel);
-    neuron.update_spatial_parallel(use_parallel);
-    neuron.update_temporal_parallel(use_parallel);
-
-    K = size(neuron.A,2);
-    tags = neuron.tag_neurons_parallel();  % find neurons with fewer nonzero pixels than min_pixel and silent calcium transients
-    neuron.remove_false_positives();
-    neuron.merge_neurons_dist_corr(show_merge);
-    neuron.merge_high_corr(show_merge, merge_thr_spatial);
-
-    if K~=size(neuron.A,2)
-        neuron.update_spatial_parallel(use_parallel);
-        neuron.update_temporal_parallel(use_parallel);
-        neuron.remove_false_positives();
-    end
-
-    %%
     % Get the folder path string
     [PATHSTR,NAME,EXT] = fileparts(inputFilename);
     [~,folderName,~] = fileparts(PATHSTR);
@@ -270,39 +191,16 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(inputMovie,varargi
     cnmfeAnalysisOutput.success = 1;
     cnmfeAnalysisOutput.params = results.options;
     cnmfeAnalysisOutput.movieList = inputFilename;
-    cnmfeAnalysisOutput.extractedImages = reshape(full(results.A),[neuron.options.d1 neuron.options.d2 size(results.C,1)]);
     % cnmfeAnalysisOutput.extractedImages = reshape(full(results.A),[size(results.P.sn) size(results.C,1)]);
+
+    cnmfeAnalysisOutput.extractedImages = reshape(full(results.A),[neuron.options.d1 neuron.options.d2 size(results.C,1)]);
     cnmfeAnalysisOutput.extractedSignals = results.C;
     cnmfeAnalysisOutput.extractedSignalsEst = results.C_raw;
     cnmfeAnalysisOutput.extractedPeaks = results.S;
     cnmfeAnalysisOutput.Cn = results.Cn;
     cnmfeAnalysisOutput.P = results.P;
-    % save([PATHSTR filesep folderName '_cnmfeAnalysis.mat'],'cnmfeAnalysisOutput');
 
-    % cnmfAnalysisOutput = cnmfeAnalysisOutput;
-    % save([PATHSTR filesep folderName '_cnmfAnalysis.mat'],'cnmfAnalysisOutput');
+    %% save workspace
+    % neuron.save_workspace_batch();
 
-
-    %% save the workspace for future analysis
-    neuron.orderROIs('snr');
-    try
-        cnmfe_path = neuron.save_workspace();
-    catch err
-        display(repmat('@',1,7))
-        disp(getReport(err,'extended','hyperlinks','on'));
-        display(repmat('@',1,7))
-    end
-    %% show neuron contours
-    % Coor = neuron.show_contours(0.6);
-
-    %% create a video for displaying the
-    % amp_ac = 140;
-    % range_ac = 5+[0, amp_ac];
-    % multi_factor = 10;
-    % range_Y = 1300+[0, amp_ac*multi_factor];
-
-    % avi_filename = neuron.show_demixed_video(save_demixed, kt, [], amp_ac, range_ac, range_Y, multi_factor);
-
-    %% save neurons shapes
-    % neuron.save_neurons();
 end

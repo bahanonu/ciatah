@@ -1036,7 +1036,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			display(repmat('*',1,14))
 			startTime = tic;
 			cnmfeAnalysisOutput = [];
-			[cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(movieList{1},'options',cnmfeOptions);
+			% [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(movieList{1},'options',cnmfeOptions);
+			[cnmfeAnalysisOutput] = computeCnmfeSignalExtraction_batch(movieList{1},'options',cnmfeOptions);
 
 			% [figHandle figNo] = openFigure(1337, '');hold off;
 			% obj.modelSaveImgToFile([],'initializationROIs_',1337,[obj.folderBaseSaveStr{obj.fileNum} '_run0' num2str(parameterSetNo)]);
