@@ -12,10 +12,17 @@ function [croppedPeakImages] = compareSignalToMovie(inputMovie, inputImages, inp
 		% 2014.01.18 [12:24:29] fully implemented, cut out from controllerAnalysis, need to improve handling at beginning of movie, but that's a playMovie function issue
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
 		% 2017.02.14 - updated to support extended crosshairs and outlines.
+		% 2019.02.13 [14:52:33] - Update to add support to loading from disk and other speed improvements.
 	% TODO
 		%
 
 	%========================
+    % Vector: 3 element vector indicating [x y frames]
+	options.inputMovieDims = [];
+	% hierarchy name in hdf5 where movie is
+	options.inputDatasetName = '/1';
+	% Binary: 1 = read movie from HDD, 0 = load entire movie
+	options.readMovieChunks = 0;
 	% old way of saving, only temporary until full switch
 	options.oldSave = 0;
 	% size in pixels to show signal image
@@ -48,6 +55,9 @@ function [croppedPeakImages] = compareSignalToMovie(inputMovie, inputImages, inp
 	options.yCoords = [];
 	% pre-set the min/max for movie display
 	options.movieMinMax = [];
+	%
+	options.hdf5Fid = [];
+	options.keepFileOpen = 0;
 	% get options
 	options = getOptions(options,varargin);
 	% unpack options into current workspace
@@ -56,6 +66,17 @@ function [croppedPeakImages] = compareSignalToMovie(inputMovie, inputImages, inp
 	%     eval([fn{i} '=options.' fn{i} ';']);
 	% end
 	%========================
+
+	if isempty(options.inputMovieDims)
+		if strcmp(class(inputMovie),'char')|strcmp(class(inputMovie),'cell')
+		    movieDims = loadMovieList(inputMovie,'frameList',[],'inputDatasetName',options.inputDatasetName,'getMovieDims',1,'displayInfo',0);
+		    options.inputMovieDims = [movieDims.one movieDims.two movieDims.three];
+		    % Force read movie chunks to be 1
+		    % options.readMovieChunks = 1;
+		else
+		    options.inputMovieDims = size(inputMovie);
+		end
+	end
 
 	if isempty(options.signalPeakArray)
 		[signalPeaks, signalPeakArray] = computeSignalPeaks(inputSignal, 'makePlots', 0,'makeSummaryPlots',0,'waitbarOn',options.waitbarOn);
@@ -74,8 +95,10 @@ function [croppedPeakImages] = compareSignalToMovie(inputMovie, inputImages, inp
 
 	cropSize = options.cropSize;
 	nSignals = size(inputImages,3);
-	nPoints = size(inputMovie,3);
-	movieDims = size(inputMovie);
+	% nPoints = size(inputMovie,3);
+	nPoints = options.inputMovieDims(3);
+	% movieDims = size(inputMovie);
+	movieDims = options.inputMovieDims;
 	timeSeq = options.timeSeq;
 
 	% inputMovie(inputMovie>1.3) = NaN;
@@ -122,7 +145,34 @@ function [croppedPeakImages] = compareSignalToMovie(inputMovie, inputImages, inp
 		% xLow
 		% xHigh
 		% peakLocations
-		croppedPeakImages = inputMovie(yLow:yHigh,xLow:xHigh,peakLocations);
+
+		if strcmp(class(inputMovie),'char')|strcmp(class(inputMovie),'cell')
+			% load only movie chunk needed directly from memory
+			yLims = yLow:yHigh;
+			xLims = xLow:xHigh;
+
+			% % signalPeaksThis
+			% if isempty(signalPeaksThis)
+			% 	signalPeaksThis = randperm(nFrames,2);
+			% end
+			% % signalImagesCrop = [];
+			% % signalImagesCrop = {};
+			% if nPeaksToUse>10
+			% 	nPeaksToUse = 10;
+			% end
+			offset = {};
+			block = {};
+			nPeaksToUse = length(peakLocations);
+			for signalPeakFrameNo = 1:nPeaksToUse
+				offset{signalPeakFrameNo} = [yLow-1 xLow-1 peakLocations(signalPeakFrameNo)-1];
+				block{signalPeakFrameNo} = [length(yLims) length(xLims) 1];
+			end
+			[croppedPeakImages] = readHDF5Subset(inputMovie, offset, block,'datasetName',options.inputDatasetName,'displayInfo',0,'hdf5Fid',options.hdf5Fid,'keepFileOpen',options.keepFileOpen);
+			% size(croppedPeakImages)
+		else
+			croppedPeakImages = inputMovie(yLow:yHigh,xLow:xHigh,peakLocations);
+		end
+
 		firstImg = squeeze(inputImages(yLow:yHigh,xLow:xHigh,signalNo));
 
 		if options.addPadding==1&(xDiff~=0|yDiff~=0)
@@ -212,8 +262,33 @@ function [croppedPeakImages] = compareSignalToMovie(inputMovie, inputImages, inp
 			peakIdxs(find(peakIdxs<1)) = 1;
 			peakIdxs(find(peakIdxs>nPoints)) = 1;
 			% get cropped version of the movie
-			croppedMovie = inputMovie(yLow:yHigh,xLow:xHigh,peakIdxs);
-			inputMovieCut = inputMovie(:,:,peakIdxs);
+			if strcmp(class(inputMovie),'char')|strcmp(class(inputMovie),'cell')
+				% load only movie chunk needed directly from memory
+				yLims = yLow:yHigh;
+				xLims = xLow:xHigh;
+
+				% % signalPeaksThis
+				% if isempty(signalPeaksThis)
+				% 	signalPeaksThis = randperm(nFrames,2);
+				% end
+				% % signalImagesCrop = [];
+				% % signalImagesCrop = {};
+				% if nPeaksToUse>10
+				% 	nPeaksToUse = 10;
+				% end
+				offset = {};
+				block = {};
+				nPeaksToUse = length(peakIdxs);
+				for signalPeakFrameNo = 1:nPeaksToUse
+					offset{signalPeakFrameNo} = [yLow-1 xLow-1 peakIdxs(signalPeakFrameNo)-1];
+					block{signalPeakFrameNo} = [length(yLims) length(xLims) 1];
+				end
+				[croppedMovie] = readHDF5Subset(inputMovie, offset, block,'datasetName',options.inputDatasetName,'displayInfo',0);
+				[inputMovieCut] = loadMovieList(inputMovie,'frameList',peakIdxs,'inputDatasetName',options.inputDatasetName,'getMovieDims',0);
+			else
+				croppedMovie = inputMovie(yLow:yHigh,xLow:xHigh,peakIdxs);
+				inputMovieCut = inputMovie(:,:,peakIdxs);
+			end
 			% inputMovieCut
 			cDims = size(croppedMovie);
 			exitSignal = playMovie(inputMovieCut,'extraMovie',croppedMovie,...

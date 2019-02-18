@@ -48,6 +48,7 @@ Note
 - Place in folder where MATLAB will have write permissions, as it also creates a `private` subdirectory to store some user information.
 - `file_exchange` folder contains File Exchange functions used by `calciumImagingAnalysis`. If does not exist, unzip `file_exchange.zip`.
 - In general, it is best to set the MATLAB startup directory to the `calciumImagingAnalysis` folder. This allows `java.opts` and `startup.m` to set the correct Java memory requirements and load the correct folders into the MATLAB path.
+- If it appears an old `calciumImagingAnalysis` respository is loaded after pulling a new version, run `restoredefaultpath` and check that old `calciumImagingAnalysis` folders are not in the MATLAB path.
 - This version of `calciumImagingAnalysis` has been tested on Windows MATLAB `2015b`, `2017a`, and `2018b`.
 
 ### Test data

@@ -812,6 +812,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			run(cvxSetupPath);
 		end
 
+		% Get the number of cells that should be requested
 		switch pcaicaPCsICsSwitchStr
 			case 'Subject'
 				nPCsnICs = obj.numExpectedSignals.(obj.signalExtractionMethod).(obj.subjectStr{obj.fileNum})
@@ -941,6 +942,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				% [cnmfAnalysisOutput] = computeCnmfSignalExtraction(movieList,obj.numExpectedSignals.(obj.signalExtractionMethod).(obj.subjectStr{obj.fileNum}),'options',cnmfOptions);
 
 				numExpectedComponents = obj.numExpectedSignals.(obj.signalExtractionMethod).(obj.subjectStr{obj.fileNum});
+				numExpectedComponents = numExpectedComponents(1);
 				originalPath = [options.signalExtractionRootPath filesep 'cnmf_original'];
 				currentPath = [options.signalExtractionRootPath filesep 'cnmf_current'];
 				switch options.CNMF.originalCurrentSwitch

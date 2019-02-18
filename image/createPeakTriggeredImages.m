@@ -133,7 +133,7 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 		options_runSecondCorr = options.runSecondCorr;
 		options_outputImageFlag = options.outputImageFlag;
 
-		options_maxPeaksToUse
+		% options_maxPeaksToUse
 
 		disp('Starting movie images...')
 		display(repmat('.',1,round(nSignals/20)))

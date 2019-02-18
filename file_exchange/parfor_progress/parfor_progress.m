@@ -41,6 +41,10 @@ end
 
 percent = 0;
 progressLength = 0;
+
+if usejava('desktop')==0
+    return;
+end
 return;
 w = 50; % Width of progress bar
 saveDir = 'private';

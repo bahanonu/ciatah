@@ -37,6 +37,8 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
         % 2018.10.08 [14:43:10] - good cells now will always be on top regardless of overlapping bad cells, option to widen selector line.
         % 2018.10.21 - Misc. changes to make it easier to look at overlapping cells.
         % 2019.01.29 [11:19:10] - Changed how movie transient montages are created, no longer use the montage function and several other Cdata vs. imagesc related changes to improve speed, esp. in R2018b.
+        % 2019.02.13 Made compatible with large movies, just input string into options.inputMovie.
+        % 2019.02.13 [16:56:21] Major speed improvements going between cells by adding options.hdf5Fid (to several functions, in order to relay to readHDF5Subset in the end) to reduce readHDF5Subset fopen overhead.
 
     % TODO
         % DONE: allow option to mark rest as bad signals
@@ -44,6 +46,33 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
         % set viewMontageso it uses minValTraces maxValTraces
 
     % ============================
+    % ===MOVIE SETTINGS
+    % Matrix or str: used to find movie frames at peaks. Matrix, movie matching inputImages/inputSignals src. Str, path to the HDF5 movie.
+    options.inputMovie = [];
+    % IGNORE: Raw (not processed) movie matching inputImages/inputSignals src, used to find movie frames at peaks
+    options.inputMovieRaw = [];
+    % Vector: 3 element vector indicating [x y frames]
+    options.inputMovieDims = [];
+    % name of HDF5 dataset name to load
+    options.inputDatasetName = '/1';
+    % FID of the inputMovie via H5F.open to save time
+    options.hdf5Fid = [];
+    % Whether to keep HDF5 file open (for FID)
+    options.keepFileOpen = 0;
+    % number of frames in each movie to load, [] = all, 1:500 would be 1st to 500th frame.
+    options.frameList = [];
+    % Number of frames to sample of inputMovie to get statistics
+    options.nFrameSampleInputMovie = 10;
+    % Binary: 1 = read movie from HDD, 0 = load entire movie
+    options.readMovieChunks = 0;
+    % movie stats
+    options.movieMax = NaN;
+    options.movieMin = NaN;
+    options.movieMinLim = -0.02;%-0.025
+    options.movieMean = NaN;
+    % Binary: 1 = pre-compute movies aligned to signal transients
+    options.preComputeImageCutMovies = 0;
+    % ===OTHER SETTINGS
     % set default options
     options.nSignals = size(inputImages,3);
     % string to display over the cell map
@@ -67,10 +96,6 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
     options.upperClassifierThres = 0.6;
     % lower range pct score to manually sort
     options.lowerClassifierThres = 0.3;
-    % movie matching inputImages/inputSignals src, used to find movie frames at peaks
-    options.inputMovie = [];
-    % Raw (not processed) movie matching inputImages/inputSignals src, used to find movie frames at peaks
-    options.inputMovieRaw = [];
     % sort by the SNR
     options.sortBySNR = 0;
     % randomize order
@@ -82,11 +107,6 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
     options.signalPeaksArray = [];
     % ROI for peak signal plotting
     options.peakROI = [-20:20];
-    % movie stats
-    options.movieMax = NaN;
-    options.movieMin = NaN;
-    options.movieMinLim = -0.02;%-0.025
-    options.movieMean = NaN;
     % whether to median filter the input trace
     options.medianFilterTrace = 1;
     % whether to subtract mean during SNR calc
@@ -117,8 +137,6 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
     options.cellmapZoomPx = 40;
     % Binary: 1 = obj outline in signal cut movies, 0 = no outlines
     options.outlinesObjCutMovie = 0;
-    % Binary: 1 = pre-compute movies aligned to signal transients
-    options.preComputeImageCutMovies = 0;
     % Input pre-computed x,y coordinates for objects in images
     options.coord.xCoords = [];
     options.coord.yCoords = [];
@@ -146,24 +164,59 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
     end
 
     if ~isempty(options.inputMovie)
-        tmpMovie = options.inputMovie(1:round(numel(options.inputMovie)*0.05):numel(options.inputMovie));
+        if strcmp(class(options.inputMovie),'char')|strcmp(class(options.inputMovie),'cell')
+            movieDims = loadMovieList(options.inputMovie,'frameList',options.frameList,'inputDatasetName',options.inputDatasetName,'getMovieDims',1);
+            options.inputMovieDims = [movieDims.one movieDims.two movieDims.three];
+            % Force read movie chunks to be 1
+            % options.readMovieChunks = 1;
+            options.hdf5Fid = H5F.open(options.inputMovie);
+            options.keepFileOpen = 1;
+        else
+            options.inputMovieDims = size(options.inputMovie);
+        end
+    end
+
+    if ~isempty(options.inputMovie)
+        % get the movie
+        if strcmp(class(options.inputMovie),'char')|strcmp(class(options.inputMovie),'cell')
+            tmpFrameList = round(linspace(1,options.inputMovieDims(3),options.nFrameSampleInputMovie));
+            tmpMovie = loadMovieList(options.inputMovie,'convertToDouble',0,'frameList',tmpFrameList,'inputDatasetName',options.inputDatasetName);
+            % offsetMovie{signalPeakFrameNo} = [yLow-1 xLow-1 signalPeaksThis(signalPeakFrameNo)-1];
+            % blockMovie{signalPeakFrameNo} = [length(yLims) length(xLims) 1];
+            % [signalImagesCrop] = readHDF5Subset(inputMovie, offsetMovie, blockMovie,'datasetName',options.inputDatasetName,'displayInfo',0);
+        else
+            tmpMovie = options.inputMovie(1:round(numel(options.inputMovie)*0.05):numel(options.inputMovie));
+        end
+
         if isnan(options.movieMax)
             display('calculating movie max...')
-            options.movieMax = nanmax(options.inputMovie(:));
+            % options.movieMax = nanmax(options.inputMovie(:));
+            options.movieMax = nanmax(tmpMovie(:));
         end
         % options.movieMax = prctile(tmpMovie,99.9); % use percentile to avoid randomly high max values
         % options.movieMax = prctile(options.inputMovie(:),95);
         if isnan(options.movieMin)
             display('calculating movie min...')
-            options.movieMin = nanmin(options.inputMovie(:));
+            % options.movieMin = nanmin(options.inputMovie(:));
+            options.movieMin = nanmin(tmpMovie(:));
         end
         % options.movieMin = nanmin(tmpMovie);
         display('calculating movie mean...')
         try
-            options.movieMean = nanmean(options.inputMovie(1:10,1:10,:));
+            if strcmp(class(options.inputMovie),'char')|strcmp(class(options.inputMovie),'cell')
+                options.movieMean = nanmean(tmpMovie(:));
+            else
+                tmpMovie2 = options.inputMovie(1:10,1:10,:);
+                options.movieMean = nanmean(tmpMovie2(:));
+                clear tmpMovie2;
+            end
             % options.movieMean = nanmean(tmpMovie);
         catch
-            options.movieMean = nanmean(options.inputMovie(:));
+            if strcmp(class(options.inputMovie),'char')|strcmp(class(options.inputMovie),'cell')
+                options.movieMean = nanmean(tmpMovie(:));
+            else
+                options.movieMean = nanmean(options.inputMovie(:));
+            end
         end
         clear tmpMovie;
     end
@@ -284,6 +337,8 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
             idxHere = peaksNoneIdx(idxHereNo);
             signalPeakIdx{idxHere} = [unique([maxValueIndices{idxHereNo}(:);
             signalPeakIdx{idxHere}(:)])]';
+            % signalPeakIdx{idxHere} = sort(signalPeakIdx{idxHere});
+            % signalPeakIdx{idxHere}
             signalPeaks(idxHere,signalPeakIdxTmp{idxHereNo}(:)) = 1;
         end
     end
@@ -300,16 +355,35 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
         %         signalPeaksArrayTmp{sss} = signalPeaksArrayTmp{sss}(1:10);
         %     end
         % end
-        [~, outputMeanImageCorrs, outputMeanImageCorrs2] = createPeakTriggeredImages(options.inputMovie, inputImages, inputSignals,'cropSize',options.cropSize,'signalPeaksArray',signalPeaksArray,'xCoords',options.coord.xCoords,'yCoords',options.coord.yCoords,'maxPeaksToUse',5,'normalizeOutput',0,'inputImagesThres',inputImagesThres);
-        outputMeanImageCorrs(isnan(outputMeanImageCorrs)) = 0;
-        outputMeanImageCorrs2(isnan(outputMeanImageCorrs2)) = 0;
-        peakOutputStat.outputMeanImageCorrs = outputMeanImageCorrs(:);
-        peakOutputStat.outputMeanImageCorrs2 = outputMeanImageCorrs2(:);
-        % get ROI traces
-        if options.showROITrace==1
-            [ROItraces] = applyImagesToMovie(inputImagesThres,options.inputMovie,'alreadyThreshold',1,'waitbarOn',1);
-        else
+        % if strcmp(class(options.inputMovie),'char')|strcmp(class(options.inputMovie),'cell')
+        %     % Load movie chunks to save RAM
+        %     readMovieChunksTmp = 1;
+        % else
+        %     readMovieChunksTmp = 0;
+        % end
+
+        if strcmp(class(options.inputMovie),'char')|strcmp(class(options.inputMovie),'cell')
+            % Ignore for now.
+            outputMeanImageCorrs = NaN([size(inputSignals,1) 1]);
+            outputMeanImageCorrs2 = NaN([size(inputSignals,1) 1]);
+            peakOutputStat.outputMeanImageCorrs = outputMeanImageCorrs(:);
+            peakOutputStat.outputMeanImageCorrs2 = outputMeanImageCorrs2(:);
+
+            % No ROI traces when enter a cell
+            options.showROITrace = 0;
             ROItraces = [];
+        else
+            [~, outputMeanImageCorrs, outputMeanImageCorrs2] = createPeakTriggeredImages(options.inputMovie, inputImages, inputSignals,'cropSize',options.cropSize,'signalPeaksArray',signalPeaksArray,'xCoords',options.coord.xCoords,'yCoords',options.coord.yCoords,'maxPeaksToUse',5,'normalizeOutput',0,'inputImagesThres',inputImagesThres,'readMovieChunks',options.readMovieChunks);
+            outputMeanImageCorrs(isnan(outputMeanImageCorrs)) = 0;
+            outputMeanImageCorrs2(isnan(outputMeanImageCorrs2)) = 0;
+            peakOutputStat.outputMeanImageCorrs = outputMeanImageCorrs(:);
+            peakOutputStat.outputMeanImageCorrs2 = outputMeanImageCorrs2(:);
+            % get ROI traces
+            if options.showROITrace==1
+                [ROItraces] = applyImagesToMovie(inputImagesThres,options.inputMovie,'alreadyThreshold',1,'waitbarOn',1);
+            else
+                ROItraces = [];
+            end
         end
     else
         peakOutputStat.outputMeanImageCorrs = NaN([size(inputImages,3) 1]);
@@ -1004,7 +1078,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                     ' | EquivD = ' num2str(round(imgStats.EquivDiameter(i)*sigDig)/sigDig)];
                     % ' | Solidity = ' num2str(round(imgStats.Solidity(i)*sigDig)/sigDig)...
                 plotSignal(thisTrace,testpeaks,'',thisStr,minValTraces,maxValTraces,options,inputSignalSignal{i},inputSignalNoise{i});
-                if ~isempty(options.inputMovie)&options.showROITrace==1
+                if ~isempty(options.inputMovie)&options.showROITrace==1&~strcmp(class(options.inputMovie),'char')
                     hold on
                     % [tmpTrace] = applyImagesToMovie(inputImagesThres(:,:,i),options.inputMovie,'alreadyThreshold',1,'waitbarOn',0);
                     tmpTrace = ROItraces(i,:);
@@ -1223,7 +1297,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                     plot(inputSignalNoise{i},'k'); hold on
                     plot(inputSignalSignal{i},'r');
                     title('Original')
-                if ~isempty(options.inputMovie)
+                if ~isempty(options.inputMovie)&~strcmp(class(options.inputMovie),'char')
                     [ROItraces] = applyImagesToMovie(inputImagesThres(:,:,i),options.inputMovie,'alreadyThreshold',1,'waitbarOn',1);
                     subplot(plotYn,1,3)
                         plot(ROItraces,'k');
@@ -1286,7 +1360,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
             [peakSignalAmplitude peakIdx] = sort(peakSignalAmplitude,'descend');
             signalPeakArray = {signalPeakArray(peakIdx)};
             try
-                compareSignalToMovie(options.inputMovie, inputImages(:,:,i), thisTrace,'waitbarOn',0,'timeSeq',-10:10,'signalPeakArray',signalPeakArray,'cropSize',options.cropSizeLength,'movieMinMax',[minHere maxHere]);
+                compareSignalToMovie(options.inputMovie, inputImages(:,:,i), thisTrace,'waitbarOn',0,'timeSeq',-10:10,'signalPeakArray',signalPeakArray,'cropSize',options.cropSizeLength,'movieMinMax',[minHere maxHere],'inputDatasetName',options.inputDatasetName,'inputMovieDims',options.inputMovieDims);
                 % options.movieMin options.movieMax
             catch err
                 display(repmat('@',1,7))
@@ -1357,7 +1431,13 @@ function [objCutMovie] = createObjCutMovieSignalSorter(options,testpeaks,thisTra
     preOffset = 10;
     postOffset = 10;
     timeVector = [-preOffset:postOffset]';
-    nPoints = size(options.inputMovie,3);
+    if strcmp(class(options.inputMovie),'char')|strcmp(class(options.inputMovie),'cell')
+        % movieDims = loadMovieList(options.inputMovie,'frameList',[],'inputDatasetName',options.inputDatasetName,'getMovieDims',1,'displayInfo',0);
+        % options.inputMovieDims = [movieDims.one movieDims.two movieDims.three];
+        nPoints = options.inputMovieDims(3);
+    else
+        nPoints = size(options.inputMovie,3);
+    end
     maxSignalsToShow = options.maxSignalsToShow-1;
     % testpeaks= unique(testpeaks);
     % bias toward high amplitude signals
@@ -1381,6 +1461,7 @@ function [objCutMovie] = createObjCutMovieSignalSorter(options,testpeaks,thisTra
         framesToAlign = testpeaks;
     end
 
+    % framesToAlign = sort(framesToAlign);
     % thisTrace(framesToAlign(:))
 
     %remove points outside valid range
@@ -1393,12 +1474,19 @@ function [objCutMovie] = createObjCutMovieSignalSorter(options,testpeaks,thisTra
     peakIdxs(find((peakIdxs>nPoints))) = [];
     % get movie cut around cell
 
+    % framesToAlign
+    % peakIdxs
+
     xCoords = options.coord.xCoords(i);
     yCoords = options.coord.yCoords(i);
 
     tmpImgHere = inputImages(:,:,i);
-    tmpMovieHere = options.inputMovie(:,:,peakIdxs);
-    objCutMovie = getObjCutMovie(tmpMovieHere,tmpImgHere,'createMontage',0,'extendedCrosshairs',2,'crossHairVal',maxValMovie*options.crossHairPercent,'outlines',1,'waitbarOn',0,'cropSize',cropSizeLength,'addPadding',usePadding,'xCoords',xCoords,'yCoords',yCoords,'outlineVal',NaN);
+    if strcmp(class(options.inputMovie),'char')|strcmp(class(options.inputMovie),'cell')
+        objCutMovie = getObjCutMovie(options.inputMovie,tmpImgHere,'createMontage',0,'extendedCrosshairs',2,'crossHairVal',maxValMovie*options.crossHairPercent,'outlines',1,'waitbarOn',0,'cropSize',cropSizeLength,'addPadding',usePadding,'xCoords',xCoords,'yCoords',yCoords,'outlineVal',NaN,'frameList',peakIdxs,'inputDatasetName',options.inputDatasetName,'inputMovieDims',options.inputMovieDims,'hdf5Fid',options.hdf5Fid,'keepFileOpen',options.keepFileOpen);
+    else
+        tmpMovieHere = options.inputMovie(:,:,peakIdxs);
+        objCutMovie = getObjCutMovie(tmpMovieHere,tmpImgHere,'createMontage',0,'extendedCrosshairs',2,'crossHairVal',maxValMovie*options.crossHairPercent,'outlines',1,'waitbarOn',0,'cropSize',cropSizeLength,'addPadding',usePadding,'xCoords',xCoords,'yCoords',yCoords,'outlineVal',NaN,'inputMovieDims',options.inputMovieDims,'hdf5Fid',options.hdf5Fid,'keepFileOpen',options.keepFileOpen);
+    end
 
     objCutMovie = vertcat(objCutMovie{:});
     % objCutMovieTmp = objCutMovie{1};
@@ -1451,7 +1539,7 @@ function [objCutMovie] = createObjCutMovieSignalSorter(options,testpeaks,thisTra
     end
 
     if options.outlinesObjCutMovie==1
-        croppedPeakImages = compareSignalToMovie(options.inputMovie, tmpImgHere, thisTrace,'crosshairs',0,'getOnlyPeakImages',1,'waitbarOn',0,'extendedCrosshairs',0,'crossHairVal',maxValMovie*options.crossHairPercent,'outlines',0,'signalPeakArray',{testpeaks},'cropSize',cropSizeLength);
+        croppedPeakImages = compareSignalToMovie(options.inputMovie, tmpImgHere, thisTrace,'crosshairs',0,'getOnlyPeakImages',1,'waitbarOn',0,'extendedCrosshairs',0,'crossHairVal',maxValMovie*options.crossHairPercent,'outlines',0,'signalPeakArray',{testpeaks},'cropSize',cropSizeLength,'inputDatasetName',options.inputDatasetName,'inputMovieDims',options.inputMovieDims);
         [thresholdedImages boundaryIndices] = thresholdImages(croppedPeakImages(:,:,1),'binary',1,'getBoundaryIndex',1,'threshold',options.thresholdOutline);
         for imageNo = nStimMovies:nStimMovies+2
             idxToUse = [(imageNo*nStimPoints+1):((imageNo+1)*nStimPoints)];
@@ -1500,7 +1588,9 @@ function [croppedPeakImages2 croppedPeakImages] = viewMontage(inputMovie,inputIm
     xCoords = options.coord.xCoords(i);
     yCoords = options.coord.yCoords(i);
 
-    croppedPeakImages = compareSignalToMovie(inputMovie, inputImage, thisTrace,'getOnlyPeakImages',1,'waitbarOn',0,'extendedCrosshairs',2,'crossHairVal',maxValMovie*options.crossHairPercent,'outlines',1,'signalPeakArray',signalPeakArray,'cropSize',cropSizeLength,'addPadding',1,'outlineVal',NaN,'xCoords',xCoords,'yCoords',yCoords);
+    % options.hdf5Fid
+    croppedPeakImages = compareSignalToMovie(inputMovie, inputImage, thisTrace,'getOnlyPeakImages',1,'waitbarOn',0,'extendedCrosshairs',2,'crossHairVal',maxValMovie*options.crossHairPercent,'outlines',1,'signalPeakArray',signalPeakArray,'cropSize',cropSizeLength,'addPadding',1,'outlineVal',NaN,'xCoords',xCoords,'yCoords',yCoords,'inputDatasetName',options.inputDatasetName,'inputMovieDims',options.inputMovieDims,'hdf5Fid',options.hdf5Fid,'keepFileOpen',options.keepFileOpen);
+    % options.hdf5Fid
     % display cropped images
     % figure(2);
     % for i=1:size(croppedPeakImages,3)
@@ -1519,7 +1609,7 @@ function [croppedPeakImages2 croppedPeakImages] = viewMontage(inputMovie,inputIm
     % size(croppedPeakImages)
     croppedPeakImages = cat(3,meanTransientImage,croppedPeakImages);
 
-    croppedPeakImages222 = compareSignalToMovie(inputMovie, inputImage, thisTrace,'getOnlyPeakImages',1,'waitbarOn',0,'extendedCrosshairs',2,'crossHairVal',maxValMovie*options.crossHairPercent,'outlines',0,'signalPeakArray',signalPeakArray,'cropSize',cropSizeLength,'crosshairs',0,'addPadding',1,'xCoords',xCoords,'yCoords',yCoords,'outlineVal',NaN);
+    croppedPeakImages222 = compareSignalToMovie(inputMovie, inputImage, thisTrace,'getOnlyPeakImages',1,'waitbarOn',0,'extendedCrosshairs',2,'crossHairVal',maxValMovie*options.crossHairPercent,'outlines',0,'signalPeakArray',signalPeakArray,'cropSize',cropSizeLength,'crosshairs',0,'addPadding',1,'xCoords',xCoords,'yCoords',yCoords,'outlineVal',NaN,'inputDatasetName',options.inputDatasetName,'inputMovieDims',options.inputMovieDims,'hdf5Fid',options.hdf5Fid,'keepFileOpen',options.keepFileOpen);
     [thresholdedImages boundaryIndices] = thresholdImages(croppedPeakImages222(:,:,1),'binary',1,'getBoundaryIndex',1,'threshold',options.thresholdOutline,'removeUnconnectedBinary',0);
     for imageNo = 1:size(croppedPeakImages,3)
         tmpImg = croppedPeakImages(:,:,imageNo);

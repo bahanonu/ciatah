@@ -13,7 +13,7 @@ function [reverseStr] = cmdWaitbar(i,nItems,reverseStr,varargin)
 	% changelog
 			% 2014.02.14 [16:35:55] now is mostly
 	% TODO
-			% Should reverseStr be made global so function is entirely self-contained?
+			% Should reverseStr be made global so function is entirely self-contained? - NO, globals are evil.
 			% change so waitbarOn = 0 can short circuit getOptions to save speed execution time
 	% example
 		% before loop = reverseStr
@@ -41,12 +41,21 @@ function [reverseStr] = cmdWaitbar(i,nItems,reverseStr,varargin)
 		else
 			% diary OFF
 		end
-		txt=sprintf(': %1.2f',i/nItems*100);
+		if usejava('desktop')==0
+		    % return;
+		    reverseStr = '';
+			txt=sprintf(': %1.2f | ',i/nItems*100);
+		else
+			txt=sprintf(': %1.2f',i/nItems*100);
+		end
 		% txt=strcat('\n',options.inputStr,txt,'%%');
 		txt=strcat('',options.inputStr,txt,'%%');
 		fprintf([reverseStr, txt]);
 		% drawnow;
 	   	reverseStr = repmat(sprintf('\b'), 1, length(txt)-1);
+	   	if usejava('desktop')==0
+		    reverseStr = '';
+	   	end
 	end
 	if i==nItems
 		fprintf('\n');
@@ -77,3 +86,4 @@ function [reverseStr] = cmdWaitbar(i,nItems,reverseStr,varargin)
 		% end
 	% end
 	% disp('done');
+end
