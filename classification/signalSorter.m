@@ -131,6 +131,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
     options.backgroundGood = [208,229,180]/255;
     options.backgroundBad = [244,166,166]/255;
     options.backgroundNeutral = repmat(230,[1 3])/255;
+    options.backgroundNegative = [166,166,244]/255;
     % type of colormap to use
     options.colormap = customColormap([]);
     % For the secondary zoomed cellmap, pixels to crop around
@@ -553,7 +554,8 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
     % subplotY = 2;
 
     if isempty(options.inputMovie)
-        objMapPlotLoc = [1 2 7 8];;
+        objMapPlotLoc = [7 8];;
+        objMapZoomPlotLoc = [1 2];
         tracePlotLoc = [9 10 11 12];
         avgSpikeTracePlot = [3 4];
     else
@@ -746,6 +748,8 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
             set(mainFig,'Color',options.backgroundGood);
         elseif valid(i)==0
             set(mainFig,'Color',options.backgroundBad);
+        elseif valid(i)==-1
+            set(mainFig,'Color',options.backgroundNegative);
         else
             set(mainFig,'Color',options.backgroundNeutral);
         end
@@ -833,8 +837,8 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
             % show the current image
             % subplot(subplotY,subplotX,filterPlotLoc)
             subplot(subplotY,subplotX,inputMoviePlotLoc2)
-                [thisImage] = subfxnCropImages(thisImage);
-                imagesc(thisImage);
+                [thisImageCrop] = subfxnCropImages(thisImage);
+                imagesc(thisImageCrop);
                 % colormap gray
                 axis off; % ij square
                 title(['signal ' cellIDStr 10 '(' num2str(sum(valid==1)) ' good)']);

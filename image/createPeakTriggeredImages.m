@@ -80,9 +80,9 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 			options.inputImagesThres = [];
 			options.thresholdImages = 1;
 		elseif ~isempty(options.thresholdImages)
-			inputImagesThres = thresholdImages(inputImages,'waitbarOn',1,'binary',1,'threshold',options.thresholdImages);
+			inputImagesThres = thresholdImages(inputImages,'waitbarOn',options.waitbarOn,'binary',1,'threshold',options.thresholdImages);
 		else
-			inputImagesThres = thresholdImages(inputImages,'waitbarOn',1,'binary',1,'threshold',0.4);
+			inputImagesThres = thresholdImages(inputImages,'waitbarOn',options.waitbarOn,'binary',1,'threshold',0.4);
 		end
 
 		if isempty(options.signalPeaksArray)

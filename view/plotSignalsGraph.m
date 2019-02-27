@@ -36,11 +36,20 @@ function plotSignalsGraph(IcaTraces,varargin)
     originalAxisColorOrder = get(groot,'defaultAxesColorOrder');
     switch options.newAxisColorOrder
         case 'gray'
-            c1 = gray(nSignals);
+            c1 = gray(nSignals*2);
             c1=c1(1:round(end/2),:);
         case 'red'
-            c1 = customColormap({[1 0.5 0.5],[1 0 0]},'nPoints',nSignals);
-            c1 = c1(randperm(size(c1,1)),:);
+            c1 = customColormap({[1 0.5 0.5],[1 0 0]},'nPoints',nSignals*2);
+            c1=c1(round(linspace(1,nSignals*2,nSignals)),:);
+            % c1 = c1(randperm(size(c1,1)),:);
+        case 'green'
+            c1 = customColormap({[0.5 1 0.5]/1.5,[0 1 0]/2},'nPoints',nSignals*2);
+            c1=c1(round(linspace(1,nSignals*2,nSignals)),:);
+            % c1 = c1(randperm(size(c1,1)),:);
+        case 'blue'
+            c1 = customColormap({[0.5 0.5 1],[0 0 1]},'nPoints',nSignals*2);
+            c1=c1(round(linspace(1,nSignals*2,nSignals)),:);
+            % c1 = c1(randperm(size(c1,1)),:);
         otherwise
             c1 = [];
     end
