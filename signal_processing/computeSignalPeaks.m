@@ -429,6 +429,19 @@ function [testpeaks] = computePeakForSignal(inputSignal, options)
     % get standard deviation of current signal
     inputSignalStd = std(inputSignal(:));
     thisStdThreshold = inputSignalStd*numStdsForThresh;
+
+    % =======
+    % peakIdx = bsxfun(@plus,options.timeSeq',testpeaks);
+    % tmpTestPeak = testpeaks;
+    % % remove peaks outside range of signal
+    % peakIdx(peakIdx>length(loopSignal))=[];
+    % peakIdx(peakIdx<=0)=[];
+
+    % % remove signal then add back in noise based on signal statistics
+    % noiseSignal = loopSignal;
+    % noiseSignal(peakIdx) = NaN;
+    % =======
+
     % run findpeaks (part of signal), returns maxima above thisStdThreshold
     % and ignores smaller peaks around larger maxima within minTimeBtEvents
     warning off
@@ -488,4 +501,67 @@ function [testpeaks] = computePeakForSignal(inputSignal, options)
     % shift peaks
     testpeaks = testpeaks + options.nFramesShift;
 
+end
+
+function [peakIdx] = subfxnCalcSignalNew(noiseSigmaThreshold,noiseSignal,loopSignal,tmpTestPeak)
+    noiseStd = nanstd(noiseSignal(:));
+    % noiseStd
+    nPeaks = length(tmpTestPeak);
+    peakIdxTmp1 = cell([1 nPeaks]);
+    peakIdxTmp2 = cell([1 nPeaks]);
+    % noiseSigmaThreshold = options.noiseSigmaThreshold;
+    loopSignalThresholded = loopSignal>noiseSigmaThreshold*noiseStd;
+    loopSignalThresholdedDiff = [0 diff(loopSignalThresholded)];
+    for peakNo = 1:nPeaks
+        try
+            peakFrame = tmpTestPeak(peakNo);
+
+            % currFrame = peakFrame;
+            signalCriteria = loopSignalThresholdedDiff(1:peakFrame);
+            currFrame = find(signalCriteria,1,'last');
+            if isempty(currFrame)
+                if sum(loopSignalThresholded(1:peakFrame))==length(loopSignalThresholded(1:peakFrame))
+                    currFrame = 1;
+                end
+            end
+            % currFrame
+            % aboveNoise = 1;
+            % while aboveNoise==1
+            %   aboveNoise = loopSignal(currFrame)>options.noiseSigmaThreshold*noiseStd;
+            %   currFrame = currFrame - 1;
+            %   if currFrame<1
+            %       break
+            %   end
+            % end
+            peakIdxTmp1{peakNo} = currFrame:peakFrame;
+
+            % currFrame = peakFrame;
+            % loopSignalThresholded = loopSignal>noiseSigmaThreshold*noiseStd;
+            signalCriteria = abs(loopSignalThresholdedDiff(peakFrame:end));
+            currFrame = find(signalCriteria,1,'first')+peakFrame;
+            if isempty(currFrame)
+                if sum(loopSignalThresholded(peakFrame:end))==length(loopSignalThresholded(peakFrame:end))
+                    currFrame = length(loopSignal);
+                end
+            end
+            % currFrame
+            % aboveNoise = 1;
+            % currFrame = peakFrame;
+            % while aboveNoise==1
+            %   aboveNoise = loopSignal(currFrame)>options.noiseSigmaThreshold*noiseStd;
+            %   currFrame = currFrame + 1;
+            %   if currFrame>length(loopSignal)
+            %       break
+            %   end
+            % end
+            peakIdxTmp2{peakNo} = peakFrame:currFrame;
+        catch err
+            fprintf('peakFrame = %d\n',peakFrame);
+            display(repmat('@',1,7))
+            disp(getReport(err,'extended','hyperlinks','on'));
+            display(repmat('@',1,7))
+        end
+    end
+    peakIdx = [peakIdxTmp1{:} peakIdxTmp2{:}];
+    peakIdx = unique(peakIdx(:));
 end

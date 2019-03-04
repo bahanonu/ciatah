@@ -27,6 +27,10 @@ function [success] = downloadCnmfGithubRepositories(varargin)
 		for gitNo = 1:nRepos
 			display(repmat('=',1,7))
 			fprintf('%s\n',gitNameDisp{gitNo});
+			if exist([signalExtractionDir filesep outputDir{gitNo}],'dir')
+				fprintf('Already extracted %s\n',[signalExtractionDir filesep outputDir{gitNo}]);
+				continue;
+			end
 			% Make directory
 			rawSavePathDownload = [signalExtractionDir];
 			if ~exist(rawSavePathDownload,'dir');mkdir(rawSavePathDownload);fprintf('Made folder: %s',rawSavePathDownload);end

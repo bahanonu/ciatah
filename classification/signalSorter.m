@@ -1492,8 +1492,13 @@ function [objCutMovie] = createObjCutMovieSignalSorter(options,testpeaks,thisTra
         objCutMovie = getObjCutMovie(tmpMovieHere,tmpImgHere,'createMontage',0,'extendedCrosshairs',2,'crossHairVal',maxValMovie*options.crossHairPercent,'outlines',1,'waitbarOn',0,'cropSize',cropSizeLength,'addPadding',usePadding,'xCoords',xCoords,'yCoords',yCoords,'outlineVal',NaN,'inputMovieDims',options.inputMovieDims,'hdf5Fid',options.hdf5Fid,'keepFileOpen',options.keepFileOpen);
     end
 
+    % Convert from cell to matrix
     objCutMovie = vertcat(objCutMovie{:});
     % objCutMovieTmp = objCutMovie{1};
+
+    % Insure that the peak images are the same class as the input images for calculation purposes
+    objCutMovie = cast(objCutMovie,class(tmpImgHere));
+
     dimSize = [size(objCutMovie,1) size(objCutMovie,2) length(timeVector)];
     diffDiffMatrix = NaN(dimSize);
     diffDiffMatrix2 = diffDiffMatrix;
@@ -1777,11 +1782,11 @@ function plotSignal(thisTrace,testpeaks,cellIDStr,instructionStr,minValTraces,ma
     % plot(thisTrace2, 'b');
 
     % plot(thisTrace, 'b');
-    plot(thisTrace, 'Color','k','LineWidth',3);
+    plot(thisTrace, 'Color','k','LineWidth',1);
     % plot(thisTrace, 'Color',[0.5 0.5 0.5],'LineWidth',3);
     hold on;
-    plot(inputSignalNoise,'Color',[127 127 255]/255);
-    plot(inputSignalSignal,'Color',[255 0 0]/255);
+    plot(inputSignalNoise,'Color',[127 127 255]/255,'LineWidth',0.5);
+    plot(inputSignalSignal,'Color',[255 0 0]/255,'LineWidth',0.5);
     % set(gca,'Color','k');
 
 
@@ -1793,7 +1798,14 @@ function plotSignal(thisTrace,testpeaks,cellIDStr,instructionStr,minValTraces,ma
     inputSignalSignal = inputSignalSignal+inputSignalNoise;
 
     % scatter(testpeaks, thisTrace(testpeaks), 'LineWidth',0.5,'MarkerFaceColor',[0 0 0], 'MarkerEdgeColor',[0 0 0])
-    scatter(testpeaks, thisTrace(testpeaks)*1.2, 30, '.', 'LineWidth',0.5,'MarkerFaceColor',[0 0 0], 'MarkerEdgeColor',[0 0 0])
+    scatter(testpeaks, min(maxValTraces*0.97,thisTrace(testpeaks)*1.4), 60, '.', 'LineWidth',0.5,'MarkerFaceColor',[0 0 0], 'MarkerEdgeColor',[0 0 0])
+    % scatter(testpeaks, maxValTraces*0.95*ones([length(testpeaks) 1]), 120, '.', 'LineWidth',0.5,'MarkerFaceColor',[0 0 0], 'MarkerEdgeColor',[0 0 0])
+
+    % for t = 1:length(testpeaks)
+    %     plot([testpeaks(t) testpeaks(t)],[thisTrace(testpeaks(t)) maxValTraces*0.95],'k-','LineWidth',0.5);
+    % end
+
+
     title([cellIDStr instructionStr])
     xlabel('frames');
     % ylabel('df/f');

@@ -173,6 +173,9 @@ function [croppedPeakImages] = compareSignalToMovie(inputMovie, inputImages, inp
 			croppedPeakImages = inputMovie(yLow:yHigh,xLow:xHigh,peakLocations);
 		end
 
+		% Insure that the peak images are the same class as the input images for calculation purposes
+		croppedPeakImages = cast(croppedPeakImages,class(inputImages));
+
 		firstImg = squeeze(inputImages(yLow:yHigh,xLow:xHigh,signalNo));
 
 		if options.addPadding==1&(xDiff~=0|yDiff~=0)

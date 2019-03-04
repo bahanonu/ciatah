@@ -14,9 +14,10 @@ function loadBatchFxns()
 		pathFilter = cellfun(@isempty,regexpi(pathListArray,[filesep 'cnmfe']));
 		pathFilter1 = cellfun(@isempty,regexpi(pathListArray,[filesep 'cnmf_original']));
 		pathFilter2 = cellfun(@isempty,regexpi(pathListArray,[filesep 'cnmf_current']));
-		pathListArray = pathListArray(pathFilter&pathFilter1&pathFilter2);
+		pathFilter3 = cellfun(@isempty,regexpi(pathListArray,[filesep 'cvx_rd']));
+		pathListArray = pathListArray(pathFilter&pathFilter1&pathFilter2&pathFilter3);
 	else
-		matchIdx = contains(pathListArray,{[filesep 'cnmfe'],[filesep 'cnmf_original'],[filesep 'cnmf_current']});
+		matchIdx = contains(pathListArray,{[filesep 'cnmfe'],[filesep 'cnmf_original'],[filesep 'cnmf_current'],[filesep 'cvx_rd']});
 		pathListArray = pathListArray(~matchIdx);
 	end
 
