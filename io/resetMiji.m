@@ -34,7 +34,7 @@ function [success] = resetMiji(varargin)
 	% try
 	success = 0;
 
-	for i = 1:2
+	for i = 1:1
 		try
 			clear MIJ miji Miji mij;
 			javaDyna = javaclasspath('-dynamic');

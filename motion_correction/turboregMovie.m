@@ -1,4 +1,4 @@
-function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
+function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	% Motion corrects (using turboreg) a movie; both turboreg (to get 2D translation coordinates) and registering images have been parallelized. Can also turboreg to one set of images and apply the registration to another set (e.g. for cross-day alignment).
 	% Biafra Ahanonu
 	% started 2013.11.09 [11:04:18]
@@ -41,7 +41,7 @@ function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	% ================================================
 
 	% check that input is not empty
-	display('starting turboreg...');
+	disp('starting turboreg...');
 	if isempty(inputMovie)
 		return;
 	end
@@ -146,7 +146,7 @@ function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	% check that Miji is present
 	if strcmp(options.normalizeType,'imagejFFT')|strcmp(options.normalizeBeforeRegister,'imagejFFT')
 		if exist('Miji.m','file')==2
-			display(['Miji located in: ' which('Miji.m')]);
+			disp(['Miji located in: ' which('Miji.m')]);
 			% Miji is loaded, continue
 		else
 			pathToMiji = inputdlg('Enter path to Miji.m in Fiji (e.g. \Fiji.app\scripts):',...
@@ -162,7 +162,7 @@ function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	end
 	% ========================
 	inputMovieClass = class(inputMovie);
-	if strcmp(inputMovieClass,'char')
+	if ischar(inputMovie)
 	    inputMovie = loadMovieList(inputMovie,'inputDatasetName',options.inputDatasetName,'frameList',options.frameList);
 	    % [pathstr,name,ext] = fileparts(inputFilePath);
 	    % options.newFilename = [pathstr '\concat_' name '.h5'];
@@ -192,7 +192,7 @@ function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	if ~isempty(options.precomputedRegistrationCooords)
 		ResultsOut = options.precomputedRegistrationCooords;
 		ResultsOutOriginal = ResultsOut;
-		for resultNo=1:size(inputMovie,3);
+		for resultNo=1:size(inputMovie,3)
 			ResultsOutTemp{resultNo} = ResultsOut{options.altMovieRegisterNum};
 		end
 		ResultsOut = ResultsOutTemp;
@@ -243,7 +243,7 @@ function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 			case 'imagejFFT'
 				imagefFftOnInputMovie('inputMovie');
 			case 'divideByLowpass'
-				display('dividing movie by lowpass...')
+				disp('dividing movie by lowpass...')
 				% inputMovie = normalizeMovie(single(inputMovie),'normalizationType','imfilter','blurRadius',20,'waitbarOn',1);
 				inputMovie = normalizeMovie(single(inputMovie),'normalizationType','lowpassFFTDivisive','freqLow',options.freqLow,'freqHigh',options.freqHigh,'waitbarOn',1,'bandpassMask','gaussian');
 				% [inputMovie] = normalizeMovie(single(inputMovie),...
@@ -251,7 +251,7 @@ function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 					% 'freqLow',options.freqLow,'freqHigh',options.freqHigh,...
 					% 'bandpassType','lowpass','showImages',0,'bandpassMask','gaussian');
 			case 'bandpass'
-				display('bandpass filtering...')
+				disp('bandpass filtering...')
 				inputMovie = single(inputMovie);
 				[inputMovie] = normalizeMovie(single(inputMovie),'normalizationType','fft','freqLow',options.freqLow,'freqHigh',options.freqHigh,'bandpassType','bandpass','showImages',0,'bandpassMask','gaussian');
 			otherwise
@@ -261,7 +261,7 @@ function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	% ========================
 	% if cropped movie for turboreg, restore the old input movie for registration
 	if ~isempty(options.altMovieRegister)
-		display(['preparing to register input #' options.altMovieRegisterNum ', converting secondary input movie...'])
+		disp(['preparing to register input #' options.altMovieRegisterNum ', converting secondary input movie...'])
 		% ===
 		% if we are using the turboreg coordinates for frame #options.altMovieRegisterNum to register all frames from options.altMovieRegister, want to give registerMovie an identical sized array to altMovieRegister like it normally expects
 		% this was made for having refCellmap and testCellmap, aligning the testCellmap to the refCellmap then registering all the cell images for testCellmap to refCellmap
@@ -275,13 +275,13 @@ function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		inputMovie = options.altMovieRegister;
 		convertInputMovieToCell();
 	elseif ~isempty(options.cropCoords)
-		display('restoring uncropped movie and converting to cell...');
+		disp('restoring uncropped movie and converting to cell...');
 		clear registeredMovie;
 		%Convert array to cell array, allows slicing (not contiguous memory block)
 		convertInputMovieToCell();
 		% ===
 	else
-		display('converting movie to cell...');
+		disp('converting movie to cell...');
 		%Convert array to cell array, allows slicing (not contiguous memory block)
 		convertInputMovieToCell();
 		% ===
@@ -303,7 +303,7 @@ function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	toc(startTime)
 
 	% ========================
-	display('converting cell array back to matrix')
+	disp('converting cell array back to matrix')
 	%Convert cell array back to 3D matrix
 	inputMovie = cat(3,inputMovie{:});
 	inputMovie = single(inputMovie);
@@ -319,7 +319,7 @@ function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	end
 
 	if ~isempty(options.refFrameMatrix)
-		display('removing ref picture');
+		disp('removing ref picture');
 		% inputMovie = inputMovie(:,:,1:end-1);
 		inputMovie(:,:,end) = [];
 		% refPic = single(squeeze(inputMovie(:,:,options.refFrame)));
@@ -329,7 +329,7 @@ function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 
 	function convertInputMovieToCell()
 		%Get dimension information about 3D movie matrix
-		[inputMovieX inputMovieY inputMovieZ] = size(inputMovie);
+		[inputMovieX, inputMovieY, inputMovieZ] = size(inputMovie);
 		reshapeValue = size(inputMovie);
 		%Convert array to cell array, allows slicing (not contiguous memory block)
 		inputMovie = squeeze(mat2cell(inputMovie,inputMovieX,inputMovieY,ones(1,inputMovieZ)));
@@ -337,7 +337,7 @@ function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 
 	function convertinputMovieCroppedToCell()
 		%Get dimension information about 3D movie matrix
-		[inputMovieX inputMovieY inputMovieZ] = size(inputMovieCropped);
+		[inputMovieX, inputMovieY, inputMovieZ] = size(inputMovieCropped);
 		reshapeValue = size(inputMovieCropped);
 		%Convert array to cell array, allows slicing (not contiguous memory block)
 		inputMovieCropped = squeeze(mat2cell(inputMovieCropped,inputMovieX,inputMovieY,ones(1,inputMovieZ)));
@@ -347,10 +347,10 @@ function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	function turboregMovieParallel()
 		% get reference picture and other pre-allocation
 		postProcessPic = single(squeeze(inputMovieCropped(:,:,options.refFrame)));
-		mask=single(ones(size(postProcessPic)));
-		imgRegMask=single(double(mask));
+		mask = single(ones(size(postProcessPic)));
+		imgRegMask = single(double(mask));
 		% we add an offset to be able to give NaN to black borders
-		averagePictureEdge=zeros(size(imgRegMask));
+		averagePictureEdge = zeros(size(imgRegMask));
 		refPic = single(squeeze(inputMovieCropped(:,:,options.refFrame)));
 		% refPic = squeeze(inputMovieCropped(:,:,options.refFrame));
 
@@ -365,17 +365,17 @@ function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		movieClass = class(inputMovieCropped);
 		% you need this FileExchange function for progress in a parfor loop
 		% parfor_progress(options.maxFrame);
-		display('turboreg-ing...');
-		display('');
+		disp('turboreg-ing...');
+		disp('');
 		% parallel for loop, since each turboreg operation is independent, can send each frame to separate workspaces
 		startTurboRegTime = tic;
 		%
 		nFramesToTurboreg = options.maxFrame;
 		if options.parallel==1; nWorkers=Inf;else;nWorkers=0;end
 		% options.maxFrame
-		try;[percent progress] = parfor_progress(nFramesToTurboreg);catch;end; dispStepSize = round(nFramesToTurboreg/20); dispstat('','init');
+		try [percent, progress] = parfor_progress(nFramesToTurboreg);catch;end; dispStepSize = round(nFramesToTurboreg/20); dispstat('','init');
 		parfor (frameNo=1:nFramesToTurboreg,nWorkers)
-			[percent progress] = parfor_progress;
+			[percent, progress] = parfor_progress;
 			% if mod(progress,dispStepSize) == 0;dispstat(sprintf('progress %0.1f %',percent));else;end
 			% get current frames
 			thisFrame = inputMovieCropped{frameNo};
@@ -393,8 +393,8 @@ function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 
 	% function registerMovie(movieData,ResultsOut,InterpListSelection,TransformationType,options)
 	function registerMovie()
-		display('registering frames...');
-		display('');
+		disp('registering frames...');
+		disp('');
 		% need to register subsets of the movie so parfor won't crash due to serialization errors
 		% TODO: make this subset based on the size of the movie, e.g. only send 1GB chunks to workers
 		subsetSize = options.subsetSizeFrames;
@@ -402,7 +402,7 @@ function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		subsetList = round(linspace(1,length(inputMovie),numSubsets));
 		display(['registering sublists: ' num2str(subsetList)]);
 		if options.turboregRotation==1
-			display('Using rotation in registration')
+			disp('Using rotation in registration')
 		end
 		% ResultsOut{1}.Rotation
 		nSubsets = (length(subsetList)-1);
@@ -425,9 +425,9 @@ function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
             registrationFxnOption = options.registrationFxn;
             % size(ResultsOut)
             nMovieSubsets = length(movieSubset);
-            try;[percent progress] = parfor_progress(nMovieSubsets);catch;end; dispStepSize = round(nMovieSubsets/20); dispstat('','init');
+            try [percent, progress] = parfor_progress(nMovieSubsets);catch;end; dispStepSize = round(nMovieSubsets/20); dispstat('','init');
 			parfor (i = movieSubset,nWorkers)
-				[percent progress] = parfor_progress;
+				[percent, progress] = parfor_progress;
 				% if mod(progress,dispStepSize) == 0;dispstat(sprintf('progress %0.1f %',percent));else;end
 				% thisFrame = movieDataTemp{i};
 				% get rotation and translation profile for image
@@ -621,7 +621,7 @@ function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		rectCrop=[xmin ymin xmax-xmin ymax-ymin];
 
 		if options.showFigs==1
-			[figHandle figNo] = openFigure(100, '');
+			[figHandle, figNo] = openFigure(100, '');
 			imagesc(imcrop(inputMovie(:,:,1),rectCrop));
 		end
 		% To get the final size, we just apply on the first figure
@@ -631,7 +631,7 @@ function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		% end
 	end
 	function imagefFftOnInputMovie(inputMovieName)
-		display('dividing movie by lowpass via imageJ...')
+		disp('dividing movie by lowpass via imageJ...')
 		% inputMovie = normalizeMovie(single(inputMovie),'normalizationType','imagejFFT','waitbarOn',1);
 		% opens imagej
 		% MUST ADD \Fiji.app\scripts
@@ -688,7 +688,7 @@ function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		% choose whether to save a copy of the lowpass fft
 		% expand this to include the raw turboreg
 		if ~isempty(options.saveNormalizeBeforeRegister)
-			display('saving lowpass...')
+			disp('saving lowpass...')
 			if ~isempty(options.refFrameMatrix)
 				inputMovieFFT = inputMovieFFT(:,:,1:end-1);
 			end
@@ -706,7 +706,7 @@ function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 			inputMovieCropped = inputMovie(cc(2):cc(4), cc(1):cc(3), :);
 			display(['cropped dims: ' num2str(size(inputMovieCropped))])
 		elseif ~isempty(options.cropCoords)
-			display('cropping stack...');
+			disp('cropping stack...');
 			cc = options.cropCoords;
 			inputMovieCropped = inputMovie(cc(2):cc(4), cc(1):cc(3), :);
 			if options.showFigs==1
@@ -733,10 +733,10 @@ function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 					imagefFftOnInputMovie('inputMovieCropped');
 				case 'matlabDisk'
 					% single(inputMovieCropped)
-					display('Matlab fspecial disk background removal')
+					disp('Matlab fspecial disk background removal')
 
 					%Get dimension information about 3D movie matrix
-					[inputMovieX inputMovieY inputMovieZ] = size(inputMovieCropped);
+					[inputMovieX, inputMovieY, inputMovieZ] = size(inputMovieCropped);
 					reshapeValue = size(inputMovieCropped);
 					%Convert array to cell array, allows slicing (not contiguous memory block)
 					inputMovieCropped = squeeze(mat2cell(inputMovieCropped,inputMovieX,inputMovieY,ones(1,inputMovieZ)));
@@ -752,7 +752,7 @@ function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 					% nImages = size(inputMovieCropped,3);
 					nImages = length(inputMovieCropped);
 
-					try;[percent progress] = parfor_progress(nImages);catch;end; dispStepSize = round(nImages/20); dispstat('','init');
+					% try [percent, progress] = parfor_progress(nImages);catch;end; dispStepSize = round(nImages/20); dispstat('','init');
 					if options.parallel==1; nWorkers=Inf;else;nWorkers=0;end
 					parfor (imageNo = 1:nImages,nWorkers)
 						% [percent progress] = parfor_progress;if mod(progress,dispStepSize) == 0;dispstat(sprintf('progress %0.1f %',percent));else;end
@@ -766,18 +766,18 @@ function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 
 					inputMovieCropped = cat(3,inputMovieCropped{:});
 				case 'divideByLowpass'
-					display('dividing movie by lowpass...')
+					disp('dividing movie by lowpass...')
 					inputMovieCropped = normalizeMovie(single(inputMovieCropped),'normalizationType','imfilter','blurRadius',20,'waitbarOn',1);
 					% inputMovie = normalizeMovie(single(inputMovie),'normalizationType','lowpassFFTDivisive','freqLow',options.freqLow,'freqHigh',options.freqHigh,'waitbarOn',1,'bandpassMask','gaussian');
 					% inputMovieCropped = normalizeMovie(single(inputMovieCropped),'normalizationType','imfilter','blurRadius',20,'waitbarOn',1);
 					% inputMovie = normalizeMovie(single(inputMovie),'normalizationType','lowpassFFTDivisive','freqLow',options.freqLow,'freqHigh',options.freqHigh,'waitbarOn',1);
 					% playMovie(inputMovieCropped);
 				case 'highpass'
-					display('high-pass filtering...')
+					disp('high-pass filtering...')
 					[inputMovieCropped] = normalizeMovie(single(inputMovieCropped),'normalizationType','fft','freqLow',7,'freqHigh',500,'bandpassType','highpass','showImages',0,'bandpassMask','gaussian');
 					% [inputMovieCropped] = normalizeMovie(single(inputMovieCropped),'normalizationType','fft','freqLow',1,'freqHigh',7,'bandpassType','lowpass','showImages',0,'bandpassMask','gaussian');
 				case 'bandpass'
-					display('bandpass...')
+					disp('bandpass...')
 					[inputMovieCropped] = normalizeMovie(single(inputMovieCropped),'normalizationType','fft','freqLow',options.normalizeFreqLow,'freqHigh',options.normalizeFreqHigh,'bandpassType',options.normalizeBandpassType,'showImages',0,'bandpassMask',options.normalizeBandpassMask);
 					% [inputMovieCropped] = normalizeMovie(single(inputMovieCropped),'normalizationType','fft','freqLow',1,'freqHigh',7,'bandpassType','lowpass','showImages',0,'bandpassMask','gaussian');
 				otherwise
@@ -785,9 +785,9 @@ function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 			end
 
 			if options.complementMatrix==1
-				display('mean subtracting and complementing matrix...');
+				disp('mean subtracting and complementing matrix...');
 			else
-				display('mean subtracting...');
+				disp('mean subtracting...');
 			end
 			reverseStr = '';
 			for frameInd=1:Ntime
@@ -811,7 +811,7 @@ function [inputMovie ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		% inputMovieCropped = 255 * (inputMovieCropped/255).^ GammaValue;
 		% playMovie(inputMovieCropped);
 	end
-	display('=======')
+	disp('=======')
 end
 function cropCoords = getCropSelection(thisFrame)
 	% get a crop of the input region

@@ -28,9 +28,9 @@ function [output1,output2] = exampleFxn(input1,input2,varargin)
 	try
 		% Code
 	catch err
-		display(repmat('@',1,7))
+		disp(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));
-		display(repmat('@',1,7))
+		disp(repmat('@',1,7))
 	end
 end
 
