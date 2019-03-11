@@ -81,7 +81,7 @@ function [fileList] = getFileList(inputDir, filterExp,varargin)
         fileList(excludeIdx) = [];
         % includeIdx = setdiff(1:length(fileList),excludeIdx)
     end
-    if strcmp(options.sortMethod,'natural')|strcmp(options.sortMethod,'numeric')
+    if ~isempty(fileList)&&(strcmp(options.sortMethod,'natural')|strcmp(options.sortMethod,'numeric'))
         fileList = natsortfiles(fileList);
     end
 end

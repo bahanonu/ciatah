@@ -1125,8 +1125,10 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 
 				movieList = getFileList(obj.inputFolders{validFoldersIdx(1)}, obj.fileFilterRegexp);
 				DFOFList.(thisSubjectStr) = loadMovieList(movieList,'convertToDouble',0,'frameList',[1:500],'inputDatasetName',obj.inputDatasetName,'treatMoviesAsContinuous',1);
-			catch
-
+			catch err
+				disp(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				disp(repmat('@',1,7))
 			end
 		end
 		for thisSubjectStr=subjectList
@@ -1228,8 +1230,10 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				% end
 				% close(h);
 				% clear DFOF;
-			catch
-
+			catch err
+				disp(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				disp(repmat('@',1,7))
 			end
 		end
 		try
