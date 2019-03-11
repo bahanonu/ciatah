@@ -624,13 +624,17 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 					options.EXTRACT.cellfind_min_snr = str2num(movieSettings{setNo});setNo = setNo+1;
 				case 'CNMF'
 					movieSettings = inputdlg({...
-							'CNMF | Use original ("original") or most recent ("current") CNMF version?'...
+							'CNMF | Use original ("original") or most recent ("current" or "current_patch" for patch version) CNMF version?'...
 							'CNMF | save each parameter run to new directory? (1 = yes, 0 = no)',...
 							'CNMF | iterate over parameter space? (1 = yes, 0 = no)',...
 							'CNMF | only run initialization algorithm? (1 = yes, 0 = no)',...
 							'CNMF | Spatial down-sampling factor (scalar >= 1)',...
 							'CNMF | Temporal down-sampling factor (scalar >= 1)',...
-							'CNMF | Movie frame rate (scalar >= 1)'...
+							'CNMF | Movie frame rate (scalar >= 1)',...
+							'CNMF | Create a memory mapped file if it is not provided in the input (1 = yes, 0 = no)',...
+							'CNMF | Patch size (power of 2 pref, e.g. 64, 128, 256, 512)',...
+							'CNMF | Patch overlap size (power of 2 pref, e.g. 4, 8, 16, 32)',...
+							'CNMF | tau (enter cell diameter in pixels)',...
 						},...
 						dlgStr,1,...
 						{...
@@ -640,7 +644,11 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 							'0',...
 							'1',...
 							'1',...
-							num2str(obj.FRAMES_PER_SECOND)...
+							num2str(obj.FRAMES_PER_SECOND),...
+							'0',...
+							'[128,128]',...
+							'[16, 16]',...
+							''...
 						}...
 					);setNo = 1;
 					options.CNMF.originalCurrentSwitch = movieSettings{setNo};setNo = setNo+1;
@@ -650,6 +658,10 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 					options.CNMF.ssub = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.CNMF.tsub = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.CNMF.fr = str2num(movieSettings{setNo});setNo = setNo+1; obj.FRAMES_PER_SECOND = options.CNMF.fr;
+					options.CNMF.create_memmap = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.CNMF.patch_size = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.CNMF.overlap = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.CNMF.gridWidth = str2num(movieSettings{setNo});setNo = setNo+1;
 				case 'CNMFE'
 					movieSettings = inputdlg({...
 							'CNMF-E | Use CNMF-F ("cnmfe"), original ("original"), or most recent ("current") CNMF version?'...
@@ -872,6 +884,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		cnmfOptions.bSiz = 3; %1e-5
 		% imaging frame rate in Hz (defaut: 30)
 		cnmfOptions.fr = options.CNMF.fr;
+		% create a memory mapped file if it is not provided in the input (default: false)
+		cnmfOptions.create_memmap = options.CNMF.create_memmap;
 
 		% Standard deviation of Gaussian kernel for initialization
 		% cnmfOptions.otherCNMF.tau = 9;
@@ -960,16 +974,29 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				switch options.CNMF.originalCurrentSwitch
 					case 'original'
 						% Add and remove necessary CNMF directories from path
-						fprintf('Remove %s\n Add %s\n',currentPath,originalPath);
-						rmpath(genpath(currentPath));
-						addpath(genpath(originalPath));
+						[success] = cnmfVersionDirLoad('original');
+						% fprintf('Remove %s\n Add %s\n',currentPath,originalPath);
+						% rmpath(genpath(currentPath));
+						% addpath(genpath(originalPath));
 						[cnmfAnalysisOutput] = computeCnmfSignalExtractionOriginal(movieList,numExpectedComponents,'options',cnmfOptions);
 					case 'current'
 						% Add and remove necessary CNMF directories from path
-						fprintf('Remove %s\n Add %s\n',originalPath,currentPath);
-						rmpath(genpath(originalPath));
-						addpath(genpath(currentPath));
+						[success] = cnmfVersionDirLoad('current');
+						% fprintf('Remove %s\n Add %s\n',originalPath,currentPath);
+						% rmpath(genpath(originalPath));
+						% addpath(genpath(currentPath));
 						[cnmfAnalysisOutput] = computeCnmfSignalExtraction_v2(movieList,numExpectedComponents,'options',cnmfOptions);
+					case 'current_patch'
+						% Add and remove necessary CNMF directories from path
+						[success] = cnmfVersionDirLoad('current');
+
+						cnmfOptions.nonCNMF.patch_size = options.CNMF.patch_size;
+						cnmfOptions.nonCNMF.overlap = options.CNMF.overlap;
+
+						% fprintf('Remove %s\n Add %s\n',originalPath,currentPath);
+						% rmpath(genpath(originalPath));
+						% addpath(genpath(currentPath));
+						[cnmfAnalysisOutput] = computeCnmfSignalExtractionPatch(movieList{1},numExpectedComponents,'options',cnmfOptions);
 					otherwise
 						% do nothing
 				end
@@ -1104,6 +1131,22 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 					display(thisSubjectStr);
 					gridWidth.(thisSubjectStr) = options.CELLMax.gridWidth;
 					gridSpacing.(thisSubjectStr) = options.CELLMax.gridSpacing;
+				end
+				gridWidth
+				gridSpacing
+				return;
+			end
+		end
+
+		if strcmp(signalExtractionMethod{signalExtractNo},'CNMF')
+			if ~isempty(options.CNMF.gridWidth)
+				display('Use manually entered values.')
+				for thisSubjectStr=subjectList
+					display(repmat('=',1,21))
+					thisSubjectStr = thisSubjectStr{1};
+					display(thisSubjectStr);
+					gridWidth.(thisSubjectStr) = options.CNMF.gridWidth;
+					gridSpacing.(thisSubjectStr) = options.CNMF.gridWidth;
 				end
 				gridWidth
 				gridSpacing

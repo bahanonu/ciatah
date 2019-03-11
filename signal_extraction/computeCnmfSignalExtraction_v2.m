@@ -109,6 +109,8 @@ function [cnmfAnalysisOutput] = computeCnmfSignalExtraction_v2(inputMovie,numExp
 
     % imaging frame rate in Hz (defaut: 30)
     options.fr = 30;
+    % create a memory mapped file if it is not provided in the input (default: false)
+    options.create_memmap = false;
 
     % get options
     options = getOptions(options,varargin);
@@ -213,6 +215,7 @@ function [cnmfAnalysisOutput] = computeCnmfSignalExtraction_v2(inputMovie,numExp
         'resparse',options.resparse,...
         'fudge_factor',options.fudge_factor,...
         'fr',options.fr,...
+        'create_memmap',options.create_memmap,...
         'merge_thr',options.merge_thr...
         );
     %% Data pre-processing
