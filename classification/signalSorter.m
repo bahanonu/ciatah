@@ -37,6 +37,9 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
         % 2018.10.08 [14:43:10] - good cells now will always be on top regardless of overlapping bad cells, option to widen selector line.
         % 2018.10.21 - Misc. changes to make it easier to look at overlapping cells.
         % 2019.01.29 [11:19:10] - Changed how movie transient montages are created, no longer use the montage function and several other Cdata vs. imagesc related changes to improve speed, esp. in R2018b.
+        % 2019.02.13 Made compatible with large movies, just input string into options.inputMovie.
+        % 2019.02.13 [16:56:21] Major speed improvements going between cells by adding options.hdf5Fid (to several functions, in order to relay to readHDF5Subset in the end) to reduce readHDF5Subset fopen overhead.
+        % 2019.03.07 [11:27:16] Change to display of movie cut images to reduce flicker on display of each new image
 
     % TODO
         % DONE: allow option to mark rest as bad signals
@@ -44,6 +47,33 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
         % set viewMontageso it uses minValTraces maxValTraces
 
     % ============================
+    % ===MOVIE SETTINGS
+    % Matrix or str: used to find movie frames at peaks. Matrix, movie matching inputImages/inputSignals src. Str, path to the HDF5 movie.
+    options.inputMovie = [];
+    % IGNORE: Raw (not processed) movie matching inputImages/inputSignals src, used to find movie frames at peaks
+    options.inputMovieRaw = [];
+    % Vector: 3 element vector indicating [x y frames]
+    options.inputMovieDims = [];
+    % name of HDF5 dataset name to load
+    options.inputDatasetName = '/1';
+    % FID of the inputMovie via H5F.open to save time
+    options.hdf5Fid = [];
+    % Whether to keep HDF5 file open (for FID)
+    options.keepFileOpen = 0;
+    % number of frames in each movie to load, [] = all, 1:500 would be 1st to 500th frame.
+    options.frameList = [];
+    % Number of frames to sample of inputMovie to get statistics
+    options.nFrameSampleInputMovie = 10;
+    % Binary: 1 = read movie from HDD, 0 = load entire movie
+    options.readMovieChunks = 0;
+    % movie stats
+    options.movieMax = NaN;
+    options.movieMin = NaN;
+    options.movieMinLim = -0.02;%-0.025
+    options.movieMean = NaN;
+    % Binary: 1 = pre-compute movies aligned to signal transients
+    options.preComputeImageCutMovies = 0;
+    % ===OTHER SETTINGS
     % set default options
     options.nSignals = size(inputImages,3);
     % string to display over the cell map
@@ -67,10 +97,6 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
     options.upperClassifierThres = 0.6;
     % lower range pct score to manually sort
     options.lowerClassifierThres = 0.3;
-    % movie matching inputImages/inputSignals src, used to find movie frames at peaks
-    options.inputMovie = [];
-    % Raw (not processed) movie matching inputImages/inputSignals src, used to find movie frames at peaks
-    options.inputMovieRaw = [];
     % sort by the SNR
     options.sortBySNR = 0;
     % randomize order
@@ -82,11 +108,6 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
     options.signalPeaksArray = [];
     % ROI for peak signal plotting
     options.peakROI = [-20:20];
-    % movie stats
-    options.movieMax = NaN;
-    options.movieMin = NaN;
-    options.movieMinLim = -0.02;%-0.025
-    options.movieMean = NaN;
     % whether to median filter the input trace
     options.medianFilterTrace = 1;
     % whether to subtract mean during SNR calc
@@ -111,14 +132,13 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
     options.backgroundGood = [208,229,180]/255;
     options.backgroundBad = [244,166,166]/255;
     options.backgroundNeutral = repmat(230,[1 3])/255;
+    options.backgroundNegative = [166,166,244]/255;
     % type of colormap to use
-    options.colormap = customColormap([]);
+    options.colormap = customColormap([],'nPoints',256);
     % For the secondary zoomed cellmap, pixels to crop around
     options.cellmapZoomPx = 40;
     % Binary: 1 = obj outline in signal cut movies, 0 = no outlines
     options.outlinesObjCutMovie = 0;
-    % Binary: 1 = pre-compute movies aligned to signal transients
-    options.preComputeImageCutMovies = 0;
     % Input pre-computed x,y coordinates for objects in images
     options.coord.xCoords = [];
     options.coord.yCoords = [];
@@ -128,6 +148,8 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
     options.widenLine = 1;
     % Int: Distance in pixels to look for nearest neighbor cells
     options.neighborDistance = 20;
+    % Int: Figure number for the secondary GUI screen to display additional information at user request
+    options.secondFigNo = 426;
     % get options
     options = getOptions(options,varargin);
     % unpack options into current workspace
@@ -137,7 +159,9 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
     end
     % ============================
     options
-
+    disp(['inputImages size: ' num2str(size(inputImages))])
+    disp(['inputSignals size: ' num2str(size(inputSignals))])
+    disp(repmat('=',1,21))
     % pre-open all needed figures
     for figNoFake = [1996 1997 1776 1777 1778 1779 42 1]
         [~, ~] = openFigure(figNoFake, '');
@@ -146,24 +170,59 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
     end
 
     if ~isempty(options.inputMovie)
-        tmpMovie = options.inputMovie(1:round(numel(options.inputMovie)*0.05):numel(options.inputMovie));
+        if ischar(options.inputMovie)||iscell(options.inputMovie)
+            movieDims = loadMovieList(options.inputMovie,'frameList',options.frameList,'inputDatasetName',options.inputDatasetName,'getMovieDims',1);
+            options.inputMovieDims = [movieDims.one movieDims.two movieDims.three];
+            % Force read movie chunks to be 1
+            % options.readMovieChunks = 1;
+            options.hdf5Fid = H5F.open(options.inputMovie);
+            options.keepFileOpen = 1;
+        else
+            options.inputMovieDims = size(options.inputMovie);
+        end
+    end
+
+    if ~isempty(options.inputMovie)
+        % get the movie
+        if ischar(options.inputMovie)||iscell(options.inputMovie)
+            tmpFrameList = round(linspace(1,options.inputMovieDims(3),options.nFrameSampleInputMovie));
+            tmpMovie = loadMovieList(options.inputMovie,'convertToDouble',0,'frameList',tmpFrameList,'inputDatasetName',options.inputDatasetName);
+            % offsetMovie{signalPeakFrameNo} = [yLow-1 xLow-1 signalPeaksThis(signalPeakFrameNo)-1];
+            % blockMovie{signalPeakFrameNo} = [length(yLims) length(xLims) 1];
+            % [signalImagesCrop] = readHDF5Subset(inputMovie, offsetMovie, blockMovie,'datasetName',options.inputDatasetName,'displayInfo',0);
+        else
+            tmpMovie = options.inputMovie(1:round(numel(options.inputMovie)*0.05):numel(options.inputMovie));
+        end
+
         if isnan(options.movieMax)
-            display('calculating movie max...')
-            options.movieMax = nanmax(options.inputMovie(:));
+            disp('calculating movie max...')
+            % options.movieMax = nanmax(options.inputMovie(:));
+            options.movieMax = nanmax(tmpMovie(:));
         end
         % options.movieMax = prctile(tmpMovie,99.9); % use percentile to avoid randomly high max values
         % options.movieMax = prctile(options.inputMovie(:),95);
         if isnan(options.movieMin)
-            display('calculating movie min...')
-            options.movieMin = nanmin(options.inputMovie(:));
+            disp('calculating movie min...')
+            % options.movieMin = nanmin(options.inputMovie(:));
+            options.movieMin = nanmin(tmpMovie(:));
         end
         % options.movieMin = nanmin(tmpMovie);
-        display('calculating movie mean...')
+        disp('calculating movie mean...')
         try
-            options.movieMean = nanmean(options.inputMovie(1:10,1:10,:));
+            if strcmp(class(options.inputMovie),'char')|strcmp(class(options.inputMovie),'cell')
+                options.movieMean = nanmean(tmpMovie(:));
+            else
+                tmpMovie2 = options.inputMovie(1:10,1:10,:);
+                options.movieMean = nanmean(tmpMovie2(:));
+                clear tmpMovie2;
+            end
             % options.movieMean = nanmean(tmpMovie);
         catch
-            options.movieMean = nanmean(options.inputMovie(:));
+            if strcmp(class(options.inputMovie),'char')|strcmp(class(options.inputMovie),'cell')
+                options.movieMean = nanmean(tmpMovie(:));
+            else
+                options.movieMean = nanmean(options.inputMovie(:));
+            end
         end
         clear tmpMovie;
     end
@@ -229,6 +288,8 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
         signalPeaks = options.signalPeaks;
         signalPeakIdx = options.signalPeaksArray;
     end
+    signalPeakIdxOriginal = signalPeakIdx;
+    signalPeaksOriginal = signalPeaks;
     % imagesc(options.signalPeaks)
     % add max peak for those signals that don't otherwise have any
     % peaksNoneIdx = sum(signalPeaks,2)>0;
@@ -246,11 +307,21 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
         maxValueIndices = cell([1 nIdx]);
         inputSignalsCell = num2cell(inputSignals(peaksNoneIdx,:),2);
         signalPeakIdxTmp = signalPeakIdx(peaksNoneIdx);
-        try [~, ~] = parfor_progress(nIdx);catch;end; dispStepSize = round(nIdx/20); dispstat('','init');
+        % try [~, ~] = parfor_progress(nIdx);catch;end; dispStepSize = round(nIdx/20); dispstat('','init');
         parfor idxHereNo = 1:nIdx
+            idxHere = peaksNoneIdx(idxHereNo);
             % [percent, progress] = parfor_progress;if mod(progress,dispStepSize) == 0;dispstat(sprintf('progress %0.1f %',percent)); end
             % idxHere = peaksNoneIdx(idxHereNo);
             tmpS = inputSignalsCell{idxHereNo};
+            % If there are peaks, remove them from trace before estimating new locations, reduce duplicate peaks found
+            if ~isempty(signalPeakIdx{idxHere})
+                peakIdx = bsxfun(@plus,options.peakROI',signalPeakIdx{idxHere});
+                peakIdx = unique(peakIdx(:));
+                peakIdx(peakIdx>length(tmpS)) = [];
+                peakIdx(peakIdx<=0) = [];
+                tmpS(peakIdx) = NaN;
+            end
+
             [~,sortingIndices] = sort(tmpS(:),'ascend');
             maxValueIndices{idxHereNo} = sortingIndices(1:minimumEvents);
 
@@ -284,6 +355,8 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
             idxHere = peaksNoneIdx(idxHereNo);
             signalPeakIdx{idxHere} = [unique([maxValueIndices{idxHereNo}(:);
             signalPeakIdx{idxHere}(:)])]';
+            % signalPeakIdx{idxHere} = sort(signalPeakIdx{idxHere});
+            % signalPeakIdx{idxHere}
             signalPeaks(idxHere,signalPeakIdxTmp{idxHereNo}(:)) = 1;
         end
     end
@@ -300,16 +373,35 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
         %         signalPeaksArrayTmp{sss} = signalPeaksArrayTmp{sss}(1:10);
         %     end
         % end
-        [~, outputMeanImageCorrs, outputMeanImageCorrs2] = createPeakTriggeredImages(options.inputMovie, inputImages, inputSignals,'cropSize',options.cropSize,'signalPeaksArray',signalPeaksArray,'xCoords',options.coord.xCoords,'yCoords',options.coord.yCoords,'maxPeaksToUse',5,'normalizeOutput',0,'inputImagesThres',inputImagesThres);
-        outputMeanImageCorrs(isnan(outputMeanImageCorrs)) = 0;
-        outputMeanImageCorrs2(isnan(outputMeanImageCorrs2)) = 0;
-        peakOutputStat.outputMeanImageCorrs = outputMeanImageCorrs(:);
-        peakOutputStat.outputMeanImageCorrs2 = outputMeanImageCorrs2(:);
-        % get ROI traces
-        if options.showROITrace==1
-            [ROItraces] = applyImagesToMovie(inputImagesThres,options.inputMovie,'alreadyThreshold',1,'waitbarOn',1);
-        else
+        % if strcmp(class(options.inputMovie),'char')|strcmp(class(options.inputMovie),'cell')
+        %     % Load movie chunks to save RAM
+        %     readMovieChunksTmp = 1;
+        % else
+        %     readMovieChunksTmp = 0;
+        % end
+
+        if strcmp(class(options.inputMovie),'char')|strcmp(class(options.inputMovie),'cell')
+            % Ignore for now.
+            outputMeanImageCorrs = NaN([size(inputSignals,1) 1]);
+            outputMeanImageCorrs2 = NaN([size(inputSignals,1) 1]);
+            peakOutputStat.outputMeanImageCorrs = outputMeanImageCorrs(:);
+            peakOutputStat.outputMeanImageCorrs2 = outputMeanImageCorrs2(:);
+
+            % No ROI traces when enter a cell
+            options.showROITrace = 0;
             ROItraces = [];
+        else
+            [~, outputMeanImageCorrs, outputMeanImageCorrs2] = createPeakTriggeredImages(options.inputMovie, inputImages, inputSignals,'cropSize',options.cropSize,'signalPeaksArray',signalPeakIdxOriginal,'xCoords',options.coord.xCoords,'yCoords',options.coord.yCoords,'maxPeaksToUse',5,'normalizeOutput',0,'inputImagesThres',inputImagesThres,'readMovieChunks',options.readMovieChunks);
+            outputMeanImageCorrs(isnan(outputMeanImageCorrs)) = 0;
+            outputMeanImageCorrs2(isnan(outputMeanImageCorrs2)) = 0;
+            peakOutputStat.outputMeanImageCorrs = outputMeanImageCorrs(:);
+            peakOutputStat.outputMeanImageCorrs2 = outputMeanImageCorrs2(:);
+            % get ROI traces
+            if options.showROITrace==1
+                [ROItraces] = applyImagesToMovie(inputImagesThres,options.inputMovie,'alreadyThreshold',1,'waitbarOn',1);
+            else
+                ROItraces = [];
+            end
         end
     else
         peakOutputStat.outputMeanImageCorrs = NaN([size(inputImages,3) 1]);
@@ -360,10 +452,10 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
     % =======
     % loop over choices
     nSignals = size(inputImages,3);
-    display(['# signals: ' num2str(nSignals)]);
+    disp(['# signals: ' num2str(nSignals)]);
     % valid = ones(1,size(inputImages,1))*-1;
 
-    choices = chooseSignals(options,1:nSignals, inputImages,inputSignals,objMap, valid, inputStr,tmpDir,sessionID,signalPeakIdx,signalSnr,inputImagesThres,inputImageSizes,peakOutputStat,ROItraces,imgStats,inputSignalSignal,inputSignalNoise,inputImagesBoundaryIndices);
+    choices = chooseSignals(options,1:nSignals, inputImages,inputSignals,objMap, valid, inputStr,tmpDir,sessionID,signalPeakIdx,signalSnr,inputImagesThres,inputImageSizes,peakOutputStat,ROItraces,imgStats,inputSignalSignal,inputSignalNoise,inputImagesBoundaryIndices,signalPeakIdxOriginal,signalPeaksOriginal);
     % assume all skips were good ICs that user forgot to enter
     validChoices = choices;
     validChoices(find(validChoices==-1))=1;
@@ -447,7 +539,7 @@ function plotSignalStatistics(inputSignals,inputImageSizes,inputStr,pointColor, 
     end
     warning on;
 end
-function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,objMap, valid, inputStr,tmpDir,sessionID,signalPeakIdx,signalSnr,inputImagesThres,inputImageSizes,peakOutputStat,ROItraces,imgStats,inputSignalSignal,inputSignalNoise,inputImagesBoundaryIndices)
+function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,objMap, valid, inputStr,tmpDir,sessionID,signalPeakIdx,signalSnr,inputImagesThres,inputImageSizes,peakOutputStat,ROItraces,imgStats,inputSignalSignal,inputSignalNoise,inputImagesBoundaryIndices,signalPeakIdxOriginal,signalPeaksOriginal)
     % manually decide which signals are good or bad, pre-computed values input to speed up movement through signals
 
     warning('off','all')
@@ -479,7 +571,8 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
     % subplotY = 2;
 
     if isempty(options.inputMovie)
-        objMapPlotLoc = [1 2 7 8];;
+        objMapPlotLoc = [7 8];;
+        objMapZoomPlotLoc = [1 2];
         tracePlotLoc = [9 10 11 12];
         avgSpikeTracePlot = [3 4];
     else
@@ -594,7 +687,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
     warning off
 
     if ~isempty(options.inputMovie)
-        display('calculating movie min/max...')
+        disp('calculating movie min/max...')
         % minValMovie = nanmin(options.inputMovie(:));
         % maxValMovie = nanmax(options.inputMovie(:));
         maxValMovie = options.movieMax;
@@ -628,7 +721,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
     %     end
     % end
 
-    % display('pre-loading preview images')
+    % disp('pre-loading preview images')
     reverseStr = '';
     nSignalsHere = size(inputImages,3);
     objCutMovieCollection = cell([nSignalsHere 1]);
@@ -645,9 +738,9 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                 [objCutMovieCollection{signalNo}] = createObjCutMovieSignalSorter(options,testpeaks,thisTrace,inputImages,signalNo,options.cropSizeLength,maxValMovie);
             catch err
                 objCutMovieCollection{signalNo} = {};
-                display(repmat('@',1,7))
+                disp(repmat('@',1,7))
                 disp(getReport(err,'extended','hyperlinks','on'));
-                display(repmat('@',1,7))
+                disp(repmat('@',1,7))
             end
             if mod(signalNo,20)==0;reverseStr = cmdWaitbar(signalNo,nSignalsHere,reverseStr,'inputStr','Pre-loading preview images','waitbarOn',1,'displayEvery',1);end
         end
@@ -672,6 +765,8 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
             set(mainFig,'Color',options.backgroundGood);
         elseif valid(i)==0
             set(mainFig,'Color',options.backgroundBad);
+        elseif valid(i)==-1
+            set(mainFig,'Color',options.backgroundNegative);
         else
             set(mainFig,'Color',options.backgroundNeutral);
         end
@@ -724,9 +819,9 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                             % imAlpha(thisImage==mode(thisImage(:)))=0;
 
                             imagesc(thisImage,'AlphaData',imAlpha);
-                            display(repmat('@',1,7))
+                            disp(repmat('@',1,7))
                             disp(getReport(err,'extended','hyperlinks','on'));
-                            display(repmat('@',1,7))
+                            disp(repmat('@',1,7))
                         end
                         try
                             sigDig = 100;
@@ -738,9 +833,9 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 
                         catch err
                             % title([' (' num2str(sum(valid==1)) ' good)']);
-                            display(repmat('@',1,7))
+                            disp(repmat('@',1,7))
                             disp(getReport(err,'extended','hyperlinks','on'));
-                            display(repmat('@',1,7))
+                            disp(repmat('@',1,7))
                         end
                     else
                         imagesc(thisImage);
@@ -759,8 +854,8 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
             % show the current image
             % subplot(subplotY,subplotX,filterPlotLoc)
             subplot(subplotY,subplotX,inputMoviePlotLoc2)
-                [thisImage] = subfxnCropImages(thisImage);
-                imagesc(thisImage);
+                [thisImageCrop] = subfxnCropImages(thisImage);
+                imagesc(thisImageCrop);
                 % colormap gray
                 axis off; % ij square
                 title(['signal ' cellIDStr 10 '(' num2str(sum(valid==1)) ' good)']);
@@ -771,7 +866,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
             Comb(:,:,1) = zeros([size(squeeze(inputImagesThres(:,:,i)))]);
             Comb(:,:,2) = zeros([size(squeeze(inputImagesThres(:,:,i)))]);
             Comb(:,:,3) = zeros([size(squeeze(inputImagesThres(:,:,i)))]);
-            display(num2str([min(Comb(:)) max(Comb(:))]))
+            disp(num2str([min(Comb(:)) max(Comb(:))]))
             CombTmp = Comb;
             % colormap gray
             goodImages = createObjMap(inputImagesThres(:,:,valid==1));
@@ -907,9 +1002,9 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
             %     imagesc(outputCutMovie(1:round(end/2),:,:));
             %     title(['green/red/gray/blue' 10 'good/bad/undecided/current' 10 strrep(options.inputStr,'_','\_') 10])
             % catch err
-            %     display(repmat('@',1,7))
+            %     disp(repmat('@',1,7))
             %     disp(getReport(err,'extended','hyperlinks','on'));
-            %     display(repmat('@',1,7))
+            %     disp(repmat('@',1,7))
             % end
 
             % inputImagesBoundaryIndices
@@ -969,9 +1064,9 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                 axisH.XRuler.Axle.LineStyle = 'none';
                 axisH.YRuler.Axle.LineStyle = 'none';
             catch err
-                display(repmat('@',1,7))
+                disp(repmat('@',1,7))
                 disp(getReport(err,'extended','hyperlinks','on'));
-                display(repmat('@',1,7))
+                disp(repmat('@',1,7))
             end
 
         % if signal has peaks, plot the average signal and other info
@@ -1004,7 +1099,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                     ' | EquivD = ' num2str(round(imgStats.EquivDiameter(i)*sigDig)/sigDig)];
                     % ' | Solidity = ' num2str(round(imgStats.Solidity(i)*sigDig)/sigDig)...
                 plotSignal(thisTrace,testpeaks,'',thisStr,minValTraces,maxValTraces,options,inputSignalSignal{i},inputSignalNoise{i});
-                if ~isempty(options.inputMovie)&options.showROITrace==1
+                if ~isempty(options.inputMovie)&options.showROITrace==1&~strcmp(class(options.inputMovie),'char')
                     hold on
                     % [tmpTrace] = applyImagesToMovie(inputImagesThres(:,:,i),options.inputMovie,'alreadyThreshold',1,'waitbarOn',0);
                     tmpTrace = ROItraces(i,:);
@@ -1081,7 +1176,12 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                 subplot(subplotY,subplotX,inputMoviePlotLoc)
                 % set title and turn off ability to change
                 if ~isempty(objCutMovie)
-                    imagesc(objCutMovie(:,:,1));
+                    % imagesc(objCutMovie(:,:,1));
+                    imAlpha=ones(size(objCutMovie(:,:,1)));
+                    imAlpha(isnan(objCutMovie(:,:,1)))=0;
+                    % imAlpha(objCutMovie(:,:,1)==mode(objCutMovie(:)))=0;
+                    imagesc(objCutMovie(:,:,1),'AlphaData',imAlpha);
+                    set(gca,'color',[0 0 0]);
                 else
 
                 end
@@ -1102,7 +1202,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                 % writerObj = VideoWriter(['cell' num2str(i) '.avi']);
                 % open(writerObj);
 
-                colormap(options.colormap);
+                colormap([options.colormap]);
 
                 if ~isempty(objCutMovie)
                     imAlpha=ones(size(objCutMovie(:,:,1)));
@@ -1123,8 +1223,9 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                 %     ' | S-ratio = ' num2str(round(peakOutputStat.slopeRatio(i)*sigDig)/sigDig)];
 
                 % title(tmpTitle,'HandleVisibility','off');
-
+                set(gca,'color',[0 0 0]);
                 loopImgHandle = imagesc(objCutMovie(:,:,frameNo),'AlphaData',imAlpha);
+                set(gca,'color',[0 0 0]);
                 while strcmp(keyIn,'3')
                     keyIn = get(gcf,'CurrentCharacter');
                     if ~isempty(objCutMovie)
@@ -1169,9 +1270,9 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                 % close(writerObj);
 
             catch err
-                display(repmat('@',1,7))
+                disp(repmat('@',1,7))
                 disp(getReport(err,'extended','hyperlinks','on'));
-                display(repmat('@',1,7))
+                disp(repmat('@',1,7))
                 [x,y,reply]=ginput(1);
             end
         else
@@ -1190,20 +1291,28 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
         % 'M' make a montage of peak frames
         if isequal(reply, 109)&~isempty(options.inputMovie)
             try
+                [~, ~] = openFigure(options.secondFigNo, '');
                 [croppedPeakImages] = viewMontage(options.inputMovie,inputImages(:,:,i),options,thisTrace,[signalPeakIdx{i}],minValMovie,maxValMovie,options.cropSizeLength,i);
-                set(findobj(gcf,'type','axes'),'hittest','off')
+                % set(findobj(gcf,'type','axes'),'hittest','off')
+                colorbar('Location','eastoutside');
+                % colorbar(inputMoviePlotLoc2Handle,'off');
+                % s2Pos = get(inputMoviePlotLoc2Handle,'position');
+                % cbh = colorbar(inputMoviePlotLoc2Handle,'Location','eastoutside','Position',[s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)]);
+
+                suptitle('Press any key to exit')
                 ginput(1);
+                close(options.secondFigNo);
             catch err
-                display(repmat('@',1,7))
+                disp(repmat('@',1,7))
                 disp(getReport(err,'extended','hyperlinks','on'));
-                display(repmat('@',1,7))
+                disp(repmat('@',1,7))
             end
         % 'T' display neighboring cells
         elseif isequal(reply, 116)
             viewNeighborsAuto(inputImages, inputSignals, neighborsCell, 'inputImagesThres',inputImagesThres,'xCoords',options.coord.xCoords,'yCoords',options.coord.yCoords,'startCellNo',i,'cropSizeLength',options.cropSizeLength);
         % 'R' display trace with median removed
         elseif isequal(reply, 114)
-            [~, ~] = openFigure(426, '');
+            [~, ~] = openFigure(options.secondFigNo, '');
                 clf
                 set(gcf,'currentch','3');
                 keyIn = get(gcf,'CurrentCharacter');
@@ -1223,7 +1332,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                     plot(inputSignalNoise{i},'k'); hold on
                     plot(inputSignalSignal{i},'r');
                     title('Original')
-                if ~isempty(options.inputMovie)
+                if ~isempty(options.inputMovie)&~strcmp(class(options.inputMovie),'char')
                     [ROItraces] = applyImagesToMovie(inputImagesThres(:,:,i),options.inputMovie,'alreadyThreshold',1,'waitbarOn',1);
                     subplot(plotYn,1,3)
                         plot(ROItraces,'k');
@@ -1249,7 +1358,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                 keyIn = get(gcf,'CurrentCharacter');
                 pause(1/options.fps);
             end
-            close(426)
+            close(options.secondFigNo)
 
         % 'Q' to change the min/max used for movie contrast
         elseif isequal(reply, 113)
@@ -1286,13 +1395,13 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
             [peakSignalAmplitude peakIdx] = sort(peakSignalAmplitude,'descend');
             signalPeakArray = {signalPeakArray(peakIdx)};
             try
-                compareSignalToMovie(options.inputMovie, inputImages(:,:,i), thisTrace,'waitbarOn',0,'timeSeq',-10:10,'signalPeakArray',signalPeakArray,'cropSize',options.cropSizeLength,'movieMinMax',[minHere maxHere]);
+                compareSignalToMovie(options.inputMovie, inputImages(:,:,i), thisTrace,'waitbarOn',0,'timeSeq',-10:10,'signalPeakArray',signalPeakArray,'cropSize',options.cropSizeLength,'movieMinMax',[minHere maxHere],'inputDatasetName',options.inputDatasetName,'inputMovieDims',options.inputMovieDims);
                 % options.movieMin options.movieMax
             catch err
-                display(repmat('@',1,7))
+                disp(repmat('@',1,7))
                 disp(getReport(err,'extended','hyperlinks','on'));
-                display(repmat('@',1,7))
-                display('Error displaying movie signal')
+                disp(repmat('@',1,7))
+                disp('Error displaying movie signal')
             end
         % 'X' montage cut movie
         elseif (isequal(reply, 120)|isequal(reply, 2)|isequal(reply, 48))&~isempty(options.inputMovie)
@@ -1301,9 +1410,9 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                 % objCutMovie(:,:,1) = nanmax(objCutMovie(:));
                 playMovie(objCutMovie,'fps',15,'movieMinMax',[minHere maxHere]);
             catch err
-                display(repmat('@',1,7))
+                disp(repmat('@',1,7))
                 disp(getReport(err,'extended','hyperlinks','on'));
-                display(repmat('@',1,7))
+                disp(repmat('@',1,7))
             end
         else
             [valid directionOfNextChoice saveData i] = respondToUserInput(reply,i,valid,directionOfNextChoice,saveData,nImages);
@@ -1357,7 +1466,13 @@ function [objCutMovie] = createObjCutMovieSignalSorter(options,testpeaks,thisTra
     preOffset = 10;
     postOffset = 10;
     timeVector = [-preOffset:postOffset]';
-    nPoints = size(options.inputMovie,3);
+    if strcmp(class(options.inputMovie),'char')|strcmp(class(options.inputMovie),'cell')
+        % movieDims = loadMovieList(options.inputMovie,'frameList',[],'inputDatasetName',options.inputDatasetName,'getMovieDims',1,'displayInfo',0);
+        % options.inputMovieDims = [movieDims.one movieDims.two movieDims.three];
+        nPoints = options.inputMovieDims(3);
+    else
+        nPoints = size(options.inputMovie,3);
+    end
     maxSignalsToShow = options.maxSignalsToShow-1;
     % testpeaks= unique(testpeaks);
     % bias toward high amplitude signals
@@ -1381,6 +1496,7 @@ function [objCutMovie] = createObjCutMovieSignalSorter(options,testpeaks,thisTra
         framesToAlign = testpeaks;
     end
 
+    % framesToAlign = sort(framesToAlign);
     % thisTrace(framesToAlign(:))
 
     %remove points outside valid range
@@ -1393,15 +1509,27 @@ function [objCutMovie] = createObjCutMovieSignalSorter(options,testpeaks,thisTra
     peakIdxs(find((peakIdxs>nPoints))) = [];
     % get movie cut around cell
 
+    % framesToAlign
+    % peakIdxs
+
     xCoords = options.coord.xCoords(i);
     yCoords = options.coord.yCoords(i);
 
     tmpImgHere = inputImages(:,:,i);
-    tmpMovieHere = options.inputMovie(:,:,peakIdxs);
-    objCutMovie = getObjCutMovie(tmpMovieHere,tmpImgHere,'createMontage',0,'extendedCrosshairs',2,'crossHairVal',maxValMovie*options.crossHairPercent,'outlines',1,'waitbarOn',0,'cropSize',cropSizeLength,'addPadding',usePadding,'xCoords',xCoords,'yCoords',yCoords,'outlineVal',NaN);
+    if strcmp(class(options.inputMovie),'char')|strcmp(class(options.inputMovie),'cell')
+        objCutMovie = getObjCutMovie(options.inputMovie,tmpImgHere,'createMontage',0,'extendedCrosshairs',2,'crossHairVal',maxValMovie*options.crossHairPercent,'outlines',1,'waitbarOn',0,'cropSize',cropSizeLength,'addPadding',usePadding,'xCoords',xCoords,'yCoords',yCoords,'outlineVal',NaN,'frameList',peakIdxs,'inputDatasetName',options.inputDatasetName,'inputMovieDims',options.inputMovieDims,'hdf5Fid',options.hdf5Fid,'keepFileOpen',options.keepFileOpen);
+    else
+        tmpMovieHere = options.inputMovie(:,:,peakIdxs);
+        objCutMovie = getObjCutMovie(tmpMovieHere,tmpImgHere,'createMontage',0,'extendedCrosshairs',2,'crossHairVal',maxValMovie*options.crossHairPercent,'outlines',1,'waitbarOn',0,'cropSize',cropSizeLength,'addPadding',usePadding,'xCoords',xCoords,'yCoords',yCoords,'outlineVal',NaN,'inputMovieDims',options.inputMovieDims,'hdf5Fid',options.hdf5Fid,'keepFileOpen',options.keepFileOpen);
+    end
 
+    % Convert from cell to matrix
     objCutMovie = vertcat(objCutMovie{:});
     % objCutMovieTmp = objCutMovie{1};
+
+    % Insure that the peak images are the same class as the input images for calculation purposes
+    objCutMovie = cast(objCutMovie,class(tmpImgHere));
+
     dimSize = [size(objCutMovie,1) size(objCutMovie,2) length(timeVector)];
     diffDiffMatrix = NaN(dimSize);
     diffDiffMatrix2 = diffDiffMatrix;
@@ -1412,7 +1540,7 @@ function [objCutMovie] = createObjCutMovieSignalSorter(options,testpeaks,thisTra
     nStimMovies = 2;
     for iii = 1:nStimMovies;objCutMovie = cat(3, diffDiffMatrix, objCutMovie);end
     dimDiff = maxSignalsToShow + nStimMovies - round(size(objCutMovie,3)/length(timeVector));
-    % display('===')
+    % disp('===')
     % dimDiff
     for diffNo = 1:dimDiff
         objCutMovie = cat(3, objCutMovie, diffDiffMatrix2);
@@ -1433,7 +1561,7 @@ function [objCutMovie] = createObjCutMovieSignalSorter(options,testpeaks,thisTra
     inputImageAddObjCut = {inputImageAddObjCut,inputImageAddObjCut2};
 
     nStimPoints = length(timeVector);
-    % display('Adding outlines')
+    % disp('Adding outlines')
     % [thresholdedImages boundaryIndices] = thresholdImages(inputImages(:,:,i),'binary',1,'getBoundaryIndex',1,'threshold',options.thresholdOutline);
     % for imageNo = 1:size(objCutMovie,3)
     for imageNo = 0:(nStimMovies-1)
@@ -1451,7 +1579,7 @@ function [objCutMovie] = createObjCutMovieSignalSorter(options,testpeaks,thisTra
     end
 
     if options.outlinesObjCutMovie==1
-        croppedPeakImages = compareSignalToMovie(options.inputMovie, tmpImgHere, thisTrace,'crosshairs',0,'getOnlyPeakImages',1,'waitbarOn',0,'extendedCrosshairs',0,'crossHairVal',maxValMovie*options.crossHairPercent,'outlines',0,'signalPeakArray',{testpeaks},'cropSize',cropSizeLength);
+        croppedPeakImages = compareSignalToMovie(options.inputMovie, tmpImgHere, thisTrace,'crosshairs',0,'getOnlyPeakImages',1,'waitbarOn',0,'extendedCrosshairs',0,'crossHairVal',maxValMovie*options.crossHairPercent,'outlines',0,'signalPeakArray',{testpeaks},'cropSize',cropSizeLength,'inputDatasetName',options.inputDatasetName,'inputMovieDims',options.inputMovieDims);
         [thresholdedImages boundaryIndices] = thresholdImages(croppedPeakImages(:,:,1),'binary',1,'getBoundaryIndex',1,'threshold',options.thresholdOutline);
         for imageNo = nStimMovies:nStimMovies+2
             idxToUse = [(imageNo*nStimPoints+1):((imageNo+1)*nStimPoints)];
@@ -1500,7 +1628,9 @@ function [croppedPeakImages2 croppedPeakImages] = viewMontage(inputMovie,inputIm
     xCoords = options.coord.xCoords(i);
     yCoords = options.coord.yCoords(i);
 
-    croppedPeakImages = compareSignalToMovie(inputMovie, inputImage, thisTrace,'getOnlyPeakImages',1,'waitbarOn',0,'extendedCrosshairs',2,'crossHairVal',maxValMovie*options.crossHairPercent,'outlines',1,'signalPeakArray',signalPeakArray,'cropSize',cropSizeLength,'addPadding',1,'outlineVal',NaN,'xCoords',xCoords,'yCoords',yCoords);
+    % options.hdf5Fid
+    croppedPeakImages = compareSignalToMovie(inputMovie, inputImage, thisTrace,'getOnlyPeakImages',1,'waitbarOn',0,'extendedCrosshairs',2,'crossHairVal',maxValMovie*options.crossHairPercent,'outlines',1,'signalPeakArray',signalPeakArray,'cropSize',cropSizeLength,'addPadding',1,'outlineVal',NaN,'xCoords',xCoords,'yCoords',yCoords,'inputDatasetName',options.inputDatasetName,'inputMovieDims',options.inputMovieDims,'hdf5Fid',options.hdf5Fid,'keepFileOpen',options.keepFileOpen);
+    % options.hdf5Fid
     % display cropped images
     % figure(2);
     % for i=1:size(croppedPeakImages,3)
@@ -1519,7 +1649,7 @@ function [croppedPeakImages2 croppedPeakImages] = viewMontage(inputMovie,inputIm
     % size(croppedPeakImages)
     croppedPeakImages = cat(3,meanTransientImage,croppedPeakImages);
 
-    croppedPeakImages222 = compareSignalToMovie(inputMovie, inputImage, thisTrace,'getOnlyPeakImages',1,'waitbarOn',0,'extendedCrosshairs',2,'crossHairVal',maxValMovie*options.crossHairPercent,'outlines',0,'signalPeakArray',signalPeakArray,'cropSize',cropSizeLength,'crosshairs',0,'addPadding',1,'xCoords',xCoords,'yCoords',yCoords,'outlineVal',NaN);
+    croppedPeakImages222 = compareSignalToMovie(inputMovie, inputImage, thisTrace,'getOnlyPeakImages',1,'waitbarOn',0,'extendedCrosshairs',2,'crossHairVal',maxValMovie*options.crossHairPercent,'outlines',0,'signalPeakArray',signalPeakArray,'cropSize',cropSizeLength,'crosshairs',0,'addPadding',1,'xCoords',xCoords,'yCoords',yCoords,'outlineVal',NaN,'inputDatasetName',options.inputDatasetName,'inputMovieDims',options.inputMovieDims,'hdf5Fid',options.hdf5Fid,'keepFileOpen',options.keepFileOpen);
     [thresholdedImages boundaryIndices] = thresholdImages(croppedPeakImages222(:,:,1),'binary',1,'getBoundaryIndex',1,'threshold',options.thresholdOutline,'removeUnconnectedBinary',0);
     for imageNo = 1:size(croppedPeakImages,3)
         tmpImg = croppedPeakImages(:,:,imageNo);
@@ -1658,9 +1788,9 @@ function [slopeRatio] = plotPeakSignal(thisTrace,testpeaks,cellIDStr,instruction
 
         hold off;
     catch err
-        display(repmat('@',1,7))
+        disp(repmat('@',1,7))
         disp(getReport(err,'extended','hyperlinks','on'));
-        display(repmat('@',1,7))
+        disp(repmat('@',1,7))
     end
 end
 
@@ -1683,11 +1813,11 @@ function plotSignal(thisTrace,testpeaks,cellIDStr,instructionStr,minValTraces,ma
     % plot(thisTrace2, 'b');
 
     % plot(thisTrace, 'b');
-    plot(thisTrace, 'Color','k','LineWidth',3);
+    plot(thisTrace, 'Color','k','LineWidth',1);
     % plot(thisTrace, 'Color',[0.5 0.5 0.5],'LineWidth',3);
     hold on;
-    plot(inputSignalNoise,'Color',[127 127 255]/255);
-    plot(inputSignalSignal,'Color',[255 0 0]/255);
+    plot(inputSignalNoise,'Color',[127 127 255]/255,'LineWidth',0.5);
+    plot(inputSignalSignal,'Color',[255 0 0]/255,'LineWidth',0.5);
     % set(gca,'Color','k');
 
 
@@ -1699,7 +1829,14 @@ function plotSignal(thisTrace,testpeaks,cellIDStr,instructionStr,minValTraces,ma
     inputSignalSignal = inputSignalSignal+inputSignalNoise;
 
     % scatter(testpeaks, thisTrace(testpeaks), 'LineWidth',0.5,'MarkerFaceColor',[0 0 0], 'MarkerEdgeColor',[0 0 0])
-    scatter(testpeaks, thisTrace(testpeaks)*1.2, 30, '.', 'LineWidth',0.5,'MarkerFaceColor',[0 0 0], 'MarkerEdgeColor',[0 0 0])
+    scatter(testpeaks, min(maxValTraces*0.97,thisTrace(testpeaks)*1.4), 60, '.', 'LineWidth',0.5,'MarkerFaceColor',[0 0 0], 'MarkerEdgeColor',[0 0 0])
+    % scatter(testpeaks, maxValTraces*0.95*ones([length(testpeaks) 1]), 120, '.', 'LineWidth',0.5,'MarkerFaceColor',[0 0 0], 'MarkerEdgeColor',[0 0 0])
+
+    % for t = 1:length(testpeaks)
+    %     plot([testpeaks(t) testpeaks(t)],[thisTrace(testpeaks(t)) maxValTraces*0.95],'k-','LineWidth',0.5);
+    % end
+
+
     title([cellIDStr instructionStr])
     xlabel('frames');
     % ylabel('df/f');
@@ -1718,9 +1855,9 @@ end
 function [valid directionOfNextChoice saveData i] = respondToUserInput(reply,i,valid,directionOfNextChoice,saveData,nFilters)
     % decide what to do based on input (not a switch due to multiple comparisons)
     if isequal(reply, 3)|isequal(reply, 110)|isequal(reply, 31)
-        % n key or right click
+        % 'N' key or right click
         directionOfNextChoice=1;
-        % display('invalid IC');
+        % disp('invalid IC');
         % set(mainFig,'Color',[0.8 0 0]);
         valid(i) = 0;
     elseif isequal(reply, 28)
@@ -1730,7 +1867,7 @@ function [valid directionOfNextChoice saveData i] = respondToUserInput(reply,i,v
         % go forward, right
         directionOfNextChoice=1;
     elseif isequal(reply, 102)
-        % user clicked 'f' for finished, exit loop
+        % user clicked 'F' for finished, exit loop
         movieDecision = questdlg('Are you sure you want to exit?', ...
             'Finish sorting', ...
             'yes','no','yes');
@@ -1739,16 +1876,22 @@ function [valid directionOfNextChoice saveData i] = respondToUserInput(reply,i,v
         end
         % i=nFilters+1;
     elseif isequal(reply, 103)
-        % if user clicks 'g' for goto, ask for which IC they want to see
+        % if user clicks 'G' for goto, ask for which IC they want to see
         icChange = inputdlg('enter signal #');
-        if ~isempty(icChange)
+        if ~isempty(icChange{1})
             icChange = str2num(icChange{1});
-            if icChange>nFilters|icChange<1
-                % do nothing, invalid command
-            else
-                i = icChange;
-                directionOfNextChoice = 0;
+            % Check user entered integer
+            if mod(icChange,1) == 0
+                if icChange>nFilters|icChange<1
+                    % do nothing, invalid command
+                    disp('Goto value entered not in range')
+                else
+                    i = icChange;
+                    directionOfNextChoice = 0;
+                end
             end
+        else
+            disp('Enter actual number')
         end
     elseif isequal(reply, 115)
         movieDecision = questdlg('Are you sure you want to exit?', ...
@@ -1756,14 +1899,14 @@ function [valid directionOfNextChoice saveData i] = respondToUserInput(reply,i,v
             'yes','no','yes');
         if strcmp(movieDecision,'yes')
             % 's' if user wants to get ride of the rest of the ICs
-            display(['classifying the following signals as bad: ' num2str(i) ':' num2str(nFilters)])
+            disp(['classifying the following signals as bad: ' num2str(i) ':' num2str(nFilters)])
             valid(i:nFilters) = 0;
             saveData=1;
         end
     elseif isequal(reply, 121)|isequal(reply, 1)|isequal(reply, 30)
         % y key or left click
         directionOfNextChoice=1;
-        % display('valid IC');
+        % disp('valid IC');
         % set(mainFig,'Color',[0 0.8 0]);
         valid(i) = 1;
     else

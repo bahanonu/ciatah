@@ -24,7 +24,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		MICRON_PER_PIXEL =  2.51;
 
 		defaultObjDir = pwd;
-		classVersion = 'v3.20190124';
+		classVersion = 'v3.20190310';
 		serverPath = '';
 		privateSettingsPath = ['private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
 		% place where functions can temporarily story user settings
@@ -187,7 +187,8 @@ classdef calciumImagingAnalysis < dynamicprops
 		validCNMFStructVarname = 'validCNMF';
 		structCNMRVarname = 'cnmfAnalysisOutput';
 		% PCAICA, EM, EXTRACT, CNMF, CNMFE
-		signalExtractionMethod = 'PCAICA';
+		% signalExtractionMethod = 'PCAICA';
+		signalExtractionMethod = 'EM';
 
 		settingOptions = struct(...
 			'analysisType',  {{'group','individual'}},...

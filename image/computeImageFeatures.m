@@ -69,11 +69,11 @@ function [imgStats] = computeImageFeatures(inputImages, varargin)
 
     % loop over images and get their stats
     for imageNo = 1:nImages
-        iImage = squeeze(inputImages(:,:,imageNo));
+        % iImage = squeeze(inputImages(:,:,imageNo));
         % imagesc(iImage)
         % imgStats.imageSizes(imageNo) = sum(iImage(:)>0);
         if options.runRegionprops==1
-            regionStat = regionprops(iImage, featureList);
+            regionStat = regionprops(inputImages(:,:,imageNo), featureList);
             for ifeature = featureList
                 % regionStat = regionprops(iImage, ifeature{1});
                 try
@@ -87,10 +87,10 @@ function [imgStats] = computeImageFeatures(inputImages, varargin)
         end
 
         if options.addedFeatures==1
-            iImage2 = squeeze(options.addedFeaturesInputImages(:,:,imageNo));
+            % iImage2 = squeeze(options.addedFeaturesInputImages(:,:,imageNo));
             % figure(11);imagesc(iImage2);title(num2str(imageNo))
             % [imageNo xCoords(imageNo) yCoords(imageNo)]
-            t1=getObjCutMovie(iImage2,iImage2,'cropSize',30,'createMontage',0,'crossHairsOn',0,'addPadding',1,'waitbarOn',0,'xCoords',xCoords(imageNo),'yCoords',yCoords(imageNo));
+            t1=getObjCutMovie(options.addedFeaturesInputImages(:,:,imageNo),options.addedFeaturesInputImages(:,:,imageNo),'cropSize',30,'createMontage',0,'crossHairsOn',0,'addPadding',1,'waitbarOn',0,'xCoords',xCoords(imageNo),'yCoords',yCoords(imageNo));
             t1 = t1{1};
             imgStats.imgKurtosis(imageNo) = double(kurtosis(t1(:)));
             imgStats.imgSkewness(imageNo) = double(skewness(t1(:)));

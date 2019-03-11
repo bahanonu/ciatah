@@ -52,7 +52,8 @@ function obj = modelVarsFromFiles(obj)
 		reportMidpoint = str2num(usrInput{fieldnameNo+3});
 	else
 		% only update the threshold
-		numStdsForThresh = 3;
+		% numStdsForThresh = 3;
+		numStdsForThresh = 2.3;
 		reportMidpoint = 0;
 	end
 
@@ -233,8 +234,8 @@ function obj = modelVarsFromFiles(obj)
 					end
 					% signalImages = double(permute(cnmfAnalysisOutput.extractedImages,[3 1 2]));
 					signalImages = double(cnmfAnalysisOutput.extractedImages);
-					signalTraces = double(cnmfAnalysisOutput.extractedSignals);
-					% signalTraces = double(cnmfAnalysisOutput.extractedSignalsEst);
+					% signalTraces = double(cnmfAnalysisOutput.extractedSignals);
+					signalTraces = double(cnmfAnalysisOutput.extractedSignalsEst);
 					rawFiles = 1;
 				case 'CNMFE'
 					regexPairs = {...

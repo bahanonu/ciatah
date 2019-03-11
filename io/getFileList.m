@@ -11,10 +11,12 @@ function [fileList] = getFileList(inputDir, filterExp,varargin)
     % changelog
         % 2014.03.21 - added feature to input cell array of filters
         % 2016.03.20 - added exclusion filter to function
+        % 2019.03.08 [13:12:59] - added support for natural sorting of files
     % TODO
         % Fix recusive to recursive in a backwards compatible way
 
     %========================
+    %
     options.recusive = 0;
     %
     options.recursive = '';
@@ -22,6 +24,9 @@ function [fileList] = getFileList(inputDir, filterExp,varargin)
     options.regexpWithFolder = 0;
     %
     options.excludeFilter = '';
+    % Char: lexicographic (e.g. 1 10 11 2 21 22 unless have 01 02 10 11 21 22) or numeric (e.g. 1 2 10 11 21 22) or natural (e.g. 1 2 10 11 21 22)
+    % options.sortMethod = 'lexicographic';
+    options.sortMethod = 'natural';
     % get options
     options = getOptions(options,varargin);
     % display(options)
@@ -75,5 +80,8 @@ function [fileList] = getFileList(inputDir, filterExp,varargin)
         excludeIdx = ~cellfun(@isempty,(regexp(fileList,options.excludeFilter)));
         fileList(excludeIdx) = [];
         % includeIdx = setdiff(1:length(fileList),excludeIdx)
+    end
+    if ~isempty(fileList)&&(strcmp(options.sortMethod,'natural')|strcmp(options.sortMethod,'numeric'))
+        fileList = natsortfiles(fileList);
     end
 end

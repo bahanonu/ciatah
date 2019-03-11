@@ -140,8 +140,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			case 'CNMF'
 				% options.CNMFE.originalCurrentSwitch
 				[success] = cnmfVersionDirLoad(options.CNMF.originalCurrentSwitch);
-
 				obj.signalExtractionMethod = signalExtractionMethod{signalExtractNo};
+				[gridWidth gridSpacing] = subfxnSignalSizeSpacing();
 				pcaicaPCsICsSwitchStr = subfxnNumExpectedSignals();
 				if options.CNMF.iterateOverParameterSpace==1
 					paramSetTmp = inputdlg({...
@@ -551,6 +551,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 							'CELLMax | movieImageCorrThreshold?',...
 							'CELLMax | loadPreviousChunks?',...
 							'CELLMax | saveIterMovie?',...
+							'CELLMax | sqOverlap?',...
 						},...
 						dlgStr,1,...
 						{...
@@ -575,6 +576,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 							'0.15',...
 							'0',...
 							'0',...
+							'16',...
 						}...
 					);setNo = 1;
 					options.CELLMax.readMovieChunks = str2num(movieSettings{setNo});setNo = setNo+1;
@@ -602,6 +604,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 
 					options.CELLMax.saveIterMovie = str2num(movieSettings{setNo});setNo = setNo+1;
 
+					options.CELLMax.sqOverlap = str2num(movieSettings{setNo});setNo = setNo+1;
+
 				case 'EXTRACT'
 					movieSettings = inputdlg({...
 							'EXTRACT | Use GPU (''gpu'') or CPU (''cpu'')?',...
@@ -625,7 +629,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 							'CNMF | iterate over parameter space? (1 = yes, 0 = no)',...
 							'CNMF | only run initialization algorithm? (1 = yes, 0 = no)',...
 							'CNMF | Spatial down-sampling factor (scalar >= 1)',...
-							'CNMF | Temporal down-sampling factor (scalar >= 1)'...
+							'CNMF | Temporal down-sampling factor (scalar >= 1)',...
+							'CNMF | Movie frame rate (scalar >= 1)'...
 						},...
 						dlgStr,1,...
 						{...
@@ -634,7 +639,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 							'0',...
 							'0',...
 							'1',...
-							'1'...
+							'1',...
+							num2str(obj.FRAMES_PER_SECOND)...
 						}...
 					);setNo = 1;
 					options.CNMF.originalCurrentSwitch = movieSettings{setNo};setNo = setNo+1;
@@ -643,6 +649,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 					options.CNMF.onlyRunInitialization = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.CNMF.ssub = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.CNMF.tsub = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.CNMF.fr = str2num(movieSettings{setNo});setNo = setNo+1; obj.FRAMES_PER_SECOND = options.CNMF.fr;
 				case 'CNMFE'
 					movieSettings = inputdlg({...
 							'CNMF-E | Use CNMF-F ("cnmfe"), original ("original"), or most recent ("current") CNMF version?'...
@@ -801,7 +808,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 
 		% if cvx is not in the path, ask user
 		if isempty(which('cvx_begin'))
-			cvxSetupPathDefault = ['private' filesep 'cvx-w64' filesep 'cvx' filesep 'cvx_setup.m'];
+			% cvxSetupPathDefault = ['private' filesep 'cvx-w64' filesep 'cvx' filesep 'cvx_setup.m'];
+			cvxSetupPathDefault = ['signal_extraction' filesep 'cvx_rd' filesep 'cvx_setup.m'];
 			if exist(cvxSetupPathDefault,'file')==2
 				cvxSetupPath = cvxSetupPathDefault;
 			else
@@ -812,6 +820,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			run(cvxSetupPath);
 		end
 
+		% Get the number of cells that should be requested
 		switch pcaicaPCsICsSwitchStr
 			case 'Subject'
 				nPCsnICs = obj.numExpectedSignals.(obj.signalExtractionMethod).(obj.subjectStr{obj.fileNum})
@@ -861,12 +870,16 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		cnmfOptions.maxIter = 5;
 		% Expansion factor for HALS localized updates
 		cnmfOptions.bSiz = 3; %1e-5
+		% imaging frame rate in Hz (defaut: 30)
+		cnmfOptions.fr = options.CNMF.fr;
 
 		% Standard deviation of Gaussian kernel for initialization
-		cnmfOptions.otherCNMF.tau = 9;
+		% cnmfOptions.otherCNMF.tau = 9;
+		cnmfOptions.otherCNMF.tau = gridWidth.(obj.subjectStr{obj.fileNum})/2;
 		% cnmfOptions.otherCNMF.tau = [3 2 1; 3 2 1]';
 		% Order of autoregressive system (p = 0 no dynamics, p=1 just decay, p = 2, both rise and decay)
 		cnmfOptions.otherCNMF.p = 2;
+
 
 		if options.CNMF.onlyRunInitialization==1
 			% run only initialization algorithm
@@ -941,6 +954,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				% [cnmfAnalysisOutput] = computeCnmfSignalExtraction(movieList,obj.numExpectedSignals.(obj.signalExtractionMethod).(obj.subjectStr{obj.fileNum}),'options',cnmfOptions);
 
 				numExpectedComponents = obj.numExpectedSignals.(obj.signalExtractionMethod).(obj.subjectStr{obj.fileNum});
+				numExpectedComponents = numExpectedComponents(1);
 				originalPath = [options.signalExtractionRootPath filesep 'cnmf_original'];
 				currentPath = [options.signalExtractionRootPath filesep 'cnmf_current'];
 				switch options.CNMF.originalCurrentSwitch
@@ -1010,10 +1024,24 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		% 	run([folderPath filesep filePath]);
 		% end
 
+		% % if cvx is not in the path, ask user
+		% if isempty(which('cvx_begin'))
+		% 	[filePath,folderPath,~] = uigetfile(['*.*'],'select cvx_setup.m');
+		% 	run([folderPath filesep filePath]);
+		% end
+
 		% if cvx is not in the path, ask user
 		if isempty(which('cvx_begin'))
-			[filePath,folderPath,~] = uigetfile(['*.*'],'select cvx_setup.m');
-			run([folderPath filesep filePath]);
+			% cvxSetupPathDefault = ['private' filesep 'cvx-w64' filesep 'cvx' filesep 'cvx_setup.m'];
+			cvxSetupPathDefault = ['signal_extraction' filesep 'cvx_rd' filesep 'cvx_setup.m'];
+			if exist(cvxSetupPathDefault,'file')==2
+				cvxSetupPath = cvxSetupPathDefault;
+			else
+				[filePath,folderPath,~] = uigetfile(['*.*'],'select cvx_setup.m');
+				cvxSetupPath = [folderPath filesep filePath];
+			end
+			fprintf('cvx_setup.m at %s\n',cvxSetupPath);
+			run(cvxSetupPath);
 		end
 
 		% switch pcaicaPCsICsSwitchStr
@@ -1097,8 +1125,10 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 
 				movieList = getFileList(obj.inputFolders{validFoldersIdx(1)}, obj.fileFilterRegexp);
 				DFOFList.(thisSubjectStr) = loadMovieList(movieList,'convertToDouble',0,'frameList',[1:500],'inputDatasetName',obj.inputDatasetName,'treatMoviesAsContinuous',1);
-			catch
-
+			catch err
+				disp(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				disp(repmat('@',1,7))
 			end
 		end
 		for thisSubjectStr=subjectList
@@ -1200,8 +1230,10 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				% end
 				% close(h);
 				% clear DFOF;
-			catch
-
+			catch err
+				disp(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				disp(repmat('@',1,7))
 			end
 		end
 		try

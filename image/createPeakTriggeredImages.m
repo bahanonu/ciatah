@@ -18,7 +18,7 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 		% Take 2 frames after peak and average to improve SNR
 
 	%========================
-	% size in pixels to crop around the movie
+	% Int: size in pixels to crop in the movie around cell centroid
 	options.cropSize = 10;
 	% hierarchy name in hdf5 where movie is
 	options.inputDatasetName = '/1';
@@ -48,6 +48,12 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 	options.runSecondCorr = 0;
 	%
 	options.outputImageFlag = 1;
+	% Int: Number of frames after event to average movie
+	options.nFramesMeanTrigger = 1;
+	% FID of the inputMovie via H5F.open to save time
+	options.hdf5Fid = [];
+	% Whether to keep HDF5 file open (for FID)
+	options.keepFileOpen = 0;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -70,6 +76,11 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 				movieDims = loadMovieList(inputMovie,'inputDatasetName',options.inputDatasetName,'getMovieDims',1);
 				movieDims = [movieDims.one movieDims.two movieDims.three];
 			end
+
+			% Force read movie chunks to be 1
+			% options.readMovieChunks = 1;
+			options.hdf5Fid = H5F.open(inputMovie);
+			options.keepFileOpen = 1;
 		else
 			movieDims = size(inputMovie);
 		end
@@ -80,9 +91,9 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 			options.inputImagesThres = [];
 			options.thresholdImages = 1;
 		elseif ~isempty(options.thresholdImages)
-			inputImagesThres = thresholdImages(inputImages,'waitbarOn',1,'binary',1,'threshold',options.thresholdImages);
+			inputImagesThres = thresholdImages(inputImages,'waitbarOn',options.waitbarOn,'binary',1,'threshold',options.thresholdImages);
 		else
-			inputImagesThres = thresholdImages(inputImages,'waitbarOn',1,'binary',1,'threshold',0.4);
+			inputImagesThres = thresholdImages(inputImages,'waitbarOn',options.waitbarOn,'binary',1,'threshold',0.4);
 		end
 
 		if isempty(options.signalPeaksArray)
@@ -113,7 +124,7 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 		outputMeanImageCorr2 = [];
 		outputMeanImageCorrMax = [];
 
-		reverseStr = '';
+		% reverseStr = '';
 		% loop over all signals
 
 		outputMeanImageStruct_corrPearson = [];
@@ -133,7 +144,10 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 		options_runSecondCorr = options.runSecondCorr;
 		options_outputImageFlag = options.outputImageFlag;
 
-		options_maxPeaksToUse
+		options_hdf5Fid = options.hdf5Fid;
+		options_keepFileOpen = options.keepFileOpen;
+
+		% options_maxPeaksToUse
 
 		disp('Starting movie images...')
 		display(repmat('.',1,round(nSignals/20)))
@@ -149,7 +163,7 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 			D = parallel.pool.DataQueue;
 			afterEach(D, @nUpdateParforProgress);
 			p = 1;
-			N = nSignals;
+			% N = nSignals;
 		end
 		% nInterval = round(nSignals/20);
 		nInterval = 20;
@@ -188,7 +202,8 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 				signalPeaksThis = unique(signalPeaksThis);
 				nPeaksToUse = length(signalPeaksThis);
 				if ~isempty(options_maxPeaksToUse)
-					thisTrace = inputSignals(signalNo,:);
+					% thisTrace = inputSignals(signalNo,:);
+					thisTrace = inputSignals{signalNo};
 					peakSignalAmplitude = thisTrace(signalPeaksThis);
 					[~, peakIdx] = sort(peakSignalAmplitude,'descend');
 					signalPeaksThis = signalPeaksThis(peakIdx);
@@ -207,12 +222,13 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 
 		xMax = movieDims(2);
 		yMax = movieDims(1);
-		nFrames = size(inputSignals,2);
+		% nFrames = size(inputSignals,2);
+		nFrames = size(inputSignals{1},2);
 
 		parfor(signalNo = 1:nSignals,nWorkers)
 		% for signalNo = 1:nSignals
 			try
-				if isnan(xCoords(signalNo))|isnan(yCoords(signalNo))
+				if isnan(xCoords(signalNo))||isnan(yCoords(signalNo))
 					outputMeanImageCorrs(signalNo) = NaN;
 					outputMeanImageCorrsMean(signalNo) = NaN;
 					outputMeanImageCorr2(signalNo) = NaN;
@@ -247,7 +263,8 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 				signalPeaksThis = unique(signalPeaksThis);
 				nPeaksToUse = length(signalPeaksThis);
 				if ~isempty(options_maxPeaksToUse)
-					thisTrace = inputSignals(signalNo,:);
+					% thisTrace = inputSignals(signalNo,:);
+					thisTrace = inputSignals{signalNo};
 					peakSignalAmplitude = thisTrace(signalPeaksThis);
 					[~, peakIdx] = sort(peakSignalAmplitude,'descend');
 					signalPeaksThis = signalPeaksThis(peakIdx);
@@ -299,7 +316,7 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 						% 	signalImagesCrop = cat(3,signalImagesCrop,signalImagesCropTmp);
 						% end
 					end
-					[signalImagesCrop] = readHDF5Subset(inputMovie, offset, block,'datasetName',options_inputDatasetName,'displayInfo',0);
+					[signalImagesCrop] = readHDF5Subset(inputMovie, offset, block,'datasetName',options_inputDatasetName,'displayInfo',0,'hdf5Fid',options_hdf5Fid,'keepFileOpen',options_keepFileOpen);
 					%signalImagesCrop = cat(3,signalImagesCrop{:});
 				end
 				% corrVals = [];
@@ -322,6 +339,10 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 					szA = size(A);
 					szB = size(B);
 					szB(3) = 1;
+					% If only have a single peak, compensate for that.
+					if length(szA)==2
+						szA(3) = 1;
+					end
 					dim12 = szA(1)*szA(2);
 
 					a1 = bsxfun(@minus,A,mean(reshape(A,dim12,1,[])));
@@ -499,16 +520,19 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 		end
 	end
 	function convertInputImagesToCell()
-		%Get dimension information about 3D movie matrix
+		% Convert input signals into cell array
+		inputSignals = squeeze(mat2cell(inputSignals,ones(1,size(inputSignals,1)),size(inputSignals,2)));
+
+		% Get dimension information about 3D movie matrix
 		[inputMovieX, inputMovieY, inputMovieZ] = size(inputImages);
-		%reshapeValue = size(inputImages);
-		%Convert array to cell array, allows slicing (not contiguous memory block)
+		% reshapeValue = size(inputImages);
+		% Convert array to cell array, allows slicing (not contiguous memory block)
 		inputImages = squeeze(mat2cell(inputImages,inputMovieX,inputMovieY,ones(1,inputMovieZ)));
 
-		%Get dimension information about 3D movie matrix
+		% Get dimension information about 3D movie matrix
 		[inputMovieX, inputMovieY, inputMovieZ] = size(inputImagesThres);
-		%reshapeValue = size(inputImagesThres);
-		%Convert array to cell array, allows slicing (not contiguous memory block)
+		% reshapeValue = size(inputImagesThres);
+		% Convert array to cell array, allows slicing (not contiguous memory block)
 		inputImagesThres = squeeze(mat2cell(inputImagesThres,inputMovieX,inputMovieY,ones(1,inputMovieZ)));
 	end
 end

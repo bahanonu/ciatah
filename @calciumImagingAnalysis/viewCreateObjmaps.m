@@ -38,6 +38,8 @@ function obj = viewCreateObjmaps(obj,varargin)
 	options.dilateOutlinesFactor = 0;
 	% none or median
 	options.medianFilterImages = 'none'
+	% red, blue, gree
+	options.plotSignalsGraphColor = 'red';
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -66,7 +68,9 @@ function obj = viewCreateObjmaps(obj,varargin)
 				'Only show cellmap/trace graph? (1 = yes, 0 = no)',...
 				'Micron per pixel for scale bar',...
 				'Dilate outlines factor (integer)',...
-				'Filter images (none, median)'...
+				'Filter images (none, median)',...
+				'Activity traces color (red, green, blue)?',...
+				'Frames per second?'...
 			},...
 			'view movie settings',1,...
 			{...
@@ -82,7 +86,9 @@ function obj = viewCreateObjmaps(obj,varargin)
 				num2str(options.onlyShowMapTraceGraph),...
 				num2str(obj.MICRON_PER_PIXEL),...
 				num2str(options.dilateOutlinesFactor),...
-				'none'...
+				'none',...
+				options.plotSignalsGraphColor,...
+				num2str(obj.FRAMES_PER_SECOND)...
 			}...
 		);
 		obj.picsSavePath = movieSettings{1};
@@ -98,6 +104,8 @@ function obj = viewCreateObjmaps(obj,varargin)
 		obj.MICRON_PER_PIXEL = str2num(movieSettings{11});
 		options.dilateOutlinesFactor = str2num(movieSettings{12});
 		options.medianFilterImages = movieSettings{13};
+		options.plotSignalsGraphColor = movieSettings{14};
+		obj.FRAMES_PER_SECOND = str2num(movieSettings{15});
 		if length(cutLength)==1
 		else
 			options.signalCutIdx = cutLength;
@@ -376,6 +384,10 @@ function obj = viewCreateObjmaps(obj,varargin)
                     else
                     	[signalSnr sortedIdx] = sort(max(sortedinputSignals(:,options.signalCutIdx),[],2),'descend');
                     end
+
+                    % max(sortedinputSignals,[],2)
+                    % sortedIdx
+                    % pause
 					sortedinputSignals = inputSignalsTmp(sortedIdx,:);
 
 					% create overlap with new images
@@ -634,6 +646,7 @@ function obj = viewCreateObjmaps(obj,varargin)
 						hold on;
 
 					[signalSnr a] = computeSignalSnr(inputSignals,'testpeaks',signalPeaks,'testpeaksArray',signalPeakIdx);
+					signalSnr(isinf(signalSnr)) = 0;
 				[figHandle figNo] = openFigure(972, '');
 					clf
 					subplot(2,3,1);
@@ -958,15 +971,20 @@ function obj = viewCreateObjmaps(obj,varargin)
 
 	end
 	function plotTracesFigure()
+		% options
 		if size(sortedinputSignalsCut,1)==1
 			plot(sortedinputSignalsCut)
         else
-        	if sum(strcmp(obj.signalExtractionMethod,{'EM','CNMF','CNMFE'}))>0
-				plotSignalsGraph(sortedinputSignalsCut,'LineWidth',2.5,'incrementAmount',[],'newAxisColorOrder','red','smoothTrace',0,'maxIncrementPercent',0.4,'minAdd',0);
-        	else
-        		% plot(sortedinputSignalsCut)
-				plotSignalsGraph(sortedinputSignalsCut,'LineWidth',2.5,'incrementAmount',options.incrementAmount);
-        	end
+    %     	if sum(strcmp(obj.signalExtractionMethod,{'EM','CNMF','CNMFE'}))>0
+				% plotSignalsGraph(sortedinputSignalsCut,'LineWidth',2.5,'incrementAmount',[],'newAxisColorOrder',options.plotSignalsGraphColor,'smoothTrace',0,'maxIncrementPercent',0.4,'minAdd',0);
+    %     	else
+    %     		% plot(sortedinputSignalsCut)
+				% plotSignalsGraph(sortedinputSignalsCut,'LineWidth',2.5,'incrementAmount',options.incrementAmount,'newAxisColorOrder',options.plotSignalsGraphColor);
+    %     	end
+    	% figure;
+    	% imagesc(sortedinputSignalsCut);
+    	% pause
+    		plotSignalsGraph(sortedinputSignalsCut,'LineWidth',2.5,'incrementAmount',[],'newAxisColorOrder',options.plotSignalsGraphColor,'smoothTrace',0,'maxIncrementPercent',0.4,'minAdd',0);
 		end
 		nTicks = 10;
 		set(gca,'XTick',round(linspace(1,size(sortedinputSignalsCut,2),nTicks)))

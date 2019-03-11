@@ -1,0 +1,294 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>NATSORTFILES Examples</title><meta name="generator" content="MATLAB 7.11"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2018-03-25"><meta name="DC.source" content="natsortfiles_doc.m"><style type="text/css">
+
+body {
+  background-color: white;
+  margin:10px;
+}
+
+h1 {
+  color: #990000; 
+  font-size: x-large;
+}
+
+h2 {
+  color: #990000;
+  font-size: medium;
+}
+
+/* Make the text shrink to fit narrow windows, but not stretch too far in 
+wide windows. */ 
+p,h1,h2,div.content div {
+  max-width: 600px;
+  /* Hack for IE6 */
+  width: auto !important; width: 600px;
+}
+
+pre.codeinput {
+  background: #EEEEEE;
+  padding: 10px;
+}
+@media print {
+  pre.codeinput {word-wrap:break-word; width:100%;}
+} 
+
+span.keyword {color: #0000FF}
+span.comment {color: #228B22}
+span.string {color: #A020F0}
+span.untermstring {color: #B20000}
+span.syscmd {color: #B28C00}
+
+pre.codeoutput {
+  color: #666666;
+  padding: 10px;
+}
+
+pre.error {
+  color: red;
+}
+
+p.footer {
+  text-align: right;
+  font-size: xx-small;
+  font-weight: lighter;
+  font-style: italic;
+  color: gray;
+}
+
+  </style></head><body><div class="content"><h1>NATSORTFILES Examples</h1><!--introduction--><p>The function <a href="https://www.mathworks.com/matlabcentral/fileexchange/47434"><tt>NATSORTFILES</tt></a> sorts a cell array of filenames or filepaths (1xN char), taking into account any number values within the strings. This is known as a <i>natural order sort</i> or an <i>alphanumeric sort</i>. Note that MATLAB's inbuilt <a href="http://www.mathworks.com/help/matlab/ref/sort.html"><tt>SORT</tt></a> function sorts the character codes only (as does <tt>SORT</tt> in most programming languages).</p><p><tt>NATSORTFILES</tt> is not a naive natural-order sort, but splits and sorts filenames and file extensions separately, which means that <tt>NATSORTFILES</tt> sorts shorter filenames before longer ones: this is known as a <i>dictionary sort</i>. For the same reason filepaths are split at every path-separator character (either <tt>'\'</tt> or <tt>'/'</tt>), and each directory level is sorted separately. See the "Explanation" sections below for more details.</p><p>For sorting the rows of a cell array of strings use <a href="https://www.mathworks.com/matlabcentral/fileexchange/47433"><tt>NATSORTROWS</tt></a>.</p><p>For sorting a cell array of strings use <a href="https://www.mathworks.com/matlabcentral/fileexchange/34464"><tt>NATSORT</tt></a>.</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Basic Usage</a></li><li><a href="#2">Output 2: Sort Index</a></li><li><a href="#3">Output 3: Debugging Array</a></li><li><a href="#4">Example with DIR and a Cell Array</a></li><li><a href="#5">Example with DIR and a Structure</a></li><li><a href="#6">Explanation: Dictionary Sort</a></li><li><a href="#7">Explanation: Filenames</a></li><li><a href="#8">Explanation: Filepaths</a></li><li><a href="#9">Regular Expression: Decimal Numbers, E-notation, +/- Sign</a></li><li><a href="#10">Regular Expression: Interactive Regular Expression Tool</a></li></ul></div><h2>Basic Usage<a name="1"></a></h2><p>By default <tt>NATSORTFILES</tt> interprets consecutive digits as being part of a single integer, each number is considered to be as wide as one letter:</p><pre class="codeinput">A = {<span class="string">'a2.txt'</span>, <span class="string">'a10.txt'</span>, <span class="string">'a1.txt'</span>};
+sort(A)
+natsortfiles(A)
+</pre><pre class="codeoutput">ans = 
+    'a1.txt'    'a10.txt'    'a2.txt'
+ans = 
+    'a1.txt'    'a2.txt'    'a10.txt'
+</pre><h2>Output 2: Sort Index<a name="2"></a></h2><p>The second output argument is a numeric array of the sort indices <tt>ndx</tt>, such that <tt>Y = X(ndx)</tt> where <tt>Y = natsortfiles(X)</tt>:</p><pre class="codeinput">[~,ndx] = natsortfiles(A)
+</pre><pre class="codeoutput">ndx =
+     3     1     2
+</pre><h2>Output 3: Debugging Array<a name="3"></a></h2><p>The third output is a cell vector of cell arrays, where each cell array contains individual characters and numbers (after converting to numeric). This is useful for confirming that the numbers are being correctly identified by the regular expression. The cells of the cell vector correspond to the split directories, filenames, and file extensions. Note that the rows of the debugging cell arrays are <a href="https://www.mathworks.com/company/newsletters/articles/matrix-indexing-in-matlab.html">linearly indexed</a> from the input cell array.</p><pre class="codeinput">[~,~,dbg] = natsortfiles(A);
+dbg{:}
+</pre><pre class="codeoutput">ans = 
+    'a'    [ 2]
+    'a'    [10]
+    'a'    [ 1]
+ans = 
+    '.'    't'    'x'    't'
+    '.'    't'    'x'    't'
+    '.'    't'    'x'    't'
+</pre><h2>Example with DIR and a Cell Array<a name="4"></a></h2><p>One common situation is to use <a href="https://www.mathworks.com/help/matlab/ref/dir.html"><tt>DIR</tt></a> to identify files in a folder, sort them into the correct order, and then loop over them: below is an example of how to do this. Remember to <a href="https://www.mathworks.com/help/matlab/matlab_prog/preallocating-arrays.html">preallocate</a> all output arrays before the loop!</p><pre class="codeinput">D = <span class="string">'natsortfiles_test'</span>; <span class="comment">% directory path</span>
+S = dir(fullfile(D,<span class="string">'*.txt'</span>)); <span class="comment">% get list of files in directory</span>
+N = natsortfiles({S.name}); <span class="comment">% sort file names into order</span>
+<span class="keyword">for</span> k = 1:numel(N)
+	disp(fullfile(D,N{k}))
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">natsortfiles_test\A_1.txt
+natsortfiles_test\A_1-new.txt
+natsortfiles_test\A_1_new.txt
+natsortfiles_test\A_2.txt
+natsortfiles_test\A_3.txt
+natsortfiles_test\A_10.txt
+natsortfiles_test\A_100.txt
+natsortfiles_test\A_200.txt
+</pre><h2>Example with DIR and a Structure<a name="5"></a></h2><p>Users who need to access the <tt>DIR</tt> structure fields can use <tt>NATSORTFILE</tt>'s second output to sort <tt>DIR</tt>'s output structure into the correct order:</p><pre class="codeinput">D = <span class="string">'natsortfiles_test'</span>; <span class="comment">% directory path</span>
+S = dir(fullfile(D,<span class="string">'*.txt'</span>)); <span class="comment">% get list of files in directory</span>
+[~,ndx] = natsortfiles({S.name}); <span class="comment">% indices of correct order</span>
+S = S(ndx); <span class="comment">% sort structure using indices</span>
+<span class="keyword">for</span> k = 1:numel(S)
+	fprintf(<span class="string">'%-13s%s\n'</span>,S(k).name,S(k).date)
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">A_1.txt      22-Jul-2017 09:13:23
+A_1-new.txt  22-Jul-2017 09:13:23
+A_1_new.txt  22-Jul-2017 09:13:23
+A_2.txt      22-Jul-2017 09:13:23
+A_3.txt      22-Jul-2017 09:13:23
+A_10.txt     22-Jul-2017 09:13:23
+A_100.txt    22-Jul-2017 09:13:23
+A_200.txt    22-Jul-2017 09:13:23
+</pre><h2>Explanation: Dictionary Sort<a name="6"></a></h2><p>Filenames and file extensions are separated by the extension separator: the period character <tt>'.'</tt>. Using a normal <tt>SORT</tt> the period gets sorted <i>after</i> all of the characters from 0 to 45 (including <tt>!"#$%&amp;'()*+,-</tt>, the space character, and all of the control characters, e.g. newlines, tabs, etc). This means that a naive <tt>SORT</tt> or natural-order sort will sort some short filenames after longer filenames. In order to provide the correct dictionary sort, with shorter filenames first, <tt>NATSORTFILES</tt> splits and sorts filenames and file extensions separately:</p><pre class="codeinput">B = {<span class="string">'test_ccc.m'</span>; <span class="string">'test-aaa.m'</span>; <span class="string">'test.m'</span>; <span class="string">'test.bbb.m'</span>};
+sort(B) <span class="comment">% '-' sorts before '.'</span>
+natsort(B) <span class="comment">% '-' sorts before '.'</span>
+natsortfiles(B) <span class="comment">% correct dictionary sort</span>
+</pre><pre class="codeoutput">ans = 
+    'test-aaa.m'
+    'test.bbb.m'
+    'test.m'
+    'test_ccc.m'
+ans = 
+    'test-aaa.m'
+    'test.bbb.m'
+    'test.m'
+    'test_ccc.m'
+ans = 
+    'test.m'
+    'test-aaa.m'
+    'test.bbb.m'
+    'test_ccc.m'
+</pre><h2>Explanation: Filenames<a name="7"></a></h2><p><tt>NATSORTFILES</tt> combines a dictionary sort with a natural-order sort, so that the number values within the filenames are taken into consideration:</p><pre class="codeinput">C = {<span class="string">'test2.m'</span>; <span class="string">'test10-old.m'</span>; <span class="string">'test.m'</span>; <span class="string">'test10.m'</span>; <span class="string">'test1.m'</span>};
+sort(C) <span class="comment">% Wrong numeric order.</span>
+natsort(C) <span class="comment">% Correct numeric order, but longer before shorter.</span>
+natsortfiles(C) <span class="comment">% Correct numeric order and dictionary sort.</span>
+</pre><pre class="codeoutput">ans = 
+    'test.m'
+    'test1.m'
+    'test10-old.m'
+    'test10.m'
+    'test2.m'
+ans = 
+    'test.m'
+    'test1.m'
+    'test2.m'
+    'test10-old.m'
+    'test10.m'
+ans = 
+    'test.m'
+    'test1.m'
+    'test2.m'
+    'test10.m'
+    'test10-old.m'
+</pre><h2>Explanation: Filepaths<a name="8"></a></h2><p>For the same reason, filepaths are split at each file path separator character (both <tt>'/'</tt> and <tt>'\'</tt> are considered to be file path separators) and every level of directory names are sorted separately. This ensures that the directory names are sorted with a dictionary sort and that any numbers are taken into consideration:</p><pre class="codeinput">D = {<span class="string">'A2-old\test.m'</span>;<span class="string">'A10\test.m'</span>;<span class="string">'A2\test.m'</span>;<span class="string">'AXarchive.zip'</span>;<span class="string">'A1\test.m'</span>};
+sort(D) <span class="comment">% Wrong numeric order, and '-' sorts before '\':</span>
+natsort(D) <span class="comment">% correct numeric order, but longer before shorter.</span>
+natsortfiles(D) <span class="comment">% correct numeric order and dictionary sort.</span>
+</pre><pre class="codeoutput">ans = 
+    'A10\test.m'
+    'A1\test.m'
+    'A2-old\test.m'
+    'A2\test.m'
+    'AXarchive.zip'
+ans = 
+    'A1\test.m'
+    'A2-old\test.m'
+    'A2\test.m'
+    'A10\test.m'
+    'AXarchive.zip'
+ans = 
+    'AXarchive.zip'
+    'A1\test.m'
+    'A2\test.m'
+    'A2-old\test.m'
+    'A10\test.m'
+</pre><h2>Regular Expression: Decimal Numbers, E-notation, +/- Sign<a name="9"></a></h2><p><tt>NATSORTFILES</tt> is a wrapper for <tt>NATSORT</tt>, which means all of <tt>NATSORT</tt>'s options are also supported. In particular the number recognition can be customized to detect numbers with decimal digits, E-notation, a +/- sign, or other specific features. This detection is defined by providing an appropriate regular expression: see <tt>NATSORT</tt> for details and examples.</p><pre class="codeinput">E = {<span class="string">'test24.csv'</span>,<span class="string">'test1.8.csv'</span>,<span class="string">'test5.csv'</span>,<span class="string">'test3.3.csv'</span>,<span class="string">'test12.csv'</span>};
+natsortfiles(E,<span class="string">'\d+\.?\d*'</span>)
+</pre><pre class="codeoutput">ans = 
+    'test1.8.csv'    'test3.3.csv'    'test5.csv'    'test12.csv'    'test24.csv'
+</pre><h2>Regular Expression: Interactive Regular Expression Tool<a name="10"></a></h2><p>Regular expressions are powerful and compact, but getting them right is not always easy. One assistance is to download my interactive tool <a href="https://www.mathworks.com/matlabcentral/fileexchange/48930"><tt>IREGEXP</tt></a>, which lets you quickly try different regular expressions and see all of <a href="https://www.mathworks.com/help/matlab/ref/regexp.html"><tt>REGEXP</tt></a>'s outputs displayed and updated as you type.</p><p class="footer"><br>
+      Published with MATLAB&reg; 7.11<br></p></div><!--
+##### SOURCE BEGIN #####
+%% NATSORTFILES Examples
+% The function <https://www.mathworks.com/matlabcentral/fileexchange/47434
+% |NATSORTFILES|> sorts a cell array of filenames or filepaths (1xN char),
+% taking into account any number values within the strings. This is known
+% as a _natural order sort_ or an _alphanumeric sort_. Note that MATLAB's
+% inbuilt <http://www.mathworks.com/help/matlab/ref/sort.html |SORT|> function
+% sorts the character codes only (as does |SORT| in most programming languages).
+%
+% |NATSORTFILES| is not a naive natural-order sort, but splits and sorts
+% filenames and file extensions separately, which means that |NATSORTFILES|
+% sorts shorter filenames before longer ones: this is known as a _dictionary
+% sort_. For the same reason filepaths are split at every path-separator
+% character (either |'\'| or |'/'|), and each directory level is sorted
+% separately. See the "Explanation" sections below for more details.
+%
+% For sorting the rows of a cell array of strings use
+% <https://www.mathworks.com/matlabcentral/fileexchange/47433 |NATSORTROWS|>.
+%
+% For sorting a cell array of strings use
+% <https://www.mathworks.com/matlabcentral/fileexchange/34464 |NATSORT|>.
+%
+%% Basic Usage
+% By default |NATSORTFILES| interprets consecutive digits as being part of
+% a single integer, each number is considered to be as wide as one letter:
+A = {'a2.txt', 'a10.txt', 'a1.txt'};
+sort(A)
+natsortfiles(A)
+%% Output 2: Sort Index
+% The second output argument is a numeric array of the sort indices |ndx|,
+% such that |Y = X(ndx)| where |Y = natsortfiles(X)|:
+[~,ndx] = natsortfiles(A)
+%% Output 3: Debugging Array
+% The third output is a cell vector of cell arrays, where each cell array
+% contains individual characters and numbers (after converting to numeric).
+% This is useful for confirming that the numbers are being correctly
+% identified by the regular expression. The cells of the cell vector
+% correspond to the split directories, filenames, and file extensions. 
+% Note that the rows of the debugging cell arrays are
+% <https://www.mathworks.com/company/newsletters/articles/matrix-indexing-in-matlab.html
+% linearly indexed> from the input cell array.
+[~,~,dbg] = natsortfiles(A);
+dbg{:}
+%% Example with DIR and a Cell Array
+% One common situation is to use <https://www.mathworks.com/help/matlab/ref/dir.html
+% |DIR|> to identify files in a folder, sort them into the correct order,
+% and then loop over them: below is an example of how to do this.
+% Remember to <https://www.mathworks.com/help/matlab/matlab_prog/preallocating-arrays.html
+% preallocate> all output arrays before the loop!
+D = 'natsortfiles_test'; % directory path
+S = dir(fullfile(D,'*.txt')); % get list of files in directory
+N = natsortfiles({S.name}); % sort file names into order
+for k = 1:numel(N)
+	disp(fullfile(D,N{k}))
+end
+%% Example with DIR and a Structure
+% Users who need to access the |DIR| structure fields can use |NATSORTFILE|'s
+% second output to sort |DIR|'s output structure into the correct order:
+D = 'natsortfiles_test'; % directory path
+S = dir(fullfile(D,'*.txt')); % get list of files in directory
+[~,ndx] = natsortfiles({S.name}); % indices of correct order
+S = S(ndx); % sort structure using indices
+for k = 1:numel(S)
+	fprintf('%-13s%s\n',S(k).name,S(k).date)
+end
+%% Explanation: Dictionary Sort
+% Filenames and file extensions are separated by the extension separator:
+% the period character |'.'|. Using a normal |SORT| the period gets sorted
+% _after_ all of the characters from 0 to 45 (including |!"#$%&'()*+,-|,
+% the space character, and all of the control characters, e.g. newlines,
+% tabs, etc). This means that a naive |SORT| or natural-order sort will
+% sort some short filenames after longer filenames. In order to provide
+% the correct dictionary sort, with shorter filenames first, |NATSORTFILES|
+% splits and sorts filenames and file extensions separately:
+B = {'test_ccc.m'; 'test-aaa.m'; 'test.m'; 'test.bbb.m'};
+sort(B) % '-' sorts before '.'
+natsort(B) % '-' sorts before '.'
+natsortfiles(B) % correct dictionary sort
+%% Explanation: Filenames
+% |NATSORTFILES| combines a dictionary sort with a natural-order sort, so
+% that the number values within the filenames are taken into consideration:
+C = {'test2.m'; 'test10-old.m'; 'test.m'; 'test10.m'; 'test1.m'};
+sort(C) % Wrong numeric order.
+natsort(C) % Correct numeric order, but longer before shorter.
+natsortfiles(C) % Correct numeric order and dictionary sort.
+%% Explanation: Filepaths
+% For the same reason, filepaths are split at each file path separator
+% character (both |'/'| and |'\'| are considered to be file path separators)
+% and every level of directory names are sorted separately. This ensures
+% that the directory names are sorted with a dictionary sort and that any
+% numbers are taken into consideration:
+D = {'A2-old\test.m';'A10\test.m';'A2\test.m';'AXarchive.zip';'A1\test.m'};
+sort(D) % Wrong numeric order, and '-' sorts before '\':
+natsort(D) % correct numeric order, but longer before shorter.
+natsortfiles(D) % correct numeric order and dictionary sort.
+%% Regular Expression: Decimal Numbers, E-notation, +/- Sign
+% |NATSORTFILES| is a wrapper for |NATSORT|, which means all of |NATSORT|'s
+% options are also supported. In particular the number recognition can be
+% customized to detect numbers with decimal digits, E-notation, a +/- sign,
+% or other specific features. This detection is defined by providing an
+% appropriate regular expression: see |NATSORT| for details and examples.
+E = {'test24.csv','test1.8.csv','test5.csv','test3.3.csv','test12.csv'};
+natsortfiles(E,'\d+\.?\d*')
+%% Regular Expression: Interactive Regular Expression Tool
+% Regular expressions are powerful and compact, but getting them right is
+% not always easy. One assistance is to download my interactive tool
+% <https://www.mathworks.com/matlabcentral/fileexchange/48930 |IREGEXP|>,
+% which lets you quickly try different regular expressions and see all of
+% <https://www.mathworks.com/help/matlab/ref/regexp.html |REGEXP|>'s
+% outputs displayed and updated as you type.
+##### SOURCE END #####
+--></body></html>

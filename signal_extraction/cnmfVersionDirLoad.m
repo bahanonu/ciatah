@@ -9,6 +9,7 @@ function [success] = cnmfVersionDirLoad(cnmfVersion,varargin)
 
 	% changelog
 		% 2019.01.23 [09:14:54] - Added support for Matlab versions without `contains` function.
+		% 2019.03.03 [20:58:33] - Added removal of cvx from path since they overload `narginchk` which can cause warnings.
 	% TODO
 		%
 
@@ -33,6 +34,7 @@ function [success] = cnmfVersionDirLoad(cnmfVersion,varargin)
 		originalPath = [options.signalExtractionRootPath filesep 'cnmf_original'];
 		currentPath = [options.signalExtractionRootPath filesep 'cnmf_current'];
 		cnmfePath = [options.signalExtractionRootPath filesep 'cnmfe'];
+		cvxPath = [options.signalExtractionRootPath filesep 'cvx_rd'];
 
 		switch cnmfVersion
 			case 'original'
@@ -56,7 +58,7 @@ function [success] = cnmfVersionDirLoad(cnmfVersion,varargin)
 			case 'none'
 				disp('Removing all CNMF dir from path.')
 				% Add and remove necessary CNMF directories from path
-				subfxnRemovePathHere({currentPath,originalPath,cnmfePath},options);
+				subfxnRemovePathHere({currentPath,originalPath,cnmfePath,cvxPath},options);
 			otherwise
 				% do nothing
 		end

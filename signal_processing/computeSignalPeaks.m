@@ -69,7 +69,7 @@ function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(sign
     % shift peak detection
     options.nFramesShift = 0;
     % region around each peak to look for a maximum to adjust the test peak by
-    options.peakMaxLook = [-6:6];
+    options.peakMaxLook = -6:6;
     % ===
     % should diff and fast oopsi be done?
     options.addedAnalysis = 0;
@@ -91,14 +91,15 @@ function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(sign
     %========================
     try
         % make sure matrix is double
-        if ~strcmp(class(signalMatrix),'double')
+        % if ~strcmp(class(signalMatrix),'double')
+        if ~isa(signalMatrix,'double')
             if options.outputInfo==1
-                display('converting signalMatrix to double');
+                disp('converting signalMatrix to double');
             end
             signalMatrix = double(signalMatrix);
         end
         if options.outputInfo==1
-            display('calculating signal peaks...')
+            disp('calculating signal peaks...')
         end
         nSignals = size(signalMatrix,1);
         % this matrix will contain binarized version of signalMatrix
@@ -108,20 +109,34 @@ function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(sign
         % open waitbar
         % if options.waitbarOn==1 waitbarHandle = waitbar(0, 'detecting traces...'); end
         % loop over all signals.
-        reverseStr = '';
+        % reverseStr = '';
         manageParallelWorkers('parallel',options.parallel);
         signalPeaksArrayTmp = cell([1 nSignals]);
         signalSigmas = [];
         % try;[percent progress] = parfor_progress(nSignals);catch;end; dispStepSize = round(nSignals/20); dispstat('','init');
 
+        % Convert to cell array to reduce memory transfer during parallelization
+        signalMatrix = squeeze(mat2cell(signalMatrix,ones(1,size(signalMatrix,1)),size(signalMatrix,2)));
+
         [optionsOut] = computePeakForSignalOptions('options', options);
 
-        parfor signalNum=1:nSignals
+        % Only implement in Matlab 2017a and above
+        if ~verLessThan('matlab', '9.2')
+            D = parallel.pool.DataQueue;
+            afterEach(D, @nUpdateParforProgress);
+            p = 1;
+            N = nSignals;
+            nInterval = 25;
+            options_waitbarOn = options.waitbarOn;
+        end
+
+        parfor signalNum = 1:nSignals
             optionsOutCopy = optionsOut;
             optionsCopy = options;
             % [percent progress] = parfor_progress;if mod(progress,dispStepSize) == 0;dispstat(sprintf('progress %0.1f %',percent));else;end
             % get the current signal and find its peaks
-            thisSignal = signalMatrix(signalNum,:);
+            % thisSignal = signalMatrix(signalNum,:);
+            thisSignal = signalMatrix{signalNum};
             %
             signalSigmas(signalNum) = std(thisSignal);
             signalPeaksArray{signalNum} = computePeakForSignal(thisSignal,optionsOutCopy);
@@ -137,10 +152,10 @@ function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(sign
                 [~] = viewComputePeaksPlot(thisSignal,signalPeaksArrayTmp{signalNum},[0 0 1],options.makePlots,20,0.1,'off',options)
                 legend('signal','raw','signal','diff')
                 title(['raw: ' num2str(length(signalPeaksArray{signalNum})) ' | diff: ' num2str(length(signalPeaksArrayTmp{signalNum}))]);
-                [x,y,reply]=ginput(1);
+                [~,~,~]=ginput(1);
                 % fast oopsi
                 [Nhat] = computePeakForSignalOopsi(thisSignal,signalPeaksArray{signalNum},options);
-                [x,y,reply]=ginput(1);
+                [~,~,~]=ginput(1);
                 % ===
             end
             % create matrix of peaks
@@ -148,10 +163,16 @@ function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(sign
 
             % waitbar access
             % reverseStr = cmdWaitbar(signalNum,nSignals,reverseStr,'inputStr','detecting peaks','waitbarOn',options.waitbarOn,'displayEvery',50);
+
+            if ~verLessThan('matlab', '9.2')
+                % Update
+                send(D, signalNum);
+            end
         end
         if options.makePlots==1
             for signalNum=1:nSignals
-                thisSignal = signalMatrix(signalNum,:);
+                % thisSignal = signalMatrix(signalNum,:);
+                thisSignal = signalMatrix{signalNum};
                     [~] = viewComputePeaksPlot(thisSignal,signalPeaksArray{signalNum},[0 0 0],options.makePlots,50,2,'on',options,signalNum,nSignals,options.numStdsForThresh);
                     pause
                     keyIn = get(gcf,'CurrentCharacter');
@@ -183,6 +204,20 @@ function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(sign
         disp(getReport(err,'extended','hyperlinks','on'));
         display(repmat('@',1,7))
     end
+    function nUpdateParforProgress(~)
+        if ~verLessThan('matlab', '9.2')
+            p = p + 1;
+            if (mod(p,nInterval)==0||p==2||p==nSignals)&&options_waitbarOn==1
+                if p==nSignals
+                    fprintf('%d%%\n',round(p/nSignals*100))
+                else
+                    fprintf('%d%% | ',round(p/nSignals*100))
+                end
+                % cmdWaitbar(p,nSignals,'','inputStr','','waitbarOn',1);
+            end
+            % [p mod(p,nInterval)==0 (mod(p,nInterval)==0||p==nSignals)&&options_waitbarOn==1]
+        end
+    end
 end
 function [inputSignal] = viewComputePeaksPlot(inputSignal,testpeaks,dotColor,makePlots,markersize,linewidth,holdVal,options,signalNum,nSignals,numStdsForThresh)
     % decide whether to plot the peaks with points indicating location of
@@ -213,7 +248,7 @@ function [inputSignal] = viewComputePeaksPlot(inputSignal,testpeaks,dotColor,mak
 
         subplot(4,3,3)
             peakSignalAmplitude = inputSignal(testpeaks(:));
-            [peakSignalAmplitude peakIdx] = sort(spikeCenterTrace(:,round(end/2)+1),'descend');
+            [peakSignalAmplitude, peakIdx] = sort(spikeCenterTrace(:,round(end/2)+1),'descend');
             spikeCenterTrace = spikeCenterTrace(peakIdx,:);
             if size(spikeCenterTrace,1)>20
                 spikeCenterTrace = spikeCenterTrace(1:20,:);
@@ -429,6 +464,19 @@ function [testpeaks] = computePeakForSignal(inputSignal, options)
     % get standard deviation of current signal
     inputSignalStd = std(inputSignal(:));
     thisStdThreshold = inputSignalStd*numStdsForThresh;
+
+    % =======
+    % peakIdx = bsxfun(@plus,options.timeSeq',testpeaks);
+    % tmpTestPeak = testpeaks;
+    % % remove peaks outside range of signal
+    % peakIdx(peakIdx>length(loopSignal))=[];
+    % peakIdx(peakIdx<=0)=[];
+
+    % % remove signal then add back in noise based on signal statistics
+    % noiseSignal = loopSignal;
+    % noiseSignal(peakIdx) = NaN;
+    % =======
+
     % run findpeaks (part of signal), returns maxima above thisStdThreshold
     % and ignores smaller peaks around larger maxima within minTimeBtEvents
     warning off
@@ -488,4 +536,67 @@ function [testpeaks] = computePeakForSignal(inputSignal, options)
     % shift peaks
     testpeaks = testpeaks + options.nFramesShift;
 
+end
+
+function [peakIdx] = subfxnCalcSignalNew(noiseSigmaThreshold,noiseSignal,loopSignal,tmpTestPeak)
+    noiseStd = nanstd(noiseSignal(:));
+    % noiseStd
+    nPeaks = length(tmpTestPeak);
+    peakIdxTmp1 = cell([1 nPeaks]);
+    peakIdxTmp2 = cell([1 nPeaks]);
+    % noiseSigmaThreshold = options.noiseSigmaThreshold;
+    loopSignalThresholded = loopSignal>noiseSigmaThreshold*noiseStd;
+    loopSignalThresholdedDiff = [0 diff(loopSignalThresholded)];
+    for peakNo = 1:nPeaks
+        try
+            peakFrame = tmpTestPeak(peakNo);
+
+            % currFrame = peakFrame;
+            signalCriteria = loopSignalThresholdedDiff(1:peakFrame);
+            currFrame = find(signalCriteria,1,'last');
+            if isempty(currFrame)
+                if sum(loopSignalThresholded(1:peakFrame))==length(loopSignalThresholded(1:peakFrame))
+                    currFrame = 1;
+                end
+            end
+            % currFrame
+            % aboveNoise = 1;
+            % while aboveNoise==1
+            %   aboveNoise = loopSignal(currFrame)>options.noiseSigmaThreshold*noiseStd;
+            %   currFrame = currFrame - 1;
+            %   if currFrame<1
+            %       break
+            %   end
+            % end
+            peakIdxTmp1{peakNo} = currFrame:peakFrame;
+
+            % currFrame = peakFrame;
+            % loopSignalThresholded = loopSignal>noiseSigmaThreshold*noiseStd;
+            signalCriteria = abs(loopSignalThresholdedDiff(peakFrame:end));
+            currFrame = find(signalCriteria,1,'first')+peakFrame;
+            if isempty(currFrame)
+                if sum(loopSignalThresholded(peakFrame:end))==length(loopSignalThresholded(peakFrame:end))
+                    currFrame = length(loopSignal);
+                end
+            end
+            % currFrame
+            % aboveNoise = 1;
+            % currFrame = peakFrame;
+            % while aboveNoise==1
+            %   aboveNoise = loopSignal(currFrame)>options.noiseSigmaThreshold*noiseStd;
+            %   currFrame = currFrame + 1;
+            %   if currFrame>length(loopSignal)
+            %       break
+            %   end
+            % end
+            peakIdxTmp2{peakNo} = peakFrame:currFrame;
+        catch err
+            fprintf('peakFrame = %d\n',peakFrame);
+            display(repmat('@',1,7))
+            disp(getReport(err,'extended','hyperlinks','on'));
+            display(repmat('@',1,7))
+        end
+    end
+    peakIdx = [peakIdxTmp1{:} peakIdxTmp2{:}];
+    peakIdx = unique(peakIdx(:));
 end

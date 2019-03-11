@@ -107,6 +107,9 @@ function [cnmfAnalysisOutput] = computeCnmfSignalExtraction_v2(inputMovie,numExp
     % merge_components.m
     options.merge_thr = 0.85; % Merging threshold (positive between 0  and 1)  0.85
 
+    % imaging frame rate in Hz (defaut: 30)
+    options.fr = 30;
+
     % get options
     options = getOptions(options,varargin);
     % display(options)
@@ -209,6 +212,7 @@ function [cnmfAnalysisOutput] = computeCnmfSignalExtraction_v2(inputMovie,numExp
         'lags',options.lags,...
         'resparse',options.resparse,...
         'fudge_factor',options.fudge_factor,...
+        'fr',options.fr,...
         'merge_thr',options.merge_thr...
         );
     %% Data pre-processing
