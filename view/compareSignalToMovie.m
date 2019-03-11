@@ -226,10 +226,11 @@ function [croppedPeakImages] = compareSignalToMovie(inputMovie, inputImages, inp
 			croppedPeakImages(cHairY,cHairX,:) = NaN;
 			switch options.extendedCrosshairs
 				case 1
-					croppedPeakImages(cHairY-1,cHairX,:) = croppedPeakImages(cHairY-1,cHairX,:)+options.crossHairVal;
-					croppedPeakImages(cHairY+1,cHairX,:) = croppedPeakImages(cHairY+1,cHairX,:)+options.crossHairVal;
-					croppedPeakImages(cHairY,cHairX-1,:) = croppedPeakImages(cHairY,cHairX-1,:)+options.crossHairVal;
-					croppedPeakImages(cHairY,cHairX+1,:) = croppedPeakImages(cHairY,cHairX+1,:)+options.crossHairVal;
+					tmpV1 = cast(options.crossHairVal,class(croppedPeakImages));
+					croppedPeakImages(cHairY-1,cHairX,:) = croppedPeakImages(cHairY-1,cHairX,:)+tmpV1;
+					croppedPeakImages(cHairY+1,cHairX,:) = croppedPeakImages(cHairY+1,cHairX,:)+tmpV1;
+					croppedPeakImages(cHairY,cHairX-1,:) = croppedPeakImages(cHairY,cHairX-1,:)+tmpV1;
+					croppedPeakImages(cHairY,cHairX+1,:) = croppedPeakImages(cHairY,cHairX+1,:)+tmpV1;
 				case 2
 					xS = size(croppedPeakImages,2);
 					yS = size(croppedPeakImages,1);
@@ -240,9 +241,9 @@ function [croppedPeakImages] = compareSignalToMovie(inputMovie, inputImages, inp
 					% idxX=1:size(croppedPeakImages,2);
 					% idxY = setdiff(idxY,round(0.25*length(idxY)):round(0.75*length(idxY)));
 					% idxX = setdiff(idxX,round(0.25*length(idxX)):round(0.75*length(idxX)));
-
-					croppedPeakImages(idxY,cHairX,:) = croppedPeakImages(idxY,cHairX,:)+options.crossHairVal;
-					croppedPeakImages(cHairY,idxX,:) = croppedPeakImages(cHairY,idxX,:)+options.crossHairVal;
+					tmpV1 = cast(options.crossHairVal,class(croppedPeakImages));
+					croppedPeakImages(idxY,cHairX,:) = croppedPeakImages(idxY,cHairX,:)+tmpV1;
+					croppedPeakImages(cHairY,idxX,:) = croppedPeakImages(cHairY,idxX,:)+tmpV1;
 				otherwise
 					% body
 			end

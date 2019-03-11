@@ -193,10 +193,11 @@ function [k] = getObjCutMovie(inputMovie,inputImages,varargin)
 			k{signalNo}(cHairY,cHairX,:) = NaN;
 			switch options.extendedCrosshairs
 				case 1
-					k{signalNo}(cHairY-1,cHairX,:) = k{signalNo}(cHairY-1,cHairX,:)+options.crossHairVal;
-					k{signalNo}(cHairY+1,cHairX,:) = k{signalNo}(cHairY+1,cHairX,:)+options.crossHairVal;
-					k{signalNo}(cHairY,cHairX-1,:) = k{signalNo}(cHairY,cHairX-1,:)+options.crossHairVal;
-					k{signalNo}(cHairY,cHairX+1,:) = k{signalNo}(cHairY,cHairX+1,:)+options.crossHairVal;
+					tmpV1 = cast(options.crossHairVal,class(k{1}));
+					k{signalNo}(cHairY-1,cHairX,:) = k{signalNo}(cHairY-1,cHairX,:)+tmpV1;
+					k{signalNo}(cHairY+1,cHairX,:) = k{signalNo}(cHairY+1,cHairX,:)+tmpV1;
+					k{signalNo}(cHairY,cHairX-1,:) = k{signalNo}(cHairY,cHairX-1,:)+tmpV1;
+					k{signalNo}(cHairY,cHairX+1,:) = k{signalNo}(cHairY,cHairX+1,:)+tmpV1;
 				case 2
 					% idxY=1:size(k{signalNo},1);
 					% idxX=1:size(k{signalNo},2);
@@ -210,8 +211,9 @@ function [k] = getObjCutMovie(inputMovie,inputImages,varargin)
 
 					% k{signalNo}(:,cHairX,:) = k{signalNo}(:,cHairX,:)+options.crossHairVal;
 					% k{signalNo}(cHairY,:,:) = k{signalNo}(cHairY,:,:)+options.crossHairVal;
-					k{signalNo}(idxY,cHairX,:) = k{signalNo}(idxY,cHairX,:)+options.crossHairVal;
-					k{signalNo}(cHairY,idxX,:) = k{signalNo}(cHairY,idxX,:)+options.crossHairVal;
+					tmpV1 = cast(options.crossHairVal,class(k{1}));
+					k{signalNo}(idxY,cHairX,:) = k{signalNo}(idxY,cHairX,:)+tmpV1;
+					k{signalNo}(cHairY,idxX,:) = k{signalNo}(cHairY,idxX,:)+tmpV1;
 				otherwise
 					% body
 			end
