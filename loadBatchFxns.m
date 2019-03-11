@@ -31,6 +31,8 @@ function loadBatchFxns()
 	if exist(pathtoMiji,'dir')~=0
 		addpath(pathtoMiji);
 		fprintf('Added Miji to path: %s.\n',pathtoMiji)
+		% Get Miji properly loaded in the path
+		resetMiji;
 	else
 		clear pathtoMiji;
 	end
@@ -40,6 +42,8 @@ function loadBatchFxns()
 		run(loadLocalFunctions);
 		addpath(pathtoMiji);
 		fprintf('Added Miji to path: %s.\n',pathtoMiji)
+		% Get Miji properly loaded in the path
+		resetMiji;
 	else
 		% create privateLoadBatchFxns.m
 	end
