@@ -39,15 +39,18 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 		% 2018.02.16 [14:48:24] Fixed frame-by-frame HDF5 load being inefficient by using tmpMovie instead of loading directly into said movie
 		% 2018.09.28 [16:49:29] HDF5 non-contiguous frame reading is faster, no looping since select multiple hyperslabs at once, see readHDF5Subset for more
 		% 2019.01.16 [07:51:01] Added ISXD support (Inscopix format for v3+).
+		% 2019.03.10 [19:28:47] Improve support for loading 1000s of TIF files by adding some performance improvements, ASSUMES that all tifs being loaded are from the same movie and have similar properties and dimensions. See options.onlyCheckFirstFileInfo.
 	% TODO
-		% Allow fallbacks for HDF5 dataset name, e.g. if can't find /1, look for /images
-		% MAKE tiff loading recognize frameList input
-		% add preallocation by pre-reading each movie's dimensions - DONE
-		% determine file type by properties of file instead of extension (don't trust input...)
-		% remove need to use tmpMovie....
-		% verify movies are of supported load types, remove from list if not and alert user, should be an option (e.g. return instead) - DONE
-		% allow user to input frames that are global across several files, e.g. [1:500 1:200 1:300] are the lengths of each movie, so if input [650:670] in frameList, should grab 150:170 from movie 2
-		% add ability to degrade gracefully with HDF5 dataset names, so try several backup datasetnames if one doesn't work
+		% OPEN
+			% MAKE tiff loading recognize frameList input
+			% verify movies are of supported load types, remove from list if not and alert user, should be an option (e.g. return instead) - DONE
+			% allow user to input frames that are global across several files, e.g. [1:500 1:200 1:300] are the lengths of each movie, so if input [650:670] in frameList, should grab 150:170 from movie 2 - DONE, see treatMoviesAsContinuous option
+		% DONE
+			% Allow fallbacks for HDF5 dataset name, e.g. if can't find /1, look for /images
+			% add preallocation by pre-reading each movie's dimensions - DONE
+			% determine file type by properties of file instead of extension (don't trust input...)
+			% remove need to use tmpMovie....
+			% add ability to degrade gracefully with HDF5 dataset names, so try several backup datasetnames if one doesn't work
 
 	% ========================
 	options.supportedTypes = {'.h5','.hdf5','.tif','.tiff','.avi','.isxd'};
@@ -81,6 +84,8 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 	options.largeMovieLoad = 0;
 	% Int: [numParts framesPerPart] number of equal parts to load the movie in
 	options.loadMovieInEqualParts = [];
+	% Binary: 1 = only check information for 1st file then populate the rest with identical information, useful for folders with thousands of TIF or other images
+	options.onlyCheckFirstFileInfo = 0;
 	% get options
 	options = getOptions(options,varargin);
 	% unpack options into current workspace
@@ -140,6 +145,16 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 	reverseStr = '';
 	for iMovie=1:numMovies
 		thisMoviePath = movieList{iMovie};
+		if options.onlyCheckFirstFileInfo==1&iMovie>1
+			fprintf('Adding movie #1 info to movie info for %d\\%d: %s\n',iMovie,numMovies,thisMoviePath);
+			dims.x(iMovie) = dims.x(1);
+			dims.y(iMovie) = dims.y(1);
+			dims.z(iMovie) = dims.z(1);
+			dims.one(iMovie) = dims.one(1);
+			dims.two(iMovie) = dims.two(1);
+			dims.three(iMovie) = dims.three(1);
+			continue
+		end
 		if options.displayInfo==1
 			fprintf('Getting movie info for %d\\%d: %s\n',iMovie,numMovies,thisMoviePath);
 		end
@@ -344,6 +359,25 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 	    % depending on movie type, load differently
 		switch options.movieType
 			case 'tiff'
+				% Pre-load the temporary image to reduce overhead and boost performance when loading many individual TIF images
+				if iMovie==1&options.onlyCheckFirstFileInfo==1
+					thisMoviePath = movieList{iMovie};
+					tiffHandle = Tiff(thisMoviePath, 'r');
+					tmpFramePerma = tiffHandle.read();
+					fileInfoH = imfinfo(thisMoviePath);
+					displayInfoH = 1;
+					NumberframeH = dims.z(iMovie);
+				elseif options.onlyCheckFirstFileInfo==1&iMovie>1
+					displayInfoH = 0;
+					NumberframeH = dims.z(iMovie);
+				else
+					% For all other cases (e.g. TIF stacks) don't alter
+					tmpFramePerma = [];
+					displayInfoH = 1;
+					Numberframe = [];
+					fileInfoH = [];
+				end
+
 				if numMovies==1
 					if isempty(thisFrameList)
 			    		outputMovie = load_tif_movie(thisMoviePath,1);
@@ -354,10 +388,10 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 			    	end
 				else
 					if isempty(thisFrameList)
-			    		tmpMovie = load_tif_movie(thisMoviePath,1);
+			    		tmpMovie = load_tif_movie(thisMoviePath,1,'tmpImage',tmpFramePerma,'displayInfo',displayInfoH,'Numberframe',NumberframeH,'fileInfo',fileInfoH);
 			    		tmpMovie = tmpMovie.Movie;
 			    	else
-			    		tmpMovie = load_tif_movie(thisMoviePath,1,'frameList',thisFrameList);
+			    		tmpMovie = load_tif_movie(thisMoviePath,1,'frameList',thisFrameList,'tmpImage',tmpFramePerma,'displayInfo',displayInfoH,'Numberframe',NumberframeH,'fileInfo',fileInfoH);
 			    		tmpMovie = tmpMovie.Movie;
 			    	end
 				end
@@ -550,7 +584,7 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 				return;
 		end
 		if exist('tmpMovie','var')
-		    if(iMovie==1)
+		    if iMovie==1
 				outputMovie(1:dims.x(iMovie),1:dims.y(iMovie),1:dims.z(iMovie)) = tmpMovie;
 		        % outputMovie(:,:,:) = tmpMovie;
 		    else

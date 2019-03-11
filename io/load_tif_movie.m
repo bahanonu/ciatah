@@ -12,6 +12,7 @@ function out = load_tif_movie(filename,downsample_xy,varargin)
     % changelog
         % 2014.01.07 [10:14:49] - removed low-level reading, seems to have problems with some versions of tifflib, will fix later.
         % 2015.11.12 Added reading of TIFFs from ImageJ bigger than 4GB.
+        % 2019.03.10 [20:17:09] Allow user to pre-input TIF temporary file to speed-up load times, esp. with individual files, see options.tmpImage and options.fileInfo
     % TODO
         %
 
@@ -19,6 +20,11 @@ function out = load_tif_movie(filename,downsample_xy,varargin)
     options.exampleOption = 'doSomething';
     options.Numberframe = [];
     options.frameList = [];
+    options.tmpImage = [];
+    % Binary: 1 = display outputs in command window
+    options.displayInfo = 1;
+    % Pre-input imfinfo information here.
+    options.fileInfo = [];
     % get options
     options = getOptions(options,varargin);
     % display(options)
@@ -29,10 +35,14 @@ function out = load_tif_movie(filename,downsample_xy,varargin)
     % end
     %========================
 
-    %First load a single frame of the movie to get generic information
-    TifLink = Tiff(filename, 'r'); %Create the Tiff object
-    TmpImage = TifLink.read();%Read in one picture to get the image size and data type
-    TifLink.close(); clear TifLink
+    if isempty(options.tmpImage)
+        %First load a single frame of the movie to get generic information
+        TifLink = Tiff(filename, 'r'); %Create the Tiff object
+        TmpImage = TifLink.read();%Read in one picture to get the image size and data type
+        TifLink.close(); clear TifLink
+    else
+        TmpImage = options.tmpImage;
+    end
 
     LocalImage = imresize(TmpImage, 1/downsample_xy); clear TmpImage; %Resize
     SizeImage=size(LocalImage);%xy dimensions
@@ -51,12 +61,16 @@ function out = load_tif_movie(filename,downsample_xy,varargin)
     % determine whether standard or non-standard TIFF
     display(repmat('=',1,3))
     if numel(framesToGrab)>1
-        display('Running standard TIFF')
+        if options.displayInfo==1
+            display('Running standard TIFF')
+        end
         % standardTIFF();
         % standardTIFF2();
         standardTIFF_new();
     else
-        display('Running non-standard TIFF')
+        if options.displayInfo==1
+            display('Running non-standard TIFF')
+        end
         nonstandardTIFF();
     end
 
@@ -73,7 +87,13 @@ function out = load_tif_movie(filename,downsample_xy,varargin)
         end
     end
     function standardTIFF_new()
-        fileInfo = imfinfo(filename);
+        % fileInfo = imfinfo(filename);
+        if isempty(options.fileInfo)
+            fileInfo = imfinfo(filename);
+        else
+            fileInfo = options.fileInfo;
+        end
+
         try
             if isfield(fileInfo,'ImageDescription')==1
                 numFramesStr = regexp(fileInfo.ImageDescription, 'images=(\d*)', 'tokens');
@@ -141,18 +161,28 @@ function out = load_tif_movie(filename,downsample_xy,varargin)
         fclose(fileID);
     end
     function nonstandardTIFF()
-        fileInfo = imfinfo(filename);
-        try
-            if isfield(fileInfo,'ImageDescription')==1
-                numFramesStr = regexp(fileInfo.ImageDescription, 'images=(\d*)', 'tokens');
-                nFrames = str2double(numFramesStr{1}{1});
-            else
-                nFrames = size(fileInfo,1);
-                fileInfo = fileInfo(1);
+        % imfinfo(filename)
+        if isempty(options.fileInfo)
+            fileInfo = imfinfo(filename);
+        else
+            fileInfo = options.fileInfo;
+        end
+
+        if isempty(options.Numberframe)
+            try
+                if isfield(fileInfo,'ImageDescription')==1
+                    numFramesStr = regexp(fileInfo.ImageDescription, 'images=(\d*)', 'tokens');
+                    nFrames = str2double(numFramesStr{1}{1});
+                else
+                    nFrames = size(fileInfo,1);
+                    fileInfo = fileInfo(1);
+                end
+            catch
+                display('assuming single frame');
+                nFrames = 1;
             end
-        catch
-            display('assuming single frame');
-            nFrames = 1;
+        else
+            nFrames = options.Numberframe;
         end
         if isempty(options.frameList)|nFrames==1
             framesToGrab2 = 1:nFrames;
@@ -193,7 +223,9 @@ function out = load_tif_movie(filename,downsample_xy,varargin)
                 break
             end
             % reverseStr = cmdWaitbar(frameNo,nFrames,reverseStr,'inputStr','loading ImageJ tif','waitbarOn',1,'displayEvery',50);
-            reverseStr = cmdWaitbar(frameNo2,nFramesDim,reverseStr,'inputStr','loading ImageJ tif','waitbarOn',1,'displayEvery',50);
+            if options.displayInfo==1
+                reverseStr = cmdWaitbar(frameNo2,nFramesDim,reverseStr,'inputStr','loading ImageJ tif','waitbarOn',1,'displayEvery',50);
+            end
         end
 
         % close handle to file
