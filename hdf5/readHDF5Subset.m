@@ -23,6 +23,7 @@ function [dataSubset fid] = readHDF5Subset(inputFilePath, offset, block, varargi
 	%========================
 	% old way of saving, only temporary until full switch
 	options.datasetName = '/1';
+	% Binary: 1 = display output info, 0 = don't display any output info
 	options.displayInfo = 1;
 	%
 	options.keepFileOpen = 0;
@@ -104,7 +105,9 @@ function [dataSubset fid] = readHDF5Subset(inputFilePath, offset, block, varargi
 	        end
 			dataSubset = H5D.read(dset_id,'H5ML_DEFAULT',mem_space_id,file_space_id,plist);
 		else
-			display('Input offsets not unique! Using backup method.')
+			if options.displayInfo==1
+				display('Input offsets not unique! Using backup method.')
+			end
 			% dataSubset = {};
 			offSetAll = cat(1,offset{:});
 			blockAll = cat(1,block{:});

@@ -102,6 +102,18 @@ function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(sign
             disp('calculating signal peaks...')
         end
         nSignals = size(signalMatrix,1);
+
+        % Remove any NaN signals, set to the mean
+        if sum(isnan(signalMatrix(:)))>0
+            if options.outputInfo==1
+                disp('Removing NaNs from matrix');
+            end
+            for signalNo = 1:nSignals
+                repIdx = isnan(signalMatrix(signalNo,:));
+                signalMatrix(signalNo,repIdx) = nanmean(signalMatrix(signalNo,:));
+            end
+        end
+
         % this matrix will contain binarized version of signalMatrix
         signalPeaks = zeros(size(signalMatrix));
         % contains a list for each signal of locations of peaks
@@ -209,9 +221,9 @@ function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(sign
             p = p + 1;
             if (mod(p,nInterval)==0||p==2||p==nSignals)&&options_waitbarOn==1
                 if p==nSignals
-                    fprintf('%d%%\n',round(p/nSignals*100))
+                    fprintf('%d\n',round(p/nSignals*100))
                 else
-                    fprintf('%d%% | ',round(p/nSignals*100))
+                    fprintf('%d|',round(p/nSignals*100))
                 end
                 % cmdWaitbar(p,nSignals,'','inputStr','','waitbarOn',1);
             end

@@ -108,7 +108,9 @@ function [inputMovie] = addDroppedFramesToMovie(inputMovie,droppedFrames,varargi
 		reverseStr = '';
 		for rowNo=1:nRows
 		    inputMovieDroppedF0(rowNo,:) = nanmean(squeeze(inputMovie(rowNo,:,:)),2);
-		    if mod(rowNo,5)==0;reverseStr = cmdWaitbar(rowNo,nRows,reverseStr,'inputStr','calculating mean...','waitbarOn',1,'displayEvery',5);end
+		    if rowNo==1||mod(rowNo,5)==0
+		    	reverseStr = cmdWaitbar(rowNo,nRows,reverseStr,'inputStr','calculating mean...','waitbarOn',1,'displayEvery',5);
+		    end
 		end
 		% movieMean = nanmean(inputMovieTmp(:));
 		display([num2str(length(droppedFrames)) ' dropped frames: ' num2str(droppedFrames(:)')])
@@ -124,7 +126,9 @@ function [inputMovie] = addDroppedFramesToMovie(inputMovie,droppedFrames,varargi
 		reverseStr = '';
 		for droppedFrameNo = 1:nDroppedFrames
 			inputMovie(:,:,droppedFrames(droppedFrameNo)) = inputMovieDroppedF0;
-			if mod(droppedFrameNo,5)==0;reverseStr = cmdWaitbar(rowNo,nRows,reverseStr,'inputStr','adding in dropped frames...','waitbarOn',1,'displayEvery',5);end
+			if droppedFrameNo==1||mod(droppedFrameNo,5)==0
+				reverseStr = cmdWaitbar(rowNo,nRows,reverseStr,'inputStr','adding in dropped frames...','waitbarOn',1,'displayEvery',5);
+			end
 		end
 
 		% loop over each dropped count and shift movie contents

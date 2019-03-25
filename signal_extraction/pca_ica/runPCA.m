@@ -212,14 +212,16 @@ function [PcaFilters PcaTraces] = runPCA(inputMatrix, inputID, numberPCs, fileRe
         % j = whos('covmat');j.bytes=j.bytes*9.53674e-7;j
 
         % Options for the Eigenvectors extraction
-        opts.issym = 'true'; %Options for the Eigenvectors extraction
+        % covmat isn't a function handle, so ignore
+        % opts.issym = 'true'; %Options for the Eigenvectors extraction
         % opts.maxit = 100;
         % opts.disp = 1;
         % opts.tol = 1e-3;
 
         display('extracting eigenvectors...');drawnow
         if nPCs<size(covmat,1)
-            [PcaTraces, CovEvals] = eigs(covmat, nPCs, 'LM', opts);
+            % [PcaTraces, CovEvals] = eigs(covmat, nPCs, 'LM', opts);
+            [PcaTraces, CovEvals] = eigs(covmat, nPCs, 'LM');
         else
             [PcaTraces, CovEvals] = eig(covmat);
             nPCs = size(CovEvals,1);

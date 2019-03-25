@@ -62,7 +62,7 @@ function createHdf5File(filename, datasetName, inputData, varargin)
 
 	% Initial Data to Write
 	% rowDim = initDims(1); colDim = initDims(2);
-	initDataToWrite = rand(initDims);
+	% initDataToWrite = rand(initDims);
 
 	% Write the initial data
 	H5D.write(dset_id, 'H5ML_DEFAULT', 'H5S_ALL', 'H5S_ALL', 'H5P_DEFAULT', inputData);

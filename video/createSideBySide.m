@@ -225,7 +225,7 @@ function [outputMovie] = createSideBySide(primaryMovie,secondaryMovie,varargin)
 			reverseStr = '';
 			for frame=1:nFrames
 				writeVideo(writerObj,squeeze(outputMovie(:,:,frame)));
-				if mod(frame,5)==0|frame==nFrames
+				if frame==1||mod(frame,5)==0||frame==nFrames
 				    reverseStr = cmdWaitbar(frame,nFrames,reverseStr,'inputStr','writing movie');drawnow;
 				end
 			end

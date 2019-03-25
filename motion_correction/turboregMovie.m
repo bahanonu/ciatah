@@ -131,6 +131,9 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	options.freqHigh = 4;
 	% 1 = show figures during processing
 	options.showFigs = 1;
+	% cmd line waitbar on?
+	options.waitbarOn = 1;
+
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -222,6 +225,19 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	cropAndNormalizeInputMovie();
 	% ========================
 	manageParallelWorkers('parallel',options.parallel);
+	%========================
+	% Only implement in Matlab 2017a and above
+    if ~verLessThan('matlab', '9.2')
+        D = parallel.pool.DataQueue;
+        afterEach(D, @nUpdateParforProgress);
+        p = 1;
+        nInterval = 500;
+        options_waitbarOn = options.waitbarOn;
+		nFrames = size(inputMovieCropped,3);
+		if nFrames<=(nInterval*2)
+			nInterval = 100;
+		end
+    end
 	% ========================
 	startTime = tic;
 	ResultsOut = {};
@@ -343,6 +359,21 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		inputMovieCropped = squeeze(mat2cell(inputMovieCropped,inputMovieX,inputMovieY,ones(1,inputMovieZ)));
 	end
 
+	function nUpdateParforProgress(~)
+        if ~verLessThan('matlab', '9.2')
+            p = p + 1;
+            if (mod(p,nInterval)==0||p==2||p==nFrames)&&options_waitbarOn==1
+                if p==nFrames
+                    fprintf('%d%%\n',round(p/nFrames*100))
+                else
+                    fprintf('%d%% | ',round(p/nFrames*100))
+                end
+                % cmdWaitbar(p,nSignals,'','inputStr','','waitbarOn',1);
+            end
+            % [p mod(p,nInterval)==0 (mod(p,nInterval)==0||p==nSignals)&&options_waitbarOn==1]
+        end
+    end
+
 	% function [ResultsOut averagePictureEdge] = turboregMovieParallel(inputMovie,turboRegOptions,options)
 	function turboregMovieParallel()
 		% get reference picture and other pre-allocation
@@ -373,19 +404,40 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		nFramesToTurboreg = options.maxFrame;
 		if options.parallel==1; nWorkers=Inf;else;nWorkers=0;end
 		% options.maxFrame
-		try [percent, progress] = parfor_progress(nFramesToTurboreg);catch;end; dispStepSize = round(nFramesToTurboreg/20); dispstat('','init');
+		% try [percent, progress] = parfor_progress(nFramesToTurboreg);catch;end; dispStepSize = round(nFramesToTurboreg/20); dispstat('','init');
 		parfor (frameNo=1:nFramesToTurboreg,nWorkers)
-			[percent, progress] = parfor_progress;
+			% [percent, progress] = parfor_progress;
 			% if mod(progress,dispStepSize) == 0;dispstat(sprintf('progress %0.1f %',percent));else;end
 			% get current frames
 			thisFrame = inputMovieCropped{frameNo};
 			thisFrameToAlign=single(thisFrame);
 			% thisFrameToAlign=thisFrame;
-			[ImageOut,ResultsOut{frameNo}]=turboreg(refPic,thisFrameToAlign,mask,imgRegMask,turboRegOptions);
-			% create a mask
-			averagePictureEdge = averagePictureEdge | ImageOut==0;
+
+			if ismac
+			    % Code to run on Mac platform
+			    [ImageOut,ResultsOut{frameNo}]=turboreg(refPic,thisFrameToAlign,mask,imgRegMask,turboRegOptions);
+			    % create a mask
+			    averagePictureEdge = averagePictureEdge | ImageOut==0;
+			elseif isunix
+			    % Code to run on Linux platform
+			    [ResultsOut{frameNo}]=turboreg(refPic,thisFrameToAlign,mask,imgRegMask,turboRegOptions);
+			    % create a mask
+			    % averagePictureEdge = averagePictureEdge | ImageOut==0;
+			elseif ispc
+			    % Code to run on Windows platform
+			    [ImageOut,ResultsOut{frameNo}]=turboreg(refPic,thisFrameToAlign,mask,imgRegMask,turboRegOptions);
+			    % create a mask
+			    averagePictureEdge = averagePictureEdge | ImageOut==0;
+			else
+				% return;
+			    disp('Platform not supported')
+			end
+
+			if ~verLessThan('matlab', '9.2')
+			    send(D, frameNo); % Update
+			end
 		end
-		dispstat('Finished.','keepprev');
+		% dispstat('Finished.','keepprev');
 		toc(startTurboRegTime);
 		drawnow;
 		% save('ResultsOutFile','ResultsOut');
@@ -795,7 +847,7 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 				    thisFrame=squeeze(inputMovieCropped(:,:,frameInd));
 				    meanThisFrame = mean(thisFrame(:));
 				    inputMovieCropped(:,:,frameInd) = inputMovieCropped(:,:,frameInd)-meanThisFrame;
-			    	reverseStr = cmdWaitbar(frameInd,Ntime,reverseStr,'inputStr','subtracting mean','waitbarOn',1,'displayEvery',5);
+			    	reverseStr = cmdWaitbar(frameInd,Ntime,reverseStr,'inputStr','subtracting mean','waitbarOn',1,'displayEvery',50);
 				end
 			    if options.complementMatrix==1
 			    	inputMovieCropped(:,:,frameInd) = imcomplement(inputMovieCropped(:,:,frameInd));
@@ -820,13 +872,24 @@ function cropCoords = getCropSelection(thisFrame)
 
 	% Use ginput to select corner points of a rectangular
 	% region by pointing and clicking the subject twice
-	p = ginput(2);
+	% p = ginput(2);
+
+	h = imrect(gca);
+	addNewPositionCallback(h,@(p) title(mat2str(p,3)));
+	fcn = makeConstrainToRectFcn('imrect',get(gca,'XLim'),get(gca,'YLim'));
+	setPositionConstraintFcn(h,fcn);
+	p = round(wait(h));
 
 	% Get the x and y corner coordinates as integers
-	cropCoords(1) = min(floor(p(1)), floor(p(2))); %xmin
-	cropCoords(2) = min(floor(p(3)), floor(p(4))); %ymin
-	cropCoords(3) = max(ceil(p(1)), ceil(p(2)));   %xmax
-	cropCoords(4) = max(ceil(p(3)), ceil(p(4)));   %ymax
+	% cropCoords(1) = min(floor(p(1)), floor(p(2))); %xmin
+	% cropCoords(2) = min(floor(p(3)), floor(p(4))); %ymin
+	% cropCoords(3) = max(ceil(p(1)), ceil(p(2)));   %xmax
+	% cropCoords(4) = max(ceil(p(3)), ceil(p(4)));   %ymax
+
+	cropCoords(1) = p(1); %xmin
+	cropCoords(2) = p(2); %ymin
+	cropCoords(3) = p(1)+p(3); %xmax
+	cropCoords(4) = p(2)+p(4); %ymax
 
 	% Index into the original image to create the new image
 	thisFrameCropped = thisFrame(cropCoords(2):cropCoords(4), cropCoords(1): cropCoords(3));

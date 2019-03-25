@@ -35,21 +35,37 @@ function [reverseStr] = cmdWaitbar(i,nItems,reverseStr,varargin)
 
 	if options.waitbarOn==0
 		return;
-	elseif mod(i,options.displayEvery)==0|i==nItems
+	elseif i==1||mod(i,options.displayEvery)==0||i==nItems
 		if i==1
 			reverseStr = '\b';
 		else
 			% diary OFF
 		end
+		progN = round(i/nItems*100);
+	    reverseStr = '';
 		if usejava('desktop')==0
 		    % return;
-		    reverseStr = '';
-			txt=sprintf(': %1.2f | ',i/nItems*100);
+		    % reverseStr = '';
+		    % options.inputStr = '';
+			% txt=sprintf(': %1.2f | ',i/nItems*100);
+			txt=sprintf('%d|',progN);
+		end
+		if i==1
+			txt=sprintf(': %d|',progN);
+		elseif i==nItems
+			% reverseStr = '';
+		    options.inputStr = '';
+			txt=sprintf('%d\n',progN);
+		elseif i~=1
+			% reverseStr = '';
+		    options.inputStr = '';
+			txt=sprintf('%d|',progN);
 		else
-			txt=sprintf(': %1.2f',i/nItems*100);
+			txt=sprintf(': %d',progN);
 		end
 		% txt=strcat('\n',options.inputStr,txt,'%%');
-		txt=strcat('',options.inputStr,txt,'%%');
+		% txt=strcat('',options.inputStr,txt,'%%');
+		txt=strcat('',options.inputStr,txt);
 		fprintf([reverseStr, txt]);
 		% drawnow;
 	   	reverseStr = repmat(sprintf('\b'), 1, length(txt)-1);

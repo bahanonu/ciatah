@@ -12,8 +12,12 @@ function [dfofMatrix, inputMovieF0, inputMovieStd] = dfofMovie(inputMovie, varar
         %
 
     %========================
+    % Char: hierarchy name in hdf5 where movie is
     options.inputDatasetName = '/1';
+    % Char: divide, dfof, slidingZscore, binnedZscore, dfstd, minus
     options.dfofType = 'dfof';
+    % Binary: 1 = waitbar on
+    options.waitbarOn = 1;
     % get options
     options = getOptions(options,varargin);
     % display(options)
@@ -51,10 +55,15 @@ function [dfofMatrix, inputMovieF0, inputMovieStd] = dfofMovie(inputMovie, varar
     inputMovieClass = class(inputMovie);
 
     % get the movie F0, do by row to reduce potential memory errors on some versions of Matlab
-    display('getting F0...')
+    if sum(strcmp(dfofType,stdList))>0
+        disp('Getting F0 and F_std...')
+    else
+        disp('Getting F0...')
+    end
     inputMovieF0 = zeros([size(inputMovie,1) size(inputMovie,2)]);
     inputMovieStd = zeros([size(inputMovie,1) size(inputMovie,2)]);
-    reverseStr = '';
+    % reverseStr = '';
+    nInterval = 10;
     nRows = size(inputMovie,1);
     for rowNo=1:nRows
         % inputMovieF0 = nanmean(inputMovie,3);
@@ -64,7 +73,17 @@ function [dfofMatrix, inputMovieF0, inputMovieStd] = dfofMovie(inputMovie, varar
             inputMovieStd(rowNo,:) = nanstd(rowFrame,[],2);
         else
         end
-        reverseStr = cmdWaitbar(rowNo,nRows,reverseStr,'inputStr','calculating mean...','waitbarOn',1,'displayEvery',5);
+
+        if (mod(rowNo,nInterval)==0||rowNo==1||rowNo==nRows)&&options.waitbarOn==1
+            if rowNo==nRows
+                fprintf('%d%%\n',round(rowNo/nRows*100))
+            elseif rowNo==1
+                fprintf('%d%%|',round(rowNo/nRows*100))
+            else
+                fprintf('%d|',round(rowNo/nRows*100))
+            end
+        end
+        % reverseStr = cmdWaitbar(rowNo,nRows,reverseStr,'inputStr','calculating mean...','waitbarOn',1,'displayEvery',5);
     end
 
     % convert to single
@@ -79,33 +98,33 @@ function [dfofMatrix, inputMovieF0, inputMovieStd] = dfofMovie(inputMovie, varar
     % bsxfun for fast matrix divide
     switch dfofType
         case 'divide'
-            display('F(t)/F0...')
+            disp('Calculating: F(t)/F0...')
             % dfofMatrix = bsxfun(@ldivide,double(inputMovieF0),double(inputMovie));
             dfofMatrix = bsxfun(@ldivide,inputMovieF0,inputMovie);
         case 'dfof'
-            display('F(t)/F0 - 1...')
+            disp('Calculating: F(t)/F0 - 1...')
             % dfofMatrix = bsxfun(@ldivide,double(inputMovieF0),double(inputMovie));
             dfofMatrix = bsxfun(@ldivide,inputMovieF0,inputMovie);
             dfofMatrix = dfofMatrix-1;
         case 'slidingZscore'
-            display('sliding (F(t)-F0)/std..')
+            disp('Calculating: sliding (F(t)-F0)/std..')
 
             % dfofMatrix = bsxfun(@ldivide,double(inputMovieF0),double(inputMovie));
             % dfofMatrix = bsxfun(@ldivide,inputMovieF0,inputMovie);
             % dfofMatrix = dfofMatrix-1;
         case 'binnedZscore'
-            display('sliding (F(t)-F0)/std..')
+            disp('Calculating: sliding (F(t)-F0)/std..')
             % dfofMatrix = bsxfun(@ldivide,double(inputMovieF0),double(inputMovie));
             dfofMatrix = bsxfun(@ldivide,inputMovieF0,inputMovie);
             dfofMatrix = dfofMatrix-1;
         case 'dfstd'
-            display('(F(t)-F0)/std...')
+            disp('Calculating: (F(t)-F0)/std...')
             % dfofMatrix = bsxfun(@ldivide,double(inputMovieF0),double(inputMovie));
             dfofMatrix = bsxfun(@minus,inputMovie,inputMovieF0);
             dfofMatrix = bsxfun(@ldivide,inputMovieStd,dfofMatrix);
             % dfofMatrix = dfofMatrix-1;
         case 'minus'
-            display('F(t)-F0...')
+            disp('Calculating: F(t)-F0...')
             % dfofMatrix = bsxfun(@ldivide,double(inputMovieF0),double(inputMovie));
             dfofMatrix = bsxfun(@minus,inputMovie,inputMovieF0);
         otherwise

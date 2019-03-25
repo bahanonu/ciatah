@@ -55,7 +55,6 @@ function [imgStats] = computeImageFeatures(inputImages, varargin)
             options.addedFeaturesInputImages = inputImages;
         end
         inputImages = thresholdImages(inputImages,'waitbarOn',1,'binary',1,'threshold',threshold);
-
     end
 
     % get the centroids and other info for movie
@@ -74,6 +73,8 @@ function [imgStats] = computeImageFeatures(inputImages, varargin)
         % imgStats.imageSizes(imageNo) = sum(iImage(:)>0);
         if options.runRegionprops==1
             regionStat = regionprops(inputImages(:,:,imageNo), featureList);
+            % regionStat
+            % figure;imagesc(inputImages(:,:,imageNo));
             for ifeature = featureList
                 % regionStat = regionprops(iImage, ifeature{1});
                 try
@@ -90,10 +91,15 @@ function [imgStats] = computeImageFeatures(inputImages, varargin)
             % iImage2 = squeeze(options.addedFeaturesInputImages(:,:,imageNo));
             % figure(11);imagesc(iImage2);title(num2str(imageNo))
             % [imageNo xCoords(imageNo) yCoords(imageNo)]
-            t1=getObjCutMovie(options.addedFeaturesInputImages(:,:,imageNo),options.addedFeaturesInputImages(:,:,imageNo),'cropSize',30,'createMontage',0,'crossHairsOn',0,'addPadding',1,'waitbarOn',0,'xCoords',xCoords(imageNo),'yCoords',yCoords(imageNo));
-            t1 = t1{1};
-            imgStats.imgKurtosis(imageNo) = double(kurtosis(t1(:)));
-            imgStats.imgSkewness(imageNo) = double(skewness(t1(:)));
+            if isnan(xCoords(imageNo))==0
+                t1=getObjCutMovie(options.addedFeaturesInputImages(:,:,imageNo),options.addedFeaturesInputImages(:,:,imageNo),'cropSize',30,'createMontage',0,'crossHairsOn',0,'addPadding',1,'waitbarOn',0,'xCoords',xCoords(imageNo),'yCoords',yCoords(imageNo));
+                t1 = t1{1};
+                imgStats.imgKurtosis(imageNo) = double(kurtosis(t1(:)));
+                imgStats.imgSkewness(imageNo) = double(skewness(t1(:)));
+            else
+                imgStats.imgKurtosis(imageNo) = NaN;
+                imgStats.imgSkewness(imageNo) = NaN;
+            end
             % imgStats.imgKurtosis(imageNo) = kurtosis(iImage(:));
             % imgStats.imgSkewness(imageNo) = skewness(iImage(:));
         else
@@ -107,7 +113,7 @@ function [imgStats] = computeImageFeatures(inputImages, varargin)
         % imgStats.Perimeter(imageNo) = regionStat.Perimeter;
         % imgStats.Solidity(imageNo) = regionStat.Solidity;
 
-        if (mod(imageNo,10)==0|imageNo==nImages)&options.waitbarOn==1
+        if (imageNo==1||mod(imageNo,10)==0||imageNo==nImages)&options.waitbarOn==1
             reverseStr = cmdWaitbar(imageNo,nImages,reverseStr,'inputStr','computing image features');
         end
     end

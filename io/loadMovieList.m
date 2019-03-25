@@ -56,7 +56,7 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 	options.supportedTypes = {'.h5','.hdf5','.tif','.tiff','.avi','.isxd'};
 	% movie type
 	options.movieType = 'tiff';
-	% hierarchy name in hdf5 where movie is
+	% hierarchy name in hdf5 where movie data is located
 	options.inputDatasetName = '/1';
 	% fallback hierarchy name, e.g. '/images'
 	options.inputDatasetNameBackup = [];
@@ -375,6 +375,7 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 					tmpFramePerma = [];
 					displayInfoH = 1;
 					Numberframe = [];
+					NumberframeH = [];
 					fileInfoH = [];
 				end
 

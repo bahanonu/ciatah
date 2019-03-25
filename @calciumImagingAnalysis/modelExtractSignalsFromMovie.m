@@ -635,6 +635,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 							'CNMF | Patch size (power of 2 pref, e.g. 64, 128, 256, 512)',...
 							'CNMF | Patch overlap size (power of 2 pref, e.g. 4, 8, 16, 32)',...
 							'CNMF | tau (enter cell diameter in pixels)',...
+							'CNMF | Run CNMF output classifier (1 = yes, 0 = no)',...
+							'CNMF | initialization method ("greedy","greedy_corr","sparse_NMF","HALS") (default: "greedy")',...
 						},...
 						dlgStr,1,...
 						{...
@@ -648,7 +650,9 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 							'0',...
 							'[128,128]',...
 							'[16, 16]',...
-							''...
+							'',...
+							'1',...
+							'greedy'...
 						}...
 					);setNo = 1;
 					options.CNMF.originalCurrentSwitch = movieSettings{setNo};setNo = setNo+1;
@@ -662,6 +666,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 					options.CNMF.patch_size = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.CNMF.overlap = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.CNMF.gridWidth = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.CNMF.classifyComponents = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.CNMF.init_method = movieSettings{setNo};setNo = setNo+1;
 				case 'CNMFE'
 					movieSettings = inputdlg({...
 							'CNMF-E | Use CNMF-F ("cnmfe"), original ("original"), or most recent ("current") CNMF version?'...
@@ -852,6 +858,9 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		% cnmfOptions.use_parallel = 1;
 		cnmfOptions.nonCNMF.parallel = 1;
 
+		% initialization method ('greedy','greedy_corr','sparse_NMF','HALS') (default: 'greedy')
+		cnmfOptions.init_method = options.CNMF.init_method;
+
 		% Merging threshold (positive between 0  and 1)
 		cnmfOptions.merge_thr = 0.85;
 		% Range of normalized frequencies over which to average PSD (2 x1 vector)
@@ -982,13 +991,29 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 					case 'current'
 						% Add and remove necessary CNMF directories from path
 						[success] = cnmfVersionDirLoad('current');
+
+						cnmfOptions.nonCNMF.classifyComponents = options.CNMF.classifyComponents;
+
 						% fprintf('Remove %s\n Add %s\n',originalPath,currentPath);
 						% rmpath(genpath(originalPath));
 						% addpath(genpath(currentPath));
-						[cnmfAnalysisOutput] = computeCnmfSignalExtraction_v2(movieList,numExpectedComponents,'options',cnmfOptions);
+						% [cnmfAnalysisOutput] = computeCnmfSignalExtraction_v2(movieList,numExpectedComponents,'options',cnmfOptions);
+
+						[cnmfAnalysisOutput] = computeCnmfSignalExtractionClass(movieList,numExpectedComponents,'options',cnmfOptions);
+
 					case 'current_patch'
 						% Add and remove necessary CNMF directories from path
 						[success] = cnmfVersionDirLoad('current');
+
+
+						cnmfOptions.nonCNMF.parallel = 1;
+						cnmfOptions.merge_thr = 0.85;
+						cnmfOptions.ssub = options.CNMF.ssub;
+						cnmfOptions.tsub = options.CNMF.tsub;
+						cnmfOptions.fr = options.CNMF.fr;
+						cnmfOptions.create_memmap = options.CNMF.create_memmap;
+						cnmfOptions.otherCNMF.tau = gridWidth.(obj.subjectStr{obj.fileNum})/2;
+						cnmfOptions.otherCNMF.p = 2;
 
 						cnmfOptions.nonCNMF.patch_size = options.CNMF.patch_size;
 						cnmfOptions.nonCNMF.overlap = options.CNMF.overlap;
@@ -1091,8 +1116,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			display(repmat('*',1,14))
 			startTime = tic;
 			cnmfeAnalysisOutput = [];
-			% [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(movieList{1},'options',cnmfeOptions);
-			[cnmfeAnalysisOutput] = computeCnmfeSignalExtraction_batch(movieList{1},'options',cnmfeOptions);
+			[cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(movieList{1},'options',cnmfeOptions);
+			% [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction_batch(movieList{1},'options',cnmfeOptions);
 
 			% [figHandle figNo] = openFigure(1337, '');hold off;
 			% obj.modelSaveImgToFile([],'initializationROIs_',1337,[obj.folderBaseSaveStr{obj.fileNum} '_run0' num2str(parameterSetNo)]);

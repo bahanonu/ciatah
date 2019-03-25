@@ -13,9 +13,11 @@ function [spatial, temporal, S] = compute_pca(M, num_PCs)
 	C = num_pixels*C; % Undo the normalization
 
 	fprintf('%s: Computing temporal PCs...\n', datestr(now));
-	options.issym = 'true';
+	% covmat isn't a function handle, so ignore
+	% options.issym = 'true';
 	C = double(C); % Conversion needed for 'eigs'
-	[temporal, cov_eigs] = eigs(C, num_PCs, 'LM', options);
+	% [temporal, cov_eigs] = eigs(C, num_PCs, 'LM', options);
+	[temporal, cov_eigs] = eigs(C, num_PCs, 'LM');
 
 	cov_eigs = diag(cov_eigs)'; % Don't need the matrix
 

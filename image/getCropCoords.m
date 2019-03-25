@@ -50,17 +50,29 @@ function [coords] = getCropCoords(thisFrame,varargin)
 			axis image;
 			box off
 			colormap gray;
-			title('Select region to crop')
+			% title('Select region to crop')
+			title(['Click to drag-n-draw region.' 10 'Double-click region to continue.'])
 
-		% Use ginput to select corner points of a rectangular
-		% region by pointing and clicking the subject twice
-		p = ginput(2);
+		h = imrect(gca);
+		addNewPositionCallback(h,@(p) title(mat2str(p,3)));
+		fcn = makeConstrainToRectFcn('imrect',get(gca,'XLim'),get(gca,'YLim'));
+		setPositionConstraintFcn(h,fcn);
+		p = round(wait(h));
 
-		% Get the x and y corner coordinates as integers
-		coords(1) = min(floor(p(1)), floor(p(2))); %xmin
-		coords(2) = min(floor(p(3)), floor(p(4))); %ymin
-		coords(3) = max(ceil(p(1)), ceil(p(2)));   %xmax
-		coords(4) = max(ceil(p(3)), ceil(p(4)));   %ymax
+		coords(1) = p(1); %xmin
+		coords(2) = p(2); %ymin
+		coords(3) = p(1)+p(3); %xmax
+		coords(4) = p(2)+p(4); %ymax
+
+		% % Use ginput to select corner points of a rectangular
+		% % region by pointing and clicking the subject twice
+		% p = ginput(2);
+
+		% % Get the x and y corner coordinates as integers
+		% coords(1) = min(floor(p(1)), floor(p(2))); %xmin
+		% coords(2) = min(floor(p(3)), floor(p(4))); %ymin
+		% coords(3) = max(ceil(p(1)), ceil(p(2)));   %xmax
+		% coords(4) = max(ceil(p(3)), ceil(p(4)));   %ymax
 
 		% Index into the original image to create the new image
 		thisFrameCropped = thisFrame(coords(2):coords(4), coords(1): coords(3));
