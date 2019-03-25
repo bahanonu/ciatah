@@ -1,10 +1,10 @@
-function [cnmfAnalysisOutput] = computeCnmfSignalExtraction_v2(inputMovie,numExpectedComponents,varargin)
-    % Brapper function for CNMF, update for most recent versions.
+function [cnmfAnalysisOutput] = computeCnmfSignalExtractionClass(inputMovie,numExpectedComponents,varargin)
+    % Wrapper function for CNMF, update for most recent versions.
     % Building off of demo_script.m in CNMF github repo
     % Most recent commit tested on: https://github.com/epnev/ca_source_extraction/commit/187bbdbe66bca466b83b81861b5601891a95b8d1
     % https://github.com/epnev/ca_source_extraction/blob/master/demo_script_class.m
     % Biafra Ahanonu
-    % started: 2016.01.20
+    % started: 2019.03.14 [10:53:12]
     % inputs
         % inputMovie - a string or a cell array of strings pointing to the movies to be analyzed (recommended). Else, [x y t] matrix where t = frames.
         % numExpectedComponents - number of expected components
@@ -18,6 +18,7 @@ function [cnmfAnalysisOutput] = computeCnmfSignalExtraction_v2(inputMovie,numExp
 
     % changelog
         % 2016.06.20 - updated to keep in line with recent changes to CNMF functions
+        % 2019.03.14 [16:48:13] Converted to using CNMF class since the demo script without using the class appears to have issues and is producing incorrect dF/F results
     % TODO
         %
 
@@ -73,7 +74,8 @@ function [cnmfAnalysisOutput] = computeCnmfSignalExtraction_v2(inputMovie,numExp
     % initialize_components.m
     options.ssub = 1;  % Spatial down-sampling factor (scalar >= 1)  1
     options.tsub = 2;  % Temporal down-sampling factor (scalar >= 1)  1
-    options.nb = 1;  % Number of background components (positive integer)  1
+    options.nb = 1;  % Number of background components (positive integer)
+    options.gnb = 3;  % Number of global background components (positive integer)  1
     options.gSig = 2*options.otherCNMF.tau+1;  % Size of Gaussian kernel  2*tau+1
     options.save_memory = 0;  % Perform spatial filter in patches sequentially to save memory (binary)  0 (not needed, use subsampling)
     options.maxIter = 5;  % Maximum number of HALS iterations  5
@@ -157,6 +159,7 @@ function [cnmfAnalysisOutput] = computeCnmfSignalExtraction_v2(inputMovie,numExp
     cnmfAnalysisOutput.success = 0;
 
     % get the movie
+    inputMovieOriginal = inputMovie;
     if strcmp(class(inputMovie),'char')|strcmp(class(inputMovie),'cell')
         movieList = inputMovie;
         Y = loadMovieList(inputMovie,'convertToDouble',options.nonCNMF.convertToDouble,'frameList',options.nonCNMF.frameList,'inputDatasetName',options.nonCNMF.inputDatasetName,'treatMoviesAsContinuous',1);
@@ -177,31 +180,32 @@ function [cnmfAnalysisOutput] = computeCnmfSignalExtraction_v2(inputMovie,numExp
 
     %Y = Y - min(Y(:));
     % if ~isa(Y,'double');    Y = double(Y);  end         % convert to single
-    if ~isa(Y,'single');    Y = single(Y);  end         % convert to single
+    % if ~isa(Y,'single');    Y = single(Y);  end         % convert to single
 
-    [d1,d2,T] = size(Y);                                % dimensions of dataset
-    d = d1*d2;                                          % total number of pixels
+    % [d1,d2,T] = size(Y);                                % dimensions of dataset
+    % d = d1*d2;                                          % total number of pixels
 
     %% Set parameters
+
+    CNM = CNMF;                                     % contruct CNMF object
 
     K = numExpectedComponents; % number of components to be found
     tau = options.otherCNMF.tau; % std of gaussian kernel (size of neuron)
     p = options.otherCNMF.p; % order of autoregressive system (p = 0 no dynamics, p=1 just decay, p = 2, both rise and decay)
     merge_thr = options.merge_thr; % merging threshold
 
-    cnmfOptions = CNMFSetParms(...
-        'd1',d1,'d2',d2,...                         % dimensionality of the FOV
-        'p',p,...                                   % order of AR dynamics
-        'gSig',tau,...                              % half size of neuron
-        'merge_thr',0.80,...                        % merging threshold
-        'nb',2,...                                  % number of background components
-        'min_SNR',3,...                             % minimum SNR threshold
-        'space_thresh',0.5,...                      % space correlation threshold
-        'cnn_thr',0.2...                            % threshold for CNN classifier
-        );
+    % cnmfOptions = CNMFSetParms(...
+    %     'p',2,...                                   % order of AR dynamics
+    %     'gSig',5,...                                % half size of neuron
+    %     'merge_thr',0.80,...                        % merging threshold
+    %     'nb',2,...                                  % number of background components
+    %     'min_SNR',3,...                             % minimum SNR threshold
+    %     'space_thresh',0.5,...                      % space correlation threshold
+    %     'cnn_thr',0.2...                            % threshold for CNN classifier
+    %     );
 
+        % 'd1',d1,'d2',d2,...                         % dimensions of datasets
     cnmfOptions = CNMFSetParms(...
-        'd1',d1,'d2',d2,...                         % dimensions of datasets
         'search_method','dilate','dist',3,...       % search locations when updating spatial components
         'deconv_method','constrained_foopsi',...    % activity deconvolution method
         'temporal_iter',2,...                       % number of block-coordinate descent steps
@@ -246,127 +250,93 @@ function [cnmfAnalysisOutput] = computeCnmfSignalExtraction_v2(inputMovie,numExp
         );
     %% Data pre-processing
 
-    [P,Y] = preprocess_data(Y,p);
-    %% fast initialization of spatial components using greedyROI and HALS
+    %% load the dataset and create the object
+    CNM.readFile(Y);                         % insert path to file here
+    CNM.optionsSet(cnmfOptions);                        % setup the options structure
 
-    % [Ain,Cin,bin,fin,center] = initialize_components(Y,K,tau,cnmfOptions,P);  % initialize
+    %% Process the dataset
+
+    CNM.preprocess;             % preprocessing (compute some quantities)
+
     %% fast initialization of spatial components using greedyROI and HALS
     if isempty(options.nonCNMF.initializeComponents)
-        [Ain,Cin,bin,fin,center] = initialize_components(Y,K,tau,cnmfOptions,P);
+        CNM.initComponents(K);      % initialization
     else
         disp('Using user input initialization components...')
         % initComp = thresholdImages(options.nonCNMF.initializeComponents,'threshold',0.1);
         % initComp = normalizeMovie(initComp,'normalizationType','imfilterSmooth','blurRadius',5,'imfilterType','disk');
         % initComp = normalizeMovie(initComp,'normalizationType','imfilterSmooth','blurRadius',5);
-        initComp = normalizeMovie(thresholdImages(options.nonCNMF.initializeComponents,'threshold',0.2),'normalizationType','medianFilter');
+        initComp = normalizeMovie(normalizeMovie(thresholdImages(options.nonCNMF.initializeComponents,'threshold',0.2),'normalizationType','medianFilter'),'normalizationType','zeroToOne');
         % Use size invariant properties to remove irrelevant signals
         imageProps = computeImageFeatures(initComp,'addedFeatures',1,'makePlots',0);
-        initComp(:,:,imageProps.Eccentricity~=0&imageProps.Orientation~=0);
+        filterIdx = imageProps.Eccentricity~=0&imageProps.Eccentricity<0.995&imageProps.Orientation~=0;
+        initComp = initComp(:,:,filterIdx);
         clear imageProps;
         % initComp = options.nonCNMF.initializeComponents;
         initComp(isnan(initComp)) = 0;
         initComp(isinf(initComp)) = 0;
-        Ain = sparse(double(reshape(initComp,[d size(initComp,3)])));
-        Cin = [double(options.nonCNMF.initializeTraces)];
+
+        % Place into class
+        CNM.A = sparse(double(reshape(initComp,[CNM.dims(1)*CNM.dims(2) size(initComp,3)])));
+        CNM.C = [double(options.nonCNMF.initializeTraces(filterIdx,:))];
+        CNM.C(CNM.C<0) = 0;
         bin = double(initComp(:,:,end));
-        bin = [bin(:)];
-        fin = [options.nonCNMF.initializeTraces(end,:)];
-        center = [];
-        clear initComp;
+        CNM.b = [bin(:)]; clear bin;
+        CNM.f = [options.nonCNMF.initializeTraces(end,:)];
+        ndOriginal = CNM.nd;
+        CNM.nd = 2;
+        CNM.COM();
+        CNM.nd = ndOriginal;
+        clear initComp ndOriginal filterIdx;
     end
 
-    % display centers of found components
-    Cn =  correlation_image(Y); %reshape(P.sn,d1,d2);  %max(Y,[],3); %std(Y,[],3); % image statistic (only for display purposes)
-    if options.nonCNMF.showFigures==1&&~isempty(center)
-        figure;imagesc(Cn);
-            axis equal; axis tight; hold all;
-            scatter(center(:,2),center(:,1),'mo');
-            title('Center of ROIs found from initialization algorithm');
-            drawnow;
-    end
+    CNM.plotCenters()           % plot center of ROIs detected during initialization
+    CNM.updateSpatial();        % update spatial components
+    CNM.updateTemporal(0);      % update temporal components (do not deconvolve at this point)
 
-    %% manually refine components (optional)
-    if options.nonCNMF.showFigures==1&&~isempty(center)
-        refine_components = false;  % flag for manual refinement
-        if refine_components
-            [Ain,Cin,center] = manually_refine_components(Y,Ain,Cin,center,Cn,tau,cnmfOptions);
-        end
-    end
+    %% component classification
 
-    %% update spatial components
-    Yr = reshape(Y,d,T);
-    [A,b,Cin] = update_spatial_components(Yr,Cin,fin,[Ain,bin],P,cnmfOptions);
-
-    %% update temporal components
-    P.p = 0;    % set AR temporarily to zero for speed
-    [C,f,P,S,YrA] = update_temporal_components(Yr,A,b,Cin,fin,P,cnmfOptions);
-
-    %% classify components
     if options.nonCNMF.classifyComponents==1
-        display('classifying components')
-        [ROIvars.rval_space,ROIvars.rval_time,ROIvars.max_pr,ROIvars.sizeA,keep] = classify_components(Y,A,C,b,f,YrA,cnmfOptions);
-        keep = logical(keep+1);
-        A_keep = A(:,keep);
-        C_keep = C(keep,:);
+        CNM.evaluateComponents();   % evaluate spatial components based on their correlation with the data
+        CNM.CNNClassifier('')       % evaluate spatial components with the CNN classifier
+        CNM.eventExceptionality();  % evaluate traces
+        CNM.keepComponents();       % keep the components that are above certain thresholds
     else
-        disp('Not classifying components')
-        A_keep = A;
-        C_keep = C;
+        % CNM.keep_cnn = true(size(CNM.A,2),1);
+        % CNM.val_cnn = ones(size(CNM.A,2),1);
     end
 
     %% merge found components
-    % display(repmat('@',1,7))
-    disp('Merging components as needed...')
-    [Am,Cm,K_m,merged_ROIs,Pm,Sm] = merge_components(Yr,A_keep,b,C_keep,f,P,S,cnmfOptions);
+    CNM.merge();
 
-    %%
     display_merging = options.nonCNMF.display_merging; % flag for displaying merging example
-    if options.nonCNMF.showFigures==1&&and(display_merging, ~isempty(merged_ROIs))
-        i = 1; %randi(length(merged_ROIs));
-        ln = length(merged_ROIs{i});
-        figure;
-            % set(gcf,'Position',[300,300,(ln+2)*300,300]);
-            for j = 1:ln
-                subplot(1,ln+2,j); imagesc(reshape(A_keep(:,merged_ROIs{i}(j)),d1,d2));
-                    title(sprintf('Component %i',j),'fontsize',16,'fontweight','bold'); axis equal; axis tight;
-            end
-            subplot(1,ln+2,ln+1); imagesc(reshape(Am(:,K_m-length(merged_ROIs)+i),d1,d2));
-                    title('Merged Component','fontsize',16,'fontweight','bold');axis equal; axis tight;
-            subplot(1,ln+2,ln+2);
-                plot(1:T,(diag(max(C_keep(merged_ROIs{i},:),[],2))\C_keep(merged_ROIs{i},:))');
-                hold all; plot(1:T,Cm(K_m-length(merged_ROIs)+i,:)/max(Cm(K_m-length(merged_ROIs)+i,:)),'--k')
-                title('Temporal Components','fontsize',16,'fontweight','bold')
-            drawnow;
+    if options.nonCNMF.showFigures==1&&display_merging==1
+        CNM.displayMerging();
     end
 
-    %% refine estimates excluding rejected components
+    %% repeat processing
 
-    Pm.p = p;    % restore AR value
-    [A2,b2,C2] = update_spatial_components(Yr,Cm,f,[Am,b],Pm,cnmfOptions);
-    [C2,f2,P2,S2,YrA2] = update_temporal_components(Yr,A2,b2,C2,f,Pm,cnmfOptions);
-
-
-    %% do some plotting
-
-    [A_or,C_or,S_or,P_or] = order_ROIs(A2,C2,S2,P2); % order components
-    K_m = size(C_or,1);
-    % playMovie(reshape(Yr,d1,d2,size(C_or,2)));
-    [C_df,~] = extract_DF_F(Yr,A_or,C_or,P_or,cnmfOptions); % extract DF/F values (optional)
-    % figure;plotSignalsGraph(C_df*-1);
-    % pause
+    CNM.updateSpatial();
+    CNM.updateTemporal();
+    CNM.extractDFF();           % extract DF/F values.
 
     disp('Organizing output struct...')
     [cnmfAnalysisOutput] = organizeStandardOutput();
 
     try
         if options.nonCNMF.showFigures==1&&options.nonCNMF.plot_contours_components==1
+
             figure;
-            [Coor,json_file] = plot_contours(A_or,Cn,cnmfOptions,1); % contour plot of spatial footprints
+            CNM.plotContours();
+            CNM.plotComponentsGUI();     % display all components
+
+            % figure;
+            % [Coor,json_file] = plot_contours(A_or,Cn,cnmfOptions,1); % contour plot of spatial footprints
             %savejson('jmesh',json_file,'filename');        % optional save json file with component coordinates (requires matlab json library)
 
             %% display components
 
-            plot_components_GUI(Yr,A_or,C_or,b2,f2,Cn,cnmfOptions);
+            % plot_components_GUI(Yr,A_or,C_or,b2,f2,Cn,cnmfOptions);
 
             %% make movie
 
@@ -380,40 +350,44 @@ function [cnmfAnalysisOutput] = computeCnmfSignalExtraction_v2(inputMovie,numExp
 
     function [cnmfAnalysisOutput] = organizeStandardOutput()
         % extract out images and organize them in standard format
-        nSignals = size(A_or,2);
+        nSignals = size(CNM.A,2);
+        d1 = CNM.dims(1);
+        d2 = CNM.dims(2);
+
         extractedImages = zeros([d1 d2 nSignals]);
         % nSignals
         for signalNo = 1:nSignals
-            extractedImages(:,:,signalNo) = reshape(A_or(:,signalNo),d1,d2);
+            extractedImages(:,:,signalNo) = reshape(CNM.A(:,signalNo),d1,d2);
         end
 
         % store background component
-        C_df_or_background = C_df(end,:);
-        S_df_or = S_or;
-
-        % figure;imagesc(C_df);
+        C_df_or_background = CNM.C_df((end-options.gnb):end,:);
+        % S_df_or = CNM.S;
 
         % add parameters and extractions to output structure
-        cnmfAnalysisOutput.params.K = K;
+        cnmfAnalysisOutput.params.K = CNM.K;
         cnmfAnalysisOutput.params.tau = options.otherCNMF.tau;
         cnmfAnalysisOutput.params.p = options.otherCNMF.p;
-        cnmfAnalysisOutput.datasetComponentProperties_P = P;
-        cnmfAnalysisOutput.movieList = movieList;
+        cnmfAnalysisOutput.datasetComponentProperties_P = CNM.P;
+        if ischar(inputMovieOriginal)|iscell(inputMovieOriginal)
+            cnmfAnalysisOutput.movieList = inputMovieOriginal;
+        else
+            cnmfAnalysisOutput.movieList = [];
+        end
         cnmfAnalysisOutput.extractedImages = extractedImages;
         % correct for df/f output problems
-        if nanmean(C_df(:))<0&options.nonCNMF.dfofCorrect==1
-            cnmfAnalysisOutput.extractedSignals = full(-1*C_df);
-        else
-            cnmfAnalysisOutput.extractedSignals = full(C_df);
-        end
-        % cnmfAnalysisOutput.extractedSignals = full(C_df);
-
+        cnmfAnalysisOutput.extractedSignals = full(CNM.C_df);
+        % if nanmean(C_df(:))<0&options.nonCNMF.dfofCorrect==1
+        %     cnmfAnalysisOutput.extractedSignals = -1*full(C_df);
+        % else
+        %     cnmfAnalysisOutput.extractedSignals = full(C_df);
+        % end
         cnmfAnalysisOutput.extractedSignalsBackground = full(C_df_or_background);
         cnmfAnalysisOutput.extractedSignalsType = 'dfof';
-        cnmfAnalysisOutput.extractedSignalsEst = full(C_or);
+        cnmfAnalysisOutput.extractedSignalsEst = CNM.C;
         cnmfAnalysisOutput.extractedSignalsEstType = 'model';
-        cnmfAnalysisOutput.extractedPeaks = S_df_or;
-        cnmfAnalysisOutput.extractedPeaksEst = S_or;
+        cnmfAnalysisOutput.extractedPeaks = CNM.S;
+        cnmfAnalysisOutput.extractedPeaksEst = CNM.S;
         cnmfAnalysisOutput.cnmfOptions = cnmfOptions;
         cnmfAnalysisOutput.time.datetime = datestr(now,'yyyy_mm_dd_HHMM','local');
         cnmfAnalysisOutput.time.runtimeWithMovie = toc(startTimeWithMovie);
