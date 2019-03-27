@@ -8,12 +8,14 @@ function createHdf5File(filename, datasetName, inputData, varargin)
 		%
 
 	% changelog
-		%
+		% 2019.03.25 [17:17:49] - Add support for custom user HDF5 chunking as opposed to previous automatic chunking
 	% TODO
 		%
 	%========================
 	% Int: Defines gzip compression level (0-9). 0 = no compression, 9 = most compression.
  	options.deflateLevel = 1;
+ 	% Int: chunk size in [x y z] of the dataset, leave empty for auto chunking
+ 	options.dataDimsChunkCopy = [];
 	% get options
 	options = getOptions(options,varargin);
 	% % unpack options into current workspace
@@ -40,8 +42,15 @@ function createHdf5File(filename, datasetName, inputData, varargin)
 	% Create the Dataset
 	% datasetName = '1';
 	dcpl_id = H5P.create('H5P_DATASET_CREATE');
-	chunkSize = [initDims(1) initDims(2) 1];
+
+	if isempty(options.dataDimsChunkCopy)
+		% set the last dimension to 1 for chunking
+		chunkSize = [initDims(1) initDims(2) 1];
+	else
+		chunkSize = options.dataDimsChunkCopy;
+	end
 	h5_chunkSize = fliplr(chunkSize);
+
 	H5P.set_chunk(dcpl_id, h5_chunkSize);
 	fprintf('Set compression level to %d of 9\n',options.deflateLevel);
 	H5P.set_deflate(dcpl_id,options.deflateLevel);

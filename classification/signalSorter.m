@@ -40,6 +40,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
         % 2019.02.13 Made compatible with large movies, just input string into options.inputMovie.
         % 2019.02.13 [16:56:21] Major speed improvements going between cells by adding options.hdf5Fid (to several functions, in order to relay to readHDF5Subset in the end) to reduce readHDF5Subset fopen overhead.
         % 2019.03.07 [11:27:16] Change to display of movie cut images to reduce flicker on display of each new image
+        % 2019.03.25 [21:53:06] - Pre-load transient still frames at the transient peak.
 
     % TODO
         % DONE: allow option to mark rest as bad signals
@@ -735,8 +736,9 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
     reverseStr = '';
     nSignalsHere = size(inputImages,3);
     objCutMovieCollection = cell([nSignalsHere 1]);
+    objCutImagesCollection = cell([nSignalsHere 1]);
     % try [percent, progress] = parfor_progress(nSignalsHere);catch;end; dispStepSize = round(nSignalsHere/20); dispstat('','init');
-    if ~isempty(options.inputMovie)&options.preComputeImageCutMovies
+    if ~isempty(options.inputMovie)&options.preComputeImageCutMovies==1
         % profile off
         % profile -memory on
         % profile on
@@ -745,7 +747,10 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
             thisTrace = inputSignals(signalNo,:);
             testpeaks = signalPeakIdx{signalNo};
             try
+                % Pre-compute the transient movies
                 [objCutMovieCollection{signalNo}] = createObjCutMovieSignalSorter(options,testpeaks,thisTrace,inputImages,signalNo,options.cropSizeLength,maxValMovie);
+                % Pre-compute the still frames at transient times
+                [objCutImagesCollection{signalNo},~] = viewMontage(options.inputMovie,inputImages(:,:,signalNo),options,thisTrace,[signalPeakIdx{signalNo}],minValMovie,maxValMovie,options.cropSizeLength,signalNo);
             catch err
                 objCutMovieCollection{signalNo} = {};
                 disp(repmat('@',1,7))
@@ -819,7 +824,25 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                                 % imagesc([1 1;1 1])
                             end
                             % montageHandle = imagesc(thisImage);
-                            [croppedPeakImages croppedPeakImagesCellarray] = viewMontage(options.inputMovie,inputImages(:,:,i),options,thisTrace,[signalPeakIdx{i}],minValMovie,maxValMovie,options.cropSizeLength,i);
+                            % Select whether to use existing peaks or not.
+                            if isempty(objCutImagesCollection{i})
+                                [croppedPeakImages croppedPeakImagesCellarray] = viewMontage(options.inputMovie,inputImages(:,:,i),options,thisTrace,[signalPeakIdx{i}],minValMovie,maxValMovie,options.cropSizeLength,i);
+                            else
+                                disp('Using existing')
+                                croppedPeakImages2 = objCutImagesCollection{i};
+                                imAlpha = ones(size(croppedPeakImages2));
+                                imAlpha(isnan(croppedPeakImages2))=0;
+                                if i==1
+                                    imagesc(croppedPeakImages2,'AlphaData',imAlpha);
+                                end
+                                montageHandle = findobj(gca,'Type','image');
+                                set(montageHandle,'Cdata',croppedPeakImages2,'AlphaData',imAlpha);
+                                set(gca,'color',[0 0 0]);
+                                colormap(options.colormap);
+                                set(gca, 'box','off','XTickLabel',[],'XTick',[],'YTickLabel',[],'YTick',[],'XColor',get(gcf,'Color'),'YColor',get(gcf,'Color'))
+                                set(gca,'color',[0 0 0]);
+                                warning on
+                            end
                             try
                                 % caxis([options.movieMin options.movieMax]);
                                 caxis([minHere maxHere]);
@@ -1229,6 +1252,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                 if ~isempty(objCutMovie)
                     imAlpha=ones(size(objCutMovie(:,:,1)));
                     imAlpha(isnan(objCutMovie(:,:,1)))=0;
+                    imAlpha(objCutMovie(:,:,1)==0)=0;
                     % imAlpha(objCutMovie(:,:,1)==mode(objCutMovie(:)))=0;
                     % imagesc(tmpImage,'AlphaData',imAlpha);
                     set(gca,'color',[0 0 0]);
@@ -1331,7 +1355,10 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
             end
         % 'T' display neighboring cells
         elseif isequal(reply, 116)
-            viewNeighborsAuto(inputImages, inputSignals, neighborsCell, 'inputImagesThres',inputImagesThres,'xCoords',options.coord.xCoords,'yCoords',options.coord.yCoords,'startCellNo',i,'cropSizeLength',options.cropSizeLength);
+            overlapDistance = inputdlg('Enter distance to look for neighbors');
+            overlapDistance = str2num(overlapDistance{1});
+            % viewNeighborsAuto(inputImages, inputSignals, neighborsCell, 'inputImagesThres',inputImagesThres,'xCoords',options.coord.xCoords,'yCoords',options.coord.yCoords,'startCellNo',i,'cropSizeLength',options.cropSizeLength,'overlapDistance',overlapDistance);
+            viewNeighborsAuto(inputImages, inputSignals, {}, 'inputImagesThres',inputImagesThres,'xCoords',options.coord.xCoords,'yCoords',options.coord.yCoords,'startCellNo',i,'cropSizeLength',options.cropSizeLength,'overlapDistance',overlapDistance);
         % 'I' display trace with median removed
         elseif isequal(reply, 105)
             [~, ~] = openFigure(options.secondFigNo, '');

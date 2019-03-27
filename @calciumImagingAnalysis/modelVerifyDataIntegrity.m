@@ -57,8 +57,13 @@ function obj = modelVerifyDataIntegrity(obj)
                 case 'CNMF'
                     cellRegexp = obj.sortedCNMFStructSaveStr;
                     validName = obj.validCNMFStructVarname;
+                case 'CNMFE'
+                    cellRegexp = obj.extractionMethodSortedSaveStr.(obj.signalExtractionMethod);
+                    validName = obj.extractionMethodValidVarname.(obj.signalExtractionMethod);
                 otherwise
-                    cellRegexp = obj.rawICfiltersSaveStr;
+                    % cellRegexp = obj.rawICfiltersSaveStr;
+                    cellRegexp = obj.extractionMethodSortedSaveStr.(obj.signalExtractionMethod);
+                    validName = obj.extractionMethodValidVarname.(obj.signalExtractionMethod);
             end
             validFoldersIdx2 = [];
             nFolders = length(obj.inputFolders);
@@ -108,6 +113,7 @@ function obj = modelVerifyDataIntegrity(obj)
                 else
                     display(repmat('=',1,21))
                     display([num2str(folderNo) '/' num2str(nFolders) ': ' obj.inputFolders{folderNo}])
+                    continue
 
                     [rawSignals rawImages signalPeaks signalPeaksArray] = modelGetSignalsImages(obj,'returnType','raw');
 

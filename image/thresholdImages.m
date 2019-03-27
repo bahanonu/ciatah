@@ -126,8 +126,8 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
         % Threshold the image
         maxVal=nanmax(thisFilt(:));
         cutoffVal = maxVal*options_threshold;
-        thisFilt(thisFilt<cutoffVal)=replaceVal;
-        thisFilt(isnan(thisFilt))=replaceVal;
+        thisFilt(thisFilt<cutoffVal) = replaceVal;
+        thisFilt(isnan(thisFilt)) = replaceVal;
 
         % make image binary
         if options_binary==1
@@ -143,7 +143,9 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
                 % Remove any pixels not connected to the image max value if there is a filter with max values at the edge, try...catch to get around errors
                 try
                     [~,numObjects(imageNo)] = bwlabel(thisFilt);
+                    warning off
                     thisFilt = bwareafilt(thisFilt,1,'largest');
+                    warning on
                 catch err
                     disp(repmat('@',1,7))
                     disp(getReport(err,'extended','hyperlinks','on'));
@@ -160,7 +162,7 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
 
         if options_removeUnconnected==1
             thisFilt2 = thisFilt;
-            thisFilt2(thisFilt2>=cutoffVal)=1;
+            % thisFilt2(thisFilt2>=cutoffVal)=1;
             thisFilt2 = logical(thisFilt2);
             switch options_imageFilterBinary
                 case 'median'
@@ -170,7 +172,10 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
             end
             % Remove any pixels not connected to the image max value if there is a filter with max values at the edge, try...catch to get around errors
             try
-                thisFilt = bwareafilt(thisFilt2,1,'largest');
+                warning off
+                thisFilt2 = bwareafilt(thisFilt2,1,'largest');
+                thisFilt(~thisFilt2) = 0;
+                warning on
             catch err
                 disp(repmat('@',1,7))
                 disp(getReport(err,'extended','hyperlinks','on'));
@@ -196,7 +201,9 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
             thisFilt(thisFilt>=cutoffVal)=1;
             thisFilt = logical(thisFilt);
             try
+                warning off
                 thisFilt = bwareafilt(thisFilt,1,'largest');
+                warning on
             catch err
                 disp(repmat('@',1,7))
                 disp(getReport(err,'extended','hyperlinks','on'));
