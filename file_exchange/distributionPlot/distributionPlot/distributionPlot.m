@@ -1,6 +1,6 @@
 function handles = distributionPlot(varargin)
 %DISTRIBUTIONPLOT creates violin plots for convenient visualization of multiple distributions
-%
+% 2019.03.28 [13:29:26] - Biafra fix % # issue
 % SYNOPSIS: handles = distributionPlot(data,propertyName,propertyValue,...)
 %           handles = distributionPlot(ah,...)
 %
@@ -271,7 +271,7 @@ def.xMode = 'manual';
 def.histOri = 'center';
 def.xyOri = 'normal';
 def.widthDiv = [1 1];
-isHistogram = false; %# this parameter is not set by input
+isHistogram = false; % # this parameter is not set by input
 
 
 if nargin == 0 || isempty(varargin{1})

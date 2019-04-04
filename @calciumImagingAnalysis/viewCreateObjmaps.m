@@ -37,7 +37,7 @@ function obj = viewCreateObjmaps(obj,varargin)
 
 	options.dilateOutlinesFactor = 0;
 	% none or median
-	options.medianFilterImages = 'none'
+	options.medianFilterImages = 'none';
 	% red, blue, gree
 	options.plotSignalsGraphColor = 'red';
 	% get options

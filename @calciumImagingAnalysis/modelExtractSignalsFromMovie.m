@@ -176,7 +176,11 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				[success] = cnmfVersionDirLoad('cnmfe');
 				obj.signalExtractionMethod = signalExtractionMethod{signalExtractNo};
 				% pcaicaPCsICsSwitchStr = subfxnNumExpectedSignals();
-				[gridWidth gridSpacing] = subfxnSignalSizeSpacing();
+				if isempty(options.CNMFE.settingsFile)
+					[gridWidth gridSpacing] = subfxnSignalSizeSpacing();
+				else
+
+				end
 			otherwise
 				% body
 		end
@@ -670,6 +674,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 					options.CNMF.init_method = movieSettings{setNo};setNo = setNo+1;
 				case 'CNMFE'
 					movieSettings = inputdlg({...
+							'CNMF-E | Edit all settings in text file? 1 = opens up Matlab editor. 2 = select file to load.',...
+							'CNMF-E | delete temporary CNMF-E folder? (1 = yes, 0 = no)',...
 							'CNMF-E | Use CNMF-F ("cnmfe"), original ("original"), or most recent ("current") CNMF version?'...
 							'CNMF-E | save each parameter run to new directory? (1 = yes, 0 = no)',...
 							'CNMF-E | iterate over parameter space? (1 = yes, 0 = no)',...
@@ -679,6 +685,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 						},...
 						dlgStr,1,...
 						{...
+							'1',...
+							'1',...
 							'cnmfe',...
 							'0',...
 							'0',...
@@ -687,12 +695,74 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 							'1'...
 						}...
 					);setNo = 1;
+					options.CNMFE.openEditor = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.CNMFE.deleteTempFolders = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.CNMFE.originalCurrentSwitch = movieSettings{setNo};setNo = setNo+1;
 					options.CNMFE.saveEachRunNewDirSwitch = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.CNMFE.iterateOverParameterSpace = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.CNMFE.onlyRunInitialization = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.CNMFE.ssub = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.CNMFE.tsub = str2num(movieSettings{setNo});setNo = setNo+1;
+
+					if options.CNMFE.deleteTempFolders==1
+						display(repmat('*',1,21))
+						nFolders = length(fileIdxArray);
+						for thisFileNumIdx = 1:length(fileIdxArray)
+							fileNum = fileIdxArray(thisFileNumIdx);
+							rmDirFolders = getFileList(obj.inputFolders{fileNum},'_source_extraction');
+							if ~isempty(rmDirFolders)
+								% Delete temporary folder.
+								fprintf('Deleting temporary folder: %s\n',rmDirFolders)
+								status = rmdir(rmDirFolders,'s')
+							end
+						end
+						display(repmat('*',1,21))
+					end
+
+					if options.CNMFE.openEditor==1
+						[~,foldername,~] = fileparts(obj.inputFolders{obj.fileNum});
+						timeStr = datestr(now,'yyyymmdd_HHMMSS','local');
+
+						newSettings = ['private' filesep 'settings' filesep 'cnmfeSettings_' timeStr '_' foldername '.m'];
+						copyfile(['settings' filesep 'cnmfeSettings.m'],newSettings);
+						h1 = matlab.desktop.editor.openDocument([pwd filesep newSettings]);
+						disp(['Close ' 'cnmfeSettings_' timeStr '_' foldername '.m file in Editor to continue!'])
+						% pause while user edits
+						while h1.Opened==1;end
+						h1.close
+						% Use editor API
+						%a1 = matlab.desktop.editor.getAll;
+						% Close the most recently open document
+						%a1(end).close
+
+						options.CNMFE.settingsFile = newSettings;
+					elseif options.CNMFE.openEditor==2
+						display('Dialog box: Select settings file to load.')
+						[filePath,folderPath,~] = uigetfile([pwd filesep '*.*'],'Select settings file to load.');
+
+						[~,foldername,~] = fileparts(obj.inputFolders{obj.fileNum});
+						timeStr = datestr(now,'yyyymmdd_HHMMSS','local');
+						[~,fileNameH,extH] = fileparts([folderPath filePath]);
+
+						% 'cnmfeSettings_'
+						newFile = [fileNameH '_' timeStr '_' foldername];
+						if (length(newFile)+2)>namelengthmax
+							newFile = newFile(1:namelengthmax-2);
+						end
+						newSettings = ['private' filesep 'settings' filesep newFile '.m'];
+						copyfile([folderPath filesep filePath],newSettings);
+						h1 = matlab.desktop.editor.openDocument([pwd filesep newSettings]);
+						disp(['Close ' newFile '.m file in Editor to continue!'])
+						% pause while user edits
+						while h1.Opened==1;end
+						h1.close
+						clear h1;
+
+						options.CNMFE.settingsFile = newSettings;
+					else
+						options.CNMFE.settingsFile = [];
+					end
+					disp(['Using settings file: ' options.CNMFE.settingsFile])
 				otherwise
 					% body
 			end
@@ -1107,10 +1177,17 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 
 		movieList = getFileList(obj.inputFolders{obj.fileNum}, fileFilterRegexp);
 
-		cnmfeOptions.gSiz = gridWidth.(obj.subjectStr{obj.fileNum});
-		cnmfeOptions.gSig = ceil(gridWidth.(obj.subjectStr{obj.fileNum})/4);
-		cnmfeOptions.ssub = options.CNMFE.ssub;
-		cnmfeOptions.tsub = options.CNMFE.tsub;
+		if isempty(options.CNMFE.settingsFile)
+			cnmfeOptions.gSiz = gridWidth.(obj.subjectStr{obj.fileNum});
+			cnmfeOptions.gSig = ceil(gridWidth.(obj.subjectStr{obj.fileNum})/4);
+			cnmfeOptions.ssub = options.CNMFE.ssub;
+			cnmfeOptions.tsub = options.CNMFE.tsub;
+		else
+			% Run the settings fule and transfer to settings
+			cnmfeOpts.ssub = 1;
+			run(options.CNMFE.settingsFile);
+			cnmfeOptions = cnmfeOpts;
+		end
 
 		try
 			display(repmat('*',1,14))
@@ -1138,10 +1215,33 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				save(savestring,saveVariable{i},'-v7.3');
 			end
 			% =======
+			% To allow deletion of cnmfe temporary directory
+			fclose('all')
+			%
+			% Delete temporary folder.
+			display(repmat('*',1,21))
+			fprintf('Deleting temporary folder: %s\n',cnmfeAnalysisOutput.P.folder_analysis)
+			display(repmat('*',1,21))
+			status = rmdir(cnmfeAnalysisOutput.P.folder_analysis,'s')
+			% _source_extraction
 		catch err
 			display(repmat('@',1,7))
 			disp(getReport(err,'extended','hyperlinks','on'));
 			display(repmat('@',1,7))
+
+			% To allow deletion of cnmfe temporary directory
+			fclose('all')
+			try
+				% Delete temporary folder.
+				display(repmat('*',1,21))
+				fprintf('Deleting temporary folder: %s\n',cnmfeAnalysisOutput.P.folder_analysis)
+				display(repmat('*',1,21))
+				status = rmdir(cnmfeAnalysisOutput.P.folder_analysis,'s')
+			catch err
+				display(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				display(repmat('@',1,7))
+			end
 		end
 	end
 	function [gridWidth gridSpacing] = subfxnSignalSizeSpacing()

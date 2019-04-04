@@ -332,7 +332,7 @@ function obj = computeManualSortSignals(obj)
 				manualSort.scorerName = scorerName;
 				manualSort.manualDecisions.(usrIdxChoiceSignalType) = valid;
 				manualSort.videoID = movieList;
-				manualSort.timestamp = datestr(now,'yyyy_mm_dd_HHMM','local');
+				manualSort.timestamp = datestr(now,'yyyy_mm_dd_HHMMSS','local');
 				manualSort.classVersion = obj.classVersion;
 				if userIdxOnlyResortGoodSources==1&usrIdxChoiceAutoValid==3
 					% replace old with new classifications

@@ -178,8 +178,12 @@ function [peakStat] = peakStats(testpeaks,inputSignal,spikeROI,slopeFrameWindow,
 			% size(corr(spikeCenterTrace',spikeCenterTrace'))
 		end
 
-
-		peakStat.avgSpikeVar = nanmean(squeeze(nanvar(spikeCenterTrace(:,round(end/2):end),[],1)));
+		% peakStat.avgSpikeVar = nanmean(squeeze(nanvar(spikeCenterTrace(:,round(end/2):end),[],1)));
+		% Change to index of dispersion
+		varH = nanvar(spikeCenterTrace(:,round(end/2):end),[],1);
+		meanH = nanmean(spikeCenterTrace(:,round(end/2):end),1);
+		peakStat.avgSpikeVar = nanmean(squeeze(varH));
+		peakStat.avgSpikeVMR = nanmean(squeeze(varH./meanH));
 
 		% get the peak amplitude
 		peakStat.avgPeakAmplitude = peakStat.avgSpikeTrace(find(spikeROI==0));

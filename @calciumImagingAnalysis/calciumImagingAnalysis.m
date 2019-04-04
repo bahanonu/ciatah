@@ -24,7 +24,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		MICRON_PER_PIXEL =  2.51;
 
 		defaultObjDir = pwd;
-		classVersion = 'v3.20190310';
+		classVersion = 'v3.20190404';
 		serverPath = '';
 		privateSettingsPath = ['private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
 		% place where functions can temporarily story user settings
@@ -261,7 +261,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		% cell array with {signalNo}.signalFeatures, {signalNo}.imageFeatures
 		classifierFeatures = {};
 		% cell array with {signalNo}.signalFeatures, {signalNo}.imageFeatures
-		classifierImageFeaturesNames = {'EquivDiameter','Area','Perimeter','Solidity'};
+		classifierImageFeaturesNames = {'Eccentricity','EquivDiameter','Area','Orientation','Perimeter','Solidity'};
 		% structure for all valid classifications to go
 		valid = {};
 		% Automated or manual classification
@@ -552,8 +552,8 @@ classdef calciumImagingAnalysis < dynamicprops
 		obj = modelTrackingData(obj)
 
 		% helper
-		[inputSignals inputImages signalPeaks signalPeaksArray valid] = modelGetSignalsImages(obj,varargin)
-		[fileIdxArray idNumIdxArray nFilesToAnalyze nFiles] = getAnalysisSubsetsToAnalyze(obj)
+		[inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, validType] = modelGetSignalsImages(obj,varargin)
+		[fileIdxArray, idNumIdxArray, nFilesToAnalyze, nFiles] = getAnalysisSubsetsToAnalyze(obj)
 		[turboregSettingStruct] = getRegistrationSettings(obj,inputTitleStr)
 
 		% set methods, for IO to specific variables in a controlled manner
@@ -910,9 +910,9 @@ classdef calciumImagingAnalysis < dynamicprops
 
 			fxnsToRun = {...
 			'=======setup=======',
+			'modelAddNewFolders',
 			'showVars',
 			'showFolders',
-			'modelAddNewFolders',
 			'loadDependencies',
 			'saveObj',
 			'initializeObj',
@@ -934,6 +934,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			'computeManualSortSignals',
 			'modelModifyRegionAnalysis',
 			'=======preprocess verification=======',
+			'viewObjmaps',
 			'viewMovie',
 			'viewSubjectMovieFrames'
 			'viewMovieCreateSideBySide',
@@ -997,7 +998,7 @@ classdef calciumImagingAnalysis < dynamicprops
 
 			excludeList = {'showVars','showFolders','setMainSettings','modelAddNewFolders','loadDependencies','saveObj','setStimulusSettings','modelDownsampleRawMovies'};
 
-			excludeListVer2 = {'modelEditStimTable','behaviorProtocolLoad','modelPreprocessMovie','modelModifyMovies','modelExtractSignalsFromMovie','computeManualSortSignals'};
+			excludeListVer2 = {'modelEditStimTable','behaviorProtocolLoad','modelPreprocessMovie','modelModifyMovies'};
 
 			excludeListStimuli = {'modelVarsFromFiles'};
 
@@ -1081,8 +1082,10 @@ classdef calciumImagingAnalysis < dynamicprops
 								missingRegexp = obj.rawEXTRACTStructSaveStr;
 							case 'CNMF'
 							    missingRegexp = obj.rawCNMFStructSaveStr;
+						    case 'CNMFE'
+						        missingRegexp = obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod);
 							otherwise
-								missingRegexp = {obj.rawPCAICAStructSaveStr,obj.rawICfiltersSaveStr};
+							    missingRegexp = obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod);
 						end
 						missingRegexp = strrep(missingRegexp,'.mat','');
 						validFoldersIdx2 = [];
@@ -1104,8 +1107,11 @@ classdef calciumImagingAnalysis < dynamicprops
 								cellRegexp = obj.rawEXTRACTStructSaveStr;
 							case 'CNMF'
 							    cellRegexp = obj.rawCNMFStructSaveStr;
+						    case 'CNMFE'
+						        missingRegexp = obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod);
 							otherwise
-								cellRegexp = {obj.rawPCAICAStructSaveStr,obj.rawICfiltersSaveStr};
+								% cellRegexp = {obj.rawPCAICAStructSaveStr,obj.rawICfiltersSaveStr};
+								missingRegexp = obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod);
 						end
 						cellRegexp = strrep(cellRegexp,'.mat','');
 						validFoldersIdx2 = [];
@@ -1151,7 +1157,7 @@ classdef calciumImagingAnalysis < dynamicprops
 							case 'CNMF'
 							    missingRegexp = obj.sortedCNMFStructSaveStr;
 							otherwise
-								missingRegexp = obj.sortedICdecisionsSaveStr;
+								missingRegexp = obj.extractionMethodSortedSaveStr.(obj.signalExtractionMethod);
 						end
 						validFoldersIdx = [];
 						missingRegexp = strrep(missingRegexp,'.mat','');
@@ -1178,7 +1184,7 @@ classdef calciumImagingAnalysis < dynamicprops
 							case 'CNMF'
 							    missingRegexp = obj.sortedCNMFStructSaveStr;
 							otherwise
-								missingRegexp = obj.sortedICdecisionsSaveStr;
+								missingRegexp = obj.extractionMethodSortedSaveStr.(obj.signalExtractionMethod);
 						end
 						validFoldersIdx = [];
 						missingRegexp = strrep(missingRegexp,'.mat','');

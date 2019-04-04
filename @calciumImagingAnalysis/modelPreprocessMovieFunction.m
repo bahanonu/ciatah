@@ -302,7 +302,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 
 			display(['cd to: ' obj.defaultObjDir]);
 			cd(obj.defaultObjDir);
-			currentDateTimeStr = datestr(now,'yyyymmdd_HHMM','local');
+			currentDateTimeStr = datestr(now,'yyyymmdd_HHMMSS','local');
 			mkdir([thisDir filesep 'processing_info'])
 			diarySaveStr = [thisDir filesep 'processing_info' filesep currentDateTimeStr '_preprocess.log'];
 			display(['saving diary: ' diarySaveStr])
