@@ -1,4 +1,4 @@
-function [inputImages, boundaryIndices] = thresholdImages(inputImages,varargin)
+function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImages,varargin)
     % Thresholds input images and makes them binary if requested. Also gets boundaries to allow for cell shape outlines in other code.
     % Biafra Ahanonu
     % started: 2013.10.xx
@@ -66,7 +66,7 @@ function [inputImages, boundaryIndices] = thresholdImages(inputImages,varargin)
         return
     end
     % loop over all images and threshold
-    reverseStr = '';
+    % reverseStr = '';
     % pre-allocate for speed
     % thresholdedImages = zeros(size(inputImages),class(inputImages));
     boundaryIndices = cell([nImages 1]);
@@ -83,15 +83,18 @@ function [inputImages, boundaryIndices] = thresholdImages(inputImages,varargin)
     options_getBoundaryIndex = options.getBoundaryIndex;
     options_waitbarOn = options.waitbarOn;
     options_normalize = options.normalize;
+    options_removeUnconnectedBinary = options.removeUnconnectedBinary;
+    options_removeUnconnected = options.removeUnconnected;
+    options_normalizationType = options.normalizationType;
 
     try
         convertInputImagesToCell();
         nWorkers = Inf;
-        cellLoad = 1;
+        % cellLoad = 1;
     catch
         disp('Memory error, using non-parfor')
         nWorkers = 0;
-        cellLoad = 0;
+        % cellLoad = 0;
     end
 
     % Only implement in Matlab 2017a and above
@@ -99,9 +102,11 @@ function [inputImages, boundaryIndices] = thresholdImages(inputImages,varargin)
         D = parallel.pool.DataQueue;
         afterEach(D, @nUpdateParforProgress);
         p = 1;
-        N = nImages;
+        % N = nImages;
         nInterval = 100;
     end
+
+    numObjects = [];
 
     replaceVal = 0;
     parfor(imageNo=1:nImages,nWorkers)
@@ -117,51 +122,34 @@ function [inputImages, boundaryIndices] = thresholdImages(inputImages,varargin)
             otherwise
                 % body
         end
-        % threshold
+
+        % Threshold the image
         maxVal=nanmax(thisFilt(:));
         cutoffVal = maxVal*options_threshold;
-        % cutoffVal
-        % cutoffVal = quantile(thisFilt(:),options_threshold);
-
-        %display('===')
-        %size(thisFilt)
-        %size(maxVal)
-        %size(options_threshold)
-        %size(cutoffVal)
-        %maxVal
-        %cutoffVal
-        %maxVal*options_threshold
-        %options_threshold
-        %display('===')
-        thisFilt(thisFilt<cutoffVal)=replaceVal;
-        thisFilt(isnan(thisFilt))=replaceVal;
+        thisFilt(thisFilt<cutoffVal) = replaceVal;
+        thisFilt(isnan(thisFilt)) = replaceVal;
 
         % make image binary
         if options_binary==1
             thisFilt(thisFilt>=cutoffVal)=1;
+            thisFilt = logical(thisFilt);
             switch options_imageFilterBinary
                 case 'median'
                     thisFilt = medfilt2(thisFilt,[options_medianFilterNeighborhoodSize options_medianFilterNeighborhoodSize]);
                 otherwise
                     % body
             end
-            if options.removeUnconnectedBinary==1
+            if options_removeUnconnectedBinary==1
                 % Remove any pixels not connected to the image max value if there is a filter with max values at the edge, try...catch to get around errors
                 try
-                    % [indx indy] = find(thisFilt==1); %Find the maximum
-                    % [B,nObjs] = bwlabeln(thisFilt);
-                    % objsN = [];
-                    % for iii = 1:nObjs
-                    %    objsN(iii) = length(find(B==iii));
-                    % end
-                    % [~,idxH] = max(objsN);
-                    % thisFilt(B~=idxH) = 0;
-
-                    thisFilt = bwareafilt(thisFilt,1);
-
-                    %thisFilt(B~=B(indx,indy)) = 0;
-                    % B = bwlabeln(thisFilt);
-                catch
+                    [~,numObjects(imageNo)] = bwlabel(thisFilt);
+                    warning off
+                    thisFilt = bwareafilt(thisFilt,1,'largest');
+                    warning on
+                catch err
+                    disp(repmat('@',1,7))
+                    disp(getReport(err,'extended','hyperlinks','on'));
+                    disp(repmat('@',1,7))
                 end
             end
 
@@ -172,9 +160,10 @@ function [inputImages, boundaryIndices] = thresholdImages(inputImages,varargin)
             % do nothing
         end
 
-        if options.removeUnconnected==1
+        if options_removeUnconnected==1
             thisFilt2 = thisFilt;
-            thisFilt2(thisFilt2>=cutoffVal)=1;
+            % thisFilt2(thisFilt2>=cutoffVal)=1;
+            thisFilt2 = logical(thisFilt2);
             switch options_imageFilterBinary
                 case 'median'
                     thisFilt2 = medfilt2(thisFilt2,[options_medianFilterNeighborhoodSize options_medianFilterNeighborhoodSize]);
@@ -183,17 +172,14 @@ function [inputImages, boundaryIndices] = thresholdImages(inputImages,varargin)
             end
             % Remove any pixels not connected to the image max value if there is a filter with max values at the edge, try...catch to get around errors
             try
-                % [indx indy] = find(thisFilt==1); %Find the maximum
-                % [B,nObjs] = bwlabeln(thisFilt2);
-                % objsN = [];
-                % for iii = 1:nObjs
-                %    objsN(iii) = length(find(B==iii));
-                % end
-                % [~,idxH] = max(objsN);
-                % thisFilt(B~=idxH) = 0;
-
-                thisFilt = bwareafilt(thisFilt,1);
-            catch
+                warning off
+                thisFilt2 = bwareafilt(thisFilt2,1,'largest');
+                thisFilt(~thisFilt2) = 0;
+                warning on
+            catch err
+                disp(repmat('@',1,7))
+                disp(getReport(err,'extended','hyperlinks','on'));
+                disp(repmat('@',1,7))
             end
         end
 
@@ -204,33 +190,27 @@ function [inputImages, boundaryIndices] = thresholdImages(inputImages,varargin)
             % inputImages(:,:,imageNo)=thisFilt;
         % end
 
-        if options_binary==1&options_getBoundaryIndex==1
-            [B,L] = bwboundaries(thisFilt);
+        if options_binary==1&&options_getBoundaryIndex==1
+            thisFilt = logical(thisFilt);
+            [B,~] = bwboundaries(thisFilt);
             for iNo = 1:length(B)
                 boundaryIndices{imageNo} = [boundaryIndices{imageNo} sub2ind(size(thisFilt),B{iNo}(:,1),B{iNo}(:,2))'];
             end
             boundaryIndices{imageNo} = boundaryIndices{imageNo}(:)';
-        elseif options_binary==0&options_getBoundaryIndex==1
+        elseif options_binary==0&&options_getBoundaryIndex==1
             thisFilt(thisFilt>=cutoffVal)=1;
-
+            thisFilt = logical(thisFilt);
             try
-                % [indx indy] = find(thisFilt==1); %Find the maximum
-                % [B,nObjs] = bwlabeln(thisFilt);
-                % objsN = [];
-                % for iii = 1:nObjs
-                %    objsN(iii) = length(find(B==iii));
-                % end
-                % [~,idxH] = max(objsN);
-                % thisFilt(B~=idxH) = 0;
-
-                thisFilt = bwareafilt(thisFilt,1);
-
-                %thisFilt(B~=B(indx,indy)) = 0;
-                % B = bwlabeln(thisFilt);
-            catch
+                warning off
+                thisFilt = bwareafilt(thisFilt,1,'largest');
+                warning on
+            catch err
+                disp(repmat('@',1,7))
+                disp(getReport(err,'extended','hyperlinks','on'));
+                disp(repmat('@',1,7))
             end
 
-            [B,L] = bwboundaries(thisFilt);
+            [B,~] = bwboundaries(thisFilt);
             for iNo = 1:length(B)
                 boundaryIndices{imageNo} = [boundaryIndices{imageNo} sub2ind(size(thisFilt),B{iNo}(:,1),B{iNo}(:,2))'];
             end
@@ -241,8 +221,7 @@ function [inputImages, boundaryIndices] = thresholdImages(inputImages,varargin)
             %reverseStr = cmdWaitbar(imageNo,nImages,reverseStr,'inputStr','thresholding images');
         % end
         if ~verLessThan('matlab', '9.2')
-            % Update
-            send(D, imageNo);
+            send(D, imageNo); % Update
         end
     end
 
@@ -255,7 +234,7 @@ function [inputImages, boundaryIndices] = thresholdImages(inputImages,varargin)
         % thresholdedImages = squeeze(thresholdedImages);
         inputImages = squeeze(inputImages);
     end
-    if nImages>1&~isempty(options.normalizationType)
+    if nImages>1&&~isempty(options_normalizationType)
         % thresholdedImages = permute(normalizeMovie(permute(thresholdedImages,[2 3 1]),'normalizationType','zeroToOne'),[3 1 2]);
         inputImages = normalizeMovie(inputImages,'normalizationType','zeroToOne');
         % thresholdedImages = normalizeMovie(thresholdedImages,'normalizationType','zeroToOne');
@@ -263,7 +242,7 @@ function [inputImages, boundaryIndices] = thresholdImages(inputImages,varargin)
     function nUpdateParforProgress(~)
         if ~verLessThan('matlab', '9.2')
             p = p + 1;
-            if (mod(p,nInterval)==0||p==nImages)&&options_waitbarOn==1
+            if (p==2||mod(p,nInterval)==0||p==nImages)&&options_waitbarOn==1
                 % cmdWaitbar(p,nImages,'','inputStr','','waitbarOn',1);
                 if p==nImages
                     fprintf('%d%%\n',round(p/nImages*100))
@@ -275,9 +254,20 @@ function [inputImages, boundaryIndices] = thresholdImages(inputImages,varargin)
     end
     function convertInputImagesToCell()
         %Get dimension information about 3D movie matrix
-        [inputMovieX inputMovieY inputMovieZ] = size(inputImages);
-        reshapeValue = size(inputImages);
+        [inputMovieX, inputMovieY, inputMovieZ] = size(inputImages);
+        % reshapeValue = size(inputImages);
         %Convert array to cell array, allows slicing (not contiguous memory block)
         inputImages = squeeze(mat2cell(inputImages,inputMovieX,inputMovieY,ones(1,inputMovieZ)));
     end
 end
+
+% [indx indy] = find(thisFilt==1); %Find the maximum
+% [B,nObjs] = bwlabeln(thisFilt);
+% objsN = [];
+% for iii = 1:nObjs
+%    objsN(iii) = length(find(B==iii));
+% end
+% [~,idxH] = max(objsN);
+% thisFilt(B~=idxH) = 0;
+%thisFilt(B~=B(indx,indy)) = 0;
+% B = bwlabeln(thisFilt);

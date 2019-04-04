@@ -1,18 +1,20 @@
-function [output] = viewLineFilledError(inputMean,inputStd,varargin)
+function [success] = viewLineFilledError(inputMean,inputStd,varargin)
 	% Makes solid error bars around line.
 	% Biafra Ahanonu
 	% started: 2014.01.03 [19:13:01]
 	% inputs
-		%
+		% inputMean - Vector [1 timePoints] of y mean for each value of
+		% inputStd - Vector [1 timePoints] indicating the std or SEM at each time point in inputMean
 	% outputs
-		%
+		% success - Binary 1 = ran without errors, 0 = encountered errors
 
-	% changelog
+	% Changelog
 		%
 	% TODO
 		%
 
 	%========================
+	% Same size as inputMean vector, but gives the actual x values, else function just plots 1:timePoints on the x axis.
 	options.xValues = [];
 	%
 	% options.lineColor = repmat(0.85,[1 3]);
@@ -37,6 +39,7 @@ function [output] = viewLineFilledError(inputMean,inputStd,varargin)
 	%========================
 
 	try
+		success = 0;
 		if isempty(options.xValues)
 			x = 1:length(inputMean);
 		else
@@ -56,7 +59,7 @@ function [output] = viewLineFilledError(inputMean,inputStd,varargin)
     	% set(h,'facealpha',options.errorAlpha)
     	lh = line(x,y,'Color',colorMatrix(randColor,:)/1.5,'LineWidth',options.linewidth);
     	% lh.Color
-    	output = 1;
+    	success = 1;
 	catch err
 		display(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));

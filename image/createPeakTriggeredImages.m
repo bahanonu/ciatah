@@ -12,8 +12,8 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 	% changelog
 		% 2016.01.02 [21:22:13] - added comments and refactored so that accepts inputImages as [x y nSignals] instead of [nSignals x y]
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
-		% 2018.09 - large speedup by vectorizing corr2 and updating
-		% readHDF5 chunking
+		% 2018.09 - large speedup by vectorizing corr2 and updating readHDF5 chunking
+		% 2019.03.12 [20:06:13] Added parallel.pool.Constant construct with H5F.open to facilitate opening fid on each worker once and thus saving readHDF5Subset time from continuously loading the same file over and over.
 	% TODO
 		% Take 2 frames after peak and average to improve SNR
 
@@ -54,6 +54,10 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 	options.hdf5Fid = [];
 	% Whether to keep HDF5 file open (for FID)
 	options.keepFileOpen = 0;
+	% Binary: 1 = display output info, 0 = don't display any output info
+	options.displayInfo = 1;
+	% Input movie dimensions to save time
+	options.movieDims = [];
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -68,21 +72,34 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 		clear varargin
 		% load movie
 		if ischar(inputMovie)
-			if options.readMovieChunks==0
-				inputMovie = loadMovieList(inputMovie,'inputDatasetName',options.inputDatasetName);
-				movieDims = size(inputMovie);
+			if isempty(options.movieDims)
+				if options.readMovieChunks==0
+					inputMovie = loadMovieList(inputMovie,'inputDatasetName',options.inputDatasetName);
+					movieDims = size(inputMovie);
+				else
+					% options.inputDatasetName
+					movieDims = loadMovieList(inputMovie,'inputDatasetName',options.inputDatasetName,'getMovieDims',1);
+					movieDims = [movieDims.one movieDims.two movieDims.three];
+				end
 			else
-				% options.inputDatasetName
-				movieDims = loadMovieList(inputMovie,'inputDatasetName',options.inputDatasetName,'getMovieDims',1);
-				movieDims = [movieDims.one movieDims.two movieDims.three];
+				movieDims = options.movieDims;
 			end
 
 			% Force read movie chunks to be 1
 			% options.readMovieChunks = 1;
-			options.hdf5Fid = H5F.open(inputMovie);
+			% options.hdf5Fid = H5F.open(inputMovie);
 			options.keepFileOpen = 1;
+
+			fcnOpenHdf5Worker = @() H5F.open(inputMovie);
+			if options.keepFileOpen==1
+				% fcnCloseHdf5Worker = @() H5F.close(inputMovie);
+				hdf5FileWorkerConstant = parallel.pool.Constant(fcnOpenHdf5Worker,@H5F.close);
+			else
+				hdf5FileWorkerConstant = parallel.pool.Constant(fcnOpenHdf5Worker);
+			end
 		else
 			movieDims = size(inputMovie);
+			hdf5FileWorkerConstant = [];
 		end
 
 		% decide whether to threshold images
@@ -147,11 +164,17 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 		options_hdf5Fid = options.hdf5Fid;
 		options_keepFileOpen = options.keepFileOpen;
 
+		movieDims1 = movieDims(1);
+		movieDims2 = movieDims(2);
+		movieDims3 = movieDims(3);
+
 		% options_maxPeaksToUse
 
-		disp('Starting movie images...')
-		display(repmat('.',1,round(nSignals/20)))
-		display(repmat('-',1,7))
+		if options.displayInfo==1
+			disp('Starting movie images...')
+			display(repmat('.',1,round(nSignals/20)))
+			display(repmat('-',1,7))
+		end
 		if options_readMovieChunks==1
 			nWorkers = Inf;
 		else
@@ -186,9 +209,9 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 				yHigh = yCoords(signalNo) + options_cropSize;
 				% check that not outside movie dimensions
 				xMin = 1 ;
-				xMax = movieDims(2);
+				xMax = movieDims2;
 				yMin = 1 ;
-				yMax = movieDims(1);
+				yMax = movieDims1;
 
 				% adjust for the difference in centroid location if movie is cropped
 				xDiff = 0;
@@ -213,21 +236,23 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 					signalPeaksThis = signalPeaksThis(1:nPeaksToUse);
 					% signalPeaksThis = signalPeaksThis(randperm(length(signalPeaksThis),nPeaksToUse));
 				end
-				signalPeaksThis(signalPeaksThis>movieDims(3)) = [];
+				signalPeaksThis(signalPeaksThis>movieDims3) = [];
 				inputMovieCrop{signalNo} = inputMovie(yLow:yHigh,xLow:xHigh,signalPeaksThis);
 			end
 		else
 			inputMovieCrop = cell(nSignals,1);
 		end
 
-		xMax = movieDims(2);
-		yMax = movieDims(1);
+		xMax = movieDims2;
+		yMax = movieDims1;
 		% nFrames = size(inputSignals,2);
 		nFrames = size(inputSignals{1},2);
 
+		fprintf('Getting movie images: ');
 		parfor(signalNo = 1:nSignals,nWorkers)
 		% for signalNo = 1:nSignals
 			try
+				% If signal has no associated real image, no correlation, skip
 				if isnan(xCoords(signalNo))||isnan(yCoords(signalNo))
 					outputMeanImageCorrs(signalNo) = NaN;
 					outputMeanImageCorrsMean(signalNo) = NaN;
@@ -236,6 +261,22 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 					outputMeanImageStruct_corrPearsonThres(signalNo) = NaN;
 					outputMeanImageStruct_corrSpearmanThres(signalNo) = NaN;
 					outputMeanImageStruct_corrMaxThres(signalNo) = NaN;
+					if options_outputImageFlag==1
+						outputImages(:,:,signalNo) = NaN;
+					else
+					end
+					continue;
+				end
+
+				% If a signal has no peaks, there is zero correlation with the movie, set to zero
+				if isempty(signalPeaksArray{signalNo})
+					outputMeanImageCorrs(signalNo) = 0;
+					outputMeanImageCorrsMean(signalNo) = 0;
+					outputMeanImageCorr2(signalNo) = 0;
+					outputMeanImageCorrMax(signalNo) = 0;
+					outputMeanImageStruct_corrPearsonThres(signalNo) = 0;
+					outputMeanImageStruct_corrSpearmanThres(signalNo) = 0;
+					outputMeanImageStruct_corrMaxThres(signalNo) = 0;
 					if options_outputImageFlag==1
 						outputImages(:,:,signalNo) = NaN;
 					else
@@ -274,7 +315,7 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 					signalPeaksThis = signalPeaksThis(1:nPeaksToUse);
 					% signalPeaksThis = signalPeaksThis(randperm(length(signalPeaksThis),nPeaksToUse));
 				end
-				signalPeaksThis(signalPeaksThis>movieDims(3)) = [];
+				signalPeaksThis(signalPeaksThis>movieDims3) = [];
 				%B = cellfun(@(x) num2str(x(:)'),signalPeaksThis,'UniformOutput',false);
 				%[~,idx] = unique(B);
 				%signalPeaksThis = signalPeaksThis(idx);
@@ -299,8 +340,9 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 					end
 					% signalImagesCrop = [];
 					% signalImagesCrop = {};
-					if nPeaksToUse>10
-						nPeaksToUse = 10;
+					nPeaksToUse = length(signalPeaksThis);
+					if nPeaksToUse>options_maxPeaksToUse
+						nPeaksToUse = options_maxPeaksToUse;
 					end
 					offset = {};
 					block = {};
@@ -316,18 +358,26 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 						% 	signalImagesCrop = cat(3,signalImagesCrop,signalImagesCropTmp);
 						% end
 					end
-					[signalImagesCrop] = readHDF5Subset(inputMovie, offset, block,'datasetName',options_inputDatasetName,'displayInfo',0,'hdf5Fid',options_hdf5Fid,'keepFileOpen',options_keepFileOpen);
+					% [signalImagesCrop] = readHDF5Subset(inputMovie, offset, block,'datasetName',options_inputDatasetName,'displayInfo',0,'hdf5Fid',options_hdf5Fid,'keepFileOpen',options_keepFileOpen);
+
+					[signalImagesCrop] = readHDF5Subset(inputMovie, offset, block,'datasetName',options_inputDatasetName,'displayInfo',0,'hdf5Fid',hdf5FileWorkerConstant.Value,'keepFileOpen',options_keepFileOpen,'displayInfo',options.displayInfo);
+
 					%signalImagesCrop = cat(3,signalImagesCrop{:});
 				end
 				% corrVals = [];
+				inputImageCrop = squeeze(inputImages{signalNo}(yLow:yHigh,xLow:xHigh));
+				% inputImageCrop = squeeze(inputImages(yLow:yHigh,xLow:xHigh,signalNo));
+
+				% Convert to inputImages class, which should be single or double
+				signalImagesCrop = cast(signalImagesCrop,class(inputImageCrop));
+				if strcmp(class(signalImagesCrop),'single')==0||strcmp(class(signalImagesCrop),'double')==0
+					signalImagesCrop = single(signalImagesCrop);
+				end
 				signalImagesCropTmp = signalImagesCrop;
 				signalImagesCropTmp(isnan(signalImagesCropTmp)) = 0;
-				% inputImageCrop = squeeze(inputImages(yLow:yHigh,xLow:xHigh,signalNo));
-				inputImageCrop = squeeze(inputImages{signalNo}(yLow:yHigh,xLow:xHigh));
 
 				% Mean image correlation
 				outputMeanImageCorrsMean(signalNo) = corr2(nanmean(signalImagesCropTmp,3),inputImageCrop);
-
 
 				if size(signalImagesCropTmp,3)>0
 					% ===
@@ -407,6 +457,10 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 					szA = size(A);
 					szB = size(B);
 					szB(3) = 1;
+					% If only have a single peak, compensate for that.
+					if length(szA)==2
+						szA(3) = 1;
+					end
 					dim12 = szA(1)*szA(2);
 
 					a1 = bsxfun(@minus,A,mean(reshape(A,dim12,1,[])));
@@ -487,7 +541,15 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 				outputMeanImageStruct_corrPearsonThres(signalNo) = NaN;
 				outputMeanImageStruct_corrSpearmanThres(signalNo) = NaN;
 				outputMeanImageStruct_corrMaxThres(signalNo) = NaN;
-			end
+            end
+
+            % job = getCurrentJob
+            % display(job)
+            % job.EnvironmentVariables
+		end
+
+		if ischar(inputMovie)
+			clear hdf5FileWorkerConstant;
 		end
 
 		outputMeanImageStruct.corrPearsonMean = outputMeanImageCorrsMean;

@@ -127,7 +127,7 @@ function [IcaFilters IcaTraces] = runICA(PcaFilters, PcaTraces, inputID, nICs, P
             minAbsCos = min(abs(diag(ica_A' * BOld)));
 
             BOld = ica_A;
-            if mod(numiter,3)==0|numiter==MaxRoundsICs
+            if numiter==1||mod(numiter,3)==0|numiter==MaxRoundsICs
                 reverseStr = cmdWaitbar(numiter,MaxRoundsICs,reverseStr,'inputStr','iterating through ICA');
             end
         end

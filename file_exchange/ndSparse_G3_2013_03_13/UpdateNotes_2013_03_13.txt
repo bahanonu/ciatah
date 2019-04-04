@@ -1,0 +1,7 @@
+Indexing bug fix. Examples,
+
+ 1. X=ndSparse([2,2]); X(2);
+ 2. X=ndSparse([1,1]); X(1)=3;
+
+
+Only linear indexing by scalar indices was affected.

@@ -55,9 +55,9 @@ function [success] = resetMiji(varargin)
 			% Miji;
 			% MIJ.exit;
 		catch err
-			display(repmat('@',1,7))
+			disp(repmat('@',1,7))
 			disp(getReport(err,'extended','hyperlinks','on'));
-			display(repmat('@',1,7))
+			disp(repmat('@',1,7))
 		end
 	end
 

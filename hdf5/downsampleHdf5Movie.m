@@ -196,7 +196,7 @@ function [success] = downsampleHdf5Movie(inputFilePath, varargin)
 						   % to reduce memory footprint, place new frame in old movie and cut off the unneeded frames after
 						   inputMovie(1:downX,frame,1:downZ) = downsampledFrame;
 						   % inputMovie(:,frame,:) = downsampledFrame;
-							if mod(frame,nestedoptions.waitbarInterval)==0&nestedoptions.waitbarOn==1|frame==downY
+							if frame==1||mod(frame,nestedoptions.waitbarInterval)==0&nestedoptions.waitbarOn==1|frame==downY
 							    reverseStr = cmdWaitbar(frame,downY,reverseStr,'inputStr','temporally downsampling matrix');
 							end
 						end
@@ -221,7 +221,7 @@ function [success] = downsampleHdf5Movie(inputFilePath, varargin)
 						   % to reduce memory footprint, place new frame in old movie and cut off the unneeded frames after
 						   inputMovie(1:downX,1:downY,frame) = downsampledFrame;
 						   % inputMovieDownsampled(1:downX,1:downY,frame) = downsampledFrame;
-							if mod(frame,nestedoptions.waitbarInterval)==0&nestedoptions.waitbarOn==1|frame==downZ
+							if frame==1||mod(frame,nestedoptions.waitbarInterval)==0&nestedoptions.waitbarOn==1|frame==downZ
 							    reverseStr = cmdWaitbar(frame,downZ,reverseStr,'inputStr','spatially downsampling matrix');
 							end
 						end

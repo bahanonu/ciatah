@@ -111,7 +111,7 @@ function neighborsCell = identifyNeighborsAuto(inputImages, inputSignals, vararg
                 res = find(res>1);
                 neighborsCell{c,1} = setdiff(res,c);
                 % reduce waitbar access
-                if mod(c,7)==0|c==nSignals
+                if c==1||mod(c,7)==0|c==nSignals
                     reverseStr = cmdWaitbar(c,nSignals,reverseStr,'inputStr','identifying neighboring cells');
                 end
                 if options.plottingOn==1

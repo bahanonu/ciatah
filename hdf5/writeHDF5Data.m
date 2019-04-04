@@ -14,6 +14,7 @@ function [success] = writeHDF5Data(inputData,saveDir,varargin)
 		% 2014.01.23 - updated so that it saves as the input data-type rather than defaulting to double
 		% 2014.10.06 - added chunking to save, decrease compatibility problems.
 		% 2015.06.19 - added automatic creation of file's directory if it doesn't already exist.
+		% 2019.03.19 [17:37:38] User option to customize chunking instead of using whole x-y, useful for very large FOV movies
 	% TODO
 		% Add option to overwrite existing HDF5 file ()
 
@@ -31,6 +32,8 @@ function [success] = writeHDF5Data(inputData,saveDir,varargin)
  	options.deflateLevel = 0;
 	% e.g. '/movie/processingSettings'
 	options.addInfoName = [];
+	% Int: chunk size in [x y z] of the dataset, leave empty for auto chunking
+	options.dataDimsChunkCopy = [];
 	% get options
 	options = getOptions(options,varargin);
 	% % unpack options into current workspace
@@ -59,9 +62,13 @@ function [success] = writeHDF5Data(inputData,saveDir,varargin)
 		else
 			dataDims = options.hdfCount - options.hdfStart;
 		end
-		% set the last dimension to 1 for chunking
-		dataDimsChunkCopy = dataDims;
-		dataDimsChunkCopy(end) = 1;
+		if isempty(options.dataDimsChunkCopy)
+			% set the last dimension to 1 for chunking
+			dataDimsChunkCopy = dataDims;
+			dataDimsChunkCopy(end) = 1;
+		else
+			dataDimsChunkCopy = options.dataDimsChunkCopy;
+		end
 		if strcmp(options.writeMode,'new')
 			% create HDF dataspace
 			h5create(saveDir,options.datasetname,dataDims,'Datatype',inputClass,'ChunkSize',dataDimsChunkCopy,'Deflate',options.deflateLevel);

@@ -1,0 +1,19 @@
+
+INSTALLATION:
+
+1. Unzip ndSparse.zip. 
+
+2. Run ndstest.m a few times-- it tests the functionality of the class by 
+running various array methods/operations and comparing with ordinary arrays.  
+It will typically report maximum percent error of about 1e-5 (and this maximum
+corresponds to single precision operations that it tests -- double precision
+operations should give less error).
+
+
+
+RECOMMENDED READING (in the following order).
+
+1. Read "help ndSparse" 
+
+2. Read "methods ndSparse" to get a sense of the range of operations currently
+ overloaded by the class. (Optionally also, browse ndstest.m)

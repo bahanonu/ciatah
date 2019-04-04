@@ -18,27 +18,30 @@ function [inputImages, inputSignals, valid, imageSizes, imgFeatures] = filterIma
 
     %========================
     % get options
+    options.threshold = 0.5;
     options.makePlots=1;
     options.waitbarOn=1;
     options.thresholdImages = 1;
     options.minNumPixels=10;
     options.maxNumPixels=100;
-    options.SNRthreshold = 1.45;
+    options.SNRthreshold = 2;
     options.minPerimeter = 5;
     options.maxPerimeter = 50;
     options.minSolidity = 0.8;
     options.maxSolidity = 1.0;
     options.minEquivDiameter = 3;
     options.maxEquivDiameter = 30;
+    options.maxEccentricity = 0.9;
     options.slopeRatioThreshold = 0.04;
+    options.maxNumObjects = 3;
     % save time if already computed peaks
     options.testpeaks = [];
     options.testpeaksArray = [];
     % 1 = open workers, 0 = do not open workers
     options.parallel = 1;
     % list of image features to calculate using regionprops
-    % options.featureList = {'Eccentricity','EquivDiameter','Area','Orientation','Perimeter','Solidity'};
-    options.featureList = {'EquivDiameter','Area','Perimeter','Solidity'};
+    options.featureList = {'Eccentricity','EquivDiameter','Area','Orientation','Perimeter','Solidity'};
+    % options.featureList = {'EquivDiameter','Area','Perimeter','Solidity'};
     options.modifyInputImage = 0;
 
     options.xCoords = [];
@@ -61,9 +64,9 @@ function [inputImages, inputSignals, valid, imageSizes, imgFeatures] = filterIma
 
     if options.thresholdImages==1
         if options.modifyInputImage==1
-            inputImages = thresholdImages(inputImages,'waitbarOn',options.waitbarOn,'binary',1);
+            [inputImages,~,numObjects] = thresholdImages(inputImages,'waitbarOn',options.waitbarOn,'binary',1,'threshold',options.threshold);
         else
-            inputImagesCopy = thresholdImages(inputImages,'waitbarOn',options.waitbarOn,'binary',1);
+            [inputImagesCopy,~,numObjects] = thresholdImages(inputImages,'waitbarOn',options.waitbarOn,'binary',1,'threshold',options.threshold);
         end
     else
         if options.modifyInputImage==1
@@ -71,7 +74,9 @@ function [inputImages, inputSignals, valid, imageSizes, imgFeatures] = filterIma
         else
             inputImagesCopy = inputImages;
         end
+        numObjects = ones([1 size(inputImages,3)]);
     end
+
     imageSizes = sum(sum(inputImagesCopy,1),2);
     imageSizes = imageSizes(:);
     % imageSizes
@@ -82,13 +87,14 @@ function [inputImages, inputSignals, valid, imageSizes, imgFeatures] = filterIma
         xlabel('rank');ylabel('image size (px)');
 
 
-    valid = (imageSizes>options.minNumPixels)&(imageSizes<options.maxNumPixels);
+    % valid = (imageSizes>options.minNumPixels)&(imageSizes<options.maxNumPixels);
     % ensure vector dims are compatibly with previous scripts
-    valid = valid(:)';
+    % valid = valid(:)';
     if options.modifyInputImage==1
         [imgStats] = computeImageFeatures(inputImages,'thresholdImages',0,'featureList',options.featureList,'xCoords',options.xCoords,'yCoords',options.yCoords);
     else
         [imgStats] = computeImageFeatures(inputImagesCopy,'thresholdImages',0,'featureList',options.featureList,'xCoords',options.xCoords,'yCoords',options.yCoords);
+
     end
     imgFeatures = cell2mat(struct2cell(imgStats))';
 
@@ -96,29 +102,41 @@ function [inputImages, inputSignals, valid, imageSizes, imgFeatures] = filterIma
         hold on
         plot(imgStats.Area,'r')
 
-    validCompute =...
-    (imgStats.Perimeter>options.minPerimeter)...
-    &(imgStats.Perimeter<options.maxPerimeter)...
-    &(imgStats.Solidity>options.minSolidity)...
-    &(imgStats.Solidity<=options.maxSolidity)...
-    &(imgStats.EquivDiameter>options.minEquivDiameter)...
-    &(imgStats.EquivDiameter<options.maxEquivDiameter);
+    % validCompute =...
+    valid = ...
+    (imgStats.Perimeter(:)>options.minPerimeter)...
+    &(imgStats.Perimeter(:)<options.maxPerimeter)...
+    &(imgStats.Area(:)<options.maxNumPixels)...
+    &(imgStats.Area(:)>options.minNumPixels)...
+    &(imgStats.Eccentricity(:)<options.maxEccentricity)...
+    &(imgStats.Solidity(:)>options.minSolidity)...
+    &(imgStats.Solidity(:)<=options.maxSolidity)...
+    &(imgStats.EquivDiameter(:)>options.minEquivDiameter)...
+    &(imgStats.EquivDiameter(:)<options.maxEquivDiameter)...
+    &(numObjects(:)<options.maxNumObjects);
 
+    % [(imgStats.Perimeter(:)>options.minPerimeter)...
+    %  (imgStats.Perimeter(:)<options.maxPerimeter)...
+    %  (imgStats.Area(:)<options.maxNumPixels)...
+    %  (imgStats.Area(:)>options.minNumPixels)...
+    %  (imgStats.Eccentricity(:)<options.maxEccentricity)...
+    %  (imgStats.Solidity(:)>options.minSolidity)...
+    %  (imgStats.Solidity(:)<=options.maxSolidity)...
+    %  (imgStats.EquivDiameter(:)>options.minEquivDiameter)...
+    %  (imgStats.EquivDiameter(:)<options.maxEquivDiameter)...
+    %  (numObjects(:)<options.maxNumObjects)];
     % ...
-
     % &(~ismember(imgStats.Orientation,[90 -90 0]));
-    valid = valid&validCompute(:)';
+    valid = valid(:)';
+    % valid = valid&validCompute(:)';
 
     % filter by SNR if inputSignals added
     if ~isempty(inputSignals)
-        % SNR
+        % SNR filter
         [signalSnr, ~] = computeSignalSnr(inputSignals,'testpeaks',options.testpeaks,'testpeaksArray',options.testpeaksArray,'signalCalcType','iterativeRemoveSignal');
         validSNR = signalSnr>options.SNRthreshold;
-        % size(valid)
-        % size(signalSnr)
-        % size(validSNR)
         valid = validSNR & valid;
-        % Slope ratio
+        % Slope ratio filter
         [peakOutputStat] = computePeakStatistics(inputSignals,'waitbarOn',options.waitbarOn,'testpeaks',options.testpeaks,'testpeaksArray',options.testpeaksArray,'onlySlopeRatio',1);
         validSlope = peakOutputStat.slopeRatio>options.slopeRatioThreshold;
         valid = validSlope & valid;
