@@ -1,4 +1,4 @@
-function [inputSignals inputImages signalPeaks signalPeaksArray valid] = modelGetSignalsImages(obj,varargin)
+function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, validType] = modelGetSignalsImages(obj,varargin)
 	% Grabs input signals and images from current folder
 	% Biafra Ahanonu
 	% branched from controllerAnalysis: 2014.08.01 [16:09:16]
@@ -52,6 +52,8 @@ function [inputSignals inputImages signalPeaks signalPeaksArray valid] = modelGe
 	%========================
 	pause(0.001)
 
+	validType = '';
+
 	if isempty(options.fileNum)
 		thisFileNum = obj.fileNum;
 	else
@@ -103,29 +105,34 @@ function [inputSignals inputImages signalPeaks signalPeaksArray valid] = modelGe
 	try obj.validRegionMod{thisFileNum};check.regionMod=1; catch; check.regionMod=0; end
 	try obj.valid{thisFileNum}.(obj.signalExtractionMethod).classifier;check.classifier=1; catch; check.classifier=0; end
 	try obj.valid{thisFileNum}.(obj.signalExtractionMethod).manual;check.manual=1; catch; check.manual=0; end
-	try obj.validManual{thisFileNum};check.manualOld=1; catch; check.manualOld=0; end
+	try obj.validManual{thisFileNum};check.manualOld=1; catch; check.manualOld=0; end;if isempty(obj.validManual{thisFileNum});check.manualOld=0;end;
 	try obj.valid{thisFileNum}.(obj.signalExtractionMethod).auto;check.auto=1; catch; check.auto=0; end
 	try obj.validAuto{thisFileNum};check.autoOld=1; catch; check.autoOld=0; end
 
 	if check.regionMod&options.forceManual==0
+		disp('using regional identifications...')
 		valid = obj.validRegionMod{thisFileNum};
-		display('using regional identifications...')
+		validType = 'validRegionMod';
 	elseif check.classifier&options.forceManual==0
+		disp('using classifier identifications...')
 		valid = obj.valid{thisFileNum}.(obj.signalExtractionMethod).classifier;
-		display('using classifier identifications...')
+		validType = 'validClassifier';
 	elseif check.manual
-		display(['using valid.' obj.signalExtractionMethod '.manual identifications...'])
+		disp(['using valid.' obj.signalExtractionMethod '.manual identifications...'])
 		valid = obj.valid{thisFileNum}.(obj.signalExtractionMethod).manual;
+		validType = 'validManual';
 	elseif check.manualOld
+		disp('using manual identifications...')
 		valid = logical(obj.validManual{thisFileNum});
-		% size(valid)
-		display('using manual identifications...')
+		validType = 'validManualOld';
 	elseif check.auto
-		display(['using valid.' obj.signalExtractionMethod '.auto identifications...'])
+		disp(['using valid.' obj.signalExtractionMethod '.auto identifications...'])
 		valid = obj.valid{thisFileNum}.(obj.signalExtractionMethod).auto;
+		validType = 'validAuto';
 	elseif check.autoOld
+		disp('using auto identifications...')
 		valid = obj.validAuto{thisFileNum};
-		display('using auto identifications...')
+		validType = 'validAutoOld';
 	elseif ~isempty(obj.rawSignals)
 		valid = ones([1 size(obj.rawSignals{thisFileNum},1)]);
 	else

@@ -23,7 +23,8 @@ function neighborsCell = identifyNeighborsAuto(inputImages, inputSignals, vararg
     options.overlapDistance = 10;
     % 'centroid', 'imdilate'
     options.neighborMethod = 'centroid';
-
+    %
+    options.waitbarOn = 1;
     % Input pre-computed x,y coordinates for objects in images
     options.xCoords = [];
     options.yCoords = [];
@@ -86,11 +87,15 @@ function neighborsCell = identifyNeighborsAuto(inputImages, inputSignals, vararg
 
             distanceMatrixThres = distanceMatrix<distanceThreshold;
             neighborsCell = {};
+            reverseStr = '';
             for cellNo = 1:nCells
                 neighborIdx = find(distanceMatrixThres(cellNo,:));
                 neighborsCell{cellNo,1} = neighborIdx;
-                if mod(cellNo,50)==1
-                    fprintf('up to cell number %d of %d \n',cellNo,nCells)
+                % if mod(cellNo,50)==1
+                %     fprintf('up to cell number %d of %d \n',cellNo,nCells)
+                % end
+                if (cellNo==1||mod(cellNo,50)==0||cellNo==nCells)&options.waitbarOn==1
+                    reverseStr = cmdWaitbar(cellNo,nCells,reverseStr,'inputStr','Finding cell neighbors');
                 end
             end
             fprintf('Done assigning neighbor IDs ...')
