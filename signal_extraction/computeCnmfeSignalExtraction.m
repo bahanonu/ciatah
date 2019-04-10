@@ -23,10 +23,13 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(inputMovie,varargi
         %
 
     % ========================
-    % for loading movie
+    % OVERALL
     % turn on parallel
     options.nonCNMF.parallel = 1;
-
+    % Binary: 1 = run merging algorithms
+    options.runMerge = 1;
+    % Binary: 1 = remove false positives using CNMF-E algorithm
+    options.runRemoveFalsePositives = 1;
     % ===COMPUTATION
     % Float: GB, memory space you allow to use in MATLAB
     options.memory_size_to_use = 32; %
@@ -65,9 +68,9 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(inputMovie,varargi
     options.nb = 1;
     % Int: when the ring model used, it is the radius of the ring used in the background model. otherwise, it's just the width of the overlapping area
     options.ring_radius = 18;
+    % Int: downsample background for a faster speed
+    options.bg_ssub = 1;
     % ===MERGING
-    % Binary: whether to run merging
-    options.runMerge = 1;
     % Float: 0 to 1, thresholds for merging neurons; [spatial overlap ratio, temporal correlation of calcium traces, spike correlation]
     options.merge_thr = 0.65;
     % Char: method for computing neuron distances {'mean', 'max'}
@@ -104,6 +107,9 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(inputMovie,varargi
     options = getOptions(options,varargin);
     % ========================
     options
+
+    % Make sure consistent
+    options.bg_ssub = options.ssub;
 
     %% clear the workspace and select data
     % clear; clc; close all;
@@ -167,7 +173,7 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(inputMovie,varargi
     ring_radius = options.ring_radius;  % when the ring model used, it is the radius of the ring used in the background model.
     %otherwise, it's just the width of the overlapping area
     num_neighbors = []; % number of neighbors for each neuron
-    bg_ssub = 2;        % downsample background for a faster speed
+    bg_ssub = options.bg_ssub;        % downsample background for a faster speed
 
     % -------------------------      MERGING      -------------------------  %
     show_merge = false;  % if true, manually verify the merging step
@@ -254,15 +260,18 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(inputMovie,varargi
         hold on;
         plot(center(:, 2), center(:, 1), '.r', 'markersize', 10);
     end
+    subfxnDisplayState();
 
     %% estimate the background components
     neuron.update_background_parallel(use_parallel);
     neuron_init = neuron.copy();
+    subfxnDisplayState();
 
     if options.runMerge==1
         %%  merge neurons and update spatial/temporal components
         neuron.merge_neurons_dist_corr(show_merge);
         neuron.merge_high_corr(show_merge, merge_thr_spatial);
+        subfxnDisplayState();
     end
 
     %% update spatial components
@@ -274,6 +283,7 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(inputMovie,varargi
         plot(center_res(:, 2), center_res(:, 1), '.g', 'markersize', 10);
     end
     neuron_init_res = neuron.copy();
+    subfxnDisplayState();
 
     %% udpate spatial&temporal components, delete false positives and merge neurons
     % update spatial
@@ -283,21 +293,26 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(inputMovie,varargi
     else
         neuron.update_spatial_parallel(use_parallel);
     end
+    subfxnDisplayState();
     if options.runMerge==1
         % merge neurons based on correlations
         neuron.merge_high_corr(show_merge, merge_thr_spatial);
+        subfxnDisplayState();
     end
 
     for m=1:2
         % update temporal
         neuron.update_temporal_parallel(use_parallel);
 
-        % delete bad neurons
-        neuron.remove_false_positives();
-
+        if options.runRemoveFalsePositives==1
+            % delete bad neurons
+            neuron.remove_false_positives();
+        end
+        subfxnDisplayState();
         if options.runMerge==1
             % merge neurons based on temporal correlation + distances
             neuron.merge_neurons_dist_corr(show_merge);
+            subfxnDisplayState();
         end
     end
 
@@ -318,24 +333,35 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(inputMovie,varargi
         if ~isempty(ids)
             neuron.viewNeurons(ids, neuron.C_raw);
         end
+        subfxnDisplayState();
     end
     %% run more iterations
     neuron.update_background_parallel(use_parallel);
     neuron.update_spatial_parallel(use_parallel);
     neuron.update_temporal_parallel(use_parallel);
+    subfxnDisplayState();
 
     K = size(neuron.A,2);
-    tags = neuron.tag_neurons_parallel();  % find neurons with fewer nonzero pixels than min_pixel and silent calcium transients
-    neuron.remove_false_positives();
+    % find neurons with fewer nonzero pixels than min_pixel and silent calcium transients
+    tags = neuron.tag_neurons_parallel();
+
+    if options.runRemoveFalsePositives==1
+        neuron.remove_false_positives();
+        subfxnDisplayState();
+    end
     if options.runMerge==1
         neuron.merge_neurons_dist_corr(show_merge);
         neuron.merge_high_corr(show_merge, merge_thr_spatial);
+        subfxnDisplayState();
     end
 
     if K~=size(neuron.A,2)
         neuron.update_spatial_parallel(use_parallel);
         neuron.update_temporal_parallel(use_parallel);
-        neuron.remove_false_positives();
+        if options.runRemoveFalsePositives==1
+            neuron.remove_false_positives();
+        end
+        subfxnDisplayState();
     end
 
     %%
@@ -346,6 +372,7 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(inputMovie,varargi
     results = neuron.obj2struct();
     cnmfeAnalysisOutput.success = 1;
     cnmfeAnalysisOutput.params = results.options;
+    cnmfeAnalysisOutput.inputOptions = options;
     cnmfeAnalysisOutput.movieList = inputFilename;
     cnmfeAnalysisOutput.extractedImages = reshape(full(results.A),[neuron.options.d1 neuron.options.d2 size(results.C,1)]);
     % cnmfeAnalysisOutput.extractedImages = reshape(full(results.A),[size(results.P.sn) size(results.C,1)]);
@@ -382,5 +409,7 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(inputMovie,varargi
 
     %% save neurons shapes
     % neuron.save_neurons();
-
+    function subfxnDisplayState()
+        disp(['A (space):' num2str(size(neuron.A)) ' | C (time): ' num2str(size(neuron.C)) ' | b (background): ' num2str(size(neuron.b))])
+    end
 end
