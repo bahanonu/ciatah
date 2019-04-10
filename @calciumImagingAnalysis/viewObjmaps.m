@@ -77,7 +77,7 @@ function obj = viewObjmaps(obj,varargin)
 				obj.picsSavePath,...
 				obj.fileFilterRegexp,...
 				'1:500',...
-				'0.5',...
+				'0.4',...
 				'15',...
 				'930',...
 				'0',...
@@ -134,16 +134,31 @@ function obj = viewObjmaps(obj,varargin)
 			obj.fileNum = thisFileNum;
 			display(repmat('=',1,21))
 			display([num2str(thisFileNum) '/' num2str(nFiles) ': ' obj.fileIDNameArray{obj.fileNum}]);
+			[~,foldername,~] = fileparts(obj.inputFolders{obj.fileNum});
+			validType = 'NULL';
 			% =====================
 			% for backwards compatibility, will be removed in the future.
 			nIDs = length(obj.stimulusNameArray);
 			%
 			nameArray = obj.stimulusNameArray;
 			idArray = obj.stimulusIdArray;
+			[~,~] = openFigure(45+thisFileNumIdx, '');
 			%
 			% [inputSignals inputImages signalPeaks signalPeakIdx] = modelGetSignalsImages(obj,'returnType','raw');
 			[inputSignals inputImages signalPeaks signalPeakIdx valid validType] = modelGetSignalsImages(obj,'returnType','raw');
-			if isempty(inputSignals);display('no input signals');continue;end
+			if isempty(inputSignals);
+				display('no input signals');
+				try
+					suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType])
+				catch
+				end
+				continue;
+			end
+			if sum(valid==1)==0
+				disp('Switching to random labels since no cells')
+				valid = rand(size(valid))>0.5;
+				validType = 'random';
+			end
 			% size(signalPeakIdx)
 			% return
 
@@ -156,7 +171,6 @@ function obj = viewObjmaps(obj,varargin)
 				output1 = createObjMap(groupImagesByColor(inputImages,rand([size(inputImages,3) 1]),'thresholdImages',1));
 			end
 
-			[~,~] = openFigure(45+thisFileNumIdx, '');
 			subplotTmp(xx,yy,1)
 				imagesc(output1)
 				% colormap(gca,[gray(sum(valid==0));customColormap([],'nPoints',round(sum(valid==1)/2))])
@@ -200,44 +214,7 @@ function obj = viewObjmaps(obj,varargin)
 				% axis equal tight; box off;
 				% title('Cellmap | Outlines')
 
-			movieList = getFileList(obj.inputFolders{obj.fileNum}, obj.fileFilterRegexp);
-			if ~isempty(movieList)
-				movieDims = loadMovieList(movieList{1},'getMovieDims',1,'inputDatasetName',obj.inputDatasetName);
-				if movieDims.three<nanmax(userVideoFrames)
-					movieFrameProc = loadMovieList(movieList{1},'convertToDouble',0,'frameList',[],'inputDatasetName',obj.inputDatasetName);
-				else
-					movieFrameProc = loadMovieList(movieList{1},'convertToDouble',0,'frameList',userVideoFrames,'inputDatasetName',obj.inputDatasetName);
-				end
-
-				subplotTmp(xx,yy,yy+1)
-					imagesc(nanmax(movieFrameProc,[],3))
-					axis equal tight; box off;
-					% colormap([0 0 0;obj.colormap])
-					colormap(gca,'gray')
-					title('Movie | raw, no pre-processing')
-
-				movieFrameProcNorm = normalizeVector(nanmax(movieFrameProc,[],3),'normRange','zeroToOne');
-				rgbImgCopy = cat(3,rMap,gMap,bMap);
-				movieFrameProcNorm(max(rgbImgCopy,[],3)>0) = 0;
-				rMap = movieFrameProcNorm+rMap;
-				gMap = movieFrameProcNorm+gMap;
-				bMap = movieFrameProcNorm+bMap;
-
-				% nCells = size(inputImagesThres,3);
-				% for cellNo = 1:nCells
-				% 	rMap([boundaryIndices{cellNo}]) = rand(1);
-				% 	gMap([boundaryIndices{cellNo}]) = rand(1);
-				% 	bMap([boundaryIndices{cellNo}]) = rand(1);
-				% end
-
-				rgbImg = cat(3,rMap,gMap,bMap);
-
-				subplotTmp(xx,yy,yy+2)
-					imagesc(rgbImg)
-					axis equal tight; box off;
-					title('Movie | raw, no pre-processing with cellmap')
-
-			end
+			subfxnDisplayMovie();
 
 			subplotTmp(xx,yy,[3 4 7 8])
 				plotSignalsGraph(inputSignals(logical(valid),:),'newAxisColorOrder','default')
@@ -249,9 +226,7 @@ function obj = viewObjmaps(obj,varargin)
 				axis equal tight; box off;
 				title('Cellmap | All extraction outputs')
 
-			[~,foldername,~] = fileparts(obj.inputFolders{obj.fileNum});
-
-			suptitle([obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType])
+			suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType])
 
 				% s2Pos = get(gca,'position');
 				s2Pos = plotboxpos(gca);
@@ -266,6 +241,60 @@ function obj = viewObjmaps(obj,varargin)
 			display(repmat('@',1,7))
 			disp(getReport(err,'extended','hyperlinks','on'));
 			display(repmat('@',1,7))
+			try
+				subfxnDisplayMovie()
+			catch err
+				display(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				display(repmat('@',1,7))
+			end
+			try
+				suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType])
+			catch err
+				display(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				display(repmat('@',1,7))
+			end
+		end
+	end
+	function subfxnDisplayMovie()
+		movieList = getFileList(obj.inputFolders{obj.fileNum}, obj.fileFilterRegexp);
+		if ~isempty(movieList)
+			movieDims = loadMovieList(movieList{1},'getMovieDims',1,'inputDatasetName',obj.inputDatasetName);
+			if movieDims.three<nanmax(userVideoFrames)
+				movieFrameProc = loadMovieList(movieList{1},'convertToDouble',0,'frameList',[],'inputDatasetName',obj.inputDatasetName);
+			else
+				movieFrameProc = loadMovieList(movieList{1},'convertToDouble',0,'frameList',userVideoFrames,'inputDatasetName',obj.inputDatasetName);
+			end
+
+			subplotTmp(xx,yy,yy+1)
+				imagesc(nanmax(movieFrameProc,[],3))
+				axis equal tight; box off;
+				% colormap([0 0 0;obj.colormap])
+				colormap(gca,'gray')
+				title('Movie | raw, no pre-processing')
+
+			movieFrameProcNorm = normalizeVector(nanmax(movieFrameProc,[],3),'normRange','zeroToOne');
+			rgbImgCopy = cat(3,rMap,gMap,bMap);
+			movieFrameProcNorm(max(rgbImgCopy,[],3)>0) = 0;
+			rMap = movieFrameProcNorm+rMap;
+			gMap = movieFrameProcNorm+gMap;
+			bMap = movieFrameProcNorm+bMap;
+
+			% nCells = size(inputImagesThres,3);
+			% for cellNo = 1:nCells
+			% 	rMap([boundaryIndices{cellNo}]) = rand(1);
+			% 	gMap([boundaryIndices{cellNo}]) = rand(1);
+			% 	bMap([boundaryIndices{cellNo}]) = rand(1);
+			% end
+
+			rgbImg = cat(3,rMap,gMap,bMap);
+
+			subplotTmp(xx,yy,yy+2)
+				imagesc(rgbImg)
+				axis equal tight; box off;
+				title('Movie | raw, no pre-processing with cellmap')
+
 		end
 	end
 end

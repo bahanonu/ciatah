@@ -710,10 +710,13 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 						for thisFileNumIdx = 1:length(fileIdxArray)
 							fileNum = fileIdxArray(thisFileNumIdx);
 							rmDirFolders = getFileList(obj.inputFolders{fileNum},'_source_extraction');
+							fclose all;
 							if ~isempty(rmDirFolders)
 								% Delete temporary folder.
-								fprintf('Deleting temporary folder: %s\n',rmDirFolders)
-								status = rmdir(rmDirFolders,'s')
+								for zz = 1:length(rmDirFolders)
+									fprintf('Deleting temporary folder: %s\n',rmDirFolders{zz})
+									status = rmdir(rmDirFolders{zz},'s')
+								end
 							end
 						end
 						display(repmat('*',1,21))

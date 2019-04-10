@@ -420,11 +420,13 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 							case 'turboreg'
 								for iternationNo = 1:options.turboreg.numTurboregIterations
 									if strcmp(options.turboreg.filterBeforeRegister,'imagejFFT')
-										Miji;
+										% Miji;
+										manageMiji('startStop','start');
 									end
 									turboregInputMovie();
 									if strcmp(options.turboreg.filterBeforeRegister,'imagejFFT')
-										MIJ.exit;
+										% MIJ.exit;
+										manageMiji('startStop','exit');
 									end
 									% playMovie(thisMovie);
 								end
@@ -1454,7 +1456,8 @@ function [ostruct options] = getPcaIcaParams(ostruct,options)
 	end
 	% inputdlg({'press OK to view a snippet of analyzed movies'},'...',1);
 	% Miji;
-	MIJ.start
+	% MIJ.start
+	manageMiji('startStop','start');
 	uiwait(msgbox('press OK to view a snippet of analyzed movies','Success','modal'));
 	% ask user for estimate of nPCs and nICs
 	for fileNum=1:nFiles
@@ -1508,5 +1511,6 @@ function [ostruct options] = getPcaIcaParams(ostruct,options)
 			display(repmat('@',1,7))
 		end
 	end
-	MIJ.exit;
+	% MIJ.exit;
+	manageMiji('startStop','exit');
 end

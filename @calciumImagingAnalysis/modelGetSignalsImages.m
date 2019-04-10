@@ -264,8 +264,8 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 			% inputImages = double(permute(cnmfAnalysisOutput.extractedImages,[3 1 2]));
 			inputImages = double(cnmfeAnalysisOutput.extractedImages);
 			% inputSignals = double(permute(extractAnalysisOutput.traces, [2 1]));
-			inputSignals = double(cnmfeAnalysisOutput.extractedSignalsEst);
-			% inputSignals = double(cnmfeAnalysisOutput.extractedSignals);
+			% inputSignals = double(cnmfeAnalysisOutput.extractedSignalsEst);
+			inputSignals = double(cnmfeAnalysisOutput.extractedSignals);
 
 			if options.loadAlgorithmPeaks==1
 				signalPeaks = cnmfeAnalysisOutput.extractedPeaks>0;

@@ -20,7 +20,7 @@ function [success] = resetMiji(varargin)
 
 	%========================
 	% DESCRIPTION
-	options.exampleOption = '';
+	options.nRounds = 1;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -34,7 +34,7 @@ function [success] = resetMiji(varargin)
 	% try
 	success = 0;
 
-	for i = 1:1
+	for i = 1:options.nRounds
 		try
 			clear MIJ miji Miji mij;
 			javaDyna = javaclasspath('-dynamic');

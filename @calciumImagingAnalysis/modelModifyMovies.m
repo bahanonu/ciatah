@@ -64,7 +64,8 @@ function obj = modelModifyMovies(obj)
 		% start Miji
 		modelAddOutsideDependencies('miji');
 		% Miji;
-		MIJ.start;
+		% MIJ.start;
+		manageMiji('startStop','start');
 
 		% loop over all directories, get masks from user first then batch
 		% cropping whole movies
@@ -142,7 +143,8 @@ function obj = modelModifyMovies(obj)
         % obj.sumStats.movieMaskArray = movieMaskArray;
         % return
 
-		MIJ.exit;
+		% MIJ.exit;
+		manageMiji('startStop','exit');
 
         % go through and crop each movie then save
         display(repmat('*',1,21))

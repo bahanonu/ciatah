@@ -45,7 +45,8 @@ function obj = viewSubjectMovieFrames(obj)
 	frameList = str2num(movieSettings{setNo});setNo = setNo+1;
 
 	% Miji;
-	MIJ.start;
+	% MIJ.start;
+	manageMiji('startStop','start');
 
 	switch usrIdxChoiceType
 		case 1
@@ -246,5 +247,6 @@ function obj = viewSubjectMovieFrames(obj)
 		otherwise
 			% body
 	end
-	MIJ.exit;
+	% MIJ.exit;
+	manageMiji('startStop','exit');
 end
