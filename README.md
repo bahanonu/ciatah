@@ -379,20 +379,11 @@ playMovie(inputTrackingVideo);
 Using `createTrackingOverlayVideo` to verify tracking matches animal position on a per frame basis.
 ![image](https://user-images.githubusercontent.com/5241605/34800536-19eefcf2-f619-11e7-954f-dba59f4fd427.png)
 
-## License
-
-Copyright (C) 2013-2019 Biafra Ahanonu
-
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 ## Acknowledgments
 
-I would like to acknowledge Jones G. Parker, PhD (<https://parker-laboratory.com/>) for providing extensive user feedback during development of the software package.
+Thanks to Jones G. Parker, PhD (<https://parker-laboratory.com/>) for providing extensive user feedback during development of the software package.
+
+Additional thanks to thank Jérôme Lecoq, Tony H. Kim, Hakan Inan, Lacey Kitch, and Maggie Larkin for help developing aspects of the code used in the software package.
 
 ## References
 
@@ -426,3 +417,14 @@ Please cite [Corder*, Ahanonu*, et al. 2019](http://science.sciencemag.org/conte
 
 ## Questions?
 Please email any additional questions not covered in the repository to `bahanonu [at] alum.mit.edu`.
+
+## License
+
+Copyright (C) 2013-2019 Biafra Ahanonu
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.

@@ -559,6 +559,36 @@ classdef calciumImagingAnalysis < dynamicprops
 		% set methods, for IO to specific variables in a controlled manner
 		obj = setMainSettings(obj)
 
+		function obj = resetMijiClass(obj)
+			% This clears Miji from Java's dynamic path and then re-initializes. Use if Miji is not loading normally.
+			resetMiji
+        	% success = 0;
+
+        	% for i = 1:2
+        	% 	try
+        	% 		% clear MIJ miji Miji mij;
+        	% 		javaDyna = javaclasspath('-dynamic');
+        	% 		matchIdx = ~cellfun(@isempty,regexpi(javaDyna,'Fiji'));
+        	% 		% cellfun(@(x) javarmpath(x),javaDyna(matchIdx));
+        	% 		javaDynaPathStr = join(javaDyna(matchIdx),''',''');
+        	% 		if ~isempty(javaDynaPathStr)
+        	% 			eval(sprintf('javarmpath(''%s'');',javaDynaPathStr{1}))
+        	% 		end
+        	% 		clear MIJ miji Miji mij;
+        	% 		% pause(1);
+        	% 		% java.lang.Runtime.getRuntime().gc;
+        	% 		% Miji;
+        	% 		% MIJ.exit;
+        	% 	catch err
+        	% 		display(repmat('@',1,7))
+        	% 		disp(getReport(err,'extended','hyperlinks','on'));
+        	% 		display(repmat('@',1,7))
+        	% 	end
+        	% end
+
+        	% success = 1;
+		end
+
 		function obj = display(obj)
 			% Overload display method so can run object by just typing 'obj' in command window.
             obj.runPipeline;
@@ -909,40 +939,50 @@ classdef calciumImagingAnalysis < dynamicprops
 			close all;clc;
 
 			fxnsToRun = {...
-			'=======setup=======',
+			'------- SETUP -------',
 			'modelAddNewFolders',
+			'loadDependencies',
+			'resetMijiClass',
+			'',
+			'------- CLASS/BEHAVIOR -------',
 			'showVars',
 			'showFolders',
-			'loadDependencies',
 			'saveObj',
 			'initializeObj',
 			'setMainSettings',
-			'=======preprocess=======',
+			'',
+			'------- PREPROCESS -------',
 			'modelGetFileInfo',
 			'modelVerifyDataIntegrity',
 			'modelBatchCopyFiles',
-			'===',
+			'',
 			'modelDownsampleRawMovies',
 			'viewMovieFiltering',
 			'viewMovieRegistrationTest',
+			'',
 			'modelPreprocessMovie',
 			'modelModifyMovies',
 			'modelExtractSignalsFromMovie',
-			'===',
+			'',
+			'------- LOAD SIGNAL DATA -------',
 			'modelVarsFromFiles',
-			'=======signal sorting=======',
+			'',
+			'------- SIGNAL SORTING -------',
 			'computeManualSortSignals',
 			'modelModifyRegionAnalysis',
-			'=======preprocess verification=======',
+			'',
+			'------- PREPROCESS VERIFICATION -------',
 			'viewObjmaps',
 			'viewMovie',
 			'viewSubjectMovieFrames'
 			'viewMovieCreateSideBySide',
 			'viewCreateObjmaps',
-			'=======tracking=======',
+			'',
+			'------- TRACKING -------',
 			'modelTrackingData',
 			'viewOverlayTrackingToVideo',
-			'=======across session analysis: compute/view=======',
+			'',
+			'------- ACROSS SESSION ANALYSIS: COMPUTE/VIEW -------',
 			'viewSubjectMovieFrames',
 			'computeMatchObjBtwnTrials',
 			'viewMatchObjBtwnSessions',
