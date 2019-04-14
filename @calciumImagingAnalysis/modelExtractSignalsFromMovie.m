@@ -30,6 +30,9 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	% end
 	%========================
 
+	% Make sure private settings folder is created
+	if ~exist(obj.settingsSavePath,'dir');mkdir(obj.settingsSavePath);fprintf('Creating directory: %s\n',obj.settingsSavePath);end
+
 	scnsize = get(0,'ScreenSize');
 	signalExtractionMethodStr = {'PCAICA','PCAICA_old','EM','EXTRACT','CNMF','CNMFE','ROI'};
 	currentIdx = find(strcmp(signalExtractionMethodStr,obj.signalExtractionMethod));

@@ -10,7 +10,6 @@ classdef calciumImagingAnalysis < dynamicprops
 
 	% changelog
 		% updated: 2017.01.15 [01:31:54]
-		%
 	% TODO
 		%
 
@@ -18,13 +17,16 @@ classdef calciumImagingAnalysis < dynamicprops
 
 	properties(GetAccess = 'public', SetAccess = 'public')
 		% public read and write access.
+
+		% FPS of movie(s) being analyzed
 		FRAMES_PER_SECOND =  5;
+		% Int: what factor temporally are analyzed movie from raw data
 		DOWNSAMPLE_FACTOR =  4;
-		% MICRON_PER_PIXEL =  2.37;
-		MICRON_PER_PIXEL =  2.51;
+		% Float: estimated um per pixel
+		MICRON_PER_PIXEL =  2.51; % 2.37;
 
 		defaultObjDir = pwd;
-		classVersion = 'v3.20190404';
+		classVersion = 'v3.20190414';
 		serverPath = '';
 		privateSettingsPath = ['private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
 		% place where functions can temporarily story user settings
@@ -72,6 +74,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		dataSavePath = ['private' filesep 'data' filesep datestr(now,'yyyymmdd','local') filesep];
 		dataSavePathFixed = ['private' filesep 'data' filesep];
 		logSavePath = ['private' filesep 'logs' filesep datestr(now,'yyyymmdd','local') filesep];
+		settingsSavePath = ['private' filesep 'settings'];
 		%
 		dataSaveFilenameModifier = '';
 		% table save
@@ -860,11 +863,13 @@ classdef calciumImagingAnalysis < dynamicprops
 			obj.picsSavePath = ['private' filesep 'pics' filesep datestr(now,'yyyymmdd','local') filesep];
 			obj.dataSavePath = ['private' filesep 'data' filesep datestr(now,'yyyymmdd','local') filesep];
 			obj.logSavePath = ['private' filesep 'logs' filesep datestr(now,'yyyymmdd','local') filesep];
+			obj.settingsSavePath = ['private' filesep 'settings'];
 
 			% ensure private folders are set
 			if ~exist(obj.picsSavePath,'dir');mkdir(obj.picsSavePath);end
 			if ~exist(obj.dataSavePath,'dir');mkdir(obj.dataSavePath);end
 			if ~exist(obj.logSavePath,'dir');mkdir(obj.logSavePath);end
+			if ~exist(obj.settingsSavePath,'dir');mkdir(obj.settingsSavePath);fprintf('Creating directory: %s\n',obj.settingsSavePath);end
 
 			% load user specific settings
 			loadUserSettings = ['private' filesep 'settings' filesep 'calciumImagingAnalysisInitialize.m'];
