@@ -310,7 +310,7 @@ function obj = modelVarsFromFiles(obj)
 				if exist(obj.extractionMethodValidVarname.('CNMFE'),'var')
 					obj.validManual{fileNum} = validCNMFE;
 					obj.valid{fileNum}.(obj.signalExtractionMethod).manual = validCNMFE;
-					clear validCNMF;
+					clear validCNMFE;
 				end
 				display('clearing manual variable...')
 			end

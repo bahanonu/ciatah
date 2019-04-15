@@ -154,7 +154,8 @@ function obj = viewMovie(obj)
 		% 	resetMiji();
 		% 	Miji;
 		% end
-		MIJ.start;
+		% MIJ.start;
+		manageMiji('startStop','start');
 	end
 	if ~isempty(analyzeSpecificFolder)
 		nFilesToAnalyze = 1;
@@ -232,7 +233,8 @@ function obj = viewMovie(obj)
 			if isempty(movieList)
 				display('No movie files found! Please check "Imaging movie regexp:" option that regular expression matches existing movie in the repository.')
 				if strcmp(options.videoPlayer,'imagej')&saveCopyOfMovie==0
-					MIJ.exit;
+					% MIJ.exit;
+					manageMiji('startStop','exit');
 				end
 				% return;
 				continue;
@@ -552,7 +554,8 @@ function obj = viewMovie(obj)
 		end
 	end
 	if strcmp(options.videoPlayer,'imagej')&saveCopyOfMovie==0
-		MIJ.exit;
+		% MIJ.exit;
+		manageMiji('startStop','exit');
 	end
 
 	function [movieDecision] = playMovieThisFunction()

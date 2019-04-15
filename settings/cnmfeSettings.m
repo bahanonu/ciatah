@@ -3,6 +3,14 @@
 % Settings to run CNMF-E, used in conjunction with modelExtractSignalsFromMovie.m or
 % as input to "computeCnmfeSignalExtraction" using "computeCnmfeSignalExtraction(inputMovie,'options',cnmfeOpts)" after running "cnmfeSettings"
 
+% ========================
+% OVERALL
+% turn on parallel
+options.nonCNMF.parallel = 1;
+% Binary: 1 = run merging algorithms
+options.runMerge = 1;
+% Binary: 1 = remove false positives using CNMF-E algorithm
+options.runRemoveFalsePositives = 1;
 % ===COMPUTATION
 % Float: GB, memory space you allow to use in MATLAB
 cnmfeOpts.memory_size_to_use = 32; %
@@ -41,9 +49,9 @@ cnmfeOpts.bg_model = 'ring';
 cnmfeOpts.nb = 1;
 % Int: when the ring model used, it is the radius of the ring used in the background model. otherwise, it's just the width of the overlapping area
 cnmfeOpts.ring_radius = 18;
+% Int: downsample background for a faster speed
+cnmfeOpts.bg_ssub = 1;
 % ===MERGING
-% Binary: whether to run merging
-cnmfeOpts.runMerge = 1;
 % Float: 0 to 1, thresholds for merging neurons; [spatial overlap ratio, temporal correlation of calcium traces, spike correlation]
 cnmfeOpts.merge_thr = 0.65;
 % Char: method for computing neuron distances {'mean', 'max'}

@@ -704,7 +704,9 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 			mijiAlreadyOpen = 1;
 		catch
 			% Miji;
-			MIJ.start;
+			% MIJ.start;
+			manageMiji('startStop','start');
+
 			switch inputMovieName
 				case 'inputMovie'
 					MIJ.createImage('result', inputMovie, true);
@@ -724,7 +726,8 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		MIJ.run('Close');
 		% close imagej instance
 		if mijiAlreadyOpen==0
-			MIJ.exit;
+			% MIJ.exit;
+			manageMiji('startStop','exit');
 		end
 		toc(startTime);
 		% divide lowpass from image

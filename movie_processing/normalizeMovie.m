@@ -324,7 +324,8 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		% open imagej instance
 		% Miji(false);
 		% Miji;
-		MIJ.start;
+		% MIJ.start;
+		manageMiji('startStop','start');
 		startTime = tic;
 		% pass matrix to imagej
 		MIJ.createImage('result', inputMovie, true);
@@ -336,7 +337,8 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		inputMovieFFT = MIJ.getCurrentImage;
 		% close imagej instance
 		MIJ.run('Close');
-		MIJ.exit;
+		% MIJ.exit;
+		manageMiji('startStop','exit');
 		toc(startTime);
 		% divide lowpass from image
 		inputMovie = bsxfun(@rdivide,single(inputMovie),single(inputMovieFFT));
@@ -389,7 +391,8 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 			reverseStr = cmdWaitbar(freqNo,nFreqs,reverseStr,'inputStr','normalizing movie','displayEvery',5);
 			MIJ.run('Close');
 		end
-		MIJ.exit;
+		% MIJ.exit;
+		manageMiji('startStop','exit');
 		% moptions.identifyingText = strsplit(num2str(freqList),' ');
 		moptions.singleRowMontage = 1;
 		moptions.fontSize = fontSize;

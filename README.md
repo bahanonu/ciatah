@@ -2,9 +2,11 @@
 
 <img src="https://user-images.githubusercontent.com/5241605/51068051-78c27680-15cd-11e9-9434-9d181b00ef8e.png" align="center">
 
+<hr>
 Code and MATLAB class for analyzing one- and two-photon calcium imaging datasets. Includes a GUI to allow users to do large-scale batch analysis, the underlying functions can also be used to create GUI-less analysis pipelines. Includes code for determining animal locations (e.g. in open-field assay).
+<hr>
 
-Contact: Biafra Ahanonu (bahanonu [at] alum.mit.edu).
+Contact: __Biafra Ahanonu, PhD (bahanonu [at] alum.mit.edu).__
 
 Repository notes:
 - Covers preprocessing of calcium imaging videos, cell and activity trace extraction (with PCA-ICA, CELLMax, EXTRACT, CNMF, and CNMF-E), manual and automated sorting of cell extraction outputs, cross-session alignment of cells, and more.
@@ -377,20 +379,15 @@ playMovie(inputTrackingVideo);
 Using `createTrackingOverlayVideo` to verify tracking matches animal position on a per frame basis.
 ![image](https://user-images.githubusercontent.com/5241605/34800536-19eefcf2-f619-11e7-954f-dba59f4fd427.png)
 
-## License
+## Acknowledgments
 
-Copyright (C) 2013-2019 Biafra Ahanonu
+Thanks to Jones G. Parker, PhD (<https://parker-laboratory.com/>) for providing extensive user feedback during development of the software package.
 
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+Additional thanks to thank Jérôme Lecoq, Tony H. Kim, Hakan Inan, Lacey Kitch, and Maggie Larkin for help developing aspects of the code used in the software package.
 
 ## References
 
-Please cite the [Corder/Ahanonu, et al. publication](http://science.sciencemag.org/content/363/6424/276.full) if you used this code to advance/help your research:
+Please cite [Corder*, Ahanonu*, et al. 2019](http://science.sciencemag.org/content/363/6424/276.full) _Science_ publication or the [Ahanonu, 2018](https://doi.org/10.5281/zenodo.2222294) _Zenodo_ release if you used the software package or code from this repository to advance/help your research:
 
 ```Latex
 @article{corderahanonu2019amygdalar,
@@ -405,5 +402,29 @@ Please cite the [Corder/Ahanonu, et al. publication](http://science.sciencemag.o
 }
 ```
 
+```Latex
+@misc{biafra_ahanonu_2018_2222295,
+  author       = {Biafra Ahanonu},
+  title        = {{calciumImagingAnalysis: a software package for
+                   analyzing one- and two-photon calcium imaging
+                   datasets.}},
+  month        = December,
+  year         = 2018,
+  doi          = {10.5281/zenodo.2222295},
+  url          = {https://doi.org/10.5281/zenodo.2222295}
+}
+```
+
 ## Questions?
 Please email any additional questions not covered in the repository to `bahanonu [at] alum.mit.edu`.
+
+## License
+
+Copyright (C) 2013-2019 Biafra Ahanonu
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.

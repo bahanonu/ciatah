@@ -10,7 +10,6 @@ classdef calciumImagingAnalysis < dynamicprops
 
 	% changelog
 		% updated: 2017.01.15 [01:31:54]
-		%
 	% TODO
 		%
 
@@ -18,13 +17,16 @@ classdef calciumImagingAnalysis < dynamicprops
 
 	properties(GetAccess = 'public', SetAccess = 'public')
 		% public read and write access.
+
+		% FPS of movie(s) being analyzed
 		FRAMES_PER_SECOND =  5;
+		% Int: what factor temporally are analyzed movie from raw data
 		DOWNSAMPLE_FACTOR =  4;
-		% MICRON_PER_PIXEL =  2.37;
-		MICRON_PER_PIXEL =  2.51;
+		% Float: estimated um per pixel
+		MICRON_PER_PIXEL =  2.51; % 2.37;
 
 		defaultObjDir = pwd;
-		classVersion = 'v3.20190404';
+		classVersion = 'v3.20190414';
 		serverPath = '';
 		privateSettingsPath = ['private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
 		% place where functions can temporarily story user settings
@@ -72,6 +74,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		dataSavePath = ['private' filesep 'data' filesep datestr(now,'yyyymmdd','local') filesep];
 		dataSavePathFixed = ['private' filesep 'data' filesep];
 		logSavePath = ['private' filesep 'logs' filesep datestr(now,'yyyymmdd','local') filesep];
+		settingsSavePath = ['private' filesep 'settings'];
 		%
 		dataSaveFilenameModifier = '';
 		% table save
@@ -559,6 +562,36 @@ classdef calciumImagingAnalysis < dynamicprops
 		% set methods, for IO to specific variables in a controlled manner
 		obj = setMainSettings(obj)
 
+		function obj = resetMijiClass(obj)
+			% This clears Miji from Java's dynamic path and then re-initializes. Use if Miji is not loading normally.
+			resetMiji
+        	% success = 0;
+
+        	% for i = 1:2
+        	% 	try
+        	% 		% clear MIJ miji Miji mij;
+        	% 		javaDyna = javaclasspath('-dynamic');
+        	% 		matchIdx = ~cellfun(@isempty,regexpi(javaDyna,'Fiji'));
+        	% 		% cellfun(@(x) javarmpath(x),javaDyna(matchIdx));
+        	% 		javaDynaPathStr = join(javaDyna(matchIdx),''',''');
+        	% 		if ~isempty(javaDynaPathStr)
+        	% 			eval(sprintf('javarmpath(''%s'');',javaDynaPathStr{1}))
+        	% 		end
+        	% 		clear MIJ miji Miji mij;
+        	% 		% pause(1);
+        	% 		% java.lang.Runtime.getRuntime().gc;
+        	% 		% Miji;
+        	% 		% MIJ.exit;
+        	% 	catch err
+        	% 		display(repmat('@',1,7))
+        	% 		disp(getReport(err,'extended','hyperlinks','on'));
+        	% 		display(repmat('@',1,7))
+        	% 	end
+        	% end
+
+        	% success = 1;
+		end
+
 		function obj = display(obj)
 			% Overload display method so can run object by just typing 'obj' in command window.
             obj.runPipeline;
@@ -830,11 +863,13 @@ classdef calciumImagingAnalysis < dynamicprops
 			obj.picsSavePath = ['private' filesep 'pics' filesep datestr(now,'yyyymmdd','local') filesep];
 			obj.dataSavePath = ['private' filesep 'data' filesep datestr(now,'yyyymmdd','local') filesep];
 			obj.logSavePath = ['private' filesep 'logs' filesep datestr(now,'yyyymmdd','local') filesep];
+			obj.settingsSavePath = ['private' filesep 'settings'];
 
 			% ensure private folders are set
 			if ~exist(obj.picsSavePath,'dir');mkdir(obj.picsSavePath);end
 			if ~exist(obj.dataSavePath,'dir');mkdir(obj.dataSavePath);end
 			if ~exist(obj.logSavePath,'dir');mkdir(obj.logSavePath);end
+			if ~exist(obj.settingsSavePath,'dir');mkdir(obj.settingsSavePath);fprintf('Creating directory: %s\n',obj.settingsSavePath);end
 
 			% load user specific settings
 			loadUserSettings = ['private' filesep 'settings' filesep 'calciumImagingAnalysisInitialize.m'];
@@ -909,40 +944,50 @@ classdef calciumImagingAnalysis < dynamicprops
 			close all;clc;
 
 			fxnsToRun = {...
-			'=======setup=======',
+			'------- SETUP -------',
 			'modelAddNewFolders',
+			'loadDependencies',
+			'resetMijiClass',
+			'',
+			'------- CLASS/BEHAVIOR -------',
 			'showVars',
 			'showFolders',
-			'loadDependencies',
 			'saveObj',
 			'initializeObj',
 			'setMainSettings',
-			'=======preprocess=======',
+			'',
+			'------- PREPROCESS -------',
 			'modelGetFileInfo',
 			'modelVerifyDataIntegrity',
 			'modelBatchCopyFiles',
-			'===',
+			'',
 			'modelDownsampleRawMovies',
 			'viewMovieFiltering',
 			'viewMovieRegistrationTest',
+			'',
 			'modelPreprocessMovie',
 			'modelModifyMovies',
 			'modelExtractSignalsFromMovie',
-			'===',
+			'',
+			'------- LOAD SIGNAL DATA -------',
 			'modelVarsFromFiles',
-			'=======signal sorting=======',
+			'',
+			'------- SIGNAL SORTING -------',
 			'computeManualSortSignals',
 			'modelModifyRegionAnalysis',
-			'=======preprocess verification=======',
+			'',
+			'------- PREPROCESS VERIFICATION -------',
 			'viewObjmaps',
 			'viewMovie',
 			'viewSubjectMovieFrames'
 			'viewMovieCreateSideBySide',
 			'viewCreateObjmaps',
-			'=======tracking=======',
+			'',
+			'------- TRACKING -------',
 			'modelTrackingData',
 			'viewOverlayTrackingToVideo',
-			'=======across session analysis: compute/view=======',
+			'',
+			'------- ACROSS SESSION ANALYSIS: COMPUTE/VIEW -------',
 			'viewSubjectMovieFrames',
 			'computeMatchObjBtwnTrials',
 			'viewMatchObjBtwnSessions',

@@ -163,7 +163,9 @@ function obj = viewMovieRegistrationTest(obj)
 
 		% view the movies
 		% Miji
-		MIJ.start;
+		% MIJ.start;
+		manageMiji('startStop','start');
+
 		for thisFileNumIdx = 1:nFilesToAnalyze
 			thisFileNum = fileIdxArray(thisFileNumIdx);
 			obj.fileNum = thisFileNum;
@@ -209,7 +211,8 @@ function obj = viewMovieRegistrationTest(obj)
 				MIJ.run('Close All Without Saving');
 			end
 		end
-		MIJ.exit;
+		% MIJ.exit;
+		manageMiji('startStop','exit');
 	catch err
 		display(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));

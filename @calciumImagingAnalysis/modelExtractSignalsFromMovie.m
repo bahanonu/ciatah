@@ -30,6 +30,9 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	% end
 	%========================
 
+	% Make sure private settings folder is created
+	if ~exist(obj.settingsSavePath,'dir');mkdir(obj.settingsSavePath);fprintf('Creating directory: %s\n',obj.settingsSavePath);end
+
 	scnsize = get(0,'ScreenSize');
 	signalExtractionMethodStr = {'PCAICA','PCAICA_old','EM','EXTRACT','CNMF','CNMFE','ROI'};
 	currentIdx = find(strcmp(signalExtractionMethodStr,obj.signalExtractionMethod));
@@ -710,10 +713,13 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 						for thisFileNumIdx = 1:length(fileIdxArray)
 							fileNum = fileIdxArray(thisFileNumIdx);
 							rmDirFolders = getFileList(obj.inputFolders{fileNum},'_source_extraction');
+							fclose all;
 							if ~isempty(rmDirFolders)
 								% Delete temporary folder.
-								fprintf('Deleting temporary folder: %s\n',rmDirFolders)
-								status = rmdir(rmDirFolders,'s')
+								for zz = 1:length(rmDirFolders)
+									fprintf('Deleting temporary folder: %s\n',rmDirFolders{zz})
+									status = rmdir(rmDirFolders{zz},'s')
+								end
 							end
 						end
 						display(repmat('*',1,21))

@@ -13,6 +13,10 @@ function obj = viewObjmaps(obj,varargin)
 		%
 
 	%========================
+	% Row and column size, don't change generally
+	options.rowSubP = 2
+	options.colSubP = 4
+
 	% which table to read in
 	options.onlyShowMapTraceGraph = 0;
 	options.mapTraceGraphNo = 43;
@@ -77,7 +81,7 @@ function obj = viewObjmaps(obj,varargin)
 				obj.picsSavePath,...
 				obj.fileFilterRegexp,...
 				'1:500',...
-				'0.5',...
+				'0.4',...
 				'15',...
 				'930',...
 				'0',...
@@ -125,6 +129,8 @@ function obj = viewObjmaps(obj,varargin)
 
 	for thisFileNumIdx = 1:nFilesToAnalyze
 		[~,~] = openFigure(45+thisFileNumIdx, '');
+
+		[~,~] = openFigure(2000+thisFileNumIdx, '');
 	end
 	% [figHandle figNo] = openFigure(969, '');
 
@@ -134,21 +140,36 @@ function obj = viewObjmaps(obj,varargin)
 			obj.fileNum = thisFileNum;
 			display(repmat('=',1,21))
 			display([num2str(thisFileNum) '/' num2str(nFiles) ': ' obj.fileIDNameArray{obj.fileNum}]);
+			[~,foldername,~] = fileparts(obj.inputFolders{obj.fileNum});
+			validType = 'NULL';
 			% =====================
 			% for backwards compatibility, will be removed in the future.
 			nIDs = length(obj.stimulusNameArray);
 			%
 			nameArray = obj.stimulusNameArray;
 			idArray = obj.stimulusIdArray;
+			[~,~] = openFigure(45+thisFileNumIdx, '');
 			%
 			% [inputSignals inputImages signalPeaks signalPeakIdx] = modelGetSignalsImages(obj,'returnType','raw');
 			[inputSignals inputImages signalPeaks signalPeakIdx valid validType] = modelGetSignalsImages(obj,'returnType','raw');
-			if isempty(inputSignals);display('no input signals');continue;end
+			if isempty(inputSignals);
+				display('no input signals');
+				try
+					suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType])
+				catch
+				end
+				continue;
+			end
+			if sum(valid==1)==0
+				disp('Switching to random labels since no cells')
+				valid = rand(size(valid))>0.5;
+				validType = 'random';
+			end
 			% size(signalPeakIdx)
 			% return
 
-			xx = 2;
-			yy = 4;
+			rowSubP = options.rowSubP;
+			colSubP = options.colSubP;
 
 			try
 				output1 = createObjMap(groupImagesByColor(inputImages,rand([size(inputImages,3) 1])+(1e4*valid(:)'),'thresholdImages',1));
@@ -156,15 +177,14 @@ function obj = viewObjmaps(obj,varargin)
 				output1 = createObjMap(groupImagesByColor(inputImages,rand([size(inputImages,3) 1]),'thresholdImages',1));
 			end
 
-			[~,~] = openFigure(45+thisFileNumIdx, '');
-			subplotTmp(xx,yy,1)
+			subplotTmp(rowSubP,colSubP,1)
 				imagesc(output1)
 				% colormap(gca,[gray(sum(valid==0));customColormap([],'nPoints',round(sum(valid==1)/2))])
 				colormap(gca,[gray(sum(valid==0));jet(sum(valid==1))])
 				axis equal tight; box off;
 				title('Cellmap | colored = cells | gray = non-cells')
 
-			subplotTmp(xx,yy,2)
+			subplotTmp(rowSubP,colSubP,2)
 				imagesc(nanmax(inputImages,[],3))
 				colormap(gca,'parula')
 				% s2Pos = get(gca,'position');
@@ -174,7 +194,7 @@ function obj = viewObjmaps(obj,varargin)
 				title('Cellmap | All extraction outputs')
 
 			% Threshold
-			% subplotTmp(xx,yy,3)
+			% subplotTmp(rowSubP,colSubP,3)
 				inputImagesThres = inputImages(:,:,logical(valid));
 				[thresholdedImages boundaryIndices] = thresholdImages(inputImagesThres,'binary',1,'getBoundaryIndex',1,'threshold',userThreshold,'imageFilter','median');
 				cellmapHere = zeros(size(output1));
@@ -200,58 +220,19 @@ function obj = viewObjmaps(obj,varargin)
 				% axis equal tight; box off;
 				% title('Cellmap | Outlines')
 
-			movieList = getFileList(obj.inputFolders{obj.fileNum}, obj.fileFilterRegexp);
-			if ~isempty(movieList)
-				movieDims = loadMovieList(movieList{1},'getMovieDims',1,'inputDatasetName',obj.inputDatasetName);
-				if movieDims.three<nanmax(userVideoFrames)
-					movieFrameProc = loadMovieList(movieList{1},'convertToDouble',0,'frameList',[],'inputDatasetName',obj.inputDatasetName);
-				else
-					movieFrameProc = loadMovieList(movieList{1},'convertToDouble',0,'frameList',userVideoFrames,'inputDatasetName',obj.inputDatasetName);
-				end
+			subfxnDisplayMovie();
 
-				subplotTmp(xx,yy,yy+1)
-					imagesc(nanmax(movieFrameProc,[],3))
-					axis equal tight; box off;
-					% colormap([0 0 0;obj.colormap])
-					colormap(gca,'gray')
-					title('Movie | raw, no pre-processing')
-
-				movieFrameProcNorm = normalizeVector(nanmax(movieFrameProc,[],3),'normRange','zeroToOne');
-				rgbImgCopy = cat(3,rMap,gMap,bMap);
-				movieFrameProcNorm(max(rgbImgCopy,[],3)>0) = 0;
-				rMap = movieFrameProcNorm+rMap;
-				gMap = movieFrameProcNorm+gMap;
-				bMap = movieFrameProcNorm+bMap;
-
-				% nCells = size(inputImagesThres,3);
-				% for cellNo = 1:nCells
-				% 	rMap([boundaryIndices{cellNo}]) = rand(1);
-				% 	gMap([boundaryIndices{cellNo}]) = rand(1);
-				% 	bMap([boundaryIndices{cellNo}]) = rand(1);
-				% end
-
-				rgbImg = cat(3,rMap,gMap,bMap);
-
-				subplotTmp(xx,yy,yy+2)
-					imagesc(rgbImg)
-					axis equal tight; box off;
-					title('Movie | raw, no pre-processing with cellmap')
-
-			end
-
-			subplotTmp(xx,yy,[3 4 7 8])
+			subplotTmp(rowSubP,colSubP,[3 4 7 8])
 				plotSignalsGraph(inputSignals(logical(valid),:),'newAxisColorOrder','default')
 				axis tight
 				title('Cell activity traces')
 
-			axHandle = subplotTmp(xx,yy,2);
+			axHandle = subplotTmp(rowSubP,colSubP,2);
 				imagesc(nanmax(inputImages,[],3))
 				axis equal tight; box off;
 				title('Cellmap | All extraction outputs')
 
-			[~,foldername,~] = fileparts(obj.inputFolders{obj.fileNum});
-
-			suptitle([obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType])
+			suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType])
 
 				% s2Pos = get(gca,'position');
 				s2Pos = plotboxpos(gca);
@@ -261,16 +242,112 @@ function obj = viewObjmaps(obj,varargin)
 
 			set(gcf,'SizeChangedFcn',@(hObject,event) resizeui(hObject,event,axHandle));
 
-			% createObjMap(groupImagesByColor(inputImages,rand([size(inputImages,3) 1])+nanmax(inputImages(:)),'thresholdImages',0))
+
+
+			% =======
+			% Plot cellmaps with all cells individually numbered
+			[~,~] = openFigure(2000+thisFileNumIdx, '');
+				clf
+				% createObjMap(groupImagesByColor(inputImages,rand([size(inputImages,3) 1])+nanmax(inputImages(:)),'thresholdImages',0))
+				cellCoords = obj.objLocations{obj.fileNum}.(obj.signalExtractionMethod);
+				cellCoords = cellCoords(valid,:);
+				% cellCoords = cellCoords(validRegion,:);
+
+				inputImagesTmp = inputImages(:,:,logical(valid));
+				try
+					output1 = createObjMap(groupImagesByColor(inputImagesTmp,rand([size(inputImagesTmp,3) 1]),'thresholdImages',1));
+				catch
+					output1 = createObjMap(groupImagesByColor(inputImages(:,:,logical(valid)),rand([size(inputImages,3) 1]),'thresholdImages',1));
+				end
+				% imagesc(max(inputImages(:,:,logical(valid)),[],3))
+				imagesc(output1)
+				% colormap([0 0 0;customColormap([])])
+				zoom on
+				colormap([0 0 0;customColormap({[1 0 0],[0 0 1]})])
+				hold on
+				for signalNo = 1:size(inputImagesTmp,3)
+					coordX = cellCoords(signalNo,1);
+					coordY = cellCoords(signalNo,2);
+					% plot(coordX,coordY,'w.','MarkerSize',5)
+					text(coordX,coordY,num2str(signalNo),'Color',[1 1 1],'HorizontalAlignment','center')
+
+				end
+				imgRowY = size(inputImagesTmp,1);
+				imgColX = size(inputImagesTmp,2);
+				scaleBarLengthPx = options.scaleBarLengthMicron/obj.MICRON_PER_PIXEL;
+				% [imgColX-scaleBarLengthPx-round(imgColX*0.05) imgRowY-round(imgRowY*0.05) scaleBarLengthPx 5]
+				% rectangle('Position',[imgColX-scaleBarLengthPx-imgColX*0.05 imgRowY-imgRowY*0.05 scaleBarLengthPx 5],'FaceColor',[1 1 1],'EdgeColor','none')
+				% annotation('line',[imgRow-50 imgRow-30]/imgRow,[20 20]/imgCol,'LineWidth',3,'Color',[1 1 1]);
+
+				suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType 10 'Zoom enabled.'])
+
 		catch err
 			display(repmat('@',1,7))
 			disp(getReport(err,'extended','hyperlinks','on'));
 			display(repmat('@',1,7))
+			try
+				[~,~] = openFigure(45+thisFileNumIdx, '');
+				subfxnDisplayMovie()
+			catch err
+				display(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				display(repmat('@',1,7))
+			end
+			try
+				for iii = [45 2000]
+					[~,~] = openFigure(iii+thisFileNumIdx, '');
+					suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType])
+				end
+			catch err
+				display(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				display(repmat('@',1,7))
+			end
+		end
+	end
+	function subfxnDisplayMovie()
+		movieList = getFileList(obj.inputFolders{obj.fileNum}, obj.fileFilterRegexp);
+		if ~isempty(movieList)
+			movieDims = loadMovieList(movieList{1},'getMovieDims',1,'inputDatasetName',obj.inputDatasetName);
+			if movieDims.three<nanmax(userVideoFrames)
+				movieFrameProc = loadMovieList(movieList{1},'convertToDouble',0,'frameList',[],'inputDatasetName',obj.inputDatasetName);
+			else
+				movieFrameProc = loadMovieList(movieList{1},'convertToDouble',0,'frameList',userVideoFrames,'inputDatasetName',obj.inputDatasetName);
+			end
+
+			subplotTmp(rowSubP,colSubP,colSubP+1)
+				imagesc(nanmax(movieFrameProc,[],3))
+				axis equal tight; box off;
+				% colormap([0 0 0;obj.colormap])
+				colormap(gca,'gray')
+				title('Movie | raw, no pre-processing')
+
+			movieFrameProcNorm = normalizeVector(nanmax(movieFrameProc,[],3),'normRange','zeroToOne');
+			rgbImgCopy = cat(3,rMap,gMap,bMap);
+			movieFrameProcNorm(max(rgbImgCopy,[],3)>0) = 0;
+			rMap = movieFrameProcNorm+rMap;
+			gMap = movieFrameProcNorm+gMap;
+			bMap = movieFrameProcNorm+bMap;
+
+			% nCells = size(inputImagesThres,3);
+			% for cellNo = 1:nCells
+			% 	rMap([boundaryIndices{cellNo}]) = rand(1);
+			% 	gMap([boundaryIndices{cellNo}]) = rand(1);
+			% 	bMap([boundaryIndices{cellNo}]) = rand(1);
+			% end
+
+			rgbImg = cat(3,rMap,gMap,bMap);
+
+			subplotTmp(rowSubP,colSubP,colSubP+2)
+				imagesc(rgbImg)
+				axis equal tight; box off;
+				title('Movie | raw, no pre-processing with cellmap')
+
 		end
 	end
 end
 function resizeui(hObject,event,axHandle)
-	% inputMoviePlotLoc2Handle = subplotTmp(xx,yy,2)
+	% inputMoviePlotLoc2Handle = subplotTmp(rowSubP,colSubP,2)
 	% disp('Check')
 	colorbar(axHandle,'off')
 	% s2Pos = get(axHandle,'position');
