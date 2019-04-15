@@ -725,21 +725,48 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 						display(repmat('*',1,21))
 					end
 
-					if options.CNMFE.openEditor==1
-						[~,foldername,~] = fileparts(obj.inputFolders{obj.fileNum});
-						timeStr = datestr(now,'yyyymmdd_HHMMSS','local');
+					if options.CNMFE.openEditor==1||options.CNMFE.openEditor==2
+						if options.CNMFE.openEditor==1
+							% Use default settings
+							originalSettings = ['settings' filesep 'cnmfeSettings.m'];
+	                    else
+	                    	% Ask user to input their own custom settings
+	                    	display('Dialog box: Select CNMF-E settings file to load.')
+	                    	[filePath,folderPath,~] = uigetfile([pwd filesep '*.*'],'Select settings file to load.');
+	                    	% [~,fileNameH,extH] = fileparts([folderPath filePath]);
+	                    	% fileNameH = strrep(fileNameH,'cnmfeSettings_','');
+	                    	originalSettings = [folderPath filesep filePath];
+	                    end
 
-						% Truncate to deal with MATLAB limit
-						newFile = ['cnmfeSettings_' timeStr '_' foldername];
-						if (length(newFile )+2)>namelengthmax
+	                    [~,foldername,~] = fileparts(obj.inputFolders{obj.fileNum});
+	                    timeStr = datestr(now,'yyyymmdd_HHMMSS','local');
+	                    newFile = ['cnmfeSettings_' timeStr '_' foldername];
+
+	                    % Truncate to deal with MATLAB limit
+						if (length(newFile)+2)>namelengthmax
+                            fprintf('Truncating filename to comply with maximum file length limits in MATLAB.\nOld: "%s"\nNew: "%s"\n\n',newFile,newFile(1:namelengthmax-2));
 							newFile = newFile(1:namelengthmax-2);
-                            disp('Truncating filename to comply with maximum file length limits in MATLAB');
                         end
+
                         newSettings = ['private' filesep 'settings' filesep newFile '.m'];
 
-						copyfile(['settings' filesep 'cnmfeSettings.m'],newSettings);
+                        fprintf('Copying "%s" to\n"%s"\n\n',originalSettings,newSettings);
+						copyfile(originalSettings,newSettings);
+
+						% Add a note about original filename
+						fileID = fopen(newSettings);
+						fileText = textscan(fileID,'%s','Delimiter','\n','CollectOutput',true);
+						fclose(fileID);
+						fileID = fopen(newSettings,'w');
+						fileText{1}{end+1} = ['% From original settings file: ' originalSettings];
+						fileText{1} = fileText{1}([end,1:end-1]);
+						for rowNo = 1:length(fileText{1})
+						    fprintf(fileID,'%s\n',fileText{1}{rowNo});
+						end
+						fclose(fileID);
+
 						h1 = matlab.desktop.editor.openDocument([pwd filesep newSettings]);
-						disp(['Close ' newFile '.m file in Editor to continue!'])
+						disp(['Close "' newFile '.m" file in Editor to continue!'])
 						% pause while user edits
 						while h1.Opened==1;end
 						h1.close
@@ -747,31 +774,6 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 						%a1 = matlab.desktop.editor.getAll;
 						% Close the most recently open document
 						%a1(end).close
-
-						options.CNMFE.settingsFile = newSettings;
-					elseif options.CNMFE.openEditor==2
-						display('Dialog box: Select settings file to load.')
-						[filePath,folderPath,~] = uigetfile([pwd filesep '*.*'],'Select settings file to load.');
-
-						[~,foldername,~] = fileparts(obj.inputFolders{obj.fileNum});
-						timeStr = datestr(now,'yyyymmdd_HHMMSS','local');
-						[~,fileNameH,extH] = fileparts([folderPath filePath]);
-
-						% Truncate to deal with MATLAB limit
-						newFile = [fileNameH '_' timeStr '_' foldername];
-						if (length(newFile)+2)>namelengthmax
-							newFile = newFile(1:namelengthmax-2);
-							disp('Truncating filename to comply with maximum file length limits in MATLAB');
-						end
-						newSettings = ['private' filesep 'settings' filesep newFile '.m'];
-
-						copyfile([folderPath filesep filePath],newSettings);
-						h1 = matlab.desktop.editor.openDocument([pwd filesep newSettings]);
-						disp(['Close ' newFile '.m file in Editor to continue!'])
-						% pause while user edits
-						while h1.Opened==1;end
-						h1.close
-						clear h1;
 
 						options.CNMFE.settingsFile = newSettings;
 					else

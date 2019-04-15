@@ -6,11 +6,11 @@
 % ========================
 % OVERALL
 % turn on parallel
-options.nonCNMF.parallel = 1;
+cnmfeOpts.nonCNMF.parallel = 1;
 % Binary: 1 = run merging algorithms
-options.runMerge = 1;
+cnmfeOpts.runMerge = 1;
 % Binary: 1 = remove false positives using CNMF-E algorithm
-options.runRemoveFalsePositives = 1;
+cnmfeOpts.runRemoveFalsePositives = 1;
 % ===COMPUTATION
 % Float: GB, memory space you allow to use in MATLAB
 cnmfeOpts.memory_size_to_use = 32; %
