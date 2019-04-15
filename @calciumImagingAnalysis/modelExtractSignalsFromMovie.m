@@ -737,7 +737,6 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
                         end
                         newSettings = ['private' filesep 'settings' filesep newFile '.m'];
 
-						newSettings = ['private' filesep 'settings' filesep 'cnmfeSettings_' timeStr '_' foldername '.m'];
 						copyfile(['settings' filesep 'cnmfeSettings.m'],newSettings);
 						h1 = matlab.desktop.editor.openDocument([pwd filesep newSettings]);
 						disp(['Close ' newFile '.m file in Editor to continue!'])
