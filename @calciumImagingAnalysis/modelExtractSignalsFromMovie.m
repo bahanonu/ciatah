@@ -729,10 +729,18 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 						[~,foldername,~] = fileparts(obj.inputFolders{obj.fileNum});
 						timeStr = datestr(now,'yyyymmdd_HHMMSS','local');
 
+						% Truncate to deal with MATLAB limit
+						newFile = ['cnmfeSettings_' timeStr '_' foldername];
+						if (length(newFile )+2)>namelengthmax
+							newFile = newFile(1:namelengthmax-2);
+                            disp('Truncating filename to comply with maximum file length limits in MATLAB');
+                        end
+                        newSettings = ['private' filesep 'settings' filesep newFile '.m'];
+
 						newSettings = ['private' filesep 'settings' filesep 'cnmfeSettings_' timeStr '_' foldername '.m'];
 						copyfile(['settings' filesep 'cnmfeSettings.m'],newSettings);
 						h1 = matlab.desktop.editor.openDocument([pwd filesep newSettings]);
-						disp(['Close ' 'cnmfeSettings_' timeStr '_' foldername '.m file in Editor to continue!'])
+						disp(['Close ' newFile '.m file in Editor to continue!'])
 						% pause while user edits
 						while h1.Opened==1;end
 						h1.close
@@ -750,12 +758,14 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 						timeStr = datestr(now,'yyyymmdd_HHMMSS','local');
 						[~,fileNameH,extH] = fileparts([folderPath filePath]);
 
-						% 'cnmfeSettings_'
+						% Truncate to deal with MATLAB limit
 						newFile = [fileNameH '_' timeStr '_' foldername];
 						if (length(newFile)+2)>namelengthmax
 							newFile = newFile(1:namelengthmax-2);
+							disp('Truncating filename to comply with maximum file length limits in MATLAB');
 						end
 						newSettings = ['private' filesep 'settings' filesep newFile '.m'];
+
 						copyfile([folderPath filesep filePath],newSettings);
 						h1 = matlab.desktop.editor.openDocument([pwd filesep newSettings]);
 						disp(['Close ' newFile '.m file in Editor to continue!'])

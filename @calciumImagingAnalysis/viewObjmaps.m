@@ -129,7 +129,8 @@ function obj = viewObjmaps(obj,varargin)
 
 	for thisFileNumIdx = 1:nFilesToAnalyze
 		[~,~] = openFigure(45+thisFileNumIdx, '');
-
+	end
+	for thisFileNumIdx = 1:nFilesToAnalyze
 		[~,~] = openFigure(2000+thisFileNumIdx, '');
 	end
 	% [figHandle figNo] = openFigure(969, '');
@@ -223,7 +224,12 @@ function obj = viewObjmaps(obj,varargin)
 			subfxnDisplayMovie();
 
 			subplotTmp(rowSubP,colSubP,[3 4 7 8])
-				plotSignalsGraph(inputSignals(logical(valid),:),'newAxisColorOrder','default')
+				if isempty(nSignalsShow)
+					plotSignalsGraph(inputSignals(logical(valid),:),'newAxisColorOrder','default');
+				else
+					inputSignalsTmp = inputSignals(logical(valid),:);
+					plotSignalsGraph(inputSignalsTmp(1:nSignalsShow),'newAxisColorOrder','default');
+				end
 				axis tight
 				title('Cell activity traces')
 
