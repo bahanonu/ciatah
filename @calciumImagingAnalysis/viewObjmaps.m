@@ -228,7 +228,7 @@ function obj = viewObjmaps(obj,varargin)
 					plotSignalsGraph(inputSignals(logical(valid),:),'newAxisColorOrder','default');
 				else
 					inputSignalsTmp = inputSignals(logical(valid),:);
-					plotSignalsGraph(inputSignalsTmp(1:nSignalsShow),'newAxisColorOrder','default');
+					plotSignalsGraph(inputSignalsTmp(1:nSignalsShow,:),'newAxisColorOrder','default');
 				end
 				axis tight
 				title('Cell activity traces')

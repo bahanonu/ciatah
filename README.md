@@ -33,8 +33,10 @@ Repository notes:
 - [Removing cells not within brain region with  `modelModifyRegionAnalysis`](#removing-cells-not-within-brain-region-with-modelmodifyregionanalysis)
 - [Cross-session cell alignment with  `computeMatchObjBtwnTrials`](#cross-session-cell-alignment-with-computematchobjbtwntrials)
 - [ImageJ+MATLAB based mouse location tracking](#imagejmatlab-based-mouse-location-tracking)
+- [Acknowledgments](#acknowledgments)
 - [References](#references)
 - [Questions](#questions)
+- [License](#license)
 
 ***
 
