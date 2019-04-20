@@ -91,7 +91,7 @@ function obj = computeManualSortSignals(obj)
 			end
 
 			try
-				[rawSignals rawImages signalPeaks signalPeaksArray] = modelGetSignalsImages(obj,'returnType','raw');
+				[rawSignals rawImages signalPeaks signalPeaksArray, ~, ~, rawSignals2] = modelGetSignalsImages(obj,'returnType','raw');
 				skipReload = 1;
 			catch
 				obj.guiEnabled = 0;
@@ -139,11 +139,14 @@ function obj = computeManualSortSignals(obj)
 				valid = validClassifier;
 			end
 
+			if skipReload==0
+				[rawSignals, rawImages, signalPeaks, signalPeaksArray, ~, ~, rawSignals2] = modelGetSignalsImages(obj,'returnType','raw');
+			end
 			switch usrIdxChoiceSignalType
 				case 'PCAICA'
-					if skipReload==0
-						[rawSignals rawImages signalPeaks signalPeaksArray] = modelGetSignalsImages(obj,'returnType','raw');
-					end
+					% if skipReload==0
+					% 	[rawSignals rawImages signalPeaks signalPeaksArray] = modelGetSignalsImages(obj,'returnType','raw');
+					% end
 					% check if the folder has temporary decisions to load (e.g. if a crash occured)
 					if usrIdxChoiceAutoValid==3
 						previousDecisionList = getFileList(currentFolderPath, strrep(options.cleanedICdecisionsSaveStr,'.mat',''));
@@ -156,9 +159,9 @@ function obj = computeManualSortSignals(obj)
 					ioptions.minValConstant = -0.02;
 					ioptions.threshold = 0.5;
 				case 'EM'
-					if skipReload==0
-						[rawSignals, rawImages, signalPeaks, signalPeaksArray] = modelGetSignalsImages(obj,'returnType','raw_CellMax');
-					end
+					% if skipReload==0
+					% 	[rawSignals, rawImages, signalPeaks, signalPeaksArray] = modelGetSignalsImages(obj,'returnType','raw_CellMax');
+					% end
 					if usrIdxChoiceAutoValid==3
 						previousDecisionList = getFileList(currentFolderPath, strrep(options.emSaveSorted,'.mat',''));
 						if ~isempty(previousDecisionList)
@@ -170,9 +173,9 @@ function obj = computeManualSortSignals(obj)
 					ioptions.minValConstant = -400;
 					ioptions.threshold = 0.5;
 				case 'EXTRACT'
-					if skipReload==0
-						[rawSignals, rawImages, signalPeaks, signalPeaksArray] = modelGetSignalsImages(obj,'returnType','raw');
-					end
+					% if skipReload==0
+					% 	[rawSignals, rawImages, signalPeaks, signalPeaksArray] = modelGetSignalsImages(obj,'returnType','raw');
+					% end
 					if usrIdxChoiceAutoValid==3
 						previousDecisionList = getFileList(currentFolderPath, strrep(obj.sortedEXTRACTStructSaveStr,'.mat',''));
 						if ~isempty(previousDecisionList)
@@ -185,9 +188,9 @@ function obj = computeManualSortSignals(obj)
 					ioptions.minValConstant = -10;
 					ioptions.threshold = 0.5;
 				case 'CNMF'
-					if skipReload==0
-						[rawSignals, rawImages, signalPeaks, signalPeaksArray] = modelGetSignalsImages(obj,'returnType','raw');
-					end
+					% if skipReload==0
+					% 	[rawSignals, rawImages, signalPeaks, signalPeaksArray] = modelGetSignalsImages(obj,'returnType','raw');
+					% end
 					if usrIdxChoiceAutoValid==3
 						previousDecisionList = getFileList(currentFolderPath, strrep(obj.sortedCNMFStructSaveStr,'.mat',''));
 						if ~isempty(previousDecisionList)
@@ -200,9 +203,9 @@ function obj = computeManualSortSignals(obj)
 					ioptions.minValConstant = -200;
 					ioptions.threshold = 0.3;
 				case 'CNMFE'
-					if skipReload==0
-						[rawSignals, rawImages, signalPeaks, signalPeaksArray] = modelGetSignalsImages(obj,'returnType','raw');
-					end
+					% if skipReload==0
+					% 	[rawSignals, rawImages, signalPeaks, signalPeaksArray, ~, ~, rawSignals2] = modelGetSignalsImages(obj,'returnType','raw');
+					% end
 					if usrIdxChoiceAutoValid==3
 						previousDecisionList = getFileList(currentFolderPath, strrep(obj.extractionMethodSortedSaveStr.(obj.signalExtractionMethod),'.mat',''));
 						if ~isempty(previousDecisionList)
@@ -271,6 +274,8 @@ function obj = computeManualSortSignals(obj)
 			ioptions.coord.xCoords = max(1,round(obj.objLocations{fileNum}.(obj.signalExtractionMethod)(:,1)));
 			ioptions.coord.yCoords = max(1,round(obj.objLocations{fileNum}.(obj.signalExtractionMethod)(:,2)));
 
+			ioptions.inputSignalsSecond = rawSignals2;
+
 			ioptions.preComputeImageCutMovies = userIdxPreComputeImageCutMovies;
 			% ioptions.classifierFilepath = options.classifierFilepath;
 			% ioptions.classifierType = options.classifierType;
@@ -278,9 +283,11 @@ function obj = computeManualSortSignals(obj)
 			if userIdxOnlyResortGoodSources==1&usrIdxChoiceAutoValid==3
 				newValid = logical(valid);
 				rawImages = rawImages(:,:,newValid);
-				rawSignals =rawSignals(newValid,:);
+				rawSignals = rawSignals(newValid,:);
+				rawSignals2 = rawSignals2(newValid,:);
 				ioptions.signalPeaks = ioptions.signalPeaks(newValid,:);
 				ioptions.signalPeaksArray = ioptions.signalPeaksArray(newValid);
+				ioptions.inputSignalsSecond = rawSignals2;
 				ioptions.valid = ioptions.valid(newValid);
 				ioptions.coord.xCoords = ioptions.coord.xCoords(newValid);
 				ioptions.coord.yCoords = ioptions.coord.yCoords(newValid);

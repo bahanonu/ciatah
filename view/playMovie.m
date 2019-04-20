@@ -377,10 +377,12 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 			    end
 
 		    	% colormap gray
-		    	ylim([-0.05 max(max(options.extraLinePlot))]);
+		    	% ylim([-0.05 max(max(options.extraLinePlot))]);
+		    	ylim([nanmin(options.extraLinePlot(:)) nanmax(options.extraLinePlot(:))]);
 		    	xval = 0;
 		    	x=[xval,xval];
-		    	y=[-0.05 max(max(options.extraLinePlot))];
+		    	% y=[-0.05 max(max(options.extraLinePlot))];
+		    	y=[nanmin(options.extraLinePlot(:)) nanmax(options.extraLinePlot(:))];
 		    	plot(x,y,'r'); box off; hold on
 		    	% hold off;
 		    	if ~isempty(options.extraLinePlotLegend)

@@ -1,4 +1,4 @@
-function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, validType] = modelGetSignalsImages(obj,varargin)
+function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, validType, inputSignals2] = modelGetSignalsImages(obj,varargin)
 	% Grabs input signals and images from current folder
 	% Biafra Ahanonu
 	% branched from controllerAnalysis: 2014.08.01 [16:09:16]
@@ -59,6 +59,8 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 	else
 		thisFileNum = options.fileNum;
 	end
+
+	inputSignals2 = [];
 
 	options.returnTypeTwo = options.returnType;
 	switch options.returnType
@@ -246,6 +248,8 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 			inputSignals = double(cnmfAnalysisOutput.extractedSignals);
 			% inputSignals = double(cnmfAnalysisOutput.extractedSignalsEst);
 
+			inputSignals2 = double(cnmfAnalysisOutput.extractedSignalsEst);
+
 			if options.loadAlgorithmPeaks==1
 				signalPeaks = cnmfAnalysisOutput.extractedPeaks>0;
 				nCells=size(signalPeaks,1);
@@ -266,6 +270,8 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 			% inputSignals = double(permute(extractAnalysisOutput.traces, [2 1]));
 			% inputSignals = double(cnmfeAnalysisOutput.extractedSignalsEst);
 			inputSignals = double(cnmfeAnalysisOutput.extractedSignals);
+
+			inputSignals2 = double(cnmfeAnalysisOutput.extractedSignalsEst);
 
 			if options.loadAlgorithmPeaks==1
 				signalPeaks = cnmfeAnalysisOutput.extractedPeaks>0;
@@ -305,6 +311,8 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 			else
 				inputSignals = emAnalysisOutput.cellTraces;
 			end
+
+			inputSignals2 = double(emAnalysisOutput.cellTraces);
 
 			% inputSignals = double(emAnalysisOutput.scaledProbabilityAlt);
 
@@ -425,6 +433,9 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 
 				case 'filtered'
 					inputSignals = inputSignals(valid,:);
+					if ~isempty(inputSignals2)
+						inputSignals2 = inputSignals2(valid,:);
+					end
 					signalPeaksArray = {obj.signalPeaksArray{thisFileNum}{valid}};
 					% signalPeaks = zeros([obj.nSignals{thisFileNum} obj.nFrames{thisFileNum}]);
 					signalPeaks = zeros([length(signalPeaksArray) obj.nFrames{thisFileNum}]);
@@ -434,6 +445,9 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 					% signalPeaks = signalPeaks(valid,:);
 				case 'filteredAndRegistered'
 					inputSignals = inputSignals(valid,:);
+					if ~isempty(inputSignals2)
+						inputSignals2 = inputSignals2(valid,:);
+					end
 					% inputImages = IcaFilters(valid,:,:);
 					signalPeaksArray = {obj.signalPeaksArray{thisFileNum}{valid}};
 
@@ -468,7 +482,9 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 						% get the global coordinate number based
 						% globalRegCoords = globalRegCoords{strcmp(obj.assay{thisFileNum},obj.globalIDFolders.(obj.subjectStr{thisFileNum}))};
                         % globalRegCoords = globalRegCoords{strcmp(obj.date{thisFileNum},obj.globalIDFolders.(obj.subjectStr{thisFileNum}))};
-                        globalRegCoords = globalRegCoords{strcmp(obj.folderBaseSaveStr{thisFileNum},obj.globalIDFolders.(obj.subjectStr{thisFileNum}))};
+                        % globalRegCoords = globalRegCoords{strcmp(obj.folderBaseSaveStr{thisFileNum},obj.globalIDFolders.(obj.subjectStr{thisFileNum}))};
+                        globalRegCoords = globalRegCoords{strcmp(obj.folderBaseSaveStrUnique{thisFileNum},obj.globalIDFolders.(obj.subjectStr{thisFileNum}))};
+
 						if ~isempty(globalRegCoords)
 							% inputImages = permute(inputImages,[2 3 1]);
 							for iterationNo = 1:length(globalRegCoords)

@@ -26,7 +26,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		MICRON_PER_PIXEL =  2.51; % 2.37;
 
 		defaultObjDir = pwd;
-		classVersion = 'v3.20190414';
+		classVersion = 'v3.20190420';
 		serverPath = '';
 		privateSettingsPath = ['private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
 		% place where functions can temporarily story user settings
@@ -247,6 +247,8 @@ classdef calciumImagingAnalysis < dynamicprops
 		% signal related
 		% either the raw signals (traces) or
 		rawSignals = {};
+		% secondary either the raw signals (traces) or
+		rawSignals2 = {};
 		%
 		rawImages = {};
 		% computed signal peaks/locations, to reduce computation in functions
@@ -302,6 +304,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		folderBaseSaveStr = {};
 		folderBasePlaneSaveStr = {};
 		folderBaseDisplayStr = {};
+		folderBaseSaveStrUnique = {};
 
 		% path to CSV/TAB file or matlab table containing trial information and frames when stimuli occur
 		discreteStimulusTable = {};
@@ -557,7 +560,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		obj = modelTrackingData(obj)
 
 		% helper
-		[inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, validType] = modelGetSignalsImages(obj,varargin)
+		[inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, validType, inputSignals2] = modelGetSignalsImages(obj,varargin)
 		[fileIdxArray, idNumIdxArray, nFilesToAnalyze, nFiles] = getAnalysisSubsetsToAnalyze(obj)
 		[turboregSettingStruct] = getRegistrationSettings(obj,inputTitleStr)
 

@@ -30,5 +30,8 @@ function obj = modelGetFileInfo(obj)
 	    obj.folderBaseSaveStr{i} = strcat(fileInfo.date,'_',fileInfo.protocol,'_',fileInfo.subject,'_',fileInfo.assay);
 	    obj.folderBasePlaneSaveStr{i} = strcat(fileInfo.date,'_',fileInfo.protocol,'_',fileInfo.subject,'_',fileInfo.assay,'_',fileInfo.imagingPlane);
 	    obj.folderBaseDisplayStr{i} = strrep(obj.folderBaseSaveStr{i},'_',' ');
+
+	    obj.folderBaseSaveStrUnique{i} = strcat(fileInfo.date,'_',fileInfo.protocol,'_',fileInfo.subject,'_',fileInfo.assay,'_',datestr(now,'yyyymmdd_HHMMSSFFF','local'));
+	    pause(0.001)
 	end
 end

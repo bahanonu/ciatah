@@ -90,7 +90,8 @@ function viewNeighborsAuto(inputImages, inputSignals, neighborsCell, varargin)
             imAlpha(isnan(croppedPeakImages2))=0;
             imagesc(croppedPeakImages2,'AlphaData',imAlpha);
             set(gca,'color',[0 0 0]);
-            title(['#' num2str(cellnum) '/' num2str(nCells) ' | neighboring cells | top-left = this cell'])
+            title(['#' num2str(cellnum) '/' num2str(nCells) ' | neighboring cells' 10 'top-left = this cell, #s increase L->R and T->B'])
+            axis equal tight
 
         % plot the traces
         subplot(2,3,[1:2 4:5])
@@ -99,7 +100,8 @@ function viewNeighborsAuto(inputImages, inputSignals, neighborsCell, varargin)
             axis tight
             xlabel('Time (frames)')
             ylabel('Cell activity')
-            title(instructionStr);
+            % suptitle(instructionStr);
+            zoom on
 
         % plot correlations
         subplot(2,3,6)
@@ -113,11 +115,24 @@ function viewNeighborsAuto(inputImages, inputSignals, neighborsCell, varargin)
             % imagesc(l);
             xlabel('cells');
             ylabel('cells');
-            title(['cell-cell trace correlations | cell #1 = this cell']);
+            title(['cell-cell trace correlations' 10 'cell #1 = this cell']);
+            box off; axis equal tight
+            caxis([0 1])
 
-
+        suptitle(instructionStr);
         set(findall(gcf,'-property','FontSize'),'FontSize',13);
-        [x,y,reply]=ginput(1);
+        % [x,y,reply]=ginput(1);
+
+        set(gcf,'currentch','3');
+        keyIn = get(gcf,'CurrentCharacter');
+
+        while strcmp(keyIn,'3')
+            keyIn = get(gcf,'CurrentCharacter');
+            pause(0.05);
+        end
+        reply = double(keyIn);
+        set(gcf,'currentch','3');
+
         [valid directionOfNextChoice exitLoop cellnum] = respondToUserInput(reply,cellnum,valid,directionOfNextChoice,exitLoop,nCells);
 
         cellnum=cellnum+directionOfNextChoice;
@@ -128,6 +143,7 @@ function viewNeighborsAuto(inputImages, inputSignals, neighborsCell, varargin)
             cellnum = 1;
         end
     end
+    close(21)
 
 end
 

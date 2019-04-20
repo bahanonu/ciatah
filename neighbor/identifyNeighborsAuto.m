@@ -31,6 +31,11 @@ function neighborsCell = identifyNeighborsAuto(inputImages, inputSignals, vararg
 
     options.inputImagesThres = [];;
 
+    %
+    options.startCellNo = 1;
+    %
+    options.cropSizeLength = 20;
+
     % get options
     options = getOptions(options,varargin);
     % unpack options into current workspace
