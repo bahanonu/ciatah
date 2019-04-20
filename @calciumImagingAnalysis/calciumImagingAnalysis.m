@@ -83,6 +83,8 @@ classdef calciumImagingAnalysis < dynamicprops
 		hdf5Datasetname = '/1';
 		% type of images to save analysis as '-dpng','-dmeta','-depsc2'
 		imgSaveTypes = {'-dpng'};
+		% Custom subject regexp find string to pass to getFileInfo
+		subjectRegexp = '(m|M|f|F|Mouse|mouse|Mouse_|mouse_)\d+';
 		% colormap to be used
 		% colormap = customColormap([]);
 		% colormap = customColormap({[0 0 0.7],[1 1 1],[0.7 0 0]});

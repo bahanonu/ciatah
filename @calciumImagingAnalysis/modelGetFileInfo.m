@@ -13,7 +13,7 @@ function obj = modelGetFileInfo(obj)
 		%
 	obj.inputFolders = obj.dataPath;
 	for i=1:length(obj.dataPath)
-	    fileInfo = getFileInfo(obj.dataPath{i});
+	    fileInfo = getFileInfo(obj.dataPath{i},'subjectRegexp',obj.subjectRegexp);
 	    % fileInfo
 	    obj.subjectStr{i} = fileInfo.subject;
 	    obj.subjectNum{i} = fileInfo.subjectNum;

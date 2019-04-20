@@ -39,6 +39,8 @@ function [success] = downsampleHdf5Movie(inputFilePath, varargin)
 	options.newFilenameTwo = [pathstr filesep 'concat_' name '.h5'];
 	% Int: Defines gzip compression level (0-9). 0 = no compression, 9 = most compression.
  	options.deflateLevel = 1;
+ 	% Int: chunk size in [x y z] of the dataset, leave empty for auto chunking
+ 	options.dataDimsChunkCopy = [128 128 1];
 	% get options
 	options = getOptions(options,varargin);
 	% unpack options into current workspace
@@ -97,7 +99,7 @@ function [success] = downsampleHdf5Movie(inputFilePath, varargin)
 
 			% save the movie
 			if currentSubset==1
-				createHdf5File(options.newFilename, options.outputDatasetName, inputMovie,'deflateLevel',options.deflateLevel);
+				createHdf5File(options.newFilename, options.outputDatasetName, inputMovie,'deflateLevel',options.deflateLevel,'dataDimsChunkCopy',options.dataDimsChunkCopy);
 			else
 				appendDataToHdf5(options.newFilename, options.outputDatasetName, inputMovie);
 			end
@@ -111,7 +113,7 @@ function [success] = downsampleHdf5Movie(inputFilePath, varargin)
 				downsampleMovieNested('downsampleDimension', 'space','downsampleFactor',options.downsampleFactorTwo,'waitbarInterval',options.waitbarInterval);
 				% save the movie
 				if currentSubset==1
-					createHdf5File(options.newFilenameTwo, options.outputDatasetName, inputMovie,'deflateLevel',options.deflateLevel);
+					createHdf5File(options.newFilenameTwo, options.outputDatasetName, inputMovie,'deflateLevel',options.deflateLevel,'dataDimsChunkCopy',options.dataDimsChunkCopy);
 				else
 					appendDataToHdf5(options.newFilenameTwo, options.outputDatasetName, inputMovie);
 				end
