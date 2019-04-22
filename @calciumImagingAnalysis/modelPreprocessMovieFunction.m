@@ -939,7 +939,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		    % thisMovie(:,:,movieSubset) = turboregMovie(thisMovie(:,:,movieSubset),'options',ioptions);
 		    % j = whos('turboregThisMovie');j.bytes=j.bytes*9.53674e-7;j
 		    j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
-	    	[thisMovie(:,:,movieSubset), ResultsOutOriginal{movieSubset}] = turboregMovie(thisMovie(:,:,movieSubset),'options',ioptions);
+	    	[thisMovie(:,:,movieSubset), ResultsOutOriginal{thisSet}] = turboregMovie(thisMovie(:,:,movieSubset),'options',ioptions);
 		    % if thisSet==1&thisSet~=nSubsets
 		    % 	% class(movieSubset)
 		    % 	% movieSubset
