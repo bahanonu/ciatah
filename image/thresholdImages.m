@@ -17,6 +17,7 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
         % 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
         % 2017 or 2018 - added boundaryIndices support.
         % 2019.03.05 [19:21:30] Change to using bwareafilt to remove unconnected points from main structure
+        % 2019.04.23 [19:51:26] Deal with images that are all zeros.
     % TODO
         %
 
@@ -154,8 +155,12 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
             end
 
         elseif options_normalize==1
-            % normalize
-            thisFilt=thisFilt/maxVal;
+            % normalize, don't divide by zero (e.g. for zero variance images)
+            if maxVal~=0
+                thisFilt=thisFilt/maxVal;
+            else
+            end
+            thisFilt(isnan(thisFilt)) = replaceVal;
         else
             % do nothing
         end

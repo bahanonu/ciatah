@@ -9,6 +9,7 @@ function obj = viewMatchObjBtwnSessions(obj)
 
 	% changelog
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
+		% 2019.04.23 [19:53:21] - a couple Windows specific path separators, switch to filesep
 	% TODO
 		%
 
@@ -441,7 +442,7 @@ function obj = viewMatchObjBtwnSessions(obj)
 							% title(strrep(obj.folderBaseSaveStr(obj.fileNum),'_',' '))
 							colormap([1 1 1; 0.9 0.9 0.9; hsv(nGlobalIDs)]);
 							set(sessionNo,'PaperUnits','inches','PaperPosition',[0 0 9 9])
-							obj.modelSaveImgToFile([],[folderSaveName{matchingNumbers} 'Session\' thisSubjectStr],sessionNo,strcat(thisFileID));
+							obj.modelSaveImgToFile([],[folderSaveName{matchingNumbers} 'Session' filesep thisSubjectStr],sessionNo,strcat(thisFileID));
 						[~, ~] = openFigure(thisFigNo, '');
 						subplot(1,nSessions,sessionNo)
 							% imagesc(globalToSessionIDs{sessionNo})
@@ -472,7 +473,7 @@ function obj = viewMatchObjBtwnSessions(obj)
 				for sessionNo = 1:nSessions
 					obj.fileNum = validFoldersIdx(sessionNo);
 					thisFileID = obj.fileIDArray{obj.fileNum};
-					obj.modelSaveImgToFile([],['matchObjColorMapSession\' thisSubjectStr],sessionNo,strcat(thisFileID));
+					obj.modelSaveImgToFile([],['matchObjColorMapSession' filesep thisSubjectStr],sessionNo,strcat(thisFileID));
 					set(sessionNo,'PaperUnits','inches','PaperPosition',[0 0 9 9])
 
 					frame = getframe(sessionNo);
