@@ -35,6 +35,12 @@ function obj = viewMovieRegistrationTest(obj)
 			end
 		end
 
+		for figNoFake = [9 4242 456 457 9019]
+		    [~, ~] = openFigure(figNoFake, '');
+		    clf
+		end
+	    drawnow
+
 		movieSettings = inputdlg({...
 				'start:end frames (leave blank for all)',...
 				'number of turboreg test to run',...

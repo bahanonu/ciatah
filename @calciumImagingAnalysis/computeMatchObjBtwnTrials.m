@@ -173,7 +173,8 @@ function obj = computeMatchObjBtwnTrials(obj)
 		validFoldersIdx
 		validFoldersIdx = validFoldersIdx([trialIDsTmp{:}]);
 		validFoldersIdx
-		globalAssayStr = obj.folderBaseSaveStr(validFoldersIdx);
+		% globalAssayStr = obj.folderBaseSaveStr(validFoldersIdx);
+		globalAssayStr = obj.folderBaseSaveStrUnique(validFoldersIdx);
 		obj.globalIDFolders.(thisSubjectStr) = globalAssayStr;
 	end
 end

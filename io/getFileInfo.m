@@ -54,7 +54,7 @@ function [fileInfo] = getFileInfo(fileStr, varargin)
 	options.planeRegexp = 'plane\d+';
 
 	options.trialList = {...
-	'01habit|02lickSession|03thresholds|04stimuliBlockOne|05stimuliBlockTwo|06stimuliBlockThree|07stimuliBlockFour|08stimuliBlockFive|baseline1|baseline2|baseline3|baseline4|baseline5'};
+	'01habit|02lickSession|03thresholds|04stimuliBlockOne|05stimuliBlockTwo|06stimuliBlockThree|07stimuliBlockFour|08stimuliBlockFive|baseline1|baseline2|baseline3|baseline4|baseline5|trial'};
 
 	% get options
 	options = getOptions(options,varargin);

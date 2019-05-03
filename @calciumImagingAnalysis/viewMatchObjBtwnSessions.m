@@ -9,6 +9,7 @@ function obj = viewMatchObjBtwnSessions(obj)
 
 	% changelog
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
+		% 2019.04.23 [19:53:21] - a couple Windows specific path separators, switch to filesep
 	% TODO
 		%
 
@@ -103,7 +104,9 @@ function obj = viewMatchObjBtwnSessions(obj)
                 display(repmat('*',1,7))
 				display([num2str(idx) '/' num2str(length(validFoldersIdx)) ': ' obj.fileIDNameArray{thisFileNum}]);
 				% folderGlobalIdx = find(strcmp(obj.assay(thisFileNum),globalIDFolders));
-                folderGlobalIdx = find(strcmp(obj.folderBaseSaveStr(thisFileNum),globalIDFolders));
+
+				% folderGlobalIdx = find(strcmp(obj.folderBaseSaveStr(thisFileNum),globalIDFolders));
+                folderGlobalIdx = find(strcmp(obj.folderBaseSaveStrUnique(thisFileNum),globalIDFolders));
 				if isempty(folderGlobalIdx)
 					display('skipping...')
 					continue
@@ -126,7 +129,9 @@ function obj = viewMatchObjBtwnSessions(obj)
 				display(repmat('*',1,7))
 				display([num2str(idx) '/' num2str(length(validFoldersIdx)) ': ' obj.fileIDNameArray{thisFileNum}]);
 				% folderGlobalIdx = find(strcmp(obj.assay(thisFileNum),globalIDFolders));
-                folderGlobalIdx = find(strcmp(obj.folderBaseSaveStr(thisFileNum),globalIDFolders));
+
+                folderGlobalIdx = find(strcmp(obj.folderBaseSaveStrUnique(thisFileNum),globalIDFolders));
+                % folderGlobalIdx = find(strcmp(obj.folderBaseSaveStr(thisFileNum),globalIDFolders));
                 %folderGlobalIdx = idx;
 				if isempty(folderGlobalIdx)
 					display('skipping...')
@@ -178,7 +183,9 @@ function obj = viewMatchObjBtwnSessions(obj)
 			for sessionNo = 1:nSessions
 				obj.fileNum = validFoldersIdx(sessionNo);
 				% folderGlobalIdx = find(strcmp(obj.assay(obj.fileNum),globalIDFolders));
-                folderGlobalIdx = find(strcmp(obj.folderBaseSaveStr(obj.fileNum),globalIDFolders));
+
+				folderGlobalIdx = find(strcmp(obj.folderBaseSaveStrUnique(obj.fileNum),globalIDFolders));
+                % folderGlobalIdx = find(strcmp(obj.folderBaseSaveStr(obj.fileNum),globalIDFolders));
 				for globalNo = 1:nGlobalIDs
 					sessionIdx = globalIDsTmp(globalNo,folderGlobalIdx);
 					if sessionIdx~=0
@@ -196,7 +203,8 @@ function obj = viewMatchObjBtwnSessions(obj)
 				try
 					obj.fileNum = validFoldersIdx(sessionNo);
 					thisFileID = obj.fileIDArray{obj.fileNum};
-					folderGlobalIdx = find(strcmp(obj.folderBaseSaveStr(obj.fileNum),globalIDFolders));
+					folderGlobalIdx = find(strcmp(obj.folderBaseSaveStrUnique(obj.fileNum),globalIDFolders));
+					% folderGlobalIdx = find(strcmp(obj.folderBaseSaveStr(obj.fileNum),globalIDFolders));
 					% globalToSessionIDsTmp = globalToSessionIDs{sessionNo};
 					% keepIDIdx = globalIDs(nMatchGlobalIDs>=2,sessionNo);
 					% keepIDIdx(keepIDIdx<1) = [];
@@ -254,7 +262,9 @@ function obj = viewMatchObjBtwnSessions(obj)
 					for sessionNo = 1:nSessions
 						obj.fileNum = validFoldersIdx(sessionNo);
 						thisFileID = obj.fileIDArray{obj.fileNum};
-						folderGlobalIdx = find(strcmp(obj.folderBaseSaveStr(obj.fileNum),globalIDFolders));
+						% folderGlobalIdx = find(strcmp(obj.folderBaseSaveStr(obj.fileNum),globalIDFolders));
+						folderGlobalIdx = find(strcmp(obj.folderBaseSaveStrUnique(obj.fileNum),globalIDFolders));
+
 						sessionIdx = globalIDsTmp(globalNo,folderGlobalIdx);
 						if sessionIdx~=0
 							tt = obj.globalIDCoords.(thisSubjectStr).localCoords{sessionNo}(sessionIdx,:);
@@ -432,13 +442,15 @@ function obj = viewMatchObjBtwnSessions(obj)
 							% title(strrep(obj.folderBaseSaveStr(obj.fileNum),'_',' '))
 							colormap([1 1 1; 0.9 0.9 0.9; hsv(nGlobalIDs)]);
 							set(sessionNo,'PaperUnits','inches','PaperPosition',[0 0 9 9])
-							obj.modelSaveImgToFile([],[folderSaveName{matchingNumbers} 'Session\' thisSubjectStr],sessionNo,strcat(thisFileID));
+							obj.modelSaveImgToFile([],[folderSaveName{matchingNumbers} 'Session' filesep thisSubjectStr],sessionNo,strcat(thisFileID));
 						[~, ~] = openFigure(thisFigNo, '');
 						subplot(1,nSessions,sessionNo)
 							% imagesc(globalToSessionIDs{sessionNo})
 							imagesc(thisCellmap+1);box off;axis off;
 							% title(strrep(obj.assay(obj.fileNum),'_',' '))
-							title(strrep(obj.folderBaseSaveStr(obj.fileNum),'_',' '))
+
+							title(strrep(obj.folderBaseSaveStrUnique(obj.fileNum),'_',' '))
+							% title(strrep(obj.folderBaseSaveStr(obj.fileNum),'_',' '))
 							% colormap(customColormap([]))
 							% colormap([1 1 1; hsv(nGlobalIDs)]);
 							colormap([1 1 1; 0.9 0.9 0.9; hsv(nGlobalIDs)]);
@@ -461,7 +473,7 @@ function obj = viewMatchObjBtwnSessions(obj)
 				for sessionNo = 1:nSessions
 					obj.fileNum = validFoldersIdx(sessionNo);
 					thisFileID = obj.fileIDArray{obj.fileNum};
-					obj.modelSaveImgToFile([],['matchObjColorMapSession\' thisSubjectStr],sessionNo,strcat(thisFileID));
+					obj.modelSaveImgToFile([],['matchObjColorMapSession' filesep thisSubjectStr],sessionNo,strcat(thisFileID));
 					set(sessionNo,'PaperUnits','inches','PaperPosition',[0 0 9 9])
 
 					frame = getframe(sessionNo);

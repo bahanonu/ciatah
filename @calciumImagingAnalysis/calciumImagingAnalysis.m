@@ -26,7 +26,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		MICRON_PER_PIXEL =  2.51; % 2.37;
 
 		defaultObjDir = pwd;
-		classVersion = 'v3.20190414';
+		classVersion = 'v3.2.1-20190428';
 		serverPath = '';
 		privateSettingsPath = ['private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
 		% place where functions can temporarily story user settings
@@ -247,6 +247,8 @@ classdef calciumImagingAnalysis < dynamicprops
 		% signal related
 		% either the raw signals (traces) or
 		rawSignals = {};
+		% secondary either the raw signals (traces) or
+		rawSignals2 = {};
 		%
 		rawImages = {};
 		% computed signal peaks/locations, to reduce computation in functions
@@ -302,6 +304,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		folderBaseSaveStr = {};
 		folderBasePlaneSaveStr = {};
 		folderBaseDisplayStr = {};
+		folderBaseSaveStrUnique = {};
 
 		% path to CSV/TAB file or matlab table containing trial information and frames when stimuli occur
 		discreteStimulusTable = {};
@@ -552,12 +555,13 @@ classdef calciumImagingAnalysis < dynamicprops
 		obj = modelDownsampleRawMovies(obj)
 		obj = modelBatchCopyFiles(obj)
 		obj = modelLoadSaveData(obj)
+		obj = modelSaveMatchObjBtwnTrials(obj,varargin)
 
 		% helps clean and load tracking data
 		obj = modelTrackingData(obj)
 
 		% helper
-		[inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, validType] = modelGetSignalsImages(obj,varargin)
+		[inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, validType, inputSignals2] = modelGetSignalsImages(obj,varargin)
 		[fileIdxArray, idNumIdxArray, nFilesToAnalyze, nFiles] = getAnalysisSubsetsToAnalyze(obj)
 		[turboregSettingStruct] = getRegistrationSettings(obj,inputTitleStr)
 
@@ -866,12 +870,14 @@ classdef calciumImagingAnalysis < dynamicprops
 			obj.dataSavePath = ['private' filesep 'data' filesep datestr(now,'yyyymmdd','local') filesep];
 			obj.logSavePath = ['private' filesep 'logs' filesep datestr(now,'yyyymmdd','local') filesep];
 			obj.settingsSavePath = ['private' filesep 'settings'];
+			obj.videoSaveDir = ['private' filesep 'vids' filesep datestr(now,'yyyymmdd','local') filesep];
 
 			% ensure private folders are set
-			if ~exist(obj.picsSavePath,'dir');mkdir(obj.picsSavePath);end
-			if ~exist(obj.dataSavePath,'dir');mkdir(obj.dataSavePath);end
-			if ~exist(obj.logSavePath,'dir');mkdir(obj.logSavePath);end
+			if ~exist(obj.picsSavePath,'dir');mkdir(obj.picsSavePath);fprintf('Creating directory: %s\n',obj.picsSavePath);end
+			if ~exist(obj.dataSavePath,'dir');mkdir(obj.dataSavePath);fprintf('Creating directory: %s\n',obj.dataSavePath);end
+			if ~exist(obj.logSavePath,'dir');mkdir(obj.logSavePath);fprintf('Creating directory: %s\n',obj.logSavePath);end
 			if ~exist(obj.settingsSavePath,'dir');mkdir(obj.settingsSavePath);fprintf('Creating directory: %s\n',obj.settingsSavePath);end
+			if ~exist(obj.videoSaveDir,'dir');mkdir(obj.videoSaveDir);fprintf('Creating directory: %s\n',obj.videoSaveDir);end
 
 			% load user specific settings
 			loadUserSettings = ['private' filesep 'settings' filesep 'calciumImagingAnalysisInitialize.m'];
@@ -993,6 +999,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			'viewSubjectMovieFrames',
 			'computeMatchObjBtwnTrials',
 			'viewMatchObjBtwnSessions',
+			'modelSaveMatchObjBtwnTrials',
 			'computeCellDistances',
 			'computeCrossDayDistancesAlignment'
 			};

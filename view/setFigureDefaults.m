@@ -16,8 +16,31 @@ function setFigureDefaults()
 
 	% scnsize = get(0,'ScreenSize');
 	% pos1 = [scnsize(3)/2, 10, scnsize(3)/2-20, scnsize(4)-100];
-	defaultFontStr = 'Futura Std Book';
-	defaultUIFontStr = 'Arial';
+	% defaultFontStr = 'Futura Std Book';
+	% defaultUIFontStr = 'Arial';
+
+	% defaultFontStr = 'Futura Std Book';
+	% defaultUIFontStr = 'Futura Std Book';
+
+	defaultFontStr = 'Consolas';
+	defaultUIFontStr = 'Consolas';
+
+	% Change the command window and editor fonts
+	FontSize = 12;
+	% java.awt.Font.BOLD
+	if ismac
+		cmdWinEditorFont = 'Menlo-Regular';
+	elseif isunix
+	    cmdWinEditorFont = 'Consolas';
+	elseif ispc
+		cmdWinEditorFont = 'Consolas';
+	else
+	    disp('Platform not supported')
+	end
+
+	com.mathworks.services.FontPrefs.setCodeFont(java.awt.Font(cmdWinEditorFont,0,FontSize))
+    com.mathworks.services.FontPrefs.setTextFont(java.awt.Font(cmdWinEditorFont,0,FontSize))
+
 	% 'DefaultLineLineSmoothing','on',...
 	% 'DefaultPatchLineSmoothing','on',...
 	% set(0,'DefaultFigureWindowStyle','docked')

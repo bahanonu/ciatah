@@ -14,6 +14,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% 2015.01.19 [20:43:49] - changed how turboreg is passed to function to improve memory usage, also moved dfof and downsample directly into function to reduce memory footprint there as well.
 		% 2016.06.22 [13:20:43] small code change to choosing what steps to perform
 		% 2019.01.23 [09:15:39] Added support for 2018b due to change in findjobj and uicontrol.
+		% 2019.04.17 [11:59:35] Saving turboreg outputs added, in same folder as the log.
 	% TODO
 		% Insert NaNs or mean of the movie into dropped frame location, see line 260
 		% Allow easy switching between analyzing all files in a folder together and each file in a folder individually
@@ -304,6 +305,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			cd(obj.defaultObjDir);
 			currentDateTimeStr = datestr(now,'yyyymmdd_HHMMSS','local');
 			mkdir([thisDir filesep 'processing_info'])
+			thisProcessingDir = [thisDir filesep 'processing_info'];
 			diarySaveStr = [thisDir filesep 'processing_info' filesep currentDateTimeStr '_preprocess.log'];
 			display(['saving diary: ' diarySaveStr])
 			diary(diarySaveStr);
@@ -321,7 +323,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			% add the folder to the output structure
 			ostruct.folderList{fileNum} = thisDir;
 
-			optionsSaveStr = [thisDir filesep 'processing_info' filesep '\preprocessingOptions_' currentDateTimeStr '.mat'];
+			optionsSaveStr = [thisDir filesep 'processing_info' filesep currentDateTimeStr '_preprocessingOptions' '.mat'];
 
 			if sum(strcmp(analysisOptionList(analysisOptionsIdx),'turboreg'))>0
 				turboRegCoordsTmp2 = turboRegCoords{fileNum};
@@ -423,7 +425,11 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 										% Miji;
 										manageMiji('startStop','start');
 									end
+									ResultsOutOriginal = {};
 									turboregInputMovie();
+
+									% Save output of translation.
+									save([thisProcessingDir filesep currentDateTimeStr '_turboregTranslationOutput.mat'],'ResultsOutOriginal');
 									if strcmp(options.turboreg.filterBeforeRegister,'imagejFFT')
 										% MIJ.exit;
 										manageMiji('startStop','exit');
@@ -933,7 +939,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		    % thisMovie(:,:,movieSubset) = turboregMovie(thisMovie(:,:,movieSubset),'options',ioptions);
 		    % j = whos('turboregThisMovie');j.bytes=j.bytes*9.53674e-7;j
 		    j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
-	    	[thisMovie(:,:,movieSubset)] = turboregMovie(thisMovie(:,:,movieSubset),'options',ioptions);
+	    	[thisMovie(:,:,movieSubset), ResultsOutOriginal{thisSet}] = turboregMovie(thisMovie(:,:,movieSubset),'options',ioptions);
 		    % if thisSet==1&thisSet~=nSubsets
 		    % 	% class(movieSubset)
 		    % 	% movieSubset

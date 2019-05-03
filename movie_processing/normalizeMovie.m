@@ -62,7 +62,7 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 	options.medianFilterNeighborhoodSize = 6;
 	% type of padding, zeros/symmetric/indexed
 	options.medianFilterPadding = 'symmetric';
-	% Version of pad image to use for FFT, 1 = original, 2 = make image dimensions power of 2.
+	% Version of pad image to use for FFT, 1 = original, 2 = make image dimensions power of 2 (speeds up computation in many cases).
 	options.padImageVersion = 2;
 	% ===
 	% cmd line waitbar on?

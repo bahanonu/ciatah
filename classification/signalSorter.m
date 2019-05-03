@@ -41,6 +41,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
         % 2019.02.13 [16:56:21] Major speed improvements going between cells by adding options.hdf5Fid (to several functions, in order to relay to readHDF5Subset in the end) to reduce readHDF5Subset fopen overhead.
         % 2019.03.07 [11:27:16] Change to display of movie cut images to reduce flicker on display of each new image
         % 2019.03.25 [21:53:06] - Pre-load transient still frames at the transient peak.
+        % 2019.04.17 [13:16:52] - Added option to put secondary trace, as is the case for CELLMax and CNMF(-E).
 
     % TODO
         % DONE: allow option to mark rest as bad signals
@@ -75,6 +76,8 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
     % Binary: 1 = pre-compute movies aligned to signal transients
     options.preComputeImageCutMovies = 0;
     % ===OTHER SETTINGS
+    % Matrix: same form as inputSignals
+    options.inputSignalsSecond = [];
     % set default options
     options.nSignals = size(inputImages,3);
     % string to display over the cell map
@@ -828,7 +831,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                             if isempty(objCutImagesCollection{i})
                                 [croppedPeakImages croppedPeakImagesCellarray] = viewMontage(options.inputMovie,inputImages(:,:,i),options,thisTrace,[signalPeakIdx{i}],minValMovie,maxValMovie,options.cropSizeLength,i);
                             else
-                                disp('Using existing')
+                                % disp('Using existing')
                                 croppedPeakImages2 = objCutImagesCollection{i};
                                 imAlpha = ones(size(croppedPeakImages2));
                                 imAlpha(isnan(croppedPeakImages2))=0;
@@ -1355,7 +1358,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
             end
         % 'T' display neighboring cells
         elseif isequal(reply, 116)
-            overlapDistance = inputdlg('Enter distance to look for neighbors');
+            overlapDistance = inputdlg('Enter distance to look for neighbors','',[1 50],{'10'});
             overlapDistance = str2num(overlapDistance{1});
             % viewNeighborsAuto(inputImages, inputSignals, neighborsCell, 'inputImagesThres',inputImagesThres,'xCoords',options.coord.xCoords,'yCoords',options.coord.yCoords,'startCellNo',i,'cropSizeLength',options.cropSizeLength,'overlapDistance',overlapDistance);
             viewNeighborsAuto(inputImages, inputSignals, {}, 'inputImagesThres',inputImagesThres,'xCoords',options.coord.xCoords,'yCoords',options.coord.yCoords,'startCellNo',i,'cropSizeLength',options.cropSizeLength,'overlapDistance',overlapDistance);
@@ -1390,19 +1393,23 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                 sigTmp1 = inputSignalSignal{i} - inputSignalMedianTmp;
                 noiseTmp1 = inputSignalNoise{i} - inputSignalMedianTmp;
                 plotYn = 4;
-                subplot(plotYn,1,1)
-                    plot(noiseTmp1,'k'); hold on
-                    plot(sigTmp1,'r');
-                    title('Median filtered')
-                subplot(plotYn,1,2)
+                linkAx = [];
+                linkAx(end+1) = subplot(plotYn,1,1)
                     plot(inputSignalNoise{i},'k'); hold on
                     plot(inputSignalSignal{i},'r');
                     title('Original')
+                    box off;zoom on;
+                linkAx(end+1) = subplot(plotYn,1,2)
+                    plot(noiseTmp1,'k'); hold on
+                    plot(sigTmp1,'r');
+                    title('Median filtered')
+                    box off;zoom on;
                 if ~isempty(options.inputMovie)&~strcmp(class(options.inputMovie),'char')
                     [ROItraces] = applyImagesToMovie(inputImagesThres(:,:,i),options.inputMovie,'alreadyThreshold',1,'waitbarOn',1);
-                    subplot(plotYn,1,3)
+                    linkAx(end+1) = subplot(plotYn,1,3)
                         plot(ROItraces,'k');
                         title('ROI')
+                        box off;zoom on;
 
                     % frImg = cat(3,inputImagesThres(:,:,i),inputImagesThres(:,:,i));
                     % LStraces = calculateTraces(frImg, options.inputMovie,'removeBelowThreshPixelsForRecalc',0);
@@ -1418,7 +1425,15 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                     %     legend({'Normal','Median removed'})
                     %     title('Least Squares')
                 end
-                suptitle('Press any key to exit')
+                if ~isempty(options.inputSignalsSecond)
+                    linkAx(end+1) = subplot(plotYn,1,4)
+                        plot(options.inputSignalsSecond(i,:),'k')
+                        title('Original trace (secondary)')
+                        box off;zoom on;
+                end
+
+                suptitle('Press any key to exit | Zoom is enabled on traces, x axes are linked')
+                linkaxes(linkAx,'x');
                 drawnow
             while strcmp(keyIn,'3')
                 keyIn = get(gcf,'CurrentCharacter');
@@ -1438,7 +1453,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                 colorbar(inputMoviePlotLoc2Handle,'off');
                 s2Pos = get(inputMoviePlotLoc2Handle,'position');
                 cbh = colorbar(inputMoviePlotLoc2Handle,'Location','eastoutside','Position',[s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)]);
-                ylabel(cbh,'Fluorescence (e.g. \DeltaF/F or \DeltaF/\sigma)');
+                ylabel(cbh,'Fluorescence (e.g. \DeltaF/F or \DeltaF/\sigma)','FontSize',15);
         % 'W' to change the min/max used for traces
         elseif isequal(reply, 119)
             % close(2);figure(mainFig);
