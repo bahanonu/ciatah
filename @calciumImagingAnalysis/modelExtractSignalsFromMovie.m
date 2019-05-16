@@ -314,7 +314,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	obj.guiEnabled = 0;
 	obj.modelVarsFromFiles();
 	obj.guiEnabled = 0;
-	obj.viewCreateObjmaps();
+	% obj.viewCreateObjmaps();
+	obj.viewObjmaps();
 	obj.guiEnabled = objGuiOld;
 	% ==========================================
 	% ==========================================

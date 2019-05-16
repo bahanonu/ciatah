@@ -250,9 +250,9 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
             if (p==2||mod(p,nInterval)==0||p==nImages)&&options_waitbarOn==1
                 % cmdWaitbar(p,nImages,'','inputStr','','waitbarOn',1);
                 if p==nImages
-                    fprintf('%d%%\n',round(p/nImages*100))
+                    fprintf('%d\n',round(p/nImages*100))
                 else
-                    fprintf('%d%% | ',round(p/nImages*100))
+                    fprintf('%d|',round(p/nImages*100))
                 end
             end
         end

@@ -7,7 +7,7 @@ function plotSignalsGraph(IcaTraces,varargin)
     % outputs
         %
     % changelog
-        %
+        % 2019.04.22 [19:14:47] - changed from plot to line so when exporting to illustrator don't need to merge lines
     % TODO
         % add options for how much to offset
 
@@ -90,14 +90,26 @@ function plotSignalsGraph(IcaTraces,varargin)
         end
     end
 
+    nXaxisPoints = size(tmpTrace,2);
     tmpTrace = flipdim(tmpTrace,1);
     % options.inputXAxis
     if isempty(options.inputXAxis)
-        plot(tmpTrace','LineWidth',options.LineWidth);
+        % plot(tmpTrace','LineWidth',options.LineWidth);
+        plotXaxis = 1:nXaxisPoints;
     else
         display('================')
         display('custom x-axis')
-        plot(options.inputXAxis,tmpTrace','LineWidth',options.LineWidth);
+        % plot(options.inputXAxis,tmpTrace','LineWidth',options.LineWidth);
+        % line(options.inputXAxis,tmpTrace','LineWidth',options.LineWidth);
+        plotXaxis = options.inputXAxis;
+    end
+
+    if isempty(c1)
+        line(plotXaxis,tmpTrace','LineWidth',options.LineWidth);
+    else
+        for ii = 1:size(tmpTrace,1)
+            line(plotXaxis,tmpTrace(ii,:),'LineWidth',options.LineWidth,'Color',c1(ii,:));
+        end
     end
 
     axis([0 size(tmpTrace,2) min(tmpTrace(:))-options.minAdd options.maxAdd*max(tmpTrace(:))]);

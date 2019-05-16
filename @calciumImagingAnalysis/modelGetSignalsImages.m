@@ -104,13 +104,52 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 
 	% get valid signals, priority is region excluded, manual sorting, automatic sorting, and all valid otherwise.
 	% use try/catch to check whether nested structure fieldname exists
-	try obj.validRegionMod{thisFileNum};check.regionMod=1; catch; check.regionMod=0; end
-	try obj.valid{thisFileNum}.(obj.signalExtractionMethod).classifier;check.classifier=1; catch; check.classifier=0; end
-	try obj.valid{thisFileNum}.(obj.signalExtractionMethod).manual;check.manual=1; catch; check.manual=0; end
-	try obj.validManual{thisFileNum};check.manualOld=1; catch; check.manualOld=0; end;if isempty(obj.validManual{thisFileNum});check.manualOld=0;end;
-	try obj.valid{thisFileNum}.(obj.signalExtractionMethod).auto;check.auto=1; catch; check.auto=0; end
-	try obj.validAuto{thisFileNum};check.autoOld=1; catch; check.autoOld=0; end
+	% REGION ANALYSIS
+	try
+		obj.validRegionMod{thisFileNum};
+		check.regionMod=1;
+	catch;
+		check.regionMod=0;
+	end
+	% CLASSIFIER ANALYSIS
+	try
+		obj.valid{thisFileNum}.(obj.signalExtractionMethod).classifier;
+		check.classifier=1;
+	catch;
+		check.classifier=0;
+	end
+	% MANUAL ANALYSIS
+	try
+		obj.valid{thisFileNum}.(obj.signalExtractionMethod).manual;
+		check.manual=1;
+	catch;
+		check.manual=0;
+	end
+	% MANUAL ANALYSIS OLD
+	try
+		obj.validManual{thisFileNum};
+		check.manualOld=1;
+	catch;
+		check.manualOld=0;
+		% if isempty(obj.validManual{thisFileNum})
+		% 	check.manualOld=0;
+		% end
+	end
+	% AUTOMATIC ANALYSIS
+	try
+		obj.valid{thisFileNum}.(obj.signalExtractionMethod).auto;
+		check.auto=1;
+	catch;
+		check.auto=0;
+	end
+	% AUTOMATIC ANALYSIS OLD
+	try
+		obj.validAuto{thisFileNum};check.autoOld=1;
+	catch;
+		check.autoOld=0;
+	end
 
+	% Change which sorting is done
 	if check.regionMod&options.forceManual==0
 		disp('using regional identifications...')
 		valid = obj.validRegionMod{thisFileNum};
@@ -269,9 +308,9 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 			inputImages = double(cnmfeAnalysisOutput.extractedImages);
 			% inputSignals = double(permute(extractAnalysisOutput.traces, [2 1]));
 			% inputSignals = double(cnmfeAnalysisOutput.extractedSignalsEst);
-			inputSignals = double(cnmfeAnalysisOutput.extractedSignals);
+			inputSignals2 = double(cnmfeAnalysisOutput.extractedSignals);
 
-			inputSignals2 = double(cnmfeAnalysisOutput.extractedSignalsEst);
+			inputSignals = double(cnmfeAnalysisOutput.extractedSignalsEst);
 
 			if options.loadAlgorithmPeaks==1
 				signalPeaks = cnmfeAnalysisOutput.extractedPeaks>0;

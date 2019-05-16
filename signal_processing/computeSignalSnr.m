@@ -57,30 +57,31 @@ function [inputSnr, inputMse, inputSnrSignal, inputSnrNoise, outputSignal, outpu
 	options.subtractMean = 1;
 	% number of frames to calculate median filter
 	options.medianFilterLength = 200;
-	options.movAvgFiltSize = [];
-
 	% the size of the moving average
+	options.movAvgFiltSize = [];
+	% Binary: 1 = convert input inputSignals matrix to cell array
+	options.convertSignalsToCell = 1;
 	% get options
 	options = getOptions(options,varargin);
 	%========================
 	try
 		if options.medianFilter==1
 			if options.displayOutput==1
-				display('Median filtering before peak statistics')
+				disp('Median filtering before peak statistics')
 			end
 			for signalNoNow = 1:size(inputSignals,1)
-			    inputSignal = inputSignals(signalNoNow,:);
-			    inputSignalMedian = medfilt1(inputSignal,options.medianFilterLength);
-			    inputSignal = inputSignal - inputSignalMedian;
-			    inputSignals(signalNoNow,:) = inputSignal;
-			    if ~isempty(options.movAvgFiltSize)
-			        inputSignals(signalNoNow,:) = filtfilt(ones(1,options.movAvgFiltSize)/options.movAvgFiltSize,1,inputSignal);
-			    end
+				inputSignal = inputSignals(signalNoNow,:);
+				inputSignalMedian = medfilt1(inputSignal,options.medianFilterLength);
+				inputSignal = inputSignal - inputSignalMedian;
+				inputSignals(signalNoNow,:) = inputSignal;
+				if ~isempty(options.movAvgFiltSize)
+					inputSignals(signalNoNow,:) = filtfilt(ones(1,options.movAvgFiltSize)/options.movAvgFiltSize,1,inputSignal);
+				end
 			end
 		end
 
 		if options.displayOutput==1
-			display(['SNR type: ' options.SNRtype])
+			disp(['SNR type: ' options.SNRtype])
 		end
 		% to later calculate the signal idx
 		% outerFun = @(x,y) x+y;
@@ -92,6 +93,13 @@ function [inputSnr, inputMse, inputSnrSignal, inputSnrNoise, outputSignal, outpu
 		else
 			% testpeaks = options.testpeaks;
 			testpeaksArray = options.testpeaksArray;
+			options.testpeaksArray = [];
+		end
+		if isempty(options.testpeaksArrayAlt)
+			testpeaksArrayAlt = [];
+		else
+			testpeaksArrayAlt = options.testpeaksArrayAlt;
+			options.testpeaksArrayAlt
 		end
 		if options.returnEachPeakSNR==1
 			inputSnr = cell(nSignals,1);
@@ -109,13 +117,29 @@ function [inputSnr, inputMse, inputSnrSignal, inputSnrNoise, outputSignal, outpu
 		% size(testpeaksArray)
 		% nSignals
 		% MAKE PARFOR
-        % try [~, ~] = parfor_progress(nSignals);catch;end; dispStepSize = round(nSignals/20); dispstat('','init');
+		% try [~, ~] = parfor_progress(nSignals);catch;end; dispStepSize = round(nSignals/20); dispstat('','init');
 
-    	optionsOriginal = options;
+		optionsOriginal = options;
+
+		% Convert to cell array to reduce memory transfer during parallelization
+		if options.convertSignalsToCell==1
+			inputSignals = squeeze(mat2cell(inputSignals,ones(1,size(inputSignals,1)),size(inputSignals,2)));
+		end
+
+		% Only implement in Matlab 2017a and above
+		if ~verLessThan('matlab', '9.2')
+			D = parallel.pool.DataQueue;
+			afterEach(D, @nUpdateParforProgress);
+			p = 1;
+			% N = nSignals;
+			nInterval = 25;
+			options_waitbarOn = options.waitbarOn;
+		end
 
 		parfor signalNo=1:nSignals
 			options = optionsOriginal;
-			loopSignal = inputSignals(signalNo,:);
+			% loopSignal = inputSignals(signalNo,:);
+			loopSignal = inputSignals{signalNo};
 			if options.subtractMean==1
 				loopSignal = loopSignal - nanmean(loopSignal(:));
 			end
@@ -126,11 +150,11 @@ function [inputSnr, inputMse, inputSnrSignal, inputSnrNoise, outputSignal, outpu
 					% Xapp=zeros(1,length(X));
 					if ~isempty(testpeaks)
 						% peakIdx = bsxfun(outerFun,options.timeSeq',testpeaks);
-						if isempty(options.testpeaksArrayAlt)
+						if isempty(testpeaksArrayAlt)
 							peakIdx = bsxfun(@plus,options.timeSeq',testpeaks);
 							tmpTestPeak = testpeaks;
 						else
-							tmpTestPeak = options.testpeaksArrayAlt{signalNo};
+							tmpTestPeak = testpeaksArrayAlt{signalNo};
 							peakIdx = bsxfun(@plus,options.timeSeq',tmpTestPeak(:)');
 						end
 
@@ -198,19 +222,19 @@ function [inputSnr, inputMse, inputSnrSignal, inputSnrNoise, outputSignal, outpu
 							xRms = rootMeanSquare(loopSignal);
 						else
 							x_snr = NaN;
-                            xRms = NaN;
-                            x_signal = NaN;
-                            x_noise = NaN;
-                            outputSignal{signalNo} = loopSignal;
-                            outputNoise{signalNo} = loopSignal;
+							xRms = NaN;
+							x_signal = NaN;
+							x_noise = NaN;
+							outputSignal{signalNo} = loopSignal;
+							outputNoise{signalNo} = loopSignal;
 						end
 					else
 						x_snr = NaN;
 						xRms = NaN;
-                        x_signal = NaN;
-                        x_noise = NaN;
-                        outputSignal{signalNo} = loopSignal;
-                        outputNoise{signalNo} = loopSignal;
+						x_signal = NaN;
+						x_noise = NaN;
+						outputSignal{signalNo} = loopSignal;
+						outputNoise{signalNo} = loopSignal;
 					end
 					if options.returnEachPeakSNR==1
 						inputSnr{signalNo}=x_snr;
@@ -228,19 +252,37 @@ function [inputSnr, inputMse, inputSnrSignal, inputSnrNoise, outputSignal, outpu
 					% IcaSnr(signalNo)=psnr;
 					% IcaMse(signalNo)=mse;
 				otherwise
-					display('incorrect SNR type')
+					disp('incorrect SNR type')
 			end
 
 			% print progress
+			if ~verLessThan('matlab', '9.2')
+				% Update
+				send(D, signalNo);
+			end
 			if options.waitbarOn==1&&options.displayOutput==1
-                % [percent, progress] = parfor_progress;if mod(progress,dispStepSize) == 0;dispstat(sprintf('progress %0.1f %',percent));end
+				% [percent, progress] = parfor_progress;if mod(progress,dispStepSize) == 0;dispstat(sprintf('progress %0.1f %',percent));end
 				% reverseStr = cmdWaitbar(signalNo,nSignals,reverseStr,'inputStr','obtaining SNR','waitbarOn',options.waitbarOn,'displayEvery',50);
 			end
 		end
 	catch err
-	    display(repmat('@',1,7))
-	    disp(getReport(err,'extended','hyperlinks','on'));
-	    display(repmat('@',1,7))
+		display(repmat('@',1,7))
+		disp(getReport(err,'extended','hyperlinks','on'));
+		display(repmat('@',1,7))
+	end
+	function nUpdateParforProgress(~)
+		if ~verLessThan('matlab', '9.2')
+			p = p + 1;
+			if (mod(p,nInterval)==0||p==2||p==nSignals)&&options_waitbarOn==1
+				if p==nSignals
+					fprintf('%d\n',round(p/nSignals*100))
+				else
+					fprintf('%d|',round(p/nSignals*100))
+				end
+				% cmdWaitbar(p,nSignals,'','inputStr','','waitbarOn',1);
+			end
+			% [p mod(p,nInterval)==0 (mod(p,nInterval)==0||p==nSignals)&&options_waitbarOn==1]
+		end
 	end
 end
 %% functionname: function description
@@ -255,9 +297,9 @@ function [peakIdx] = subfxnCalcSignalNew(options,noiseSignal,loopSignal,tmpTestP
 	loopSignalThresholdedDiff = [0 diff(loopSignalThresholded)];
 	for peakNo = 1:nPeaks
 		try
-    		peakFrame = tmpTestPeak(peakNo);
+			peakFrame = tmpTestPeak(peakNo);
 
-    		% currFrame = peakFrame;
+			% currFrame = peakFrame;
 			signalCriteria = loopSignalThresholdedDiff(1:peakFrame);
 			currFrame = find(signalCriteria,1,'last');
 			if isempty(currFrame)
@@ -266,36 +308,36 @@ function [peakIdx] = subfxnCalcSignalNew(options,noiseSignal,loopSignal,tmpTestP
 				end
 			end
 			% currFrame
-    		% aboveNoise = 1;
-    		% while aboveNoise==1
-    		% 	aboveNoise = loopSignal(currFrame)>options.noiseSigmaThreshold*noiseStd;
-    		% 	currFrame = currFrame - 1;
-    		% 	if currFrame<1
-    		% 		break
-    		% 	end
-    		% end
-    		peakIdxTmp1{peakNo} = currFrame:peakFrame;
+			% aboveNoise = 1;
+			% while aboveNoise==1
+			% 	aboveNoise = loopSignal(currFrame)>options.noiseSigmaThreshold*noiseStd;
+			% 	currFrame = currFrame - 1;
+			% 	if currFrame<1
+			% 		break
+			% 	end
+			% end
+			peakIdxTmp1{peakNo} = currFrame:peakFrame;
 
-    		% currFrame = peakFrame;
-    		% loopSignalThresholded = loopSignal>noiseSigmaThreshold*noiseStd;
-    		signalCriteria = abs(loopSignalThresholdedDiff(peakFrame:end));
-    		currFrame = find(signalCriteria,1,'first')+peakFrame;
-    		if isempty(currFrame)
-    			if sum(loopSignalThresholded(peakFrame:end))==length(loopSignalThresholded(peakFrame:end))
-    				currFrame = length(loopSignal);
-    			end
-    		end
-    		% currFrame
-    		% aboveNoise = 1;
-    		% currFrame = peakFrame;
-    		% while aboveNoise==1
-    		% 	aboveNoise = loopSignal(currFrame)>options.noiseSigmaThreshold*noiseStd;
-    		% 	currFrame = currFrame + 1;
-    		% 	if currFrame>length(loopSignal)
-    		% 		break
-    		% 	end
-    		% end
-    		peakIdxTmp2{peakNo} = peakFrame:currFrame;
+			% currFrame = peakFrame;
+			% loopSignalThresholded = loopSignal>noiseSigmaThreshold*noiseStd;
+			signalCriteria = abs(loopSignalThresholdedDiff(peakFrame:end));
+			currFrame = find(signalCriteria,1,'first')+peakFrame;
+			if isempty(currFrame)
+				if sum(loopSignalThresholded(peakFrame:end))==length(loopSignalThresholded(peakFrame:end))
+					currFrame = length(loopSignal);
+				end
+			end
+			% currFrame
+			% aboveNoise = 1;
+			% currFrame = peakFrame;
+			% while aboveNoise==1
+			% 	aboveNoise = loopSignal(currFrame)>options.noiseSigmaThreshold*noiseStd;
+			% 	currFrame = currFrame + 1;
+			% 	if currFrame>length(loopSignal)
+			% 		break
+			% 	end
+			% end
+			peakIdxTmp2{peakNo} = peakFrame:currFrame;
 		catch err
 			fprintf('peakFrame = %d\n',peakFrame);
 			display(repmat('@',1,7))

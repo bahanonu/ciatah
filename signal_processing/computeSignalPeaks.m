@@ -37,7 +37,7 @@ function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(sign
     % add controller directory and subdirectories to path
     % addpath(genpath(pwd));
     %========================
-    % make a plot?
+    % Binary: 1 = show plots with found events and other information for each signal. 0 = do not show signal plot GUI.
     options.makePlots = 0;
     % show waitbar?
     options.waitbarOn = 1;
@@ -81,6 +81,8 @@ function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(sign
     options.parallel = 1;
     % display output
     options.outputInfo = 1;
+    % Binary: 1 = convert input inputSignals matrix to cell array
+    options.convertSignalsToCell = 1;
     % get user inputs
     options = getOptions(options,varargin);
     % unpack options into current workspace
@@ -102,6 +104,7 @@ function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(sign
             disp('calculating signal peaks...')
         end
         nSignals = size(signalMatrix,1);
+        nFrames = size(signalMatrix,2);
 
         % Remove any NaN signals, set to the mean
         if sum(isnan(signalMatrix(:)))>0
@@ -124,11 +127,13 @@ function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(sign
         % reverseStr = '';
         manageParallelWorkers('parallel',options.parallel);
         signalPeaksArrayTmp = cell([1 nSignals]);
-        signalSigmas = [];
+        signalSigmas = repmat([],[1 nSignals]);
         % try;[percent progress] = parfor_progress(nSignals);catch;end; dispStepSize = round(nSignals/20); dispstat('','init');
 
         % Convert to cell array to reduce memory transfer during parallelization
-        signalMatrix = squeeze(mat2cell(signalMatrix,ones(1,size(signalMatrix,1)),size(signalMatrix,2)));
+        if options.convertSignalsToCell==1
+            signalMatrix = squeeze(mat2cell(signalMatrix,ones(1,size(signalMatrix,1)),size(signalMatrix,2)));
+        end
 
         [optionsOut] = computePeakForSignalOptions('options', options);
 
@@ -142,24 +147,58 @@ function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(sign
             options_waitbarOn = options.waitbarOn;
         end
 
+        % signalIdxAll = {};
+        % if options.convertSignalsToCell==1
+        %     parfor signalNum3 = 1:nSignals
+        %         signalIdxAll{signalNum3} = signalNum3;
+        %     end
+        % else
+        %     parfor signalNum3 = 1:nSignals
+        %         signalIdxAll{signalNum3} = sub2ind(size(signalMatrix), repmat(signalNum3,[nFrames 1]), [1:nFrames]');
+        %     end
+        % end
+
         parfor signalNum = 1:nSignals
             optionsOutCopy = optionsOut;
             optionsCopy = options;
             % [percent progress] = parfor_progress;if mod(progress,dispStepSize) == 0;dispstat(sprintf('progress %0.1f %',percent));else;end
             % get the current signal and find its peaks
-            % thisSignal = signalMatrix(signalNum,:);
-            thisSignal = signalMatrix{signalNum};
+            % if options.convertSignalsToCell==1
+            %     thisSignal = signalMatrix{signalNum2};
+            %     signalNum = signalNum2;
+            %     signalNum3 = signalNum2;
+            %     signalSigmas(signalNum2) = std(thisSignal);
+            %     signalPeaksArray{signalNum2} = computePeakForSignal(thisSignal,optionsOutCopy);
+            % else
+            %     signalNum = find(cellfun(@(x) sum(signalNum2==x),signalIdxAll));
+            %     % signalIdx = sub2ind(size(signalMatrix), repmat(signalNum,[nFrames 1]), [1:nFrames]');
+            %     % signalIdx = signalIdxAll{signalNum};
+            %     thisSignal = signalMatrix(signalNum2);
+            %     signalSigmas(signalNum) = std(thisSignal);
+            %     signalPeaksArray{signalNum} = computePeakForSignal(thisSignal,optionsOutCopy);
+            % end
+
+            if options.convertSignalsToCell==1
+                thisSignal = signalMatrix{signalNum};
+            else
+                % thisSignal = signalMatrix(signalNum,:);
+                % signalSigmas(signalNum) = std(thisSignal);
+                % signalPeaksArray{signalNum} = computePeakForSignal(thisSignal,optionsOutCopy);
+            end
+
             %
             signalSigmas(signalNum) = std(thisSignal);
             signalPeaksArray{signalNum} = computePeakForSignal(thisSignal,optionsOutCopy);
+
             % [~] = viewComputePeaksPlot(thisSignal,signalPeaksArray{signalNum},[0 0 0],options.makePlots,50,2,'on')
             % ===
             if optionsCopy.addedAnalysis==1
                 % using diff
                 detectOld = optionsOutCopy.detectMethod;
                 optionsOutCopy.detectMethod = 'diff';
-                signalPeaksArrayTmp{signalNum} = computePeakForSignal(thisSignal,optionsOutCopy);
                 optionsOutCopy.detectMethod = detectOld;
+
+                signalPeaksArrayTmp{signalNum} = computePeakForSignal(thisSignal,optionsOutCopy);
                 % plot the resulting peaks overlayed
                 [~] = viewComputePeaksPlot(thisSignal,signalPeaksArrayTmp{signalNum},[0 0 1],options.makePlots,20,0.1,'off',options)
                 legend('signal','raw','signal','diff')
@@ -168,6 +207,9 @@ function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(sign
                 % fast oopsi
                 [Nhat] = computePeakForSignalOopsi(thisSignal,signalPeaksArray{signalNum},options);
                 [~,~,~]=ginput(1);
+                % if options.convertSignalsToCell==1
+                % else
+                % end
                 % ===
             end
             % create matrix of peaks
@@ -183,8 +225,11 @@ function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(sign
         end
         if options.makePlots==1
             for signalNum=1:nSignals
-                % thisSignal = signalMatrix(signalNum,:);
-                thisSignal = signalMatrix{signalNum};
+                if options.convertSignalsToCell==1
+                    thisSignal = signalMatrix{signalNum};
+                else
+                    thisSignal = signalMatrix(signalNum,:);
+                end
                     [~] = viewComputePeaksPlot(thisSignal,signalPeaksArray{signalNum},[0 0 0],options.makePlots,50,2,'on',options,signalNum,nSignals,options.numStdsForThresh);
                     pause
                     keyIn = get(gcf,'CurrentCharacter');

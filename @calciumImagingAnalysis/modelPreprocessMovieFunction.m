@@ -1487,15 +1487,23 @@ function [ostruct options] = getPcaIcaParams(ostruct,options)
 			% thisMovie = loadMovieList(movieList,'convertToDouble',0,'frameList',options.frameList);
 			thisMovie = thisMovieArray{fileNum};
 
-			% playMovie(thisMovie,'fps',120,'extraTitleText',[10 pathInfo]);
-			MIJ.createImage([num2str(fileNum) '/' num2str(length(ostruct.folderList)) ': ' ostruct.folderList{fileNum}],thisMovie, true);
-			if size(thisMovie,1)<300
-				for foobar=1:2; MIJ.run('In [+]'); end
+			try
+				% playMovie(thisMovie,'fps',120,'extraTitleText',[10 pathInfo]);
+				MIJ.createImage([num2str(fileNum) '/' num2str(length(ostruct.folderList)) ': ' ostruct.folderList{fileNum}],thisMovie, true);
+				if size(thisMovie,1)<300
+					for foobar=1:2; MIJ.run('In [+]'); end
+				end
+				for foobar=1:2; MIJ.run('Enhance Contrast','saturated=0.35'); end
+				MIJ.run('Start Animation [\]');
+				uiwait(msgbox('press OK to move onto next movie','Success','modal'));
+				MIJ.run('Close All Without Saving');
+			catch err
+				disp(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				disp(repmat('@',1,7))
+				msgbox('Press E to move onto next movie, close this box to continue','Success','modal')
+				playMovie(thisMovie);
 			end
-			for foobar=1:2; MIJ.run('Enhance Contrast','saturated=0.35'); end
-			MIJ.run('Start Animation [\]');
-			uiwait(msgbox('press OK to move onto next movie','Success','modal'));
-			MIJ.run('Close All Without Saving');
 
 			if options.askForPCICs==1
 				% add arbitrary nPCs and nICs to the output

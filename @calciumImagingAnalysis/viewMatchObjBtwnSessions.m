@@ -27,16 +27,19 @@ function obj = viewMatchObjBtwnSessions(obj)
 
 	movieSettings = inputdlg({...
 			'directory to save pictures: ',...
-			'subject alignment set # (e.g. if need multiple separate alignments): '
+			'subject alignment set # (e.g. if need multiple separate alignments): ',...
+			'Sort global IDs in GUI (1 = yes, 0 = no): '
 		},...
 		'view movie settings',1,...
 		{...
 			obj.picsSavePath,...
-			'1'
+			'1',...
+			'0'
 		}...
 	);
 	obj.picsSavePath = movieSettings{1};
 	options.alignmentSetNum = str2num(movieSettings{2});
+	sortGlobalIDs = str2num(movieSettings{3});
 
 	scnsize = get(0,'ScreenSize');
 	viewMatchSessionsStr = {'view cross session matches','make cross session color cellmaps'};
@@ -161,7 +164,7 @@ function obj = viewMatchObjBtwnSessions(obj)
 			end
 			strcmp('view cross session matches',viewMatchSessionsStr)
 			if sum(strcmp('view cross session matches',viewMatchSessionsStr))>0
-				[matchedObjMaps euclideanStruct] = displayMatchingObjs(inputImages,globalIDs,'inputSignals',inputSignals,'globalIDCoords',obj.globalIDCoords.(thisSubjectStr).globalCoords);
+				[matchedObjMaps euclideanStruct] = displayMatchingObjs(inputImages,globalIDs,'inputSignals',inputSignals,'globalIDCoords',obj.globalIDCoords.(thisSubjectStr).globalCoords,'sortGlobalIDs',sortGlobalIDs);
 				% write out summary statistics
 			    savePath = [obj.dataSavePath obj.protocol{obj.fileNum} '_' obj.subjectStr{obj.fileNum} '_crossDayEucledian.tab'];
 			    display(['saving data to: ' savePath])

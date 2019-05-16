@@ -280,6 +280,12 @@ function obj = modelVarsFromFiles(obj)
 				otherwise
 					% body
 			end
+
+			display(['signalTraces: ' num2str(size(signalTraces))])
+			display(['signalImages: ' num2str(size(signalImages))])
+			% display(['signalPeaks: ' num2str(size(signalPeaks))])
+			% display(['signalPeaksArray: ' num2str(size(signalPeaksArray))])
+
 			% if manually sorted signals, add
 			% if exist('valid','var')|exist('validCellMax','var')|exist('validEXTRACT','var')
 			varList = who;

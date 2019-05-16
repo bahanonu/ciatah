@@ -82,7 +82,8 @@ function obj = viewMovie(obj)
             'video regular expression:',...
             'rotate second video (0 = no, 1 = yes)',...
             'treat movie as continuous (0 = no, 1 = yes):',...
-            'dataset name'...
+            'dataset name',...
+            'downsample factor for movie viewing (1 = no downsample):'...
 		},...
 		'view movie settings',[1 100],...
 		{...
@@ -96,6 +97,7 @@ function obj = viewMovie(obj)
             '0',...
             '1',...
             obj.inputDatasetName...
+            '1'...
 		}...
 	);
 	% concat the two
@@ -128,6 +130,8 @@ function obj = viewMovie(obj)
     rotateVideoSwitch = str2num(movieSettings{20});
     treatMoviesAsContinuous = str2num(movieSettings{21});
     obj.inputDatasetName = movieSettings{22};
+    downsampleFactorView = str2num(movieSettings{23});
+
     noCrop = 0;
 	% =====================
 	% FINISH INCORPORATING!!
@@ -146,8 +150,8 @@ function obj = viewMovie(obj)
 	end
 	% % =====================
 	if strcmp(options.videoPlayer,'imagej')&saveCopyOfMovie==0
-		% Miji;
-		% try
+		% Miji
+;		% try
 		% 	MIJ.exit;
 		% catch
 		% 	clear MIJ miji Miji mij;
@@ -199,6 +203,11 @@ function obj = viewMovie(obj)
                     	movieListTmp2 = movieList{movieMontageIdx(movieNo)};
                     end
                 	[primaryMoviePreloaded{thisFileNumIdx}{movieNo}] = loadMovieList(movieListTmp2,'convertToDouble',0,'frameList',frameListTmp(:),'treatMoviesAsContinuous',treatMoviesAsContinuous,'inputDatasetName',obj.inputDatasetName);
+
+                	if downsampleFactorView~=1
+                		[primaryMoviePreloaded{thisFileNumIdx}{movieNo}] = downsampleMovie(primaryMoviePreloaded{thisFileNumIdx}{movieNo},'downsampleDimension','space','downsampleFactor',downsampleFactorView);
+                	end
+
                     % [primaryMoviePreloaded{thisFileNumIdx}{movieNo}] = loadMovieList(movieList{movieMontageIdx(movieNo)},'convertToDouble',0,'frameList',frameListTmp(:));
                 end
             catch err
@@ -267,7 +276,11 @@ function obj = viewMovie(obj)
                 if preLoadPrimaryMovie == 1
                     primaryMovie = primaryMoviePreloaded{thisFileNumIdx}{movieNo};
                 else
-        		[primaryMovie] = loadMovieList(movieListTmp2,'convertToDouble',0,'frameList',frameListTmp(:),'treatMoviesAsContinuous',treatMoviesAsContinuous,'inputDatasetName',obj.inputDatasetName);
+        			[primaryMovie] = loadMovieList(movieListTmp2,'convertToDouble',0,'frameList',frameListTmp(:),'treatMoviesAsContinuous',treatMoviesAsContinuous,'inputDatasetName',obj.inputDatasetName);
+
+        			if downsampleFactorView~=1
+        				[primaryMovie] = downsampleMovie(primaryMovie,'downsampleDimension','space','downsampleFactor',downsampleFactorView);
+        			end
                 end
 				identifyingText = {'dfof'};
 				% treatMoviesAsContinuous

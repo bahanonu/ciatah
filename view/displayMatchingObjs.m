@@ -18,6 +18,8 @@ function [matchedObjMaps euclideanStruct] = displayMatchingObjs(inputImages,glob
     options.permuteImages = 0;
     %
     options.globalIDCoords = [];
+    %
+    options.sortGlobalIDs = 1;
     % get options
     options = getOptions(options,varargin);
     % display(options)
@@ -53,9 +55,11 @@ function [matchedObjMaps euclideanStruct] = displayMatchingObjs(inputImages,glob
         reverseStr = '';
         nGlobals = size(globalIDs,1);
         nObjPerGlobal = sum(globalIDs>0,2);
-        % sort global IDs by those with most
-        [nObjPerGlobalSorted sortedIdx] = sort(nObjPerGlobal,'descend');
-        globalIDs = globalIDs(sortedIdx,:);
+        if options.sortGlobalIDs==1
+            % sort global IDs by those with most
+            [nObjPerGlobalSorted sortedIdx] = sort(nObjPerGlobal,'descend');
+            globalIDs = globalIDs(sortedIdx,:);
+        end
 
         for gID = 1:size(globalIDs,2)
             cumProb(gID) = sum(sum(~(globalIDs==0),2)==gID)/size(globalIDs,1);

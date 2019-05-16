@@ -52,8 +52,9 @@ Note
 - Place in folder where MATLAB will have write permissions, as it also creates a `private` subdirectory to store some user information.
 - `file_exchange` folder contains File Exchange functions used by `calciumImagingAnalysis`. If does not exist, unzip `file_exchange.zip`.
 - In general, it is best to set the MATLAB startup directory to the `calciumImagingAnalysis` folder. This allows `java.opts` and `startup.m` to set the correct Java memory requirements and load the correct folders into the MATLAB path.
-- If it appears an old `calciumImagingAnalysis` respository is loaded after pulling a new version, run `restoredefaultpath` and check that old `calciumImagingAnalysis` folders are not in the MATLAB path.
-- This version of `calciumImagingAnalysis` has been tested on Windows MATLAB `2015b`, `2017a`, and `2018b`.
+- If `calciumImagingAnalysis` IS NOT the startup folder, place `java.opts` wherever the startup folder is so the correct Java memory requirements are set (important for using ImageJ/Miji in MATLAB).
+- If it appears an old `calciumImagingAnalysis` repository is loaded after pulling a new version, run `restoredefaultpath` and check that old `calciumImagingAnalysis` folders are not in the MATLAB path.
+- This version of `calciumImagingAnalysis` has been tested on Windows MATLAB `2015b`, `2017a`, and `2018b`. Moderate testing on Windows and OSX (10.10.5) `2017b` and `2018b`.
 
 ### Test data
 
@@ -345,6 +346,15 @@ If the imaging field-of-view includes cells from other brain regions, they can b
 - `computeCellDistances` and `computeCrossDayDistancesAlignment` allow users to compute the within session pairwise Euclidean centroid distance for all cells and the cross-session pairwise distance for all global matched cells, respectively.
 
 ![image](https://user-images.githubusercontent.com/5241605/49835713-eec88900-fd54-11e8-8d24-f7c426802297.png)
+
+Users can then get the matrix that gives the session IDs
+
+```Matlab
+% Global IDs is a matrix of [globalID sessionID]
+% Each (globalID, sessionID) pair gives the within session ID for that particular global ID
+globalIDs = alignmentStruct.globalIDs;
+
+```
 
 # ImageJ+MATLAB based mouse location tracking
 
