@@ -127,8 +127,11 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 	end
 	% MANUAL ANALYSIS OLD
 	try
-		obj.validManual{thisFileNum};
-		check.manualOld=1;
+		if isempty(obj.validManual{thisFileNum});
+			check.manualOld=0;
+		else
+			check.manualOld=1;
+		end
 	catch;
 		check.manualOld=0;
 		% if isempty(obj.validManual{thisFileNum})
@@ -422,9 +425,13 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 					%end
 					% signalPeaks = [];
 					% signalPeaksArray = [];
-					valid = [];
+
+					% valid = [];
 					display(['inputSignals: ' num2str(size(inputSignals))])
 					display(['inputImages: ' num2str(size(inputImages))])
+					display(['signalPeaks: ' num2str(size(signalPeaks))])
+					display(['signalPeaksArray: ' num2str(size(signalPeaksArray))])
+					display(['valid: ' num2str(size(valid))])
 					return
 				otherwise
 					try obj.valid{thisFileNum}.(obj.signalExtractionMethod).auto;check.auto=1; catch; check.auto=0; end
@@ -583,4 +590,5 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 	display(['inputImages: ' num2str(size(inputImages))])
 	display(['signalPeaks: ' num2str(size(signalPeaks))])
 	display(['signalPeaksArray: ' num2str(size(signalPeaksArray))])
+	display(['valid: ' num2str(size(valid))])
 end

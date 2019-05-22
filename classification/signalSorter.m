@@ -83,6 +83,8 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
     % max movie cut images to show
     % options.maxSignalsToShow = 24;
     options.maxSignalsToShow = 15;
+    % Int: Max size in MB of async transient cut movie and image storage
+    options.maxAsyncStorageSize = 2000;
     % ===OTHER SETTINGS
     % Matrix: same form as inputSignals
     options.inputSignalsSecond = [];
@@ -855,6 +857,9 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                                         % Fetch output, blocks UI until read
                                         croppedPeakImages = fetchOutputs(objCutImagesAsyncF{i});
                                         objCutImagesCollection{i} = croppedPeakImages;
+                                        % Remove old objects from memory
+                                        delete(objCutImagesAsyncF{i});
+                                        objCutImagesAsyncF{i} = [];
                                     end
                                 else
                                     % objCutMovie = createObjCutMovieSignalSorter(options,testpeaks,thisTrace,inputImages,i,options.cropSizeLength,maxValMovie);
@@ -868,11 +873,23 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                                     if kk>nSignalsHere
                                         continue;
                                     end
-                                    if isempty(objCutImagesAsyncF{kk})
+                                    if isempty(objCutImagesAsyncF{kk})&&isempty(objCutImagesCollection)
                                         % objCutImagesAsyncF{kk} = parfeval(p,@viewMontage,1,optionsCpy,signalPeakIdx{kk},inputSignals(kk,:),inputImages,kk,options.cropSizeLength,maxValMovie);
                                         objCutImagesAsyncF{kk} = parfeval(p,@viewMontage,1,options.inputMovie,inputImages(:,:,kk),optionsCpy,inputSignals(kk,:),[signalPeakIdx{kk}],minValMovie,maxValMovie,options.cropSizeLength,kk,0);
                                     else
 
+                                    end
+                                end
+                            end
+
+                            j = whos('objCutImagesCollection');j.bytes=j.bytes*9.53674e-7;
+                            objCutImagesCollectionMB = j.bytes;
+                            if objCutImagesCollectionMB>options.maxAsyncStorageSize
+                                display(['objCutImagesCollection: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
+                                disp('Removing old images to save space...')
+                                for kk = 1:(i-5)
+                                    if kk<nSignalsHere&&kk>1
+                                        objCutImagesCollection{kk} = [];
                                     end
                                 end
                             end
@@ -902,6 +919,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                             end
                             if i==1
                                 s2Pos = get(gca,'position');
+                                % s2Pos = plotboxpos(gca);
                                 cbh = colorbar(gca,'Location','eastoutside','Position',[s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)]);
                                 ylabel(cbh,'Fluorescence (e.g. \DeltaF/F or \DeltaF/\sigma)');
                             end
@@ -1267,6 +1285,8 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                             % Fetch output, blocks UI until read
 							objCutMovie = fetchOutputs(objCutMovieAsyncF{i});
                             objCutMovieCollection{i} = objCutMovie;
+                            % Remove job and associated storage
+                            delete(objCutMovieAsyncF{i});
 						end
 					else
 						objCutMovie = createObjCutMovieSignalSorter(options,testpeaks,thisTrace,inputImages,i,options.cropSizeLength,maxValMovie);
@@ -1279,7 +1299,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 						if kk>nSignalsHere
 							continue;
 						end
-						if isempty(objCutMovieAsyncF{kk})
+						if isempty(objCutMovieAsyncF{kk})&&isempty(objCutMovieCollection{kk})
 							objCutMovieAsyncF{kk} = parfeval(p,@createObjCutMovieSignalSorter,1,optionsCpy,signalPeakIdx{kk},inputSignals(kk,:),inputImages(:,:,kk),kk,options.cropSizeLength,maxValMovie);
                         else
 
@@ -1287,6 +1307,18 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 					end
                 else
                     objCutMovie = objCutMovieCollection{i};
+                end
+
+                j = whos('objCutMovieCollection');j.bytes=j.bytes*9.53674e-7;
+                objCutMovieCollectionMB = j.bytes;
+                if objCutMovieCollectionMB>options.maxAsyncStorageSize
+                    display(['objCutMovieCollection: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
+                    disp('Removing old images to save space...')
+                    for kk = 1:(i-5)
+                        if kk<nSignalsHere&&kk>1
+                            objCutMovieCollection{kk} = [];
+                        end
+                    end
                 end
 
                 if options.movieMin<options.movieMinLim

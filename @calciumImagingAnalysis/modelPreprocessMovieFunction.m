@@ -1301,11 +1301,11 @@ function [turboRegCoords] = turboregCropSelection(options,folderList)
 					% if strcmp(ext,'.h5')|strcmp(ext,'.hdf5')
 
 					% 	hinfo = hdf5info(inputFilePath);
-     %                    try
-     %                        hReadInfo = hinfo.GroupHierarchy.Datasets(1);
-     %                    catch
-     %                        hReadInfo = hinfo.GroupHierarchy.Groups.Datasets(1);
-     %                    end
+                        % try
+                        %     hReadInfo = hinfo.GroupHierarchy.Datasets(1);
+                        % catch
+                        %     hReadInfo = hinfo.GroupHierarchy.Groups.Datasets(1);
+                        % end
 					% 	xDim = hReadInfo.Dims(1);
 					% 	yDim = hReadInfo.Dims(2);
 					% 	% select the first frame from the dataset
@@ -1318,7 +1318,7 @@ function [turboRegCoords] = turboregCropSelection(options,folderList)
 					% end
 
 					[figHandle figNo] = openFigure(9, '');
-					subplot(1,2,1);imagesc(thisFrame); axis image; colormap gray; title(['Click to drag-n-draw region.' 10 'Double-click region to continue.'])
+					subplot(1,2,1);imagesc(thisFrame); axis image; colormap gray; title(['Click to drag-n-draw region. Cropped only for motion correction, original movie dimensions retained after registration.' 10 'Double-click region to continue.'])
 					set(0,'DefaultTextInterpreter','none');
 					% suptitle([num2str(fileNumIdx) '\' num2str(nFilesToRun) ': ' 10 strrep(thisDir,'\','/')],'fontSize',12,'plotregion',0.9,'titleypos',0.95);
 					uicontrol('Style','Text','String',[num2str(fileNumIdx) '\' num2str(nFilesToRun) ': ' strrep(thisDir,'\','/')],'Units','normalized','Position',[0.1 0.9 0.8 0.10],'BackgroundColor','white','HorizontalAlignment','Center');

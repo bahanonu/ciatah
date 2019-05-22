@@ -19,7 +19,7 @@ function obj = viewMovie(obj)
 	% =====================
 	currentDateTimeStr = datestr(now,'yyyymmdd_HHMM','local');
 	if isempty(options.videoPlayer)
-		usrIdxChoiceStr = {'imagej','matlab'};
+		usrIdxChoiceStr = {'matlab','imagej'};
 		scnsize = get(0,'ScreenSize');
 		[sel, ok] = listdlg('ListString',usrIdxChoiceStr,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','which video player to use?');
 		options.videoPlayer = usrIdxChoiceStr{sel};
@@ -83,7 +83,9 @@ function obj = viewMovie(obj)
             'rotate second video (0 = no, 1 = yes)',...
             'treat movie as continuous (0 = no, 1 = yes):',...
             'dataset name',...
-            'downsample factor for movie viewing (1 = no downsample):'...
+            'downsample factor for movie viewing (1 = no downsample):',...
+            'Create cell extraction outlines on movie (0 = no, 1 = yes, 2 = yes, all outputs):',...
+            'Cell extraction outlines threshold (float btwn 0 and 1):'...
 		},...
 		'view movie settings',[1 100],...
 		{...
@@ -97,7 +99,9 @@ function obj = viewMovie(obj)
             '0',...
             '1',...
             obj.inputDatasetName...
-            '1'...
+            '1',...
+            '0',...
+            '0.4'...
 		}...
 	);
 	% concat the two
@@ -131,6 +135,8 @@ function obj = viewMovie(obj)
     treatMoviesAsContinuous = str2num(movieSettings{21});
     obj.inputDatasetName = movieSettings{22};
     downsampleFactorView = str2num(movieSettings{23});
+    createImageOutlineOnMovieSwitch = str2num(movieSettings{24});
+    thresholdOutline = str2num(movieSettings{25});
 
     noCrop = 0;
 	% =====================
@@ -404,6 +410,16 @@ function obj = viewMovie(obj)
 					identifyingText{end+1} = 'signalBased';
 				end
 				% =================================================
+				if createImageOutlineOnMovieSwitch==1||createImageOutlineOnMovieSwitch==2
+					if createImageOutlineOnMovieSwitch==1
+						[inputSignals, inputImages, signalPeaks, ~] = modelGetSignalsImages(obj,'returnType','filtered');
+					elseif createImageOutlineOnMovieSwitch==2
+						[inputSignals, inputImages, signalPeaks, ~] = modelGetSignalsImages(obj,'returnType','raw');
+					end
+					primaryMovie = createImageOutlineOnMovie(primaryMovie,inputImages,'thresholdOutline',thresholdOutline,'movieVal',NaN);
+				end
+
+				% =================================================
 				if iscell(primaryMovie)
 					% primaryMovie = montageMovies(primaryMovie);
 					if viewOptions.useIdentifyText==0
@@ -428,6 +444,7 @@ function obj = viewMovie(obj)
 					% display(['saving: ' savePathName])
 					% saveastiff(primaryMovie, savePathName, tiffOptions);
 				else
+
 					[movieDecision] = playMovieThisFunction()
 
 					if exist('runtimeTable','var')
