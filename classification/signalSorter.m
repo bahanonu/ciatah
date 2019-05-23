@@ -44,6 +44,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
         % 2019.04.17 [13:16:52] - Added option to put secondary trace, as is the case for CELLMax and CNMF(-E).
         % 2019.05.14 [10:59:56] - Made changes to how often colormap and other display elements are updated to improve performance on MATLAB 2018b.
         % 2019.05.15 [16:17:42] - Added asynchronous loading of next cells when readMovieChunks = 0 and preComputeImageCutMovies = 0 to improve performance. Loads options.nSignalsLoadAsync number of cells in advance.
+        % 2019.05.22 [22:16:44] - Changes (e.g. move colormap, caxis, etc. calls around) to reduce slow reduction in performance as more cells are chosen.
 
     % TODO
         % DONE: allow option to mark rest as bad signals
@@ -167,6 +168,8 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
     options.numStdsForThresh = 2.3;
     % Binary: 1 = show the image correlation value when input path to options.inputMovie
     options.showImageCorrWithCharInputMovie = 0;
+    % Binary: 1 = run tic-toc check on timing in signal loop, 0 =
+    options.signalLoopTicTocCheck = 0;
     % get options
     options = getOptions(options,varargin);
     % unpack options into current workspace
@@ -793,6 +796,10 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 
     % only exit if user clicks options that calls for saving the data
     while saveData==0
+        if options.signalLoopTicTocCheck==1
+            tic
+        end
+
         figure(mainFig);
         % change figure color based on nature of current choice
         % valid
@@ -884,7 +891,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 
                             j = whos('objCutImagesCollection');j.bytes=j.bytes*9.53674e-7;
                             objCutImagesCollectionMB = j.bytes;
-                            if objCutImagesCollectionMB>options.maxAsyncStorageSize
+                            if objCutImagesCollectionMB>options.maxAsyncStorageSize&&options.readMovieChunks==1&&options.preComputeImageCutMovies==0
                                 display(['objCutImagesCollection: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
                                 disp('Removing old images to save space...')
                                 for kk = 1:(i-5)
@@ -902,11 +909,11 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                                 imAlpha(isnan(croppedPeakImages2))=0;
                                 if i==1
                                     imagesc(croppedPeakImages2,'AlphaData',imAlpha);
+                                    colormap(options.colormap);
                                 end
                                 montageHandle = findobj(gca,'Type','image');
                                 set(montageHandle,'Cdata',croppedPeakImages2,'AlphaData',imAlpha);
                                 set(gca,'color',[0 0 0]);
-                                colormap(options.colormap);
                                 set(gca, 'box','off','XTickLabel',[],'XTick',[],'YTickLabel',[],'YTick',[],'XColor',get(gcf,'Color'),'YColor',get(gcf,'Color'))
                                 set(gca,'color',[0 0 0]);
                                 warning on
@@ -1311,7 +1318,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 
                 j = whos('objCutMovieCollection');j.bytes=j.bytes*9.53674e-7;
                 objCutMovieCollectionMB = j.bytes;
-                if objCutMovieCollectionMB>options.maxAsyncStorageSize
+                if objCutMovieCollectionMB>options.maxAsyncStorageSize&&options.readMovieChunks==1&&options.preComputeImageCutMovies==0
                     display(['objCutMovieCollection: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
                     disp('Removing old images to save space...')
                     for kk = 1:(i-5)
@@ -1350,9 +1357,12 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                 % set(gca , 'NextPlot' , 'replacechildren');
                 % axis off
 
+                % Force re-draw of
+                % if i==1||mod(i,20)
                 if i==1
                     drawnow
                 end
+
                 % title(['signal ' cellIDStr ' (' num2str(sum(valid==1)) ' good)']);
                 frameNoMax = size(objCutMovie,3);
                 frameNo = round(frameNoMax*0.40);
@@ -1393,6 +1403,17 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                 loopImgHandle = imagesc(objCutMovie(:,:,frameNo),'AlphaData',imAlpha);
                 set(gca,'color',[0 0 0]);
                 set(gca, 'box','off','XTickLabel',[],'XTick',[],'YTickLabel',[],'YTick',[],'XColor',get(gcf,'Color'),'YColor',get(gcf,'Color'))
+
+                if options.signalLoopTicTocCheck==1
+                    toc
+                end
+
+                try
+                    caxis([minHere maxHere]);
+                catch
+                    caxis([-0.05 0.1]);
+                end
+
                 while strcmp(keyIn,'3')
                     keyIn = get(gcf,'CurrentCharacter');
                     if ~isempty(objCutMovie)
@@ -1406,11 +1427,6 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                         % title(strrep(options.inputStr,'_','\_'), 'HandleVisibility' , 'off' )
                         % if frameNo==1
                         % end
-                        try
-                            caxis([minHere maxHere]);
-                        catch
-                            caxis([-0.05 0.1]);
-                        end
                         % axis off
                         % drawnow;
                         % drawnow limitrate
@@ -1426,9 +1442,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                     end
                     pause(1/options.fps);
                     frameNo = frameNo + 1;
-
                     % writeVideo(writerObj,getframe(mainFig));
-
                 end
 
                 reply = double(keyIn);
