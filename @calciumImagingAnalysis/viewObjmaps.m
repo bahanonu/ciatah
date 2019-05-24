@@ -143,6 +143,7 @@ function obj = viewObjmaps(obj,varargin)
 			display([num2str(thisFileNum) '/' num2str(nFiles) ': ' obj.fileIDNameArray{obj.fileNum}]);
 			[~,foldername,~] = fileparts(obj.inputFolders{obj.fileNum});
 			validType = 'NULL';
+			linkAx = [];
 			% =====================
 			% for backwards compatibility, will be removed in the future.
 			nIDs = length(obj.stimulusNameArray);
@@ -184,7 +185,7 @@ function obj = viewObjmaps(obj,varargin)
 				output1 = createObjMap(groupImagesByColor(inputImages,rand([size(inputImages,3) 1]),'thresholdImages',1));
 			end
 
-			subplotTmp(rowSubP,colSubP,1)
+			linkAx(end+1) = subplotTmp(rowSubP,colSubP,1)
 				imagesc(output1)
 				% colormap(gca,[gray(sum(valid==0));customColormap([],'nPoints',round(sum(valid==1)/2))])
 				% colormap(gca,[gray(sum(valid==0));jet(sum(valid==1))])
@@ -192,7 +193,7 @@ function obj = viewObjmaps(obj,varargin)
 				axis equal tight; box off;
 				title('Cellmap | colored = cells | gray = non-cells')
 
-			subplotTmp(rowSubP,colSubP,2)
+			linkAx(end+1) = subplotTmp(rowSubP,colSubP,2)
 				imagesc(nanmax(inputImages,[],3))
 				colormap(gca,'parula')
 				% s2Pos = get(gca,'position');
@@ -228,6 +229,7 @@ function obj = viewObjmaps(obj,varargin)
 				% axis equal tight; box off;
 				% title('Cellmap | Outlines')
 
+
 			subfxnDisplayMovie();
 
 			subplotTmp(rowSubP,colSubP,[3 4 7 8])
@@ -246,6 +248,7 @@ function obj = viewObjmaps(obj,varargin)
 				title('Cell activity traces | zoom on')
 
 			axHandle = subplotTmp(rowSubP,colSubP,2);
+			linkAx(end+1) = axHandle;
 				imagesc(nanmax(inputImages,[],3))
 				axis equal tight; box off;
 				title('Cellmap | All extraction outputs')
@@ -260,6 +263,7 @@ function obj = viewObjmaps(obj,varargin)
 
 			set(gcf,'SizeChangedFcn',@(hObject,event) resizeui(hObject,event,axHandle));
 
+			linkaxes(linkAx);
 
 
 			% =======
@@ -334,8 +338,9 @@ function obj = viewObjmaps(obj,varargin)
 			else
 				movieFrameProc = loadMovieList(movieList{1},'convertToDouble',0,'frameList',userVideoFrames,'inputDatasetName',obj.inputDatasetName);
 			end
+			movieFrameProc = cast(movieFrameProc,class(rMap));
 
-			subplotTmp(rowSubP,colSubP,colSubP+1)
+			linkAx(end+1) = subplotTmp(rowSubP,colSubP,colSubP+1)
 				imagesc(nanmax(movieFrameProc,[],3))
 				axis equal tight; box off;
 				% colormap([0 0 0;obj.colormap])
@@ -358,7 +363,7 @@ function obj = viewObjmaps(obj,varargin)
 
 			rgbImg = cat(3,rMap,gMap,bMap);
 
-			subplotTmp(rowSubP,colSubP,colSubP+2)
+			linkAx(end+1) = subplotTmp(rowSubP,colSubP,colSubP+2)
 				imagesc(rgbImg)
 				axis equal tight; box off;
 				title('Movie | raw, no pre-processing with cellmap')

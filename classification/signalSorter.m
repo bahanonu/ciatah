@@ -880,7 +880,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                                     if kk>nSignalsHere
                                         continue;
                                     end
-                                    if isempty(objCutImagesAsyncF{kk})&&isempty(objCutImagesCollection)
+                                    if isempty(objCutImagesAsyncF{kk})&&isempty(objCutImagesCollection{kk})
                                         % objCutImagesAsyncF{kk} = parfeval(p,@viewMontage,1,optionsCpy,signalPeakIdx{kk},inputSignals(kk,:),inputImages,kk,options.cropSizeLength,maxValMovie);
                                         objCutImagesAsyncF{kk} = parfeval(p,@viewMontage,1,options.inputMovie,inputImages(:,:,kk),optionsCpy,inputSignals(kk,:),[signalPeakIdx{kk}],minValMovie,maxValMovie,options.cropSizeLength,kk,0);
                                     else
