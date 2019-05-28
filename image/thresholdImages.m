@@ -43,6 +43,8 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
     options.removeUnconnected = 0;
     % Binary: 1 = remove unconnected even when binary thresholding
     options.removeUnconnectedBinary = 1;
+    % Str: 'holes' or 'noholes'
+    options.boundaryHoles = 'holes';
     % get options
     options = getOptions(options,varargin);
     % display(options)
@@ -87,6 +89,7 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
     options_removeUnconnectedBinary = options.removeUnconnectedBinary;
     options_removeUnconnected = options.removeUnconnected;
     options_normalizationType = options.normalizationType;
+    options_boundaryHoles = options.boundaryHoles;
 
     try
         convertInputImagesToCell();
@@ -197,7 +200,7 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
 
         if options_binary==1&&options_getBoundaryIndex==1
             thisFilt = logical(thisFilt);
-            [B,~] = bwboundaries(thisFilt);
+            [B,~] = bwboundaries(thisFilt,options_boundaryHoles);
             for iNo = 1:length(B)
                 boundaryIndices{imageNo} = [boundaryIndices{imageNo} sub2ind(size(thisFilt),B{iNo}(:,1),B{iNo}(:,2))'];
             end
@@ -215,7 +218,7 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
                 disp(repmat('@',1,7))
             end
 
-            [B,~] = bwboundaries(thisFilt);
+            [B,~] = bwboundaries(thisFilt,options_boundaryHoles);
             for iNo = 1:length(B)
                 boundaryIndices{imageNo} = [boundaryIndices{imageNo} sub2ind(size(thisFilt),B{iNo}(:,1),B{iNo}(:,2))'];
             end

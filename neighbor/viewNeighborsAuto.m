@@ -10,6 +10,8 @@ function viewNeighborsAuto(inputImages, inputSignals, neighborsCell, varargin)
         %
     % changelog
         % 2018 - updated interface, speed improvements.
+        % 2019.05.28 [13:49:31] - No longer use montage to create montage, use loops plus cat and cell arrays to improve speed, reduce use of montage(), and make outlines crisp (on 2018b they would become expanded with montage).
+        % 2019.05.28 [15:15:43] - General improvements to GUI clarity.
     % TODO
         %
 
@@ -61,50 +63,108 @@ function viewNeighborsAuto(inputImages, inputSignals, neighborsCell, varargin)
     yCoords = [];
 
     % instructions
-    instructionStr =  ['forward/back | e:exit | g:(goto cell #) | cell #s low-high from top to bottom | top trace = this cell' 10];
+    instructionStr =  ['Controls: left/right arrow:forward/back | e:exit | g:(goto cell #) | cell #s low-high from top to bottom | top trace = this cell' 10];
 
     while exitLoop==0
         directionOfNextChoice = 0;
         thisFilt = squeeze(inputImages(:,:,cellnum));
 
         % montage of nearby cells
-        subplot(2,3,3)
+        subplot(2,3,1)
             rgbImage = [];
             nImgs = inputImages(:,:,[cellnum; neighborsCell{cellnum,1}(:)]);
+            nMatchCells = size(nImgs,3);
 
-            objCutMovie = getObjCutMovie(nImgs,thisFilt,'createMontage',0,'extendedCrosshairs',1,'crossHairVal',NaN,'outlines',1,'waitbarOn',0,'cropSize',cropSizeLength,'addPadding',usePadding,'xCoords',xCoords,'yCoords',yCoords,'outlineVal',NaN);
+            objCutMovie = getObjCutMovie(nImgs,thisFilt,'createMontage',0,'extendedCrosshairs',0,'crossHairVal',NaN,'outlines',1,'waitbarOn',0,'cropSize',cropSizeLength,'addPadding',usePadding,'xCoords',xCoords,'yCoords',yCoords,'outlineVal',NaN);
             objCutMovie = vertcat(objCutMovie{:});
-            [thresholdedImages boundaryIndices] = thresholdImages(objCutMovie(:,:,1),'binary',1,'getBoundaryIndex',1,'threshold',0.35,'imageFilter','','waitbarOn',0);
+            [thresholdedImages boundaryIndices] = thresholdImages(objCutMovie(:,:,1),'binary',1,'getBoundaryIndex',1,'threshold',0.35,'imageFilter','','waitbarOn',0,'normalizationType','zeroToOne','removeUnconnected',1,'boundaryHoles','noholes');
+
+            nList = [cellnum neighborsCell{cellnum,1}(:)'];
             for zz = 1:size(nImgs,3)
                 tmpImg = squeeze(objCutMovie(:,:,zz));
                 tmpImg([boundaryIndices{:}]) = NaN;
+
+                % tmpImg = squeeze(nanmean(...
+                %     insertText(tmpImg,[0 0],num2str(nList(zz)),...
+                %     'BoxColor',[0 0 0],...
+                %     'TextColor',[1e10 1e10 1e10],...
+                %     'AnchorPoint','LeftTop',...
+                %     'FontSize',8,...
+                %     'BoxOpacity',0)...
+                % ,3));
+                % tmpImg(tmpImg>1e7) = NaN;
+                % figure;imagesc(tmpImg)
                 objCutMovie(:,:,zz) = tmpImg;
             end
             clear objCutMovie2;
             objCutMovie2(:,:,1,:) = objCutMovie;
-            montage(objCutMovie2)
-            colormap(gca,customColormap([]))
+            % montage(objCutMovie2)
 
-            croppedPeakImages2 = getimage;
+            croppedPeakImagesCell = {};
+            [xPlot yPlot] = getSubplotDimensions(size(objCutMovie,3));
+            for iii = 1:xPlot*yPlot
+                if iii>size(objCutMovie,3)
+                    croppedPeakImagesCell{iii} = NaN(size(objCutMovie(:,:,1)));
+                else
+                    croppedPeakImagesCell{iii} = objCutMovie(:,:,iii);
+                end
+            end
+            mNum = 1;
+            g = cell([xPlot 1]);
+            rowNum = 1;
+
+            xyLoc = ones([nMatchCells 2]);
+            xyLoc(:,2) = [3];
+            xyLoc(:,1) = [2];
+
+            cellNoHere = 1;
+            for xNo = 1:xPlot
+                for yNo = 1:yPlot
+                    g{rowNum} = cat(2,g{rowNum},croppedPeakImagesCell{mNum});
+
+                    if sum(isnan(croppedPeakImagesCell{mNum}(:)))~=numel(croppedPeakImagesCell{mNum}(:))&&cellNoHere>1&&yNo>1
+                        xyLoc(cellNoHere,:) = [xyLoc(cellNoHere-1,1)+options.cropSizeLength*2+1 xyLoc(cellNoHere,2)];
+                    end
+                    cellNoHere = cellNoHere+1;
+                    mNum = mNum + 1;
+                end
+
+                xyLoc(cellNoHere:end,2) = [xyLoc(cellNoHere:end,2)+options.cropSizeLength*2+1];
+                xyLoc(cellNoHere:end,1) = [2];
+                rowNum = rowNum + 1;
+            end
+            croppedPeakImages2 = cat(1,g{:});
+
+            % croppedPeakImages2 = getimage;
             imAlpha = ones(size(croppedPeakImages2));
             imAlpha(isnan(croppedPeakImages2))=0;
             imagesc(croppedPeakImages2,'AlphaData',imAlpha);
             set(gca,'color',[0 0 0]);
-            title(['#' num2str(cellnum) '/' num2str(nCells) ' | neighboring cells' 10 'top-left = this cell, #s increase L->R and T->B'])
+            colormap(gca,customColormap([]))
+            title(['neighboring cell ID #s (white)' 10 'top-left = selected cell, #s increase L->R and T->B'])
+            % title(['neighboring cells | top-left = selected cell, #s increase L->R and T->B'])
             axis equal tight
+            box off
+
+            % xyLoc
+            for zz = 1:size(nImgs,3)
+                text(xyLoc(zz,1),xyLoc(zz,2),num2str(nList(zz)),'Color',[1 1 1],'FontSize',options.cropSizeLength/2)
+            end
 
         % plot the traces
-        subplot(2,3,[1:2 4:5])
+        subplot(2,3,[2:3 5:6])
             nList = [cellnum neighborsCell{cellnum,1}(:)'];
             plotSignalsGraph(inputSignals, 'plotList', flipdim(nList(:),1),'newAxisColorOrder','','minAdd',0,'maxIncrementPercent',1.1);
             axis tight
             xlabel('Time (frames)')
             ylabel('Cell activity')
+            title('Activity traces for selected and neighboring cells (Zoom enabled)')
+            legend(strsplit(num2str(nList),' '),'Location','southoutside','Orientation','horizontal')
             % suptitle(instructionStr);
             zoom on
 
         % plot correlations
-        subplot(2,3,6)
+        subplot(2,3,4)
             z0 = corr(inputSignals(nList(:),:)');
             imagesc(z0)
             colorbar
@@ -113,18 +173,23 @@ function viewNeighborsAuto(inputImages, inputSignals, neighborsCell, varargin)
             % colormap hot
 
             % imagesc(l);
-            xlabel('cells');
-            ylabel('cells');
-            title(['cell-cell trace correlations' 10 'cell #1 = this cell']);
+            xlabel('Cell ID #s');
+            ylabel('Cell ID #s');
+            xticks(1:length(nList))
+            xticklabels(nList)
+            yticks(1:length(nList))
+            yticklabels(nList)
+            title(['cell-cell activity trace correlations' 10 'cell #' num2str(nList(1)) ' = this cell']);
             box off; axis equal tight
             caxis([0 1])
 
-        suptitle(instructionStr);
+        suptitle([sprintf('cell # %d/%d',cellnum,nCells) 10 instructionStr],'plotregion',0.9);
         set(findall(gcf,'-property','FontSize'),'FontSize',13);
         % [x,y,reply]=ginput(1);
 
         set(gcf,'currentch','3');
         keyIn = get(gcf,'CurrentCharacter');
+        figure(21)
 
         while strcmp(keyIn,'3')
             keyIn = get(gcf,'CurrentCharacter');
