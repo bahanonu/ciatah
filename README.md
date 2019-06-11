@@ -288,9 +288,14 @@ Outputs from PCA-ICA (and most other common cell extraction algorithms like CNMF
 
 ![image](https://user-images.githubusercontent.com/5241605/49845107-43322f80-fd7a-11e8-96b9-3f870d4b9009.png)
 
+### GUI usage on large imaging datasets
+
+- To manually sort on large movies that will not fit into RAM, select the below options (highlighted in green). This will load only chunks of the movie asynchronously into the GUI as you sort cell extraction outputs.
+![image](https://user-images.githubusercontent.com/5241605/59215159-5d07d000-8b6d-11e9-8dd7-0d69d5fd38b6.png)
+
 ### Usage
 
-Below are two examples of the interface and code to run.
+Below are two examples of the interface and code to run if not using the `calciumImagingAnalysis` GUI.
 
 Usage instructions below for `signalSorter.m`:
 

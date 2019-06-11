@@ -26,6 +26,7 @@ function [inputMovie] = downsampleMovie(inputMovie, varargin)
 	% exact dimensions to downsample in y (columns)
 	options.downsampleY = [];
 	options.waitbarOn = 1;
+	options.waitbarOnInterval = 100;
 	% number of frames in each movie to load, [] = all, 1:500 would be 1st to 500th frame.
 	options.frameList = [];
 	% whether to convert movie to double on load, not recommended
@@ -62,6 +63,8 @@ function [inputMovie] = downsampleMovie(inputMovie, varargin)
 			% body
 	end
 
+	waitbarOnInterval = options.waitbarOnInterval;
+
 	switch options.downsampleDimension
 		case 'time'
 			switch options.downsampleType
@@ -83,7 +86,7 @@ function [inputMovie] = downsampleMovie(inputMovie, varargin)
 					   % to reduce memory footprint, place new frame in old movie and cut off the unneeded frames after
 					   inputMovie(1:downX,frame,1:downZ) = downsampledFrame;
 					   % inputMovie(:,frame,:) = downsampledFrame;
-						if (frame==1||mod(frame,20)==0||frame==downZ)&options.waitbarOn==1
+						if (frame==1||mod(frame,waitbarOnInterval)==0||frame==downZ)&options.waitbarOn==1
 							reverseStr = cmdWaitbar(frame,downY,reverseStr,'inputStr',[secondaryDownsampleType ' temporally downsampling matrix']);
 						end
 					end
@@ -116,7 +119,7 @@ function [inputMovie] = downsampleMovie(inputMovie, varargin)
 							inputMovie(1:downX,1:downY,frame) = downsampledFrame;
 						end
 						% inputMovieDownsampled(1:downX,1:downY,frame) = downsampledFrame;
-						if (frame==1||mod(frame,20)==0||frame==downZ)&options.waitbarOn==1
+						if (frame==1||mod(frame,waitbarOnInterval)==0||frame==downZ)&options.waitbarOn==1
 							reverseStr = cmdWaitbar(frame,downZ,reverseStr,'inputStr',[secondaryDownsampleType ' spatially downsampling matrix']);
 						end
 					end

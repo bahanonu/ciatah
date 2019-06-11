@@ -42,10 +42,14 @@ function loadBatchFxns()
 	loadLocalFunctions = ['private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
 	if exist(loadLocalFunctions,'file')~=0
 		run(loadLocalFunctions);
-		addpath(pathtoMiji);
-		fprintf('Added Miji to path: %s.\n',pathtoMiji)
+        if exist(pathtoMiji,'dir')==7
+    		addpath(pathtoMiji);
+        	fprintf('Added Miji to path: %s.\n',pathtoMiji)
+        else
+        	fprintf('No folder at specified path, retry! %s.\n',pathtoMiji)
+        end
 		% Get Miji properly loaded in the path
-		if exist('MIJ','class')==0
+		if exist('Miji.m')==2&&exist('MIJ','class')==0
 			resetMiji;
 		else
 		end

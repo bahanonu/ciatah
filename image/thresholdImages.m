@@ -18,6 +18,8 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
         % 2017 or 2018 - added boundaryIndices support.
         % 2019.03.05 [19:21:30] Change to using bwareafilt to remove unconnected points from main structure
         % 2019.04.23 [19:51:26] Deal with images that are all zeros.
+        % 2019.06.02 [22:14:03] - Revert back to slicing the 3D inputImages
+        % rather than converting to a cell
     % TODO
         %
 
@@ -92,7 +94,7 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
     options_boundaryHoles = options.boundaryHoles;
 
     try
-        convertInputImagesToCell();
+        % convertInputImagesToCell();
         nWorkers = Inf;
         % cellLoad = 1;
     catch
@@ -113,9 +115,10 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
     numObjects = [];
 
     replaceVal = 0;
+    % startState = ticBytes(gcp);
     parfor(imageNo=1:nImages,nWorkers)
-        thisFilt = squeeze(inputImages{imageNo});
-        % thisFilt = inputImages(:,:,imageNo);
+        % thisFilt = squeeze(inputImages{imageNo});
+        thisFilt = inputImages(:,:,imageNo);
         % if cellLoad==1
         % else
             % thisFilt = squeeze(inputImages(:,:,imageNo));
@@ -191,8 +194,8 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
             end
         end
 
-        inputImages{imageNo} = thisFilt;
-        % inputImages(:,:,imageNo) = thisFilt;
+        % inputImages{imageNo} = thisFilt;
+        inputImages(:,:,imageNo) = thisFilt;
         % if cellLoad==1
         % else
             % inputImages(:,:,imageNo)=thisFilt;
@@ -232,8 +235,10 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
             send(D, imageNo); % Update
         end
     end
+    
+    % tocBytes(gcp,startState)
 
-    inputImages = cat(3,inputImages{:});
+    % inputImages = cat(3,inputImages{:});
     % if cellLoad==1
     % end
 

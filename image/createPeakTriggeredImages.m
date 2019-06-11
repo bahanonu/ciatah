@@ -172,8 +172,8 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 
 		if options.displayInfo==1
 			disp('Starting movie images...')
-			display(repmat('.',1,round(nSignals/20)))
-			display(repmat('-',1,7))
+			% display(repmat('.',1,round(nSignals/20)))
+			% display(repmat('-',1,7))
 		end
 		if options_readMovieChunks==1
 			nWorkers = Inf;

@@ -132,7 +132,7 @@ function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(sign
 
         % Convert to cell array to reduce memory transfer during parallelization
         if options.convertSignalsToCell==1
-            signalMatrix = squeeze(mat2cell(signalMatrix,ones(1,size(signalMatrix,1)),size(signalMatrix,2)));
+            % signalMatrix = squeeze(mat2cell(signalMatrix,ones(1,size(signalMatrix,1)),size(signalMatrix,2)));
         end
 
         [optionsOut] = computePeakForSignalOptions('options', options);
@@ -158,9 +158,12 @@ function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(sign
         %     end
         % end
 
+        % startState = ticBytes(gcp);
+        optsConstant = parallel.pool.Constant(optionsOut);
+        optionsCopy_addedAnalysis = options.addedAnalysis;
+        optionsCopy_convertSignalsToCell = options.convertSignalsToCell;
         parfor signalNum = 1:nSignals
-            optionsOutCopy = optionsOut;
-            optionsCopy = options;
+            optionsOutCopy = optsConstant.Value;
             % [percent progress] = parfor_progress;if mod(progress,dispStepSize) == 0;dispstat(sprintf('progress %0.1f %',percent));else;end
             % get the current signal and find its peaks
             % if options.convertSignalsToCell==1
@@ -177,14 +180,16 @@ function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(sign
             %     signalSigmas(signalNum) = std(thisSignal);
             %     signalPeaksArray{signalNum} = computePeakForSignal(thisSignal,optionsOutCopy);
             % end
+            
+            thisSignal = signalMatrix(signalNum,:);
 
-            if options.convertSignalsToCell==1
-                thisSignal = signalMatrix{signalNum};
-            else
-                % thisSignal = signalMatrix(signalNum,:);
-                % signalSigmas(signalNum) = std(thisSignal);
-                % signalPeaksArray{signalNum} = computePeakForSignal(thisSignal,optionsOutCopy);
-            end
+            % if iscell(signalMatrix)==1
+            %     thisSignal = signalMatrix{signalNum};
+            % else
+            %     thisSignal = signalMatrix(signalNum,:);
+            %     % signalSigmas(signalNum) = std(thisSignal);
+            %     % signalPeaksArray{signalNum} = computePeakForSignal(thisSignal,optionsOutCopy);
+            % end
 
             %
             signalSigmas(signalNum) = std(thisSignal);
@@ -192,7 +197,7 @@ function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(sign
 
             % [~] = viewComputePeaksPlot(thisSignal,signalPeaksArray{signalNum},[0 0 0],options.makePlots,50,2,'on')
             % ===
-            if optionsCopy.addedAnalysis==1
+            if optionsCopy_addedAnalysis==1
                 % using diff
                 detectOld = optionsOutCopy.detectMethod;
                 optionsOutCopy.detectMethod = 'diff';
@@ -223,6 +228,7 @@ function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(sign
                 send(D, signalNum);
             end
         end
+        % tocBytes(gcp,startState)
         if options.makePlots==1
             for signalNum=1:nSignals
                 if options.convertSignalsToCell==1
