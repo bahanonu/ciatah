@@ -143,6 +143,7 @@ function obj = viewObjmaps(obj,varargin)
 			display([num2str(thisFileNum) '/' num2str(nFiles) ': ' obj.fileIDNameArray{obj.fileNum}]);
 			[~,foldername,~] = fileparts(obj.inputFolders{obj.fileNum});
 			validType = 'NULL';
+			linkAx = [];
 			% =====================
 			% for backwards compatibility, will be removed in the future.
 			nIDs = length(obj.stimulusNameArray);
@@ -173,19 +174,26 @@ function obj = viewObjmaps(obj,varargin)
 			colSubP = options.colSubP;
 
 			try
-				output1 = createObjMap(groupImagesByColor(inputImages,rand([size(inputImages,3) 1])+(1e4*valid(:)'),'thresholdImages',1));
-			catch
+				groupingVector = zeros([size(inputImages,3) 1]);
+				groupingVector(valid==1) = sum(valid==0)+randperm(sum(valid==1));
+				groupingVector(valid==0) = 1:sum(valid==0);
+				output1 = createObjMap(groupImagesByColor(inputImages,groupingVector),'thresholdImages',1);
+			catch err
+				display(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				display(repmat('@',1,7))
 				output1 = createObjMap(groupImagesByColor(inputImages,rand([size(inputImages,3) 1]),'thresholdImages',1));
 			end
 
-			subplotTmp(rowSubP,colSubP,1)
+			linkAx(end+1) = subplotTmp(rowSubP,colSubP,1)
 				imagesc(output1)
 				% colormap(gca,[gray(sum(valid==0));customColormap([],'nPoints',round(sum(valid==1)/2))])
-				colormap(gca,[gray(sum(valid==0));jet(sum(valid==1))])
+				% colormap(gca,[gray(sum(valid==0));jet(sum(valid==1))])
+				colormap(gca,[gray(sum(valid==0))/2;parula(sum(valid==1))])
 				axis equal tight; box off;
 				title('Cellmap | colored = cells | gray = non-cells')
 
-			subplotTmp(rowSubP,colSubP,2)
+			linkAx(end+1) = subplotTmp(rowSubP,colSubP,2)
 				imagesc(nanmax(inputImages,[],3))
 				colormap(gca,'parula')
 				% s2Pos = get(gca,'position');
@@ -221,6 +229,7 @@ function obj = viewObjmaps(obj,varargin)
 				% axis equal tight; box off;
 				% title('Cellmap | Outlines')
 
+
 			subfxnDisplayMovie();
 
 			subplotTmp(rowSubP,colSubP,[3 4 7 8])
@@ -228,12 +237,18 @@ function obj = viewObjmaps(obj,varargin)
 					plotSignalsGraph(inputSignals(logical(valid),:),'newAxisColorOrder','default');
 				else
 					inputSignalsTmp = inputSignals(logical(valid),:);
-					plotSignalsGraph(inputSignalsTmp(1:nSignalsShow,:),'newAxisColorOrder','default');
+					if size(inputSignalsTmp,1)>nSignalsShow
+						plotSignalsGraph(inputSignalsTmp(1:nSignalsShow,:),'newAxisColorOrder','default');
+					else
+						plotSignalsGraph(inputSignalsTmp(:,:),'newAxisColorOrder','default');
+					end
 				end
 				axis tight
-				title('Cell activity traces')
+				zoom on
+				title('Cell activity traces | zoom on')
 
 			axHandle = subplotTmp(rowSubP,colSubP,2);
+			linkAx(end+1) = axHandle;
 				imagesc(nanmax(inputImages,[],3))
 				axis equal tight; box off;
 				title('Cellmap | All extraction outputs')
@@ -248,6 +263,7 @@ function obj = viewObjmaps(obj,varargin)
 
 			set(gcf,'SizeChangedFcn',@(hObject,event) resizeui(hObject,event,axHandle));
 
+			linkaxes(linkAx);
 
 
 			% =======
@@ -285,7 +301,9 @@ function obj = viewObjmaps(obj,varargin)
 				% rectangle('Position',[imgColX-scaleBarLengthPx-imgColX*0.05 imgRowY-imgRowY*0.05 scaleBarLengthPx 5],'FaceColor',[1 1 1],'EdgeColor','none')
 				% annotation('line',[imgRow-50 imgRow-30]/imgRow,[20 20]/imgCol,'LineWidth',3,'Color',[1 1 1]);
 
-				suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType 10 'Zoom enabled.'])
+				suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType 10  'Zoom enabled.'])
+
+				fprintf('%d/%d: %s | %s | %s\n %d cells, %d total | Zoom enabled',thisFileNumIdx,nFilesToAnalyze,obj.folderBaseDisplayStr{obj.fileNum},strrep(foldername,'_','\_'),sum(valid==1),length(valid),validType)
 
 		catch err
 			display(repmat('@',1,7))
@@ -320,8 +338,9 @@ function obj = viewObjmaps(obj,varargin)
 			else
 				movieFrameProc = loadMovieList(movieList{1},'convertToDouble',0,'frameList',userVideoFrames,'inputDatasetName',obj.inputDatasetName);
 			end
+			movieFrameProc = cast(movieFrameProc,class(rMap));
 
-			subplotTmp(rowSubP,colSubP,colSubP+1)
+			linkAx(end+1) = subplotTmp(rowSubP,colSubP,colSubP+1)
 				imagesc(nanmax(movieFrameProc,[],3))
 				axis equal tight; box off;
 				% colormap([0 0 0;obj.colormap])
@@ -344,7 +363,7 @@ function obj = viewObjmaps(obj,varargin)
 
 			rgbImg = cat(3,rMap,gMap,bMap);
 
-			subplotTmp(rowSubP,colSubP,colSubP+2)
+			linkAx(end+1) = subplotTmp(rowSubP,colSubP,colSubP+2)
 				imagesc(rgbImg)
 				axis equal tight; box off;
 				title('Movie | raw, no pre-processing with cellmap')

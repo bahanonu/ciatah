@@ -1301,11 +1301,11 @@ function [turboRegCoords] = turboregCropSelection(options,folderList)
 					% if strcmp(ext,'.h5')|strcmp(ext,'.hdf5')
 
 					% 	hinfo = hdf5info(inputFilePath);
-     %                    try
-     %                        hReadInfo = hinfo.GroupHierarchy.Datasets(1);
-     %                    catch
-     %                        hReadInfo = hinfo.GroupHierarchy.Groups.Datasets(1);
-     %                    end
+                        % try
+                        %     hReadInfo = hinfo.GroupHierarchy.Datasets(1);
+                        % catch
+                        %     hReadInfo = hinfo.GroupHierarchy.Groups.Datasets(1);
+                        % end
 					% 	xDim = hReadInfo.Dims(1);
 					% 	yDim = hReadInfo.Dims(2);
 					% 	% select the first frame from the dataset
@@ -1318,7 +1318,7 @@ function [turboRegCoords] = turboregCropSelection(options,folderList)
 					% end
 
 					[figHandle figNo] = openFigure(9, '');
-					subplot(1,2,1);imagesc(thisFrame); axis image; colormap gray; title(['Click to drag-n-draw region.' 10 'Double-click region to continue.'])
+					subplot(1,2,1);imagesc(thisFrame); axis image; colormap gray; title(['Click to drag-n-draw region. Cropped only for motion correction, original movie dimensions retained after registration.' 10 'Double-click region to continue.'])
 					set(0,'DefaultTextInterpreter','none');
 					% suptitle([num2str(fileNumIdx) '\' num2str(nFilesToRun) ': ' 10 strrep(thisDir,'\','/')],'fontSize',12,'plotregion',0.9,'titleypos',0.95);
 					uicontrol('Style','Text','String',[num2str(fileNumIdx) '\' num2str(nFilesToRun) ': ' strrep(thisDir,'\','/')],'Units','normalized','Position',[0.1 0.9 0.8 0.10],'BackgroundColor','white','HorizontalAlignment','Center');
@@ -1487,15 +1487,23 @@ function [ostruct options] = getPcaIcaParams(ostruct,options)
 			% thisMovie = loadMovieList(movieList,'convertToDouble',0,'frameList',options.frameList);
 			thisMovie = thisMovieArray{fileNum};
 
-			% playMovie(thisMovie,'fps',120,'extraTitleText',[10 pathInfo]);
-			MIJ.createImage([num2str(fileNum) '/' num2str(length(ostruct.folderList)) ': ' ostruct.folderList{fileNum}],thisMovie, true);
-			if size(thisMovie,1)<300
-				for foobar=1:2; MIJ.run('In [+]'); end
+			try
+				% playMovie(thisMovie,'fps',120,'extraTitleText',[10 pathInfo]);
+				MIJ.createImage([num2str(fileNum) '/' num2str(length(ostruct.folderList)) ': ' ostruct.folderList{fileNum}],thisMovie, true);
+				if size(thisMovie,1)<300
+					for foobar=1:2; MIJ.run('In [+]'); end
+				end
+				for foobar=1:2; MIJ.run('Enhance Contrast','saturated=0.35'); end
+				MIJ.run('Start Animation [\]');
+				uiwait(msgbox('press OK to move onto next movie','Success','modal'));
+				MIJ.run('Close All Without Saving');
+			catch err
+				disp(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				disp(repmat('@',1,7))
+				msgbox('Press E to move onto next movie, close this box to continue','Success','modal')
+				playMovie(thisMovie);
 			end
-			for foobar=1:2; MIJ.run('Enhance Contrast','saturated=0.35'); end
-			MIJ.run('Start Animation [\]');
-			uiwait(msgbox('press OK to move onto next movie','Success','modal'));
-			MIJ.run('Close All Without Saving');
 
 			if options.askForPCICs==1
 				% add arbitrary nPCs and nICs to the output

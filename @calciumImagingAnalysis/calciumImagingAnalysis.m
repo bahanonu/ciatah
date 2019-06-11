@@ -26,7 +26,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		MICRON_PER_PIXEL =  2.51; % 2.37;
 
 		defaultObjDir = pwd;
-		classVersion = 'v3.2.1-20190428';
+		classVersion = 'v3.2.2-20190508';
 		serverPath = '';
 		privateSettingsPath = ['private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
 		% place where functions can temporarily story user settings
@@ -456,7 +456,7 @@ classdef calciumImagingAnalysis < dynamicprops
 
 			obj = initializeObj(obj);
 
-			display('done!')
+			display('Done initializing calciumImagingAnalysis!')
 			display(repmat('#',1,7))
 
 			display([...
@@ -652,7 +652,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		end
 
 		function obj = changeCaxis(obj)
-			xxx = inputdlg('CAXIS min max');str2num(xxx{1});
+			userInput = inputdlg('CAXIS min max');str2num(userInput{1});
 			S = findobj(gcf,'Type','Axes');
 			% C = cell2mat(get(S,'Clim'));
 			C = str2num(xxx{1});
@@ -661,9 +661,9 @@ classdef calciumImagingAnalysis < dynamicprops
 		end
 
 		function obj = changeFont(obj)
-			xxx = inputdlg('New font');
-			xxx = str2num(xxx{1});
-			set(findall(gcf,'-property','FontSize'),'FontSize',xxx);
+			userInput = inputdlg('New font');
+			userInput = str2num(userInput{1});
+			set(findall(gcf,'-property','FontSize'),'FontSize',userInput);
 		end
 
 		function obj = checkToolboxes(obj)
@@ -864,6 +864,33 @@ classdef calciumImagingAnalysis < dynamicprops
 			loadBatchFxns();
 			cnmfVersionDirLoad('none','displayOutput',0);
 			% [success] = cnmfVersionDirLoad('cnmfe');
+
+			% Check required toolboxes are available, warn if not
+			display(repmat('-',1,7))
+			toolboxList = {...
+			'distrib_computing_toolbox',...
+			'image_toolbox',...
+			'signal_toolbox',...
+			'statistics_toolbox',...
+			'video_and_image_blockset',...
+			};
+			% 'neural_network_toolbox'...
+			nToolboxes = length(toolboxList);
+			for toolboxNo = 1:nToolboxes
+				toolboxName = toolboxList{toolboxNo};
+				if license('test',toolboxName)==1
+					fprintf('Toolbox %s available!\n',toolboxName)
+				else
+					warning(sprintf('Please install %s toolbox before running calciumImagingAnalysis.',toolboxName));
+				    % if ~verLessThan('matlab', '9.5')
+				    %     warning('Please install Neural Network toolbox before running classifySignals');
+				    % else
+				    %     warning('Please install Deep Learning Toolbox before running classifySignals');
+				    % end
+				    % return;
+				end
+			end
+			display(repmat('-',1,7))
 
 			% Ensure date paths are up to date
 			obj.picsSavePath = ['private' filesep 'pics' filesep datestr(now,'yyyymmdd','local') filesep];
@@ -1279,8 +1306,12 @@ classdef calciumImagingAnalysis < dynamicprops
 			for thisFxn=fxnsToRun
 				try
 					display(repmat('!',1,21))
-					display(['Running: obj.' thisFxn{1}]);
-					obj.(thisFxn{1});
+					if ismethod(obj,thisFxn)
+						display(['Running: obj.' thisFxn{1}]);
+						obj.(thisFxn{1});
+					else
+						display(['Method not supported, skipping: obj.' thisFxn{1}]);
+					end
 				catch err
 					display(repmat('@',1,7))
 					disp(getReport(err,'extended','hyperlinks','on'));

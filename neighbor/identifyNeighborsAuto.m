@@ -103,7 +103,7 @@ function neighborsCell = identifyNeighborsAuto(inputImages, inputSignals, vararg
                     reverseStr = cmdWaitbar(cellNo,nCells,reverseStr,'inputStr','Finding cell neighbors');
                 end
             end
-            fprintf('Done assigning neighbor IDs ...')
+            fprintf('Done assigning neighbor IDs...\n')
         case 'imdilate'
             % do nothing
         otherwise

@@ -17,6 +17,7 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 		% 2014.01.18 [19:09:14] several improvements to how extraLinePlot is displayed, now loops correctly
 		% 2014.02.19 [12:13:36] added dfof and normalization to list of movie modifications
 		% 2014.03.21 [00:43:22] can now label
+		% 2019.05.21 [22:23:42] Major changes to display of images and line plots by updating underlying graphics handle data instead of calling imagesc, plot, etc. Several other plotting changes to make faster and avoid non-responsive keyboard inputs. Changed how line plot is made so loops signal without skips in the plot.
 
 	% ========================
 	% options
@@ -24,9 +25,9 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 	options.fps = 20;
 	% Set the min/max FPS
 	% To get around issues with Matlab drawing too fast to detect key strokes, set to 60 or below.
-	options.fpsMax = 60;
+	options.fpsMax = 80;
 	options.fpsMin = 1/10;
-	% additional movie to show
+	% [X Y Z] matrix, additional movie to show
 	options.extraMovie = [];
 	% 2D matrix of [signals frames] signals
 	options.extraLinePlot = [];
@@ -79,8 +80,12 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 	% ========================
 
 	if ~isempty(options.extraMovie)|~isempty(options.extraLinePlot)
-		options.fpsMax = 30;
+		% options.fpsMax = 30;
 	end
+
+	% ==========================================
+	% COLORMAP SETUP
+	colorbarsOn = 0;
 	% clc
 	% add custom colormap
 	t = [255, 0, 0]./255;
@@ -104,45 +109,125 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 	grayRed = customColormap({[0 0 0],[0.5 0.5 0.5],[1 1 1],[0.7 0.2 0.2],[1 0 0]});
 	options.colormapColorList = [...
 		outputColormap2,...
+		{'gray'},...
+		redWhiteMap,...
 		grayRed,...
 		options.colormapColor,...
 		outputColormap4,...
 		outputColormap3,...
-		{'gray'},...
 		options.colormapColor,...
-		redWhiteMap,...
 		options.colormapColorList];
 	% options.colormapColorList
-	% ========================
+
+	% ==========================================
 	if options.nFrames==0
 		nFrames = size(inputMovie,3);
 	else
 		nFrames = options.nFrames;
 	end
 
+    % setup subplots
+	subplotNumPlots = sum([~isempty(options.extraMovie) ~isempty(options.extraLinePlot)])+1;
+	subplotRows = 1;
+	if ~isempty(options.extraLinePlot)
+		subplotRows = 2;
+	end
+	subplotCols = 2;
+
 	% pass to calling functions, in case you want to exit an upper-level loop
 	exitSignal = 0;
 
 	fig1 = figure(42);
+	% fig = figure(42,'KeyPressFcn',@detectKeyPress);
+
 	clf
 	set(findobj(gcf,'type','axes'),'hittest','off')
 
+	% ==========================================
+	if ~isempty(options.extraMovie)
+		subplotNum = 2;
+		extraMovieFrame = squeeze(options.extraMovie(:,:,1));
+		subplot(subplotRows,subplotCols,subplotNum);
+		imagesc(extraMovieFrame);
+		axHandle2 = gca;
+		if colorbarsOn==1
+			set(gcf,'SizeChangedFcn',@(hObject,event) resizeui(hObject,event,axHandle2,colorbarsOn));
+		end
+		box off;
+		axis equal tight
+	end
+
+	if ~isempty(options.extraLinePlot)
+		% increment subplot
+		% subplotNum = subplotNum+1;
+		subplotNum = [4];
+		plotAxisHandle = subplot(subplotRows,subplotCols,subplotNum);
+		xval = 0;
+		x=[xval,xval];
+		% y=[-0.05 max(max(options.extraLinePlot))];
+		y=[nanmin(options.extraLinePlot(:)) nanmax(options.extraLinePlot(:))];
+		h1 = plot(x,y,'r','LineWidth',2);
+		% uistack(h1,'bottom');
+
+		hold on;
+		plotHandle = plot(options.extraLinePlot');
+		box off;
+		xAxisHandleLine = xlabel('frame');
+		ylim([nanmin(options.extraLinePlot(:)) nanmax(options.extraLinePlot(:))]);
+	end
+
+    if ~isempty(options.extraMovie)
+    	subplotNum = [1];
+    	subplot(subplotRows,subplotCols,subplotNum);
+    end
+    if ~isempty(options.extraLinePlot)
+		subplotNum = [1 3];
+    	subplot(subplotRows,subplotCols,subplotNum);
+    	% set(gca, 'Position', get(gca, 'OuterPosition') - ...
+    	    % get(gca, 'TightInset') * [-1 0 1 0; 0 -1 0 1; 0 0 1 0; 0 0 0 1]);
+		% axHandle = fig1;
+    end
+
+	imagesc(squeeze(inputMovie(:,:,1)))
+	axHandle = gca;
+	box off;
+	if ~isempty(options.extraLinePlot)
+		% axis square
+		axis equal tight
+	else
+		axis equal tight
+	end
+
+	xAxisHandle = xlabel(['frame: 1/' num2str(nFrames) '    fps: ' num2str(options.fps)])
+
+	if colorbarsOn==1
+		set(gcf,'SizeChangedFcn',@(hObject,event) resizeui(hObject,event,axHandle,colorbarsOn));
+	end
+
+
+	% ==========================================
+	% TITLE AND COMMANDS
 	% close(fig1);fig1 = figure(42);
 	if isempty(options.extraTitleText)
 		options.extraTitleText = '';
 	else
 		options.extraTitleText = [10,options.extraTitleText];
 	end
-	supTitleStr = [10,10,10,10,'e:exit    q:exit all    g:goto frame    p:pause/play    r:rewind    f:forward    j:contrast    l:label    i:imagej',10,'c:crop    d:\DeltaF/F    a:downsample    n:normalize    m:\Deltacolormap    +:speed    -:slow    ]:+1 frame    [:-1 frame    dims: ' num2str(size(inputMovie)),'    ',strrep(options.extraTitleText,'\','/'),10,repmat(' ',1,7),10,10];
+	% supTitleStr = [10,10,10,10,'e:exit    q:exit all    g:goto frame    p:pause/play    r:rewind',10,'f:forward    j:contrast    l:label    i:imagej	c:crop',10,'    d:\DeltaF/F    a:downsample    n:normalize    m:\Deltacolormap    ',10,'+:speed    -:slow    ]:+1 frame    [:-1 frame    movie dims: ' num2str(size(inputMovie)),'    ',strrep(options.extraTitleText,'\','/'),10,repmat(' ',1,7),10,10];
+	supTitleStr = [10,'e:exit    q:exit all    g:goto frame    p:pause/play    r:rewind',10,'f:forward    j:contrast    l:label    i:imagej	c:crop',10,'    d:\DeltaF/F    a:downsample    n:normalize    m:\Deltacolormap    ',10,'+:speed    -:slow    ]:+1 frame    [:-1 frame    movie dims: ' num2str(size(inputMovie)),'    ',strrep(options.extraTitleText,'\','/')];
+	if isempty(options.extraTitleText)
+		supTitleStr = [supTitleStr 10]
+	end
 	display(strrep(supTitleStr,'    ', 10 ))
 	% supTitleStr
 	% suptitleHandle = suptitle(strrep(strrep('/','\',supTitleStr),'_','\_'));
+
 	suptitleHandle = suptitle(supTitleStr);
 	set(suptitleHandle,'FontSize',10,'FontWeight','normal')
 	hold off;
-	imagesc(squeeze(inputMovie(:,:,1)))
 	% imcontrast
 
+	% ==========================================
 	% get current key information
 	thisKey=1;
 	% set(fig1,'keypress','thisKey=get(gcf,''CurrentCharacter'');');
@@ -157,23 +242,18 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
     options.colormapColor = options.colormapColorList{options.colormapIdx};
     colormap(options.colormapColor);
 
-    % setup subplots
-	subplotNumPlots = sum([~isempty(options.extraMovie) ~isempty(options.extraLinePlot)])+1;
-	subplotRows = 1;
-	if ~isempty(options.extraLinePlot)
-		subplotRows = 2;
-	end
-	subplotCols = 2;
-
 	% open object to record movie if set
 	if options.recordMovie~=0
 		writerObj = VideoWriter(options.recordMovie);
 		open(writerObj);
 	end
 
+	% ==========================================
+	% CONSTANTS
 	% while loop to allow forward, back, skipping around
 	dirChange = 1;
-	frame=1;
+	frame = 1;
+	nFramesStr = num2str(nFrames);
 	loopSignal = 1;
 	loopCounter = 1;
 	labelCounter = 1;
@@ -181,7 +261,7 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 	ostruct.labelArray.time = {};
 	ostruct.labelArray.id = {};
 
-
+	% ==========================================
 	nLabels = length(options.labelLegend);
 	if ~isempty(options.labelLegend)&~any(strcmp('labelMatrix',fieldnames(ostruct)))
 	    ostruct.labelMatrix = zeros([nLabels nFrames]);
@@ -198,18 +278,23 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 	% use for references to keep contrast stable across frames
 	firstFrame = squeeze(inputMovie(:,:,1));
 	maxAdjFactor = 1;
-	maxMovie(1) = nanmax(inputMovie(:));
-	minMovie(1) = nanmin(inputMovie(:));
-	if ~isempty(options.extraMovie)
-		maxMovie(2) = nanmax(options.extraMovie(:));
-		minMovie(2) = nanmin(options.extraMovie(:));
-	end
 	if ~isempty(options.movieMinMax)
 		minMovie(1) = options.movieMinMax(1);
 		maxMovie(1) = options.movieMinMax(2);
 		minMovie(2) = options.movieMinMax(1);
 		maxMovie(2) = options.movieMinMax(2);
+	else
+		maxMovie(1) = nanmax(inputMovie(:));
+		minMovie(1) = nanmin(inputMovie(:));
+		if ~isempty(options.extraMovie)
+			maxMovie(2) = nanmax(options.extraMovie(:));
+			minMovie(2) = nanmin(options.extraMovie(:));
+		end
 	end
+
+	colorbarSwitch = 1;
+	colorbarSwitchTwo = 1;
+
 	try
 		while loopSignal==1
 			% [figHandle figNo] = openFigure(42, '');
@@ -221,11 +306,11 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 			end
 		    if ~isempty(options.extraMovie)
 		    	subplotNum = [1];
-		    	subplot(subplotRows,subplotCols,subplotNum)
+		    	% subplot(subplotRows,subplotCols,subplotNum)
 		    end
 		    if ~isempty(options.extraLinePlot)
 				subplotNum = [1 3];
-		    	subplot(subplotRows,subplotCols,subplotNum)
+		    	% subplot(subplotRows,subplotCols,subplotNum)
 		    	% set(gca, 'Position', get(gca, 'OuterPosition') - ...
 		    	    % get(gca, 'TightInset') * [-1 0 1 0; 0 -1 0 1; 0 0 1 0; 0 0 0 1]);
 		    end
@@ -242,27 +327,59 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 		    % keep contrast stable across frames.
 		    thisFrame(1,1) = maxMovie(1)*maxAdjFactor;
 		    thisFrame(1,2) = minMovie(1);
-		    imagesc(thisFrame);
+		    % imagesc(thisFrame);
+
+		    imAlpha = ones(size(thisFrame));
+		    imAlpha(isnan(thisFrame))=0;
+
+		    montageHandle = findobj(axHandle,'Type','image');
+		    set(montageHandle,'Cdata',thisFrame,'AlphaData',imAlpha);
+		    if strcmp(options.colormapColor,'gray')
+		    	set(axHandle,'color',[1 0 0]);
+		    else
+		    	set(axHandle,'color',[0 0 0]);
+		    end
+		    % size(thisFrame)
+		    % montageHandle
+		    % axHandle
+		    % pause
+		    % axis square;
+		    % axis equal tight
+
 		    try
 		        caxis([minMovie(1) maxMovie(1)]);
 		    catch
 		        caxis([-0.05 0.1]);
 		    end
+
+		    if colorbarSwitch==1&&colorbarsOn==1
+		        % s2Pos = get(gca,'position');
+		        s2Pos = plotboxpos(axHandle);
+		        cbh = colorbar(axHandle,'Location','eastoutside','Position',[s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)],'LimitsMode','manual');
+		        ylabel(cbh,'Fluorescence (e.g. \DeltaF/F or \DeltaF/\sigma)');
+		        colorbarSwitch = 0;
+		    end
+
 		    % imagesc(imhistmatch(thisFrame,firstFrame));
 		    % imagesc(imadjust(thisFrame));
 		    % text(15, 15, 'hello','color','w',...
 		        % 'HorizontalAlignment','center','VerticalAlignment','middle');
 		    % toc
 		    % axis off;
-		    axis square;
 		    % axis image;
-		    xlabel(['skip: ' num2str(options.fps*dirChange), ' frames    frame: ' num2str(frame) '/' num2str(size(inputMovie,3)) '    fps: ' num2str(options.fps*dirChange)])
+		    % xlabel(['skip: ' num2str(options.fps*dirChange), ' frames    frame: ' num2str(frame) '/' num2str(size(inputMovie,3)) '    fps: ' num2str(options.fps*dirChange)])
+		    % xlabel(['skip: ' num2str(options.fps), ' frames    frame: ' num2str(frame) '/' num2str(size(inputMovie,3)) '    fps: ' num2str(options.fps)])
+		    % xlabel(['frame: ' num2str(frame) '/' nFramesStr '    fps: ' num2str(options.fps)])
+		    try
+		    	set(xAxisHandle,'String',['frame: ' num2str(frame) '/' nFramesStr '    fps: ' num2str(options.fps)]);
+		    catch
+		    end
 		    % title(['skip: ' num2str(options.fps*dirChange), ' frames    frame: ' num2str(frame) '/' num2str(size(inputMovie,3)) '    fps: ' num2str(options.fps*dirChange)]);
 		    % colorbar
-		    hold on;
+		    if ~isempty(options.primaryPoint)||~isempty(options.primaryTrackingPoint)||~isempty(options.secondaryTrackingPoint)
+		    	hold on;
+		    end
 		    if ~isempty(options.primaryPoint)
-
-
 		    	if length(options.primaryPoint(:,1))==1
 		    		xpt1 = options.primaryPoint(:,1);
 		    		ypt1 = options.primaryPoint(:,2);
@@ -304,13 +421,15 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 
 		    	quiver(options.secondaryTrackingPoint(frame,1), options.secondaryTrackingPoint(frame,2), u, v,'MaxHeadSize',10,'AutoScaleFactor',1,'AutoScale','off','color',options.secondaryTrackingPointColor,'linewidth',2)
 		    end
-		    hold off
+		    if ~isempty(options.primaryPoint)||~isempty(options.primaryTrackingPoint)||~isempty(options.secondaryTrackingPoint)
+			    hold off
+			end
 			% =====================
 		    % if user has an extra movie
 		    if ~isempty(options.extraMovie)
 		    	% subplotNum = subplotNum+1;
 		    	subplotNum = 2;
-		    	subplot(subplotRows,subplotCols,subplotNum)
+		    	% subplot(subplotRows,subplotCols,subplotNum)
 		    	% set(gca, 'Position', get(gca, 'OuterPosition') - ...
 		    	    % get(gca, 'TightInset') * [-1 0 1 0; 0 -1 0 1; 0 0 1 0; 0 0 0 1]);
 		    	% imagesc(imcomplement(squeeze(options.extraMovie(:,:,frame))));
@@ -318,27 +437,46 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 		    	% normalize contrast across frames
 		    	extraMovieFrame(1,1) = maxMovie(2)*maxAdjFactor;
 		    	extraMovieFrame(1,2) = minMovie(2);
-		    	imagesc(extraMovieFrame);
+
+		    	imAlpha = ones(size(extraMovieFrame));
+		    	imAlpha(isnan(extraMovieFrame))=0;
+
+		    	% imagesc(extraMovieFrame);
+		    	montageHandle2 = findobj(axHandle2,'Type','image');
+		    	set(montageHandle2,'Cdata',extraMovieFrame,'AlphaData',imAlpha);
+		    	set(axHandle2,'color',[0 0 0]);
+		    	% axis square;
+		    	% axis equal tight;
+
 		    	try
 		    	    caxis([minMovie(2) maxMovie(2)]);
 		    	catch
 		    	    caxis([-0.05 0.1]);
 		    	end
+
+		    	if colorbarSwitchTwo==1&&colorbarsOn==1
+		    	    % s2Pos = get(gca,'position');
+		    	    s2Pos = plotboxpos(axHandle2);
+		    	    cbh = colorbar(axHandle2,'Location','eastoutside','Position',[s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)],'LimitsMode','manual');
+		    	    ylabel(cbh,'Fluorescence (e.g. \DeltaF/F or \DeltaF/\sigma)');
+		    	    colorbarSwitchTwo = 0;
+		    	end
+
+
 		    	% axis off;
-		    	axis square;
-		    	xlabel(['frame: ' num2str(frame) '/' num2str(size(options.extraMovie,3)) ' | fps: ' num2str(options.fps*dirChange)])
+		    	% xlabel(['frame: ' num2str(frame) '/' num2str(size(options.extraMovie,3)) ' | fps: ' num2str(options.fps*dirChange)])
 		    	% title(['frame: ' num2str(frame) '/' num2str(size(options.extraMovie,3)) ' | fps: ' num2str(options.fps*dirChange)]);
 		    	% plot(x,y,'r'); box off; hold off;
 		    	% axis image;
-		    	hold on;
 		    	if ~isempty(options.secondaryPoint)
+		    		hold on;
 		    		if length(options.secondaryPoint(:,1))==1
 		    			plot(options.secondaryPoint(:,1), options.secondaryPoint(:,2), 'k+', 'Markersize', 42)
 		    		else
 		    			plot(options.secondaryPoint(:,1), options.secondaryPoint(:,2), 'k.', 'Markersize', 10)
 		    		end
+		    		hold off
 		    	end
-		    	hold off
 		    end
 		    % =====================
 		    % if user wants a lineplot to also be shown
@@ -346,44 +484,93 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 		    	% increment subplot
 		    	% subplotNum = subplotNum+1;
 		    	subplotNum = [4];
-		    	subplot(subplotRows,subplotCols,subplotNum);cla
+		    	% subplot(subplotRows,subplotCols,subplotNum);
+		    	% axes(plotAxisHandle)
+
+		    	% cla
 		    	% set(gca, 'Position', get(gca, 'OuterPosition') - ...
 		    	    % get(gca, 'TightInset') * [-1 0 1 0; 0 -1 0 1; 0 0 1 0; 0 0 0 1]);
-		    	if frame<options.windowLength
-		    		% frame = options.windowLength;
-		    		linewindow = [(nFrames-options.windowLength+frame):nFrames 1:(1+options.windowLength+frame)];
-		    	elseif frame>=(nFrames-options.windowLength)
-		    		% frame=nFrames;
-		    		% linewindow = frame:nFrames;
-		    		linewindow = [(frame-options.windowLength):nFrames 1:(1+options.windowLength-(nFrames-frame))];
-		    	else
-			    	linewindow = (frame-options.windowLength):(frame+options.windowLength);
-		    	end
-		    	linewindow = linewindow(find(linewindow>0));
+
+		    	indexVector = 1:nFrames;
+		    	indexVectorAll = repmat(indexVector,[1 10]);
+		    	frameIdx = find(indexVectorAll==frame);
+		    	frameIdx = frameIdx(round(end/2));
+
+		    	linewindowIdx = frameIdx+[-options.windowLength:options.windowLength];
+		    	linewindow = indexVectorAll(linewindowIdx);
+
+		    	% linewindow = frame+[-options.windowLength:options.windowLength];
+
+		    	% if length(linewindow)>nFrames
+			    % 	if frame<options.windowLength
+			    % 		% frame = options.windowLength;
+			    % 		linewindow = [(nFrames-options.windowLength+frame):nFrames 1:(1+options.windowLength+frame)];
+			    % 	elseif frame>=(nFrames-options.windowLength)
+			    % 		% frame=nFrames;
+			    % 		% linewindow = frame:nFrames;
+			    % 		linewindow = [(frame-options.windowLength):nFrames 1:(1+options.windowLength-(nFrames-frame))];
+			    % 	else
+				   %  	linewindow = (frame-options.windowLength):(frame+options.windowLength);
+			    % 	end
+			    % 	linewindow = linewindow(find(linewindow>0));
+
+			    % 	linewindow
+		    	% else
+			    % 	linewindow(linewindow<1) = indexVector((end+(min(linewindow(linewindow<1)))):end);
+			    % 	linewindow(linewindow>nFrames) = indexVector((1:(max(linewindow(linewindow>nFrames))-nFrames)));
+		    	% end
+
 		    	linewindowX = linspace(-options.windowLength,options.windowLength,length(linewindow));
 
 		    	try
 			    	if options.colorLinePlot==1
-			    		plot(linewindowX,options.extraLinePlot(:,linewindow)'); hold on;
+			    		% plot(linewindowX,options.extraLinePlot(:,linewindow)'); hold on;
+			    		if length(plotHandle)==1
+			    			set(plotHandle,'XData',linewindowX,'YData',options.extraLinePlot(:,linewindow)')
+			    		else
+			    			for iii = 1:length(plotHandle)
+			    				set(plotHandle(iii),'XData',linewindowX,'YData',options.extraLinePlot(iii,linewindow)')
+			    			end
+			    		end
 			    	else
-			    		plot(linewindowX,options.extraLinePlot(:,linewindow)','k'); hold on;
+			    		% plot(linewindowX,options.extraLinePlot(:,linewindow)','k'); hold on;
+			    		if length(plotHandle)==1
+			    			set(plotHandle,'XData',linewindowX,'YData',options.extraLinePlot(:,linewindow)')
+			    		else
+			    			for iii = 1:length(plotHandle)
+			    				set(plotHandle(iii),'XData',linewindowX,'YData',options.extraLinePlot(iii,linewindow)')
+			    			end
+			    		end
 			    	end
 			    catch
-			    	display('out of range!');
+			    	try
+			    		% if options.colorLinePlot==1
+			    		% 	plot(linewindowX,options.extraLinePlot(:,linewindow)'); hold on;
+			    		% 	% set(plotHandle,'XData',linewindowX,'YData',options.extraLinePlot(:,linewindow)')
+			    		% else
+			    		% 	plot(linewindowX,options.extraLinePlot(:,linewindow)','k'); hold on;
+			    		% 	% set(plotHandle,'XData',linewindowX,'YData',options.extraLinePlot(:,linewindow)')
+			    		% end
+			    	catch
+			    		display('out of range!');
+			    	end
 		    		% err
 					% display(repmat('@',1,7))
 					% disp(getReport(err,'extended','hyperlinks','on'));
 					% display(repmat('@',1,7))
 			    end
-
+			    % plotHandle
 		    	% colormap gray
 		    	% ylim([-0.05 max(max(options.extraLinePlot))]);
-		    	ylim([nanmin(options.extraLinePlot(:)) nanmax(options.extraLinePlot(:))]);
-		    	xval = 0;
-		    	x=[xval,xval];
+		    	% ylim([nanmin(options.extraLinePlot(:)) nanmax(options.extraLinePlot(:))]);
+		    	% xval = 0;
+		    	% x=[xval,xval];
 		    	% y=[-0.05 max(max(options.extraLinePlot))];
-		    	y=[nanmin(options.extraLinePlot(:)) nanmax(options.extraLinePlot(:))];
-		    	plot(x,y,'r'); box off; hold on
+		    	% y=[nanmin(options.extraLinePlot(:)) nanmax(options.extraLinePlot(:))];
+		    	% plot(x,y,'r');
+		    	% set(plotHandle,'XData',x,'YData',y)
+
+		    	% box off; hold on
 		    	% hold off;
 		    	if ~isempty(options.extraLinePlotLegend)
 		    		try
@@ -394,9 +581,10 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 		    		catch
 		    		end
 		    	end
-		    	hold off;
+		    	% hold off;
 		    	% grid on
-		    	xlabel('frames');
+		    	% xlabel('frames');
+		    	% set(xAxisHandle,'String','frames');
 		    end
 		    % =====================
 		    if options.recordMovie~=0
@@ -408,6 +596,8 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 			% [x,y,reply]=ginput(1);
 			clearKey = 1;
 		    pause(1/options.fps);
+		    drawnow
+		    % uiwait(gcf, 1/options.fps)
 		    if options.fps>options.fpsMax
 		    	options.fps = options.fpsMax;
 		    end
@@ -417,6 +607,11 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 			keyIn = get(gcf,'CurrentCharacter');
 			if isempty(double(keyIn))
 				keyIn = '/';
+			elseif double(keyIn)~=51
+				figure(fig1)
+				set(gcf,'CurrentCharacter','3');
+				pause(1/options.fps);
+				drawnow
 			else
 				% double(keyIn)
 			end
@@ -424,10 +619,24 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 			switch double(keyIn)
 				case 105
 					subfxn_imageJ(inputMovie)
+				case 119 %'w' %set frame rate
+					% if user clicks 'g' for goto
+					try
+						fpsTmp = inputdlg('enter fps (frames per second)','',1,{num2str(options.fps)});
+						options.fps = str2num(fpsTmp{1});
+					catch
+					end
 				case 101 %'e' %user wants to exit
 					set(gcf,'currentch','3');
 					% set(gcf,'CurrentCharacter','');
-					loopSignal = 0;
+
+					movieDecision = questdlg('Are you sure you want to exit?', ...
+					    'Exit movie', ...
+					    'yes','no','yes');
+					if strcmp(movieDecision,'yes')
+						loopSignal = 0;
+					end
+
 					% break;
 				case 48 %0 %user wants to exit
 					set(gcf,'currentch','3');
@@ -436,8 +645,15 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 					% break;
 				case 113 %'q' %user wants to send a kill signal up
 					set(gcf,'currentch','3');
-					exitSignal = 1;
-					loopSignal = 0;
+
+					movieDecision = questdlg('Are you sure you want to exit?', ...
+					    'Exit movie', ...
+					    'yes','no','yes');
+					if strcmp(movieDecision,'yes')
+						exitSignal = 1;
+						loopSignal = 0;
+					end
+
 					% break;
 				case 49 %'1' %skip
 					if options.fps==1
@@ -454,11 +670,20 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 				case 29 %backarrow
 					dirChange = 1;
 					clearKey = 0;
-					ginput(1);
+					% ginput(1);
+					waitforbuttonpress
+
+					if double(get(gcf,'CurrentCharacter'))==28
+						dirChange = -1;
+					end
 				case 28 %forward arrow
 					dirChange = -1;
 					clearKey = 0;
-					ginput(1);
+					waitforbuttonpress
+					% ginput(1);
+					if double(get(gcf,'CurrentCharacter'))==29
+						dirChange = 1;
+					end
 				case 114 %'r' %rewind
 					dirChange = -1;
 				case 102 %'f' %forward
@@ -472,8 +697,8 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 						maxMovie(1) = maxMovie(2);
 						minMovie(1) = minMovie(2);
 					elseif usrIdxChoice==1
-						maxMovie(1) = 0.1;
-						minMovie(1) = -0.03;
+						maxMovie(1) = 0.15;
+						minMovie(1) = -0.01;
 					else
 						% since optimal is first, adjust to be correct
 						usrIdxChoice = usrIdxChoice-1;
@@ -481,6 +706,8 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 						maxMovie(usrIdxChoice) = str2num(answer{1});
 						minMovie(usrIdxChoice) = str2num(answer{2});
 					end
+					colorbarSwitch = 1;
+					colorbarSwitchTwo = 1;
 				case 108 %'l' %label frame
 					if ~isempty(options.labelLegend)
 						[labelID, ok] = listdlg('ListString',options.labelLegend,'PromptString','toggle label(s), can select multiple to switch','ListSize' ,[400 350]);
@@ -680,6 +907,7 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 		if options.recordMovie~=0
 			close(writerObj);
 		end
+		% drawnow
 	catch err
 		display(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));
@@ -749,4 +977,21 @@ function subfxn_imageJ(inputMovie)
 	MIJ.run('Close');
 	% MIJ.exit;
 	manageMiji('startStop','exit');
+end
+function resizeui(hObject,event,axHandle,colorbarsOn)
+	if colorbarsOn==0
+		return;
+	end
+	warning off;
+	% inputMoviePlotLoc2Handle = subplotTmp(rowSubP,colSubP,2)
+	% disp('Check')
+	colorbar(axHandle,'off')
+	% s2Pos = get(axHandle,'position');
+	s2Pos = plotboxpos(axHandle);
+	% s2Pos
+	% [s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)]
+	cbh = colorbar(axHandle,'Location','eastoutside','Position',[s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)]);
+	ylabel(cbh,'Fluorescence (e.g. \DeltaF/F or \DeltaF/\sigma)');
+	% ylabel(cbh,'Raw extraction image value','FontSize',15);
+	warning on;
 end

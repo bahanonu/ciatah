@@ -42,11 +42,15 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
         % 2019.03.07 [11:27:16] Change to display of movie cut images to reduce flicker on display of each new image
         % 2019.03.25 [21:53:06] - Pre-load transient still frames at the transient peak.
         % 2019.04.17 [13:16:52] - Added option to put secondary trace, as is the case for CELLMax and CNMF(-E).
+        % 2019.05.14 [10:59:56] - Made changes to how often colormap and other display elements are updated to improve performance on MATLAB 2018b.
+        % 2019.05.15 [16:17:42] - Added asynchronous loading of next cells when readMovieChunks = 0 and preComputeImageCutMovies = 0 to improve performance. Loads options.nSignalsLoadAsync number of cells in advance.
+        % 2019.05.22 [22:16:44] - Changes (e.g. move colormap, caxis, etc. calls around) to reduce slow reduction in performance as more cells are chosen.
 
     % TODO
         % DONE: allow option to mark rest as bad signals
         % c should make an obj cut movie for 10 or so signals
         % set viewMontageso it uses minValTraces maxValTraces
+        % Allow asynchronous loading of cell information from disk, e.g. do the first 20 cells then load in background while person goes through the rest of the cells.
 
     % ============================
     % ===MOVIE SETTINGS
@@ -66,7 +70,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
     options.frameList = [];
     % Number of frames to sample of inputMovie to get statistics
     options.nFrameSampleInputMovie = 10;
-    % Binary: 1 = read movie from HDD, 0 = load entire movie
+    % Binary: 1 = read movie from HDD, 0 = load entire movie into RAM
     options.readMovieChunks = 0;
     % movie stats
     options.movieMax = NaN;
@@ -75,6 +79,13 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
     options.movieMean = NaN;
     % Binary: 1 = pre-compute movies aligned to signal transients
     options.preComputeImageCutMovies = 0;
+    % Int: number of signals ahead of current to asynchronously load imageCutMovies, might make the first couple signal selections slow while loading takes place
+    options.nSignalsLoadAsync = 20;
+    % max movie cut images to show
+    % options.maxSignalsToShow = 24;
+    options.maxSignalsToShow = 15;
+    % Int: Max size in MB of async transient cut movie and image storage
+    options.maxAsyncStorageSize = 2000;
     % ===OTHER SETTINGS
     % Matrix: same form as inputSignals
     options.inputSignalsSecond = [];
@@ -122,9 +133,6 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
     options.minValConstant = -0.02; %-0.1
     % Max movie value to display
     options.maxValConstant = 0.4; %-0.1
-    % max movie cut images to show
-    % options.maxSignalsToShow = 24;
-    options.maxSignalsToShow = 15;
     % size in pixels to crop around the movie
     options.cropSize = 5;
     options.cropSizeLength = 10;
@@ -158,8 +166,10 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
     options.secondFigNo = 426;
     %% number of standard deviations above the threshold to count as spike
     options.numStdsForThresh = 2.3;
-    % Binary: show the image correlation value when input path to options.inputMovie
+    % Binary: 1 = show the image correlation value when input path to options.inputMovie
     options.showImageCorrWithCharInputMovie = 0;
+    % Binary: 1 = run tic-toc check on timing in signal loop, 0 =
+    options.signalLoopTicTocCheck = 0;
     % get options
     options = getOptions(options,varargin);
     % unpack options into current workspace
@@ -259,8 +269,12 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 
 
     % get the SNR for traces and sort traces by this if asked
+    % if isempty(options.signalSnr)
     % [signalSnr ~] = computeSignalSnr(inputSignals,'testpeaks',options.signalPeaks,'testpeaksArray',options.signalPeaksArray);
     [signalSnr inputMse inputSnrSignal inputSnrNoise inputSignalSignal inputSignalNoise] = computeSignalSnr(inputSignals,'testpeaks',options.signalPeaks,'testpeaksArray',options.signalPeaksArray,'signalCalcType',options.signalCalcType,'medianFilter',options.medianFilterTrace,'subtractMean',options.subtractMean);
+    % else
+    %     signalSnr = options.signalSnr;
+    % end
     if options.sortBySNR==1
         signalSnr(isnan(signalSnr)) = -Inf;
         [signalSnr newIdx] = sort(signalSnr,'descend');
@@ -695,7 +709,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 
     % initialize loop variables
     saveData=0;
-    i = 1;
+    i = 1; % the current signal # being sorted
     reply = 0;
     loopCount = 1;
     warning off
@@ -753,7 +767,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                 % Pre-compute the transient movies
                 [objCutMovieCollection{signalNo}] = createObjCutMovieSignalSorter(options,testpeaks,thisTrace,inputImages,signalNo,options.cropSizeLength,maxValMovie);
                 % Pre-compute the still frames at transient times
-                [objCutImagesCollection{signalNo},~] = viewMontage(options.inputMovie,inputImages(:,:,signalNo),options,thisTrace,[signalPeakIdx{signalNo}],minValMovie,maxValMovie,options.cropSizeLength,signalNo);
+                [objCutImagesCollection{signalNo},~] = viewMontage(options.inputMovie,inputImages(:,:,signalNo),options,thisTrace,[signalPeakIdx{signalNo}],minValMovie,maxValMovie,options.cropSizeLength,signalNo,1);
             catch err
                 objCutMovieCollection{signalNo} = {};
                 disp(repmat('@',1,7))
@@ -776,8 +790,16 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
     % ensure main figure hasn't been closed
     mainFig = figure(1);
 
+	% For async execution
+	objCutMovieAsyncF = cell([1 nSignalsHere]);
+    objCutImagesAsyncF = cell([1 nSignalsHere]);
+
     % only exit if user clicks options that calls for saving the data
     while saveData==0
+        if options.signalLoopTicTocCheck==1
+            tic
+        end
+
         figure(mainFig);
         % change figure color based on nature of current choice
         % valid
@@ -829,7 +851,57 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                             % montageHandle = imagesc(thisImage);
                             % Select whether to use existing peaks or not.
                             if isempty(objCutImagesCollection{i})
-                                [croppedPeakImages croppedPeakImagesCellarray] = viewMontage(options.inputMovie,inputImages(:,:,i),options,thisTrace,[signalPeakIdx{i}],minValMovie,maxValMovie,options.cropSizeLength,i);
+                                % [croppedPeakImages croppedPeakImagesCellarray] = viewMontage(options.inputMovie,inputImages(:,:,i),options,thisTrace,[signalPeakIdx{i}],minValMovie,maxValMovie,options.cropSizeLength,i);
+                                if exist('objCutImagesAsyncF','var')==1
+                                    % cellfun(@(x) disp(x),objCutMovieAsyncF)
+                                    % clc
+                                    % objCutImagesAsyncF
+                                    % objCutImagesAsyncF{i}
+                                    if isempty(objCutImagesAsyncF{i})
+                                        % objCutMovie = createObjCutMovieSignalSorter(options,testpeaks,thisTrace,inputImages,i,options.cropSizeLength,maxValMovie);
+                                        [objCutImagesCollection{i}, ~] = viewMontage(options.inputMovie,inputImages(:,:,i),options,thisTrace,[signalPeakIdx{i}],minValMovie,maxValMovie,options.cropSizeLength,i,1);
+                                    else
+                                        % Fetch output, blocks UI until read
+                                        croppedPeakImages = fetchOutputs(objCutImagesAsyncF{i});
+                                        objCutImagesCollection{i} = croppedPeakImages;
+                                        % Remove old objects from memory
+                                        delete(objCutImagesAsyncF{i});
+                                        objCutImagesAsyncF{i} = [];
+                                    end
+                                else
+                                    % objCutMovie = createObjCutMovieSignalSorter(options,testpeaks,thisTrace,inputImages,i,options.cropSizeLength,maxValMovie);
+                                    [objCutImagesCollection{i}, ~] = viewMontage(options.inputMovie,inputImages(:,:,i),options,thisTrace,[signalPeakIdx{i}],minValMovie,maxValMovie,options.cropSizeLength,i,1);
+                                end
+                                p = gcp(); % Get the current parallel pool
+                                optionsCpy = options;
+                                optionsCpy.hdf5Fid = [];
+                                for kk = (i+1):(i+options.nSignalsLoadAsync)
+                                    % Don't try to load signals out of range
+                                    if kk>nSignalsHere
+                                        continue;
+                                    end
+                                    if isempty(objCutImagesAsyncF{kk})&&isempty(objCutImagesCollection{kk})
+                                        % objCutImagesAsyncF{kk} = parfeval(p,@viewMontage,1,optionsCpy,signalPeakIdx{kk},inputSignals(kk,:),inputImages,kk,options.cropSizeLength,maxValMovie);
+                                        objCutImagesAsyncF{kk} = parfeval(p,@viewMontage,1,options.inputMovie,inputImages(:,:,kk),optionsCpy,inputSignals(kk,:),[signalPeakIdx{kk}],minValMovie,maxValMovie,options.cropSizeLength,kk,0);
+                                    else
+
+                                    end
+                                end
+                            end
+
+                            j = whos('objCutImagesCollection');j.bytes=j.bytes*9.53674e-7;
+                            objCutImagesCollectionMB = j.bytes;
+                            if objCutImagesCollectionMB>options.maxAsyncStorageSize&&options.readMovieChunks==1&&options.preComputeImageCutMovies==0
+                                display(['objCutImagesCollection: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
+                                disp('Removing old images to save space...')
+                                for kk = 1:(i-5)
+                                    if kk<nSignalsHere&&kk>1
+                                        objCutImagesCollection{kk} = [];
+                                    end
+                                end
+                            end
+
+                            if isempty(objCutImagesCollection{i})
                             else
                                 % disp('Using existing')
                                 croppedPeakImages2 = objCutImagesCollection{i};
@@ -837,11 +909,11 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                                 imAlpha(isnan(croppedPeakImages2))=0;
                                 if i==1
                                     imagesc(croppedPeakImages2,'AlphaData',imAlpha);
+                                    colormap(options.colormap);
                                 end
                                 montageHandle = findobj(gca,'Type','image');
                                 set(montageHandle,'Cdata',croppedPeakImages2,'AlphaData',imAlpha);
                                 set(gca,'color',[0 0 0]);
-                                colormap(options.colormap);
                                 set(gca, 'box','off','XTickLabel',[],'XTick',[],'YTickLabel',[],'YTick',[],'XColor',get(gcf,'Color'),'YColor',get(gcf,'Color'))
                                 set(gca,'color',[0 0 0]);
                                 warning on
@@ -854,6 +926,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                             end
                             if i==1
                                 s2Pos = get(gca,'position');
+                                % s2Pos = plotboxpos(gca);
                                 cbh = colorbar(gca,'Location','eastoutside','Position',[s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)]);
                                 ylabel(cbh,'Fluorescence (e.g. \DeltaF/F or \DeltaF/\sigma)');
                             end
@@ -888,7 +961,9 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                         % colormap(customColormap([]));
                     end
                     % colormap(options.colormap);
-                    colormap(gca,options.colormap);
+                    if i==1
+                        colormap(gca,options.colormap);
+                    end
                     % axis off;
                     % toc
                     % imagesc(croppedPeakImages{i});
@@ -1189,7 +1264,9 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
         end
 
         % get user input
-        figure(mainFig);
+        if i==1
+            figure(mainFig);
+        end
         set(findobj(gcf,'type','axes'),'hittest','off')
         validPrevious = valid(i);
         warning('off','all')
@@ -1204,9 +1281,51 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
             try
                 % [objCutMovie] = createObjCutMovieSignalSorter(options,testpeaks,thisTrace,inputImages,i);
                 if isempty(objCutMovieCollection{i})
-                    objCutMovie = createObjCutMovieSignalSorter(options,testpeaks,thisTrace,inputImages,i,options.cropSizeLength,maxValMovie);
+					if exist('objCutMovieAsyncF','var')==1
+                        % cellfun(@(x) disp(x),objCutMovieAsyncF)
+                        % clc
+                        % objCutMovieAsyncF
+                        % objCutMovieAsyncF{i}
+						if isempty(objCutMovieAsyncF{i})
+							objCutMovie = createObjCutMovieSignalSorter(options,testpeaks,thisTrace,inputImages,i,options.cropSizeLength,maxValMovie);
+						else
+                            % Fetch output, blocks UI until read
+							objCutMovie = fetchOutputs(objCutMovieAsyncF{i});
+                            objCutMovieCollection{i} = objCutMovie;
+                            % Remove job and associated storage
+                            delete(objCutMovieAsyncF{i});
+						end
+					else
+						objCutMovie = createObjCutMovieSignalSorter(options,testpeaks,thisTrace,inputImages,i,options.cropSizeLength,maxValMovie);
+					end
+                    p = gcp(); % Get the current parallel pool
+					optionsCpy = options;
+					optionsCpy.hdf5Fid = [];
+					for kk = (i+1):(i+options.nSignalsLoadAsync)
+                        % Don't try to load signals out of range
+						if kk>nSignalsHere
+							continue;
+						end
+						if isempty(objCutMovieAsyncF{kk})&&isempty(objCutMovieCollection{kk})
+							objCutMovieAsyncF{kk} = parfeval(p,@createObjCutMovieSignalSorter,1,optionsCpy,signalPeakIdx{kk},inputSignals(kk,:),inputImages(:,:,kk),kk,options.cropSizeLength,maxValMovie);
+                        else
+
+						end
+					end
                 else
                     objCutMovie = objCutMovieCollection{i};
+                end
+
+                j = whos('objCutMovieCollection');j.bytes=j.bytes*9.53674e-7;
+                objCutMovieCollectionMB = j.bytes;
+                if objCutMovieCollectionMB>options.maxAsyncStorageSize&&options.readMovieChunks==1&&options.preComputeImageCutMovies==0
+                    display(['objCutMovieCollection: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
+                    disp('Removing old images to save space...')
+                    for kk = 1:(i-5)
+                        if kk<nSignalsHere&&kk>1
+                            objCutMovieCollection{kk} = [];
+                        end
+                    end
                 end
 
                 if options.movieMin<options.movieMinLim
@@ -1237,7 +1356,13 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                 % title(strrep(options.inputStr,'_','\_'), 'HandleVisibility' , 'off' )
                 % set(gca , 'NextPlot' , 'replacechildren');
                 % axis off
-                drawnow
+
+                % Force re-draw of
+                % if i==1||mod(i,20)
+                if i==1
+                    drawnow
+                end
+
                 % title(['signal ' cellIDStr ' (' num2str(sum(valid==1)) ' good)']);
                 frameNoMax = size(objCutMovie,3);
                 frameNo = round(frameNoMax*0.40);
@@ -1250,7 +1375,9 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                 % writerObj = VideoWriter(['cell' num2str(i) '.avi']);
                 % open(writerObj);
 
-                colormap([options.colormap]);
+                if i==1
+                    colormap([options.colormap]);
+                end
 
                 if ~isempty(objCutMovie)
                     imAlpha=ones(size(objCutMovie(:,:,1)));
@@ -1275,24 +1402,31 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                 set(gca,'color',[0 0 0]);
                 loopImgHandle = imagesc(objCutMovie(:,:,frameNo),'AlphaData',imAlpha);
                 set(gca,'color',[0 0 0]);
+                set(gca, 'box','off','XTickLabel',[],'XTick',[],'YTickLabel',[],'YTick',[],'XColor',get(gcf,'Color'),'YColor',get(gcf,'Color'))
+
+                if options.signalLoopTicTocCheck==1
+                    toc
+                end
+
+                try
+                    caxis([minHere maxHere]);
+                catch
+                    caxis([-0.05 0.1]);
+                end
+
                 while strcmp(keyIn,'3')
                     keyIn = get(gcf,'CurrentCharacter');
                     if ~isempty(objCutMovie)
                         % Use Cdata update instead of imagesc to improve drawnow speed, esp. on Matlab 2018b.
                         set(loopImgHandle,'Cdata',squeeze(objCutMovie(:,:,frameNo)));
                         % imagesc(objCutMovie(:,:,frameNo),'AlphaData',imAlpha);
-                        set(gca, 'box','off','XTickLabel',[],'XTick',[],'YTickLabel',[],'YTick',[],'XColor',get(gcf,'Color'),'YColor',get(gcf,'Color'))
-                        set(gca,'color',[0 0 0]);
+                        % set(gca, 'box','off','XTickLabel',[],'XTick',[],'YTickLabel',[],'YTick',[],'XColor',get(gcf,'Color'),'YColor',get(gcf,'Color'))
+                        % set(gca,'color',[0 0 0]);
                         % sigDig = 100;
 
                         % title(strrep(options.inputStr,'_','\_'), 'HandleVisibility' , 'off' )
                         % if frameNo==1
                         % end
-                        try
-                            caxis([minHere maxHere]);
-                        catch
-                            caxis([-0.05 0.1]);
-                        end
                         % axis off
                         % drawnow;
                         % drawnow limitrate
@@ -1308,9 +1442,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
                     end
                     pause(1/options.fps);
                     frameNo = frameNo + 1;
-
                     % writeVideo(writerObj,getframe(mainFig));
-
                 end
 
                 reply = double(keyIn);
@@ -1341,7 +1473,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
         if isequal(reply, 109)&~isempty(options.inputMovie)
             try
                 [~, ~] = openFigure(options.secondFigNo, '');
-                [croppedPeakImages] = viewMontage(options.inputMovie,inputImages(:,:,i),options,thisTrace,[signalPeakIdx{i}],minValMovie,maxValMovie,options.cropSizeLength,i);
+                [croppedPeakImages] = viewMontage(options.inputMovie,inputImages(:,:,i),options,thisTrace,[signalPeakIdx{i}],minValMovie,maxValMovie,options.cropSizeLength,i,1);
                 % set(findobj(gcf,'type','axes'),'hittest','off')
                 colorbar('Location','eastoutside');
                 % colorbar(inputMoviePlotLoc2Handle,'off');
@@ -1596,7 +1728,11 @@ function [objCutMovie] = createObjCutMovieSignalSorter(options,testpeaks,thisTra
     xCoords = options.coord.xCoords(i);
     yCoords = options.coord.yCoords(i);
 
-    tmpImgHere = inputImages(:,:,i);
+    if size(inputImages,3)==1
+        tmpImgHere = inputImages;
+    else
+        tmpImgHere = inputImages(:,:,i);
+    end
     if strcmp(class(options.inputMovie),'char')|strcmp(class(options.inputMovie),'cell')
         objCutMovie = getObjCutMovie(options.inputMovie,tmpImgHere,'createMontage',0,'extendedCrosshairs',2,'crossHairVal',maxValMovie*options.crossHairPercent,'outlines',1,'waitbarOn',0,'cropSize',cropSizeLength,'addPadding',usePadding,'xCoords',xCoords,'yCoords',yCoords,'outlineVal',NaN,'frameList',peakIdxs,'inputDatasetName',options.inputDatasetName,'inputMovieDims',options.inputMovieDims,'hdf5Fid',options.hdf5Fid,'keepFileOpen',options.keepFileOpen);
     else
@@ -1678,7 +1814,7 @@ function [objCutMovie] = createObjCutMovieSignalSorter(options,testpeaks,thisTra
     nAlignPts = nAlignPts+nStimMovies+dimDiff;
     [objCutMovie] = createStimCutMovieMontage(objCutMovie,nAlignPts,timeVector,'squareMontage',1,'addStimMovie',0);
 end
-function [croppedPeakImages2 croppedPeakImages] = viewMontage(inputMovie,inputImage,options,thisTrace,signalPeakArray,minValMovie,maxValMovie,cropSizeLength,i)
+function [croppedPeakImages2 croppedPeakImages] = viewMontage(inputMovie,inputImage,options,thisTrace,signalPeakArray,minValMovie,maxValMovie,cropSizeLength,i,dispImgFinal)
     displayImg = 1;
     if isempty(signalPeakArray)
         if displayImg==1
@@ -1801,6 +1937,9 @@ function [croppedPeakImages2 croppedPeakImages] = viewMontage(inputMovie,inputIm
         % imAlpha(croppedPeakImages2==mode(croppedPeakImages2(:))) = 0;
         % imagesc(croppedPeakImages2,'AlphaData',imAlpha);
 
+        if dispImgFinal==0
+            return;
+        end
         if i==1
             imagesc(croppedPeakImages2,'AlphaData',imAlpha);
         end
@@ -1811,7 +1950,9 @@ function [croppedPeakImages2 croppedPeakImages] = viewMontage(inputMovie,inputIm
 
         set(gca,'color',[0 0 0]);
         % imagesc(croppedPeakImages2);
-        colormap(options.colormap);
+        if i==1
+            colormap(options.colormap);
+        end
         % axis off;
         set(gca, 'box','off','XTickLabel',[],'XTick',[],'YTickLabel',[],'YTick',[],'XColor',get(gcf,'Color'),'YColor',get(gcf,'Color'))
         set(gca,'color',[0 0 0]);

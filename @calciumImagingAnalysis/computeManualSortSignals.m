@@ -9,6 +9,7 @@ function obj = computeManualSortSignals(obj)
 
 	% changelog
 		% 2014.10.09 - finished re-implementing for behaviorAnalysis class
+		% 2019.05.15 [13:13:10] Added support for reading movie from disk to allow sorting of large imaging movies
 	% TODO
 		% ADD PERSONS NAME TO THE FILE
 
@@ -237,7 +238,7 @@ function obj = computeManualSortSignals(obj)
 			% valid
 			% =======
 			% load movie?
-			if strcmp(usrIdxChoiceMovie,'load movie')
+			if strcmp(usrIdxChoiceMovie,'load movie')&&userIdxReadMovieChunks==0
 				% load movies
 				if isempty(movieList)
 					display('Dialog box: select movie to load.')
@@ -254,8 +255,16 @@ function obj = computeManualSortSignals(obj)
 					display('setting mean to zero')
 					ioptions.inputMovie = ioptions.inputMovie-1;
 				end
-			else
-
+			elseif userIdxReadMovieChunks==1
+				if isempty(movieList)
+					display('Dialog box: select movie to load.')
+					[filePath,folderPath,~] = uigetfile([currentFolderPath filesep '*.*'],'select movie to load');
+					% exit if user picks nothing
+					% if folderListInfo==0; return; end
+					movieList = [folderPath filesep filePath];
+					movieList = {movieList};
+				end
+				ioptions.inputMovie = movieList{1};
 			end
 			% =======
 			ioptions.signalPeaks = signalPeaks;
@@ -277,6 +286,11 @@ function obj = computeManualSortSignals(obj)
 			ioptions.inputSignalsSecond = rawSignals2;
 
 			ioptions.preComputeImageCutMovies = userIdxPreComputeImageCutMovies;
+
+			ioptions.readMovieChunks = userIdxReadMovieChunks;
+
+			ioptions.signalLoopTicTocCheck = userIdxSignalLoopTicTocCheck;
+
 			% ioptions.classifierFilepath = options.classifierFilepath;
 			% ioptions.classifierType = options.classifierType;
 
@@ -393,7 +407,9 @@ function [settingStruct] = subfxnGetSettings(inputTitleStr,fileFilterRegexp,inpu
 		'userIdxLargeMovieLoad',{{1,0}},...
 		'userIdxPreComputeImageCutMovies',{{1,0}},...
 		'userIdxOnlyResortGoodSources',{{0,1}},...
-		'userIdxLoadPostSort',{{0,1}}...
+		'userIdxLoadPostSort',{{0,1}},...
+		'userIdxReadMovieChunks',{{0,1}},...
+		'userIdxSignalLoopTicTocCheck',{{0,1}}...
 	);
 	regSettingStr = struct(...
 		'usrIdxChoiceSortType', {{'sorting (decisions are saved)','viewing (decisions are NOT saved)'}},...
@@ -411,7 +427,9 @@ function [settingStruct] = subfxnGetSettings(inputTitleStr,fileFilterRegexp,inpu
 		'userIdxLargeMovieLoad',{{'Single large movie','Normal movie'}},...
 		'userIdxPreComputeImageCutMovies',{{'DO pre-compute event aligned movies','DO NOT pre-compute event aligned movies'}},...
 		'userIdxOnlyResortGoodSources',{{'DO NOT only sort good sources','DO only sort good sources'}},...
-		'userIdxLoadPostSort',{{'DO NOT load data after sorting','DO load data after sorting'}}...
+		'userIdxLoadPostSort',{{'DO NOT load data after sorting','DO load data after sorting'}},...
+		'userIdxReadMovieChunks',{{'DO NOT load movie from disk, e.g. into RAM (HDF5)','DO load movie from disk (HDF5)'}},...
+		'userIdxSignalLoopTicTocCheck',{{'DO NOT run signal loop tic-toc','DO run signal loop tic-toc'}}...
 	);
 
 	% propertySettings = regSettingDefaults;

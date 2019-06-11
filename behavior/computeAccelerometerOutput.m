@@ -19,6 +19,8 @@ function [acceleration outputStruct] = computeAccelerometerOutput(x,y,z,varargin
 	% Float: raw value to g force conversion
 	options.rawToGfactor = 1/0.3; % g/300mV or 3.33 g/V
 	% options.rawToGfactor =  (5/1024)*(1/0.3); % 5V/1024 units * g/0.001 V
+	% Whether to show the plots
+	options.showPlots = 0;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
