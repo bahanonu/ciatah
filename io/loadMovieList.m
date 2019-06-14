@@ -1,4 +1,4 @@
-function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, varargin)
+function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, varargin)
 	% Load movies, automatically detects type (avi, tif, or hdf5) and concatenates if multiple movies in a list.
 	% Biafra Ahanonu
 	% started: 2013.11.01
@@ -40,6 +40,7 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 		% 2018.09.28 [16:49:29] HDF5 non-contiguous frame reading is faster, no looping since select multiple hyperslabs at once, see readHDF5Subset for more
 		% 2019.01.16 [07:51:01] Added ISXD support (Inscopix format for v3+).
 		% 2019.03.10 [19:28:47] Improve support for loading 1000s of TIF files by adding some performance improvements, ASSUMES that all tifs being loaded are from the same movie and have similar properties and dimensions. See options.onlyCheckFirstFileInfo.
+		% 2019.06.06 [19:39:17] - Misc code fixes
 	% TODO
 		% OPEN
 			% MAKE tiff loading recognize frameList input
@@ -100,23 +101,23 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 	end
 	% ========================
 	% allow usr to input just a string if a single movie
-    if strcmp(class(movieList),'char')
-        movieList = {movieList};
-    end
+	if ischar(movieList)
+		movieList = {movieList};
+	end
 
-    % ========================
-    % modify frameList if loading equal parts
-    if ~isempty(options.loadMovieInEqualParts)
-    	fprintf('Loading %d equal parts of %d frames each\n',options.loadMovieInEqualParts(1),options.loadMovieInEqualParts(2))
-    	options.frameList = subfxnLoadEqualParts(movieList,options);
-    end
+	% ========================
+	% modify frameList if loading equal parts
+	if ~isempty(options.loadMovieInEqualParts)
+		fprintf('Loading %d equal parts of %d frames each\n',options.loadMovieInEqualParts(1),options.loadMovieInEqualParts(2))
+		options.frameList = subfxnLoadEqualParts(movieList,options);
+	end
 
 	% ========================
 	% remove unsupported files
 	movieNo = 1;
 	for iMovie=1:length(movieList)
 		thisMoviePath = movieList{iMovie};
-		[options.movieType supported] = getMovieFileType(thisMoviePath);
+		[options.movieType, supported] = getMovieFileType(thisMoviePath);
 		if supported==0
 			subfxnDisplay(['removing unsupported file from list: ' thisMoviePath],options);
 		else
@@ -140,12 +141,12 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 	end
 	numMovies = length(movieList);
 
-    % ========================
+	% ========================
 	% pre-read each file to allow pre-allocation of output file
 	reverseStr = '';
 	for iMovie=1:numMovies
 		thisMoviePath = movieList{iMovie};
-		if options.onlyCheckFirstFileInfo==1&iMovie>1
+		if options.onlyCheckFirstFileInfo==1&&iMovie>1
 			fprintf('Adding movie #1 info to movie info for %d\\%d: %s\n',iMovie,numMovies,thisMoviePath);
 			dims.x(iMovie) = dims.x(1);
 			dims.y(iMovie) = dims.y(1);
@@ -158,7 +159,7 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 		if options.displayInfo==1
 			fprintf('Getting movie info for %d\\%d: %s\n',iMovie,numMovies,thisMoviePath);
 		end
-		[options.movieType supported] = getMovieFileType(thisMoviePath);
+		[options.movieType, supported] = getMovieFileType(thisMoviePath);
 		if supported==0
 
 		end
@@ -180,20 +181,20 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 					fileInfo = imfinfo(thisMoviePath);
 					try
 						numFramesStr = regexp(fileInfo.ImageDescription, 'images=(\d*)', 'tokens');
-					    nFrames = str2double(numFramesStr{1}{1});
+						nFrames = str2double(numFramesStr{1}{1});
 					catch
 						nFrames = 1;
 					end
-				    dims.z(iMovie) = nFrames;
+					dims.z(iMovie) = nFrames;
 				end
 			case 'hdf5'
 				%
 				hinfo = hdf5info(thisMoviePath);
-                [hReadInfo thisDatasetName] = getHdf5Info();
-                if options.displayDiagnosticInfo==1
-                	hReadInfo
-                	hReadInfo.Name
-                end
+				[hReadInfo, thisDatasetName] = getHdf5Info();
+				if options.displayDiagnosticInfo==1
+					display(hReadInfo)
+					hReadInfo.Name
+				end
 				dims.x(iMovie) = hReadInfo.Dims(1);
 				dims.y(iMovie) = hReadInfo.Dims(2);
 				dims.z(iMovie) = hReadInfo.Dims(3);
@@ -215,6 +216,7 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 				dims.two(iMovie) = xyloObj.Width;
 				dims.three(iMovie) = xyloObj.NumberOfFrames;
 				tmpFrame = read(xyloObj, 1);
+				% tmpFrame = readFrame(xyloObj);
 			case 'isxd'
 				inputMovieIsx = isx.Movie.read(thisMoviePath);
 				nFrames = inputMovieIsx.timing.num_samples;
@@ -280,16 +282,16 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 
 	% size(outputMovie)
 
-	if options.treatMoviesAsContinuous==1&~isempty(options.frameList)
+	if options.treatMoviesAsContinuous==1&&~isempty(options.frameList)
 		% totalZ = sum(dims.z);
 		zdims = dims.z;
 		frameList = options.frameList;
 		zdimsCumsum = cumsum([0 zdims]);
 		zdims = [1 zdims];
 		for i=1:(length(zdims)-1)
-		    g{i} = frameList>zdimsCumsum(i)&frameList<=zdimsCumsum(i+1);
-		    globalFrame{i} = frameList(g{i}) - zdimsCumsum(i);
-		    dims.z(i) = length(globalFrame{i});
+			g{i} = frameList>zdimsCumsum(i)&frameList<=zdimsCumsum(i+1);
+			globalFrame{i} = frameList(g{i}) - zdimsCumsum(i);
+			dims.z(i) = length(globalFrame{i});
 		end
 		cellfun(@max,globalFrame,'UniformOutput',false)
 		cellfun(@min,globalFrame,'UniformOutput',false)
@@ -321,7 +323,7 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 	% pre-allocated output structure, convert to input movie datatype
 	if options.largeMovieLoad==1
 	else
-		if strcmp(imgClass,'single')|strcmp(imgClass,'double')
+		if strcmp(imgClass,'single')||strcmp(imgClass,'double')
 			if isempty(options.loadSpecificImgClass)
 				subfxnDisplay(['pre-allocating ' imgClass ' NaN matrix...'],options);
 				outputMovie = NaN([xDimMax yDimMax zDimLength],imgClass);
@@ -339,35 +341,35 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 	subfxnDisplay('-------',options);
 	% ========================
 	for iMovie=1:numMovies
-	    thisMoviePath = movieList{iMovie};
+		thisMoviePath = movieList{iMovie};
 
-	    [options.movieType] = getMovieFileType(thisMoviePath);
+		[options.movieType] = getMovieFileType(thisMoviePath);
 
-	    if isempty(globalFrame)
-	    	thisFrameList = options.frameList;
-	    else
-	    	thisFrameList = globalFrame{iMovie};
-	    	if isempty(thisFrameList)
+		if isempty(globalFrame)
+			thisFrameList = options.frameList;
+		else
+			thisFrameList = globalFrame{iMovie};
+			if isempty(thisFrameList)
 				subfxnDisplay(['no global frames:' num2str(iMovie) '/' num2str(numMovies) ': ' thisMoviePath],options);
-	    		continue
-	    	end
-	    end
+				continue
+			end
+		end
 
-	    if options.displayInfo==1
-	    	subfxnDisplay(['loading ' num2str(iMovie) '/' num2str(numMovies) ': ' thisMoviePath],options);
-	    end
-	    % depending on movie type, load differently
+		if options.displayInfo==1
+			subfxnDisplay(['loading ' num2str(iMovie) '/' num2str(numMovies) ': ' thisMoviePath],options);
+		end
+		% depending on movie type, load differently
 		switch options.movieType
 			case 'tiff'
 				% Pre-load the temporary image to reduce overhead and boost performance when loading many individual TIF images
-				if iMovie==1&options.onlyCheckFirstFileInfo==1
+				if iMovie==1&&options.onlyCheckFirstFileInfo==1
 					thisMoviePath = movieList{iMovie};
 					tiffHandle = Tiff(thisMoviePath, 'r');
 					tmpFramePerma = tiffHandle.read();
 					fileInfoH = imfinfo(thisMoviePath);
 					displayInfoH = 1;
 					NumberframeH = dims.z(iMovie);
-				elseif options.onlyCheckFirstFileInfo==1&iMovie>1
+				elseif options.onlyCheckFirstFileInfo==1&&iMovie>1
 					displayInfoH = 0;
 					NumberframeH = dims.z(iMovie);
 				else
@@ -381,24 +383,24 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 
 				if numMovies==1
 					if isempty(thisFrameList)
-			    		outputMovie = load_tif_movie(thisMoviePath,1);
-			    		outputMovie = outputMovie.Movie;
-			    	else
-			    		outputMovie = load_tif_movie(thisMoviePath,1,'frameList',thisFrameList);
-			    		outputMovie = outputMovie.Movie;
-			    	end
+						outputMovie = load_tif_movie(thisMoviePath,1);
+						outputMovie = outputMovie.Movie;
+					else
+						outputMovie = load_tif_movie(thisMoviePath,1,'frameList',thisFrameList);
+						outputMovie = outputMovie.Movie;
+					end
 				else
 					if isempty(thisFrameList)
-			    		tmpMovie = load_tif_movie(thisMoviePath,1,'tmpImage',tmpFramePerma,'displayInfo',displayInfoH,'Numberframe',NumberframeH,'fileInfo',fileInfoH);
-			    		tmpMovie = tmpMovie.Movie;
-			    	else
-			    		tmpMovie = load_tif_movie(thisMoviePath,1,'frameList',thisFrameList,'tmpImage',tmpFramePerma,'displayInfo',displayInfoH,'Numberframe',NumberframeH,'fileInfo',fileInfoH);
-			    		tmpMovie = tmpMovie.Movie;
-			    	end
+						tmpMovie = load_tif_movie(thisMoviePath,1,'tmpImage',tmpFramePerma,'displayInfo',displayInfoH,'Numberframe',NumberframeH,'fileInfo',fileInfoH);
+						tmpMovie = tmpMovie.Movie;
+					else
+						tmpMovie = load_tif_movie(thisMoviePath,1,'frameList',thisFrameList,'tmpImage',tmpFramePerma,'displayInfo',displayInfoH,'Numberframe',NumberframeH,'fileInfo',fileInfoH);
+						tmpMovie = tmpMovie.Movie;
+					end
 				end
-	    	% ========================
+			% ========================
 			case 'hdf5'
-				if isempty(thisFrameList)&~options.forcePerFrameRead
+				if isempty(thisFrameList)&&options.forcePerFrameRead==0
 					hinfo = hdf5info(thisMoviePath);
 					% hReadInfo = hinfo.GroupHierarchy.Datasets(1);
 					% datasetNames = {hinfo.GroupHierarchy.Datasets.Name};
@@ -406,25 +408,25 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 					% hReadInfo = hinfo.GroupHierarchy.Datasets(thisDatasetName);
 					hReadInfo = getHdf5Info();
 					% read in the file
-	                % hReadInfo.Attributes
-	                if options.largeMovieLoad==1
-	                	outputMovie = hdf5read(hReadInfo);
-	                else
+					% hReadInfo.Attributes
+					if options.largeMovieLoad==1
+						outputMovie = hdf5read(hReadInfo);
+					else
 						tmpMovie = hdf5read(hReadInfo);
 						if isempty(options.loadSpecificImgClass)
 						else
 							tmpMovie = cast(tmpMovie,imgClass);
 						end
-	                end
+					end
 				else
 					% xxxx = 1;
-					if nanmin(diff(thisFrameList)==1)==1&~options.forcePerFrameRead
+					if sum(nanmin(diff(thisFrameList)==1))==1&&options.forcePerFrameRead==0
 						% if contiguous segment of HDF5 file, read that in as one block to save time if user specifies as such
 						inputFilePath = thisMoviePath;
 						framesToGrab = thisFrameList;
 						hinfo = hdf5info(inputFilePath);
 						% hReadInfo = hinfo.GroupHierarchy.Datasets(1);
-						[hReadInfo thisDatasetName] = getHdf5Info();
+						[hReadInfo, thisDatasetName] = getHdf5Info();
 						xDim = hReadInfo.Dims(1);
 						yDim = hReadInfo.Dims(2);
 
@@ -438,21 +440,21 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 							tmpMovie = readHDF5Subset(inputFilePath,[0 0 framesToGrab(1)-1],[xDim yDim length(framesToGrab)],'datasetName',thisDatasetName,'displayInfo',options.displayInfo);
 						end
 					else
-						display('Read frame-by-frame')
+						disp('Read frame-by-frame')
 						% read frame-by-frame to save space
 						inputFilePath = thisMoviePath;
 						hinfo = hdf5info(inputFilePath);
 						% hReadInfo = hinfo.GroupHierarchy.Datasets(1);
-						[hReadInfo thisDatasetName] = getHdf5Info();
+						[hReadInfo, thisDatasetName] = getHdf5Info();
 						xDim = hReadInfo.Dims(1);
 						yDim = hReadInfo.Dims(2);
 						% tmpMovie = readHDF5Subset(inputFilePath,[0 0 thisFrameList(1)],[xDim yDim length(thisFrameList)],'datasetName',options.inputDatasetName);
-                        framesToGrab = thisFrameList;
-						if isempty(thisFrameList)&options.forcePerFrameRead==1
+						framesToGrab = thisFrameList;
+						if isempty(thisFrameList)&&options.forcePerFrameRead==1
 							framesToGrab = 1:dims.z(iMovie);
 						end
 						nFrames = length(framesToGrab);
-						reverseStr = '';
+						% reverseStr = '';
 
 						for iframe = 1:nFrames
 							readFrame = framesToGrab(iframe);
@@ -468,13 +470,13 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 							% tmpMovie(:,:,iframe) = thisFrame;
 							outputMovie(1:dims.x(iMovie),1:dims.y(iMovie),1:nFrames) = thisFrame;
 						else
-					    	% assume 3D movies with [x y frames] as dimensions
-						    if(iMovie==1)
+							% assume 3D movies with [x y frames] as dimensions
+							if(iMovie==1)
 								outputMovie(1:dims.x(iMovie),1:dims.y(iMovie),1:nFrames) = cast(thisFrame,imgClass);
-						    else
-						    	zOffset = sum(dims.z(1:iMovie-1));
-						    	outputMovie(1:dims.x(iMovie),1:dims.y(iMovie),(zOffset+1:nFrames)) = cast(thisFrame,imgClass);
-						    end
+							else
+								zOffset = sum(dims.z(1:iMovie-1));
+								outputMovie(1:dims.x(iMovie),1:dims.y(iMovie),(zOffset+1:nFrames)) = cast(thisFrame,imgClass);
+							end
 						end
 						% if options.displayInfo==1
 						% 	reverseStr = cmdWaitbar(iframe,nFrames,reverseStr,'inputStr','loading hdf5','waitbarOn',options.waitbarOn,'displayEvery',50);
@@ -533,12 +535,12 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 					if size(tmpAviFrame,3)==3
 						tmpAviFrame = squeeze(tmpAviFrame(:,:,1));
 					end
-				    tmpMovie(:,:,iframe) = tmpAviFrame;
-		            % reduce waitbar access
-		            if options.displayInfo==1
-		    			reverseStr = cmdWaitbar(iframe,nFrames,reverseStr,'inputStr','loading avi','waitbarOn',options.waitbarOn,'displayEvery',50);
-		    		end
-		    		iframe = iframe + 1;
+					tmpMovie(:,:,iframe) = tmpAviFrame;
+					% reduce waitbar access
+					if options.displayInfo==1
+						reverseStr = cmdWaitbar(iframe,nFrames,reverseStr,'inputStr','loading avi','waitbarOn',options.waitbarOn,'displayEvery',50);
+					end
+					iframe = iframe + 1;
 				end
 			% ========================
 			case 'isxd'
@@ -572,12 +574,12 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 					% if size(tmpAviFrame,3)==3
 					% 	tmpAviFrame = squeeze(tmpAviFrame(:,:,1));
 					% end
-				    tmpMovie(:,:,iframe) = tmpAviFrame;
-		            % reduce waitbar access
-		            if options.displayInfo==1
-		    			reverseStr = cmdWaitbar(iframe,nFrames,reverseStr,'inputStr','loading ISXD','waitbarOn',options.waitbarOn,'displayEvery',50);
-		    		end
-		    		iframe = iframe + 1;
+					tmpMovie(:,:,iframe) = tmpAviFrame;
+					% reduce waitbar access
+					if options.displayInfo==1
+						reverseStr = cmdWaitbar(iframe,nFrames,reverseStr,'inputStr','loading ISXD','waitbarOn',options.waitbarOn,'displayEvery',50);
+					end
+					iframe = iframe + 1;
 				end
 			% ========================
 			otherwise
@@ -585,16 +587,16 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 				return;
 		end
 		if exist('tmpMovie','var')
-		    if iMovie==1
+			if iMovie==1
 				outputMovie(1:dims.x(iMovie),1:dims.y(iMovie),1:dims.z(iMovie)) = tmpMovie;
-		        % outputMovie(:,:,:) = tmpMovie;
-		    else
-		    	% assume 3D movies with [x y frames] as dimensions
-		    	zOffset = sum(dims.z(1:iMovie-1));
-		    	outputMovie(1:dims.x(iMovie),1:dims.y(iMovie),(zOffset+1):(zOffset+dims.z(iMovie))) = tmpMovie;
-		        % outputMovie(:,:,end+1:end+size(tmpMovie,3)) = tmpMovie;
-		    end
-	    	clear tmpMovie;
+				% outputMovie(:,:,:) = tmpMovie;
+			else
+				% assume 3D movies with [x y frames] as dimensions
+				zOffset = sum(dims.z(1:iMovie-1));
+				outputMovie(1:dims.x(iMovie),1:dims.y(iMovie),(zOffset+1):(zOffset+dims.z(iMovie))) = tmpMovie;
+				% outputMovie(:,:,end+1:end+size(tmpMovie,3)) = tmpMovie;
+			end
+			clear tmpMovie;
 		else
 
 		end
@@ -606,25 +608,25 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 	% DFOFsize = size(DFOF.Movie);
 	movieDims = size(outputMovie);
 	nPixels = movieDims(1)*movieDims(2);
-    if length(movieDims)==2
-        nFrames = 1;
-    else
-        nFrames = movieDims(3);
-    end
+	if length(movieDims)==2
+		nFrames = 1;
+	else
+		nFrames = movieDims(3);
+	end
 	if options.waitbarOn==1
-	    subfxnDisplay(['movie class: ' class(outputMovie)],options);
-	    subfxnDisplay(['movie size: ' num2str(size(outputMovie))],options);
-	    subfxnDisplay(['x-dims: ' num2str(dims.x)],options);
-	    subfxnDisplay(['y-dims: ' num2str(dims.y)],options);
-	    subfxnDisplay(['z-dims: ' num2str(dims.z)],options);
+		subfxnDisplay(['movie class: ' class(outputMovie)],options);
+		subfxnDisplay(['movie size: ' num2str(size(outputMovie))],options);
+		subfxnDisplay(['x-dims: ' num2str(dims.x)],options);
+		subfxnDisplay(['y-dims: ' num2str(dims.y)],options);
+		subfxnDisplay(['z-dims: ' num2str(dims.z)],options);
 	end
 	j = whos('outputMovie');j.bytes=j.bytes*9.53674e-7;
 	subfxnDisplay(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class],options);
-    % display(dims);
+	% display(dims);
 	% Convert the movie to single
 	% DFOF=single(DFOF);
 	if options.convertToDouble==1
-	    subfxnDisplay('converting to double...',options);
+		subfxnDisplay('converting to double...',options);
 		outputMovie=double(outputMovie);
 	end
 
@@ -633,30 +635,30 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 		display(repmat('#',1,3))
 	end
 
-	function [hReadInfo thisDatasetName] = getHdf5Info();
+	function [hReadInfo, thisDatasetName] = getHdf5Info()
 		if ischar(options.inputDatasetName)
 			try
-			    datasetNames = {hinfo.GroupHierarchy.Datasets.Name};
-			    thisDatasetName = strmatch(options.inputDatasetName,datasetNames);
-			    hReadInfo = hinfo.GroupHierarchy.Datasets(thisDatasetName);
-	        catch
-	            try
-	                datasetNames = {hinfo.GroupHierarchy.Groups.Datasets.Name};
-	                thisDatasetName = strmatch(options.inputDatasetName,datasetNames);
-	                hReadInfo = hinfo.GroupHierarchy.Groups.Datasets(thisDatasetName);
-	            catch
-	                nGroups = length(hinfo.GroupHierarchy.Groups);
-	                datasetNames = {};
-	                for groupNo = 1:nGroups
-	                    datasetNames{groupNo} = hinfo.GroupHierarchy.Groups(groupNo).Datasets.Name;
-	                end
-	                thisDatasetName = strmatch(options.inputDatasetName,datasetNames);
-	                thisGroupNo = strmatch(options.inputDatasetName,datasetNames);
-	                % hReadInfo = hinfo.GroupHierarchy.Groups(thisDatasetName).Datasets;
-	                % hinfo.GroupHierarchy.Groups(thisGroupNo).Datasets.Name
-	                thisDatasetNo = strmatch(options.inputDatasetName,{hinfo.GroupHierarchy.Groups(thisGroupNo).Datasets.Name});
-	                hReadInfo = hinfo.GroupHierarchy.Groups(thisGroupNo).Datasets(thisDatasetNo);
-	            end
+				datasetNames = {hinfo.GroupHierarchy.Datasets.Name};
+				thisDatasetName = strmatch(options.inputDatasetName,datasetNames);
+				hReadInfo = hinfo.GroupHierarchy.Datasets(thisDatasetName);
+			catch
+				try
+					datasetNames = {hinfo.GroupHierarchy.Groups.Datasets.Name};
+					thisDatasetName = strmatch(options.inputDatasetName,datasetNames);
+					hReadInfo = hinfo.GroupHierarchy.Groups.Datasets(thisDatasetName);
+				catch
+					nGroups = length(hinfo.GroupHierarchy.Groups);
+					datasetNames = {};
+					for groupNo = 1:nGroups
+						datasetNames{groupNo} = hinfo.GroupHierarchy.Groups(groupNo).Datasets.Name;
+					end
+					thisDatasetName = strmatch(options.inputDatasetName,datasetNames);
+					thisGroupNo = strmatch(options.inputDatasetName,datasetNames);
+					% hReadInfo = hinfo.GroupHierarchy.Groups(thisDatasetName).Datasets;
+					% hinfo.GroupHierarchy.Groups(thisGroupNo).Datasets.Name
+					thisDatasetNo = strmatch(options.inputDatasetName,{hinfo.GroupHierarchy.Groups(thisGroupNo).Datasets.Name});
+					hReadInfo = hinfo.GroupHierarchy.Groups(thisGroupNo).Datasets(thisDatasetNo);
+				end
 			end
 		else
 			hReadInfo = hinfo.GroupHierarchy.Datasets(options.inputDatasetName);
@@ -665,10 +667,10 @@ function [outputMovie movieDims nPixels nFrames] = loadMovieList(movieList, vara
 	end
 end
 
-function [movieType supported] = getMovieFileType(thisMoviePath)
-    % determine how to load movie, don't assume every movie in list is of the same type
+function [movieType, supported] = getMovieFileType(thisMoviePath)
+	% determine how to load movie, don't assume every movie in list is of the same type
 	supported = 1;
-    try
+	try
 		[pathstr,name,ext] = fileparts(thisMoviePath);
 	catch
 		movieType = '';
@@ -676,9 +678,9 @@ function [movieType supported] = getMovieFileType(thisMoviePath)
 		return;
 	end
 	% files are assumed to be named correctly (lying does no one any good)
-	if strcmp(ext,'.h5')|strcmp(ext,'.hdf5')
+	if strcmp(ext,'.h5')||strcmp(ext,'.hdf5')
 		movieType = 'hdf5';
-	elseif strcmp(ext,'.tif')|strcmp(ext,'.tiff')
+	elseif strcmp(ext,'.tif')||strcmp(ext,'.tiff')
 		movieType = 'tiff';
 	elseif strcmp(ext,'.avi')
 		movieType = 'avi';

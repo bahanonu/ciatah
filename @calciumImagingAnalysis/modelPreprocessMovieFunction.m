@@ -1487,6 +1487,7 @@ function [ostruct options] = getPcaIcaParams(ostruct,options)
 			% thisMovie = loadMovieList(movieList,'convertToDouble',0,'frameList',options.frameList);
 			thisMovie = thisMovieArray{fileNum};
 
+			% Try with Miji, else use built-in player
 			try
 				% playMovie(thisMovie,'fps',120,'extraTitleText',[10 pathInfo]);
 				MIJ.createImage([num2str(fileNum) '/' num2str(length(ostruct.folderList)) ': ' ostruct.folderList{fileNum}],thisMovie, true);

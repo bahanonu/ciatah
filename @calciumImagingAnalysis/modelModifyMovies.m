@@ -8,11 +8,22 @@ function obj = modelModifyMovies(obj)
 		%
 
 	% changelog
-		%
+		% 2019.06.10 [11:01:55] - Added support for non-Miji based masking.
 	% TODO
 		%
 
 	try
+		options.videoPlayer = [];
+		if isempty(options.videoPlayer)
+			usrIdxChoiceStr = {'matlab','imagej'};
+			scnsize = get(0,'ScreenSize');
+			[sel, ok] = listdlg('ListString',usrIdxChoiceStr,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','which video player to use?');
+			options.videoPlayer = usrIdxChoiceStr{sel};
+		end
+		if strcmp(options.videoPlayer,'imagej')
+			modelAddOutsideDependencies('miji');
+		end
+
 		% get user input
 		movieSettings = inputdlg({...
 				'start:end frames for preview (blank = all frames)',...
@@ -54,18 +65,17 @@ function obj = modelModifyMovies(obj)
 		replaceFileFilterRegexpAlt = movieSettings{setNo};setNo = setNo+1;
 
 		% analyzeMovieFiles =  str2num(movieSettings{6});
-		obj.fileFilterRegexp = replaceFileFilterRegexp;
-		obj.fileFilterRegexpAlt = replaceFileFilterRegexpAlt;
-
 
         % get files to analyze
 		[fileIdxArray idNumIdxArray nFilesToAnalyze nFiles] = obj.getAnalysisSubsetsToAnalyze();
 
-		% start Miji
-		modelAddOutsideDependencies('miji');
-		% Miji;
-		% MIJ.start;
-		manageMiji('startStop','start');
+		if strcmp(options.videoPlayer,'imagej')
+			% start Miji
+			modelAddOutsideDependencies('miji');
+			% Miji;
+			% MIJ.start;
+			manageMiji('startStop','start');
+		end
 
 		% loop over all directories, get masks from user first then batch
 		% cropping whole movies
@@ -90,46 +100,119 @@ function obj = modelModifyMovies(obj)
 
 					try
 						[movieMask] = subfxnCreateMask(movieMaskArray{thisFileNumIdx});
-						if ~isempty(movieMask)
-							primaryMovie = bsxfun(@times,primaryMovie,movieMask);
-						end
+
 					catch
 						display('No mask')
 					end
 
-					MIJ.createImage(obj.folderBaseSaveStr{obj.fileNum}, primaryMovie, true);
-		            for foobar=1:2; MIJ.run('In [+]'); end
-		        	for foobar=1:2; MIJ.run('Enhance Contrast','saturated=0.35'); end
-					% uiwait(msgbox('select region of movie to keep','Success','modal'));
-		            movieDecision = questdlg('Should movie be cropped? YES (draw ROI of area to keep then request to draw another), NO (skips this movie), DONE (end ROI drawing, move onto cropping or next movie).', ...
-							'Movie decision', ...
-							'yes','no','done','yes');
-		            if strcmp(movieDecision,'yes')|strcmp(movieDecision,'done')
-		                try
-		                    MIJ.run('Set Slice...', 'slice=1');
-		                    MIJ.run('Set...', 'value=1');
-		                    MIJ.run('Make Inverse');
-		                    MIJ.run('Set...', 'value=0');
-		                    MIJ.run('Select None');
-		                    MIJ.run('Make Substack...', 'delete slices=1');
-		                    movieMaskArray{thisFileNumIdx}{maskNo} = MIJ.getCurrentImage;
-		                    % Ensure that it is a binary mask, sometimes ImageJ would give out negative values
-		                    movieMaskArray{thisFileNumIdx}{maskNo} = movieMaskArray{thisFileNumIdx}{maskNo}>0;
-		                    MIJ.run('Close All Without Saving');
-		                catch err
-		                    movieMaskArray{thisFileNumIdx}{maskNo} = [];
-		                    try
-		                        MIJ.run('Close All Without Saving');
-		                    catch
-		                    end
-		                    display(repmat('@',1,7))
-		                    disp(getReport(err,'extended','hyperlinks','on'));
-		                    display(repmat('@',1,7))
-		                end
-		            else
-		                MIJ.run('Close All Without Saving');
-		                movieMaskArray{thisFileNumIdx}{maskNo} = [];
-		            end
+					if strcmp(options.videoPlayer,'imagej')
+						try
+							if ~isempty(movieMask)
+								primaryMovie = bsxfun(@times,primaryMovie,movieMask);
+							end
+						catch
+						end
+
+						MIJ.createImage(obj.folderBaseSaveStr{obj.fileNum}, primaryMovie, true);
+			            for foobar=1:2; MIJ.run('In [+]'); end
+			        	for foobar=1:2; MIJ.run('Enhance Contrast','saturated=0.35'); end
+						% uiwait(msgbox('select region of movie to keep','Success','modal'));
+			            movieDecision = questdlg(['Should movie be cropped?' 10 'YES (draw ROI of area to keep then request to draw another)' 10 'NO (skips this movie)' 10 'DONE (end ROI drawing, move onto cropping or next movie).'], ...
+								'Movie decision', ...
+								'yes','no','done','yes');
+			            if strcmp(movieDecision,'yes')|strcmp(movieDecision,'done')
+			                try
+			                    MIJ.run('Set Slice...', 'slice=1');
+			                    MIJ.run('Set...', 'value=1');
+			                    MIJ.run('Make Inverse');
+			                    MIJ.run('Set...', 'value=0');
+			                    MIJ.run('Select None');
+			                    MIJ.run('Make Substack...', 'delete slices=1');
+			                    movieMaskArray{thisFileNumIdx}{maskNo} = MIJ.getCurrentImage;
+			                    % Ensure that it is a binary mask, sometimes ImageJ would give out negative values
+			                    movieMaskArray{thisFileNumIdx}{maskNo} = movieMaskArray{thisFileNumIdx}{maskNo}>0;
+			                    MIJ.run('Close All Without Saving');
+			                catch err
+			                    movieMaskArray{thisFileNumIdx}{maskNo} = [];
+			                    try
+			                        MIJ.run('Close All Without Saving');
+			                    catch
+			                    end
+			                    display(repmat('@',1,7))
+			                    disp(getReport(err,'extended','hyperlinks','on'));
+			                    display(repmat('@',1,7))
+			                end
+			            else
+			                MIJ.run('Close All Without Saving');
+			                movieMaskArray{thisFileNumIdx}{maskNo} = [];
+			            end
+			        elseif strcmp(options.videoPlayer,'matlab')
+			        	try
+			        		if ~isempty(movieMask)
+			        			primaryMovie = bsxfun(@times,primaryMovie,movieMask);
+			        		end
+			        	catch
+			        	end
+			        	primaryMovieMask = max(primaryMovie,[],3);
+			        	imAlpha = ones(size(primaryMovieMask));
+			        	imAlpha(primaryMovieMask==0)=0;
+			        	primaryMovieMask = primaryMovieMask;
+
+			        	figure(343);
+			        	% imagesc()
+			        	primaryMovieMask2 = imadjust(primaryMovieMask);
+			        	primaryMovieMask2(isnan(primaryMovieMask)) = NaN;
+			        	imagesc(primaryMovieMask2,'AlphaData',imAlpha);
+			        	% if maskNo==1
+			        	% 	imcontrast
+			        	% end
+			        	set(gca,'color',[1 0 0]);
+				        ax = gca;
+				        ax.PlotBoxAspectRatio = [1 1 0.5];
+			        	box off;
+        				colormap gray
+
+        				usrIdxRegion = {'ellipse','polygon','rectangle'};
+        				scnsize = get(0,'ScreenSize');
+        				[sel, ok] = listdlg('ListString',usrIdxRegion,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','What type of shape to draw?');
+        				usrIdxRegionStr = usrIdxRegion{sel};
+
+        				titleStr = ['Draw ' usrIdxRegionStr ' around areas to keep, double click shape when done to continue. Red regions will be cropped (set to zero).'];
+			        	title([titleStr 10 obj.folderBaseDisplayStr{obj.fileNum}])
+			        	% h = imrect(gca);
+			        	switch usrIdxRegionStr
+			        		case 'ellipse'
+			        			h = imellipse(gca);
+			        			titleStr = 'Draw ellipse/circle around areas to keep, double click shape when done to continue.';
+			        		case 'polygon'
+			        			% change to drawpolygon in the future but not now since need 2018b
+			        			h = impoly(gca);
+			        			titleStr = 'Draw polygon around areas to keep, double click shape when done to continue.';
+			        		case 'rectangle'
+			        			h = imrect(gca);
+			        			titleStr = 'Draw rectangle around areas to keep, double click shape when done to continue.';
+			        		otherwise
+			        			% body
+			        	end
+			        	h.setColor([1 0 0]);
+			        	wait(h);
+			        	% addNewPositionCallback(h,@(p) title(mat2str(p,3)));
+			        	% fcn = makeConstrainToRectFcn('imrect',get(gca,'XLim'),get(gca,'YLim'));
+			        	% setPositionConstraintFcn(h,fcn);
+
+        	            movieDecision = questdlg(['Should movie be cropped?' 10 'YES (draw ROI of area to keep then request to draw another)' 10 'NO (skips this movie)' 10 'DONE (end ROI drawing, move onto cropping or next movie).'], ...
+        						'Movie decision', ...
+        						'yes','no','done','yes');
+
+        	            if strcmp(movieDecision,'yes')|strcmp(movieDecision,'done')
+        	            	movieMaskArray{thisFileNumIdx}{maskNo} = h.createMask;
+        	            	% Ensure that it is a binary mask, sometimes ImageJ would give out negative values
+        	            	movieMaskArray{thisFileNumIdx}{maskNo} = movieMaskArray{thisFileNumIdx}{maskNo}>0;
+        	            else
+        	            	movieMaskArray{thisFileNumIdx}{maskNo} = [];
+        	            end
+			        end
+
 		            maskNo = maskNo + 1;
 	            end
 	       catch err
@@ -143,8 +226,10 @@ function obj = modelModifyMovies(obj)
         % obj.sumStats.movieMaskArray = movieMaskArray;
         % return
 
-		% MIJ.exit;
-		manageMiji('startStop','exit');
+        if strcmp(options.videoPlayer,'imagej')
+			% MIJ.exit;
+			manageMiji('startStop','exit');
+		end
 
         % go through and crop each movie then save
         display(repmat('*',1,21))
@@ -203,6 +288,10 @@ function obj = modelModifyMovies(obj)
 			end
         end
 
+        % Only replace if successfully cropped all movies;
+        obj.fileFilterRegexp = replaceFileFilterRegexp;
+        obj.fileFilterRegexpAlt = replaceFileFilterRegexpAlt;
+
 	catch err
 		display(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));
@@ -213,6 +302,10 @@ end
 function subfxnEditMovies(inputFolderHere,fileFilterRegexp,replaceFileFilterRegexp,frameListSave,inputDatasetName,outputDatasetName,loadMovieInEqualParts,movieMask,folderBaseDisplayStr,subplotNo)
 	% load entire movie and crop
 	movieList = getFileList(inputFolderHere, fileFilterRegexp);
+	if isempty(movieList)
+		disp(['No movie files associated with regexp: ' fileFilterRegexp])
+		return;
+	end
 	moviePath = movieList{1};
 	[frameListSaveTmp] = subfxnVerifyFrameList(frameListSave,moviePath,inputDatasetName,loadMovieInEqualParts);
 	[primaryMovie] = loadMovieList(moviePath,'convertToDouble',0,'frameList',frameListSaveTmp,'inputDatasetName',inputDatasetName,'largeMovieLoad',1);

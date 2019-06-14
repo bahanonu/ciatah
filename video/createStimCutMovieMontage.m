@@ -41,7 +41,7 @@ function [k] = createStimCutMovieMontage(inputMovie,nAlignPts,timeVector,varargi
 	% =======================
 	% SAVE AN ARRAY of the movie cut to the alignment pt
 	% this is super hacky at the moment, but it WORKs, so don't whine. Basically trying to make a square matrix of the primary movie cut to the stimulus. Convert to cell array, add a fake movie that blips at stimulus, line up all movies horizontally then cut into rows determined by the number of stimuli...
-	[m n t] = size(inputMovie);
+	[m, n, t] = size(inputMovie);
 	nStims = nAlignPts;
 	stimLength = length(timeVector(:));
 	k = mat2cell(inputMovie,m,n,stimLength*ones([1 nStims]));

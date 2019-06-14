@@ -65,7 +65,7 @@ function [xCoords yCoords allCoords] = findCentroid(inputMatrix,varargin)
 		% threshold image
 		thisImage = squeeze(inputMatrixThreshold(:,:,imageNum));
 		% get the sum of the image
-		imagesum = sum(thisImage(:));
+		% imagesum = sum(thisImage(:));
 		% get coordinates
 		[i,j,imgValue] = find(thisImage > options_thresholdValue);
 		% weight the centroid by the intensity of the image
