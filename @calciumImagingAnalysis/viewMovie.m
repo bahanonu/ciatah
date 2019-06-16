@@ -40,8 +40,13 @@ function obj = viewMovie(obj)
     	processedMovieFlag = 0;
     	defaultFileFilterRegexp = obj.fileFilterRegexpRaw;
     end
+    % =====================
+    if iscell(obj.videoDir);
+    	videoDir = strjoin(obj.videoDir,',');
+    else
+    	videoDir = obj.videoDir;
+    end;
 	% =====================
-	if iscell(obj.videoDir); videoDir = strjoin(obj.videoDir,','); else videoDir = obj.videoDir; end;
 	movieSettings = inputdlg({...
 			'char: Imaging movie regexp (IMPORTANT, make sure matches the movie you want to view):',...
 			'start:end frames (leave blank for all)',...
@@ -714,7 +719,6 @@ function obj = viewMovie(obj)
 		end
 		% frameListTmp
 	end
-
 end
 function [inputMovies] = montageMovies(inputMovies)
 	nMovies = length(inputMovies);

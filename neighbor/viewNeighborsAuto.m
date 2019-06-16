@@ -141,7 +141,7 @@ function viewNeighborsAuto(inputImages, inputSignals, neighborsCell, varargin)
             imagesc(croppedPeakImages2,'AlphaData',imAlpha);
             set(gca,'color',[0 0 0]);
             colormap(gca,customColormap([]))
-            title(['neighboring cell ID #s (white)' 10 'top-left = selected cell, #s increase L->R and T->B'])
+            title(['neighboring cell ID #s (white)' 10 'top-left = selected cell' 10 '#s increase L->R and T->B'])
             % title(['neighboring cells | top-left = selected cell, #s increase L->R and T->B'])
             axis equal tight
             box off

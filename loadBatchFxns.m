@@ -30,11 +30,21 @@ function loadBatchFxns()
 	pathtoMiji = '\Fiji.app\scripts\';
 	if exist(pathtoMiji,'dir')~=0
 		addpath(pathtoMiji);
-		fprintf('Added Miji to path: %s.\n',pathtoMiji)
-		% Get Miji properly loaded in the path if not already
-		if exist('MIJ','class')==0
-			resetMiji;
-		end
+		fprintf('Added default Miji to path: %s.\n',pathtoMiji)
+
+        try
+        	currP=pwd;Miji;cd(currP);MIJ.exit;
+        catch err
+			disp(repmat('@',1,7))
+			disp(getReport(err,'extended','hyperlinks','on'));
+			disp(repmat('@',1,7))
+        	manageMiji('startStop','start');
+        	manageMiji('startStop','exit');
+        end
+		% % Get Miji properly loaded in the path if not already
+		% if exist('MIJ','class')==0
+		% 	resetMiji;
+		% end
 	else
 		clear pathtoMiji;
 	end
@@ -44,15 +54,24 @@ function loadBatchFxns()
 		run(loadLocalFunctions);
         if exist(pathtoMiji,'dir')==7
     		addpath(pathtoMiji);
-        	fprintf('Added Miji to path: %s.\n',pathtoMiji)
+        	fprintf('Added private Miji to path: %s.\n',pathtoMiji)
         else
         	fprintf('No folder at specified path, retry! %s.\n',pathtoMiji)
         end
-		% Get Miji properly loaded in the path
-		if exist('Miji.m')==2&&exist('MIJ','class')==0
-			resetMiji;
-		else
-		end
+        try
+        	currP=pwd;Miji;cd(currP);MIJ.exit;
+        catch err
+			disp(repmat('@',1,7))
+			disp(getReport(err,'extended','hyperlinks','on'));
+			disp(repmat('@',1,7))
+        	manageMiji('startStop','start');
+        	manageMiji('startStop','exit');
+        end
+		% % Get Miji properly loaded in the path
+		% if exist('Miji.m')==2&&exist('MIJ','class')==0
+		% 	resetMiji;
+		% else
+		% end
 	else
 		% create privateLoadBatchFxns.m
 	end

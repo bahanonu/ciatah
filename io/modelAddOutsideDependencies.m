@@ -47,6 +47,35 @@ function [success] = modelAddOutsideDependencies(dependencyName,varargin)
 						addpath(pathToMiji);
 					end
 
+					% % If MIJ class not loaded, load Miji.m.
+					% if exist('MIJ')~=8
+					% 	% Load Miji so paths added to javaclasspath('-dynamic')
+					% 	currP=pwd;Miji;cd(currP);
+					% 	MIJ.exit;
+					% end
+
+					% % First attempt to open Miji
+					% try
+					% 	MIJ.start;
+					% catch err
+					% 	disp(repmat('@',1,7))
+					% 	disp(getReport(err,'extended','hyperlinks','on'));
+					% 	disp(repmat('@',1,7))
+
+					% 	disp('Reset Java class path and Miji then try again');
+					% 	resetMiji
+
+					% 	% Try again after resetting Miji.
+					% 	try
+					% 		MIJ.start;
+					% 	catch err
+					% 		disp(repmat('@',1,7))
+					% 		disp('Apparently Miji hates your computer, sorry!')
+					% 		disp(getReport(err,'extended','hyperlinks','on'));
+					% 		disp(repmat('@',1,7))
+					% 	end
+					% end
+
 					% Get Miji properly loaded in the path
 					resetMiji;
 

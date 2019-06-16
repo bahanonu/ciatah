@@ -26,7 +26,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		MICRON_PER_PIXEL =  2.51; % 2.37;
 
 		defaultObjDir = pwd;
-		classVersion = 'v3.2.2-20190508';
+		classVersion = 'v3.2.3-20190615';
 		serverPath = '';
 		privateSettingsPath = ['private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
 		% place where functions can temporarily story user settings
@@ -54,6 +54,8 @@ classdef calciumImagingAnalysis < dynamicprops
 		fileFilterRegexp = 'crop';
 		% Regular expression for alternative file
 		fileFilterRegexpAlt = 'crop';
+		% Regular expression for alternative file during cell extraction
+		fileFilterRegexpAltCellExtraction = '';
 		% raw movie
 		fileFilterRegexpRaw = 'concat';
 		% behavior video regexp
@@ -421,9 +423,9 @@ classdef calciumImagingAnalysis < dynamicprops
 			% ' Calcium Imaging Analysis Class
 			display([...
 			'calciumImagingAnalysis' 10 ...
-			'A software package for analyzing one- and two-photon calcium imaging datasets.' 10 ...
-			'Version ' obj.classVersion 10 ...
-			'Biafra Ahanonu <<a href="emailto:bahanonu@alum.mit.edu">bahanonu@alum.mit.edu</a>>' 10 10 ...
+			'A software package for analyzing one- and two-photon calcium imaging datasets.' 10 10 ...
+			'Biafra Ahanonu <<a href="emailto:bahanonu@alum.mit.edu">bahanonu@alum.mit.edu</a>>' 10 ...
+			'Version ' obj.classVersion 10 10 ...
 			'Made in USA' 10 ...
 			'* * * * * * * * * * =========================' 10 ...
 			'* * * * * * * * * * :::::::::::::::::::::::::' 10 ...
@@ -438,7 +440,8 @@ classdef calciumImagingAnalysis < dynamicprops
 			'=============================================' 10 ...
 			':::::::::::::::::::::::::::::::::::::::::::::' 10 ...
 			'=============================================' 10])
-			display(repmat('#',1,7))
+
+			display(repmat('*',1,42))
 			display('Constructing calciumImagingAnalysis imaging analysis object...')
 
 			% Because the obj
@@ -457,7 +460,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			obj = initializeObj(obj);
 
 			display('Done initializing calciumImagingAnalysis!')
-			display(repmat('#',1,7))
+			display(repmat('*',1,42))
 
 			display([...
 			'Run processing pipeline by typing below (or clicking link) into command window (no semi-colon!):' 10 ...
@@ -524,6 +527,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		obj = viewMovieRegistrationTest(obj)
 		obj = viewMovieCreateSideBySide(obj)
 		obj = modelModifyMovies(obj)
+		obj = viewCellExtractionOnMovie(obj,varargin)
 
 		% require pre-computation, individual
 
@@ -866,7 +870,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			% [success] = cnmfVersionDirLoad('cnmfe');
 
 			% Check required toolboxes are available, warn if not
-			display(repmat('-',1,7))
+			display(repmat('*',1,42))
 			toolboxList = {...
 			'distrib_computing_toolbox',...
 			'image_toolbox',...
@@ -890,7 +894,7 @@ classdef calciumImagingAnalysis < dynamicprops
 				    % return;
 				end
 			end
-			display(repmat('-',1,7))
+			display(repmat('*',1,42))
 
 			% Ensure date paths are up to date
 			obj.picsSavePath = ['private' filesep 'pics' filesep datestr(now,'yyyymmdd','local') filesep];
@@ -1003,6 +1007,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			'modelPreprocessMovie',
 			'modelModifyMovies',
 			'modelExtractSignalsFromMovie',
+			'viewCellExtractionOnMovie',
 			'',
 			'------- LOAD SIGNAL DATA -------',
 			'modelVarsFromFiles',
