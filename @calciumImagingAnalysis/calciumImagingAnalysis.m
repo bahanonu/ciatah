@@ -194,8 +194,8 @@ classdef calciumImagingAnalysis < dynamicprops
 		validCNMFStructVarname = 'validCNMF';
 		structCNMRVarname = 'cnmfAnalysisOutput';
 		% PCAICA, EM, EXTRACT, CNMF, CNMFE
-		% signalExtractionMethod = 'PCAICA';
-		signalExtractionMethod = 'EM';
+		signalExtractionMethod = 'PCAICA';
+		% signalExtractionMethod = 'EM';
 
 		settingOptions = struct(...
 			'analysisType',  {{'group','individual'}},...

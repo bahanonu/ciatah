@@ -3,29 +3,19 @@
 <img src="https://user-images.githubusercontent.com/5241605/51068051-78c27680-15cd-11e9-9434-9d181b00ef8e.png" align="center">
 
 <hr>
-Code and MATLAB class for analyzing one- and two-photon calcium imaging datasets. Includes a GUI to allow users to do large-scale batch analysis, the underlying functions can also be used to create GUI-less analysis pipelines. Includes code for determining animal locations (e.g. in open-field assay).
-<hr>
+
+Software package for analyzing one- and two-photon calcium imaging datasets. Includes a GUI to allow users to do large-scale batch analysis, accessed via the repository's `calciumImagingAnalysis` class. The underlying functions can also be used to create GUI-less, command line-ready analysis pipelines. Includes code for determining animal locations (e.g. in open-field assay).
+<!-- <hr> -->
 
 Contact: __Biafra Ahanonu, PhD (bahanonu [at] alum.mit.edu).__
 
-Repository notes:
-- Covers preprocessing of calcium imaging videos, cell and activity trace extraction (with PCA-ICA, CELLMax, EXTRACT, CNMF, and CNMF-E), manual and automated sorting of cell extraction outputs, cross-session alignment of cells, and more.
-- Supports `PCA-ICA`, `CNMF`, and `CNMF-E` cell extraction methods publicly along with `CELLMax` and `EXTRACT` for Schnitzer Lab collaborators. Additional methods can be integrated upon request.
-- Most extensively tested on Windows MATLAB `2015b` and `2017a`. Moderate testing on Windows and OSX (10.10.5) `2017b` and `2018b`. Individual functions and `calciumImagingAnalysis` class should work on other MATLAB versions after `2015b`, but submit an issue if errors occur.
-- This repository consists of code used in
-  - G. Corder*, __B. Ahanonu*__, B. F. Grewe, D. Wang, M. J. Schnitzer, and G. Scherrer (2019). An amygdalar neural ensemble encoding the unpleasantness of painful experiences. _Science_, 363, 276-281. http://science.sciencemag.org/content/363/6424/276.
-  - and similar code helped process data in: J.G. Parker*, J.D. Marshall*, __B. Ahanonu__, Y.W. Wu, T.H. Kim, B.F. Grewe, Y. Zhang, J.Z. Li, J.B. Ding, M.D. Ehlers, and M.J. Schnitzer (2018). Diametric neural ensemble dynamics in parkinsonian and dyskinetic states. _Nature_, 557, 177–182. https://doi.org/10.1038/s41586-018-0090-6.
-- Code developed while in [Prof. Mark Schnitzer's lab](http://pyramidal.stanford.edu/) at Stanford University.
-- Please check the 'Wiki' for further instructions on specific processing/analysis steps and additional information of software used by this package.
-- When issues are encountered, first check the `Common issues and fixes` Wiki page to see if a solution is there. Else, submit a new issue.
-
-![image](https://user-images.githubusercontent.com/5241605/49833336-03ede980-fd4e-11e8-8022-9aa3dedfd5ab.png)
-
 ***
 ## Contents
+- [Repository notes](#repository-notes)
 - [Installation](#installation)
 - [Data](#data)
 - [Processing calcium imaging data](#processing-calcium-imaging-data)
+	- [Check movie registration before pre-processing with `viewMovieRegistrationTest`](#check-movie-registration-before-pre-processing-with-viewmovieregistrationtest)
 	- [Preprocessing calcium imaging movies with  `modelPreprocessMovie`](#preprocessing-calcium-imaging-movies-with-modelpreprocessmovie)
 	- [Manual movie cropping with  `modelModifyMovies`](#manual-movie-cropping-with-modelmodifymovies)
 	- [Extracting cells with  `modelExtractSignalsFromMovie`](#extracting-cells-with-modelextractsignalsfrommovie)
@@ -40,6 +30,19 @@ Repository notes:
 - [License](#license)
 
 ***
+
+## Repository notes
+- Covers preprocessing of calcium imaging videos, cell and activity trace extraction (with PCA-ICA, CELLMax, EXTRACT, CNMF, and CNMF-E), manual and automated sorting of cell extraction outputs, cross-session alignment of cells, and more.
+- Supports `PCA-ICA`, `CNMF`, and `CNMF-E` cell extraction methods publicly along with `CELLMax` and `EXTRACT` for Schnitzer Lab collaborators. Additional methods can be integrated upon request.
+- Most extensively tested on Windows MATLAB `2015b` and `2017a`. Moderate testing on Windows and OSX (10.10.5) `2017b` and `2018b`. Individual functions and `calciumImagingAnalysis` class should work on other MATLAB versions after `2015b`, but submit an issue if errors occur.
+- This repository consists of code used in
+  - G. Corder*, __B. Ahanonu*__, B. F. Grewe, D. Wang, M. J. Schnitzer, and G. Scherrer (2019). An amygdalar neural ensemble encoding the unpleasantness of painful experiences. _Science_, 363, 276-281. http://science.sciencemag.org/content/363/6424/276.
+  - and similar code helped process data in: J.G. Parker*, J.D. Marshall*, __B. Ahanonu__, Y.W. Wu, T.H. Kim, B.F. Grewe, Y. Zhang, J.Z. Li, J.B. Ding, M.D. Ehlers, and M.J. Schnitzer (2018). Diametric neural ensemble dynamics in parkinsonian and dyskinetic states. _Nature_, 557, 177–182. https://doi.org/10.1038/s41586-018-0090-6.
+- Code developed while in [Prof. Mark Schnitzer's lab](http://pyramidal.stanford.edu/) at Stanford University.
+- Please check the 'Wiki' for further instructions on specific processing/analysis steps and additional information of software used by this package.
+- When issues are encountered, first check the `Common issues and fixes` Wiki page to see if a solution is there. Else, submit a new issue.
+
+![image](https://user-images.githubusercontent.com/5241605/49833336-03ede980-fd4e-11e8-8022-9aa3dedfd5ab.png)
 
 ## Installation
 
@@ -215,23 +218,18 @@ The general order of functions that users should run is:
 
 ******************************************
 
-## viewMovieRegistrationTest
+## Check movie registration before pre-processing with `viewMovieRegistrationTest`
 
 Users should spatially filter one-photon or other data with background noise (e.g. neuropil). To get a feel for how the different spatial filtering affects SNR/movie data before running the full processing pipeline, run `viewMovieRegistrationTest` module. Then select either `matlab divide by lowpass before registering` or `matlab bandpass before registering` then change `filterBeforeRegFreqLow` and `filterBeforeRegFreqHigh` settings, see below.
 
 ![image](https://user-images.githubusercontent.com/5241605/52497447-f3f65880-2b8a-11e9-8875-c6b408e5c011.png)
 
-- You'll get an output like the below (top left is without any filtering, other 3 are with different bandpass filtering options).
+- You'll get an output like the below:
+	- __A__: The top left is without any filtering while the other 3 are with different bandpass filtering options.
+	- __B__: Cell ΔF/F intensity profile from the raw movie.
+	- __C__: Same cell ΔF/F intensity profile from the bottom/left movie (note the y-axis is the same as above).
 
-![image](https://user-images.githubusercontent.com/5241605/52153455-f3137300-262e-11e9-9858-45445f44e7f5.png)
-
-- Cell ΔF/F intensity profile from the raw movie:
-
-![image](https://user-images.githubusercontent.com/5241605/52153427-d7a86800-262e-11e9-983f-fa3879adca9a.png)
-
-- Same cell ΔF/F intensity profile from the bottom/left movie (not the y-axis is the same as above):
-
-![image](https://user-images.githubusercontent.com/5241605/52153392-ba739980-262e-11e9-8750-04ef2c11861b.png)
+![image](https://user-images.githubusercontent.com/5241605/59561146-695ab580-8fd1-11e9-892b-ce1f5fc7800e.png)
 
 ## Preprocessing calcium imaging movies with `modelPreprocessMovie`
 
@@ -409,9 +407,9 @@ Using `createTrackingOverlayVideo` to verify tracking matches animal position on
 
 ## Acknowledgments
 
-Thanks to Jones G. Parker, PhD (<https://parker-laboratory.com/>) for providing extensive user feedback during development of the software package.
+Thanks to Jones G. Parker, PhD (<https://parker-laboratory.com/>) for providing extensive user feedback during development of the `calciumImagingAnalysis` software package.
 
-Additional thanks to thank Jérôme Lecoq, Tony H. Kim, Hakan Inan, Lacey Kitch, and Maggie Larkin for help developing aspects of the code used in the software package.
+Additional thanks to Jesse Marshall, Jérôme Lecoq, Tony H. Kim, Hakan Inan, Lacey Kitch, Maggie Larkin, and Elizabeth Otto Hamel for providing certain functions or helping develop aspects of the code used in the software package.
 
 ## References
 
