@@ -1,4 +1,4 @@
-function varargout=msgbox_custom(varargin)
+function varargout=msgbox(varargin)
 %MSGBOX Message box.
 %   msgbox(Message) creates a message box that automatically wraps
 %   Message to fit an appropriately sized Figure.  Message is a string
@@ -58,10 +58,6 @@ function varargout=msgbox_custom(varargin)
 narginchk(1,6);
 nargoutchk(0,1);
 
-if nargin > 0
-    [varargin{:}] = convertStringsToChars(varargin{:});
-end
-
 inputStr = varargin{1};
 BodyTextString = dialogCellstrHelper(inputStr);
 
@@ -85,35 +81,35 @@ if (any(strcmpi(Interpreter, {'latex', 'tex', 'none'})) ~= 1)
 end
 
 
-switch nargin
-    case 2
+switch nargin,
+    case 2,
         if ~Flag
             TitleString=varargin{2};
         end
-    case 3
+    case 3,
         TitleString=varargin{2};
         if ~Flag
             IconString=varargin{3};
         end
-    case 4
+    case 4,
         TitleString=varargin{2};
         IconString=varargin{3};
         if ~Flag
             IconData = varargin{4};
         end
-    case 5
+    case 5,
         if Flag
             error(message('MATLAB:msgbox:colormap'));
         end
         TitleString=varargin{2};
         IconString=varargin{3};
-        if ~strcmpi(IconString,'custom')
+        if ~strcmpi(IconString,'custom'),
             warning(message('MATLAB:msgbox:customicon'));
             IconString='custom';
         end
         IconData=varargin{4};
         IconCMap=varargin{5};
-    case 6
+    case 6,
         TitleString=varargin{2};
         IconString=varargin{3};
         IconData=varargin{4};
@@ -151,12 +147,8 @@ MsgOff=7;
 IconWidth = 32 * 72/get(groot,'ScreenPixelsPerInch');
 IconHeight = 32 * 72/get(groot,'ScreenPixelsPerInch');
 
-if strcmp(IconString,'none')
+if strcmp(IconString,'none'),
     FigWidth=125;
-    if(~isunix)
-        % Figure width for windows
-        FigWidth=150;
-    end
     MsgTxtWidth=FigWidth-2*MsgOff;
 else
     FigWidth=190;
@@ -242,7 +234,7 @@ FigColor=get(figureHandle,'Color');
 MsgTxtBackClr=FigColor;
 
 Font.FontUnits='points';
-Font.FontSize=get(0,'FactoryUicontrolFontSize');
+Font.FontSize=get(0,'defaultUicontrolFontSize');
 Font.FontName=get(0,'defaultUicontrolFontName');
 Font.FontWeight=get(figureHandle,'DefaultUicontrolFontWeight');
 
@@ -346,7 +338,7 @@ setdefaultbutton(figureHandle, OKHandle);
 txtPos = [ MsgTxtXOffset MsgTxtYOffset 0 ];
 set(texthandle, 'Position'            ,txtPos);
 
-if ~strcmp(IconString,'none')
+if ~strcmp(IconString,'none'),
     % create an axes for the icon
     iconPos = [IconXOffset IconYOffset IconWidth IconHeight];
     IconAxes=axes(                                   ...

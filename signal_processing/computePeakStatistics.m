@@ -12,6 +12,8 @@ function [peakOutputStat] = computePeakStatistics(inputSignals,varargin)
 		% spikeCenterTrace
 		% pwelchPxx
 		% pwelchf
+	% TODO
+		% - Use the SNR signal calculated to determine when to end the S ratio calculation
 	% changelog
 		% 2013.12.24 - changed output so that it is a structure, allows more flexibility when adding new statistics.
 

@@ -24,14 +24,16 @@ function loadBatchFxns()
 	pathList = strjoin(pathListArray,pathsep);
 	addpath(pathList);
 
-	% EM analysis path
-	% addpath(genpath(['..' filesep 'Lacey']));
 	% add path for Miji, change as needed
 	pathtoMiji = '\Fiji.app\scripts\';
 	if exist(pathtoMiji,'dir')~=0
-		addpath(pathtoMiji);
-		fprintf('Added default Miji to path: %s.\n',pathtoMiji)
-
+    	onPath = subfxnCheckPath(pathtoMiji);
+    	if onPath==1
+    		fprintf('Miji already in PATH: %s.\n',pathtoMiji)
+    	else
+			addpath(pathtoMiji);
+			fprintf('Added default Miji to path: %s.\n',pathtoMiji)
+    	end
         try
         	currP=pwd;Miji;cd(currP);MIJ.exit;
         catch err
@@ -52,9 +54,14 @@ function loadBatchFxns()
 	loadLocalFunctions = ['private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
 	if exist(loadLocalFunctions,'file')~=0
 		run(loadLocalFunctions);
+    	onPath = subfxnCheckPath(pathtoMiji);
         if exist(pathtoMiji,'dir')==7
-    		addpath(pathtoMiji);
-        	fprintf('Added private Miji to path: %s.\n',pathtoMiji)
+        	if onPath==1
+        		fprintf('Miji already in PATH: %s.\n',pathtoMiji)
+        	else
+    			addpath(pathtoMiji);
+        		fprintf('Added private Miji to path: %s.\n',pathtoMiji)
+        	end
         else
         	fprintf('No folder at specified path, retry! %s.\n',pathtoMiji)
         end
@@ -76,4 +83,14 @@ function loadBatchFxns()
 		% create privateLoadBatchFxns.m
 	end
 	% cnmfVersionDirLoad('none');
+end
+function onPath = subfxnCheckPath(thisRootPath)
+	pathCell = regexp(path, pathsep, 'split');
+			if verLessThan('matlab','9.0')
+				matchIdx = ~cellfun(@isempty,regexpi(pathCell,thisRootPath));
+				% pathListArray = pathListArray(pathFilter&pathFilter1&pathFilter2);
+			else
+				matchIdx = contains(pathCell,thisRootPath);
+			end
+	onPath = any(matchIdx);
 end

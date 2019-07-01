@@ -12,6 +12,7 @@ function viewNeighborsAuto(inputImages, inputSignals, neighborsCell, varargin)
         % 2018 - updated interface, speed improvements.
         % 2019.05.28 [13:49:31] - No longer use montage to create montage, use loops plus cat and cell arrays to improve speed, reduce use of montage(), and make outlines crisp (on 2018b they would become expanded with montage).
         % 2019.05.28 [15:15:43] - General improvements to GUI clarity.
+        % 2019.06.18 [14:54:34] - Added support for spatial correlations
     % TODO
         %
 
@@ -62,24 +63,27 @@ function viewNeighborsAuto(inputImages, inputSignals, neighborsCell, varargin)
     xCoords = [];
     yCoords = [];
 
+    rowP = 3;
+    colP = 3;
+
     % instructions
-    instructionStr =  ['Controls: left/right arrow:forward/back | e:exit | g:(goto cell #) | cell #s low-high from top to bottom | top trace = this cell' 10];
+    instructionStr =  ['Controls: left/right arrow:forward/back | e:exit | g:(goto cell #)' 10 ' cell #s low-high from top to bottom | top trace = this cell' 10];
 
     while exitLoop==0
         directionOfNextChoice = 0;
         thisFilt = squeeze(inputImages(:,:,cellnum));
-
+        nList = [cellnum neighborsCell{cellnum,1}(:)'];
+        % nList
         % montage of nearby cells
-        subplot(2,3,1)
+        subplot(rowP,colP,1)
             rgbImage = [];
-            nImgs = inputImages(:,:,[cellnum; neighborsCell{cellnum,1}(:)]);
+            nImgs = inputImages(:,:,nList);
             nMatchCells = size(nImgs,3);
 
             objCutMovie = getObjCutMovie(nImgs,thisFilt,'createMontage',0,'extendedCrosshairs',0,'crossHairVal',NaN,'outlines',1,'waitbarOn',0,'cropSize',cropSizeLength,'addPadding',usePadding,'xCoords',xCoords,'yCoords',yCoords,'outlineVal',NaN);
             objCutMovie = vertcat(objCutMovie{:});
             [thresholdedImages boundaryIndices] = thresholdImages(objCutMovie(:,:,1),'binary',1,'getBoundaryIndex',1,'threshold',0.35,'imageFilter','','waitbarOn',0,'normalizationType','zeroToOne','removeUnconnected',1,'boundaryHoles','noholes');
 
-            nList = [cellnum neighborsCell{cellnum,1}(:)'];
             for zz = 1:size(nImgs,3)
                 tmpImg = squeeze(objCutMovie(:,:,zz));
                 tmpImg([boundaryIndices{:}]) = NaN;
@@ -152,8 +156,8 @@ function viewNeighborsAuto(inputImages, inputSignals, neighborsCell, varargin)
             end
 
         % plot the traces
-        subplot(2,3,[2:3 5:6])
-            nList = [cellnum neighborsCell{cellnum,1}(:)'];
+        subplot(rowP,colP,[2:3 5:6 8:9])
+            % nList = [cellnum neighborsCell{cellnum,1}(:)'];
             plotSignalsGraph(inputSignals, 'plotList', flipdim(nList(:),1),'newAxisColorOrder','','minAdd',0,'maxIncrementPercent',1.1);
             axis tight
             xlabel('Time (frames)')
@@ -163,12 +167,12 @@ function viewNeighborsAuto(inputImages, inputSignals, neighborsCell, varargin)
             % suptitle(instructionStr);
             zoom on
 
-        % plot correlations
-        subplot(2,3,4)
+        % plot temporal correlations
+        subplot(rowP,colP,4)
             z0 = corr(inputSignals(nList(:),:)');
             imagesc(z0)
             colorbar
-            colormap(gca,jet)
+            colormap(gca,customColormap([]))
             % colorbar; colormap jet;
             % colormap hot
 
@@ -181,6 +185,84 @@ function viewNeighborsAuto(inputImages, inputSignals, neighborsCell, varargin)
             yticklabels(nList)
             title(['cell-cell activity trace correlations' 10 'cell #' num2str(nList(1)) ' = this cell']);
             box off; axis equal tight
+            caxis([0 1])
+            % datacursormode on
+
+        % plot spatial correlations
+        subplot(rowP,colP,7)
+
+            nCellsH = length(nList);
+            fracMaxVal = 0.2;
+            tmpImgs = inputImages(:,:,nList);
+            for cInd1 = 1:nCellsH
+                tmpImgs1 = tmpImgs(:,:,cInd1);
+                tmpImgs1(tmpImgs1<(nanmax(tmpImgs1(:))*fracMaxVal)) = 0;
+                tmpImgs(:,:,cInd1) = tmpImgs1;
+            end
+
+            cEst = permute(tmpImgs, [3 1 2]);
+            cEst = reshape(cEst, [size(cEst,1), numel(inputImages(:,:,1))]);
+            % figure;imagesc(cEst);pause
+            corrImgMatrix = 1-squareform(pdist(single(cEst>0),'jaccard'));
+
+            spatialCorr = z0*0;
+            spatialCorr2 = z0*0;
+            for cInd1 = 1:nCellsH
+                cImg1 = tmpImgs(:,:,cInd1);
+                cImg1_2 = inputImages(:,:,nList(cInd1));
+                for cInd2 = 1:nCellsH
+                    if cInd2==cInd1
+                        spatialCorr(cInd1,cInd2) = 1;
+                    end
+                    if cInd2>cInd1
+                        continue;
+                    end
+                    cImg2 = tmpImgs(:,:,cInd2);
+                    cImg2_2 = inputImages(:,:,nList(cInd2));
+
+                    % cImg1(cImg1<(nanmax(cImg1(:))*fracMaxVal)) = 0;
+                    % cImg2(cImg2<(nanmax(cImg2(:))*fracMaxVal)) = 0;
+
+                    c1Pixels = find(cImg1>0);
+                    c2Pixels = find(cImg2>0);
+                    thisOverlap=length(intersect(c1Pixels,c2Pixels));
+                    thisOverlap1=thisOverlap/length(c1Pixels);
+                    thisOverlap2=thisOverlap/length(c2Pixels);
+
+                    spatialCorr(cInd1,cInd2) = thisOverlap1;
+                    spatialCorr(cInd2,cInd1) = thisOverlap2;
+
+                    c1Pixels = find(cImg1_2>0);
+                    c2Pixels = find(cImg2_2>0);
+                    thisOverlap=length(intersect(c1Pixels,c2Pixels));
+                    thisOverlap1=thisOverlap/length(c1Pixels);
+                    thisOverlap2=thisOverlap/length(c2Pixels);
+
+                    spatialCorr2(cInd1,cInd2) = thisOverlap1;
+                    spatialCorr2(cInd2,cInd1) = thisOverlap2;
+                end
+            end
+            imagesc(cat(2,spatialCorr,corrImgMatrix,spatialCorr2));
+            colorbar
+            colormap(gca,customColormap([]))
+            % colorbar; colormap jet;
+            % colormap hot
+
+            % imagesc(l);
+            xlabel('Cell ID #s');
+            ylabel('Cell ID #s');
+            nListLen = length(nList);
+            xticks(1:(nListLen*3))
+            xticklabels([nList; nList; nList])
+            yticks(1:length(nList))
+            yticklabels(nList)
+            title(['cell-cell image correlations']);
+            box off; axis equal tight
+            hold on;
+            plot([nListLen+0.5 nListLen+0.5],get(gca,'YLim'),'k-','LineWidth',10);
+            plot([nListLen*2+0.5 nListLen*2+0.5],get(gca,'YLim'),'k-','LineWidth',10);
+            hold off;
+            % datacursormode on
             caxis([0 1])
 
         suptitle([sprintf('cell # %d/%d',cellnum,nCells) 10 instructionStr],'plotregion',0.9);
@@ -232,7 +314,7 @@ function [valid directionOfNextChoice exitLoop i] = respondToUserInput(reply,i,v
         % i=nCells+1;
     elseif isequal(reply, 103)
         % if user clicks 'g' for goto, ask for which IC they want to see
-        icChange = inputdlg('enter IC #'); icChange = str2num(icChange{1});
+        icChange = inputdlg('enter signal #'); icChange = str2num(icChange{1});
         if icChange>nCells|icChange<1
             % do nothing, invalid command
         else
@@ -241,7 +323,7 @@ function [valid directionOfNextChoice exitLoop i] = respondToUserInput(reply,i,v
         end
     elseif isequal(reply, 115)
         % 's' if user wants to get ride of the rest of the ICs
-        display(['classifying the following ICs as bad: ' num2str(i) ':' num2str(nCells)])
+        display(['classifying the following signals as bad: ' num2str(i) ':' num2str(nCells)])
         valid(i:nCells) = 0;
         exitLoop=1;
     elseif isequal(reply, 121)|isequal(reply, 1)|isequal(reply, 30)
