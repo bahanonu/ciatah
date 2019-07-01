@@ -59,7 +59,7 @@ function [inputMovie] = removeStripsFromMovie(inputMovie,varargin)
 	try
 		% ========================
 		% Pad image to power of 2 size to improve image processing speed
-	    stripCutoffFilter = ones([size(inputMovie,1) size(inputMovie,2)]);
+		stripCutoffFilter = ones([size(inputMovie,1) size(inputMovie,2)]);
 		padImage = 1;
 		if padImage==1
 			if options.padImageVersion==2
@@ -78,7 +78,7 @@ function [inputMovie] = removeStripsFromMovie(inputMovie,varargin)
 
 		% Create mean filter
 		meanFilt = 1/options.meanFilterSize*ones(options.meanFilterSize,1);
-	    meanFilt = meanFilt*meanFilt';
+		meanFilt = meanFilt*meanFilt';
 		% Create vertical or horizontal mask
 		xN = size(stripCutoffFilter,1);
 		yN = size(stripCutoffFilter,2);
@@ -152,11 +152,11 @@ function [inputMovie] = removeStripsFromMovie(inputMovie,varargin)
 		% fprintf(1,'FFT movie:  ');
 		nFramesToNormalize = options.maxFrame;
 		try;[percent progress] = parfor_progress(nFramesToNormalize);catch;end; dispStepSize = round(nFramesToNormalize/20); dispstat('','init');
-        secondaryNormalizationType = options.secondaryNormalizationType;
-        maxFrame = options.maxFrame;
+		secondaryNormalizationType = options.secondaryNormalizationType;
+		maxFrame = options.maxFrame;
 
 		ioptions.showImages = options.showImages;
-        ioptions.cutoffFilter = stripCutoffFilter;
+		ioptions.cutoffFilter = stripCutoffFilter;
 
 		for frame=1:nFramesToNormalize
 			thisFrame = squeeze(inputMovie{frame});

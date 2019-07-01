@@ -42,11 +42,11 @@ function [reverseStr] = cmdWaitbar(i,nItems,reverseStr,varargin)
 			% diary OFF
 		end
 		progN = round(i/nItems*100);
-	    reverseStr = '';
+		reverseStr = '';
 		if usejava('desktop')==0
-		    % return;
-		    % reverseStr = '';
-		    % options.inputStr = '';
+			% return;
+			% reverseStr = '';
+			% options.inputStr = '';
 			% txt=sprintf(': %1.2f | ',i/nItems*100);
 			txt=sprintf('%d|',progN);
 		end
@@ -54,11 +54,11 @@ function [reverseStr] = cmdWaitbar(i,nItems,reverseStr,varargin)
 			txt=sprintf(': %d|',progN);
 		elseif i==nItems
 			% reverseStr = '';
-		    options.inputStr = '';
+			options.inputStr = '';
 			txt=sprintf('%d\n',progN);
 		elseif i~=1
 			% reverseStr = '';
-		    options.inputStr = '';
+			options.inputStr = '';
 			txt=sprintf('%d|',progN);
 		else
 			txt=sprintf(': %d',progN);
@@ -68,10 +68,10 @@ function [reverseStr] = cmdWaitbar(i,nItems,reverseStr,varargin)
 		txt=strcat('',options.inputStr,txt);
 		fprintf([reverseStr, txt]);
 		% drawnow;
-	   	reverseStr = repmat(sprintf('\b'), 1, length(txt)-1);
-	   	if usejava('desktop')==0
-		    reverseStr = '';
-	   	end
+		reverseStr = repmat(sprintf('\b'), 1, length(txt)-1);
+		if usejava('desktop')==0
+			reverseStr = '';
+		end
 	end
 	if i==nItems
 		fprintf('\n');

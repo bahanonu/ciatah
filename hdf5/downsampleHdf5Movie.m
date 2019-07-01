@@ -38,9 +38,9 @@ function [success] = downsampleHdf5Movie(inputFilePath, varargin)
 	[pathstr,name,ext] = fileparts(inputFilePath);
 	options.newFilenameTwo = [pathstr filesep 'concat_' name '.h5'];
 	% Int: Defines gzip compression level (0-9). 0 = no compression, 9 = most compression.
- 	options.deflateLevel = 1;
- 	% Int: chunk size in [x y z] of the dataset, leave empty for auto chunking
- 	options.dataDimsChunkCopy = [128 128 1];
+	options.deflateLevel = 1;
+	% Int: chunk size in [x y z] of the dataset, leave empty for auto chunking
+	options.dataDimsChunkCopy = [128 128 1];
 	% get options
 	options = getOptions(options,varargin);
 	% unpack options into current workspace
@@ -92,10 +92,10 @@ function [success] = downsampleHdf5Movie(inputFilePath, varargin)
 			% thisMovie = uint16(thisMovie);
 			display(['subset class: ' class(inputMovie)])
 
-            % For snapshots with a single frame
-            if size(inputMovie,3)==1
-                inputMovie(:,:,2) = inputMovie;
-            end
+			% For snapshots with a single frame
+			if size(inputMovie,3)==1
+				inputMovie(:,:,2) = inputMovie;
+			end
 
 			% save the movie
 			if currentSubset==1
@@ -199,7 +199,7 @@ function [success] = downsampleHdf5Movie(inputFilePath, varargin)
 						   inputMovie(1:downX,frame,1:downZ) = downsampledFrame;
 						   % inputMovie(:,frame,:) = downsampledFrame;
 							if frame==1||mod(frame,nestedoptions.waitbarInterval)==0&nestedoptions.waitbarOn==1|frame==downY
-							    reverseStr = cmdWaitbar(frame,downY,reverseStr,'inputStr','temporally downsampling matrix');
+								reverseStr = cmdWaitbar(frame,downY,reverseStr,'inputStr','temporally downsampling matrix');
 							end
 						end
 						inputMovie = inputMovie(:,:,1:downZ);
@@ -224,7 +224,7 @@ function [success] = downsampleHdf5Movie(inputFilePath, varargin)
 						   inputMovie(1:downX,1:downY,frame) = downsampledFrame;
 						   % inputMovieDownsampled(1:downX,1:downY,frame) = downsampledFrame;
 							if frame==1||mod(frame,nestedoptions.waitbarInterval)==0&nestedoptions.waitbarOn==1|frame==downZ
-							    reverseStr = cmdWaitbar(frame,downZ,reverseStr,'inputStr','spatially downsampling matrix');
+								reverseStr = cmdWaitbar(frame,downZ,reverseStr,'inputStr','spatially downsampling matrix');
 							end
 						end
 						inputMovie = inputMovie(1:downX,1:downY,:);
@@ -247,7 +247,7 @@ function [subsets dataDim] = getSubsetOfDataToAnalyze(inputFilePath, options, va
 	% datasetNames = {hinfo.GroupHierarchy.Datasets.Name};
 	% thisDatasetName = strmatch(options.inputDatasetName,datasetNames);
 	% hReadInfo = hinfo.GroupHierarchy.Datasets(thisDatasetName);
-    hReadInfo = getHdf5Info(hinfo,options);
+	hReadInfo = getHdf5Info(hinfo,options);
 	dataDim.x = hReadInfo.Dims(1);
 	dataDim.y = hReadInfo.Dims(2);
 	dataDim.z = hReadInfo.Dims(3);
@@ -260,25 +260,25 @@ function [subsets dataDim] = getSubsetOfDataToAnalyze(inputFilePath, options, va
 	subsets = floor(linspace(1,dataDim.z,numSubsets));
 end
 function hReadInfo = getHdf5Info(hinfo,options)
-    try
-        datasetNames = {hinfo.GroupHierarchy.Datasets.Name};
-        thisDatasetName = strmatch(options.inputDatasetName,datasetNames);
-        hReadInfo = hinfo.GroupHierarchy.Datasets(thisDatasetName);
-    catch
-        try
-            datasetNames = {hinfo.GroupHierarchy.Groups.Datasets.Name};
-            thisDatasetName = strmatch(options.inputDatasetName,datasetNames);
-            hReadInfo = hinfo.GroupHierarchy.Groups.Datasets(thisDatasetName);
-        catch
-            nGroups = length(hinfo.GroupHierarchy.Groups);
-            datasetNames = {};
-            for groupNo = 1:nGroups
-                datasetNames{groupNo} = hinfo.GroupHierarchy.Groups(groupNo).Datasets.Name;
-            end
-            thisDatasetName = strmatch(options.inputDatasetName,datasetNames);
-            hReadInfo = hinfo.GroupHierarchy.Groups(thisDatasetName).Datasets;
-        end
-    end
+	try
+		datasetNames = {hinfo.GroupHierarchy.Datasets.Name};
+		thisDatasetName = strmatch(options.inputDatasetName,datasetNames);
+		hReadInfo = hinfo.GroupHierarchy.Datasets(thisDatasetName);
+	catch
+		try
+			datasetNames = {hinfo.GroupHierarchy.Groups.Datasets.Name};
+			thisDatasetName = strmatch(options.inputDatasetName,datasetNames);
+			hReadInfo = hinfo.GroupHierarchy.Groups.Datasets(thisDatasetName);
+		catch
+			nGroups = length(hinfo.GroupHierarchy.Groups);
+			datasetNames = {};
+			for groupNo = 1:nGroups
+				datasetNames{groupNo} = hinfo.GroupHierarchy.Groups(groupNo).Datasets.Name;
+			end
+			thisDatasetName = strmatch(options.inputDatasetName,datasetNames);
+			hReadInfo = hinfo.GroupHierarchy.Groups(thisDatasetName).Datasets;
+		end
+	end
 end
 % function createHdf5File(filename, datasetName, inputData, varargin)
 % 	% Create the HDF5 file

@@ -43,19 +43,19 @@ function [peakOutputStat] = computePeakStatistics(inputSignals,varargin)
 	options = getOptions(options,varargin);
 	fn=fieldnames(options);
 	for i=1:length(fn)
-	    eval([fn{i} '=options.' fn{i} ';']);
+		eval([fn{i} '=options.' fn{i} ';']);
 	end
 	%========================
 
 	display('Median filtering before peak statistics')
 	for signalNoNow = 1:size(inputSignals,1)
-	    inputSignal = inputSignals(signalNoNow,:);
-	    inputSignalMedian = medfilt1(inputSignal,options.medianFilterLength);
-	    inputSignal = inputSignal - inputSignalMedian;
-	    inputSignals(signalNoNow,:) = inputSignal;
-	    if ~isempty(options.movAvgFiltSize)
-	        inputSignals(signalNoNow,:) = filtfilt(ones(1,options.movAvgFiltSize)/options.movAvgFiltSize,1,inputSignal);
-	    end
+		inputSignal = inputSignals(signalNoNow,:);
+		inputSignalMedian = medfilt1(inputSignal,options.medianFilterLength);
+		inputSignal = inputSignal - inputSignalMedian;
+		inputSignals(signalNoNow,:) = inputSignal;
+		if ~isempty(options.movAvgFiltSize)
+			inputSignals(signalNoNow,:) = filtfilt(ones(1,options.movAvgFiltSize)/options.movAvgFiltSize,1,inputSignal);
+		end
 	end
 
 
@@ -84,7 +84,7 @@ function [peakOutputStat] = computePeakStatistics(inputSignals,varargin)
 		peakOutputStat.traceErr(i) = peakStat.traceErr;
 		peakOutputStat.fwhmSignal = [peakOutputStat.fwhmSignal; peakStat.fwhmTrace(:)];
 		peakOutputStat.avgFwhm(i) = nanmean(peakStat.fwhmTrace(:));
-        peakOutputStat.fwhmSignalSignals{i} = peakStat.fwhmTrace(:);
+		peakOutputStat.fwhmSignalSignals{i} = peakStat.fwhmTrace(:);
 		peakOutputStat.avgPeakAmplitude(i) = peakStat.avgPeakAmplitude;
 		peakOutputStat.traceSkewness(i) = skewness(thisSignal(:));
 		peakOutputStat.traceKurtosis(i) = kurtosis(thisSignal(:));
@@ -96,31 +96,31 @@ function [peakOutputStat] = computePeakStatistics(inputSignals,varargin)
 
 		% reduce waitbar access
 		reverseStr = cmdWaitbar(i,nSignals,reverseStr,'inputStr','getting statistics','waitbarOn',options.waitbarOn,'displayEvery',50);
-    end
+	end
 
-    if options.fwhmPlot~=0
-	    fwhmMax = max(peakOutputStat.fwhmSignal);
-	    figCount = 1;
-	    plotCount = 1;
-	    sheight = 10;
-	    swidth = 10;
-	    for i=1:nSignals
-	        figure(143+figCount)
-	        subplot(sheight,swidth,plotCount);
-	            hist(peakOutputStat.fwhmSignalSignals{i},[0:fwhmMax]);
-	                % box off;
-	            h = findobj(gca,'Type','patch');
-	            set(h,'FaceColor',[0 0 0],'EdgeColor',[0 0 0])
-	            set(gca,'xlim',[0 fwhmMax],'ylim',[0 20]);
-	            if plotCount~=1
-	                set(gca,'XTickLabel','','YTickLabel','');
-	            end
-	        plotCount = plotCount+1;
-	        if (mod(i,sheight*swidth)==0)
-	           figCount = figCount+1;
-	           plotCount = 1;
-	        end
-	    end
+	if options.fwhmPlot~=0
+		fwhmMax = max(peakOutputStat.fwhmSignal);
+		figCount = 1;
+		plotCount = 1;
+		sheight = 10;
+		swidth = 10;
+		for i=1:nSignals
+			figure(143+figCount)
+			subplot(sheight,swidth,plotCount);
+				hist(peakOutputStat.fwhmSignalSignals{i},[0:fwhmMax]);
+					% box off;
+				h = findobj(gca,'Type','patch');
+				set(h,'FaceColor',[0 0 0],'EdgeColor',[0 0 0])
+				set(gca,'xlim',[0 fwhmMax],'ylim',[0 20]);
+				if plotCount~=1
+					set(gca,'XTickLabel','','YTickLabel','');
+				end
+			plotCount = plotCount+1;
+			if (mod(i,sheight*swidth)==0)
+			   figCount = figCount+1;
+			   plotCount = 1;
+			end
+		end
 	end
 
 function [peakStat] = peakStats(testpeaks,inputSignal,spikeROI,slopeFrameWindow,options)
@@ -221,7 +221,7 @@ function [peakStat] = peakStats(testpeaks,inputSignal,spikeROI,slopeFrameWindow,
 		% get fwhm for all peaks
 		for i=1:size(spikeCenterTrace,1)
 			peakStat.fwhmTrace(i) = fwhm(spikeROI,spikeCenterTrace(i,:));
-        end
+		end
 
 		if options.psd==1
 			% get the power-spectrum

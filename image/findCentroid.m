@@ -36,14 +36,14 @@ function [xCoords yCoords allCoords] = findCentroid(inputMatrix,varargin)
 	inputDims = size(inputMatrix);
 	inputDimsLen = length(inputDims);
 	if inputDimsLen==3
-	    nImages = size(inputMatrix,3);
+		nImages = size(inputMatrix,3);
 	elseif inputDimsLen==2
-	    nImages = 1;
-	    tmpImage = inputMatrix; clear inputMatrix;
-	    inputMatrix(:,:,1) = tmpImage;
-	    options.waitbarOn = 0;
+		nImages = 1;
+		tmpImage = inputMatrix; clear inputMatrix;
+		inputMatrix(:,:,1) = tmpImage;
+		options.waitbarOn = 0;
 	else
-	    return
+		return
 	end
 
 	if options.runImageThreshold==1
@@ -53,13 +53,13 @@ function [xCoords yCoords allCoords] = findCentroid(inputMatrix,varargin)
 	end
 
 	reverseStr = '';
-    if options.waitbarOn==1
-        display('finding centroids...')
-    end
+	if options.waitbarOn==1
+		display('finding centroids...')
+	end
 
-    options_thresholdValue = options.thresholdValue;
-    options_roundCentroidPosition = options.roundCentroidPosition;
-    options_waitbarOn = options.waitbarOn;
+	options_thresholdValue = options.thresholdValue;
+	options_roundCentroidPosition = options.roundCentroidPosition;
+	options_waitbarOn = options.waitbarOn;
 
 	parfor imageNum=1:nImages
 		% threshold image
@@ -98,7 +98,7 @@ function [xCoords yCoords allCoords] = findCentroid(inputMatrix,varargin)
 		% use median instead of mean?
 
 		if (mod(imageNum,20)==0|imageNum==nImages)&options_waitbarOn==1
-		    %reverseStr = cmdWaitbar(imageNum,nImages,reverseStr,'inputStr','finding centroids');
+			%reverseStr = cmdWaitbar(imageNum,nImages,reverseStr,'inputStr','finding centroids');
 		end
 	end
 

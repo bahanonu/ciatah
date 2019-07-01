@@ -400,8 +400,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				'sqSizeX',...
 				'sqSizeY',...
 				'numSignalsDetected',...
-                'versionAlgorithm',...
-                'selectRandomFrames'})
+				'versionAlgorithm',...
+				'selectRandomFrames'})
 			% runtimeTable.runtime_seconds = toc(startTime);
 
 			addRow = size(runtimeTable,1)+1;
@@ -426,13 +426,13 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		writetable(runtimeTable,runtimeTablePath,'FileType','text','Delimiter',',');
 		parametersToAdd = {'minIters','maxIters','maxSqSize','maxSqSize','maxDeltaParams','gridSpacing','gridWidth','initMethod','sqSizeX','sqSizeY','numSignalsDetected','selectRandomFrames'};
 		if strcmp(algorithm,'cellmax_v3')
-            try
-                runtimeTable.parallel(addRow,1) = emOptions.useParallel;
-            catch
-                runtimeTable.parallel(addRow,1) = NaN;
-            end
+			try
+				runtimeTable.parallel(addRow,1) = emOptions.useParallel;
+			catch
+				runtimeTable.parallel(addRow,1) = NaN;
+			end
 			runtimeTable.workers(addRow,1) = 7;
-            fn_structdisp(emOptions);
+			fn_structdisp(emOptions);
 			for parameterNo = 1:length(parametersToAdd)
 				parameterStr = parametersToAdd{parameterNo};
 				% check that parameter name exists
@@ -744,28 +744,28 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 						if options.CNMFE.openEditor==1
 							% Use default settings
 							originalSettings = ['settings' filesep 'cnmfeSettings.m'];
-	                    else
-	                    	% Ask user to input their own custom settings
-	                    	display('Dialog box: Select CNMF-E settings file to load.')
-	                    	[filePath,folderPath,~] = uigetfile([pwd filesep '*.*'],'Select settings file to load.');
-	                    	% [~,fileNameH,extH] = fileparts([folderPath filePath]);
-	                    	% fileNameH = strrep(fileNameH,'cnmfeSettings_','');
-	                    	originalSettings = [folderPath filesep filePath];
-	                    end
+						else
+							% Ask user to input their own custom settings
+							display('Dialog box: Select CNMF-E settings file to load.')
+							[filePath,folderPath,~] = uigetfile([pwd filesep '*.*'],'Select settings file to load.');
+							% [~,fileNameH,extH] = fileparts([folderPath filePath]);
+							% fileNameH = strrep(fileNameH,'cnmfeSettings_','');
+							originalSettings = [folderPath filesep filePath];
+						end
 
-	                    [~,foldername,~] = fileparts(obj.inputFolders{obj.fileNum});
-	                    timeStr = datestr(now,'yyyymmdd_HHMMSS','local');
-	                    newFile = ['cnmfeSettings_' timeStr '_' foldername];
+						[~,foldername,~] = fileparts(obj.inputFolders{obj.fileNum});
+						timeStr = datestr(now,'yyyymmdd_HHMMSS','local');
+						newFile = ['cnmfeSettings_' timeStr '_' foldername];
 
-	                    % Truncate to deal with MATLAB limit
+						% Truncate to deal with MATLAB limit
 						if (length(newFile)+2)>namelengthmax
-                            fprintf('Truncating filename to comply with maximum file length limits in MATLAB.\nOld: "%s"\nNew: "%s"\n\n',newFile,newFile(1:namelengthmax-2));
+							fprintf('Truncating filename to comply with maximum file length limits in MATLAB.\nOld: "%s"\nNew: "%s"\n\n',newFile,newFile(1:namelengthmax-2));
 							newFile = newFile(1:namelengthmax-2);
-                        end
+						end
 
-                        newSettings = ['private' filesep 'settings' filesep newFile '.m'];
+						newSettings = ['private' filesep 'settings' filesep newFile '.m'];
 
-                        fprintf('Copying "%s" to\n"%s"\n\n',originalSettings,newSettings);
+						fprintf('Copying "%s" to\n"%s"\n\n',originalSettings,newSettings);
 						copyfile(originalSettings,newSettings);
 
 						% Add a note about original filename
@@ -776,7 +776,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 						fileText{1}{end+1} = ['% From original settings file: ' originalSettings];
 						fileText{1} = fileText{1}([end,1:end-1]);
 						for rowNo = 1:length(fileText{1})
-						    fprintf(fileID,'%s\n',fileText{1}{rowNo});
+							fprintf(fileID,'%s\n',fileText{1}{rowNo});
 						end
 						fclose(fileID);
 
@@ -1354,18 +1354,18 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				imagesc(squeeze(maxProj));
 				colormap gray;
 				% imellipse has different behavior depending on axis in 2015b and 2017a
-        		% if verLessThan('matlab','9.0')
-        		% 	axis equal;
-        		% else
-        		% 	axis equal tight
-        		% end
-        		ax = gca;
-        		ax.PlotBoxAspectRatio = [1 1 0.5];
-        		mymenu = uimenu('Parent',mainFig,'Label','Hot Keys');
-        		uimenu('Parent',mymenu,'Label','Zoom','Accelerator','z','Callback',@(src,evt)zoom(mainFig,'on'));
-        		uimenu('Parent',mymenu,'Label','Zoom','Accelerator','x','Callback',@(src,evt)zoom(mainFig,'off'));
-        		box off;
-        		title(sprintf('Select (green) a region covering one cell (best to select one near another cell).\nDouble-click region to continue.\nEnable zoom with crtl+Z = zoom on, ctrl+x = zoom off. Turn off to re-enable cell size selection'))
+				% if verLessThan('matlab','9.0')
+				% 	axis equal;
+				% else
+				% 	axis equal tight
+				% end
+				ax = gca;
+				ax.PlotBoxAspectRatio = [1 1 0.5];
+				mymenu = uimenu('Parent',mainFig,'Label','Hot Keys');
+				uimenu('Parent',mymenu,'Label','Zoom','Accelerator','z','Callback',@(src,evt)zoom(mainFig,'on'));
+				uimenu('Parent',mymenu,'Label','Zoom','Accelerator','x','Callback',@(src,evt)zoom(mainFig,'off'));
+				box off;
+				title(sprintf('Select (green) a region covering one cell (best to select one near another cell).\nDouble-click region to continue.\nEnable zoom with crtl+Z = zoom on, ctrl+x = zoom off. Turn off to re-enable cell size selection'))
 
 				% open up first picture
 				movieDims = size(DFOF);

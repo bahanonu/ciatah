@@ -38,7 +38,7 @@ function [success] = manageParallelWorkers(varargin)
 
 		% Check if already inside a parallel loop, exit since can't open parpool on workers
 		if ~isempty(getCurrentTask())==1
-            % display('Already inside parfor loop')
+			% display('Already inside parfor loop')
 			return;
 		end
 		switch options.openCloseParallelPool

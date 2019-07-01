@@ -66,7 +66,7 @@ function obj = modelModifyMovies(obj)
 
 		% analyzeMovieFiles =  str2num(movieSettings{6});
 
-        % get files to analyze
+		% get files to analyze
 		[fileIdxArray idNumIdxArray nFilesToAnalyze nFiles] = obj.getAnalysisSubsetsToAnalyze();
 
 		if strcmp(options.videoPlayer,'imagej')
@@ -79,7 +79,7 @@ function obj = modelModifyMovies(obj)
 
 		% loop over all directories, get masks from user first then batch
 		% cropping whole movies
-        movieMaskArray = cell([1 5]);
+		movieMaskArray = cell([1 5]);
 		for thisFileNumIdx = 1:nFilesToAnalyze
 			thisFileNum = fileIdxArray(thisFileNumIdx);
 			obj.fileNum = thisFileNum;
@@ -114,127 +114,127 @@ function obj = modelModifyMovies(obj)
 						end
 
 						MIJ.createImage(obj.folderBaseSaveStr{obj.fileNum}, primaryMovie, true);
-			            for foobar=1:2; MIJ.run('In [+]'); end
-			        	for foobar=1:2; MIJ.run('Enhance Contrast','saturated=0.35'); end
+						for foobar=1:2; MIJ.run('In [+]'); end
+						for foobar=1:2; MIJ.run('Enhance Contrast','saturated=0.35'); end
 						% uiwait(msgbox('select region of movie to keep','Success','modal'));
-			            movieDecision = questdlg(['Should movie be cropped?' 10 'YES (draw ROI of area to keep then request to draw another)' 10 'NO (skips this movie)' 10 'DONE (end ROI drawing, move onto cropping or next movie).'], ...
+						movieDecision = questdlg(['Should movie be cropped?' 10 'YES (draw ROI of area to keep then request to draw another)' 10 'NO (skips this movie)' 10 'DONE (end ROI drawing, move onto cropping or next movie).'], ...
 								'Movie decision', ...
 								'yes','no','done','yes');
-			            if strcmp(movieDecision,'yes')|strcmp(movieDecision,'done')
-			                try
-			                    MIJ.run('Set Slice...', 'slice=1');
-			                    MIJ.run('Set...', 'value=1');
-			                    MIJ.run('Make Inverse');
-			                    MIJ.run('Set...', 'value=0');
-			                    MIJ.run('Select None');
-			                    MIJ.run('Make Substack...', 'delete slices=1');
-			                    movieMaskArray{thisFileNumIdx}{maskNo} = MIJ.getCurrentImage;
-			                    % Ensure that it is a binary mask, sometimes ImageJ would give out negative values
-			                    movieMaskArray{thisFileNumIdx}{maskNo} = movieMaskArray{thisFileNumIdx}{maskNo}>0;
-			                    MIJ.run('Close All Without Saving');
-			                catch err
-			                    movieMaskArray{thisFileNumIdx}{maskNo} = [];
-			                    try
-			                        MIJ.run('Close All Without Saving');
-			                    catch
-			                    end
-			                    display(repmat('@',1,7))
-			                    disp(getReport(err,'extended','hyperlinks','on'));
-			                    display(repmat('@',1,7))
-			                end
-			            else
-			                MIJ.run('Close All Without Saving');
-			                movieMaskArray{thisFileNumIdx}{maskNo} = [];
-			            end
-			        elseif strcmp(options.videoPlayer,'matlab')
-			        	try
-			        		if ~isempty(movieMask)
-			        			primaryMovie = bsxfun(@times,primaryMovie,movieMask);
-			        		end
-			        	catch
-			        	end
-			        	primaryMovieMask = max(primaryMovie,[],3);
-			        	imAlpha = ones(size(primaryMovieMask));
-			        	imAlpha(primaryMovieMask==0)=0;
-			        	primaryMovieMask = primaryMovieMask;
+						if strcmp(movieDecision,'yes')|strcmp(movieDecision,'done')
+							try
+								MIJ.run('Set Slice...', 'slice=1');
+								MIJ.run('Set...', 'value=1');
+								MIJ.run('Make Inverse');
+								MIJ.run('Set...', 'value=0');
+								MIJ.run('Select None');
+								MIJ.run('Make Substack...', 'delete slices=1');
+								movieMaskArray{thisFileNumIdx}{maskNo} = MIJ.getCurrentImage;
+								% Ensure that it is a binary mask, sometimes ImageJ would give out negative values
+								movieMaskArray{thisFileNumIdx}{maskNo} = movieMaskArray{thisFileNumIdx}{maskNo}>0;
+								MIJ.run('Close All Without Saving');
+							catch err
+								movieMaskArray{thisFileNumIdx}{maskNo} = [];
+								try
+									MIJ.run('Close All Without Saving');
+								catch
+								end
+								display(repmat('@',1,7))
+								disp(getReport(err,'extended','hyperlinks','on'));
+								display(repmat('@',1,7))
+							end
+						else
+							MIJ.run('Close All Without Saving');
+							movieMaskArray{thisFileNumIdx}{maskNo} = [];
+						end
+					elseif strcmp(options.videoPlayer,'matlab')
+						try
+							if ~isempty(movieMask)
+								primaryMovie = bsxfun(@times,primaryMovie,movieMask);
+							end
+						catch
+						end
+						primaryMovieMask = max(primaryMovie,[],3);
+						imAlpha = ones(size(primaryMovieMask));
+						imAlpha(primaryMovieMask==0)=0;
+						primaryMovieMask = primaryMovieMask;
 
-			        	figure(343);
-			        	% imagesc()
-			        	primaryMovieMask2 = imadjust(primaryMovieMask);
-			        	primaryMovieMask2(isnan(primaryMovieMask)) = NaN;
-			        	imagesc(primaryMovieMask2,'AlphaData',imAlpha);
-			        	% if maskNo==1
-			        	% 	imcontrast
-			        	% end
-			        	set(gca,'color',[1 0 0]);
-				        ax = gca;
-				        ax.PlotBoxAspectRatio = [1 1 0.5];
-			        	box off;
-        				colormap gray
+						figure(343);
+						% imagesc()
+						primaryMovieMask2 = imadjust(primaryMovieMask);
+						primaryMovieMask2(isnan(primaryMovieMask)) = NaN;
+						imagesc(primaryMovieMask2,'AlphaData',imAlpha);
+						% if maskNo==1
+						% 	imcontrast
+						% end
+						set(gca,'color',[1 0 0]);
+						ax = gca;
+						ax.PlotBoxAspectRatio = [1 1 0.5];
+						box off;
+						colormap gray
 
-        				usrIdxRegion = {'ellipse','polygon','rectangle'};
-        				scnsize = get(0,'ScreenSize');
-        				[sel, ok] = listdlg('ListString',usrIdxRegion,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','What type of shape to draw?');
-        				usrIdxRegionStr = usrIdxRegion{sel};
+						usrIdxRegion = {'ellipse','polygon','rectangle'};
+						scnsize = get(0,'ScreenSize');
+						[sel, ok] = listdlg('ListString',usrIdxRegion,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','What type of shape to draw?');
+						usrIdxRegionStr = usrIdxRegion{sel};
 
-        				titleStr = ['Draw ' usrIdxRegionStr ' around areas to keep, double click shape when done to continue. Red regions will be cropped (set to zero).'];
-			        	title([titleStr 10 obj.folderBaseDisplayStr{obj.fileNum}])
-			        	% h = imrect(gca);
-			        	switch usrIdxRegionStr
-			        		case 'ellipse'
-			        			h = imellipse(gca);
-			        			titleStr = 'Draw ellipse/circle around areas to keep, double click shape when done to continue.';
-			        		case 'polygon'
-			        			% change to drawpolygon in the future but not now since need 2018b
-			        			h = impoly(gca);
-			        			titleStr = 'Draw polygon around areas to keep, double click shape when done to continue.';
-			        		case 'rectangle'
-			        			h = imrect(gca);
-			        			titleStr = 'Draw rectangle around areas to keep, double click shape when done to continue.';
-			        		otherwise
-			        			% body
-			        	end
-			        	h.setColor([1 0 0]);
-			        	wait(h);
-			        	% addNewPositionCallback(h,@(p) title(mat2str(p,3)));
-			        	% fcn = makeConstrainToRectFcn('imrect',get(gca,'XLim'),get(gca,'YLim'));
-			        	% setPositionConstraintFcn(h,fcn);
+						titleStr = ['Draw ' usrIdxRegionStr ' around areas to keep, double click shape when done to continue. Red regions will be cropped (set to zero).'];
+						title([titleStr 10 obj.folderBaseDisplayStr{obj.fileNum}])
+						% h = imrect(gca);
+						switch usrIdxRegionStr
+							case 'ellipse'
+								h = imellipse(gca);
+								titleStr = 'Draw ellipse/circle around areas to keep, double click shape when done to continue.';
+							case 'polygon'
+								% change to drawpolygon in the future but not now since need 2018b
+								h = impoly(gca);
+								titleStr = 'Draw polygon around areas to keep, double click shape when done to continue.';
+							case 'rectangle'
+								h = imrect(gca);
+								titleStr = 'Draw rectangle around areas to keep, double click shape when done to continue.';
+							otherwise
+								% body
+						end
+						h.setColor([1 0 0]);
+						wait(h);
+						% addNewPositionCallback(h,@(p) title(mat2str(p,3)));
+						% fcn = makeConstrainToRectFcn('imrect',get(gca,'XLim'),get(gca,'YLim'));
+						% setPositionConstraintFcn(h,fcn);
 
-        	            movieDecision = questdlg(['Should movie be cropped?' 10 'YES (draw ROI of area to keep then request to draw another)' 10 'NO (skips this movie)' 10 'DONE (end ROI drawing, move onto cropping or next movie).'], ...
-        						'Movie decision', ...
-        						'yes','no','done','yes');
+						movieDecision = questdlg(['Should movie be cropped?' 10 'YES (draw ROI of area to keep then request to draw another)' 10 'NO (skips this movie)' 10 'DONE (end ROI drawing, move onto cropping or next movie).'], ...
+								'Movie decision', ...
+								'yes','no','done','yes');
 
-        	            if strcmp(movieDecision,'yes')|strcmp(movieDecision,'done')
-        	            	movieMaskArray{thisFileNumIdx}{maskNo} = h.createMask;
-        	            	% Ensure that it is a binary mask, sometimes ImageJ would give out negative values
-        	            	movieMaskArray{thisFileNumIdx}{maskNo} = movieMaskArray{thisFileNumIdx}{maskNo}>0;
-        	            else
-        	            	movieMaskArray{thisFileNumIdx}{maskNo} = [];
-        	            end
-			        end
+						if strcmp(movieDecision,'yes')|strcmp(movieDecision,'done')
+							movieMaskArray{thisFileNumIdx}{maskNo} = h.createMask;
+							% Ensure that it is a binary mask, sometimes ImageJ would give out negative values
+							movieMaskArray{thisFileNumIdx}{maskNo} = movieMaskArray{thisFileNumIdx}{maskNo}>0;
+						else
+							movieMaskArray{thisFileNumIdx}{maskNo} = [];
+						end
+					end
 
-		            maskNo = maskNo + 1;
-	            end
-	       catch err
-	           movieMaskArray{thisFileNumIdx}{maskNo} = [];
-	           display(repmat('@',1,7))
-	           disp(getReport(err,'extended','hyperlinks','on'));
-	           display(repmat('@',1,7))
-	       end
-        end
+					maskNo = maskNo + 1;
+				end
+		   catch err
+			   movieMaskArray{thisFileNumIdx}{maskNo} = [];
+			   display(repmat('@',1,7))
+			   disp(getReport(err,'extended','hyperlinks','on'));
+			   display(repmat('@',1,7))
+		   end
+		end
 
-        % obj.sumStats.movieMaskArray = movieMaskArray;
-        % return
+		% obj.sumStats.movieMaskArray = movieMaskArray;
+		% return
 
-        if strcmp(options.videoPlayer,'imagej')
+		if strcmp(options.videoPlayer,'imagej')
 			% MIJ.exit;
 			manageMiji('startStop','exit');
 		end
 
-        % go through and crop each movie then save
-        display(repmat('*',1,21))
-        display(repmat('*',1,21))
-        display('CROPPING THE MOVIES!');
+		% go through and crop each movie then save
+		display(repmat('*',1,21))
+		display(repmat('*',1,21))
+		display('CROPPING THE MOVIES!');
 		for thisFileNumIdx = 1:nFilesToAnalyze
 			try
 				thisFileNum = fileIdxArray(thisFileNumIdx);
@@ -242,26 +242,26 @@ function obj = modelModifyMovies(obj)
 				display(repmat('=',1,21))
 				display([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ' (' num2str(thisFileNum) '/' num2str(nFiles) '): ' obj.fileIDNameArray{obj.fileNum}]);
 
-	            % get previously stored mask
-	            movieMask = movieMaskArray{thisFileNumIdx};
-	            movieMask = cat(3,movieMask{:});
-	            if isempty(movieMask)
-	               continue;
-	            end
-	            movieMask = sum(movieMask,3);
-	            maxVal = nanmax(movieMask(:));
-	            figure;
-	            	subplot(2,2,1);imagesc(movieMask);title(obj.folderBaseDisplayStr{obj.fileNum});axis equal tight;colorbar;
-	            		colormap(gca,parula)
-	            movieMask = movieMask==maxVal;
-	            movieMask(isnan(movieMask)) = 1;
-	            movieMask = logical(movieMask);
-	            % figure;
-	            	subplot(2,2,2);imagesc(movieMask);title(obj.folderBaseDisplayStr{obj.fileNum});axis equal tight;colorbar;
+				% get previously stored mask
+				movieMask = movieMaskArray{thisFileNumIdx};
+				movieMask = cat(3,movieMask{:});
+				if isempty(movieMask)
+				   continue;
+				end
+				movieMask = sum(movieMask,3);
+				maxVal = nanmax(movieMask(:));
+				figure;
+					subplot(2,2,1);imagesc(movieMask);title(obj.folderBaseDisplayStr{obj.fileNum});axis equal tight;colorbar;
+						colormap(gca,parula)
+				movieMask = movieMask==maxVal;
+				movieMask(isnan(movieMask)) = 1;
+				movieMask = logical(movieMask);
+				% figure;
+					subplot(2,2,2);imagesc(movieMask);title(obj.folderBaseDisplayStr{obj.fileNum});axis equal tight;colorbar;
 
-	            subfxnEditMovies(obj.inputFolders{obj.fileNum},fileFilterRegexp,replaceFileFilterRegexp,frameListSave,inputDatasetName,outputDatasetName,loadMovieInEqualParts,movieMask,obj.folderBaseDisplayStr{obj.fileNum},3);
+				subfxnEditMovies(obj.inputFolders{obj.fileNum},fileFilterRegexp,replaceFileFilterRegexp,frameListSave,inputDatasetName,outputDatasetName,loadMovieInEqualParts,movieMask,obj.folderBaseDisplayStr{obj.fileNum},3);
 
-	            subfxnEditMovies(obj.inputFolders{obj.fileNum},fileFilterRegexpAlt,replaceFileFilterRegexpAlt,frameListSave,inputDatasetName,outputDatasetName,loadMovieInEqualParts,movieMask,obj.folderBaseDisplayStr{obj.fileNum},4);
+				subfxnEditMovies(obj.inputFolders{obj.fileNum},fileFilterRegexpAlt,replaceFileFilterRegexpAlt,frameListSave,inputDatasetName,outputDatasetName,loadMovieInEqualParts,movieMask,obj.folderBaseDisplayStr{obj.fileNum},4);
 	   %          % load entire movie and crop
 	   %          movieList = getFileList(obj.inputFolders{obj.fileNum}, fileFilterRegexp);
 				% moviePath = movieList{1};
@@ -281,16 +281,16 @@ function obj = modelModifyMovies(obj)
 				% copyfile(moviePath,newPathFile);
 				% [output] = writeHDF5Data(primaryMovie,newPathFile,'datasetname',outputDatasetName,'writeMode','append');
 			catch err
-			    movieMaskArray{thisFileNumIdx} = [];
-			    display(repmat('@',1,7))
-			    disp(getReport(err,'extended','hyperlinks','on'));
-			    display(repmat('@',1,7))
+				movieMaskArray{thisFileNumIdx} = [];
+				display(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				display(repmat('@',1,7))
 			end
-        end
+		end
 
-        % Only replace if successfully cropped all movies;
-        obj.fileFilterRegexp = replaceFileFilterRegexp;
-        obj.fileFilterRegexpAlt = replaceFileFilterRegexpAlt;
+		% Only replace if successfully cropped all movies;
+		obj.fileFilterRegexp = replaceFileFilterRegexp;
+		obj.fileFilterRegexpAlt = replaceFileFilterRegexpAlt;
 
 	catch err
 		display(repmat('@',1,7))

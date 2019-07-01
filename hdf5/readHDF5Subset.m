@@ -45,26 +45,26 @@ function [dataSubset fid] = readHDF5Subset(inputFilePath, offset, block, varargi
 	% hReadInfo = hinfo.GroupHierarchy.Datasets(1);
 	% xDim = hReadInfo.Dims(1);
 	% yDim = hReadInfo.Dims(2);
-    offsetRaw = offset;
-    blockRaw = block;
-    if iscell(offset)~=1
-       offsetTmp = {};
-       offsetTmp{1} = offset;
-       offset = offsetTmp;
-    end
-    if iscell(block)~=1
-       blockTmp = {};
-       blockTmp{1} = block;
-       block = blockTmp;
-    end
+	offsetRaw = offset;
+	blockRaw = block;
+	if iscell(offset)~=1
+	   offsetTmp = {};
+	   offsetTmp{1} = offset;
+	   offset = offsetTmp;
+	end
+	if iscell(block)~=1
+	   blockTmp = {};
+	   blockTmp{1} = block;
+	   block = blockTmp;
+	end
 
-    nSlabs = length(offset);
+	nSlabs = length(offset);
 
-    % display file information for reference
+	% display file information for reference
 	if options.displayInfo==1
-        for sNo = 1:nSlabs
-            display(['loading chunk | offset: ' num2str(offset{sNo}) ' | block: ' num2str(block{sNo}) 10]);
-        end
+		for sNo = 1:nSlabs
+			display(['loading chunk | offset: ' num2str(offset{sNo}) ' | block: ' num2str(block{sNo}) 10]);
+		end
 	end
 
 	% open fid to hdf5 dataset
@@ -73,20 +73,20 @@ function [dataSubset fid] = readHDF5Subset(inputFilePath, offset, block, varargi
 		fid = H5F.open(inputFilePath);
 	else
 		fid = options.hdf5Fid;
-    end
-    % options.hdf5Fid
-    % fid
+	end
+	% options.hdf5Fid
+	% fid
 	dset_id = H5D.open(fid,options.datasetName);
 	dims = fliplr(block{1});%[xDim yDim 1]
-    tmpVar = sum(cat(1,block{:}),1);
-    if length(block{1})==3
-        dims(1) = tmpVar(3);
-    elseif length(block{1})==4
-        dims(1) = tmpVar(4);
-    else
-    	disp('Dimensions not supported')
-        return;
-    end
+	tmpVar = sum(cat(1,block{:}),1);
+	if length(block{1})==3
+		dims(1) = tmpVar(3);
+	elseif length(block{1})==4
+		dims(1) = tmpVar(4);
+	else
+		disp('Dimensions not supported')
+		return;
+	end
 	mem_space_id = H5S.create_simple(length(dims),dims,dims);
 	file_space_id = H5D.get_space(dset_id);
 
@@ -95,24 +95,24 @@ function [dataSubset fid] = readHDF5Subset(inputFilePath, offset, block, varargi
 		offSetUnique = unique(offSetAll,'rows');
 		% Check if there are duplicates (read in each frame-by-frame if so) else continue as normal.
 		if size(offSetAll)==size(offSetUnique)
-	        for sNo = 1:nSlabs
-	            % offset and size of the block to get, flip dimensions so in format that H5S wants
-	            offsetFlip = fliplr(offset{sNo});
-	            blockFlip = fliplr(block{sNo});
+			for sNo = 1:nSlabs
+				% offset and size of the block to get, flip dimensions so in format that H5S wants
+				offsetFlip = fliplr(offset{sNo});
+				blockFlip = fliplr(block{sNo});
 
-	            % select the hyperslab
-	            % H5S.select_hyperslab(file_space_id,'H5S_SELECT_SET',offsetFlip,[],[],blockFlip);
+				% select the hyperslab
+				% H5S.select_hyperslab(file_space_id,'H5S_SELECT_SET',offsetFlip,[],[],blockFlip);
 
-	            % select the hyperslab
-	            if sNo==1
-	                H5S.select_hyperslab(file_space_id,'H5S_SELECT_SET',offsetFlip,[],[],blockFlip);
-	            else
-	                H5S.select_hyperslab(file_space_id,'H5S_SELECT_OR',offsetFlip,[],[],blockFlip);
-	            end
-	            %output = H5S.select_valid(file_space_id)
-	            %[start,finish] = H5S.get_select_bounds(file_space_id)
-	            % select the data subset
-	        end
+				% select the hyperslab
+				if sNo==1
+					H5S.select_hyperslab(file_space_id,'H5S_SELECT_SET',offsetFlip,[],[],blockFlip);
+				else
+					H5S.select_hyperslab(file_space_id,'H5S_SELECT_OR',offsetFlip,[],[],blockFlip);
+				end
+				%output = H5S.select_valid(file_space_id)
+				%[start,finish] = H5S.get_select_bounds(file_space_id)
+				% select the data subset
+			end
 			dataSubset = H5D.read(dset_id,'H5ML_DEFAULT',mem_space_id,file_space_id,plist);
 		else
 			if options.displayInfo==1
@@ -128,32 +128,32 @@ function [dataSubset fid] = readHDF5Subset(inputFilePath, offset, block, varargi
 			% cat(1,offSetUnique{:})
 
 			dims = fliplr(blockUnique{1});%[xDim yDim 1]
-		    tmpVar = sum(cat(1,blockUnique{:}),1);
-		    dims(1) = tmpVar(3);
+			tmpVar = sum(cat(1,blockUnique{:}),1);
+			dims(1) = tmpVar(3);
 			mem_space_id = H5S.create_simple(length(dims),dims,dims);
 			file_space_id = H5D.get_space(dset_id);
 
 			nSlabsTmp = length(offSetUnique);
 
-	        for sNoTmp = 1:nSlabsTmp
-	            % offset and size of the block to get, flip dimensions so in format that H5S wants
-	            offsetFlip = fliplr(offSetUnique{sNoTmp});
-	            blockFlip = fliplr(blockUnique{sNoTmp});
+			for sNoTmp = 1:nSlabsTmp
+				% offset and size of the block to get, flip dimensions so in format that H5S wants
+				offsetFlip = fliplr(offSetUnique{sNoTmp});
+				blockFlip = fliplr(blockUnique{sNoTmp});
 
-	            % select the hyperslab
-	            % H5S.select_hyperslab(file_space_id,'H5S_SELECT_SET',offsetFlip,[],[],blockFlip);
+				% select the hyperslab
+				% H5S.select_hyperslab(file_space_id,'H5S_SELECT_SET',offsetFlip,[],[],blockFlip);
 
-	            % select the hyperslab
-	            if sNoTmp==1
-	                H5S.select_hyperslab(file_space_id,'H5S_SELECT_SET',offsetFlip,[],[],blockFlip);
-	            else
-	                H5S.select_hyperslab(file_space_id,'H5S_SELECT_OR',offsetFlip,[],[],blockFlip);
-	            end
-	            %output = H5S.select_valid(file_space_id)
-	            %[start,finish] = H5S.get_select_bounds(file_space_id)
-	            % select the data subset
-	            % [dataSubset{sNo}] = readHDF5Subset(inputFilePath, offset{sNoTmp}, block{sNoTmp},'options',options);
-	        end
+				% select the hyperslab
+				if sNoTmp==1
+					H5S.select_hyperslab(file_space_id,'H5S_SELECT_SET',offsetFlip,[],[],blockFlip);
+				else
+					H5S.select_hyperslab(file_space_id,'H5S_SELECT_OR',offsetFlip,[],[],blockFlip);
+				end
+				%output = H5S.select_valid(file_space_id)
+				%[start,finish] = H5S.get_select_bounds(file_space_id)
+				% select the data subset
+				% [dataSubset{sNo}] = readHDF5Subset(inputFilePath, offset{sNoTmp}, block{sNoTmp},'options',options);
+			end
 			dataSubset = H5D.read(dset_id,'H5ML_DEFAULT',mem_space_id,file_space_id,plist);
 			% dataSubset = cat(3,dataSubset{:});
 
@@ -176,15 +176,15 @@ function [dataSubset fid] = readHDF5Subset(inputFilePath, offset, block, varargi
 			dataSubset(:,:,newIdx) = dataSubset(:,:,oldIdx);
 		end
 	catch err
-        display(repmat('=',1,7))
-        offsetError = cat(1,offset{:});
-        blockError = cat(1,block{:});
-        % size(offset);
-        % size(block);
-        disp(['offsetError: ' offsetError]);
-        disp(['blockError: ' blockError]);
-        disp(['offset: ' size(offset)]);
-        disp(['block: ' size(block)]);
+		display(repmat('=',1,7))
+		offsetError = cat(1,offset{:});
+		blockError = cat(1,block{:});
+		% size(offset);
+		% size(block);
+		disp(['offsetError: ' offsetError]);
+		disp(['blockError: ' blockError]);
+		disp(['offset: ' size(offset)]);
+		disp(['block: ' size(block)]);
 
 		display(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));
@@ -194,31 +194,31 @@ function [dataSubset fid] = readHDF5Subset(inputFilePath, offset, block, varargi
 			return;
 		end
 
-        try
-            if options.displayInfo==1
-                display('Block contains extra dimension');
-            end
-            % offset and size of the block to get, flip dimensions so in format that H5S wants
-            offsetTmp = offset;
-            blockTmp = block;
-            for kk = 1:length(offsetTmp)
-            	offsetTmp{kk}(4) = 0;
-            	blockTmp{kk}(4) = 1;
-            end
+		try
+			if options.displayInfo==1
+				display('Block contains extra dimension');
+			end
+			% offset and size of the block to get, flip dimensions so in format that H5S wants
+			offsetTmp = offset;
+			blockTmp = block;
+			for kk = 1:length(offsetTmp)
+				offsetTmp{kk}(4) = 0;
+				blockTmp{kk}(4) = 1;
+			end
 
-            options.errorRun = 1;
+			options.errorRun = 1;
 
-            [dataSubset] = readHDF5Subset(inputFilePath, offsetTmp, blockTmp,'options',options);
+			[dataSubset] = readHDF5Subset(inputFilePath, offsetTmp, blockTmp,'options',options);
 
-            % % select the hyperslab
-            % H5S.select_hyperslab(file_space_id,'H5S_SELECT_SET',offsetFlip,[],[],blockFlip);
-            % % select the data subset
-            % dataSubset = H5D.read(dset_id,'H5ML_DEFAULT',mem_space_id,file_space_id,plist);
-        catch err
-            display(repmat('@',1,7))
-            disp(getReport(err,'extended','hyperlinks','on'));
-            display(repmat('@',1,7))
-        end
+			% % select the hyperslab
+			% H5S.select_hyperslab(file_space_id,'H5S_SELECT_SET',offsetFlip,[],[],blockFlip);
+			% % select the data subset
+			% dataSubset = H5D.read(dset_id,'H5ML_DEFAULT',mem_space_id,file_space_id,plist);
+		catch err
+			display(repmat('@',1,7))
+			disp(getReport(err,'extended','hyperlinks','on'));
+			display(repmat('@',1,7))
+		end
 	end
 
 	% close IDs

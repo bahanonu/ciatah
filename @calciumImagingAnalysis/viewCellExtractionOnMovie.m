@@ -424,7 +424,7 @@ function obj = viewCellExtractionOnMovie(obj,varargin)
 				if size(primaryMovie,1)<300
 					for foobar=1:3; MIJ.run('In [+]'); end
 				end
-                for foobar=1:2; MIJ.run('Enhance Contrast','saturated=0.35'); end
+				for foobar=1:2; MIJ.run('Enhance Contrast','saturated=0.35'); end
 				MIJ.run('Start Animation [\]');
 				clear primaryMovie;
 				% uiwait(msgbox('press OK to move onto next movie','Success','modal'));
@@ -468,25 +468,25 @@ function obj = viewCellExtractionOnMovie(obj,varargin)
 			movieListTmp2 = movieList{movieMontageIdx(movieNo)};
 		end
 		if isempty(frameList)
-		    frameListTmp = frameList;
+			frameListTmp = frameList;
 		else
 			switch movieType
 				case 'primary'
-		    		movieDims = loadMovieList(movieListTmp2,'convertToDouble',0,'frameList',[],'inputDatasetName',obj.inputDatasetName,'getMovieDims',1,'treatMoviesAsContinuous',treatMoviesAsContinuous);
+					movieDims = loadMovieList(movieListTmp2,'convertToDouble',0,'frameList',[],'inputDatasetName',obj.inputDatasetName,'getMovieDims',1,'treatMoviesAsContinuous',treatMoviesAsContinuous);
 				case 'raw'
 					movieDims = loadMovieList(movieListRaw,'convertToDouble',0,'frameList',[],'treatMoviesAsContinuous',treatMoviesAsContinuous,'getMovieDims',1,'inputDatasetName',obj.inputDatasetName);
 				otherwise
 					% body
 			end
-		    nMovieFrames = sum(movieDims.z);
-		    display(['movie frames: ' num2str(nMovieFrames)]);
-		    frameListTmp = frameList;
-		    frameListTmp(frameListTmp>nMovieFrames) = [];
+			nMovieFrames = sum(movieDims.z);
+			display(['movie frames: ' num2str(nMovieFrames)]);
+			frameListTmp = frameList;
+			frameListTmp(frameListTmp>nMovieFrames) = [];
 		end
 		if loadMovieInEqualParts~=0
 			switch movieType
 				case 'primary'
-		    		movieDims = loadMovieList(movieListTmp2,'convertToDouble',0,'frameList',[],'inputDatasetName',obj.inputDatasetName,'treatMoviesAsContinuous',treatMoviesAsContinuous,'loadSpecificImgClass','single','getMovieDims',1);
+					movieDims = loadMovieList(movieListTmp2,'convertToDouble',0,'frameList',[],'inputDatasetName',obj.inputDatasetName,'treatMoviesAsContinuous',treatMoviesAsContinuous,'loadSpecificImgClass','single','getMovieDims',1);
 				case 'raw'
 					movieDims = loadMovieList(movieListRaw,'convertToDouble',0,'frameList',[],'inputDatasetName',obj.inputDatasetName,'treatMoviesAsContinuous',treatMoviesAsContinuous,'loadSpecificImgClass','single','getMovieDims',1);
 					% movieDims = loadMovieList(movieListRaw,'convertToDouble',0,'frameList',[],'treatMoviesAsContinuous',treatMoviesAsContinuous,'getMovieDims',1,'inputDatasetName',obj.inputDatasetName);

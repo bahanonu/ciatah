@@ -17,7 +17,7 @@ function [croppedPeakImages] = compareSignalToMovie(inputMovie, inputImages, inp
 		%
 
 	%========================
-    % Vector: 3 element vector indicating [x y frames]
+	% Vector: 3 element vector indicating [x y frames]
 	options.inputMovieDims = [];
 	% hierarchy name in hdf5 where movie is
 	options.inputDatasetName = '/1';
@@ -70,12 +70,12 @@ function [croppedPeakImages] = compareSignalToMovie(inputMovie, inputImages, inp
 
 	if isempty(options.inputMovieDims)
 		if strcmp(class(inputMovie),'char')|strcmp(class(inputMovie),'cell')
-		    movieDims = loadMovieList(inputMovie,'frameList',[],'inputDatasetName',options.inputDatasetName,'getMovieDims',1,'displayInfo',0);
-		    options.inputMovieDims = [movieDims.one movieDims.two movieDims.three];
-		    % Force read movie chunks to be 1
-		    % options.readMovieChunks = 1;
+			movieDims = loadMovieList(inputMovie,'frameList',[],'inputDatasetName',options.inputDatasetName,'getMovieDims',1,'displayInfo',0);
+			options.inputMovieDims = [movieDims.one movieDims.two movieDims.three];
+			% Force read movie chunks to be 1
+			% options.readMovieChunks = 1;
 		else
-		    options.inputMovieDims = size(inputMovie);
+			options.inputMovieDims = size(inputMovie);
 		end
 	end
 

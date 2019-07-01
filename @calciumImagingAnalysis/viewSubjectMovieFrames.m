@@ -71,7 +71,7 @@ function obj = viewSubjectMovieFrames(obj)
 					[output] = writeHDF5Data(subjectMovieFrames,movieSavePath);
 					movieSavePath = strcat(movieSavePathBase,filesep,thisSubjectStr{1},'.tiff');
 					options.comp = 'no';
-                    options.overwrite = true;
+					options.overwrite = true;
 					movieSavePath
 					saveastiff(subjectMovieFrames, movieSavePath, options);
 				end
@@ -152,11 +152,11 @@ function obj = viewSubjectMovieFrames(obj)
 				options.comp = 'no';
 				display(['saving: ' movieSavePath])
 				saveastiff(primaryMovie, movieSavePath, options);
-            end
-            disp(identifyingText)
-            MIJ.createImage('Montage', primaryMovie, true);
-            % for foobar=1:3; MIJ.run('In [+]'); end
-            uiwait(msgbox('press OK to finish','Success','modal'));
+			end
+			disp(identifyingText)
+			MIJ.createImage('Montage', primaryMovie, true);
+			% for foobar=1:3; MIJ.run('In [+]'); end
+			uiwait(msgbox('press OK to finish','Success','modal'));
 			MIJ.run('Close All Without Saving');
 		case 4
 			[fileIdxArray idNumIdxArray nFilesToAnalyze nFiles] = obj.getAnalysisSubsetsToAnalyze();

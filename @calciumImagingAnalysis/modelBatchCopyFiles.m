@@ -86,9 +86,9 @@ function obj = modelBatchCopyFiles(obj)
 							display(['moving' num2str(movieNo) '/' num2str(nMovies) ': ' moviePath ' TO ' archivePathFile]);
 							% movefile(moviePath,archivePathFile);
 							if ispc
-							    dos(['move ' moviePath ' ' archivePathFile]);
+								dos(['move ' moviePath ' ' archivePathFile]);
 							elseif isunix
-							    unix(['mv ' moviePath ' ' archivePathFile]);
+								unix(['mv ' moviePath ' ' archivePathFile]);
 							end
 							newPathFile = moviePath;
 							moviePath = archivePathFile;
@@ -132,9 +132,9 @@ function obj = modelBatchCopyFiles(obj)
 							display(['moving' num2str(fileNo) '/' num2str(nFiles) ': ' filePath ' TO ' archivePathFile]);
 							% movefile(filePath,archivePathFile);
 							if ispc
-							    dos(['move ' filePath ' ' archivePathFile]);
+								dos(['move ' filePath ' ' archivePathFile]);
 							elseif isunix
-							    unix(['mv ' filePath ' ' archivePathFile]);
+								unix(['mv ' filePath ' ' archivePathFile]);
 							end
 							newPathFile = filePath;
 							filePath = archivePathFile;
@@ -146,9 +146,9 @@ function obj = modelBatchCopyFiles(obj)
 							newPathFile = [newPath filesep NAME EXT];
 							display(['copying' num2str(fileNo) '/' num2str(nFiles) ': ' filePath ' TO ' newPathFile]);
 							if ispc
-							    dos(['copy ' filePath ' ' newPathFile]);
+								dos(['copy ' filePath ' ' newPathFile]);
 							elseif isunix
-							    unix(['cp ' filePath ' ' newPathFile]);
+								unix(['cp ' filePath ' ' newPathFile]);
 							end
 						end
 					end

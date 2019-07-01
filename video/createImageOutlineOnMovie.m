@@ -37,9 +37,9 @@ function [inputMovie] = createImageOutlineOnMovie(inputMovie,inputImages,varargi
 	try
 		inputMovieClass = class(inputMovie);
 		if strcmp(inputMovieClass,'char')
-		    inputMovie = loadMovieList(inputMovie,'inputDatasetName',options.inputDatasetName,'frameList',options.frameList);
-		    % [pathstr,name,ext] = fileparts(inputFilePath);
-		    % options.newFilename = [pathstr '\concat_' name '.h5'];
+			inputMovie = loadMovieList(inputMovie,'inputDatasetName',options.inputDatasetName,'frameList',options.frameList);
+			% [pathstr,name,ext] = fileparts(inputFilePath);
+			% options.newFilename = [pathstr '\concat_' name '.h5'];
 		end
 
 		% Get the outlines from the thresholded images.
@@ -54,11 +54,11 @@ function [inputMovie] = createImageOutlineOnMovie(inputMovie,inputImages,varargi
 		end
 		reverseStr = '';
 		for frameNo = 1:nFrames
-            tmpImg = inputMovie(:,:,frameNo);
-            tmpImg([boundaryIndices{:}]) = tmpImg([boundaryIndices{:}])+replaceMovieVal;
-            inputMovie(:,:,frameNo) = tmpImg;
+			tmpImg = inputMovie(:,:,frameNo);
+			tmpImg([boundaryIndices{:}]) = tmpImg([boundaryIndices{:}])+replaceMovieVal;
+			inputMovie(:,:,frameNo) = tmpImg;
 			reverseStr = cmdWaitbar(frameNo,nFrames,reverseStr,'inputStr','Adding outlines to cells','waitbarOn',options.waitbarOn,'displayEvery',50);
-        end
+		end
 
 	catch err
 		display(repmat('@',1,7))

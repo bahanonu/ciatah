@@ -21,17 +21,17 @@ function [success] = viewAcceptedRejectedCellExtraction(inputImages,inputSignals
 	options.frameList = [];
 	% name in HDF5 file where data is stored
 	options.inputDatasetName = '/1';
-    % pre-compute signal peaks
-    options.signalPeaks = [];
-    options.signalPeaksArray = [];
-    % Int: 1/2 length in pixels of crop square
-    options.cropSizeLength = 20;
-    % Float: Value between 0 and 1 of max to crop image to get outline
-    options.thresholdOutline = 0.1;
-    % ROI for peak signal plotting
-    options.peakROI = [-20:20];
-    % number of standard deviations above the threshold to count as spike
-    options.numStdsForThresh = 3.0;
+	% pre-compute signal peaks
+	options.signalPeaks = [];
+	options.signalPeaksArray = [];
+	% Int: 1/2 length in pixels of crop square
+	options.cropSizeLength = 20;
+	% Float: Value between 0 and 1 of max to crop image to get outline
+	options.thresholdOutline = 0.1;
+	% ROI for peak signal plotting
+	options.peakROI = [-20:20];
+	% number of standard deviations above the threshold to count as spike
+	options.numStdsForThresh = 3.0;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -51,9 +51,9 @@ function [success] = viewAcceptedRejectedCellExtraction(inputImages,inputSignals
 		% check whether movie is a string or not, load
 		inputMovieClass = class(inputMovie);
 		if strcmp(inputMovieClass,'char')
-		    inputMovie = loadMovieList(inputMovie,'inputDatasetName',options.inputDatasetName,'frameList',options.frameList);
-		    % [pathstr,name,ext] = fileparts(inputFilePath);
-		    % options.newFilename = [pathstr '\concat_' name '.h5'];
+			inputMovie = loadMovieList(inputMovie,'inputDatasetName',options.inputDatasetName,'frameList',options.frameList);
+			% [pathstr,name,ext] = fileparts(inputFilePath);
+			% options.newFilename = [pathstr '\concat_' name '.h5'];
 		end
 
 		% calculate grid size based
@@ -86,10 +86,10 @@ function [success] = viewAcceptedRejectedCellExtraction(inputImages,inputSignals
 
 		% calculate signal peaks
 		if isempty(options.signalPeaks)
-		    [signalPeaks, signalPeaksArray] = computeSignalPeaks(inputSignals,'makePlots', 0,'makeSummaryPlots',0,'waitbarOn',1);
+			[signalPeaks, signalPeaksArray] = computeSignalPeaks(inputSignals,'makePlots', 0,'makeSummaryPlots',0,'waitbarOn',1);
 		else
-		    signalPeaks = options.signalPeaks;
-		    signalPeaksArray = options.signalPeaksArray;
+			signalPeaks = options.signalPeaks;
+			signalPeaksArray = options.signalPeaksArray;
 		end
 
 		% get the peak statistics
@@ -157,7 +157,7 @@ function [success] = viewAcceptedRejectedCellExtraction(inputImages,inputSignals
 				[peakSignalAmplitude peakIdx] = sort(spikeCenterTrace(:,round(end/2)+1),'descend');
 				spikeCenterTrace = spikeCenterTrace(peakIdx,:);
 				if size(spikeCenterTrace,1)>20
-				    spikeCenterTrace = spikeCenterTrace(1:20,:);
+					spikeCenterTrace = spikeCenterTrace(1:20,:);
 				end
 
 				plot(repmat(peakROI, [size(spikeCenterTrace,1) 1])', spikeCenterTrace','Color',[4 4 4]/8)

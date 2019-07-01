@@ -13,9 +13,9 @@ function createHdf5File(filename, datasetName, inputData, varargin)
 		%
 	%========================
 	% Int: Defines gzip compression level (0-9). 0 = no compression, 9 = most compression.
- 	options.deflateLevel = 1;
- 	% Int: chunk size in [x y z] of the dataset, leave empty for auto chunking
- 	options.dataDimsChunkCopy = [];
+	options.deflateLevel = 1;
+	% Int: chunk size in [x y z] of the dataset, leave empty for auto chunking
+	options.dataDimsChunkCopy = [];
 	% get options
 	options = getOptions(options,varargin);
 	% % unpack options into current workspace

@@ -541,11 +541,11 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 				outputMeanImageStruct_corrPearsonThres(signalNo) = NaN;
 				outputMeanImageStruct_corrSpearmanThres(signalNo) = NaN;
 				outputMeanImageStruct_corrMaxThres(signalNo) = NaN;
-            end
+			end
 
-            % job = getCurrentJob
-            % display(job)
-            % job.EnvironmentVariables
+			% job = getCurrentJob
+			% display(job)
+			% job.EnvironmentVariables
 		end
 
 		if ischar(inputMovie)

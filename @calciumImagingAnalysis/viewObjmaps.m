@@ -195,7 +195,7 @@ function obj = viewObjmaps(obj,varargin)
 				output1 = createObjMap(groupImagesByColor(thresholdedImages,rand([size(inputImages,3) 1]),'thresholdImages',0));
 			end
 
-			linkAx(end+1) = subplotTmp(rowSubP,colSubP,1)
+			linkAx(end+1) = subplotTmp(rowSubP,colSubP,1);
 				imagesc(output1)
 				% colormap(gca,[gray(sum(valid==0));customColormap([],'nPoints',round(sum(valid==1)/2))])
 				% colormap(gca,[gray(sum(valid==0));jet(sum(valid==1))])
@@ -204,7 +204,7 @@ function obj = viewObjmaps(obj,varargin)
 				axis equal tight; box off;
 				title('Cellmap | colored = cells | gray = non-cells')
 
-			linkAx(end+1) = subplotTmp(rowSubP,colSubP,2)
+			linkAx(end+1) = subplotTmp(rowSubP,colSubP,2);
 				imagesc(imadjust(nanmax(inputImages,[],3)))
 				% imagesc(nanmax(inputImages,[],3))
 				colormap(gca,'parula')
@@ -387,7 +387,7 @@ function obj = viewObjmaps(obj,varargin)
 			end
 			movieFrameProc = cast(movieFrameProc,class(rMap));
 
-			linkAx(end+1) = subplotTmp(rowSubP,colSubP,colSubP+1)
+			linkAx(end+1) = subplotTmp(rowSubP,colSubP,colSubP+1);
 				imagesc(nanmax(movieFrameProc,[],3))
 				axis equal tight; box off;
 				% colormap([0 0 0;obj.colormap])
@@ -410,7 +410,7 @@ function obj = viewObjmaps(obj,varargin)
 
 			rgbImg = cat(3,rMap,gMap,bMap);
 
-			linkAx(end+1) = subplotTmp(rowSubP,colSubP,colSubP+2)
+			linkAx(end+1) = subplotTmp(rowSubP,colSubP,colSubP+2);
 				imagesc(rgbImg)
 				axis equal tight; box off;
 				title('Movie | raw, no pre-processing with cellmap')

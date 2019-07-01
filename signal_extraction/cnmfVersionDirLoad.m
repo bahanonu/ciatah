@@ -80,7 +80,7 @@ function subfxnRemovePathHere(listOfRootPaths,options)
 			matchIdx = contains(pathCell,thisRootPath);
 		end
 
-	  	onPath = any(matchIdx);
+		onPath = any(matchIdx);
 		% if ispc  % Windows is not case-sensitive
 		%   onPath = any(contains(pathCell,thisRootPath));
 		% else

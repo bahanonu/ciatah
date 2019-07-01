@@ -33,19 +33,19 @@ function obj = viewMovie(obj)
 
 	% Check whether preprocessed movie is there by default in 1st folder. Else load standard regexp for raw movie.
 	defaultFileFilterRegexp = obj.fileFilterRegexp;
-    movieList = getFileList(obj.inputFolders{fileIdxArray(1)}, defaultFileFilterRegexp);
-    processedMovieFlag = 1;
-    if isempty(movieList)
-    	fprintf('No files with default obj.fileFilterRegexp (%s), using obj.fileFilterRegexpRaw (%s).\n',obj.fileFilterRegexp,obj.fileFilterRegexpRaw);
-    	processedMovieFlag = 0;
-    	defaultFileFilterRegexp = obj.fileFilterRegexpRaw;
-    end
-    % =====================
-    if iscell(obj.videoDir);
-    	videoDir = strjoin(obj.videoDir,',');
-    else
-    	videoDir = obj.videoDir;
-    end;
+	movieList = getFileList(obj.inputFolders{fileIdxArray(1)}, defaultFileFilterRegexp);
+	processedMovieFlag = 1;
+	if isempty(movieList)
+		fprintf('No files with default obj.fileFilterRegexp (%s), using obj.fileFilterRegexpRaw (%s).\n',obj.fileFilterRegexp,obj.fileFilterRegexpRaw);
+		processedMovieFlag = 0;
+		defaultFileFilterRegexp = obj.fileFilterRegexpRaw;
+	end
+	% =====================
+	if iscell(obj.videoDir);
+		videoDir = strjoin(obj.videoDir,',');
+	else
+		videoDir = obj.videoDir;
+	end;
 	% =====================
 	movieSettings = inputdlg({...
 			'char: Imaging movie regexp (IMPORTANT, make sure matches the movie you want to view):',...
@@ -81,32 +81,32 @@ function obj = viewMovie(obj)
 			'recursively search video directory (0 = no, 1 = yes)',...
 			'add text labels to movie (0 = no, 1 = yes):',...
 			'normalize movies (0 = no, 1 = yes):',...
-            'preload primary movies (0 = no, 1 = yes):',...
-            'load movie in equal parts (0 = disable feature):',...
-            'downsample factor for movie  (1 = no downsample):',...
-            'video regular expression:',...
-            'rotate second video (0 = no, 1 = yes)',...
-            'treat movie as continuous (0 = no, 1 = yes):',...
-            'dataset name',...
-            'downsample factor for movie viewing (1 = no downsample):',...
-            'Create cell extraction outlines on movie (0 = no, 1 = yes, 2 = yes, all outputs):',...
-            'Cell extraction outlines threshold (float btwn 0 and 1):'...
+			'preload primary movies (0 = no, 1 = yes):',...
+			'load movie in equal parts (0 = disable feature):',...
+			'downsample factor for movie  (1 = no downsample):',...
+			'video regular expression:',...
+			'rotate second video (0 = no, 1 = yes)',...
+			'treat movie as continuous (0 = no, 1 = yes):',...
+			'dataset name',...
+			'downsample factor for movie viewing (1 = no downsample):',...
+			'Create cell extraction outlines on movie (0 = no, 1 = yes, 2 = yes, all outputs):',...
+			'Cell extraction outlines threshold (float btwn 0 and 1):'...
 		},...
 		'view movie settings',[1 100],...
 		{...
 			'0',...
 			'0',...
 			'0',...
-            '0',...
-            '0',...
-            '1',...
-            obj.behaviorVideoRegexp,...
-            '0',...
-            '1',...
-            obj.inputDatasetName...
-            '1',...
-            '0',...
-            '0.4'...
+			'0',...
+			'0',...
+			'1',...
+			obj.behaviorVideoRegexp,...
+			'0',...
+			'1',...
+			obj.inputDatasetName...
+			'1',...
+			'0',...
+			'0.4'...
 		}...
 	);
 	% concat the two
@@ -132,18 +132,18 @@ function obj = viewMovie(obj)
 	recursiveVideoSearch = str2num(movieSettings{13});
 	viewOptions.useIdentifyText = str2num(movieSettings{14});
 	normalizeMovieSwitch = str2num(movieSettings{15});
-    preLoadPrimaryMovie = str2num(movieSettings{16});
-    loadMovieInEqualParts = str2num(movieSettings{17});
-    downsampleFactorSave = str2num(movieSettings{18});
-    videoFilterRegexp = movieSettings{19}; obj.behaviorVideoRegexp = videoFilterRegexp;
-    rotateVideoSwitch = str2num(movieSettings{20});
-    treatMoviesAsContinuous = str2num(movieSettings{21});
-    obj.inputDatasetName = movieSettings{22};
-    downsampleFactorView = str2num(movieSettings{23});
-    createImageOutlineOnMovieSwitch = str2num(movieSettings{24});
-    thresholdOutline = str2num(movieSettings{25});
+	preLoadPrimaryMovie = str2num(movieSettings{16});
+	loadMovieInEqualParts = str2num(movieSettings{17});
+	downsampleFactorSave = str2num(movieSettings{18});
+	videoFilterRegexp = movieSettings{19}; obj.behaviorVideoRegexp = videoFilterRegexp;
+	rotateVideoSwitch = str2num(movieSettings{20});
+	treatMoviesAsContinuous = str2num(movieSettings{21});
+	obj.inputDatasetName = movieSettings{22};
+	downsampleFactorView = str2num(movieSettings{23});
+	createImageOutlineOnMovieSwitch = str2num(movieSettings{24});
+	thresholdOutline = str2num(movieSettings{25});
 
-    noCrop = 0;
+	noCrop = 0;
 	% =====================
 	% FINISH INCORPORATING!!
 	videoTrialRegExp = '';
@@ -174,62 +174,62 @@ function obj = viewMovie(obj)
 	end
 	if ~isempty(analyzeSpecificFolder)
 		nFilesToAnalyze = 1;
-    end
-    primaryMoviePreloaded = {};
-    display(repmat('=',1,21))
-    display(repmat('=',1,21))
-    display('PRE-LOADING MOVIES')
-    if preLoadPrimaryMovie == 1
-        for thisFileNumIdx = 1:nFilesToAnalyze
-            try
-                fileNum = fileIdxArray(thisFileNumIdx);
-                obj.fileNum = fileNum;
-                display(repmat('=',1,21))
-                display([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.fileIDNameArray{obj.fileNum}]);
+	end
+	primaryMoviePreloaded = {};
+	display(repmat('=',1,21))
+	display(repmat('=',1,21))
+	display('PRE-LOADING MOVIES')
+	if preLoadPrimaryMovie == 1
+		for thisFileNumIdx = 1:nFilesToAnalyze
+			try
+				fileNum = fileIdxArray(thisFileNumIdx);
+				obj.fileNum = fileNum;
+				display(repmat('=',1,21))
+				display([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.fileIDNameArray{obj.fileNum}]);
 
-                if isempty(analyzeSpecificFolder)
-                    movieList = getFileList(obj.inputFolders{obj.fileNum}, fileFilterRegexp);
-                else
-                    analyzeSpecificFolder
-                    fileFilterRegexp
-                    movieList = getFileList(analyzeSpecificFolder, fileFilterRegexp);
-                end
-                if ischar(movieList)
-                    display(movieList)
-                elseif iscell(movieList)
-                    cellfun(@display,movieList);
-                end
-                movieMontageIdx = 1:length(movieList);
-                nMovies = length(movieMontageIdx);
-                if treatMoviesAsContinuous==1
-                	movieMontageIdx = 1;
-                end
-                for movieNo = 1:length(movieMontageIdx)
-                    display(['movie ' num2str(movieMontageIdx(movieNo)) '/' num2str(nMovies) ': ' movieList{movieMontageIdx(movieNo)}])
-                    % =================================================
-                    [frameListTmp] = getProperFrameList('primary');
-                    if treatMoviesAsContinuous==1
-                    	movieListTmp2 = movieList;
-                    else
-                    	movieListTmp2 = movieList{movieMontageIdx(movieNo)};
-                    end
-                	[primaryMoviePreloaded{thisFileNumIdx}{movieNo}] = loadMovieList(movieListTmp2,'convertToDouble',0,'frameList',frameListTmp(:),'treatMoviesAsContinuous',treatMoviesAsContinuous,'inputDatasetName',obj.inputDatasetName);
+				if isempty(analyzeSpecificFolder)
+					movieList = getFileList(obj.inputFolders{obj.fileNum}, fileFilterRegexp);
+				else
+					analyzeSpecificFolder
+					fileFilterRegexp
+					movieList = getFileList(analyzeSpecificFolder, fileFilterRegexp);
+				end
+				if ischar(movieList)
+					display(movieList)
+				elseif iscell(movieList)
+					cellfun(@display,movieList);
+				end
+				movieMontageIdx = 1:length(movieList);
+				nMovies = length(movieMontageIdx);
+				if treatMoviesAsContinuous==1
+					movieMontageIdx = 1;
+				end
+				for movieNo = 1:length(movieMontageIdx)
+					display(['movie ' num2str(movieMontageIdx(movieNo)) '/' num2str(nMovies) ': ' movieList{movieMontageIdx(movieNo)}])
+					% =================================================
+					[frameListTmp] = getProperFrameList('primary');
+					if treatMoviesAsContinuous==1
+						movieListTmp2 = movieList;
+					else
+						movieListTmp2 = movieList{movieMontageIdx(movieNo)};
+					end
+					[primaryMoviePreloaded{thisFileNumIdx}{movieNo}] = loadMovieList(movieListTmp2,'convertToDouble',0,'frameList',frameListTmp(:),'treatMoviesAsContinuous',treatMoviesAsContinuous,'inputDatasetName',obj.inputDatasetName);
 
-                	if downsampleFactorView~=1
-                		[primaryMoviePreloaded{thisFileNumIdx}{movieNo}] = downsampleMovie(primaryMoviePreloaded{thisFileNumIdx}{movieNo},'downsampleDimension','space','downsampleFactor',downsampleFactorView);
-                	end
+					if downsampleFactorView~=1
+						[primaryMoviePreloaded{thisFileNumIdx}{movieNo}] = downsampleMovie(primaryMoviePreloaded{thisFileNumIdx}{movieNo},'downsampleDimension','space','downsampleFactor',downsampleFactorView);
+					end
 
-                    % [primaryMoviePreloaded{thisFileNumIdx}{movieNo}] = loadMovieList(movieList{movieMontageIdx(movieNo)},'convertToDouble',0,'frameList',frameListTmp(:));
-                end
-            catch err
-                display(repmat('@',1,7))
-                disp(getReport(err,'extended','hyperlinks','on'));
-                display(repmat('@',1,7))
-            end
-        end
-        display(repmat('=',1,21))
-        display(repmat('=',1,21))
-    end
+					% [primaryMoviePreloaded{thisFileNumIdx}{movieNo}] = loadMovieList(movieList{movieMontageIdx(movieNo)},'convertToDouble',0,'frameList',frameListTmp(:));
+				end
+			catch err
+				display(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				display(repmat('@',1,7))
+			end
+		end
+		display(repmat('=',1,21))
+		display(repmat('=',1,21))
+	end
 
 	for thisFileNumIdx = 1:nFilesToAnalyze
 		try
@@ -284,15 +284,15 @@ function obj = viewMovie(obj)
 				else
 					movieListTmp2 = movieList{movieMontageIdx(movieNo)};
 				end
-                if preLoadPrimaryMovie == 1
-                    primaryMovie = primaryMoviePreloaded{thisFileNumIdx}{movieNo};
-                else
-        			[primaryMovie] = loadMovieList(movieListTmp2,'convertToDouble',0,'frameList',frameListTmp(:),'treatMoviesAsContinuous',treatMoviesAsContinuous,'inputDatasetName',obj.inputDatasetName);
+				if preLoadPrimaryMovie == 1
+					primaryMovie = primaryMoviePreloaded{thisFileNumIdx}{movieNo};
+				else
+					[primaryMovie] = loadMovieList(movieListTmp2,'convertToDouble',0,'frameList',frameListTmp(:),'treatMoviesAsContinuous',treatMoviesAsContinuous,'inputDatasetName',obj.inputDatasetName);
 
-        			if downsampleFactorView~=1
-        				[primaryMovie] = downsampleMovie(primaryMovie,'downsampleDimension','space','downsampleFactor',downsampleFactorView);
-        			end
-                end
+					if downsampleFactorView~=1
+						[primaryMovie] = downsampleMovie(primaryMovie,'downsampleDimension','space','downsampleFactor',downsampleFactorView);
+					end
+				end
 				identifyingText = {'dfof'};
 				% treatMoviesAsContinuous
 				switch fileFilterRegexp
@@ -609,7 +609,7 @@ function obj = viewMovie(obj)
 				if size(primaryMovie,1)<300
 					for foobar=1:3; MIJ.run('In [+]'); end
 				end
-                for foobar=1:2; MIJ.run('Enhance Contrast','saturated=0.35'); end
+				for foobar=1:2; MIJ.run('Enhance Contrast','saturated=0.35'); end
 				MIJ.run('Start Animation [\]');
 				clear primaryMovie;
 				% uiwait(msgbox('press OK to move onto next movie','Success','modal'));
@@ -677,25 +677,25 @@ function obj = viewMovie(obj)
 			movieListTmp2 = movieList{movieMontageIdx(movieNo)};
 		end
 		if isempty(frameList)
-		    frameListTmp = frameList;
+			frameListTmp = frameList;
 		else
 			switch movieType
 				case 'primary'
-		    		movieDims = loadMovieList(movieListTmp2,'convertToDouble',0,'frameList',[],'inputDatasetName',obj.inputDatasetName,'getMovieDims',1,'treatMoviesAsContinuous',treatMoviesAsContinuous);
+					movieDims = loadMovieList(movieListTmp2,'convertToDouble',0,'frameList',[],'inputDatasetName',obj.inputDatasetName,'getMovieDims',1,'treatMoviesAsContinuous',treatMoviesAsContinuous);
 				case 'raw'
 					movieDims = loadMovieList(movieListRaw,'convertToDouble',0,'frameList',[],'treatMoviesAsContinuous',treatMoviesAsContinuous,'getMovieDims',1,'inputDatasetName',obj.inputDatasetName);
 				otherwise
 					% body
 			end
-		    nMovieFrames = sum(movieDims.z);
-		    display(['movie frames: ' num2str(nMovieFrames)]);
-		    frameListTmp = frameList;
-		    frameListTmp(frameListTmp>nMovieFrames) = [];
+			nMovieFrames = sum(movieDims.z);
+			display(['movie frames: ' num2str(nMovieFrames)]);
+			frameListTmp = frameList;
+			frameListTmp(frameListTmp>nMovieFrames) = [];
 		end
 		if loadMovieInEqualParts~=0
 			switch movieType
 				case 'primary'
-		    		movieDims = loadMovieList(movieListTmp2,'convertToDouble',0,'frameList',[],'inputDatasetName',obj.inputDatasetName,'treatMoviesAsContinuous',treatMoviesAsContinuous,'loadSpecificImgClass','single','getMovieDims',1);
+					movieDims = loadMovieList(movieListTmp2,'convertToDouble',0,'frameList',[],'inputDatasetName',obj.inputDatasetName,'treatMoviesAsContinuous',treatMoviesAsContinuous,'loadSpecificImgClass','single','getMovieDims',1);
 				case 'raw'
 					movieDims = loadMovieList(movieListRaw,'convertToDouble',0,'frameList',[],'inputDatasetName',obj.inputDatasetName,'treatMoviesAsContinuous',treatMoviesAsContinuous,'loadSpecificImgClass','single','getMovieDims',1);
 					% movieDims = loadMovieList(movieListRaw,'convertToDouble',0,'frameList',[],'treatMoviesAsContinuous',treatMoviesAsContinuous,'getMovieDims',1,'inputDatasetName',obj.inputDatasetName);

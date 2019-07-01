@@ -82,10 +82,10 @@ function [inputMovie] = downsampleMovie(inputMovie, varargin)
 					% this is a normal for loop at the moment, if convert inputMovie to cell array, can force it to be parallel
 					reverseStr = '';
 					for frame=1:downY
-					   downsampledFrame = imresize(squeeze(inputMovie(:,frame,:)),[downX downZ],secondaryDownsampleType);
-					   % to reduce memory footprint, place new frame in old movie and cut off the unneeded frames after
-					   inputMovie(1:downX,frame,1:downZ) = downsampledFrame;
-					   % inputMovie(:,frame,:) = downsampledFrame;
+						downsampledFrame = imresize(squeeze(inputMovie(:,frame,:)),[downX downZ],secondaryDownsampleType);
+						% to reduce memory footprint, place new frame in old movie and cut off the unneeded frames after
+						inputMovie(1:downX,frame,1:downZ) = downsampledFrame;
+						% inputMovie(:,frame,:) = downsampledFrame;
 						if (frame==1||mod(frame,waitbarOnInterval)==0||frame==downZ)&options.waitbarOn==1
 							reverseStr = cmdWaitbar(frame,downY,reverseStr,'inputStr',[secondaryDownsampleType ' temporally downsampling matrix']);
 						end

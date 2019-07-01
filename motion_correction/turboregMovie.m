@@ -153,7 +153,7 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 			% Miji is loaded, continue
 		else
 			pathToMiji = inputdlg('Enter path to Miji.m in Fiji (e.g. \Fiji.app\scripts):',...
-			             'Miji path', [1 100]);
+						 'Miji path', [1 100]);
 			if ~isempty(pathToMiji)
 				pathToMiji = pathToMiji{1};
 				privateLoadBatchFxnsPath = 'private\privateLoadBatchFxns.m';
@@ -166,9 +166,9 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	% ========================
 	inputMovieClass = class(inputMovie);
 	if ischar(inputMovie)
-	    inputMovie = loadMovieList(inputMovie,'inputDatasetName',options.inputDatasetName,'frameList',options.frameList);
-	    % [pathstr,name,ext] = fileparts(inputFilePath);
-	    % options.newFilename = [pathstr '\concat_' name '.h5'];
+		inputMovie = loadMovieList(inputMovie,'inputDatasetName',options.inputDatasetName,'frameList',options.frameList);
+		% [pathstr,name,ext] = fileparts(inputFilePath);
+		% options.newFilename = [pathstr '\concat_' name '.h5'];
 	end
 	options.maxFrame = size(inputMovie,3);
 	movieDim = size(inputMovie);
@@ -227,17 +227,17 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	manageParallelWorkers('parallel',options.parallel);
 	%========================
 	% Only implement in Matlab 2017a and above
-    if ~verLessThan('matlab', '9.2')
-        D = parallel.pool.DataQueue;
-        afterEach(D, @nUpdateParforProgress);
-        p = 1;
-        nInterval = 500;
-        options_waitbarOn = options.waitbarOn;
+	if ~verLessThan('matlab', '9.2')
+		D = parallel.pool.DataQueue;
+		afterEach(D, @nUpdateParforProgress);
+		p = 1;
+		nInterval = 500;
+		options_waitbarOn = options.waitbarOn;
 		nFrames = size(inputMovieCropped,3);
 		if nFrames<=(nInterval*2)
 			nInterval = 100;
 		end
-    end
+	end
 	% ========================
 	startTime = tic;
 	ResultsOut = {};
@@ -360,19 +360,19 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	end
 
 	function nUpdateParforProgress(~)
-        if ~verLessThan('matlab', '9.2')
-            p = p + 1;
-            if (mod(p,nInterval)==0||p==2||p==nFrames)&&options_waitbarOn==1
-                if p==nFrames
-                    fprintf('%d%%\n',round(p/nFrames*100))
-                else
-                    fprintf('%d%% | ',round(p/nFrames*100))
-                end
-                % cmdWaitbar(p,nSignals,'','inputStr','','waitbarOn',1);
-            end
-            % [p mod(p,nInterval)==0 (mod(p,nInterval)==0||p==nSignals)&&options_waitbarOn==1]
-        end
-    end
+		if ~verLessThan('matlab', '9.2')
+			p = p + 1;
+			if (mod(p,nInterval)==0||p==2||p==nFrames)&&options_waitbarOn==1
+				if p==nFrames
+					fprintf('%d%%\n',round(p/nFrames*100))
+				else
+					fprintf('%d%% | ',round(p/nFrames*100))
+				end
+				% cmdWaitbar(p,nSignals,'','inputStr','','waitbarOn',1);
+			end
+			% [p mod(p,nInterval)==0 (mod(p,nInterval)==0||p==nSignals)&&options_waitbarOn==1]
+		end
+	end
 
 	% function [ResultsOut averagePictureEdge] = turboregMovieParallel(inputMovie,turboRegOptions,options)
 	function turboregMovieParallel()
@@ -414,27 +414,27 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 			% thisFrameToAlign=thisFrame;
 
 			if ismac
-			    % Code to run on Mac platform
-			    [ImageOut,ResultsOut{frameNo}]=turboreg(refPic,thisFrameToAlign,mask,imgRegMask,turboRegOptions);
-			    % create a mask
-			    averagePictureEdge = averagePictureEdge | ImageOut==0;
+				% Code to run on Mac platform
+				[ImageOut,ResultsOut{frameNo}]=turboreg(refPic,thisFrameToAlign,mask,imgRegMask,turboRegOptions);
+				% create a mask
+				averagePictureEdge = averagePictureEdge | ImageOut==0;
 			elseif isunix
-			    % Code to run on Linux platform
-			    [ResultsOut{frameNo}]=turboreg(refPic,thisFrameToAlign,mask,imgRegMask,turboRegOptions);
-			    % create a mask
-			    % averagePictureEdge = averagePictureEdge | ImageOut==0;
+				% Code to run on Linux platform
+				[ResultsOut{frameNo}]=turboreg(refPic,thisFrameToAlign,mask,imgRegMask,turboRegOptions);
+				% create a mask
+				% averagePictureEdge = averagePictureEdge | ImageOut==0;
 			elseif ispc
-			    % Code to run on Windows platform
-			    [ImageOut,ResultsOut{frameNo}]=turboreg(refPic,thisFrameToAlign,mask,imgRegMask,turboRegOptions);
-			    % create a mask
-			    averagePictureEdge = averagePictureEdge | ImageOut==0;
+				% Code to run on Windows platform
+				[ImageOut,ResultsOut{frameNo}]=turboreg(refPic,thisFrameToAlign,mask,imgRegMask,turboRegOptions);
+				% create a mask
+				averagePictureEdge = averagePictureEdge | ImageOut==0;
 			else
 				% return;
-			    disp('Platform not supported')
+				disp('Platform not supported')
 			end
 
 			if ~verLessThan('matlab', '9.2')
-			    send(D, frameNo); % Update
+				send(D, frameNo); % Update
 			end
 		end
 		% dispstat('Finished.','keepprev');
@@ -474,10 +474,10 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 			if options.parallel==1; nWorkers=Inf;else;nWorkers=0;end
 
 			turboregRotationOption = options.turboregRotation;
-            registrationFxnOption = options.registrationFxn;
-            % size(ResultsOut)
-            nMovieSubsets = length(movieSubset);
-            try [percent, progress] = parfor_progress(nMovieSubsets);catch;end; dispStepSize = round(nMovieSubsets/20); dispstat('','init');
+			registrationFxnOption = options.registrationFxn;
+			% size(ResultsOut)
+			nMovieSubsets = length(movieSubset);
+			try [percent, progress] = parfor_progress(nMovieSubsets);catch;end; dispStepSize = round(nMovieSubsets/20); dispstat('','init');
 			parfor (i = movieSubset,nWorkers)
 				[percent, progress] = parfor_progress;
 				% if mod(progress,dispStepSize) == 0;dispstat(sprintf('progress %0.1f %',percent));else;end
@@ -555,15 +555,15 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		rightVal = sum(thisMovieMinMask(floor(end/2),end-floor(end/4):end));
 		tmpPxToCrop = max([topVal bottomVal leftVal rightVal]);
 		display(['[topVal bottomVal leftVal rightVal]: ' num2str([topVal bottomVal leftVal rightVal])])
-    	if tmpPxToCrop~=0
-	    	if tmpPxToCrop<options.pxToCrop
-	    		% [thisMovie] = cropMatrix(thisMovie,'pxToCrop',tmpPxToCrop);
-	    		cropMatrixPreProcess(tmpPxToCrop);
-	    	else
-	    		% [thisMovie] = cropMatrix(thisMovie,'pxToCrop',options.pxToCrop);
-	    		cropMatrixPreProcess(options.pxToCrop);
-	    	end
-	    end
+		if tmpPxToCrop~=0
+			if tmpPxToCrop<options.pxToCrop
+				% [thisMovie] = cropMatrix(thisMovie,'pxToCrop',tmpPxToCrop);
+				cropMatrixPreProcess(tmpPxToCrop);
+			else
+				% [thisMovie] = cropMatrix(thisMovie,'pxToCrop',options.pxToCrop);
+				cropMatrixPreProcess(options.pxToCrop);
+			end
+		end
 
 		% if size(inputMovie,2)>=size(inputMovie,1)
 		% 	coords(1) = options.pxToCrop; %xmin
@@ -610,8 +610,8 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		%     inputMovie(:,:,i) = thisFrame;
 		% end
 	end
-    function cropMatrixPreProcess(pxToCropPreprocess)
-    	% if size(thisMovie,2)>=size(thisMovie,1)
+	function cropMatrixPreProcess(pxToCropPreprocess)
+		% if size(thisMovie,2)>=size(thisMovie,1)
 		% 	coords(1) = pxToCropPreprocess; %xmin
 		% 	coords(2) = pxToCropPreprocess; %ymin
 		% 	coords(3) = size(thisMovie,1)-pxToCropPreprocess;   %xmax
@@ -634,7 +634,7 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		bottomRowCrop = size(inputMovie,1)-pxToCropPreprocess; % bottom row
 		rightColCrop = size(inputMovie,2)-pxToCropPreprocess; % right column
 
-    	rowLen = size(inputMovie,1);
+		rowLen = size(inputMovie,1);
 		colLen = size(inputMovie,2);
 		% set leftmost columns to NaN
 		inputMovie(1:end,1:leftColCrop,:) = NaN;
@@ -847,14 +847,14 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 			reverseStr = '';
 			for frameInd=1:Ntime
 				if options.meanSubtractNormalize==1
-				    thisFrame=squeeze(inputMovieCropped(:,:,frameInd));
-				    meanThisFrame = mean(thisFrame(:));
-				    inputMovieCropped(:,:,frameInd) = inputMovieCropped(:,:,frameInd)-meanThisFrame;
-			    	reverseStr = cmdWaitbar(frameInd,Ntime,reverseStr,'inputStr','subtracting mean','waitbarOn',1,'displayEvery',50);
+					thisFrame=squeeze(inputMovieCropped(:,:,frameInd));
+					meanThisFrame = mean(thisFrame(:));
+					inputMovieCropped(:,:,frameInd) = inputMovieCropped(:,:,frameInd)-meanThisFrame;
+					reverseStr = cmdWaitbar(frameInd,Ntime,reverseStr,'inputStr','subtracting mean','waitbarOn',1,'displayEvery',50);
 				end
-			    if options.complementMatrix==1
-			    	inputMovieCropped(:,:,frameInd) = imcomplement(inputMovieCropped(:,:,frameInd));
-			    end
+				if options.complementMatrix==1
+					inputMovieCropped(:,:,frameInd) = imcomplement(inputMovieCropped(:,:,frameInd));
+				end
 			end
 		end
 		if options.showFigs==1
@@ -903,17 +903,17 @@ function cropCoords = getCropSelection(thisFrame)
 end
 function depth = nestFxnCalculatePyramidDepth(len)
 	% via Jessica Maxey
-    min_size = 45;
-    depth = 0;
-    while (min_size <= len)
-        len = len/2;
-        depth = depth + 1;
-    end
+	min_size = 45;
+	depth = 0;
+	while (min_size <= len)
+		len = len/2;
+		depth = depth + 1;
+	end
 end
 function A_tr = transform_2(A, ssm_filter, asm_filter)
 
-    A_tr = A - imfilter(A, ssm_filter, 'replicate');
+	A_tr = A - imfilter(A, ssm_filter, 'replicate');
 
-    A_tr = imfilter(A_tr, asm_filter);
+	A_tr = imfilter(A_tr, asm_filter);
 
 end

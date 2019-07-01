@@ -151,13 +151,13 @@ function [cnmfAnalysisOutput] = computeCnmfSignalExtractionOriginal(inputMovie,n
 
 		if options.nonCNMF.useOldInitializationSetParams == 1
 			cnmfOptions = CNMFSetParms(...
-			    'd1',d1,'d2',d2,...                         % dimensions of datasets
-			    'search_method','ellipse','dist',3,...      % search locations when updating spatial components
-			    'deconv_method','constrained_foopsi',...    % activity deconvolution method
-			    'temporal_iter',2,...                       % number of block-coordinate descent steps
-			    'fudge_factor',0.98,...                      % bias correction for AR coefficients
-			    'merge_thr',merge_thr...                    % merging threshold
-			    );
+				'd1',d1,'d2',d2,...                         % dimensions of datasets
+				'search_method','ellipse','dist',3,...      % search locations when updating spatial components
+				'deconv_method','constrained_foopsi',...    % activity deconvolution method
+				'temporal_iter',2,...                       % number of block-coordinate descent steps
+				'fudge_factor',0.98,...                      % bias correction for AR coefficients
+				'merge_thr',merge_thr...                    % merging threshold
+				);
 		else
 			% construct a cell array of parameters and pass to CNMFSetParms
 			optionNames = fieldnames(options);
@@ -197,10 +197,10 @@ function [cnmfAnalysisOutput] = computeCnmfSignalExtractionOriginal(inputMovie,n
 			[figHandle figNo] = openFigure(1337, '');
 			clf
 			imagesc(Cn);
-			    axis equal; axis tight; hold all;
-			    scatter(center(:,2),center(:,1),'mo');
-			    title('Center of ROIs found from initialization algorithm');
-			    drawnow;
+				axis equal; axis tight; hold all;
+				scatter(center(:,2),center(:,1),'mo');
+				title('Center of ROIs found from initialization algorithm');
+				drawnow;
 		 end
 
 		% exit if user only wants to run a part of the algorithm
@@ -208,64 +208,64 @@ function [cnmfAnalysisOutput] = computeCnmfSignalExtractionOriginal(inputMovie,n
 			return
 		end
 
-	    %% update spatial components
-	    Yr = reshape(Y,d,T);
-	    clear Y;
-	    [A,b,Cin] = update_spatial_components(Yr,Cin,fin,Ain,P,cnmfOptions);
+		%% update spatial components
+		Yr = reshape(Y,d,T);
+		clear Y;
+		[A,b,Cin] = update_spatial_components(Yr,Cin,fin,Ain,P,cnmfOptions);
 
-	    %% update temporal components
-	    [C,f,Y_res,P,S] = update_temporal_components_parallel(Yr,A,b,Cin,fin,P,cnmfOptions);
+		%% update temporal components
+		[C,f,Y_res,P,S] = update_temporal_components_parallel(Yr,A,b,Cin,fin,P,cnmfOptions);
 
-	    %% merge found components
-	    [Am,Cm,K_m,merged_ROIs,P,Sm] = merge_components(Y_res,A,b,C,f,P,S,cnmfOptions);
-	    % flag for displaying merging example
-	    if options.nonCNMF.showFigures==1
-		    display_merging = options.otherCNMF.display_merging;
-		    if display_merging
-		        i = 1; randi(length(merged_ROIs));
-		        ln = length(merged_ROIs{i});
+		%% merge found components
+		[Am,Cm,K_m,merged_ROIs,P,Sm] = merge_components(Y_res,A,b,C,f,P,S,cnmfOptions);
+		% flag for displaying merging example
+		if options.nonCNMF.showFigures==1
+			display_merging = options.otherCNMF.display_merging;
+			if display_merging
+				i = 1; randi(length(merged_ROIs));
+				ln = length(merged_ROIs{i});
 
-		        [figHandle figNo] = openFigure(1338, '');
-		        	clf
-		            set(gcf,'Position',[300,300,(ln+2)*300,300]);
-		            for j = 1:ln
-		                subplot(1,ln+2,j); imagesc(reshape(A(:,merged_ROIs{i}(j)),d1,d2));
-		                    title(sprintf('Component %i',j),'fontsize',16,'fontweight','bold'); axis equal; axis tight;
-		            end
-		            subplot(1,ln+2,ln+1); imagesc(reshape(Am(:,K_m-length(merged_ROIs)+i),d1,d2));
-		                    title('Merged Component','fontsize',16,'fontweight','bold');axis equal; axis tight;
-		            subplot(1,ln+2,ln+2);
-		                plot(1:T,(diag(max(C(merged_ROIs{i},:),[],2))\C(merged_ROIs{i},:))');
-		                hold all; plot(1:T,Cm(K_m-length(merged_ROIs)+i,:)/max(Cm(K_m-length(merged_ROIs)+i,:)),'--k')
-		                title('Temporal Components','fontsize',16,'fontweight','bold')
-		            drawnow;
-		    end
+				[figHandle figNo] = openFigure(1338, '');
+					clf
+					set(gcf,'Position',[300,300,(ln+2)*300,300]);
+					for j = 1:ln
+						subplot(1,ln+2,j); imagesc(reshape(A(:,merged_ROIs{i}(j)),d1,d2));
+							title(sprintf('Component %i',j),'fontsize',16,'fontweight','bold'); axis equal; axis tight;
+					end
+					subplot(1,ln+2,ln+1); imagesc(reshape(Am(:,K_m-length(merged_ROIs)+i),d1,d2));
+							title('Merged Component','fontsize',16,'fontweight','bold');axis equal; axis tight;
+					subplot(1,ln+2,ln+2);
+						plot(1:T,(diag(max(C(merged_ROIs{i},:),[],2))\C(merged_ROIs{i},:))');
+						hold all; plot(1:T,Cm(K_m-length(merged_ROIs)+i,:)/max(Cm(K_m-length(merged_ROIs)+i,:)),'--k')
+						title('Temporal Components','fontsize',16,'fontweight','bold')
+					drawnow;
+			end
 		end
 
-	    %% repeat
-	    [A2,b2,Cm] = update_spatial_components(Yr,Cm,f,Am,P,cnmfOptions);
-	    [C2,f2,Y_res,P,S2] = update_temporal_components_parallel(Yr,A2,b2,Cm,f,P,cnmfOptions);
-	    K_m = size(C2,1);
-	    [C_df,~,S_df] = extract_DF_F(Yr,[A2,b2],[C2;f2],S2,K_m+1); % extract DF/F values (optional)
+		%% repeat
+		[A2,b2,Cm] = update_spatial_components(Yr,Cm,f,Am,P,cnmfOptions);
+		[C2,f2,Y_res,P,S2] = update_temporal_components_parallel(Yr,A2,b2,Cm,f,P,cnmfOptions);
+		K_m = size(C2,1);
+		[C_df,~,S_df] = extract_DF_F(Yr,[A2,b2],[C2;f2],S2,K_m+1); % extract DF/F values (optional)
 
-	    % order components
-	    [A_or,C_or,S_or,P,srt] = order_ROIs(A2,C2,S2,P);
-	    % order dfof values
-	    C_df_or = C_df(srt,:);
-	    S_df_or = S_df(srt,:);
+		% order components
+		[A_or,C_or,S_or,P,srt] = order_ROIs(A2,C2,S2,P);
+		% order dfof values
+		C_df_or = C_df(srt,:);
+		S_df_or = S_df(srt,:);
 
-	    if options.nonCNMF.showFigures==1
-	    	contour_threshold = 0.95; % amount of energy used for each component to construct contour plot
-	    	%% do some plotting
-	    	[figHandle figNo] = openFigure(1339, '');
-	    	clf
-	    	[Coor,json_file] = plot_contours(A_or,reshape(P.sn,d1,d2),contour_threshold,1);
-	    	drawnow
-	    end
-	    % contour plot of spatial footprints
-	    % pause;
-	    %savejson('jmesh',json_file,'filename');        % optional save json file with component coordinates (requires matlab json library)
-	    % view_components(Yr,A_or,C_or,b2,f2,Cn,cnmfOptions);         % display all components
+		if options.nonCNMF.showFigures==1
+			contour_threshold = 0.95; % amount of energy used for each component to construct contour plot
+			%% do some plotting
+			[figHandle figNo] = openFigure(1339, '');
+			clf
+			[Coor,json_file] = plot_contours(A_or,reshape(P.sn,d1,d2),contour_threshold,1);
+			drawnow
+		end
+		% contour plot of spatial footprints
+		% pause;
+		%savejson('jmesh',json_file,'filename');        % optional save json file with component coordinates (requires matlab json library)
+		% view_components(Yr,A_or,C_or,b2,f2,Cn,cnmfOptions);         % display all components
 		% =======
 
 		% extract out images and organize them in standard format
@@ -294,15 +294,15 @@ function [cnmfAnalysisOutput] = computeCnmfSignalExtractionOriginal(inputMovie,n
 
 		% fix negative traces output
 		for iii = 1:size(cnmfAnalysisOutput.extractedSignals,1)
-		    tmpTrace = cnmfAnalysisOutput.extractedSignals(iii,:);
-		    if nanmean(tmpTrace(:))<0
-		    	cnmfAnalysisOutput.extractedSignals(iii,:) = -1*tmpTrace;
-		    end
+			tmpTrace = cnmfAnalysisOutput.extractedSignals(iii,:);
+			if nanmean(tmpTrace(:))<0
+				cnmfAnalysisOutput.extractedSignals(iii,:) = -1*tmpTrace;
+			end
 
-		    tmpTrace = cnmfAnalysisOutput.extractedSignalsEst(iii,:);
-		    if nanmean(tmpTrace(:))<0
-		    	cnmfAnalysisOutput.extractedSignalsEst(iii,:) = -1*tmpTrace;
-		    end
+			tmpTrace = cnmfAnalysisOutput.extractedSignalsEst(iii,:);
+			if nanmean(tmpTrace(:))<0
+				cnmfAnalysisOutput.extractedSignalsEst(iii,:) = -1*tmpTrace;
+			end
 		end
 
 		% if verLessThan('matlab','8.4')

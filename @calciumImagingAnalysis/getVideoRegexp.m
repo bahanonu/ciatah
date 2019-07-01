@@ -3,14 +3,14 @@ function obj = getVideoRegexp(obj)
 	% Biafra Ahanonu
 	% started: 2017.04.17 [15:08:00]
 	% inputs
-	    %
+		%
 	% outputs
-	    %
+		%
 
 	% changelog
-	    %
+		%
 	% TODO
-	    %
+		%
 	switch videoTrialRegExpIdx
 		case 1
 			videoTrialRegExp = [obj.date{obj.fileNum} '_' obj.protocol{obj.fileNum} '_' obj.fileIDArray{obj.fileNum} '.*' videoCameraId];

@@ -36,10 +36,10 @@ function obj = viewMovieRegistrationTest(obj)
 		end
 
 		for figNoFake = [9 4242 456 457 9019]
-		    [~, ~] = openFigure(figNoFake, '');
-		    clf
+			[~, ~] = openFigure(figNoFake, '');
+			clf
 		end
-	    drawnow
+		drawnow
 
 		movieSettings = inputdlg({...
 				'start:end frames (leave blank for all)',...
@@ -129,9 +129,9 @@ function obj = viewMovieRegistrationTest(obj)
 					else
 						frameListTmp = frameList;
 					end
-	            end
-	        end
-            % frameList
+				end
+			end
+			% frameList
 
 			% crop coords for this folder
 			cropCoords = registrationCoords{thisFileNumIdx}{1};
@@ -152,18 +152,18 @@ function obj = viewMovieRegistrationTest(obj)
 				end
 				% [inputMovie] = cropInputMovie(inputMovie);
 
-		    	newDir = [obj.inputFolders{obj.fileNum} filesep 'tregRun0' num2str(testNo)];
-		    	savePathStr = [newDir filesep obj.folderBaseSaveStr{obj.fileNum} '_turboreg.h5'];
-		    	if (~exist(newDir,'dir')) mkdir(newDir); end;
-		    	movieSaved = writeHDF5Data(inputMovie,savePathStr);
+				newDir = [obj.inputFolders{obj.fileNum} filesep 'tregRun0' num2str(testNo)];
+				savePathStr = [newDir filesep obj.folderBaseSaveStr{obj.fileNum} '_turboreg.h5'];
+				if (~exist(newDir,'dir')) mkdir(newDir); end;
+				movieSaved = writeHDF5Data(inputMovie,savePathStr);
 
-		    	savedMovieList{thisFileNumIdx}{testNo} = savePathStr;
+				savedMovieList{thisFileNumIdx}{testNo} = savePathStr;
 
-		    	% save the options used
-		    	savestring = [newDir filesep 'settings.mat'];
-		    	display(['saving: ' savestring])
-		    	% save(savestring,saveVariable{i},'-v7.3','emOptions');
-		    	save(savestring,'thisRegistrationSettings','cropCoords','movieList','frameListTmp');
+				% save the options used
+				savestring = [newDir filesep 'settings.mat'];
+				display(['saving: ' savestring])
+				% save(savestring,saveVariable{i},'-v7.3','emOptions');
+				save(savestring,'thisRegistrationSettings','cropCoords','movieList','frameListTmp');
 			end
 		end
 
@@ -185,11 +185,11 @@ function obj = viewMovieRegistrationTest(obj)
 				[inputMovieReg] = loadMovieList(movieListTest,'convertToDouble',0,'frameList',[],'inputDatasetName',inputDatasetName);
 				[inputMovieRegAllTmp{testNo+1}] = loadMovieList(movieListTest,'convertToDouble',0,'frameList',[],'inputDatasetName',inputDatasetName);
 				inputMovieRegAll{thisFileNumIdx}{1} = 1;
-                % if testNo==1
-                %     inputMovieRegAll{thisFileNumIdx}{1} = createSideBySide(inputMovie,inputMovieReg);
-                % else
-                %     inputMovieRegAll{thisFileNumIdx}{1} = createSideBySide(inputMovieRegAll{thisFileNumIdx}{1},inputMovieReg);
-                % end
+				% if testNo==1
+				%     inputMovieRegAll{thisFileNumIdx}{1} = createSideBySide(inputMovie,inputMovieReg);
+				% else
+				%     inputMovieRegAll{thisFileNumIdx}{1} = createSideBySide(inputMovieRegAll{thisFileNumIdx}{1},inputMovieReg);
+				% end
 			end
 			[inputMovieRegAll{thisFileNumIdx}{1}] = createMontageMovie(inputMovieRegAllTmp,'normalizeMovies',zeros([length(inputMovieRegAll) 1]),'downsampleFactorSpace',montageDownsampleFactorSpace);
 			[inputMovieRegAll{thisFileNumIdx}{2}] = dfofMovie(inputMovieRegAll{thisFileNumIdx}{1});
@@ -200,7 +200,7 @@ function obj = viewMovieRegistrationTest(obj)
 			obj.fileNum = thisFileNum;
 			display(repmat('=',1,21))
 			display([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ' (' num2str(thisFileNum) '/' num2str(nFiles) '): ' obj.fileIDNameArray{obj.fileNum} 10 obj.inputFolders{obj.fileNum}]);
-            nTestToRun = 2;
+			nTestToRun = 2;
 			for testNo = 1:nTestToRun
 				display(repmat('*',1,14))
 				display([num2str(testNo) '/' num2str(nTestToRun)]);
@@ -257,27 +257,27 @@ function [inputMovie] = subfxnSpatialFilterInputMovie(regSettings,movieList,inpu
 			display([num2str(subsetStartIdx) '-' num2str(subsetEndIdx-1) ' ' num2str(thisSet) '/' num2str(nSubsets)])
 		end
 		display(repmat('$',1,7))
-	    j = whos('inputMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
+		j = whos('inputMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
 
-	    % inputMovie(:,:,movieSubset) = normalizeMovie(inputMovie(:,:,movieSubset),'normalizationType','medianFilter','medianFilterNeighborhoodSize',options.turboreg.medianFilterSize);
+		% inputMovie(:,:,movieSubset) = normalizeMovie(inputMovie(:,:,movieSubset),'normalizationType','medianFilter','medianFilterNeighborhoodSize',options.turboreg.medianFilterSize);
 
-	    % ioptions.normalizeType = options.turboreg.normalizeType;
-	    % ioptions.registrationFxn = options.turboreg.registrationFxn;
-	    % ioptions.freqLow = options.turboreg.filterBeforeRegFreqLow;
-	    % ioptions.freqHigh = options.turboreg.filterBeforeRegFreqHigh;
+		% ioptions.normalizeType = options.turboreg.normalizeType;
+		% ioptions.registrationFxn = options.turboreg.registrationFxn;
+		% ioptions.freqLow = options.turboreg.filterBeforeRegFreqLow;
+		% ioptions.freqHigh = options.turboreg.filterBeforeRegFreqHigh;
 
-	    switch options.turboreg.filterBeforeRegister
-	    	case 'imagejFFT'
-	    		imagefFftOnInputMovie('inputMovie');
-	    	case 'divideByLowpass'
-	    		display('dividing movie by lowpass...')
-	    		inputMovie(:,:,movieSubset) = normalizeMovie(single(inputMovie(:,:,movieSubset)),'normalizationType','lowpassFFTDivisive','freqLow',options.turboreg.filterBeforeRegFreqLow,'freqHigh',options.turboreg.filterBeforeRegFreqHigh,'waitbarOn',1,'bandpassMask','gaussian');
-	    	case 'bandpass'
-	    		display('bandpass filtering...')
-	    		[inputMovie(:,:,movieSubset)] = normalizeMovie(single(inputMovie(:,:,movieSubset)),'normalizationType','fft','freqLow',options.turboreg.filterBeforeRegFreqLow,'freqHigh',options.turboreg.filterBeforeRegFreqHigh,'bandpassType','bandpass','showImages',0,'bandpassMask','gaussian');
-	    	otherwise
-	    		% do nothing
-	    end
+		switch options.turboreg.filterBeforeRegister
+			case 'imagejFFT'
+				imagefFftOnInputMovie('inputMovie');
+			case 'divideByLowpass'
+				display('dividing movie by lowpass...')
+				inputMovie(:,:,movieSubset) = normalizeMovie(single(inputMovie(:,:,movieSubset)),'normalizationType','lowpassFFTDivisive','freqLow',options.turboreg.filterBeforeRegFreqLow,'freqHigh',options.turboreg.filterBeforeRegFreqHigh,'waitbarOn',1,'bandpassMask','gaussian');
+			case 'bandpass'
+				display('bandpass filtering...')
+				[inputMovie(:,:,movieSubset)] = normalizeMovie(single(inputMovie(:,:,movieSubset)),'normalizationType','fft','freqLow',options.turboreg.filterBeforeRegFreqLow,'freqHigh',options.turboreg.filterBeforeRegFreqHigh,'bandpassType','bandpass','showImages',0,'bandpassMask','gaussian');
+			otherwise
+				% do nothing
+		end
 
 		toc(subsetStartTime)
 	end
@@ -315,7 +315,7 @@ function [inputMovie] = subfxnRunTurboreg(regSettings,movieList,inputDatasetName
 	ioptions.refFrame = regSettings.refCropFrame;
 	ioptions.refFrameMatrix = inputMovieRefFrame;
 
-    j = whos('inputMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
+	j = whos('inputMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
 	[inputMovie] = turboregMovie(inputMovie,'options',ioptions);
 end
 function [regCoords] = subfxnCropSelection(options,folderList)
@@ -348,8 +348,8 @@ function [regCoords] = subfxnCropSelection(options,folderList)
 			switch options.turboregType
 				case 'preselect'
 					if strfind(folderList{fileNum},'#')==1
-					    % display('skipping...')
-					    continue;
+						% display('skipping...')
+						continue;
 					end
 					% opens frame n in each movie and asks the user to pre-select a region
 					% thisDir = folderList{fileNum};
@@ -472,17 +472,17 @@ function [inputMovie] = cropInputMovie(inputMovie)
 	tmpPxToCrop = max([topVal bottomVal leftVal rightVal]);
 	display(['[topVal bottomVal leftVal rightVal]: ' num2str([topVal bottomVal leftVal rightVal])])
 	if tmpPxToCrop~=0
-    	if tmpPxToCrop<options.pxToCrop
-    		cropMatrixPreProcess(tmpPxToCrop);
-    	else
-    		cropMatrixPreProcess(options.pxToCrop);
-    	end
-    end
+		if tmpPxToCrop<options.pxToCrop
+			cropMatrixPreProcess(tmpPxToCrop);
+		else
+			cropMatrixPreProcess(options.pxToCrop);
+		end
+	end
 end
 function A_tr = transform_2(A, ssm_filter, asm_filter)
 
-    A_tr = A - imfilter(A, ssm_filter, 'replicate');
+	A_tr = A - imfilter(A, ssm_filter, 'replicate');
 
-    A_tr = imfilter(A_tr, asm_filter);
+	A_tr = imfilter(A_tr, asm_filter);
 
 end

@@ -45,21 +45,21 @@ function [success] = viewLineFilledError(inputMean,inputStd,varargin)
 		else
 			x = options.xValues;
 		end
-    	y = inputMean;
-    	dy = options.sigmaNum*inputStd;
-    	if strcmp(options.errorType,'sem')&~isempty(options.ncount)
-    		dy = dy/sqrt(options.ncount);
-    	end
-    	colorMatrix = hsv(10);
-    	colorMatrix = repmat(options.lineColor,[2 1]);
-    	colorMatrixError = repmat(options.errorColor,[2 1]);
-    	randColor = randsample(10,1,false);
-    	randColor = 1;
-    	h = fill([x(:);flipud(x(:))],[y(:)-dy(:);flipud(y(:)+dy(:))],colorMatrixError(randColor,:),'linestyle','none');
-    	% set(h,'facealpha',options.errorAlpha)
-    	lh = line(x,y,'Color',colorMatrix(randColor,:)/1.5,'LineWidth',options.linewidth);
-    	% lh.Color
-    	success = 1;
+		y = inputMean;
+		dy = options.sigmaNum*inputStd;
+		if strcmp(options.errorType,'sem')&~isempty(options.ncount)
+			dy = dy/sqrt(options.ncount);
+		end
+		colorMatrix = hsv(10);
+		colorMatrix = repmat(options.lineColor,[2 1]);
+		colorMatrixError = repmat(options.errorColor,[2 1]);
+		randColor = randsample(10,1,false);
+		randColor = 1;
+		h = fill([x(:);flipud(x(:))],[y(:)-dy(:);flipud(y(:)+dy(:))],colorMatrixError(randColor,:),'linestyle','none');
+		% set(h,'facealpha',options.errorAlpha)
+		lh = line(x,y,'Color',colorMatrix(randColor,:)/1.5,'LineWidth',options.linewidth);
+		% lh.Color
+		success = 1;
 	catch err
 		display(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));
