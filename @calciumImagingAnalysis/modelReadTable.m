@@ -65,8 +65,8 @@ function [obj] = modelReadTable(obj,varargin)
 		fileInfo = getFileInfo(inputFileName);
 		repeatSize = [size(inputTable,1) 1];
 		inputTable.subject = repmat(fileInfo.subjectNum,repeatSize);
-	    % inputTable.assay = repmat({fileInfo.assay},repeatSize);
-	    inputTable.trial = repmat({fileInfo.assay},repeatSize);
-	    inputTable.date = repmat({fileInfo.date},repeatSize);
+		% inputTable.assay = repmat({fileInfo.assay},repeatSize);
+		inputTable.trial = repmat({fileInfo.assay},repeatSize);
+		inputTable.date = repmat({fileInfo.date},repeatSize);
 	end
 end

@@ -88,7 +88,7 @@ function [fileInfo] = getFileInfo(fileStr, varargin)
 	if ~isempty(fileInfo.protocol)
 		fileInfo.protocol = fileInfo.protocol{1};
 	else
-	    fileInfo.protocol = 'p000';
+		fileInfo.protocol = 'p000';
 	end
 
 	% get the assay used

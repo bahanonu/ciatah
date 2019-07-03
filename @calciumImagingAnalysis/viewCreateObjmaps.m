@@ -177,109 +177,109 @@ function obj = viewCreateObjmaps(obj,varargin)
 			fileFilterRegexp = obj.fileFilterRegexp;
 			% =====================
 
-	    	% thisFileID = obj.fileIDNameArray{obj.fileNum};
-	    	thisFileID = obj.fileIDArray{obj.fileNum};
+			% thisFileID = obj.fileIDNameArray{obj.fileNum};
+			thisFileID = obj.fileIDArray{obj.fileNum};
 
 
 
-    		try obj.valid{obj.fileNum}.(obj.signalExtractionMethod).manual;check.manual=1; catch check.manual=0; end
+			try obj.valid{obj.fileNum}.(obj.signalExtractionMethod).manual;check.manual=1; catch check.manual=0; end
 			try obj.valid{obj.fileNum}.(obj.signalExtractionMethod).regionMod;check.regionMod=1; catch check.regionMod=0; end
-    		if check.manual==1
-    			[figHandle figNo] = openFigure(123456, '');
-    			validManual = obj.valid{obj.fileNum}.(obj.signalExtractionMethod).manual;
-    			nCellsToShow = 3;
-    			nCellsToGrab = 40;
-    			% filter, trace, movie triggered
-    			nCols = 6;
-    			peakROI = [-20:20];
-    			[inputSignals2 inputImages2 signalPeaks2 signalPeakIdx2] = modelGetSignalsImages(obj,'returnType','raw');
+			if check.manual==1
+				[figHandle figNo] = openFigure(123456, '');
+				validManual = obj.valid{obj.fileNum}.(obj.signalExtractionMethod).manual;
+				nCellsToShow = 3;
+				nCellsToGrab = 40;
+				% filter, trace, movie triggered
+				nCols = 6;
+				peakROI = [-20:20];
+				[inputSignals2 inputImages2 signalPeaks2 signalPeakIdx2] = modelGetSignalsImages(obj,'returnType','raw');
 				[peakOutputStat] = computePeakStatistics(inputSignals2,'waitbarOn',1,'testpeaks',signalPeaks2,'testpeaksArray',signalPeakIdx2,'spikeROI',peakROI);
 				% inputImagesThresholded = thresholdImages(inputImages2,'binary',0,'threshold',userThreshold,'imageFilter','median');
 
 				while 0
 					clf
-    				subplotNum = 1;
-	    			goodBadIndicator = [1 0];
-	    			for gbIdx2 = 1:2
-	    				gbIdx = goodBadIndicator(gbIdx2)
-	    				if gbIdx2==1
-	    					dispIdx = find(validManual==gbIdx,nCellsToGrab);
-	    					dispIdx = [33 36 8];
-	    				else
-	    					dispIdx = find(validManual==gbIdx,nCellsToGrab,'last');
-	    				end
-	    				% dispIdx = find(validManual==gbIdx);
-	    				dispIdx = dispIdx(randperm(length(dispIdx)));
-	    				dispIdx = dispIdx(1:nCellsToShow);
-	    				for signalIdx2 = 1:length(dispIdx)
-	    					try
-	    					signalIdx = dispIdx(signalIdx2);
-		    				framesToGrab = signalPeakIdx2{signalIdx};
-	    					movieList = getFileList(obj.inputFolders{obj.fileNum}, fileFilterRegexp);
-	    					inputMovie = loadMovieList(movieList{1},'convertToDouble',0,'frameList',framesToGrab,'inputDatasetName',obj.inputDatasetName);
-	    					meanMovieImage = compareSignalToMovie(inputMovie, inputImages2(:,:,signalIdx), inputSignals2(signalIdx,:),'getOnlyPeakImages',1,'waitbarOn',0,'extendedCrosshairs',0,'outlines',0,'signalPeakArray',{[1:length(signalPeakIdx2(signalIdx))]},'cropSize',15,'getOnlyMeanImage',1);
-		    				spikeCenterTrace = peakOutputStat.spikeCenterTrace{signalIdx};
-		    				avgSpikeTrace = peakOutputStat.avgSpikeTrace(signalIdx,:);
+					subplotNum = 1;
+					goodBadIndicator = [1 0];
+					for gbIdx2 = 1:2
+						gbIdx = goodBadIndicator(gbIdx2)
+						if gbIdx2==1
+							dispIdx = find(validManual==gbIdx,nCellsToGrab);
+							dispIdx = [33 36 8];
+						else
+							dispIdx = find(validManual==gbIdx,nCellsToGrab,'last');
+						end
+						% dispIdx = find(validManual==gbIdx);
+						dispIdx = dispIdx(randperm(length(dispIdx)));
+						dispIdx = dispIdx(1:nCellsToShow);
+						for signalIdx2 = 1:length(dispIdx)
+							try
+							signalIdx = dispIdx(signalIdx2);
+							framesToGrab = signalPeakIdx2{signalIdx};
+							movieList = getFileList(obj.inputFolders{obj.fileNum}, fileFilterRegexp);
+							inputMovie = loadMovieList(movieList{1},'convertToDouble',0,'frameList',framesToGrab,'inputDatasetName',obj.inputDatasetName);
+							meanMovieImage = compareSignalToMovie(inputMovie, inputImages2(:,:,signalIdx), inputSignals2(signalIdx,:),'getOnlyPeakImages',1,'waitbarOn',0,'extendedCrosshairs',0,'outlines',0,'signalPeakArray',{[1:length(signalPeakIdx2(signalIdx))]},'cropSize',15,'getOnlyMeanImage',1);
+							spikeCenterTrace = peakOutputStat.spikeCenterTrace{signalIdx};
+							avgSpikeTrace = peakOutputStat.avgSpikeTrace(signalIdx,:);
 
-		    				[thresholdedImages boundaryIndices] = thresholdImages(meanMovieImage(:,:,1),'binary',1,'getBoundaryIndex',1,'threshold',0.2,'imageFilter','median');
-		    				meanMovieImage2 = meanMovieImage(:,:,2);
-		    				meanMovieImage2([boundaryIndices{:}]) = NaN;
+							[thresholdedImages boundaryIndices] = thresholdImages(meanMovieImage(:,:,1),'binary',1,'getBoundaryIndex',1,'threshold',0.2,'imageFilter','median');
+							meanMovieImage2 = meanMovieImage(:,:,2);
+							meanMovieImage2([boundaryIndices{:}]) = NaN;
 
-		    				% plot the image
-		    				subplot(nCellsToShow,nCols,subplotNum);subplotNum=subplotNum+1;
-		    					imagesc(meanMovieImage(:,:,1))
-		    					axis off;
-		    					title(num2str(signalIdx))
-		    					colormap gray
-		    				% plot the mean movie image
-		    				subplot(nCellsToShow,nCols,subplotNum);subplotNum=subplotNum+1;
-		    					imagesc(meanMovieImage2)
-		    					caxis([0 0.05])
-		    					axis off;
-		    				% plot the average trace
-		    				subplot(nCellsToShow,nCols,subplotNum);subplotNum=subplotNum+1;
-		    				plot(repmat(peakROI, [size(spikeCenterTrace,1) 1])', spikeCenterTrace','Color',[4 4 4]/8)
-		    				    hold on;
-		    				    plot(peakROI, avgSpikeTrace,'k', 'LineWidth',3);box off;
-		    					% add in zero line
-		    				    line([0 0],get(gca,'YLim'),'Color',[0 0 0],'LineWidth',2)
-		    				    ylim([-0.05 0.2])
-		    				catch
-		    				end
-		    			end
-	    			end
-	    			pause
-	    		end
-    		end
-    		drawnow
+							% plot the image
+							subplot(nCellsToShow,nCols,subplotNum);subplotNum=subplotNum+1;
+								imagesc(meanMovieImage(:,:,1))
+								axis off;
+								title(num2str(signalIdx))
+								colormap gray
+							% plot the mean movie image
+							subplot(nCellsToShow,nCols,subplotNum);subplotNum=subplotNum+1;
+								imagesc(meanMovieImage2)
+								caxis([0 0.05])
+								axis off;
+							% plot the average trace
+							subplot(nCellsToShow,nCols,subplotNum);subplotNum=subplotNum+1;
+							plot(repmat(peakROI, [size(spikeCenterTrace,1) 1])', spikeCenterTrace','Color',[4 4 4]/8)
+								hold on;
+								plot(peakROI, avgSpikeTrace,'k', 'LineWidth',3);box off;
+								% add in zero line
+								line([0 0],get(gca,'YLim'),'Color',[0 0 0],'LineWidth',2)
+								ylim([-0.05 0.2])
+							catch
+							end
+						end
+					end
+					pause
+				end
+			end
+			drawnow
 
-	    	normalFigs = 1;
-	    	if normalFigs==1
-	    		[figHandle figNo] = openFigure(options.mapTraceGraphNo, '');
-	    		clf;
-	    		try obj.valid{obj.fileNum}.(obj.signalExtractionMethod).manual;check.manual=1; catch check.manual=0; end
-    			try obj.valid{obj.fileNum}.(obj.signalExtractionMethod).regionMod;check.regionMod=1; catch check.regionMod=0; end
-	    		if check.manual==1
-	    			% display(['using valid.' obj.signalExtractionMethod '.manual identifications...']);
-	    			validManual = logical(obj.valid{obj.fileNum}.(obj.signalExtractionMethod).manual);
-	    			if check.regionMod==1
-	    				validRegion = logical(obj.valid{obj.fileNum}.(obj.signalExtractionMethod).regionMod);
-	    			else
-	    				validRegion = validManual;
-	    			end
-	    		else
-	    			validManual = obj.valid{obj.fileNum}.(obj.signalExtractionMethod).auto;
-	    			validRegion = obj.valid{obj.fileNum}.(obj.signalExtractionMethod).auto;
-	    		end
+			normalFigs = 1;
+			if normalFigs==1
+				[figHandle figNo] = openFigure(options.mapTraceGraphNo, '');
+				clf;
+				try obj.valid{obj.fileNum}.(obj.signalExtractionMethod).manual;check.manual=1; catch check.manual=0; end
+				try obj.valid{obj.fileNum}.(obj.signalExtractionMethod).regionMod;check.regionMod=1; catch check.regionMod=0; end
+				if check.manual==1
+					% display(['using valid.' obj.signalExtractionMethod '.manual identifications...']);
+					validManual = logical(obj.valid{obj.fileNum}.(obj.signalExtractionMethod).manual);
+					if check.regionMod==1
+						validRegion = logical(obj.valid{obj.fileNum}.(obj.signalExtractionMethod).regionMod);
+					else
+						validRegion = validManual;
+					end
+				else
+					validManual = obj.valid{obj.fileNum}.(obj.signalExtractionMethod).auto;
+					validRegion = obj.valid{obj.fileNum}.(obj.signalExtractionMethod).auto;
+				end
 
-	    		[inputSignalsTmp inputImagesTmp signalPeaksTmp signalPeakIdxTmp] = modelGetSignalsImages(obj,'returnType','raw','filterTraces',0);
+				[inputSignalsTmp inputImagesTmp signalPeaksTmp signalPeakIdxTmp] = modelGetSignalsImages(obj,'returnType','raw','filterTraces',0);
 
-	    		validRegion = validRegion(validManual);
-	    		inputSignalsTmp = inputSignalsTmp(validManual,:);
-	    		inputImagesTmp = inputImagesTmp(:,:,validManual);
-	    		signalPeaksTmp = signalPeaksTmp(validManual,:);
-	    		% get raw background movie
-	    		movieList = getFileList(obj.inputFolders{obj.fileNum}, 'concat');
+				validRegion = validRegion(validManual);
+				inputSignalsTmp = inputSignalsTmp(validManual,:);
+				inputImagesTmp = inputImagesTmp(:,:,validManual);
+				signalPeaksTmp = signalPeaksTmp(validManual,:);
+				% get raw background movie
+				movieList = getFileList(obj.inputFolders{obj.fileNum}, 'concat');
 				if isempty(movieList)
 					movieList = getFileList(obj.inputFolders{obj.fileNum}, fileFilterRegexp);
 				end
@@ -289,12 +289,12 @@ function obj = viewCreateObjmaps(obj,varargin)
 					[movieFrame] = downsampleMovie(movieFrame,'downsampleX',size(inputImages,1),'downsampleY',size(inputImages,2),'downsampleDimension','space');
 					movieFrame = squeeze(max(movieFrame,[],3));
 
-		    		% [inputImagesThresholded boundaryIndices] = thresholdImages(inputImagesTmp,'binary',0,'threshold',userThreshold,'imageFilter','median','getBoundaryIndex',1,'imageFilterBinary','median');
-		    		[inputImagesThresholded boundaryIndices] = thresholdImages(inputImagesTmp,'binary',0,'threshold',userThreshold,'imageFilter',options.medianFilterImages,'getBoundaryIndex',1,'imageFilterBinary',options.medianFilterImages);
-		    		% cells but not in FOV ROI
-		    		colorObjMaps{1} = createObjMap(inputImagesThresholded(:,:,validRegion==0));
-		    		% cells in FOV ROI
-		    		iiTTmp = inputImagesThresholded(:,:,validRegion==1);
+					% [inputImagesThresholded boundaryIndices] = thresholdImages(inputImagesTmp,'binary',0,'threshold',userThreshold,'imageFilter','median','getBoundaryIndex',1,'imageFilterBinary','median');
+					[inputImagesThresholded boundaryIndices] = thresholdImages(inputImagesTmp,'binary',0,'threshold',userThreshold,'imageFilter',options.medianFilterImages,'getBoundaryIndex',1,'imageFilterBinary',options.medianFilterImages);
+					% cells but not in FOV ROI
+					colorObjMaps{1} = createObjMap(inputImagesThresholded(:,:,validRegion==0));
+					% cells in FOV ROI
+					iiTTmp = inputImagesThresholded(:,:,validRegion==1);
 					colorObjMaps{2} = createObjMap(groupImagesByColor(iiTTmp,rand([size(iiTTmp,3) 1])+nanmax(iiTTmp(:)),'thresholdImages',0));
 					colorObjMaps{3} = createObjMap(groupImagesByColor(iiTTmp,rand([size(iiTTmp,3) 1])+nanmax(iiTTmp(:)),'thresholdImages',0));
 
@@ -337,8 +337,8 @@ function obj = viewCreateObjmaps(obj,varargin)
 					Comb2(:,:,2) = movieFrameProc+tmpColormap; % green
 					Comb2(:,:,3) = movieFrameProc; % blue
 
-		    		E = normalizeVector(double(movieFrame),'normRange','zeroToOne');
-		    		% E = E*0;
+					E = normalizeVector(double(movieFrame),'normRange','zeroToOne');
+					% E = E*0;
 					% E = E';
 					E = E*0.7;
 					display(['E: ' num2str(size(E))])
@@ -378,16 +378,16 @@ function obj = viewCreateObjmaps(obj,varargin)
 					cellCoords = cellCoords(validRegion,:);
 
 					% look at
-                    sortedinputSignals = signalPeaksTmp.*inputSignalsTmp;
-                    if isempty(options.signalCutIdx)
-                    	[signalSnr sortedIdx] = sort(max(sortedinputSignals,[],2),'descend');
-                    else
-                    	[signalSnr sortedIdx] = sort(max(sortedinputSignals(:,options.signalCutIdx),[],2),'descend');
-                    end
+					sortedinputSignals = signalPeaksTmp.*inputSignalsTmp;
+					if isempty(options.signalCutIdx)
+						[signalSnr sortedIdx] = sort(max(sortedinputSignals,[],2),'descend');
+					else
+						[signalSnr sortedIdx] = sort(max(sortedinputSignals(:,options.signalCutIdx),[],2),'descend');
+					end
 
-                    % max(sortedinputSignals,[],2)
-                    % sortedIdx
-                    % pause
+					% max(sortedinputSignals,[],2)
+					% sortedIdx
+					% pause
 					sortedinputSignals = inputSignalsTmp(sortedIdx,:);
 
 					% create overlap with new images
@@ -433,14 +433,14 @@ function obj = viewCreateObjmaps(obj,varargin)
 						coordX = cellCoords(signalNo,1);
 						coordY = cellCoords(signalNo,2);
 						plot(coordX,coordY,'w.','MarkerSize',5)
-	    				text(coordX,coordY,num2str(signalNo),'Color',[1 1 1])
+						text(coordX,coordY,num2str(signalNo),'Color',[1 1 1])
 
-	    				imgRowY = size(inputImagesTmp,1);
-	    				imgColX = size(inputImagesTmp,2);
-	    				scaleBarLengthPx = options.scaleBarLengthMicron/MICRON_PER_PIXEL;
-	    				% [imgColX-scaleBarLengthPx-round(imgColX*0.05) imgRowY-round(imgRowY*0.05) scaleBarLengthPx 5]
-	    				rectangle('Position',[imgColX-scaleBarLengthPx-imgColX*0.05 imgRowY-imgRowY*0.05 scaleBarLengthPx 5],'FaceColor',[1 1 1],'EdgeColor','none')
-	    				% annotation('line',[imgRow-50 imgRow-30]/imgRow,[20 20]/imgCol,'LineWidth',3,'Color',[1 1 1]);
+						imgRowY = size(inputImagesTmp,1);
+						imgColX = size(inputImagesTmp,2);
+						scaleBarLengthPx = options.scaleBarLengthMicron/MICRON_PER_PIXEL;
+						% [imgColX-scaleBarLengthPx-round(imgColX*0.05) imgRowY-round(imgRowY*0.05) scaleBarLengthPx 5]
+						rectangle('Position',[imgColX-scaleBarLengthPx-imgColX*0.05 imgRowY-imgRowY*0.05 scaleBarLengthPx 5],'FaceColor',[1 1 1],'EdgeColor','none')
+						% annotation('line',[imgRow-50 imgRow-30]/imgRow,[20 20]/imgCol,'LineWidth',3,'Color',[1 1 1]);
 					end
 
 					% subplot(2,2,[2 4])
@@ -464,7 +464,7 @@ function obj = viewCreateObjmaps(obj,varargin)
 							continue;
 						end
 						spikeIdx = spikeIdx(tmpIdx(1));
-                        spikeIdx = spikeIdx(:);
+						spikeIdx = spikeIdx(:);
 						spikeIdx = spikeIdx-(round(cutLength/2)-shiftVector(signalNo));
 						% spikeIdx
 						% cutLength
@@ -478,15 +478,15 @@ function obj = viewCreateObjmaps(obj,varargin)
 								endDiff = abs(-spikeIdx);
 								cutIdx = bsxfun(@plus,spikeIdx,-(cutLength+endDiff+1):(cutLength-endDiff-1));
 								cutIdx = (nPoints-(cutLength*2)):nPoints;
-                            else
+							else
 								cutIdx = bsxfun(@plus,spikeIdx,-cutLength:cutLength);
 							end
-                        catch err
-                            display(repmat('@',1,7))
-                            disp(getReport(err,'extended','hyperlinks','on'));
-                            display(repmat('@',1,7))
+						catch err
+							display(repmat('@',1,7))
+							disp(getReport(err,'extended','hyperlinks','on'));
+							display(repmat('@',1,7))
 							cutIdx = [];
-                            cutIdx = -cutLength:cutLength;
+							cutIdx = -cutLength:cutLength;
 						end
 						if options.filterShownTraces==1
 							inputSignal99 = sortedinputSignals(signalNo,:);
@@ -515,7 +515,7 @@ function obj = viewCreateObjmaps(obj,varargin)
 								sortedinputSignalsCut(signalNo,:) = tmpSignal(cutIdx(:)');
 							end
 						end
-                    end
+					end
 					display(['sortedinputSignalsCut: ' num2str(size(sortedinputSignalsCut))])
 					plotTracesFigure();
 
@@ -546,7 +546,7 @@ function obj = viewCreateObjmaps(obj,varargin)
 				suptitle(sprintf('%s | # cells = %d',obj.folderBaseDisplayStr{obj.fileNum},sum(validRegion)))
 				drawnow
 
-                set(figHandle,'PaperUnits','inches','PaperPosition',[0 0 15 10])
+				set(figHandle,'PaperUnits','inches','PaperPosition',[0 0 15 10])
 				suptitle(sprintf('%s | # cells = %d',obj.folderBaseDisplayStr{obj.fileNum},sum(validRegion)))
 				binOld = obj.binDownsampleAmount; obj.binDownsampleAmount = [];
 				% obj.modelSaveImgToFile([],['objMapLabeled' filesep obj.subjectStr{obj.fileNum}],'current',[]);
@@ -555,48 +555,48 @@ function obj = viewCreateObjmaps(obj,varargin)
 				if options.onlyShowMapTraceGraph==1
 					return
 				end
-	    		% continue
-	    		% [figHandle figNo] = openFigure(85, '');
-	    		% 	[inputSignals inputImages signalPeaks signalPeakIdx] = modelGetSignalsImages(obj,'returnType','raw');
+				% continue
+				% [figHandle figNo] = openFigure(85, '');
+				% 	[inputSignals inputImages signalPeaks signalPeakIdx] = modelGetSignalsImages(obj,'returnType','raw');
 
-	    		% 	[signalSnr a] = computeSignalSnr(inputSignals,'testpeaks',signalPeaks,'testpeaksArray',signalPeakIdx);
-	    		% 	[signalSnr sortedIdx] = sort(signalSnr,'descend');
+				% 	[signalSnr a] = computeSignalSnr(inputSignals,'testpeaks',signalPeaks,'testpeaksArray',signalPeakIdx);
+				% 	[signalSnr sortedIdx] = sort(signalSnr,'descend');
 
-	    		% 	inputImages2 = inputImages;
-	    		% 	for cellNo = 1:size(inputImages,3)
-	    		% 		inputImages2(:,:,cellNo) = normalizeVector(inputImages2(:,:,cellNo),'normRange','zeroToOne');
-	    		% 	end
-	    		% 	emImages2 = zeros([size(inputImages2,1) size(inputImages2,2) 3])
-	    		% 	for i=1:3
-	    		% 		randColorVector = 1*rand([size(inputImages2,3) 1]);
-	    		% 		randColorVector = randColorVector.*matchAcross;
-	    		% 		% randColorVector = randColorVector+0.05;
-	    		% 		randColorVector(randColorVector==0) = 0.2;
-	    		% 		% size(randColorVector)
-	    		% 		% figure;plot(randColorVector)
-	    		% 		emImages2(:,:,i) = nanmax(groupImagesByColor(inputImages2,randColorVector,'thresholdImages',0),[],3);
-	    		% 	end
+				% 	inputImages2 = inputImages;
+				% 	for cellNo = 1:size(inputImages,3)
+				% 		inputImages2(:,:,cellNo) = normalizeVector(inputImages2(:,:,cellNo),'normRange','zeroToOne');
+				% 	end
+				% 	emImages2 = zeros([size(inputImages2,1) size(inputImages2,2) 3])
+				% 	for i=1:3
+				% 		randColorVector = 1*rand([size(inputImages2,3) 1]);
+				% 		randColorVector = randColorVector.*matchAcross;
+				% 		% randColorVector = randColorVector+0.05;
+				% 		randColorVector(randColorVector==0) = 0.2;
+				% 		% size(randColorVector)
+				% 		% figure;plot(randColorVector)
+				% 		emImages2(:,:,i) = nanmax(groupImagesByColor(inputImages2,randColorVector,'thresholdImages',0),[],3);
+				% 	end
 
-	    		% 	clear inputImages2
-	    		% 	imagesc(emImages2);drawnow
-	    		% 	axis off
+				% 	clear inputImages2
+				% 	imagesc(emImages2);drawnow
+				% 	axis off
 
-	    		% 	markers = {'+','o','*','.','x','s','d','^','v','>','<','p','h'};
+				% 	markers = {'+','o','*','.','x','s','d','^','v','>','<','p','h'};
 
-	    		% 	legend()
+				% 	legend()
 
-	    		% 	title([subject ' | ' assay ' | overlap map | ' num2str(size(signalPeaks,1)) ' cells'],'fontsize',20)
-	    		% 	set(figHandle,'PaperUnits','inches','PaperPosition',[0 0 9 9])
-	    		% 	% figure(figHandle)
-	    		% 	obj.modelSaveImgToFile([],'cellmapObjColor_','current',[]);
+				% 	title([subject ' | ' assay ' | overlap map | ' num2str(size(signalPeaks,1)) ' cells'],'fontsize',20)
+				% 	set(figHandle,'PaperUnits','inches','PaperPosition',[0 0 9 9])
+				% 	% figure(figHandle)
+				% 	obj.modelSaveImgToFile([],'cellmapObjColor_','current',[]);
 
-    			[figHandle figNo] = openFigure(85, '');
-    				imagesc(emImages2);drawnow
-    				axis off
-    				title([subject ' | ' assay ' | overlap map | ' num2str(size(signalPeaks,1)) ' cells'],'fontsize',20)
-    				set(figHandle,'PaperUnits','inches','PaperPosition',[0 0 9 9])
-    				% figure(figHandle)
-    				obj.modelSaveImgToFile([],'cellmapObjColor_','current',[]);
+				[figHandle figNo] = openFigure(85, '');
+					imagesc(emImages2);drawnow
+					axis off
+					title([subject ' | ' assay ' | overlap map | ' num2str(size(signalPeaks,1)) ' cells'],'fontsize',20)
+					set(figHandle,'PaperUnits','inches','PaperPosition',[0 0 9 9])
+					% figure(figHandle)
+					obj.modelSaveImgToFile([],'cellmapObjColor_','current',[]);
 
 				% [figHandle figNo] = openFigure(options.mapTraceGraphNo, '');
 				% 	subplotTmp(2,3,3)
@@ -609,36 +609,36 @@ function obj = viewCreateObjmaps(obj,varargin)
 				% 	return
 				% end
 
-	    			markers = {'+','o','*','.','x','s','d','^','v','>','<','p','h'}
+					markers = {'+','o','*','.','x','s','d','^','v','>','<','p','h'}
 
-	    		[figHandle figNo] = openFigure(7989, '');
-	    			thres = thresholdImages(inputImages,'binary',1,'threshold',userThreshold);
-	    			thisCellmap = createObjMap(thres,'mapType','sum');
-	    			imagesc(thisCellmap);colorbar;
-	    			% colormap(obj.colormap);
-	    			colormap([0 0 0;jet(nanmax(thisCellmap(:)))])
-	    			title([subject ' | ' assay ' | overlap map | ' num2str(size(signalPeaks,1)) ' cells'],'fontsize',20)
-	    			set(figHandle,'PaperUnits','inches','PaperPosition',[0 0 9 9])
-	    			% figure(figHandle)
-	    			obj.modelSaveImgToFile([],'cellmapObjOverlap_','current',[]);
-			    [figHandle figNo] = openFigure(969, '');
-				    s1 = subplot(1,2,1);
-					    % coloredObjs = groupImagesByColor(thresholdImages(inputImages),[]);
-					    % thisCellmap = createObjMap(coloredObjs);
-					    % firing rate grouped images
-					    display(['signalPeaks: ' num2str(size(signalPeaks))])
-					    numPeakEvents = sum(signalPeaks,2);
-					    numPeakEvents = numPeakEvents/size(signalPeaks,2)*framesPerSecond;
-					    display(['inputImages: ' num2str(size(inputImages))])
-					    display(['numPeakEvents: ' num2str(size(numPeakEvents))])
-					    thres = thresholdImages(inputImages,'threshold',userThreshold);
-					    [groupedImagesRates] = groupImagesByColor(inputImages,numPeakEvents);
-					    thisCellmap = createObjMap(groupedImagesRates);
+				[figHandle figNo] = openFigure(7989, '');
+					thres = thresholdImages(inputImages,'binary',1,'threshold',userThreshold);
+					thisCellmap = createObjMap(thres,'mapType','sum');
+					imagesc(thisCellmap);colorbar;
+					% colormap(obj.colormap);
+					colormap([0 0 0;jet(nanmax(thisCellmap(:)))])
+					title([subject ' | ' assay ' | overlap map | ' num2str(size(signalPeaks,1)) ' cells'],'fontsize',20)
+					set(figHandle,'PaperUnits','inches','PaperPosition',[0 0 9 9])
+					% figure(figHandle)
+					obj.modelSaveImgToFile([],'cellmapObjOverlap_','current',[]);
+				[figHandle figNo] = openFigure(969, '');
+					s1 = subplot(1,2,1);
+						% coloredObjs = groupImagesByColor(thresholdImages(inputImages),[]);
+						% thisCellmap = createObjMap(coloredObjs);
+						% firing rate grouped images
+						display(['signalPeaks: ' num2str(size(signalPeaks))])
+						numPeakEvents = sum(signalPeaks,2);
+						numPeakEvents = numPeakEvents/size(signalPeaks,2)*framesPerSecond;
+						display(['inputImages: ' num2str(size(inputImages))])
+						display(['numPeakEvents: ' num2str(size(numPeakEvents))])
+						thres = thresholdImages(inputImages,'threshold',userThreshold);
+						[groupedImagesRates] = groupImagesByColor(inputImages,numPeakEvents);
+						thisCellmap = createObjMap(groupedImagesRates);
 
-					    % if fileNum==1
-					    %     fig1 = figure(32);
-					    %     % colormap gray;
-					    % end
+						% if fileNum==1
+						%     fig1 = figure(32);
+						%     % colormap gray;
+						% end
 						% thisCellmap = createObjMap([thisDirSaveStr options.rawICfiltersSaveStr]);
 						% subplot(round(nFiles/4),4,fileNum);
 						plotBinaryCellMapFigure();
@@ -655,9 +655,9 @@ function obj = viewCreateObjmaps(obj,varargin)
 					s2 = subplot(1,2,2);
 						if nSignals>1
 							[signalSnr sortedIdx] = sort(signalSnr,'descend');
-                            sortedinputSignals = signalPeaks.*inputSignals;
-                            % [signalSnr sortedIdx] = sort(sum(sortedinputSignals,2),'descend');
-                            [signalSnr sortedIdx] = sort(max(sortedinputSignals,[],2),'descend');
+							sortedinputSignals = signalPeaks.*inputSignals;
+							% [signalSnr sortedIdx] = sort(sum(sortedinputSignals,2),'descend');
+							[signalSnr sortedIdx] = sort(max(sortedinputSignals,[],2),'descend');
 							sortedinputSignals = inputSignals(sortedIdx,:);
 							display('==============')
 							display(['signalPeakIdx: ' num2str(size(signalPeakIdx))])
@@ -681,7 +681,7 @@ function obj = viewCreateObjmaps(obj,varargin)
 									continue;
 								end
 								spikeIdx = spikeIdx(tmpIdx(1));
-                                spikeIdx = spikeIdx(:);
+								spikeIdx = spikeIdx(:);
 								spikeIdx = spikeIdx-(round(cutLength/2)-shiftVector(sIdx));
 								% spikeIdx
 								% cutLength
@@ -695,23 +695,23 @@ function obj = viewCreateObjmaps(obj,varargin)
 										endDiff = abs(-spikeIdx);
 										cutIdx = bsxfun(@plus,spikeIdx,-(cutLength+endDiff+1):(cutLength-endDiff-1));
 										cutIdx = (nPoints-(cutLength*2)):nPoints;
-                                    else
+									else
 										cutIdx = bsxfun(@plus,spikeIdx,-cutLength:cutLength);
 									end
-                                catch err
-                                    display(repmat('@',1,7))
-                                    disp(getReport(err,'extended','hyperlinks','on'));
-                                    display(repmat('@',1,7))
+								catch err
+									display(repmat('@',1,7))
+									disp(getReport(err,'extended','hyperlinks','on'));
+									display(repmat('@',1,7))
 									cutIdx = [];
-                                    cutIdx = -cutLength:cutLength;
+									cutIdx = -cutLength:cutLength;
 								end
 								if ~isempty(cutIdx)
 									sortedinputSignalsCut(sIdx,:) = sortedinputSignals(sIdx,cutIdx(:)');
 								end
-                            end
-                            %size(sortedinputSignalsCut)
-                            %imagesc(sortedinputSignals)
-                            % sortedinputSignalsCut = sortedinputSignals(1:nSignalsShow,:);
+							end
+							%size(sortedinputSignalsCut)
+							%imagesc(sortedinputSignals)
+							% sortedinputSignalsCut = sortedinputSignals(1:nSignalsShow,:);
 							% sortedinputSignalsCut = flip(sortedinputSignalsCut,1);
 							display(['sortedinputSignalsCut: ' num2str(size(sortedinputSignalsCut))])
 							% sortedinputSignalsCut = sortedinputSignals(1:7,:);
@@ -726,14 +726,14 @@ function obj = viewCreateObjmaps(obj,varargin)
 
 					d=0.02; %distance between images
 					set(s1,'position',[d 0.15 0.5-2*d 0.8])
-			     	set(s2,'position',[0.5+d 0.15 0.5-2*d 0.8])
-				    saveFile = char(strrep(strcat(picsSavePath,'cellmap_',thisFileID,''),'/',''));
-				    set(figHandle,'PaperUnits','inches','PaperPosition',[0 0 16 9])
-				    % figure(figHandle)
-				    obj.modelSaveImgToFile([],'cellmapObj_','current',[]);
-				    % print('-dpng','-r200',saveFile)
-				    % print('-dmeta','-r200',saveFile)
-				    % saveas(gcf,saveFile);
+					set(s2,'position',[0.5+d 0.15 0.5-2*d 0.8])
+					saveFile = char(strrep(strcat(picsSavePath,'cellmap_',thisFileID,''),'/',''));
+					set(figHandle,'PaperUnits','inches','PaperPosition',[0 0 16 9])
+					% figure(figHandle)
+					obj.modelSaveImgToFile([],'cellmapObj_','current',[]);
+					% print('-dpng','-r200',saveFile)
+					% print('-dmeta','-r200',saveFile)
+					% saveas(gcf,saveFile);
 					drawnow;
 
 					[figHandle figNo] = openFigure(972, '');
@@ -766,14 +766,14 @@ function obj = viewCreateObjmaps(obj,varargin)
 						title('example traces','fontsize',20);
 					end
 					title([subject ' | ' assay ' | example traces'],'fontsize',20)
-				    saveFile = char(strrep(strcat(picsSavePath,'traces_',thisFileID,''),'/',''));
-				    saveFile
-				    set(figHandle,'PaperUnits','inches','PaperPosition',[0 0 16 9])
-				    % figure(figHandle)
-				    obj.modelSaveImgToFile([],'cellmapTraces_','current',[]);
-				    % print('-dpng','-r200',saveFile)
-				    % print('-dmeta','-r200',saveFile)
-				    % saveas(gcf,saveFile);
+					saveFile = char(strrep(strcat(picsSavePath,'traces_',thisFileID,''),'/',''));
+					saveFile
+					set(figHandle,'PaperUnits','inches','PaperPosition',[0 0 16 9])
+					% figure(figHandle)
+					obj.modelSaveImgToFile([],'cellmapTraces_','current',[]);
+					% print('-dpng','-r200',saveFile)
+					% print('-dmeta','-r200',saveFile)
+					% saveas(gcf,saveFile);
 					drawnow;
 			end
 			movieList = getFileList(obj.inputFolders{obj.fileNum}, 'concat');
@@ -900,10 +900,10 @@ function obj = viewCreateObjmaps(obj,varargin)
 						% num2str(size(signalPeaks,1))
 				movieList2 = getFileList(obj.inputFolders{obj.fileNum}, fileFilterRegexp);
 				if ~isempty(movieList2)
-                    movieDims = loadMovieList(movieList2{1},'getMovieDims',1,'inputDatasetName',obj.inputDatasetName);
-                    if movieDims.z<max(userVideoFrames);nFramesMax=1:movieDims.z;else nFramesMax=userVideoFrames;end
+					movieDims = loadMovieList(movieList2{1},'getMovieDims',1,'inputDatasetName',obj.inputDatasetName);
+					if movieDims.z<max(userVideoFrames);nFramesMax=1:movieDims.z;else nFramesMax=userVideoFrames;end
 					movieFrame = loadMovieList(movieList2{1},'convertToDouble',0,'frameList',nFramesMax,'inputDatasetName',obj.inputDatasetName);
-                    [movieFrame] = downsampleMovie(movieFrame,'downsampleX',size(inputImages,1),'downsampleY',size(inputImages,2),'downsampleDimension','space');
+					[movieFrame] = downsampleMovie(movieFrame,'downsampleX',size(inputImages,1),'downsampleY',size(inputImages,2),'downsampleDimension','space');
 					movieFrame = squeeze(max(movieFrame,[],3));
 					E = normalizeVector(double(movieFrame),'normRange','zeroToOne')/2;
 					display(['E: ' num2str(size(E))])
@@ -938,7 +938,7 @@ function obj = viewCreateObjmaps(obj,varargin)
 				% set(titleAxes, 'Color', 'None', 'XColor', 'White', 'YColor', 'White' );
 				% set( gca, 'Color', 'None', 'XColor', 'White', 'YColor', 'White' );
 				% text(0.5, 0, [subject ' | ' assay ' | firing rate map | ' num2str(sum(validAuto)) ' cells'], 'FontSize', 14', 'FontWeight', 'Bold', 'HorizontalAlignment', 'Center', 'VerticalAlignment', 'Bottom' );
-                set(figHandle,'PaperUnits','inches','PaperPosition',[0 0 22 16])
+				set(figHandle,'PaperUnits','inches','PaperPosition',[0 0 22 16])
 				obj.modelSaveImgToFile([],'objMapAll_','current',[]);
 
 				% inputImagesThresholded = thresholdImages(inputImages,'binary',0);
@@ -962,7 +962,7 @@ function obj = viewCreateObjmaps(obj,varargin)
 		s2Pos = get(gca,'position');
 		cb = colorbar('location','southoutside'); ylabel(cb, 'Hz');
 		set(gca,'position',s2Pos);
-	    % colormap hot; colorbar;
+		% colormap hot; colorbar;
 		% title(regexp(thisDir,'m\d+', 'match'));
 		box off;
 		axis tight;
@@ -974,17 +974,17 @@ function obj = viewCreateObjmaps(obj,varargin)
 		% options
 		if size(sortedinputSignalsCut,1)==1
 			plot(sortedinputSignalsCut)
-        else
-    %     	if sum(strcmp(obj.signalExtractionMethod,{'EM','CNMF','CNMFE'}))>0
+		else
+	%     	if sum(strcmp(obj.signalExtractionMethod,{'EM','CNMF','CNMFE'}))>0
 				% plotSignalsGraph(sortedinputSignalsCut,'LineWidth',2.5,'incrementAmount',[],'newAxisColorOrder',options.plotSignalsGraphColor,'smoothTrace',0,'maxIncrementPercent',0.4,'minAdd',0);
-    %     	else
-    %     		% plot(sortedinputSignalsCut)
+	%     	else
+	%     		% plot(sortedinputSignalsCut)
 				% plotSignalsGraph(sortedinputSignalsCut,'LineWidth',2.5,'incrementAmount',options.incrementAmount,'newAxisColorOrder',options.plotSignalsGraphColor);
-    %     	end
-    	% figure;
-    	% imagesc(sortedinputSignalsCut);
-    	% pause
-    		plotSignalsGraph(sortedinputSignalsCut,'LineWidth',2.5,'incrementAmount',[],'newAxisColorOrder',options.plotSignalsGraphColor,'smoothTrace',0,'maxIncrementPercent',0.4,'minAdd',0);
+	%     	end
+		% figure;
+		% imagesc(sortedinputSignalsCut);
+		% pause
+			plotSignalsGraph(sortedinputSignalsCut,'LineWidth',2.5,'incrementAmount',[],'newAxisColorOrder',options.plotSignalsGraphColor,'smoothTrace',0,'maxIncrementPercent',0.4,'minAdd',0);
 		end
 		nTicks = 10;
 		set(gca,'XTick',round(linspace(1,size(sortedinputSignalsCut,2),nTicks)))

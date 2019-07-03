@@ -29,7 +29,7 @@ function [success] = writeHDF5Data(inputData,saveDir,varargin)
 	options.hdfCount = [];
 	options.addInfo = [];
 	% Int: Defines gzip compression level (0-9). 0 = no compression, 9 = most compression.
- 	options.deflateLevel = 0;
+	options.deflateLevel = 0;
 	% e.g. '/movie/processingSettings'
 	options.addInfoName = [];
 	% Int: chunk size in [x y z] of the dataset, leave empty for auto chunking

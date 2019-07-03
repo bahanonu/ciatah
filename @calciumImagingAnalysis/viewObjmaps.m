@@ -128,10 +128,16 @@ function obj = viewObjmaps(obj,varargin)
 	options
 
 	for thisFileNumIdx = 1:nFilesToAnalyze
-		[~,~] = openFigure(45+thisFileNumIdx, '');
+		[~,~] = openFigure(2000+thisFileNumIdx, '');
 	end
 	for thisFileNumIdx = 1:nFilesToAnalyze
-		[~,~] = openFigure(2000+thisFileNumIdx, '');
+		[~,~] = openFigure(5000+thisFileNumIdx, '');
+	end
+	for thisFileNumIdx = 1:nFilesToAnalyze
+		[~,~] = openFigure(4000+thisFileNumIdx, '');
+	end
+	for thisFileNumIdx = 1:nFilesToAnalyze
+		[~,~] = openFigure(45+thisFileNumIdx, '');
 	end
 	% [figHandle figNo] = openFigure(969, '');
 
@@ -170,32 +176,39 @@ function obj = viewObjmaps(obj,varargin)
 			% size(signalPeakIdx)
 			% return
 
+			[thresholdedImages, ~] = thresholdImages(inputImages,'binary',1,'getBoundaryIndex',0,'threshold',userThreshold,'imageFilter','none');
+
 			rowSubP = options.rowSubP;
 			colSubP = options.colSubP;
 
 			try
 				groupingVector = zeros([size(inputImages,3) 1]);
 				groupingVector(valid==1) = sum(valid==0)+randperm(sum(valid==1));
-				groupingVector(valid==0) = 1:sum(valid==0);
-				output1 = createObjMap(groupImagesByColor(inputImages,groupingVector),'thresholdImages',1);
+				% groupingVector(valid==0) = 1:sum(valid==0);
+				tmpVec = 1:sum(valid==0);
+				groupingVector(valid==0) = tmpVec(randperm(length(tmpVec)));
+				output1 = createObjMap(groupImagesByColor(thresholdedImages,groupingVector,'thresholdImages',0));
 			catch err
 				display(repmat('@',1,7))
 				disp(getReport(err,'extended','hyperlinks','on'));
 				display(repmat('@',1,7))
-				output1 = createObjMap(groupImagesByColor(inputImages,rand([size(inputImages,3) 1]),'thresholdImages',1));
+				output1 = createObjMap(groupImagesByColor(thresholdedImages,rand([size(inputImages,3) 1]),'thresholdImages',0));
 			end
 
-			linkAx(end+1) = subplotTmp(rowSubP,colSubP,1)
+			linkAx(end+1) = subplotTmp(rowSubP,colSubP,1);
 				imagesc(output1)
 				% colormap(gca,[gray(sum(valid==0));customColormap([],'nPoints',round(sum(valid==1)/2))])
 				% colormap(gca,[gray(sum(valid==0));jet(sum(valid==1))])
-				colormap(gca,[gray(sum(valid==0))/2;parula(sum(valid==1))])
+				grayColors = gray(sum(valid==0)*2);
+				colormap(gca,[0 0 0;grayColors((sum(valid==0)+1):end,:)/2;parula(sum(valid==1))])
 				axis equal tight; box off;
 				title('Cellmap | colored = cells | gray = non-cells')
 
-			linkAx(end+1) = subplotTmp(rowSubP,colSubP,2)
-				imagesc(nanmax(inputImages,[],3))
+			linkAx(end+1) = subplotTmp(rowSubP,colSubP,2);
+				imagesc(imadjust(nanmax(inputImages,[],3)))
+				% imagesc(nanmax(inputImages,[],3))
 				colormap(gca,'parula')
+				% colormap(gca,[0 0 0;parula(250)])
 				% s2Pos = get(gca,'position');
 				% cbh = colorbar(gca,'Location','eastoutside','Position',[s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)]);
 				% ylabel(cbh,'Raw extraction image value','FontSize',15);
@@ -204,8 +217,9 @@ function obj = viewObjmaps(obj,varargin)
 
 			% Threshold
 			% subplotTmp(rowSubP,colSubP,3)
-				inputImagesThres = inputImages(:,:,logical(valid));
-				[thresholdedImages boundaryIndices] = thresholdImages(inputImagesThres,'binary',1,'getBoundaryIndex',1,'threshold',userThreshold,'imageFilter','median');
+				% inputImagesThres = inputImages(:,:,logical(valid));
+				% boundaryIndices = boundaryIndices(logical(valid));
+				[thresholdedImages, boundaryIndices] = thresholdImages(inputImages(:,:,logical(valid)),'binary',1,'getBoundaryIndex',1,'threshold',userThreshold,'imageFilter','median');
 				cellmapHere = zeros(size(output1));
 				% cellmapHere([boundaryIndices{:}]) = 1;
 				% imagesc(cellmapHere)
@@ -213,7 +227,8 @@ function obj = viewObjmaps(obj,varargin)
 				rMap = cellmapHere;
 				gMap = cellmapHere;
 				bMap = cellmapHere;
-				nCells = size(inputImagesThres,3);
+				nCells = size(thresholdedImages,3);
+				% nCells = sum(valid);
 				for cellNo = 1:nCells
 					rMap([boundaryIndices{cellNo}]) = rand(1);
 					gMap([boundaryIndices{cellNo}]) = rand(1);
@@ -253,7 +268,10 @@ function obj = viewObjmaps(obj,varargin)
 				axis equal tight; box off;
 				title('Cellmap | All extraction outputs')
 
-			suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType])
+			% suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType])
+
+			titleStr = sprintf('%d/%d: %s | %s | %s\n %d cells, %d total | Zoom enabled',thisFileNumIdx,nFilesToAnalyze,obj.folderBaseDisplayStr{obj.fileNum},strrep(foldername,'_','\_'),validType,sum(valid==1),length(valid));
+			suptitle(titleStr)
 
 				% s2Pos = get(gca,'position');
 				s2Pos = plotboxpos(gca);
@@ -267,43 +285,72 @@ function obj = viewObjmaps(obj,varargin)
 
 
 			% =======
+			plotSets = [2000 5000];
 			% Plot cellmaps with all cells individually numbered
-			[~,~] = openFigure(2000+thisFileNumIdx, '');
-				clf
-				% createObjMap(groupImagesByColor(inputImages,rand([size(inputImages,3) 1])+nanmax(inputImages(:)),'thresholdImages',0))
-				cellCoords = obj.objLocations{obj.fileNum}.(obj.signalExtractionMethod);
-				cellCoords = cellCoords(valid,:);
-				% cellCoords = cellCoords(validRegion,:);
+			for plotSetNo = plotSets
+				[~,~] = openFigure(plotSetNo+thisFileNumIdx, '');
+					clf
+					% createObjMap(groupImagesByColor(inputImages,rand([size(inputImages,3) 1])+nanmax(inputImages(:)),'thresholdImages',0))
+					cellCoords = obj.objLocations{obj.fileNum}.(obj.signalExtractionMethod);
+					if plotSetNo==2000
+						cellCoords = cellCoords(valid,:);
+						inputImagesTmp = inputImages(:,:,logical(valid));
+					else
+						cellCoords = cellCoords(:,:);
+						inputImagesTmp = inputImages(:,:,:);
+					end
+					% cellCoords = cellCoords(validRegion,:);
 
-				inputImagesTmp = inputImages(:,:,logical(valid));
-				try
-					output1 = createObjMap(groupImagesByColor(inputImagesTmp,rand([size(inputImagesTmp,3) 1]),'thresholdImages',1));
-				catch
-					output1 = createObjMap(groupImagesByColor(inputImages(:,:,logical(valid)),rand([size(inputImages,3) 1]),'thresholdImages',1));
-				end
-				% imagesc(max(inputImages(:,:,logical(valid)),[],3))
-				imagesc(output1)
-				% colormap([0 0 0;customColormap([])])
+					try
+						output1 = createObjMap(groupImagesByColor(inputImagesTmp,rand([size(inputImagesTmp,3) 1]),'thresholdImages',1));
+					catch err
+						display(repmat('@',1,7))
+						disp(getReport(err,'extended','hyperlinks','on'));
+						display(repmat('@',1,7))
+						output1 = createObjMap(groupImagesByColor(inputImages(:,:,logical(valid)),rand([size(inputImages,3) 1]),'thresholdImages',1));
+					end
+					% imagesc(max(inputImages(:,:,logical(valid)),[],3))
+					imagesc(output1)
+					% colormap([0 0 0;customColormap([])])
+					zoom on
+					colormap([0 0 0;customColormap({[1 0 0],[0 0 1]})])
+					axis equal tight
+					hold on
+					colorbar
+
+					for signalNo = 1:size(inputImagesTmp,3)
+						coordX = cellCoords(signalNo,1);
+						coordY = cellCoords(signalNo,2);
+						% plot(coordX,coordY,'w.','MarkerSize',5)
+						text(coordX,coordY,num2str(signalNo),'Color',[1 1 1],'HorizontalAlignment','center')
+
+					end
+					imgRowY = size(inputImagesTmp,1);
+					imgColX = size(inputImagesTmp,2);
+					scaleBarLengthPx = options.scaleBarLengthMicron/obj.MICRON_PER_PIXEL;
+					% [imgColX-scaleBarLengthPx-round(imgColX*0.05) imgRowY-round(imgRowY*0.05) scaleBarLengthPx 5]
+					% rectangle('Position',[imgColX-scaleBarLengthPx-imgColX*0.05 imgRowY-imgRowY*0.05 scaleBarLengthPx 5],'FaceColor',[1 1 1],'EdgeColor','none')
+					% annotation('line',[imgRow-50 imgRow-30]/imgRow,[20 20]/imgCol,'LineWidth',3,'Color',[1 1 1]);
+
+					suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType 10  'Zoom enabled.'])
+
+					titleStr = sprintf('%d/%d: %s | %s | %s\n %d cells, %d total | Zoom enabled',thisFileNumIdx,nFilesToAnalyze,obj.folderBaseDisplayStr{obj.fileNum},strrep(foldername,'_','\_'),validType,sum(valid==1),length(valid));
+					suptitle(titleStr)
+			end
+
+			% =======
+			% Plot cellmaps in a binary fashion to look at overlapping cells
+			[~,~] = openFigure(4000+thisFileNumIdx, '');
+				[thresholdedImages,~] = thresholdImages(inputImages,'binary',1,'getBoundaryIndex',0,'threshold',userThreshold,'imageFilter','none');
+				thisCellmap = sum(thresholdedImages,3);
+				imagesc(thisCellmap)
+				axis equal tight
 				zoom on
-				colormap([0 0 0;customColormap({[1 0 0],[0 0 1]})])
-				hold on
-				for signalNo = 1:size(inputImagesTmp,3)
-					coordX = cellCoords(signalNo,1);
-					coordY = cellCoords(signalNo,2);
-					% plot(coordX,coordY,'w.','MarkerSize',5)
-					text(coordX,coordY,num2str(signalNo),'Color',[1 1 1],'HorizontalAlignment','center')
-
-				end
-				imgRowY = size(inputImagesTmp,1);
-				imgColX = size(inputImagesTmp,2);
-				scaleBarLengthPx = options.scaleBarLengthMicron/obj.MICRON_PER_PIXEL;
-				% [imgColX-scaleBarLengthPx-round(imgColX*0.05) imgRowY-round(imgRowY*0.05) scaleBarLengthPx 5]
-				% rectangle('Position',[imgColX-scaleBarLengthPx-imgColX*0.05 imgRowY-imgRowY*0.05 scaleBarLengthPx 5],'FaceColor',[1 1 1],'EdgeColor','none')
-				% annotation('line',[imgRow-50 imgRow-30]/imgRow,[20 20]/imgCol,'LineWidth',3,'Color',[1 1 1]);
-
-				suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType 10  'Zoom enabled.'])
-
-				fprintf('%d/%d: %s | %s | %s\n %d cells, %d total | Zoom enabled',thisFileNumIdx,nFilesToAnalyze,obj.folderBaseDisplayStr{obj.fileNum},strrep(foldername,'_','\_'),sum(valid==1),length(valid),validType)
+				colormap([0 0 0;customColormap([])])
+				cbh = colorbar;
+				ylabel(cbh,'# cells at that pixel location','FontSize',10);
+				titleStr = sprintf('Cell overlap | %d/%d: %s | %s | %s\n %d cells, %d total | Zoom enabled',thisFileNumIdx,nFilesToAnalyze,obj.folderBaseDisplayStr{obj.fileNum},strrep(foldername,'_','\_'),validType,sum(valid==1),length(valid));
+				suptitle(titleStr)
 
 		catch err
 			display(repmat('@',1,7))
@@ -340,7 +387,7 @@ function obj = viewObjmaps(obj,varargin)
 			end
 			movieFrameProc = cast(movieFrameProc,class(rMap));
 
-			linkAx(end+1) = subplotTmp(rowSubP,colSubP,colSubP+1)
+			linkAx(end+1) = subplotTmp(rowSubP,colSubP,colSubP+1);
 				imagesc(nanmax(movieFrameProc,[],3))
 				axis equal tight; box off;
 				% colormap([0 0 0;obj.colormap])
@@ -363,7 +410,7 @@ function obj = viewObjmaps(obj,varargin)
 
 			rgbImg = cat(3,rMap,gMap,bMap);
 
-			linkAx(end+1) = subplotTmp(rowSubP,colSubP,colSubP+2)
+			linkAx(end+1) = subplotTmp(rowSubP,colSubP,colSubP+2);
 				imagesc(rgbImg)
 				axis equal tight; box off;
 				title('Movie | raw, no pre-processing with cellmap')
@@ -376,7 +423,9 @@ function resizeui(hObject,event,axHandle)
 	% disp('Check')
 	colorbar(axHandle,'off')
 	% s2Pos = get(axHandle,'position');
+	warning off
 	s2Pos = plotboxpos(axHandle);
+	warning on
 	% s2Pos
 	% [s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)]
 	cbh = colorbar(axHandle,'Location','eastoutside','Position',[s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)]);

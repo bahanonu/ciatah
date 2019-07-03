@@ -73,7 +73,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			'Input HDF5 dataset name',...
 			'Use default options (1 = yes, 0 = no)',...
 			'Runtime Matlab profiler (1 = yes, 0 = no)',...
-			'Regular expression for alternative movie (e.g. non-downsampled)',...
+			'Regular expression for alternative movie (e.g. non-downsampled, LEAVE blank)',...
 		},...
 		'Cell extraction parameters for all algorithms',1,...
 		{...
@@ -84,7 +84,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			obj.inputDatasetName,...
 			'0',...
 			'0',...
-			obj.fileFilterRegexpAlt,...
+			obj.fileFilterRegexpAltCellExtraction,...
 		}...
 	);setNo = 1;
 	obj.fileFilterRegexp = movieSettings{setNo};setNo = setNo+1;
@@ -94,7 +94,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	obj.inputDatasetName = movieSettings{setNo};setNo = setNo+1;
 	options.defaultOptions = str2num(movieSettings{setNo});setNo = setNo+1;
 	options.profiler = str2num(movieSettings{setNo});setNo = setNo+1;
-	obj.fileFilterRegexpAlt = movieSettings{setNo};setNo = setNo+1;
+	obj.fileFilterRegexpAltCellExtraction = movieSettings{setNo};setNo = setNo+1;
 
 	% get files to process
 	[fileIdxArray idNumIdxArray nFilesToAnalyze nFiles] = obj.getAnalysisSubsetsToAnalyze();
@@ -209,7 +209,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			display([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ' (' num2str(fileNum) '/' num2str(nFiles) '): ' obj.fileIDNameArray{obj.fileNum}]);
 
 			fileFilterRegexp = obj.fileFilterRegexp;
-			fileFilterRegexpAlt = obj.fileFilterRegexpAlt;
+			fileFilterRegexpAltCellExtraction = obj.fileFilterRegexpAltCellExtraction;
 			if iscell(signalExtractionMethod)
 				nSignalExtractMethods = length(signalExtractionMethod);
 			else
@@ -400,8 +400,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				'sqSizeX',...
 				'sqSizeY',...
 				'numSignalsDetected',...
-                'versionAlgorithm',...
-                'selectRandomFrames'})
+				'versionAlgorithm',...
+				'selectRandomFrames'})
 			% runtimeTable.runtime_seconds = toc(startTime);
 
 			addRow = size(runtimeTable,1)+1;
@@ -426,13 +426,13 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		writetable(runtimeTable,runtimeTablePath,'FileType','text','Delimiter',',');
 		parametersToAdd = {'minIters','maxIters','maxSqSize','maxSqSize','maxDeltaParams','gridSpacing','gridWidth','initMethod','sqSizeX','sqSizeY','numSignalsDetected','selectRandomFrames'};
 		if strcmp(algorithm,'cellmax_v3')
-            try
-                runtimeTable.parallel(addRow,1) = emOptions.useParallel;
-            catch
-                runtimeTable.parallel(addRow,1) = NaN;
-            end
+			try
+				runtimeTable.parallel(addRow,1) = emOptions.useParallel;
+			catch
+				runtimeTable.parallel(addRow,1) = NaN;
+			end
 			runtimeTable.workers(addRow,1) = 7;
-            fn_structdisp(emOptions);
+			fn_structdisp(emOptions);
 			for parameterNo = 1:length(parametersToAdd)
 				parameterStr = parametersToAdd{parameterNo};
 				% check that parameter name exists
@@ -560,6 +560,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 							'CELLMax | loadPreviousChunks?',...
 							'CELLMax | saveIterMovie?',...
 							'CELLMax | sqOverlap?',...
+							'CELLMax | downsampleFactorTime?',...
+							'CELLMax | downsampleFactorSpace?',...
 						},...
 						dlgStr,1,...
 						{...
@@ -585,6 +587,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 							'0',...
 							'0',...
 							'16',...
+							'1',...
+							'1'...
 						}...
 					);setNo = 1;
 					options.CELLMax.readMovieChunks = str2num(movieSettings{setNo});setNo = setNo+1;
@@ -607,29 +611,39 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 					options.CELLMax.scaledPhiCorrThresh = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.CELLMax.runMovieImageCorrThreshold = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.CELLMax.movieImageCorrThreshold = str2num(movieSettings{setNo});setNo = setNo+1;
-
 					options.CELLMax.loadPreviousChunks = str2num(movieSettings{setNo});setNo = setNo+1;
-
 					options.CELLMax.saveIterMovie = str2num(movieSettings{setNo});setNo = setNo+1;
-
 					options.CELLMax.sqOverlap = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.CELLMax.downsampleFactorTime = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.CELLMax.downsampleFactorSpace = str2num(movieSettings{setNo});setNo = setNo+1;
 
 				case 'EXTRACT'
 					movieSettings = inputdlg({...
 							'EXTRACT | Use GPU (''gpu'') or CPU (''cpu'')?',...
 							'EXTRACT | avg_cell_radius (Avg. cell radius, also controls cell elimination)? Leave blank for GUI to estimate radius.',...
-							'EXTRACT | cellfind_min_snr (threshold on the max instantaneous per-pixel SNR in the movie for searching for cells)?'...
+							'EXTRACT | cellfind_min_snr (threshold on the max instantaneous per-pixel SNR in the movie for searching for cells)?',...
+							'EXTRACT | preprocess? (1 = yes, 0 = no)',...
+							'EXTRACT | num_partitions? Int: number of partitions in x and y.',...
+							'EXTRACT | compact_output? (1 = yes, 0 = no)'...
 						},...
 						dlgStr,1,...
 						{...
-							'gpu',...
+							'cpu',...
 							'',...
 							'2'...
+							'0',...
+							'1',...
+							'0',...
 						}...
 					);setNo = 1;
 					options.EXTRACT.gpuOrCPU = movieSettings{setNo};setNo = setNo+1;
 					options.EXTRACT.avg_cell_radius = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.EXTRACT.cellfind_min_snr = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.EXTRACT.preprocess = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.EXTRACT.num_partitions_x = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.EXTRACT.num_partitions_y = options.EXTRACT.num_partitions_x;
+					options.EXTRACT.compact_output = str2num(movieSettings{setNo});setNo = setNo+1;
+
 				case 'CNMF'
 					movieSettings = inputdlg({...
 							'CNMF | Use original ("original") or most recent ("current" or "current_patch" for patch version) CNMF version?'...
@@ -730,28 +744,28 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 						if options.CNMFE.openEditor==1
 							% Use default settings
 							originalSettings = ['settings' filesep 'cnmfeSettings.m'];
-	                    else
-	                    	% Ask user to input their own custom settings
-	                    	display('Dialog box: Select CNMF-E settings file to load.')
-	                    	[filePath,folderPath,~] = uigetfile([pwd filesep '*.*'],'Select settings file to load.');
-	                    	% [~,fileNameH,extH] = fileparts([folderPath filePath]);
-	                    	% fileNameH = strrep(fileNameH,'cnmfeSettings_','');
-	                    	originalSettings = [folderPath filesep filePath];
-	                    end
+						else
+							% Ask user to input their own custom settings
+							display('Dialog box: Select CNMF-E settings file to load.')
+							[filePath,folderPath,~] = uigetfile([pwd filesep '*.*'],'Select settings file to load.');
+							% [~,fileNameH,extH] = fileparts([folderPath filePath]);
+							% fileNameH = strrep(fileNameH,'cnmfeSettings_','');
+							originalSettings = [folderPath filesep filePath];
+						end
 
-	                    [~,foldername,~] = fileparts(obj.inputFolders{obj.fileNum});
-	                    timeStr = datestr(now,'yyyymmdd_HHMMSS','local');
-	                    newFile = ['cnmfeSettings_' timeStr '_' foldername];
+						[~,foldername,~] = fileparts(obj.inputFolders{obj.fileNum});
+						timeStr = datestr(now,'yyyymmdd_HHMMSS','local');
+						newFile = ['cnmfeSettings_' timeStr '_' foldername];
 
-	                    % Truncate to deal with MATLAB limit
+						% Truncate to deal with MATLAB limit
 						if (length(newFile)+2)>namelengthmax
-                            fprintf('Truncating filename to comply with maximum file length limits in MATLAB.\nOld: "%s"\nNew: "%s"\n\n',newFile,newFile(1:namelengthmax-2));
+							fprintf('Truncating filename to comply with maximum file length limits in MATLAB.\nOld: "%s"\nNew: "%s"\n\n',newFile,newFile(1:namelengthmax-2));
 							newFile = newFile(1:namelengthmax-2);
-                        end
+						end
 
-                        newSettings = ['private' filesep 'settings' filesep newFile '.m'];
+						newSettings = ['private' filesep 'settings' filesep newFile '.m'];
 
-                        fprintf('Copying "%s" to\n"%s"\n\n',originalSettings,newSettings);
+						fprintf('Copying "%s" to\n"%s"\n\n',originalSettings,newSettings);
 						copyfile(originalSettings,newSettings);
 
 						% Add a note about original filename
@@ -762,7 +776,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 						fileText{1}{end+1} = ['% From original settings file: ' originalSettings];
 						fileText{1} = fileText{1}([end,1:end-1]);
 						for rowNo = 1:length(fileText{1})
-						    fprintf(fileID,'%s\n',fileText{1}{rowNo});
+							fprintf(fileID,'%s\n',fileText{1}{rowNo});
 						end
 						fclose(fileID);
 
@@ -1340,18 +1354,18 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				imagesc(squeeze(maxProj));
 				colormap gray;
 				% imellipse has different behavior depending on axis in 2015b and 2017a
-        		% if verLessThan('matlab','9.0')
-        		% 	axis equal;
-        		% else
-        		% 	axis equal tight
-        		% end
-        		ax = gca;
-        		ax.PlotBoxAspectRatio = [1 1 0.5];
-        		mymenu = uimenu('Parent',mainFig,'Label','Hot Keys');
-        		uimenu('Parent',mymenu,'Label','Zoom','Accelerator','z','Callback',@(src,evt)zoom(mainFig,'on'));
-        		uimenu('Parent',mymenu,'Label','Zoom','Accelerator','x','Callback',@(src,evt)zoom(mainFig,'off'));
-        		box off;
-        		title(sprintf('Select (green) a region covering one cell (best to select one near another cell).\nDouble-click region to continue.\nEnable zoom with crtl+Z = zoom on, ctrl+x = zoom off. Turn off to re-enable cell size selection'))
+				% if verLessThan('matlab','9.0')
+				% 	axis equal;
+				% else
+				% 	axis equal tight
+				% end
+				ax = gca;
+				ax.PlotBoxAspectRatio = [1 1 0.5];
+				mymenu = uimenu('Parent',mainFig,'Label','Hot Keys');
+				uimenu('Parent',mymenu,'Label','Zoom','Accelerator','z','Callback',@(src,evt)zoom(mainFig,'on'));
+				uimenu('Parent',mymenu,'Label','Zoom','Accelerator','x','Callback',@(src,evt)zoom(mainFig,'off'));
+				box off;
+				title(sprintf('Select (green) a region covering one cell (best to select one near another cell).\nDouble-click region to continue.\nEnable zoom with crtl+Z = zoom on, ctrl+x = zoom off. Turn off to re-enable cell size selection'))
 
 				% open up first picture
 				movieDims = size(DFOF);

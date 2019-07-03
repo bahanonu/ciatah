@@ -86,14 +86,14 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 
 	%========================
 	% Only implement in Matlab 2017a and above
-    if ~verLessThan('matlab', '9.2')
-        D = parallel.pool.DataQueue;
-        afterEach(D, @nUpdateParforProgress);
-        p = 1;
-        N = size(inputMovie,3);
-        nInterval = 25;
-        options_waitbarOn = options.waitbarOn;
-    end
+	if ~verLessThan('matlab', '9.2')
+		D = parallel.pool.DataQueue;
+		afterEach(D, @nUpdateParforProgress);
+		p = 1;
+		N = size(inputMovie,3);
+		nInterval = 25;
+		options_waitbarOn = options.waitbarOn;
+	end
 	%========================
 	switch options.normalizationType
 		case 'medianFilter'
@@ -139,15 +139,15 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 			nFrames = size(inputMovie,3);
 			% reverseStr = '';
 			for frameNo2 = 1:nFrames
-			    thisFrame = squeeze(inputMovie(:,:,frameNo2));
+				thisFrame = squeeze(inputMovie(:,:,frameNo2));
 				maxVec = nanmax(thisFrame(:));
 				minVec = nanmin(thisFrame(:));
 				% meanVec = nanmean(thisFrame(:));
 				inputMovie(:,:,frameNo2) = (thisFrame-minVec)./(maxVec-minVec);
 				if ~verLessThan('matlab', '9.2')
-				    send(D, frameNo2); % Update
+					send(D, frameNo2); % Update
 				end
-			    % reverseStr = cmdWaitbar(frameNo2,nFrames,reverseStr,'inputStr','normalizing movie','waitbarOn',options.waitbarOn,'displayEvery',5);
+				% reverseStr = cmdWaitbar(frameNo2,nFrames,reverseStr,'inputStr','normalizing movie','waitbarOn',options.waitbarOn,'displayEvery',5);
 			end
 		otherwise
 			disp('Input correct option, returning movie...')
@@ -159,26 +159,26 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		inputMovie = squeeze(inputMovie(:,:,1));
 	end
 	function nUpdateParforProgress(~)
-        if ~verLessThan('matlab', '9.2')
-            p = p + 1;
-            if (mod(p,nInterval)==0||p==2||p==nFrames)&&options_waitbarOn==1
-                if p==nFrames
-                    fprintf('%d%%\n',round(p/nFrames*100))
-                else
-                    fprintf('%d%% | ',round(p/nFrames*100))
-                end
-                % cmdWaitbar(p,nSignals,'','inputStr','','waitbarOn',1);
-            end
-            % [p mod(p,nInterval)==0 (mod(p,nInterval)==0||p==nSignals)&&options_waitbarOn==1]
-        end
-    end
+		if ~verLessThan('matlab', '9.2')
+			p = p + 1;
+			if (mod(p,nInterval)==0||p==2||p==nFrames)&&options_waitbarOn==1
+				if p==nFrames
+					fprintf('%d%%\n',round(p/nFrames*100))
+				else
+					fprintf('%d%% | ',round(p/nFrames*100))
+				end
+				% cmdWaitbar(p,nSignals,'','inputStr','','waitbarOn',1);
+			end
+			% [p mod(p,nInterval)==0 (mod(p,nInterval)==0||p==nSignals)&&options_waitbarOn==1]
+		end
+	end
 	function mijiCheck()
 		if exist('Miji.m','file')==2
 			disp(['Miji located in: ' which('Miji.m')]);
 			% Miji is loaded, continue
 		else
 			pathToMiji = inputdlg('Enter path to Miji.m in Fiji (e.g. \Fiji.app\scripts):',...
-			             'Miji path', [1 100]);
+						 'Miji path', [1 100]);
 			pathToMiji = pathToMiji{1};
 			privateLoadBatchFxnsPath = 'private\privateLoadBatchFxns.m';
 			fid = fopen(privateLoadBatchFxnsPath,'at');
@@ -292,8 +292,8 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		% try [percent, progress] = parfor_progress(nFramesToNormalize);catch;end; dispStepSize = round(nFramesToNormalize/20); dispstat('','init');
 		medianFilterNeighborhoodSize = options.medianFilterNeighborhoodSize;
 		medianFilterPadding = options.medianFilterPadding;
-        maxFrame = options.maxFrame;
-        nFrames = nFramesToNormalize;
+		maxFrame = options.maxFrame;
+		nFrames = nFramesToNormalize;
 		parfor frame=1:nFramesToNormalize
 			% [percent progress] = parfor_progress;if mod(progress,dispStepSize) == 0;dispstat(sprintf('progress %0.1f %',percent));else;end
 			thisFrame = squeeze(inputMovie{frame});
@@ -306,7 +306,7 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 			% xx = 4;
 			% inputMovie{frame} = conv2(double(thisFrame), ones(xx)/xx^2, 'same');
 			if ~verLessThan('matlab', '9.2')
-			    send(D, frame); % Update
+				send(D, frame); % Update
 			end
 			% if mod(frame,round(maxFrame/10))==0
 				% fprintf ('%2.0f-',frame/options.maxFrame*100);drawnow
@@ -444,8 +444,8 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		nFramesToNormalize = options.maxFrame;
 		nFrames = nFramesToNormalize;
 		% try;[percent progress] = parfor_progress(nFramesToNormalize);catch;end; dispStepSize = round(nFramesToNormalize/20); dispstat('','init');
-        secondaryNormalizationType = options.secondaryNormalizationType;
-        maxFrame = options.maxFrame;
+		secondaryNormalizationType = options.secondaryNormalizationType;
+		maxFrame = options.maxFrame;
 		parfor frame = 1:nFramesToNormalize
 			% [percent progress] = parfor_progress;if mod(progress,dispStepSize) == 0;dispstat(sprintf('progress %0.1f %',percent));else;end
 			% thisFrame = squeeze(inputMovie(:,:,frame));
@@ -469,7 +469,7 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 			end
 
 			if ~verLessThan('matlab', '9.2')
-			    send(D, frame); % Update
+				send(D, frame); % Update
 			end
 
 			% if mod(frame,round(maxFrame/10))==0
@@ -520,7 +520,7 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		inputImageTest = cell([nFreqs 1]);
 		inputMovieDuplicate = cell([nFreqs 1]);
 		inputMovieDivide = cell([nFreqs 1]);
-        inputMovieDfof = cell([nFreqs 1]);
+		inputMovieDfof = cell([nFreqs 1]);
 		% size(inputImageTest)
 
 
@@ -660,9 +660,9 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 	end
 	function A_tr = transform_2(A, ssm_filter, asm_filter)
 
-	    A_tr = A - imfilter(A, ssm_filter, 'replicate');
+		A_tr = A - imfilter(A, ssm_filter, 'replicate');
 
-	    A_tr = imfilter(A_tr, asm_filter);
+		A_tr = imfilter(A_tr, asm_filter);
 
 	end
 	function subfxnMatlabFFTTemporal()
@@ -675,25 +675,25 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		inputMovieDims = size(inputMovie);
 
 		d1 = designfilt('lowpassiir','FilterOrder',12, ...
-		    'HalfPowerFrequency',0.10,'DesignMethod','butter');
+			'HalfPowerFrequency',0.10,'DesignMethod','butter');
 		% tt = filtfilt(d1,double(squeeze(g(72,60,:))));
 
 		width = inputMovieDims(1);
 		height = inputMovieDims(2);
-	 	[p,q] = meshgrid(1:width, 1:height);
-	 	idPairs = [p(:) q(:)];
-	 	% idPairs = unique(sort(idPairs,2),'rows');
-	 	% idPairs((idPairs(:,1)==idPairs(:,2)),:) = [];
+		[p,q] = meshgrid(1:width, 1:height);
+		idPairs = [p(:) q(:)];
+		% idPairs = unique(sort(idPairs,2),'rows');
+		% idPairs((idPairs(:,1)==idPairs(:,2)),:) = [];
 		nPairs = size(idPairs,1);
 		reverseStr = '';
 		inputMovie = single(inputMovie);
 		for idPairNum = 1:nPairs
 			widthNo = idPairs(idPairNum,1);
 			heightNo = idPairs(idPairNum,2);
-		    % inputMovie(widthNo,heightNo,:) = conv(squeeze(inputMovie(widthNo,heightNo,:)), gaussFilter, 'same');
-		    tmpLine = filtfilt(d1,double(squeeze(inputMovie(widthNo,heightNo,:))));
-		    inputMovie(widthNo,heightNo,:) = tmpLine;
-		    reverseStr = cmdWaitbar(idPairNum,nPairs,reverseStr,'inputStr','normalizing movie','waitbarOn',options.waitbarOn,'displayEvery',5);
+			% inputMovie(widthNo,heightNo,:) = conv(squeeze(inputMovie(widthNo,heightNo,:)), gaussFilter, 'same');
+			tmpLine = filtfilt(d1,double(squeeze(inputMovie(widthNo,heightNo,:))));
+			inputMovie(widthNo,heightNo,:) = tmpLine;
+			reverseStr = cmdWaitbar(idPairNum,nPairs,reverseStr,'inputStr','normalizing movie','waitbarOn',options.waitbarOn,'displayEvery',5);
 		end
 	end
 	function subfxnImfilterSmooth()
@@ -709,24 +709,24 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		nFrames = size(inputMovie,3);
 		% inputMovieFiltered = zeros(size(inputMovie),class(inputMovie));
 		reverseStr = '';
-        options_boundaryType = options.boundaryType;
+		options_boundaryType = options.boundaryType;
 
-        %Get dimension information about 3D movie matrix
-        % [inputMovieX, inputMovieY, inputMovieZ] = size(inputMovie);
-        % reshapeValue = size(inputMovie);
-        %Convert array to cell array, allows slicing (not contiguous memory block)
-        % inputMovie = squeeze(mat2cell(inputMovie,inputMovieX,inputMovieY,ones(1,inputMovieZ)));
+		%Get dimension information about 3D movie matrix
+		% [inputMovieX, inputMovieY, inputMovieZ] = size(inputMovie);
+		% reshapeValue = size(inputMovie);
+		%Convert array to cell array, allows slicing (not contiguous memory block)
+		% inputMovie = squeeze(mat2cell(inputMovie,inputMovieX,inputMovieY,ones(1,inputMovieZ)));
 
 		parfor frame=1:nFrames
-		    thisFrame = squeeze(inputMovie(:,:,frame));
-		    % thisFrame = inputMovie{frame};
-		    thisFrame(isnan(thisFrame))=nanmean(thisFrame(:));
-		    inputMovie(:,:,frame) = imfilter(thisFrame, movieFilter,options_boundaryType);
-		    % inputMovie{frame} = imfilter(thisFrame, movieFilter,options_boundaryType);
-		    % reverseStr = cmdWaitbar(frame,nFrames,reverseStr,'inputStr','imfilter normalizing movie','waitbarOn',options.waitbarOn,'displayEvery',5);
-		    if ~verLessThan('matlab', '9.2')
-		        send(D, frame); % Update
-		    end
+			thisFrame = squeeze(inputMovie(:,:,frame));
+			% thisFrame = inputMovie{frame};
+			thisFrame(isnan(thisFrame))=nanmean(thisFrame(:));
+			inputMovie(:,:,frame) = imfilter(thisFrame, movieFilter,options_boundaryType);
+			% inputMovie{frame} = imfilter(thisFrame, movieFilter,options_boundaryType);
+			% reverseStr = cmdWaitbar(frame,nFrames,reverseStr,'inputStr','imfilter normalizing movie','waitbarOn',options.waitbarOn,'displayEvery',5);
+			if ~verLessThan('matlab', '9.2')
+				send(D, frame); % Update
+			end
 		end
 		% inputMovie = cat(3,inputMovie{:});
 		% divide each frame by the filtered movie to remove 'background'
@@ -746,10 +746,10 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		inputMovieFiltered = zeros(size(inputMovie),class(inputMovie));
 		reverseStr = '';
 		for frame=1:nFrames
-		    thisFrame = squeeze(inputMovie(:,:,frame));
-		    thisFrame(isnan(thisFrame))=nanmean(thisFrame(:));
-		    inputMovieFiltered(:,:,frame) = imfilter(thisFrame, movieFilter,options.boundaryType);
-		    reverseStr = cmdWaitbar(frame,nFrames,reverseStr,'inputStr','normalizing movie','waitbarOn',options.waitbarOn,'displayEvery',5);
+			thisFrame = squeeze(inputMovie(:,:,frame));
+			thisFrame(isnan(thisFrame))=nanmean(thisFrame(:));
+			inputMovieFiltered(:,:,frame) = imfilter(thisFrame, movieFilter,options.boundaryType);
+			reverseStr = cmdWaitbar(frame,nFrames,reverseStr,'inputStr','normalizing movie','waitbarOn',options.waitbarOn,'displayEvery',5);
 		end
 		% divide each frame by the filtered movie to remove 'background'
 		inputMovie = bsxfun(@ldivide,inputMovieFiltered,inputMovie);

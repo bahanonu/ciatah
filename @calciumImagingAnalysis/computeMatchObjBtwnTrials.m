@@ -49,11 +49,11 @@ function obj = computeMatchObjBtwnTrials(obj)
 		userDefaults);
 
 	% options.frameList = [1:500];
-    nCorrections = str2num(usrIdxChoice{1});
-    maxDistance = str2num(usrIdxChoice{2});
-    imageThreshold = str2num(usrIdxChoice{3});
-    trialToAlignUserOption = str2num(usrIdxChoice{4});
-    RegisTypeFinal = str2num(usrIdxChoice{5});
+	nCorrections = str2num(usrIdxChoice{1});
+	maxDistance = str2num(usrIdxChoice{2});
+	imageThreshold = str2num(usrIdxChoice{3});
+	trialToAlignUserOption = str2num(usrIdxChoice{4});
+	RegisTypeFinal = str2num(usrIdxChoice{5});
 
 	for thisSubjectStr=subjectList
 		try

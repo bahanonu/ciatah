@@ -254,7 +254,7 @@ function [clockTimes] = subfxn_filterSyncSpikes(clockTimes,clockTimesOriginal,fi
 		% check that t - 1 state is 1
 		digitalStateFilt = digitalState==1;
 		% filter out spikes past main clock times
-        spikeFilter1(spikeFilter1>length(digitalStateFilt)) = [];
+		spikeFilter1(spikeFilter1>length(digitalStateFilt)) = [];
 		digitalStateFilt = digitalStateFilt(spikeFilter1-1);
 		spikeFilter1 = spikeFilter1(digitalStateFilt);
 

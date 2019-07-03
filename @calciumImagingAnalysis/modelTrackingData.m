@@ -150,14 +150,14 @@ function obj = modelTrackingData(obj)
 				framesPerSecond = str2num(trackingSettings{8});
 
 				fileList = getFileList(trackingDir,fileRegExp);
-                nFiles = length(fileList);
-                for fileNo = 1:nFiles
-                    thisFile = fileList{fileNo};
-                    [outputTable] = readExternalTable(thisFile,'delimiter',',');
-                    figure(fileNo);plot(outputTable.XM_cm);title(thisFile);drawnow
-                    zoom on;
-                    viewHotKeyAcc(fileNo);
-                end
+				nFiles = length(fileList);
+				for fileNo = 1:nFiles
+					thisFile = fileList{fileNo};
+					[outputTable] = readExternalTable(thisFile,'delimiter',',');
+					figure(fileNo);plot(outputTable.XM_cm);title(thisFile);drawnow
+					zoom on;
+					viewHotKeyAcc(fileNo);
+				end
 			case 'saveTrackingDataSummary'
 				trackingSettings = inputdlg({...
 							'loading parent directory',...
@@ -186,9 +186,9 @@ function obj = modelTrackingData(obj)
 				%     'GroupingVariables',{'date','subject','assay','file','filePath','binGroupAll'},...
 				%     'OutputVariableName','distance_traveled');
 				B = rowfun(func,trackingTableFilteredCell,...
-				    'InputVariables',{'velocity_cm'},...
-				    'GroupingVariables',{'date','subject','assay','file','filePath'},...
-				    'OutputVariableName','distance_traveled');
+					'InputVariables',{'velocity_cm'},...
+					'GroupingVariables',{'date','subject','assay','file','filePath'},...
+					'OutputVariableName','distance_traveled');
 				savePath = [obj.dataSavePath filesep obj.protocol{1} '_trackingSummary.csv'];
 				display(savePath)
 				writetable(B,savePath,'FileType','text','Delimiter',',');
@@ -244,10 +244,10 @@ function obj = modelTrackingData(obj)
 				uniquefileDates = unique(fileDates)
 				uniquefileSubjects = unique(fileSubjects);
 				uniquefileAssays = unique(fileAssays);
-			 	[p,q,r] = meshgrid(1:length(uniquefileDates), 1:length(uniquefileSubjects), 1:length(uniquefileAssays));
-			 	idPairs = [p(:) q(:) r(:)];
-			 	% idPairs = unique(sort(idPairs,2),'rows');
-			 	% idPairs((idPairs(:,1)==idPairs(:,2)),:) = [];
+				[p,q,r] = meshgrid(1:length(uniquefileDates), 1:length(uniquefileSubjects), 1:length(uniquefileAssays));
+				idPairs = [p(:) q(:) r(:)];
+				% idPairs = unique(sort(idPairs,2),'rows');
+				% idPairs((idPairs(:,1)==idPairs(:,2)),:) = [];
 				nPairs = size(idPairs,1);
 				for idPairNum = 1:nPairs
 					try
@@ -285,29 +285,29 @@ function obj = modelTrackingData(obj)
 						obj.continuousStimulusTimeSeq = {[-5:5],[-5:5],[-5:5],[-5:5],[-5:5]};
 
 						if ~isempty(obj.continuousStimulusTable)&~strcmp(class(obj.continuousStimulusTable),'table')
-					        obj.delimiter = ',';
-					        obj.modelReadTable('table','continuousStimulusTable','addFileInfoToTable',1);
-					        obj.delimiter = ',';
-					        obj.modelTableToStimArray(...
-					        	'table','continuousStimulusTable',...
-					        	'tableArray','continuousStimulusArray',...
-					        	'nameArray','continuousStimulusNameArray',...
-					        	'idArray','continuousStimulusIdArray',...
-					        	'valueName',obj.stimulusTableValueName,...
-					        	'frameName',obj.stimulusTableFrameName,...
-					        	'trialName',obj.stimulusTableSessionName,...
-					        	'grabStimulusColumnFromTable',1,...
-					        	'disableMissingFilesOutput',1,...
-					        	'filterSpecificObjProperty',filterSpecificObjProperty,...
-					        	'specificFolder',folderIdx);
-					    end
+							obj.delimiter = ',';
+							obj.modelReadTable('table','continuousStimulusTable','addFileInfoToTable',1);
+							obj.delimiter = ',';
+							obj.modelTableToStimArray(...
+								'table','continuousStimulusTable',...
+								'tableArray','continuousStimulusArray',...
+								'nameArray','continuousStimulusNameArray',...
+								'idArray','continuousStimulusIdArray',...
+								'valueName',obj.stimulusTableValueName,...
+								'frameName',obj.stimulusTableFrameName,...
+								'trialName',obj.stimulusTableSessionName,...
+								'grabStimulusColumnFromTable',1,...
+								'disableMissingFilesOutput',1,...
+								'filterSpecificObjProperty',filterSpecificObjProperty,...
+								'specificFolder',folderIdx);
+						end
 					catch err
-				        display(repmat('@',1,7))
-				        disp(getReport(err,'extended','hyperlinks','on'));
-				        display(repmat('@',1,7))
-				    end
+						display(repmat('@',1,7))
+						disp(getReport(err,'extended','hyperlinks','on'));
+						display(repmat('@',1,7))
+					end
 				end
-			    return
+				return
 			case 'detectTurns'
 				% ask user for number of regions to look for turns in
 
@@ -322,8 +322,8 @@ function obj = modelTrackingData(obj)
 				% grab a frame from the video corresponding to the turn point
 
 
-		   	otherwise
-		   		% body
+			otherwise
+				% body
 		end
 	catch err
 		display(repmat('@',1,7))

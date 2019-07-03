@@ -46,6 +46,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 		% 2019.05.15 [16:17:42] - Added asynchronous loading of next cells when readMovieChunks = 0 and preComputeImageCutMovies = 0 to improve performance. Loads options.nSignalsLoadAsync number of cells in advance.
 		% 2019.05.22 [22:16:44] - Changes (e.g. move colormap, caxis, etc. calls around) to reduce slow reduction in performance as more cells are chosen.
 		% 2019.06.10 [10:24:54] - Updates to async memory handling to reduce RAM usage.
+		% 2019.06.14/2019.06.15 [22:17:21] - Separate legend and keyboard shortcuts into different window, various GUI improvements.
 
 	% TODO
 		% DONE: allow option to mark rest as bad signals
@@ -150,6 +151,10 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 	options.backgroundNegative = [166,166,244]/255;
 	% type of colormap to use
 	options.colormap = customColormap([],'nPoints',256);
+	% colormap indx
+	options.colormapIdx = 1;
+	% list of different colormaps
+	options.colormapColorList = {'gray','jet','hot','hsv','copper'};
 	% For the secondary zoomed cellmap, pixels to crop around
 	options.cellmapZoomPx = 40;
 	% Binary: 1 = obj outline in signal cut movies, 0 = no outlines
@@ -171,6 +176,10 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 	options.showImageCorrWithCharInputMovie = 0;
 	% Binary: 1 = run tic-toc check on timing in signal loop, 0 =
 	options.signalLoopTicTocCheck = 0;
+	% Binary: 1 = make x and y axis equal for cell map and movies
+	options.axisEqual = 1;
+	% Int: minimum number of events a signal needs to have else will add pseudo peaks
+	options.minEventsAddPeaks = 4;
 	% get options
 	options = getOptions(options,varargin);
 	% unpack options into current workspace
@@ -183,7 +192,45 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 	display(options)
 	disp(['inputImages size: ' num2str(size(inputImages))])
 	disp(['inputSignals size: ' num2str(size(inputSignals))])
+
+	% ==========================================
+	% COLORMAP SETUP
+	colorbarsOn = 0;
+	% clc
+	% add custom colormap
+	t = [255, 0, 0]./255;
+	color1 = [1 1 1];
+	color2 = [0 0 1];
+	% color1 = [0 0 0];
+	R = [linspace(color1(1),color2(1),50) linspace(color2(1),t(1),50)];
+	G = [linspace(color1(2),color2(2),50) linspace(color2(2),t(2),50)];
+	B = [linspace(color1(3),color2(3),50) linspace(color2(3),t(3),50)];
+	redWhiteMap = [R', G', B'];
+	[outputColormap2] = customColormap({[0 0 1],[1 1 1],[0.5 0 0],[1 0 0]});
+	outputColormap3 = diverging_map([0:0.01:1],[0 0 0.7],[0.7 0 0]);
+	outputColormap4 = customColormap({[0 0 0.7],[1 1 1],[0.7 0 0]});
+	if strcmp(options.colormap,'whiteRed')
+		% outputColormap2 = customColormap([]);
+		outputColormap = diverging_map([0:0.01:1],[0 0 1],[1 0 0]);
+		options.colormap = outputColormap;
+		% options.colormapIdx = 0;
+	end
+	% grayRed = customColormap({[0 0 0],[0.5 0.5 0.5],[1 1 1],[0.7 0.4 0.4],[0.7 0.3 0.3],[0.7 0.2 0.2],[0.7 0.1 0.1],[0.7 0 0],[1 0 0]});
+	grayRed = customColormap({[0 0 0],[0.5 0.5 0.5],[1 1 1],[0.7 0.2 0.2],[1 0 0]});
+	options.colormapColorList = [...
+		customColormap([],'nPoints',256),...
+		outputColormap2,...
+		{'gray'},...
+		redWhiteMap,...
+		grayRed,...
+		options.colormap,...
+		outputColormap4,...
+		outputColormap3,...
+		options.colormapColorList];
 	%% ============================
+	instructionStr = subfxnCreateLegend();
+	%% ============================
+
 	disp(repmat('=',1,21))
 	% pre-open all needed figures
 	for figNoFake = [1996 1997 1776 1777 1778 1779 42 1]
@@ -323,7 +370,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 	% add max peak for those signals that don't otherwise have any
 	% peaksNoneIdx = sum(signalPeaks,2)>0;
 	% peaksNoneIdx = find(~nPeaksAll);
-	minimumEvents = 4;
+	minimumEvents = options.minEventsAddPeaks;
 	% figure(223123)
 	% plot(cellfun(@length,signalPeakIdx))
 	peaksNoneIdx = cellfun(@length,signalPeakIdx)>minimumEvents;
@@ -488,7 +535,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 	disp(['# signals: ' num2str(nSignals)]);
 	% valid = ones(1,size(inputImages,1))*-1;
 
-	choices = chooseSignals(options,1:nSignals, inputImages,inputSignals,objMap, valid, inputStr,tmpDir,sessionID,signalPeakIdx,signalSnr,inputImagesThres,inputImageSizes,peakOutputStat,ROItraces,imgStats,inputSignalSignal,inputSignalNoise,inputImagesBoundaryIndices,signalPeakIdxOriginal,signalPeaksOriginal);
+	choices = chooseSignals(options,1:nSignals, inputImages,inputSignals,objMap, valid, inputStr,tmpDir,sessionID,signalPeakIdx,signalSnr,inputImagesThres,inputImageSizes,peakOutputStat,ROItraces,imgStats,inputSignalSignal,inputSignalNoise,inputImagesBoundaryIndices,signalPeakIdxOriginal,signalPeaksOriginal,instructionStr);
 	% assume all skips were good ICs that user forgot to enter
 	validChoices = choices;
 	% validChoices(find(validChoices==-1))=1;
@@ -573,7 +620,7 @@ function plotSignalStatistics(inputSignals,inputImageSizes,inputStr,pointColor, 
 	end
 	warning on;
 end
-function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,objMap, valid, inputStr,tmpDir,sessionID,signalPeakIdx,signalSnr,inputImagesThres,inputImageSizes,peakOutputStat,ROItraces,imgStats,inputSignalSignal,inputSignalNoise,inputImagesBoundaryIndices,signalPeakIdxOriginal,signalPeaksOriginal)
+function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,objMap, valid, inputStr,tmpDir,sessionID,signalPeakIdx,signalSnr,inputImagesThres,inputImageSizes,peakOutputStat,ROItraces,imgStats,inputSignalSignal,inputSignalNoise,inputImagesBoundaryIndices,signalPeakIdxOriginal,signalPeaksOriginal,instructionStr)
 	% manually decide which signals are good or bad, pre-computed values input to speed up movement through signals
 
 	warning('off','all')
@@ -582,6 +629,9 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 	if ~exist(tmpDir,'file')
 		mkdir(tmpDir);
 	end
+
+	subplotTmp = @(x,y,z) subaxis(x,y,z, 'Spacing', 0.07, 'Padding', 0, 'MarginTop', 0.05,'MarginBottom', 0.05,'MarginLeft', 0.03,'MarginRight', 0.07);
+	% subplotTmp = @(x,y,z) subplot(x,y,z);
 
 	% mainFig = openFigure(1,'full');
 	mainFig = figure(1);
@@ -634,48 +684,14 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 	% instructionStr =  ['up/down:good/bad | left/right: forward/back | m:(montage peak images) | c:(compare signal to movie) |',10,' f:finished | g:(goto signal) | s:(set remaining signals to bad) | signals are assumed good',10,10,10];
 	% instructionStr =  ['controls',10,10,'up/down:good/bad',10,'left/right: forward/back',10,'m: peak images',10,'c: movie signal',10,'f:finished',10,'g: goto signal',10,'s: remaining bad',10,'signals assumed good'];
 	% sepStrNum = ' | ';
-	sepStrNum = 10;
-	instructionStr =  [...
-	'===keyboard shortcuts===',sepStrNum,...
-	'up/down | good/bad',sepStrNum,...
-	'left/right | forward/back',sepStrNum,...
-	'm | peak images',sepStrNum,...
-	'i | current cell image',sepStrNum,...
-	'c | movie signal',sepStrNum,...
-	'x | movie signal array',sepStrNum,...
-	'g | goto signal',sepStrNum,...
-	's | set remaining bad',sepStrNum,...
-	'f | finished/save',sepStrNum,...
-	'q | change movie min/max',sepStrNum,...
-	'w | change trace min/max',sepStrNum,...
-	'r | processed traces',sepStrNum,...
-	'e | change fps',sepStrNum,...
-	't | neighbor compare',sepStrNum,sepStrNum,...
-	'===auto classify===',sepStrNum,...
-	'Eccentricity>0.4',sepStrNum,...
-	'imageSizes>10,<100',sepStrNum,...
-	'Perimeter<50,>5',sepStrNum,...
-	'EquivDiameter>3,<30',sepStrNum,...
-	'signalSnr>1.45',sepStrNum,...
-	'slopeRatio>0.02',sepStrNum,sepStrNum,...
-	'===cell map legend===',sepStrNum,...
-	'green = good',sepStrNum,...
-	'red = bad',sepStrNum,...
-	'gray = undecided',sepStrNum,...
-	'blue = current',sepStrNum];
-	% 'Solidity>0.8',10,...
-	suptitleHandle = suptitle(instructionStr);
 
-	set(suptitleHandle,'FontSize',10,'FontWeight','normal');
-	set(suptitleHandle, 'horizontalAlignment', 'left');
-	set(suptitleHandle, 'units', 'normalized');
-	h1 = get(suptitleHandle, 'position');
-	% ha2 = subplot(subplotY,subplotX,inputMoviePlotLoc);
-	% h2 = get(ha2, 'position');
-	set(suptitleHandle, 'position', [0.007 -0.3 h1(3)]);
+	% instructionStr = subfxnCreateLegend();
+
+	figure(mainFig);
 
 	% plot the cell map to provide context
-	subplot(subplotY,subplotX,objMapPlotLoc);
+	% subplot(subplotY,subplotX,objMapPlotLoc);
+	subplotTmp(subplotY,subplotX,objMapPlotLoc);
 	imagesc(objMap); axis off;
 	colormap gray;
 	title(['objMap' inputStr]);hold on;
@@ -833,10 +849,12 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 		directionOfNextChoice=0;
 		thisImage = squeeze(inputImages(:,:,i));
 		thisTrace = inputSignals(i,:);
+		testpeaks = signalPeakIdx{i};
 		cellIDStr = ['#' num2str(i) '/' num2str(nImages)];
 
 		if ~isempty(options.inputMovie)
-			inputMoviePlotLoc2Handle = subplot(subplotY,subplotX,inputMoviePlotLoc2);
+			% inputMoviePlotLoc2Handle = subplot(subplotY,subplotX,inputMoviePlotLoc2);
+			inputMoviePlotLoc2Handle = subplotTmp(subplotY,subplotX,inputMoviePlotLoc2);
 				% tic
 
 				if options.showImageCorrWithCharInputMovie==1
@@ -848,7 +866,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 
 				oldPlotHere = 1;
 				if oldPlotHere==1
-					testpeaks = signalPeakIdx{i};
+					% testpeaks = signalPeakIdx{i};
 					if(~isempty(testpeaks))
 						try
 							if i==1
@@ -945,10 +963,13 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 								caxis([-0.05 0.1]);
 							end
 							if i==1
-								s2Pos = get(gca,'position');
-								% s2Pos = plotboxpos(gca);
-								cbh = colorbar(gca,'Location','eastoutside','Position',[s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)]);
-								ylabel(cbh,'Fluorescence (e.g. \DeltaF/F or \DeltaF/\sigma)');
+								if options.axisEqual==1
+									axis equal tight;
+								end
+								% s2Pos = get(gca,'position');
+								s2Pos = plotboxpos(gca);
+								cbh = colorbar(gca,'Location','eastoutside','Position',[s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)],'FontSize',6);
+								ylabel(cbh,'Fluorescence (e.g. \DeltaF/F or \DeltaF/\sigma)','FontSize',8);
 							end
 						catch err
 
@@ -993,7 +1014,8 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 		else
 			% show the current image
 			% subplot(subplotY,subplotX,filterPlotLoc)
-			subplot(subplotY,subplotX,inputMoviePlotLoc2)
+			% subplot(subplotY,subplotX,inputMoviePlotLoc2)
+			subplotTmp(subplotY,subplotX,inputMoviePlotLoc2)
 				[thisImageCrop] = subfxnCropImages(thisImage);
 				imagesc(thisImageCrop);
 				% colormap gray
@@ -1029,7 +1051,8 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 			% goodImages2 = normalizeVector(goodImages,'normRange','zeroToOne');
 			% badImages2 = normalizeVector(badImages,'normRange','zeroToOne');
 		% end
-		subplot(subplotY,subplotX,objMapPlotLoc)
+		% subplot(subplotY,subplotX,objMapPlotLoc)
+		subplotTmp(subplotY,subplotX,objMapPlotLoc)
 			% currentImage = squeeze(inputImages(:,:,i));
 			currentImageThres = squeeze(inputImagesThres(:,:,i));
 			Comb(:,:,2) = ones(size(currentImageThres));
@@ -1126,16 +1149,21 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 
 			imagesc(CombTmp2)
 			box off;
+			if options.axisEqual==1
+				axis equal tight;
+			end
 			axisH = gca;
 			axisH.XRuler.Axle.LineStyle = 'none';
 			axisH.YRuler.Axle.LineStyle = 'none';
 			if isempty(options.inputStr)
 				% title(['signal map' 10 'green/red/gray/blue' 10 'good/bad/undecided/current'])
+				title([strrep(options.inputStr,'_','\_') 10 'Legend: green(good), red(bad), blue(current)'])
 			else
-				title(strrep(options.inputStr,'_','\_'))
+				title([strrep(options.inputStr,'_','\_') 10 'Legend: green(good), red(bad), blue(current)'])
 			end
 			% title(strrep(options.inputStr,'_','\_'), 'HandleVisibility' , 'off' )
-		subplot(subplotY,subplotX,objMapZoomPlotLoc)
+		% subplot(subplotY,subplotX,objMapZoomPlotLoc)
+		subplotTmp(subplotY,subplotX,objMapZoomPlotLoc)
 			% CombTmp2Zoom = CombTmp2;
 			% currentImage2(:,:,1) = currentImage;
 			% % currentImage2(:,:,2) = currentImage;
@@ -1202,7 +1230,11 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 				% size(outputCutMovie)
 				% class(outputCutMovie)
 				imagesc(outputCutMovie(1:round(end/2),:,:));
-				title(['signal ' cellIDStr ' (' num2str(sum(valid==1)) ' good)'],'FontSize',18)
+				if options.axisEqual==1
+					axis equal tight;
+				end
+				title(['signal ' cellIDStr ' (' num2str(sum(valid==1)) ' good)'],'FontSize',12)
+				% 10 'Legend: green(good), red(bad), blue(current)'
 				box off;
 				axisH = gca;
 				axisH.XRuler.Axle.LineStyle = 'none';
@@ -1218,7 +1250,8 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 		if(~isempty(testpeaks))
 			% tic
 			% plot all signals and the average
-			subplot(subplotY,subplotX,avgSpikeTracePlot);
+			% subplot(subplotY,subplotX,avgSpikeTracePlot);
+			subplotTmp(subplotY,subplotX,avgSpikeTracePlot);
 				% [slopeRatio] = plotPeakSignal(thisTrace,testpeaks,cellIDStr,instructionStr,minValTraces,maxValTraces,peakROI,peakOutputStat.avgSpikeTrace(i,:),peakOutputStat.slopeRatio(i),peakOutputStat.spikeCenterTrace{i},valid);
 				plotPeakSignal(thisTrace,testpeaks,cellIDStr,instructionStr,minValTraces,maxValTraces,peakROI,peakOutputStat.avgSpikeTrace(i,:),peakOutputStat.slopeRatio(i),peakOutputStat.spikeCenterTrace{i},valid);
 				axisH = gca;
@@ -1229,7 +1262,8 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 				% title(['signal ' cellIDStr]);
 			% plot the trace
 
-			subplot(subplotY,subplotX,tracePlotLoc)
+			% subplot(subplotY,subplotX,tracePlotLoc)
+			subplotTmp(subplotY,subplotX,tracePlotLoc)
 				sigDig = 100;
 				thisStr = [...
 					'SNR = ' num2str(round(signalSnr(i)*sigDig)/sigDig)...
@@ -1270,13 +1304,15 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 				axisH.YRuler.Axle.LineStyle = 'none';
 			% toc
 		else
-			subplot(subplotY,subplotX,avgSpikeTracePlot);
+			% subplot(subplotY,subplotX,avgSpikeTracePlot);
+			subplotTmp(subplotY,subplotX,avgSpikeTracePlot);
 				plot(peakROI,thisTrace(1:length(peakROI)));
 				xlabel('frames');
 				ylabel('\DeltaF/F');
 				ylim([minValTraces maxValTraces]);
 				title(['signal peaks ' cellIDStr])
-			subplot(subplotY,subplotX,tracePlotLoc)
+			% subplot(subplotY,subplotX,tracePlotLoc)
+			subplotTmp(subplotY,subplotX,tracePlotLoc)
 				plot(thisTrace, 'r');
 				xlabel('frames');
 				% ylabel('df/f');
@@ -1375,7 +1411,8 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 				maxHere = options.movieMax;
 				objCutMovie(1,2,:) = options.movieMax;
 
-				subplot(subplotY,subplotX,inputMoviePlotLoc)
+				% subplot(subplotY,subplotX,inputMoviePlotLoc)
+				subplotTmp(subplotY,subplotX,inputMoviePlotLoc)
 				% set title and turn off ability to change
 				if ~isempty(objCutMovie)
 					% imagesc(objCutMovie(:,:,1));
@@ -1436,8 +1473,21 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 				% title(tmpTitle,'HandleVisibility','off');
 				set(gca,'color',[0 0 0]);
 				loopImgHandle = imagesc(objCutMovie(:,:,frameNo),'AlphaData',imAlpha);
+				if options.axisEqual==1
+					axis equal tight;
+				end
+				% if i==1
+				% else
+				% 	loopImgHandle = findobj(gca,'Type','image');
+				% end
 				set(gca,'color',[0 0 0]);
 				set(gca, 'box','off','XTickLabel',[],'XTick',[],'YTickLabel',[],'YTick',[],'XColor',get(gcf,'Color'),'YColor',get(gcf,'Color'))
+
+				% if i==1
+				% 	if options.axisEqual==1
+				% 		axis equal tight;
+				% 	end
+				% end
 
 				if options.signalLoopTicTocCheck==1
 					toc
@@ -1448,6 +1498,8 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 				catch
 					caxis([-0.05 0.1]);
 				end
+
+				title(['Press Q to change movie contrast.' 10 'Press L for legend.'])
 
 				while strcmp(keyIn,'3')
 					keyIn = get(gcf,'CurrentCharacter');
@@ -1489,10 +1541,16 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 				disp(repmat('@',1,7))
 				disp(getReport(err,'extended','hyperlinks','on'));
 				disp(repmat('@',1,7))
-				[~,~,reply]=ginput(1);
+				% [~,~,reply]=ginput(1);
+				keyIn = get(gcf,'CurrentCharacter');
+				reply = double(keyIn);
+				set(gcf,'currentch','3');
 			end
 		else
-			[~,~,reply]=ginput(1);
+			% [~,~,reply]=ginput(1);
+			keyIn = get(gcf,'CurrentCharacter');
+			reply = double(keyIn);
+			set(gcf,'currentch','3');
 		end
 		figure(mainFig);
 		% objCutMovie(:,:,1) = nanmax(objCutMovie(:));
@@ -1527,19 +1585,43 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 		% 'T' display neighboring cells
 		elseif isequal(reply, 116)
 			overlapDistance = inputdlg('Enter distance to look for neighbors','',[1 50],{'10'});
-			overlapDistance = str2double(overlapDistance{1});
-			% viewNeighborsAuto(inputImages, inputSignals, neighborsCell, 'inputImagesThres',inputImagesThres,'xCoords',options.coord.xCoords,'yCoords',options.coord.yCoords,'startCellNo',i,'cropSizeLength',options.cropSizeLength,'overlapDistance',overlapDistance);
-			% viewNeighborsAuto(inputImages, inputSignals, {}, 'inputImagesThres',inputImagesThres,'xCoords',options.coord.xCoords,'yCoords',options.coord.yCoords,'startCellNo',i,'cropSizeLength',options.cropSizeLength,'overlapDistance',overlapDistance);
-			viewNeighborsAuto(inputImages, inputSignals, neighborsCell, 'inputImagesThres',inputImagesThres,'xCoords',options.coord.xCoords,'yCoords',options.coord.yCoords,'startCellNo',i,'cropSizeLength',options.cropSizeLength,'overlapDistance',overlapDistance);
+			if isempty(overlapDistance)
+
+			else
+				overlapDistance = str2double(overlapDistance{1});
+				% viewNeighborsAuto(inputImages, inputSignals, neighborsCell, 'inputImagesThres',inputImagesThres,'xCoords',options.coord.xCoords,'yCoords',options.coord.yCoords,'startCellNo',i,'cropSizeLength',options.cropSizeLength,'overlapDistance',overlapDistance);
+				% viewNeighborsAuto(inputImages, inputSignals, {}, 'inputImagesThres',inputImagesThres,'xCoords',options.coord.xCoords,'yCoords',options.coord.yCoords,'startCellNo',i,'cropSizeLength',options.cropSizeLength,'overlapDistance',overlapDistance);
+				% viewNeighborsAuto(inputImages, inputSignals, neighborsCell, 'inputImagesThres',inputImagesThres,'xCoords',options.coord.xCoords,'yCoords',options.coord.yCoords,'startCellNo',i,'cropSizeLength',options.cropSizeLength,'overlapDistance',overlapDistance);
+				viewNeighborsAuto(inputImages, inputSignals, {}, 'inputImagesThres',inputImagesThres,'xCoords',options.coord.xCoords,'yCoords',options.coord.yCoords,'startCellNo',i,'cropSizeLength',options.cropSizeLength,'overlapDistance',overlapDistance);
+			end
+		% 'D' change colormap
+		elseif isequal(reply, 100)
+			options.colormap = options.colormapColorList{options.colormapIdx};
+			options.colormapIdx = options.colormapIdx+1;
+			if options.colormapIdx>length(options.colormapColorList)
+				options.colormapIdx = 1;
+			end
+			colormap(options.colormap);
+		% 'L' re-display legend
+		elseif isequal(reply, 108)
+			subfxnCreateLegend();
 		% 'I' display trace with median removed
 		elseif isequal(reply, 105)
 			[~, ~] = openFigure(options.secondFigNo, '');
 				clf
 				set(gcf,'currentch','3');
 				keyIn = get(gcf,'CurrentCharacter');
-				imagesc(inputImages(:,:,i))
+
+				imAlpha = ones(size(inputImages(:,:,i)));
+				imAlpha(isnan(inputImages(:,:,i))) = 0;
+				imAlpha(inputImages(:,:,i)==0) = 0;
+				imagesc(inputImages(:,:,i),'AlphaData',imAlpha);
+				set(gca,'color',[0 0 0]);
+
+				% imagesc(inputImages(:,:,i))
 				axis equal tight
-				colormap(options.colormap);
+				colormap([0 0 0;options.colormap]);
+				colorbar
 				% pause
 				suptitle('Current signal source image | Press any key to exit')
 				drawnow
@@ -1550,7 +1632,8 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 				close(options.secondFigNo)
 		% 'R' display trace with median removed
 		elseif isequal(reply, 114)
-			[~, ~] = openFigure(options.secondFigNo, '');
+			% [~, ~] = openFigure(options.secondFigNo, '');
+			figure(options.secondFigNo)
 				clf
 				set(gcf,'currentch','3');
 				keyIn = get(gcf,'CurrentCharacter');
@@ -1561,46 +1644,78 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 				inputSignalMedianTmp = medfilt1(thisTrace,medianFilterLength);
 				sigTmp1 = inputSignalSignal{i} - inputSignalMedianTmp;
 				noiseTmp1 = inputSignalNoise{i} - inputSignalMedianTmp;
-				plotYn = 4;
+				plotYn = 5;
 				linkAx = [];
 				linkAx(end+1) = subplot(plotYn,1,1);
-					plot(inputSignalNoise{i},'Color',[0.5 0.5 0.5]); hold on
-					plot(inputSignalSignal{i},'r');
 					plot(thisTrace,'k');
+					hold on;
+					scatter(testpeaks, min(maxValTraces*0.97,thisTrace(testpeaks)*1.4), 60, '.', 'LineWidth',0.5,'MarkerFaceColor',[0 0 0], 'MarkerEdgeColor',[0 0 0])
 					title('Original')
 					box off;zoom on;
 				linkAx(end+1) = subplot(plotYn,1,2);
-					plot(noiseTmp1,'k'); hold on
+					plot(inputSignalNoise{i},'Color',[0.5 0.5 0.5]);
+					hold on
+					plot(inputSignalSignal{i},'r');
+
+					ss1 = inputSignalNoise{i};
+					ss1(isnan(ss1)) = 0;
+					ss2 = inputSignalSignal{i};
+					ss2(isnan(ss2)) = 0;
+					ss1 = ss1 + ss2;
+					scatter(testpeaks, min(maxValTraces*0.97,ss1(testpeaks)*1.4), 60, '.', 'LineWidth',0.5,'MarkerFaceColor',[0 0 0], 'MarkerEdgeColor',[0 0 0]);
+					title('Displayed')
+					box off;zoom on;
+				linkAx(end+1) = subplot(plotYn,1,3);
+					plot(noiseTmp1,'k');
+					hold on
 					plot(sigTmp1,'r');
+
+					ss1 = sigTmp1;
+					ss1(isnan(ss1)) = 0;
+					ss2 = noiseTmp1;
+					ss2(isnan(ss2)) = 0;
+					ss1 = ss1 + ss2;
+					scatter(testpeaks, min(maxValTraces*0.97,ss1(testpeaks)*1.4), 60, '.', 'LineWidth',0.5,'MarkerFaceColor',[0 0 0], 'MarkerEdgeColor',[0 0 0]);
+
 					title('Median filtered')
 					box off;zoom on;
-				if ~isempty(options.inputMovie)&&~ischar(options.inputMovie)
-					[ROItraces] = applyImagesToMovie(inputImagesThres(:,:,i),options.inputMovie,'alreadyThreshold',1,'waitbarOn',1);
-					linkAx(end+1) = subplot(plotYn,1,3);
-						plot(ROItraces,'k');
-						title('ROI')
-						box off;zoom on;
+				linkAx(end+1) = subplot(plotYn,1,4);
+					if ~isempty(options.inputMovie)&&~ischar(options.inputMovie)
+						[ROItraces] = applyImagesToMovie(inputImagesThres(:,:,i),options.inputMovie,'alreadyThreshold',1,'waitbarOn',1);
+						% linkAx(end+1) = subplot(plotYn,1,4);
+							plot(ROItraces,'k');
+							hold on;
+							scatter(testpeaks, min(maxValTraces*0.97,ROItraces(testpeaks)*1.4), 60, '.', 'LineWidth',0.5,'MarkerFaceColor',[0 0 0], 'MarkerEdgeColor',[0 0 0]);
+							title('ROI calculated trace')
+							box off;zoom on;
 
-					% frImg = cat(3,inputImagesThres(:,:,i),inputImagesThres(:,:,i));
-					% LStraces = calculateTraces(frImg, options.inputMovie,'removeBelowThreshPixelsForRecalc',0);
+						% frImg = cat(3,inputImagesThres(:,:,i),inputImagesThres(:,:,i));
+						% LStraces = calculateTraces(frImg, options.inputMovie,'removeBelowThreshPixelsForRecalc',0);
 
-					% % LStraces = calculateTraces(inputImagesThres, options.inputMovie,'removeBelowThreshPixelsForRecalc',0);
-					% % size(LStraces)
-					% % LStraces = permute(double(extract_traces(options.inputMovie,frImg)),[2 1]);
-					% % LStraces(1,1:00)
-					% % LStraces = LStraces(i,:);
-					% subplot(plotYn,1,4)
-					%     plot(LStraces(1,:),'k'); hold on;
-					%     plot(LStraces(1,:)-medfilt1(LStraces(1,:),medianFilterLength),'r');
-					%     legend({'Normal','Median removed'})
-					%     title('Least Squares')
-				end
-				if ~isempty(options.inputSignalsSecond)
-					linkAx(end+1) = subplot(plotYn,1,4);
-						plot(options.inputSignalsSecond(i,:),'k')
+						% % LStraces = calculateTraces(inputImagesThres, options.inputMovie,'removeBelowThreshPixelsForRecalc',0);
+						% % size(LStraces)
+						% % LStraces = permute(double(extract_traces(options.inputMovie,frImg)),[2 1]);
+						% % LStraces(1,1:00)
+						% % LStraces = LStraces(i,:);
+						% subplot(plotYn,1,4)
+						%     plot(LStraces(1,:),'k'); hold on;
+						%     plot(LStraces(1,:)-medfilt1(LStraces(1,:),medianFilterLength),'r');
+						%     legend({'Normal','Median removed'})
+						%     title('Least Squares')
+					else
+						title('NO DATA, EXCLUDED: ROI calculated trace')
+					end
+				linkAx(end+1) = subplot(plotYn,1,5);
+					if ~isempty(options.inputSignalsSecond)
+						tmpSecondTrace = options.inputSignalsSecond(i,:);
+						plot(tmpSecondTrace,'k');
+						hold on;
+						scatter(testpeaks, min(maxValTraces*0.97,tmpSecondTrace(testpeaks)*1.4), 60, '.', 'LineWidth',0.5,'MarkerFaceColor',[0 0 0], 'MarkerEdgeColor',[0 0 0]);
 						title('Original trace (secondary)')
 						box off;zoom on;
-				end
+					else
+						title('NO DATA, EXCLUDED: Original trace (secondary)')
+					end
 
 				suptitle('Press any key to exit | Zoom is enabled on traces, x axes are linked')
 				linkaxes(linkAx,'x');
@@ -1621,9 +1736,10 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 					options.movieMax = str2double(answer{2});
 				end
 				colorbar(inputMoviePlotLoc2Handle,'off');
-				s2Pos = get(inputMoviePlotLoc2Handle,'position');
-				cbh = colorbar(inputMoviePlotLoc2Handle,'Location','eastoutside','Position',[s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)]);
-				ylabel(cbh,'Fluorescence (e.g. \DeltaF/F or \DeltaF/\sigma)','FontSize',15);
+				% s2Pos = get(inputMoviePlotLoc2Handle,'position');
+				s2Pos = plotboxpos(inputMoviePlotLoc2Handle);
+				cbh = colorbar(inputMoviePlotLoc2Handle,'Location','eastoutside','Position',[s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)],'FontSize',6);
+				ylabel(cbh,'Fluorescence (e.g. \DeltaF/F or \DeltaF/\sigma)','FontSize',8);
 		% 'W' to change the min/max used for traces
 		elseif isequal(reply, 119)
 			% close(2);figure(mainFig);
@@ -1646,7 +1762,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 			[peakSignalAmplitude, peakIdx] = sort(peakSignalAmplitude,'descend');
 			signalPeakArray = {signalPeakArray(peakIdx)};
 			try
-				compareSignalToMovie(options.inputMovie, inputImages(:,:,i), thisTrace,'waitbarOn',0,'timeSeq',-10:10,'signalPeakArray',signalPeakArray,'cropSize',options.cropSizeLength,'movieMinMax',[minHere maxHere],'inputDatasetName',options.inputDatasetName,'inputMovieDims',options.inputMovieDims);
+				compareSignalToMovie(options.inputMovie, inputImages(:,:,i), thisTrace,'waitbarOn',0,'timeSeq',-10:10,'signalPeakArray',signalPeakArray,'cropSize',options.cropSizeLength,'movieMinMax',[minHere maxHere],'inputDatasetName',options.inputDatasetName,'inputMovieDims',options.inputMovieDims,'colormap',options.colormap);
 				% options.movieMin options.movieMax
 			catch err
 				disp(repmat('@',1,7))
@@ -1659,7 +1775,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 			try
 				[objCutMovie] = createObjCutMovieSignalSorter(options,testpeaks,thisTrace,inputImages,i,options.cropSizeLength,maxValMovie);
 				% objCutMovie(:,:,1) = nanmax(objCutMovie(:));
-				playMovie(objCutMovie,'fps',15,'movieMinMax',[minHere maxHere]);
+				playMovie(objCutMovie,'fps',15,'movieMinMax',[minHere maxHere],'colormapColor',options.colormap);
 			catch err
 				disp(repmat('@',1,7))
 				disp(getReport(err,'extended','hyperlinks','on'));
@@ -1708,6 +1824,88 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 	% warning on
 	warning('on','all')
 	warning('query','all')
+end
+
+function instructionStr = subfxnCreateLegend()
+	% legendFig = figure(343);
+	% clf
+	sepStrNum = 10;
+	instructionStr =  [...
+	'signalSorter',sepStrNum,...
+	'keyboard shortcuts and legend',sepStrNum,sepStrNum,...
+	'===keyboard shortcuts===',sepStrNum,...
+	'KEY        | COMMAND',sepStrNum,...
+	'up/down    | mark current as good/bad',sepStrNum,...
+	'left/right | move to next/previous signal',sepStrNum,...
+	'f          | finish and save selections',sepStrNum,...
+	'q          | change movie CONTRAST (min/max)',sepStrNum,...
+	'g          | goto signal #...',sepStrNum,...
+	'c          | movie during transients',sepStrNum,...
+	'm          | movie snapshot during transients',sepStrNum,...
+	'i          | full FOV for current cell extraction image',sepStrNum,...
+	'r          | show traces in full figure',sepStrNum,...
+	'x          | montage transients in movie',sepStrNum,...
+	's          | set remaining signals as bad',sepStrNum,...
+	'w          | change trace min/max',sepStrNum,...
+	'e          | change fps of transient movies',sepStrNum,...
+	't          | GUI for comparing neighboring signals',sepStrNum,...
+	'd          | change colormap',sepStrNum,...
+	'l          | create new legend',sepStrNum,sepStrNum,...
+	'===cell map legend===',sepStrNum,...
+	'green = good',sepStrNum,...
+	'red = bad',sepStrNum,...
+	'gray = undecided',sepStrNum,...
+	'blue = current',sepStrNum,sepStrNum,...
+	'===auto classify===',sepStrNum,...
+	'Eccentricity>0.4',sepStrNum,...
+	'imageSizes>10,<100',sepStrNum,...
+	'Perimeter<50,>5',sepStrNum,...
+	'EquivDiameter>3,<30',sepStrNum,...
+	'signalSnr>1.45',sepStrNum,...
+	'slopeRatio>0.02',sepStrNum,sepStrNum];
+	% msgbox(instructionStr)
+
+	s.Interpreter = 'tex';
+	% s.WindowStyle = 'non-modal';
+	s.WindowStyle = 'replace';
+	h = msgbox_custom(['\fontsize{10}' instructionStr],'signalSorter shortcuts/legend',s);
+	sspos = get(h, 'position'); %makes box bigger
+	scnsize = get(0,'ScreenSize');
+	% dlgSize = [scnsize(3)*0.8 scnsize(4)*0.8];
+	% scnsize(4)-sspos(1)*2
+	set(h, 'position', [0 0 sspos(3) sspos(4)]); %makes box bigger
+	% set(h, 'position', [100 440 1000 100]);
+	% ah = get( h, 'CurrentAxes' );
+	% ch = get( ah, 'Children' );
+	% if ismac
+	% 	cmdWinEditorFont = 'Menlo-Regular';
+	% elseif isunix
+	%     cmdWinEditorFont = 'Consolas';
+	% elseif ispc
+	% 	cmdWinEditorFont = 'Consolas';
+	% else
+	% 	cmdWinEditorFont = '';
+	%     disp('Platform not supported')
+	% end
+	% if isempty(cmdWinEditorFont)
+	% else
+	% 	set(ch, 'FontName', cmdWinEditorFont);
+	% 	% set(ch,'VerticalAlignment','bottom','String',instructionStr,'FontName', cmdWinEditorFont,'FontSize',10);
+	% end
+
+	% 'Solidity>0.8',10,...
+	% suptitleHandle = suptitle(instructionStr);
+	% % set(suptitleHandle,'FontSize',10,'FontWeight','normal');
+	% set(suptitleHandle,'FontSize',15,'FontWeight','normal');
+	% set(suptitleHandle, 'horizontalAlignment', 'left');
+	% set(suptitleHandle, 'units', 'normalized');
+	% h1 = get(suptitleHandle, 'position');
+	% % ha2 = subplot(subplotY,subplotX,inputMoviePlotLoc);
+	% % h2 = get(ha2, 'position');
+	% set(suptitleHandle, 'position', [0.007 -0.3 h1(3)]);
+	% axis off;
+	% % undock the figure
+	% set(343,'windowstyle','modal');set(343,'windowstyle','normal');
 end
 
 function [objCutMovie] = createObjCutMovieSignalSorter(options,testpeaks,thisTrace,inputImages,i,cropSizeLength,maxValMovie)
@@ -1934,6 +2132,12 @@ function [croppedPeakImages2, croppedPeakImages] = viewMontage(inputMovie,inputI
 
 
 	[xPlot, yPlot] = getSubplotDimensions(size(croppedPeakImages,3));
+	if yPlot>xPlot
+		yPlotTmp = yPlot;
+		yPlot = xPlot;
+		xPlot = yPlotTmp;
+	end
+
 	nImagesH2 = xPlot*yPlot;
 	croppedPeakImagesCell = cell([1 nImagesH2]);
 	for iii = 1:nImagesH2
@@ -1959,8 +2163,8 @@ function [croppedPeakImages2, croppedPeakImages] = viewMontage(inputMovie,inputI
 		mNum = 1;
 		g = cell([xPlot 1]);
 		rowNum = 1;
-		for xNo = 1:xPlot
-			for yNo = 1:yPlot
+		for yNo = 1:yPlot
+			for xNo = 1:xPlot
 				g{rowNum} = cat(2,g{rowNum},croppedPeakImagesCell{mNum});
 				mNum = mNum + 1;
 			end

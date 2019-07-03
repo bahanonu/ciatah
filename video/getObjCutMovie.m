@@ -16,12 +16,12 @@ function [k] = getObjCutMovie(inputMovie,inputImages,varargin)
 		%
 
 	%========================
-    % Vector: 3 element vector indicating [x y frames]
+	% Vector: 3 element vector indicating [x y frames]
 	options.inputMovieDims = [];
 	% hierarchy name in hdf5 where movie is
 	options.inputDatasetName = '/1';
-    % number of frames in each movie to load, [] = all, 1:500 would be 1st to 500th frame.
-    options.frameList = [];
+	% number of frames in each movie to load, [] = all, 1:500 would be 1st to 500th frame.
+	options.frameList = [];
 	% crop size from centroid in pixels
 	options.cropSize = 10;
 	%
@@ -43,12 +43,12 @@ function [k] = getObjCutMovie(inputMovie,inputImages,varargin)
 	options.addPaddingForce = 0;
 	options.outlines = 0;
 	options.outlineVal = [];
-    % Input pre-computed x,y coordinates for objects in images
-    options.xCoords = [];
-    options.yCoords = [];
-    %
-    options.hdf5Fid = [];
-    options.keepFileOpen = 0;
+	% Input pre-computed x,y coordinates for objects in images
+	options.xCoords = [];
+	options.yCoords = [];
+	%
+	options.hdf5Fid = [];
+	options.keepFileOpen = 0;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -69,12 +69,12 @@ function [k] = getObjCutMovie(inputMovie,inputImages,varargin)
 
 	if isempty(options.inputMovieDims)
 		if strcmp(class(inputMovie),'char')|strcmp(class(inputMovie),'cell')
-		    movieDims = loadMovieList(inputMovie,'frameList',[],'inputDatasetName',options.inputDatasetName,'getMovieDims',1,'displayInfo',0);
-		    options.inputMovieDims = [movieDims.one movieDims.two movieDims.three];
-		    % Force read movie chunks to be 1
-		    % options.readMovieChunks = 1;
+			movieDims = loadMovieList(inputMovie,'frameList',[],'inputDatasetName',options.inputDatasetName,'getMovieDims',1,'displayInfo',0);
+			options.inputMovieDims = [movieDims.one movieDims.two movieDims.three];
+			% Force read movie chunks to be 1
+			% options.readMovieChunks = 1;
 		else
-		    options.inputMovieDims = size(inputMovie);
+			options.inputMovieDims = size(inputMovie);
 		end
 	end
 
@@ -142,36 +142,36 @@ function [k] = getObjCutMovie(inputMovie,inputImages,varargin)
 		% yHigh
 		% xLow
 		% xHigh
-        %yLow
-        %yHigh
-        %xLow
-        %xHigh
-        if strcmp(class(inputMovie),'char')|strcmp(class(inputMovie),'cell')
-            % load only movie chunk needed directly from memory
-            yLims = yLow:yHigh;
-            xLims = xLow:xHigh;
+		%yLow
+		%yHigh
+		%xLow
+		%xHigh
+		if strcmp(class(inputMovie),'char')|strcmp(class(inputMovie),'cell')
+			% load only movie chunk needed directly from memory
+			yLims = yLow:yHigh;
+			xLims = xLow:xHigh;
 
-            % % signalPeaksThis
-            % if isempty(signalPeaksThis)
-            % 	signalPeaksThis = randperm(nFrames,2);
-            % end
-            % % signalImagesCrop = [];
-            % % signalImagesCrop = {};
-            % if nPeaksToUse>10
-            % 	nPeaksToUse = 10;
-            % end
-            peakLocations = options.frameList;
-            offset = {};
-            block = {};
-            nPeaksToUse = length(peakLocations);
-            for signalPeakFrameNo = 1:nPeaksToUse
-            	offset{signalPeakFrameNo} = [yLow-1 xLow-1 peakLocations(signalPeakFrameNo)-1];
-            	block{signalPeakFrameNo} = [length(yLims) length(xLims) 1];
-            end
-            [k{signalNo}] = readHDF5Subset(inputMovie, offset, block,'datasetName',options.inputDatasetName,'displayInfo',0,'hdf5Fid',options.hdf5Fid,'keepFileOpen',options.keepFileOpen);
-        else
+			% % signalPeaksThis
+			% if isempty(signalPeaksThis)
+			% 	signalPeaksThis = randperm(nFrames,2);
+			% end
+			% % signalImagesCrop = [];
+			% % signalImagesCrop = {};
+			% if nPeaksToUse>10
+			% 	nPeaksToUse = 10;
+			% end
+			peakLocations = options.frameList;
+			offset = {};
+			block = {};
+			nPeaksToUse = length(peakLocations);
+			for signalPeakFrameNo = 1:nPeaksToUse
+				offset{signalPeakFrameNo} = [yLow-1 xLow-1 peakLocations(signalPeakFrameNo)-1];
+				block{signalPeakFrameNo} = [length(yLims) length(xLims) 1];
+			end
+			[k{signalNo}] = readHDF5Subset(inputMovie, offset, block,'datasetName',options.inputDatasetName,'displayInfo',0,'hdf5Fid',options.hdf5Fid,'keepFileOpen',options.keepFileOpen);
+		else
 			k{signalNo} = inputMovie(yLow:yHigh,xLow:xHigh,:);
-        end
+		end
 
 		if options.addPadding==1|options.addPaddingForce==1
 			if xLowO<xMin; k{signalNo} = padarray(k{signalNo},[0 abs(xDiff) 0],NaN,'pre'); xDiff=0; end
@@ -188,8 +188,8 @@ function [k] = getObjCutMovie(inputMovie,inputImages,varargin)
 
 		if options.crossHairsOn==1
 			% k{signalNo}(cHairY,cHairX,:) = options.crossHairVal;
-            %cHairY
-            %cHairX
+			%cHairY
+			%cHairX
 			k{signalNo}(cHairY,cHairX,:) = NaN;
 			switch options.extendedCrosshairs
 				case 1

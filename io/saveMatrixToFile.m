@@ -31,7 +31,7 @@ function [success] = saveMatrixToFile(inputMatrix,savePath,varargin)
 	% HDF5: append (don't blank HDF5 file) or new (blank HDF5 file)
 	options.writeMode = 'new';
 	% Int: Defines gzip compression level (0-9). 0 = no compression, 9 = most compression.
- 	options.deflateLevel = 0;
+	options.deflateLevel = 0;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -97,9 +97,9 @@ function [success] = saveMatrixToFile(inputMatrix,savePath,varargin)
 	end
 end
 function [movieType supported] = getMovieFileType(thisMoviePath)
-    % determine how to load movie, don't assume every movie in list is of the same type
+	% determine how to load movie, don't assume every movie in list is of the same type
 	supported = 1;
-    try
+	try
 		[pathstr,name,ext] = fileparts(thisMoviePath);
 	catch
 		movieType = '';

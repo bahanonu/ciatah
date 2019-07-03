@@ -34,7 +34,7 @@ function obj = viewOverlayTrackingToVideo(obj)
 	try
 
 		[fileIdxArray idNumIdxArray nFilesToAnalyze nFiles] = obj.getAnalysisSubsetsToAnalyze();
-        if iscell(obj.videoDir); videoDir = strjoin(obj.videoDir,','); else videoDir = obj.videoDir; end;
+		if iscell(obj.videoDir); videoDir = strjoin(obj.videoDir,','); else videoDir = obj.videoDir; end;
 		trackingSettings = inputdlg({...
 					'video folder(s), separate multiple folders by a comma:',...
 					'side-by-side save folder:',...
@@ -51,7 +51,7 @@ function obj = viewOverlayTrackingToVideo(obj)
 					num2str(options.STIM_CUTOFF),...
 				}...
 			);
-        obj.videoDir = strsplit(trackingSettings{1},','); videoDir = obj.videoDir;
+		obj.videoDir = strsplit(trackingSettings{1},','); videoDir = obj.videoDir;
 		obj.videoSaveDir = trackingSettings{2}; videoSaveDir = obj.videoSaveDir;
 		options.framesPerSecond = str2num(trackingSettings{3});
 		options.nFramesUse = str2num(trackingSettings{4});

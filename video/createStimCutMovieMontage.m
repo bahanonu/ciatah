@@ -71,6 +71,17 @@ function [k] = createStimCutMovieMontage(inputMovie,nAlignPts,timeVector,varargi
 			k{end+1} = diffDiffMatrix;
 		end
 	end
+	if options.addStimMovie==1
+		[xPlot yPlot] = getSubplotDimensions(length(k));
+	else
+		[xPlot yPlot] = getSubplotDimensions(length(k));
+	end
+	if yPlot>xPlot
+		yPlotTmp = yPlot;
+		yPlot = xPlot;
+		xPlot = yPlotTmp;
+	end
+
 	% size(k);
 	% line up all movies horizontally and then cut into rows
 	k = [k{:}];

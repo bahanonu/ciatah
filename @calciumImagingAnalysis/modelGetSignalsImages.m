@@ -227,15 +227,15 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 				break;
 			end
 		end
-	    if isempty(filesToLoad)
-	    % if(~exist(filesToLoad{1}, 'file'))
-	    	display('no files');
-	    	inputSignals = [];
-	    	inputImages = [];
-	    	signalPeaks = [];
-	    	signalPeaksArray = [];
-	        return;
-	    end
+		if isempty(filesToLoad)
+		% if(~exist(filesToLoad{1}, 'file'))
+			display('no files');
+			inputSignals = [];
+			inputImages = [];
+			signalPeaks = [];
+			signalPeaksArray = [];
+			return;
+		end
 		% rawFiles = 0;
 		% % get secondary list of files to load
 		% % |strcmp(options.returnType,'raw')
@@ -245,16 +245,16 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 		% end
 		% load files in order
 		for i=1:length(filesToLoad)
-		    display(['loading: ' filesToLoad{i}]);
-		    try
-		    	load(filesToLoad{i});
-		    catch err
+			display(['loading: ' filesToLoad{i}]);
+			try
+				load(filesToLoad{i});
+			catch err
 				display(repmat('@',1,7))
 				disp(getReport(err,'extended','hyperlinks','on'));
 				display(repmat('@',1,7))
-		    	pause(3)
-		    	display(['trying, loading again: ' filesToLoad{i}]);
-		    	load(filesToLoad{i});
+				pause(3)
+				display(['trying, loading again: ' filesToLoad{i}]);
+				load(filesToLoad{i});
 			end
 
 		end
@@ -297,7 +297,7 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 				nCells=size(signalPeaks,1);
 				signalPeaksArray=cell(nCells,1);
 				for cInd=1:nCells
-				    signalPeaksArray{cInd}=find(signalPeaks(cInd,:));
+					signalPeaksArray{cInd}=find(signalPeaks(cInd,:));
 				end
 				obj.signalPeaksArray{thisFileNum} = signalPeaksArray;
 				obj.signalPeaks{thisFileNum} = signalPeaks;
@@ -320,7 +320,7 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 				nCells=size(signalPeaks,1);
 				signalPeaksArray=cell(nCells,1);
 				for cInd=1:nCells
-				    signalPeaksArray{cInd}=find(signalPeaks(cInd,:));
+					signalPeaksArray{cInd}=find(signalPeaks(cInd,:));
 				end
 				obj.signalPeaksArray{thisFileNum} = signalPeaksArray;
 				obj.signalPeaks{thisFileNum} = signalPeaks;
@@ -409,17 +409,17 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 				case 'raw'
 					try obj.signalPeaksArray{thisFileNum};calcPeaks=1; catch; calcPeaks=0; end
 					if calcPeaks==0
-                        [signalPeaks, signalPeaksArray] = computeSignalPeaks(inputSignals, 'makePlots', 0,'makeSummaryPlots',0);
-                    else
-                        signalPeaksArray = obj.signalPeaksArray{thisFileNum};
-                        % obj.signalPeaksArray{thisFileNum}
-                    end
-                    signalPeaksArray = obj.signalPeaksArray{thisFileNum};
-                    signalPeaks = zeros([obj.nSignals{thisFileNum} obj.nFrames{thisFileNum}]);
-                    display('creating signalPeaks...')
-                    for signalNo = 1:obj.nSignals{thisFileNum}
-                        signalPeaks(signalNo,obj.signalPeaksArray{thisFileNum}{signalNo}) = 1;
-                    end
+						[signalPeaks, signalPeaksArray] = computeSignalPeaks(inputSignals, 'makePlots', 0,'makeSummaryPlots',0);
+					else
+						signalPeaksArray = obj.signalPeaksArray{thisFileNum};
+						% obj.signalPeaksArray{thisFileNum}
+					end
+					signalPeaksArray = obj.signalPeaksArray{thisFileNum};
+					signalPeaks = zeros([obj.nSignals{thisFileNum} obj.nFrames{thisFileNum}]);
+					display('creating signalPeaks...')
+					for signalNo = 1:obj.nSignals{thisFileNum}
+						signalPeaks(signalNo,obj.signalPeaksArray{thisFileNum}{signalNo}) = 1;
+					end
 					%if isempty(signalPeaks)
 					%	[signalPeaks, signalPeaksArray] = computeSignalPeaks(inputSignals, 'makePlots', 0,'makeSummaryPlots',0);
 					%end
@@ -527,9 +527,9 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 						display('registering images')
 						% get the global coordinate number based
 						% globalRegCoords = globalRegCoords{strcmp(obj.assay{thisFileNum},obj.globalIDFolders.(obj.subjectStr{thisFileNum}))};
-                        % globalRegCoords = globalRegCoords{strcmp(obj.date{thisFileNum},obj.globalIDFolders.(obj.subjectStr{thisFileNum}))};
-                        % globalRegCoords = globalRegCoords{strcmp(obj.folderBaseSaveStr{thisFileNum},obj.globalIDFolders.(obj.subjectStr{thisFileNum}))};
-                        globalRegCoords = globalRegCoords{strcmp(obj.folderBaseSaveStrUnique{thisFileNum},obj.globalIDFolders.(obj.subjectStr{thisFileNum}))};
+						% globalRegCoords = globalRegCoords{strcmp(obj.date{thisFileNum},obj.globalIDFolders.(obj.subjectStr{thisFileNum}))};
+						% globalRegCoords = globalRegCoords{strcmp(obj.folderBaseSaveStr{thisFileNum},obj.globalIDFolders.(obj.subjectStr{thisFileNum}))};
+						globalRegCoords = globalRegCoords{strcmp(obj.folderBaseSaveStrUnique{thisFileNum},obj.globalIDFolders.(obj.subjectStr{thisFileNum}))};
 
 						if ~isempty(globalRegCoords)
 							% inputImages = permute(inputImages,[2 3 1]);

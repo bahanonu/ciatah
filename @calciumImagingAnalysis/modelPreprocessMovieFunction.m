@@ -65,7 +65,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	% reference frame used for cropping and turboreg
 	options.refCropFrame = 1;
 	% Int: Defines gzip compression level (0-9). 0 = no compression, 9 = most compression.
- 	options.deflateLevel = 1;
+	options.deflateLevel = 1;
 	% ====
 	% OLD OPTIONS
 	% should the movie be saved?
@@ -91,10 +91,10 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	startDir = pwd;
 	if options.showFigures==1
 		for figNoFake = [9 4242 456 457 9019]
-		    [~, ~] = openFigure(figNoFake, '');
-		    clf
+			[~, ~] = openFigure(figNoFake, '');
+			clf
 		end
-	    drawnow
+		drawnow
 	end
 	% read in the list of folders
 	if strcmp(class(options.folderListPath),'char')&~strcmp(options.folderListPath,'manual')
@@ -168,9 +168,9 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		display(repmat('@',1,7))
 		display('BACKUP DIALOG')
 		[analysisOptionsIdx, ok] = listdlg('ListString',analysisOptionList,'InitialValue',defaultChoiceIdx,...
-		    'Name','the red pill...',...
-		    'PromptString',['select analysis steps to perform. will be analyzed top to bottom, with top first'],...
-		    'ListSize',[scnsize(3)*0.4 scnsize(4)*0.3]);
+			'Name','the red pill...',...
+			'PromptString',['select analysis steps to perform. will be analyzed top to bottom, with top first'],...
+			'ListSize',[scnsize(3)*0.4 scnsize(4)*0.3]);
 		% pause
 	end
 
@@ -196,9 +196,9 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		display(repmat('@',1,7))
 		display('BACKUP DIALOG')
 		[saveIdx, ok] = listdlg('ListString',analysisOptionList,'InitialValue',defaultSaveIdx,...
-		    'Name','Gentlemen, you can not fight in here! This is the War Room.',...
-		    'PromptString','select at which stages to save a file. if option not selected for analysis, will be ignored',...
-		    'ListSize',[scnsize(3)*0.4 scnsize(4)*0.3]);
+			'Name','Gentlemen, you can not fight in here! This is the War Room.',...
+			'PromptString','select at which stages to save a file. if option not selected for analysis, will be ignored',...
+			'ListSize',[scnsize(3)*0.4 scnsize(4)*0.3]);
 	end
 
 	if ok~=1
@@ -273,8 +273,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 					ostruct.nICs{fileNum} = str2num(dirInfo{2});
 				else
 					display('please add nICs and PCs')
-				    ostruct.nPCs{fileNum} = 700;
-				    ostruct.nICs{fileNum} = 500;
+					ostruct.nPCs{fileNum} = 700;
+					ostruct.nICs{fileNum} = 500;
 				end
 			else
 				% thisDir = folderList{fileNum};
@@ -286,8 +286,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			display([num2str(fileNumToRun) '/' num2str(nFilesToRun) ': ' thisDir]);
 			% check if this directory has been commented out, if so, skip
 			if strfind(thisDir,'#')==1
-			    display('skipping...')
-			    continue;
+				display('skipping...')
+				continue;
 			end
 
 			% skip this analysis if files already exist
@@ -335,10 +335,10 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			% get the movie
 			% [thisMovie ostruct options] = getCurrentMovie(movieList,options,ostruct);
 			if frameListDlg==0
-                % usrIdxChoice = inputdlg('select frame range (e.g. 1:1000), leave blank for all frames');
+				% usrIdxChoice = inputdlg('select frame range (e.g. 1:1000), leave blank for all frames');
 				% options.frameList = [1:500];
-                % options.frameList = str2num(usrIdxChoice{1});
-                frameListDlg = 1;
+				% options.frameList = str2num(usrIdxChoice{1});
+				frameListDlg = 1;
 			end
 			if options.processMoviesSeparately==1
 				nMovies = length(movieList);
@@ -594,11 +594,11 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			% ensure that it is a string so numbers don't get added incorrectly
 			if ischar(droppedCount)
 				display(['converting droppedCount str2num: ' logInfo.filename])
-			    droppedCount = str2num(droppedCount);
+				droppedCount = str2num(droppedCount);
 			end
 			if ischar(movieFrames)
 				display(['converting movieFrames str2num: ' logInfo.filename])
-			    movieFrames = str2num(movieFrames);
+				movieFrames = str2num(movieFrames);
 			end
 			folderFrameNumList{cellNo} = movieFrames;
 			droppedCountList{cellNo} = droppedCount;
@@ -634,8 +634,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		nRows = size(thisMovie,1);
 		reverseStr = '';
 		for rowNo=1:nRows
-		    inputMovieDroppedF0(rowNo,:) = nanmean(squeeze(thisMovie(rowNo,:,:)),2);
-		    if mod(rowNo,5)==0;reverseStr = cmdWaitbar(rowNo,nRows,reverseStr,'inputStr','calculating mean...','waitbarOn',1,'displayEvery',5);end
+			inputMovieDroppedF0(rowNo,:) = nanmean(squeeze(thisMovie(rowNo,:,:)),2);
+			if mod(rowNo,5)==0;reverseStr = cmdWaitbar(rowNo,nRows,reverseStr,'inputStr','calculating mean...','waitbarOn',1,'displayEvery',5);end
 		end
 		% movieMean = nanmean(inputMovieTmp(:));
 		display([num2str(length(droppedFrames)) ' dropped frames: ' num2str(droppedFrames(:)')])
@@ -692,23 +692,23 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		   thisMovie(1:downX,frame,1:downZ) = downsampledFrame;
 		   % inputMovie(:,frame,:) = downsampledFrame;
 			if mod(frame,20)==0&options.waitbarOn==1|frame==downY
-			    reverseStr = cmdWaitbar(frame,downY,reverseStr,'inputStr','temporally downsampling matrix');
+				reverseStr = cmdWaitbar(frame,downY,reverseStr,'inputStr','temporally downsampling matrix');
 			end
-        end
-        j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
-        reverseStr = '';
-        % for frame = (downZ+1):size(thisMovie,3)
-        %     thisMovie(:,:,1) = [];
-        %     reverseStr = cmdWaitbar(frame,downZ,reverseStr,'inputStr','removing elements');
-        % end
+		end
+		j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
+		reverseStr = '';
+		% for frame = (downZ+1):size(thisMovie,3)
+		%     thisMovie(:,:,1) = [];
+		%     reverseStr = cmdWaitbar(frame,downZ,reverseStr,'inputStr','removing elements');
+		% end
 		%thisMovie = thisMovie(:,:,1:downZ);
 		thisMovie(:,:,(downZ+1):end) = 0;
-        % thisMovie(:,:,(downZ+1):end) = [];
-        thisMovieTmp = thisMovie(:,:,1:downZ);
-        clear thisMovie;
-        thisMovie = thisMovieTmp;
-        clear thisMovieTmp;
-        j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
+		% thisMovie(:,:,(downZ+1):end) = [];
+		thisMovieTmp = thisMovie(:,:,1:downZ);
+		clear thisMovie;
+		thisMovie = thisMovieTmp;
+		clear thisMovieTmp;
+		j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
 		drawnow;
 		% =====================
 	end
@@ -751,7 +751,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			end
 		end
 		thisMovie = thisMovie(1:downX,1:downY,:);
-        j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
+		j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
 		drawnow;
 		% =====================
 	end
@@ -783,70 +783,70 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% =====================
 		% get the movie F0
 		% thisMovie = single(thisMovie);
-	    display('getting F0...')
-	    inputMovieF0 = zeros([size(thisMovie,1) size(thisMovie,2)]);
-	    if strcmp(options.dfofType,'dfstd')
-	    	inputMovieStd = zeros([size(thisMovie,1) size(thisMovie,2)]);
-	    	progressStr = 'calculating mean and std...';
-	    else
-	    	progressStr = 'calculating mean...';
-	    end
-	    nRows = size(thisMovie,1);
-	    reverseStr = '';
-	    for rowNo=1:nRows
-	        % inputMovieF0 = nanmean(inputMovie,3);
-        	rowFrame = single(squeeze(thisMovie(rowNo,:,:)));
-	        inputMovieF0(rowNo,:) = nanmean(rowFrame,2);
-	        if strcmp(options.dfofType,'dfstd')
-	            inputMovieStd(rowNo,:) = nanstd(rowFrame,[],2);
-	        else
-	        end
-	        if mod(rowNo,5)==0;reverseStr = cmdWaitbar(rowNo,nRows,reverseStr,'inputStr',progressStr,'waitbarOn',1,'displayEvery',5);end
-	    end
+		display('getting F0...')
+		inputMovieF0 = zeros([size(thisMovie,1) size(thisMovie,2)]);
+		if strcmp(options.dfofType,'dfstd')
+			inputMovieStd = zeros([size(thisMovie,1) size(thisMovie,2)]);
+			progressStr = 'calculating mean and std...';
+		else
+			progressStr = 'calculating mean...';
+		end
+		nRows = size(thisMovie,1);
+		reverseStr = '';
+		for rowNo=1:nRows
+			% inputMovieF0 = nanmean(inputMovie,3);
+			rowFrame = single(squeeze(thisMovie(rowNo,:,:)));
+			inputMovieF0(rowNo,:) = nanmean(rowFrame,2);
+			if strcmp(options.dfofType,'dfstd')
+				inputMovieStd(rowNo,:) = nanstd(rowFrame,[],2);
+			else
+			end
+			if mod(rowNo,5)==0;reverseStr = cmdWaitbar(rowNo,nRows,reverseStr,'inputStr',progressStr,'waitbarOn',1,'displayEvery',5);end
+		end
 
-	    savePathStr = [thisDirSaveStr '_inputMovieF0' '.h5'];
-	    movieSaved = writeHDF5Data(inputMovieF0,savePathStr,'deflateLevel',options.deflateLevel);
+		savePathStr = [thisDirSaveStr '_inputMovieF0' '.h5'];
+		movieSaved = writeHDF5Data(inputMovieF0,savePathStr,'deflateLevel',options.deflateLevel);
 
-	    thisMovieMean = nanmean(inputMovieF0(:));
+		thisMovieMean = nanmean(inputMovieF0(:));
 		% bsxfun for fast matrix divide
 		switch options.dfofType
-	        case 'divide'
-	            display('F(t)/F0...')
-	            % dfofMatrix = bsxfun(@ldivide,double(inputMovieF0),double(inputMovie));
-	            thisMovie = bsxfun(@ldivide,inputMovieF0,thisMovie);
-	        case 'dfof'
-	            display('F(t)/F0 - 1...')
-	            % dfofMatrix = bsxfun(@ldivide,double(inputMovieF0),double(inputMovie));
-	            % thisMovie = bsxfun(@ldivide,inputMovieF0,thisMovie);
-	            reverseStr = '';
-	            nFrames = size(thisMovie,3);
-	            for frameNo = 1:nFrames
-	            	thisMovie(:,:,frameNo) = thisMovie(:,:,frameNo)./inputMovieF0;
-	            	if mod(rowNo,50)==0;reverseStr = cmdWaitbar(frameNo,nFrames,reverseStr,'inputStr','DFOF','waitbarOn',1,'displayEvery',50);end
-	            end
-	            thisMovie = thisMovie-1;
-            case 'dfstd'
-                display('(F(t)-F0)/std...')
-                % dfofMatrix = bsxfun(@ldivide,double(inputMovieF0),double(inputMovie));
-                % dfofMatrix = bsxfun(@minus,inputMovie,inputMovieF0);
-                % dfofMatrix = bsxfun(@ldivide,inputMovieStd,dfofMatrix);
+			case 'divide'
+				display('F(t)/F0...')
+				% dfofMatrix = bsxfun(@ldivide,double(inputMovieF0),double(inputMovie));
+				thisMovie = bsxfun(@ldivide,inputMovieF0,thisMovie);
+			case 'dfof'
+				display('F(t)/F0 - 1...')
+				% dfofMatrix = bsxfun(@ldivide,double(inputMovieF0),double(inputMovie));
+				% thisMovie = bsxfun(@ldivide,inputMovieF0,thisMovie);
+				reverseStr = '';
+				nFrames = size(thisMovie,3);
+				for frameNo = 1:nFrames
+					thisMovie(:,:,frameNo) = thisMovie(:,:,frameNo)./inputMovieF0;
+					if mod(rowNo,50)==0;reverseStr = cmdWaitbar(frameNo,nFrames,reverseStr,'inputStr','DFOF','waitbarOn',1,'displayEvery',50);end
+				end
+				thisMovie = thisMovie-1;
+			case 'dfstd'
+				display('(F(t)-F0)/std...')
+				% dfofMatrix = bsxfun(@ldivide,double(inputMovieF0),double(inputMovie));
+				% dfofMatrix = bsxfun(@minus,inputMovie,inputMovieF0);
+				% dfofMatrix = bsxfun(@ldivide,inputMovieStd,dfofMatrix);
 
-                everseStr = '';
-	            nFrames = size(thisMovie,3);
-	            for frameNo = 1:nFrames
-	            	thisMovie(:,:,frameNo) = thisMovie(:,:,frameNo)-inputMovieF0;
-	            	thisMovie(:,:,frameNo) = thisMovie(:,:,frameNo)./inputMovieStd;
-	            	if mod(rowNo,50)==0;reverseStr = cmdWaitbar(frameNo,nFrames,reverseStr,'inputStr','DFOF','waitbarOn',1,'displayEvery',50);end
-	            end
-	            % thisMovie = thisMovie-1;
-	        case 'minus'
-	            display('F(t)-F0...')
-	            % dfofMatrix = bsxfun(@ldivide,double(inputMovieF0),double(inputMovie));
-	            thisMovie = bsxfun(@minus,thisMovie,inputMovieF0);
-	        otherwise
-	            % return;
-	    end
-	    % =====================
+				everseStr = '';
+				nFrames = size(thisMovie,3);
+				for frameNo = 1:nFrames
+					thisMovie(:,:,frameNo) = thisMovie(:,:,frameNo)-inputMovieF0;
+					thisMovie(:,:,frameNo) = thisMovie(:,:,frameNo)./inputMovieStd;
+					if mod(rowNo,50)==0;reverseStr = cmdWaitbar(frameNo,nFrames,reverseStr,'inputStr','DFOF','waitbarOn',1,'displayEvery',50);end
+				end
+				% thisMovie = thisMovie-1;
+			case 'minus'
+				display('F(t)-F0...')
+				% dfofMatrix = bsxfun(@ldivide,double(inputMovieF0),double(inputMovie));
+				thisMovie = bsxfun(@minus,thisMovie,inputMovieF0);
+			otherwise
+				% return;
+		end
+		% =====================
 	end
 	function turboregInputMovie()
 		% number of frames to subset
@@ -936,39 +936,39 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			% end
 			% playMovie(thisMovie);
 			% dt=whos('VARIABLE_YOU_CARE_ABOUT'); MB=dt.bytes*9.53674e-7;
-		    % thisMovie(:,:,movieSubset) = turboregMovie(thisMovie(:,:,movieSubset),'options',ioptions);
-		    % j = whos('turboregThisMovie');j.bytes=j.bytes*9.53674e-7;j
-		    j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
-	    	[thisMovie(:,:,movieSubset), ResultsOutOriginal{thisSet}] = turboregMovie(thisMovie(:,:,movieSubset),'options',ioptions);
-		    % if thisSet==1&thisSet~=nSubsets
-		    % 	% class(movieSubset)
-		    % 	% movieSubset
-		    % 	% thisMovie(:,:,movieSubset) = [];
-		    % 	% thisMovie = thisMovie(:,:,(subsetEndIdx):end);
-		    % elseif thisSet==nSubsets
-		    % 	% movieSubset-subsetStartIdx+1
-		    % 	thisMovie(:,:,movieSubset-subsetStartIdx+1) = turboregMovie(thisMovie(:,:,movieSubset-subsetStartIdx+1),'options',ioptions);
-		    % 	% clear thisMovie;
-		    % 	% thisMovie = turboregThisMovie;
-		    % 	% clear turboregThisMovie;
-		    % else
-		    % 	% movieSubset-subsetStartIdx+1
-		    % 	thisMovie(:,:,movieSubset-subsetStartIdx+1) = turboregMovie(thisMovie(:,:,movieSubset-subsetStartIdx+1),'options',ioptions);
-		    % 	% thisMovie(:,:,movieSubset-subsetStartIdx+1) = [];
-		    % 	% cutoffSubset = length(movieSubset);
-		    % 	% thisMovie = thisMovie(:,:,(cutoffSubset+1):end);
-		    % end
-		    % j = whos('turboregThisMovie');j.bytes=j.bytes*9.53674e-7;j
-		    % j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j
-		    % tmpMovieClass = class(tmpMovie);
-		    % cast(thisMovie,tmpMovieClass);
-		    % thisMovie(:,:,movieSubset) = tmpMovie;
-		    toc(subsetStartTime)
+			% thisMovie(:,:,movieSubset) = turboregMovie(thisMovie(:,:,movieSubset),'options',ioptions);
+			% j = whos('turboregThisMovie');j.bytes=j.bytes*9.53674e-7;j
+			j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
+			[thisMovie(:,:,movieSubset), ResultsOutOriginal{thisSet}] = turboregMovie(thisMovie(:,:,movieSubset),'options',ioptions);
+			% if thisSet==1&thisSet~=nSubsets
+			% 	% class(movieSubset)
+			% 	% movieSubset
+			% 	% thisMovie(:,:,movieSubset) = [];
+			% 	% thisMovie = thisMovie(:,:,(subsetEndIdx):end);
+			% elseif thisSet==nSubsets
+			% 	% movieSubset-subsetStartIdx+1
+			% 	thisMovie(:,:,movieSubset-subsetStartIdx+1) = turboregMovie(thisMovie(:,:,movieSubset-subsetStartIdx+1),'options',ioptions);
+			% 	% clear thisMovie;
+			% 	% thisMovie = turboregThisMovie;
+			% 	% clear turboregThisMovie;
+			% else
+			% 	% movieSubset-subsetStartIdx+1
+			% 	thisMovie(:,:,movieSubset-subsetStartIdx+1) = turboregMovie(thisMovie(:,:,movieSubset-subsetStartIdx+1),'options',ioptions);
+			% 	% thisMovie(:,:,movieSubset-subsetStartIdx+1) = [];
+			% 	% cutoffSubset = length(movieSubset);
+			% 	% thisMovie = thisMovie(:,:,(cutoffSubset+1):end);
+			% end
+			% j = whos('turboregThisMovie');j.bytes=j.bytes*9.53674e-7;j
+			% j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j
+			% tmpMovieClass = class(tmpMovie);
+			% cast(thisMovie,tmpMovieClass);
+			% thisMovie(:,:,movieSubset) = tmpMovie;
+			toc(subsetStartTime)
 		end
-	    clear ioptions;
-	    % size(thisMovie)
-	    % imagesc(squeeze(thisMovie(:,:,1)))
-	    % 	title(['iteration number: ' num2str(iternationNo)])
+		clear ioptions;
+		% size(thisMovie)
+		% imagesc(squeeze(thisMovie(:,:,1)))
+		% 	title(['iteration number: ' num2str(iternationNo)])
 	end
 	function cropInputMovie()
 		% turboreg outputs 0s where movement goes off the screen
@@ -1010,35 +1010,35 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		rightVal = sum(thisMovieMinMask(floor(end/2),end-floor(end/4):end));
 		tmpPxToCrop = max([topVal bottomVal leftVal rightVal]);
 		display(['[topVal bottomVal leftVal rightVal]: ' num2str([topVal bottomVal leftVal rightVal])])
-    	% % crop movie based on how much was turboreg'd
-    	% display('cropping movie...')
-    	% varImg = nanvar(thisMovie,[],3);
-    	% varImg = var(thisMovie,0,3);
-    	% medianVar = median(varImg(:));
-    	% stdVar = std(varImg(:));
-    	% twoSigma = 2*medianVar;
-    	% varImgX = median(varImg,1);
-    	% varImgY = median(varImg,2);
-    	% varThreshold = 1e3;
-    	% tmpPxToCrop = max([sum(varImgX>varThreshold) sum(varImgY>varThreshold)]);
-    	% imagesc(nanvar(thisMovie,[],3));
-    	% title('turboreg var projection');
-    	% % tmpPxToCrop = 10;
-    	% tmpPxToCrop
-    	if tmpPxToCrop~=0
-	    	if tmpPxToCrop<options.pxToCrop
-	    		% [thisMovie] = cropMatrix(thisMovie,'pxToCrop',tmpPxToCrop);
-	    		cropMatrixPreProcess(tmpPxToCrop);
-	    	else
-	    		% [thisMovie] = cropMatrix(thisMovie,'pxToCrop',options.pxToCrop);
-	    		cropMatrixPreProcess(options.pxToCrop);
-	    	end
-	    end
-    	% % convert to single (32-bit floating point)
-    	% % thisMovie = single(thisMovie);
-    	% saveStr = [saveStr '_crop'];
-    end
-    function cropMatrixPreProcess(pxToCropPreprocess)
+		% % crop movie based on how much was turboreg'd
+		% display('cropping movie...')
+		% varImg = nanvar(thisMovie,[],3);
+		% varImg = var(thisMovie,0,3);
+		% medianVar = median(varImg(:));
+		% stdVar = std(varImg(:));
+		% twoSigma = 2*medianVar;
+		% varImgX = median(varImg,1);
+		% varImgY = median(varImg,2);
+		% varThreshold = 1e3;
+		% tmpPxToCrop = max([sum(varImgX>varThreshold) sum(varImgY>varThreshold)]);
+		% imagesc(nanvar(thisMovie,[],3));
+		% title('turboreg var projection');
+		% % tmpPxToCrop = 10;
+		% tmpPxToCrop
+		if tmpPxToCrop~=0
+			if tmpPxToCrop<options.pxToCrop
+				% [thisMovie] = cropMatrix(thisMovie,'pxToCrop',tmpPxToCrop);
+				cropMatrixPreProcess(tmpPxToCrop);
+			else
+				% [thisMovie] = cropMatrix(thisMovie,'pxToCrop',options.pxToCrop);
+				cropMatrixPreProcess(options.pxToCrop);
+			end
+		end
+		% % convert to single (32-bit floating point)
+		% % thisMovie = single(thisMovie);
+		% saveStr = [saveStr '_crop'];
+	end
+	function cropMatrixPreProcess(pxToCropPreprocess)
   %   	if size(thisMovie,2)>=size(thisMovie,1)
 		% 	coords(1) = pxToCropPreprocess; %xmin
 		% 	coords(2) = pxToCropPreprocess; %ymin
@@ -1062,7 +1062,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		bottomRowCrop = size(thisMovie,1)-pxToCropPreprocess; % bottom row
 		rightColCrop = size(thisMovie,2)-pxToCropPreprocess; % right column
 
-    	rowLen = size(thisMovie,1);
+		rowLen = size(thisMovie,1);
 		colLen = size(thisMovie,2);
 		% set leftmost columns to NaN
 		thisMovie(1:end,1:leftColCrop,:) = NaN;
@@ -1097,8 +1097,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				display([num2str(subsetStartIdx) '-' num2str(subsetEndIdx-1) ' ' num2str(thisSet) '/' num2str(nSubsets)])
 			end
 			display(repmat('$',1,7))
-		    j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
-		    thisMovie(:,:,movieSubset) = normalizeMovie(thisMovie(:,:,movieSubset),'normalizationType','medianFilter','medianFilterNeighborhoodSize',options.turboreg.medianFilterSize);
+			j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
+			thisMovie(:,:,movieSubset) = normalizeMovie(thisMovie(:,:,movieSubset),'normalizationType','medianFilter','medianFilterNeighborhoodSize',options.turboreg.medianFilterSize);
 			toc(subsetStartTime)
 		end
 		% thisMovie = normalizeMovie(thisMovie,'normalizationType','medianFilter');
@@ -1127,27 +1127,27 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				display([num2str(subsetStartIdx) '-' num2str(subsetEndIdx-1) ' ' num2str(thisSet) '/' num2str(nSubsets)])
 			end
 			display(repmat('$',1,7))
-		    j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
+			j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
 
-		    % thisMovie(:,:,movieSubset) = normalizeMovie(thisMovie(:,:,movieSubset),'normalizationType','medianFilter','medianFilterNeighborhoodSize',options.turboreg.medianFilterSize);
+			% thisMovie(:,:,movieSubset) = normalizeMovie(thisMovie(:,:,movieSubset),'normalizationType','medianFilter','medianFilterNeighborhoodSize',options.turboreg.medianFilterSize);
 
-		    % ioptions.normalizeType = options.turboreg.normalizeType;
-		    % ioptions.registrationFxn = options.turboreg.registrationFxn;
-		    % ioptions.freqLow = options.turboreg.filterBeforeRegFreqLow;
-		    % ioptions.freqHigh = options.turboreg.filterBeforeRegFreqHigh;
+			% ioptions.normalizeType = options.turboreg.normalizeType;
+			% ioptions.registrationFxn = options.turboreg.registrationFxn;
+			% ioptions.freqLow = options.turboreg.filterBeforeRegFreqLow;
+			% ioptions.freqHigh = options.turboreg.filterBeforeRegFreqHigh;
 
-		    switch options.turboreg.filterBeforeRegister
-		    	case 'imagejFFT'
-		    		imagefFftOnInputMovie('inputMovie');
-		    	case 'divideByLowpass'
-		    		display('dividing movie by lowpass...')
-		    		thisMovie(:,:,movieSubset) = normalizeMovie(single(thisMovie(:,:,movieSubset)),'normalizationType','lowpassFFTDivisive','freqLow',options.turboreg.filterBeforeRegFreqLow,'freqHigh',options.turboreg.filterBeforeRegFreqHigh,'waitbarOn',1,'bandpassMask','gaussian');
-		    	case 'bandpass'
-		    		display('bandpass filtering...')
-		    		[thisMovie(:,:,movieSubset)] = normalizeMovie(single(thisMovie(:,:,movieSubset)),'normalizationType','fft','freqLow',options.turboreg.filterBeforeRegFreqLow,'freqHigh',options.turboreg.filterBeforeRegFreqHigh,'bandpassType','bandpass','showImages',0,'bandpassMask','gaussian');
-		    	otherwise
-		    		% do nothing
-		    end
+			switch options.turboreg.filterBeforeRegister
+				case 'imagejFFT'
+					imagefFftOnInputMovie('inputMovie');
+				case 'divideByLowpass'
+					display('dividing movie by lowpass...')
+					thisMovie(:,:,movieSubset) = normalizeMovie(single(thisMovie(:,:,movieSubset)),'normalizationType','lowpassFFTDivisive','freqLow',options.turboreg.filterBeforeRegFreqLow,'freqHigh',options.turboreg.filterBeforeRegFreqHigh,'waitbarOn',1,'bandpassMask','gaussian');
+				case 'bandpass'
+					display('bandpass filtering...')
+					[thisMovie(:,:,movieSubset)] = normalizeMovie(single(thisMovie(:,:,movieSubset)),'normalizationType','fft','freqLow',options.turboreg.filterBeforeRegFreqLow,'freqHigh',options.turboreg.filterBeforeRegFreqHigh,'bandpassType','bandpass','showImages',0,'bandpassMask','gaussian');
+				otherwise
+					% do nothing
+			end
 
 			toc(subsetStartTime)
 		end
@@ -1177,9 +1177,9 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				display([num2str(subsetStartIdx) '-' num2str(subsetEndIdx-1) ' ' num2str(thisSet) '/' num2str(nSubsets)])
 			end
 			display(repmat('$',1,7))
-		    j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
+			j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
 
-		    thisMovie(:,:,movieSubset) = removeStripsFromMovie(single(thisMovie(:,:,movieSubset)),'stripOrientation',options.turboreg.stripOrientationRemove,'meanFilterSize',options.turboreg.stripSize,'freqLowExclude',options.turboreg.stripfreqLowExclude,'waitbarOn',1);
+			thisMovie(:,:,movieSubset) = removeStripsFromMovie(single(thisMovie(:,:,movieSubset)),'stripOrientation',options.turboreg.stripOrientationRemove,'meanFilterSize',options.turboreg.stripSize,'freqLowExclude',options.turboreg.stripfreqLowExclude,'waitbarOn',1);
 
 			toc(subsetStartTime)
 		end
@@ -1192,53 +1192,53 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 
 		% get the mean projection
 	end
-    function fftHighpassInputMovie()
-    	% do a highpass filter
-    	ioptions.normalizationType = 'fft';
-    	ioptions.freqLow = 7;
-    	ioptions.freqHigh = 500;
-    	ioptions.bandpassType = 'highpass';
-    	ioptions.showImages = 0;
-    	ioptions.bandpassMask = 'gaussian';
-    	[thisMovie] = normalizeMovie(thisMovie,'options',ioptions);
-    	if exist('tmpPxToCrop','var')
-    		if tmpPxToCrop<options.pxToCrop
-    			[thisMovie] = cropMatrix(thisMovie,'pxToCrop',tmpPxToCrop);
-    		else
-    			[thisMovie] = cropMatrix(thisMovie,'pxToCrop',options.pxToCrop);
-    		end
-    	end
-    	% remove negative numbers
-    	[thisMovie] = normalizeVector(thisMovie,'normRange','zeroToOne');
-    	clear ioptions;
-    end
-    function fftLowpassInputMovie()
-    	% do a lowpass filter
-    	ioptions.normalizationType = 'fft';
-    	ioptions.freqLow = 1;
-    	ioptions.freqHigh = 7;
-    	ioptions.bandpassType = 'lowpass';
-    	ioptions.showImages = 0;
-    	ioptions.bandpassMask = 'gaussian';
-    	% save lowpass as separate
-    	[thisMovieLowpass] = normalizeMovie(thisMovie,'options',ioptions);
-    	clear ioptions;
-    	if exist('tmpPxToCrop','var')
-    		if tmpPxToCrop<options.pxToCrop
-    			[thisMovieLowpass] = cropMatrix(thisMovieLowpass,'pxToCrop',tmpPxToCrop);
-    		else
-    			[thisMovieLowpass] = cropMatrix(thisMovieLowpass,'pxToCrop',options.pxToCrop);
-    		end
-    	end
-    	% save lowpass as separate
-    	if sum(optionIdx==saveIdx)
-    		savePathStr = [thisDirSaveStr saveStr '.h5'];
-    		movieSaved = writeHDF5Data(thisMovieLowpass,savePathStr,'deflateLevel',options.deflateLevel)
-    	end
-    	% prevent lowpass file saving overwrite
-    	optionIdx = -1;
-    	clear thisMovieLowpass;
-    end
+	function fftHighpassInputMovie()
+		% do a highpass filter
+		ioptions.normalizationType = 'fft';
+		ioptions.freqLow = 7;
+		ioptions.freqHigh = 500;
+		ioptions.bandpassType = 'highpass';
+		ioptions.showImages = 0;
+		ioptions.bandpassMask = 'gaussian';
+		[thisMovie] = normalizeMovie(thisMovie,'options',ioptions);
+		if exist('tmpPxToCrop','var')
+			if tmpPxToCrop<options.pxToCrop
+				[thisMovie] = cropMatrix(thisMovie,'pxToCrop',tmpPxToCrop);
+			else
+				[thisMovie] = cropMatrix(thisMovie,'pxToCrop',options.pxToCrop);
+			end
+		end
+		% remove negative numbers
+		[thisMovie] = normalizeVector(thisMovie,'normRange','zeroToOne');
+		clear ioptions;
+	end
+	function fftLowpassInputMovie()
+		% do a lowpass filter
+		ioptions.normalizationType = 'fft';
+		ioptions.freqLow = 1;
+		ioptions.freqHigh = 7;
+		ioptions.bandpassType = 'lowpass';
+		ioptions.showImages = 0;
+		ioptions.bandpassMask = 'gaussian';
+		% save lowpass as separate
+		[thisMovieLowpass] = normalizeMovie(thisMovie,'options',ioptions);
+		clear ioptions;
+		if exist('tmpPxToCrop','var')
+			if tmpPxToCrop<options.pxToCrop
+				[thisMovieLowpass] = cropMatrix(thisMovieLowpass,'pxToCrop',tmpPxToCrop);
+			else
+				[thisMovieLowpass] = cropMatrix(thisMovieLowpass,'pxToCrop',options.pxToCrop);
+			end
+		end
+		% save lowpass as separate
+		if sum(optionIdx==saveIdx)
+			savePathStr = [thisDirSaveStr saveStr '.h5'];
+			movieSaved = writeHDF5Data(thisMovieLowpass,savePathStr,'deflateLevel',options.deflateLevel)
+		end
+		% prevent lowpass file saving overwrite
+		optionIdx = -1;
+		clear thisMovieLowpass;
+	end
 end
 
 function [turboRegCoords] = turboregCropSelection(options,folderList)
@@ -1276,8 +1276,8 @@ function [turboRegCoords] = turboregCropSelection(options,folderList)
 			switch options.turboregType
 				case 'preselect'
 					if strfind(folderList{fileNum},'#')==1
-					    % display('skipping...')
-					    continue;
+						% display('skipping...')
+						continue;
 					end
 					% opens frame n in each movie and asks the user to pre-select a region
 					% thisDir = folderList{fileNum};
@@ -1290,9 +1290,9 @@ function [turboRegCoords] = turboregCropSelection(options,folderList)
 					inputFilePath = movieList{movieNo};
 					if nMovies==1
 						inputFilePath = movieList;
-                    else
-                        inputFilePath = movieList{movieNo};
-                    end
+					else
+						inputFilePath = movieList{movieNo};
+					end
 
 					% [pathstr,name,ext] = fileparts(inputFilePath{1});
 
@@ -1301,11 +1301,11 @@ function [turboRegCoords] = turboregCropSelection(options,folderList)
 					% if strcmp(ext,'.h5')|strcmp(ext,'.hdf5')
 
 					% 	hinfo = hdf5info(inputFilePath);
-                        % try
-                        %     hReadInfo = hinfo.GroupHierarchy.Datasets(1);
-                        % catch
-                        %     hReadInfo = hinfo.GroupHierarchy.Groups.Datasets(1);
-                        % end
+						% try
+						%     hReadInfo = hinfo.GroupHierarchy.Datasets(1);
+						% catch
+						%     hReadInfo = hinfo.GroupHierarchy.Groups.Datasets(1);
+						% end
 					% 	xDim = hReadInfo.Dims(1);
 					% 	yDim = hReadInfo.Dims(2);
 					% 	% select the first frame from the dataset

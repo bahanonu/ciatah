@@ -26,7 +26,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		MICRON_PER_PIXEL =  2.51; % 2.37;
 
 		defaultObjDir = pwd;
-		classVersion = 'v3.2.2-20190508';
+		classVersion = 'v3.2.3-20190615';
 		serverPath = '';
 		privateSettingsPath = ['private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
 		% place where functions can temporarily story user settings
@@ -54,6 +54,8 @@ classdef calciumImagingAnalysis < dynamicprops
 		fileFilterRegexp = 'crop';
 		% Regular expression for alternative file
 		fileFilterRegexpAlt = 'crop';
+		% Regular expression for alternative file during cell extraction
+		fileFilterRegexpAltCellExtraction = '';
 		% raw movie
 		fileFilterRegexpRaw = 'concat';
 		% behavior video regexp
@@ -192,8 +194,8 @@ classdef calciumImagingAnalysis < dynamicprops
 		validCNMFStructVarname = 'validCNMF';
 		structCNMRVarname = 'cnmfAnalysisOutput';
 		% PCAICA, EM, EXTRACT, CNMF, CNMFE
-		% signalExtractionMethod = 'PCAICA';
-		signalExtractionMethod = 'EM';
+		signalExtractionMethod = 'PCAICA';
+		% signalExtractionMethod = 'EM';
 
 		settingOptions = struct(...
 			'analysisType',  {{'group','individual'}},...
@@ -421,9 +423,9 @@ classdef calciumImagingAnalysis < dynamicprops
 			% ' Calcium Imaging Analysis Class
 			display([...
 			'calciumImagingAnalysis' 10 ...
-			'A software package for analyzing one- and two-photon calcium imaging datasets.' 10 ...
-			'Version ' obj.classVersion 10 ...
-			'Biafra Ahanonu <<a href="emailto:bahanonu@alum.mit.edu">bahanonu@alum.mit.edu</a>>' 10 10 ...
+			'A software package for analyzing one- and two-photon calcium imaging datasets.' 10 10 ...
+			'Biafra Ahanonu <<a href="emailto:bahanonu@alum.mit.edu">bahanonu@alum.mit.edu</a>>' 10 ...
+			'Version ' obj.classVersion 10 10 ...
 			'Made in USA' 10 ...
 			'* * * * * * * * * * =========================' 10 ...
 			'* * * * * * * * * * :::::::::::::::::::::::::' 10 ...
@@ -438,7 +440,8 @@ classdef calciumImagingAnalysis < dynamicprops
 			'=============================================' 10 ...
 			':::::::::::::::::::::::::::::::::::::::::::::' 10 ...
 			'=============================================' 10])
-			display(repmat('#',1,7))
+
+			display(repmat('*',1,42))
 			display('Constructing calciumImagingAnalysis imaging analysis object...')
 
 			% Because the obj
@@ -457,7 +460,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			obj = initializeObj(obj);
 
 			display('Done initializing calciumImagingAnalysis!')
-			display(repmat('#',1,7))
+			display(repmat('*',1,42))
 
 			display([...
 			'Run processing pipeline by typing below (or clicking link) into command window (no semi-colon!):' 10 ...
@@ -524,6 +527,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		obj = viewMovieRegistrationTest(obj)
 		obj = viewMovieCreateSideBySide(obj)
 		obj = modelModifyMovies(obj)
+		obj = viewCellExtractionOnMovie(obj,varargin)
 
 		% require pre-computation, individual
 
@@ -571,36 +575,36 @@ classdef calciumImagingAnalysis < dynamicprops
 		function obj = resetMijiClass(obj)
 			% This clears Miji from Java's dynamic path and then re-initializes. Use if Miji is not loading normally.
 			resetMiji
-        	% success = 0;
+			% success = 0;
 
-        	% for i = 1:2
-        	% 	try
-        	% 		% clear MIJ miji Miji mij;
-        	% 		javaDyna = javaclasspath('-dynamic');
-        	% 		matchIdx = ~cellfun(@isempty,regexpi(javaDyna,'Fiji'));
-        	% 		% cellfun(@(x) javarmpath(x),javaDyna(matchIdx));
-        	% 		javaDynaPathStr = join(javaDyna(matchIdx),''',''');
-        	% 		if ~isempty(javaDynaPathStr)
-        	% 			eval(sprintf('javarmpath(''%s'');',javaDynaPathStr{1}))
-        	% 		end
-        	% 		clear MIJ miji Miji mij;
-        	% 		% pause(1);
-        	% 		% java.lang.Runtime.getRuntime().gc;
-        	% 		% Miji;
-        	% 		% MIJ.exit;
-        	% 	catch err
-        	% 		display(repmat('@',1,7))
-        	% 		disp(getReport(err,'extended','hyperlinks','on'));
-        	% 		display(repmat('@',1,7))
-        	% 	end
-        	% end
+			% for i = 1:2
+			% 	try
+			% 		% clear MIJ miji Miji mij;
+			% 		javaDyna = javaclasspath('-dynamic');
+			% 		matchIdx = ~cellfun(@isempty,regexpi(javaDyna,'Fiji'));
+			% 		% cellfun(@(x) javarmpath(x),javaDyna(matchIdx));
+			% 		javaDynaPathStr = join(javaDyna(matchIdx),''',''');
+			% 		if ~isempty(javaDynaPathStr)
+			% 			eval(sprintf('javarmpath(''%s'');',javaDynaPathStr{1}))
+			% 		end
+			% 		clear MIJ miji Miji mij;
+			% 		% pause(1);
+			% 		% java.lang.Runtime.getRuntime().gc;
+			% 		% Miji;
+			% 		% MIJ.exit;
+			% 	catch err
+			% 		display(repmat('@',1,7))
+			% 		disp(getReport(err,'extended','hyperlinks','on'));
+			% 		display(repmat('@',1,7))
+			% 	end
+			% end
 
-        	% success = 1;
+			% success = 1;
 		end
 
 		function obj = display(obj)
 			% Overload display method so can run object by just typing 'obj' in command window.
-            obj.runPipeline;
+			obj.runPipeline;
 			% display('hello');
 		end
 
@@ -614,15 +618,15 @@ classdef calciumImagingAnalysis < dynamicprops
 			[fileIdxArray, ok] = listdlg('ListString',dependencyStr,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','Which dependency to load?');
 			analysisType = dependencyStr{fileIdxArray};
 			switch analysisType
-			    case 'downloadCnmfGithubRepositories'
+				case 'downloadCnmfGithubRepositories'
 					[success] = downloadCnmfGithubRepositories();
-			    case 'loadMiji'
+				case 'loadMiji'
 					modelAddOutsideDependencies('miji');
-			    case 'example_downloadTestData'
+				case 'example_downloadTestData'
 					example_downloadTestData();
-		    	otherwise
-		    		% nothing
-		    end
+				otherwise
+					% nothing
+			end
 		end
 
 		function obj = showProtocolSubjectsSessions(obj)
@@ -741,8 +745,8 @@ classdef calciumImagingAnalysis < dynamicprops
 				obj.sumStats.distances.cellPairs(end+1:end+nPtsAdd,1) = 1:length(allDistances);
 				obj.sumStats.distances.sessionStr(end+1:end+nPtsAdd,1) = {theseFieldnames{subjNo}};
 			end
-		    savePath = [obj.dataSavePath obj.protocol{obj.fileNum} '_cellDistanceStatsAligned.tab'];
-		    display(['saving data to: ' savePath])
+			savePath = [obj.dataSavePath obj.protocol{obj.fileNum} '_cellDistanceStatsAligned.tab'];
+			display(['saving data to: ' savePath])
 			writetable(struct2table(obj.sumStats.distances),savePath,'FileType','text','Delimiter','\t');
 
 			% return;
@@ -763,8 +767,8 @@ classdef calciumImagingAnalysis < dynamicprops
 				obj.sumStats.centroids.y(end+1:end+nPtsAdd,1) = allCentroids(:,1);
 			end
 
-		    savePath = [obj.dataSavePath obj.protocol{obj.fileNum} '_cellCentroidsAligned.tab'];
-		    display(['saving data to: ' savePath])
+			savePath = [obj.dataSavePath obj.protocol{obj.fileNum} '_cellCentroidsAligned.tab'];
+			display(['saving data to: ' savePath])
 			writetable(struct2table(obj.sumStats.centroids),savePath,'FileType','text','Delimiter','\t');
 
 
@@ -796,8 +800,8 @@ classdef calciumImagingAnalysis < dynamicprops
 			 %    end
 			end
 
-		    savePath = [obj.dataSavePath obj.protocol{obj.fileNum} '_globalIDNums.tab'];
-		    display(['saving data to: ' savePath])
+			savePath = [obj.dataSavePath obj.protocol{obj.fileNum} '_globalIDNums.tab'];
+			display(['saving data to: ' savePath])
 			writetable(struct2table(obj.sumStats.globalIDs),savePath,'FileType','text','Delimiter','\t');
 
 		end
@@ -854,8 +858,8 @@ classdef calciumImagingAnalysis < dynamicprops
 				end
 			end
 
-		    savePath = [obj.dataSavePath obj.protocol{obj.fileNum} '_cellDistanceStats.csv'];
-		    display(['saving data to: ' savePath])
+			savePath = [obj.dataSavePath obj.protocol{obj.fileNum} '_cellDistanceStats.csv'];
+			display(['saving data to: ' savePath])
 			writetable(struct2table(obj.sumStats),savePath,'FileType','text','Delimiter',',');
 		end
 
@@ -866,7 +870,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			% [success] = cnmfVersionDirLoad('cnmfe');
 
 			% Check required toolboxes are available, warn if not
-			display(repmat('-',1,7))
+			display(repmat('*',1,42))
 			toolboxList = {...
 			'distrib_computing_toolbox',...
 			'image_toolbox',...
@@ -882,15 +886,15 @@ classdef calciumImagingAnalysis < dynamicprops
 					fprintf('Toolbox %s available!\n',toolboxName)
 				else
 					warning(sprintf('Please install %s toolbox before running calciumImagingAnalysis.',toolboxName));
-				    % if ~verLessThan('matlab', '9.5')
-				    %     warning('Please install Neural Network toolbox before running classifySignals');
-				    % else
-				    %     warning('Please install Deep Learning Toolbox before running classifySignals');
-				    % end
-				    % return;
+					% if ~verLessThan('matlab', '9.5')
+					%     warning('Please install Neural Network toolbox before running classifySignals');
+					% else
+					%     warning('Please install Deep Learning Toolbox before running classifySignals');
+					% end
+					% return;
 				end
 			end
-			display(repmat('-',1,7))
+			display(repmat('*',1,42))
 
 			% Ensure date paths are up to date
 			obj.picsSavePath = ['private' filesep 'pics' filesep datestr(now,'yyyymmdd','local') filesep];
@@ -1003,6 +1007,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			'modelPreprocessMovie',
 			'modelModifyMovies',
 			'modelExtractSignalsFromMovie',
+			'viewCellExtractionOnMovie',
 			'',
 			'------- LOAD SIGNAL DATA -------',
 			'modelVarsFromFiles',
@@ -1162,11 +1167,11 @@ classdef calciumImagingAnalysis < dynamicprops
 							case 'EXTRACT'
 								missingRegexp = obj.rawEXTRACTStructSaveStr;
 							case 'CNMF'
-							    missingRegexp = obj.rawCNMFStructSaveStr;
-						    case 'CNMFE'
-						        missingRegexp = obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod);
+								missingRegexp = obj.rawCNMFStructSaveStr;
+							case 'CNMFE'
+								missingRegexp = obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod);
 							otherwise
-							    missingRegexp = obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod);
+								missingRegexp = obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod);
 						end
 						missingRegexp = strrep(missingRegexp,'.mat','');
 						validFoldersIdx2 = [];
@@ -1187,9 +1192,9 @@ classdef calciumImagingAnalysis < dynamicprops
 							case 'EXTRACT'
 								cellRegexp = obj.rawEXTRACTStructSaveStr;
 							case 'CNMF'
-							    cellRegexp = obj.rawCNMFStructSaveStr;
-						    case 'CNMFE'
-						        missingRegexp = obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod);
+								cellRegexp = obj.rawCNMFStructSaveStr;
+							case 'CNMFE'
+								missingRegexp = obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod);
 							otherwise
 								% cellRegexp = {obj.rawPCAICAStructSaveStr,obj.rawICfiltersSaveStr};
 								missingRegexp = obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod);
@@ -1236,7 +1241,7 @@ classdef calciumImagingAnalysis < dynamicprops
 							case 'EXTRACT'
 								missingRegexp = obj.sortedEXTRACTStructSaveStr;
 							case 'CNMF'
-							    missingRegexp = obj.sortedCNMFStructSaveStr;
+								missingRegexp = obj.sortedCNMFStructSaveStr;
 							otherwise
 								missingRegexp = obj.extractionMethodSortedSaveStr.(obj.signalExtractionMethod);
 						end
@@ -1263,7 +1268,7 @@ classdef calciumImagingAnalysis < dynamicprops
 							case 'EXTRACT'
 								missingRegexp = obj.sortedEXTRACTStructSaveStr;
 							case 'CNMF'
-							    missingRegexp = obj.sortedCNMFStructSaveStr;
+								missingRegexp = obj.sortedCNMFStructSaveStr;
 							otherwise
 								missingRegexp = obj.extractionMethodSortedSaveStr.(obj.signalExtractionMethod);
 						end
