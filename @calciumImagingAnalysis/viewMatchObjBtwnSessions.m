@@ -1,4 +1,4 @@
-function obj = viewMatchObjBtwnSessions(obj)
+function obj = viewMatchObjBtwnSessions(obj,varargin)
 	% Plots various metrics to visualize goodness of cross-session cell alignment.
 	% Biafra Ahanonu
 	% branched from controllerAnalysis: 2014.08.01 [16:09:16]
@@ -10,6 +10,7 @@ function obj = viewMatchObjBtwnSessions(obj)
 	% changelog
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
 		% 2019.04.23 [19:53:21] - a couple Windows specific path separators, switch to filesep
+		% 2019.07.03 [16:35:10] - Updated to allow GUI-less option so computeMatchObjBtwnTrials can run after cross-session alignment.
 	% TODO
 		%
 
@@ -25,27 +26,51 @@ function obj = viewMatchObjBtwnSessions(obj)
 		% end
 		% return
 
-	movieSettings = inputdlg({...
-			'directory to save pictures: ',...
-			'subject alignment set # (e.g. if need multiple separate alignments): ',...
-			'Sort global IDs in GUI (1 = yes, 0 = no): '
-		},...
-		'view movie settings',1,...
-		{...
-			obj.picsSavePath,...
-			'1',...
-			'0'
-		}...
-	);
-	obj.picsSavePath = movieSettings{1};
-	options.alignmentSetNum = str2num(movieSettings{2});
-	sortGlobalIDs = str2num(movieSettings{3});
+	%========================
+	% DESCRIPTION
+	options.picsSavePath = obj.picsSavePath;
+	options.alignmentSetNum = 1;
+	options.sortGlobalIDs = 0;
+	options.runGui = 1;
+	% get options
+	options = getOptions(options,varargin);
+	% display(options)
+	% unpack options into current workspace
+	% fn=fieldnames(options);
+	% for i=1:length(fn)
+	% 	eval([fn{i} '=options.' fn{i} ';']);
+	% end
+	%========================
 
-	scnsize = get(0,'ScreenSize');
-	viewMatchSessionsStr = {'view cross session matches','make cross session color cellmaps'};
-	[signalIdxArray, ok] = listdlg('ListString',viewMatchSessionsStr,'ListSize',[scnsize(3)*0.4 scnsize(4)*0.4],'Name','Which cross-day analysis to run?','InitialValue',2);
-		% signalIdxArray
-	viewMatchSessionsStr = viewMatchSessionsStr(signalIdxArray);
+	if options.runGui==1
+		movieSettings = inputdlg({...
+				'directory to save pictures: ',...
+				'subject alignment set # (e.g. if need multiple separate alignments): ',...
+				'Sort global IDs in GUI (1 = yes, 0 = no): '
+			},...
+			'view movie settings',1,...
+			{...
+				obj.picsSavePath,...
+				'1',...
+				'0'
+			}...
+		);
+		obj.picsSavePath = movieSettings{1};
+		options.alignmentSetNum = str2num(movieSettings{2});
+		sortGlobalIDs = str2num(movieSettings{3});
+
+		scnsize = get(0,'ScreenSize');
+		viewMatchSessionsStr = {'view cross session matches','make cross session color cellmaps'};
+		[signalIdxArray, ok] = listdlg('ListString',viewMatchSessionsStr,'ListSize',[scnsize(3)*0.4 scnsize(4)*0.4],'Name','Which cross-day analysis to run?','InitialValue',2);
+			% signalIdxArray
+		viewMatchSessionsStr = viewMatchSessionsStr(signalIdxArray);
+	else
+		obj.picsSavePath = options.picsSavePath;
+		options.alignmentSetNum = options.alignmentSetNum;
+		sortGlobalIDs = options.sortGlobalIDs;
+		viewMatchSessionsStr = {'make cross session color cellmaps'};
+	end
+
 
 	nFiles = length(obj.rawSignals);
 	[fileIdxArray idNumIdxArray nFilesToAnalyze nFiles] = obj.getAnalysisSubsetsToAnalyze();
@@ -290,12 +315,14 @@ function obj = viewMatchObjBtwnSessions(obj)
 					if sum(distMatrixPairs>options.maxDistAccept)>1
 						[xPlot2 yPlot2] = getSubplotDimensions(size(tmpGlobalImg,3));
 						figure(10000+globalNo)
+							linkAx = [];
 							for sss = 1:size(tmpGlobalImg,3)
-								subplot(xPlot2,yPlot2,sss)
+								linkAx(end+1) = subplot(xPlot2,yPlot2,sss)
 								imagesc(tmpGlobalImg(:,:,sss))
 								hold on;
 								plot(globalCoordHere(:,1),globalCoordHere(:,2),'k.');
 							end
+							linkaxes(linkAx); zoom on;
 							suptitle(num2str(globalNo))
 							% montage()
 							% globalNo
@@ -404,8 +431,9 @@ function obj = viewMatchObjBtwnSessions(obj)
 			% figure(90)
 			% plot(nMatchGlobalIDs)
 			% round(nSessions*0.6)
-			for matchingNumbers = [2 1]
-				folderSaveName = {'matchObjColorMapAllMatched','matchObjColorMap70percentMatched'};
+			for matchingNumbers = [1 2 3]
+				folderSaveName = {'matchObjColorMapAllMatched','matchObjColorMap70percentMatched','matchObjColorMap50percentMatched'};
+				fractionShow = [1 0.7 0.5];
 				for sessionNo = 1:nSessions
 					try
 						obj.fileNum = validFoldersIdx(sessionNo);
@@ -413,11 +441,12 @@ function obj = viewMatchObjBtwnSessions(obj)
 						globalToSessionIDsTmp = globalToSessionIDs{sessionNo};
 						% get
 						% figure;plot(nMatchGlobalIDs==nSessions);
-						if matchingNumbers==1
-							keepIDIdx = globalIDs(nMatchGlobalIDs>=round(nSessions*0.7),sessionNo);
-						else
-							keepIDIdx = globalIDs(nMatchGlobalIDs==nSessions,sessionNo);
-						end
+						keepIDIdx = globalIDs(nMatchGlobalIDs>=round(nSessions*fractionShow(matchingNumbers)),sessionNo);
+						% if matchingNumbers==1
+						% 	keepIDIdx = globalIDs(nMatchGlobalIDs==nSessions,sessionNo);
+						% else
+						% 	keepIDIdx = globalIDs(nMatchGlobalIDs>=round(nSessions*0.7),sessionNo);
+						% end
 						keepIDIdx(keepIDIdx<1) = [];
 						keepIDIdx(keepIDIdx>length(globalToSessionIDsTmp)) = [];
 						% keepIDIdx
@@ -486,6 +515,7 @@ function obj = viewMatchObjBtwnSessions(obj)
 				end
 				close(writerObj);
 			end
+
 			display('finished making global maps')
 			continue
 

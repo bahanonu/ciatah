@@ -215,6 +215,7 @@ The general order of functions that users should run is:
 	- Users are able to select specific cells from cell extraction manual sorting to include in further analyses.
 - `computeMatchObjBtwnTrials`
 	- Method to register cells across imaging sessions. Also includes visual check GUI in `viewMatchObjBtwnSessions` method.
+	- __Note: it is heavily advised that throughout a particular animal's imaging sessions, that you keep the acquisition frame dimensions identical.__ This makes cross-session registration easier. Else you will have to crop all sessions for that animal to the same size ensuring that the area of interest is present in each.
 
 ******************************************
 

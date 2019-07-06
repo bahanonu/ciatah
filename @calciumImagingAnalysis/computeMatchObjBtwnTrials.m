@@ -1,4 +1,4 @@
-function obj = computeMatchObjBtwnTrials(obj)
+function obj = computeMatchObjBtwnTrials(obj,varargin)
 	% Match cells across imaging sessions.
 	% Biafra Ahanonu
 	% branched from controllerAnalysis: 2014.08.01 [16:09:16]
@@ -8,9 +8,22 @@ function obj = computeMatchObjBtwnTrials(obj)
 		%
 
 	% changelog
-		%
+		% 2019.07.03 [16:36:32] - Updated to call viewMatchObjBtwnSessions afterwards as an option
 	% TODO
 		%
+
+	%========================
+	% DESCRIPTION
+	options.exampleOption = '';
+	% get options
+	options = getOptions(options,varargin);
+	% display(options)
+	% unpack options into current workspace
+	% fn=fieldnames(options);
+	% for i=1:length(fn)
+	% 	eval([fn{i} '=options.' fn{i} ';']);
+	% end
+	%========================
 
 	% scnsize = get(0,'ScreenSize');
 	% [fileIdxArray, ok] = listdlg('ListString',obj.fileIDNameArray,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','choose which trial to align to?');
@@ -26,7 +39,7 @@ function obj = computeMatchObjBtwnTrials(obj)
 	% 	% idNumIdxArray = 1:length(obj.stimulusNameArray);
 	% 	% fileIdxArray = 1:length(obj.fileIDNameArray);
 	% end
-	[fileIdxArray idNumIdxArray nFilesToAnalyze nFiles] = obj.getAnalysisSubsetsToAnalyze();
+	[fileIdxArray, idNumIdxArray, nFilesToAnalyze, nFiles] = obj.getAnalysisSubsetsToAnalyze();
 
 	for thisFileNumIdx = [342 343 344 9019 59857 65 66]
 		[~, ~] = openFigure(thisFileNumIdx, '');
@@ -38,22 +51,33 @@ function obj = computeMatchObjBtwnTrials(obj)
 	% 	usrIdxChoice = userDefaults;
 	% end
 	scnsize = get(0,'ScreenSize');
-	userDefaults = {'1','5','0.4','','2'};
+	userDefaults = {'1','5','0.4','','2','0.6','1','1e-6','0','1'};
 	usrIdxChoice = inputdlg({...
-		'number of rounds to register images',...
-		'distance to match (px)',...
-		'image threshold value (0 to 1)',...
-		'Session to align to (leave blank to auto-calculate middle session)',...
-		'3 = rotation and iso scaling, 2 = rotation no iso scaling',...
-		},'options',1,...
+		'Number of rounds to register images (integer)',...
+		'Distance threshold to match cells cross-session (in pixels)',...
+		'Image threshold (0 to 1, fraction each image''s max value)',...
+		'Session to align to (leave blank to auto-calculate middle session to use for alignment)',...
+		'Registration type (3 = rotation and iso scaling, 2 = rotation no iso scaling)',...
+		'Image correlation threshold for matched cells (0 to 1)',...
+		'Run image correlation threshold? (1 = yes, 0 = no)',...
+		'Threshold below which registered image values set to zero',...
+		'Visually compare image correlation values and matched images (1 = yes, 0 = no)',...
+		'View full results after [viewMatchObjBtwnSessions] (1 = yes, 0 = no)',...
+		},'Cross-session cell alignment options',1,...
 		userDefaults);
 
 	% options.frameList = [1:500];
-	nCorrections = str2num(usrIdxChoice{1});
-	maxDistance = str2num(usrIdxChoice{2});
-	imageThreshold = str2num(usrIdxChoice{3});
-	trialToAlignUserOption = str2num(usrIdxChoice{4});
-	RegisTypeFinal = str2num(usrIdxChoice{5});
+	s1 = 1;
+	nCorrections = str2num(usrIdxChoice{s1});s1=s1+1;
+	maxDistance = str2num(usrIdxChoice{s1});s1=s1+1;
+	imageThreshold = str2num(usrIdxChoice{s1});s1=s1+1;
+	trialToAlignUserOption = str2num(usrIdxChoice{s1});s1=s1+1;
+	RegisTypeFinal = str2num(usrIdxChoice{s1});s1=s1+1;
+	imageCorr = str2num(usrIdxChoice{s1});s1=s1+1;
+	runImageCorr = str2num(usrIdxChoice{s1});s1=s1+1;
+	checkImageCorr = str2num(usrIdxChoice{s1});s1=s1+1;
+	turboregZeroThres = str2num(usrIdxChoice{s1});s1=s1+1;
+	runViewMatchObjBtwnSessions = str2num(usrIdxChoice{s1});s1=s1+1;
 
 	for thisSubjectStr=subjectList
 		try
@@ -75,7 +99,7 @@ function obj = computeMatchObjBtwnTrials(obj)
 				display([num2str(idx) '/' num2str(length(validFoldersIdx)) ': ' obj.fileIDNameArray{obj.fileNum}]);
 				% obj.folderBaseSaveStr{obj.fileNum}
 				% [rawSignalsTmp rawImagesTmp signalPeaks signalPeaksArray] = modelGetSignalsImages(obj,'returnType','raw');
-				[rawSignalsTmp rawImagesTmp signalPeaks signalPeaksArray] = modelGetSignalsImages(obj,'returnType','filtered');
+				[rawSignalsTmp, rawImagesTmp, signalPeaks, signalPeaksArray] = modelGetSignalsImages(obj,'returnType','filtered');
 				if ~isempty(rawSignalsTmp)
 					display('adding to alignment...')
 					rawSignals{end+1} = rawSignalsTmp;
@@ -130,7 +154,24 @@ function obj = computeMatchObjBtwnTrials(obj)
 				trialToAlign = trialToAlignUserOption;
 			end
 			% alignmentStruct = matchObjBtwnTrials(rawImages,'inputSignals',rawSignals,'trialToAlign',trialToAlign,'additionalAlignmentImages',additionalAlignmentImages,'nCorrections',nCorrections);
-			alignmentStruct = matchObjBtwnTrials(rawImages,'inputSignals',rawSignals,'trialToAlign',trialToAlign,'additionalAlignmentImages',[],'nCorrections',nCorrections,'maxDistance',maxDistance,'threshold',imageThreshold,'RegisTypeFinal',RegisTypeFinal);
+
+			clear mOpts;
+
+			mOpts.inputSignals = rawSignals;
+			mOpts.trialToAlign = trialToAlign;
+			mOpts.additionalAlignmentImages = [];
+			mOpts.nCorrections = nCorrections;
+			mOpts.maxDistance = maxDistance;
+			mOpts.threshold = imageThreshold;
+			mOpts.RegisTypeFinal = RegisTypeFinal;
+			mOpts.imageCorr = imageCorr;
+			mOpts.runImageCorr = runImageCorr;
+			mOpts.checkImageCorr = checkImageCorr;
+			mOpts.turboregZeroThres = turboregZeroThres;
+
+			% alignmentStruct = matchObjBtwnTrials(rawImages,'inputSignals',rawSignals,'trialToAlign',trialToAlign,'additionalAlignmentImages',[],'nCorrections',nCorrections,'maxDistance',maxDistance,'threshold',imageThreshold,'RegisTypeFinal',RegisTypeFinal);
+			alignmentStruct = matchObjBtwnTrials(rawImages,'options',mOpts);
+
 			obj.globalIDs.(thisSubjectStr) = alignmentStruct.globalIDs;
 			obj.globalIDs.alignmentStruct.(thisSubjectStr) = alignmentStruct;
 			obj.globalIDCoords.(thisSubjectStr).localCoords = alignmentStruct.coords;
@@ -156,6 +197,21 @@ function obj = computeMatchObjBtwnTrials(obj)
 			display(repmat('@',1,7))
 			disp(getReport(err,'extended','hyperlinks','on'));
 			display(repmat('@',1,7))
+		end
+	end
+
+	if runViewMatchObjBtwnSessions==1
+		for thisSubjectStr=subjectList
+			try
+				display(repmat('=',1,21))
+				thisSubjectStr = thisSubjectStr{1};
+				display([thisSubjectStr]);
+				obj.viewMatchObjBtwnSessions('runGui',0);
+			catch err
+				display(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				display(repmat('@',1,7))
+			end
 		end
 	end
 	function convertTrialNumbersToAssayStr()

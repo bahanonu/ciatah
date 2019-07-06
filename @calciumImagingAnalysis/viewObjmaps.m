@@ -14,8 +14,8 @@ function obj = viewObjmaps(obj,varargin)
 
 	%========================
 	% Row and column size, don't change generally
-	options.rowSubP = 2
-	options.colSubP = 4
+	options.rowSubP = 2;
+	options.colSubP = 4;
 
 	% which table to read in
 	options.onlyShowMapTraceGraph = 0;
@@ -54,7 +54,7 @@ function obj = viewObjmaps(obj,varargin)
 	% end
 	%========================
 
-	[fileIdxArray idNumIdxArray nFilesToAnalyze nFiles] = obj.getAnalysisSubsetsToAnalyze();
+	[fileIdxArray, idNumIdxArray, nFilesToAnalyze, nFiles] = obj.getAnalysisSubsetsToAnalyze();
 
 	subplotTmp = @(x,y,z) subaxis(x,y,z, 'Spacing', 0.05, 'Padding', 0, 'MarginTop', 0.05,'MarginBottom', 0.1,'MarginLeft', 0.03,'MarginRight', 0.02);
 
@@ -125,19 +125,11 @@ function obj = viewObjmaps(obj,varargin)
 		options.filterShownTraces = 0;
 	end
 
-	options
-
-	for thisFileNumIdx = 1:nFilesToAnalyze
-		[~,~] = openFigure(2000+thisFileNumIdx, '');
-	end
-	for thisFileNumIdx = 1:nFilesToAnalyze
-		[~,~] = openFigure(5000+thisFileNumIdx, '');
-	end
-	for thisFileNumIdx = 1:nFilesToAnalyze
-		[~,~] = openFigure(4000+thisFileNumIdx, '');
-	end
-	for thisFileNumIdx = 1:nFilesToAnalyze
-		[~,~] = openFigure(45+thisFileNumIdx, '');
+	disp(options)
+	for figNo1 = [2000 5000 4000 45]
+		for thisFileNumIdx = 1:nFilesToAnalyze
+			[~,~] = openFigure(figNo1+thisFileNumIdx, '');
+		end
 	end
 	% [figHandle figNo] = openFigure(969, '');
 
@@ -159,9 +151,9 @@ function obj = viewObjmaps(obj,varargin)
 			[~,~] = openFigure(45+thisFileNumIdx, '');
 			%
 			% [inputSignals inputImages signalPeaks signalPeakIdx] = modelGetSignalsImages(obj,'returnType','raw');
-			[inputSignals inputImages signalPeaks signalPeakIdx valid validType] = modelGetSignalsImages(obj,'returnType','raw');
-			if isempty(inputSignals);
-				display('no input signals');
+			[inputSignals, inputImages, signalPeaks, signalPeakIdx, valid, validType] = modelGetSignalsImages(obj,'returnType','raw');
+			if isempty(inputSignals)
+				disp('no input signals');
 				try
 					suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType])
 				catch
@@ -325,9 +317,9 @@ function obj = viewObjmaps(obj,varargin)
 						text(coordX,coordY,num2str(signalNo),'Color',[1 1 1],'HorizontalAlignment','center')
 
 					end
-					imgRowY = size(inputImagesTmp,1);
-					imgColX = size(inputImagesTmp,2);
-					scaleBarLengthPx = options.scaleBarLengthMicron/obj.MICRON_PER_PIXEL;
+					% imgRowY = size(inputImagesTmp,1);
+					% imgColX = size(inputImagesTmp,2);
+					% scaleBarLengthPx = options.scaleBarLengthMicron/obj.MICRON_PER_PIXEL;
 					% [imgColX-scaleBarLengthPx-round(imgColX*0.05) imgRowY-round(imgRowY*0.05) scaleBarLengthPx 5]
 					% rectangle('Position',[imgColX-scaleBarLengthPx-imgColX*0.05 imgRowY-imgRowY*0.05 scaleBarLengthPx 5],'FaceColor',[1 1 1],'EdgeColor','none')
 					% annotation('line',[imgRow-50 imgRow-30]/imgRow,[20 20]/imgCol,'LineWidth',3,'Color',[1 1 1]);

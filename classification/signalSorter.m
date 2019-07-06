@@ -640,11 +640,11 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 
 	% % location of each subplot
 	% if ~isempty(options.inputMovie)
-	%     objMapPlotLoc = 4;
-	%     tracePlotLoc = [5:6];
+	% 	objMapPlotLoc = 4;
+	% 	tracePlotLoc = [5:6];
 	% else
-	%     objMapPlotLoc = 1;
-	%     tracePlotLoc = [4:6];
+	% 	objMapPlotLoc = 1;
+	% 	tracePlotLoc = [4:6];
 	% end
 	% % inputMoviePlotLoc = 1:2;
 	% inputMoviePlotLoc = 2;
@@ -2250,7 +2250,8 @@ function [slopeRatio] = plotPeakSignal(thisTrace,testpeaks,cellIDStr,instruction
 		x=[xval,xval];
 		y = ylim;
 		% y=[minValTraces maxValTraces];
-		plot(x,y,'r'); box off;
+		h = plot(x,y,'r'); box off;
+		uistack(h,'bottom');
 
 		axisH = gca;
 		axisH.XRuler.Axle.LineStyle = 'none';
