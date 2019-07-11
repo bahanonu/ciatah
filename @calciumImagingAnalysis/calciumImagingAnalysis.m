@@ -511,7 +511,7 @@ classdef calciumImagingAnalysis < dynamicprops
 
 
 		% compute methods, performs some computation and returns calculation to class property
-		obj = computeMatchObjBtwnTrials(obj)
+		obj = computeMatchObjBtwnTrials(obj,varargin)
 		obj = computeManualSortSignals(obj)
 		obj = computeClassifyTrainSignals(obj)
 
@@ -532,7 +532,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		% require pre-computation, individual
 
 		% require pre-computation, group, global alignment
-		obj = viewMatchObjBtwnSessions(obj)
+		obj = viewMatchObjBtwnSessions(obj,varargin)
 		% movies
 
 		% require pre-computation and behavior metrics, individual

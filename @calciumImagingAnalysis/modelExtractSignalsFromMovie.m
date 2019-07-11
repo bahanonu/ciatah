@@ -15,6 +15,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 
 	% changelog
 		% 2016.02.19 - rewrite of code to allow non-overwrite mode, so that multiple computers can connect to the same server and process the same series of folders in parallel while automatically ignoring folders that have already been processed. Could extend to include some date-based measure for analysis re-runs
+		% 2019.04.15 - Added new method of inputting CNMF-E settings using MATLAB editor. More flexible.
 	% TODO
 		%
 

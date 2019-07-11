@@ -20,6 +20,8 @@ function [matchedObjMaps euclideanStruct] = displayMatchingObjs(inputImages,glob
     options.globalIDCoords = [];
     %
     options.sortGlobalIDs = 1;
+    %
+    options.fps = 20;
     % get options
     options = getOptions(options,varargin);
     % display(options)
@@ -31,6 +33,9 @@ function [matchedObjMaps euclideanStruct] = displayMatchingObjs(inputImages,glob
     %========================
 
     try
+        guiRow = 2;
+        guiCol = 3;
+
         matchedObjMaps = [];
         euclideanStruct = struct;
         if options.permuteImages==1
@@ -105,11 +110,15 @@ function [matchedObjMaps euclideanStruct] = displayMatchingObjs(inputImages,glob
                 % if nMatchedIDs>2
                     nShuffles = 2;
                     reverseStr = '';
+                    tmpGlobalIDs = globalIDs;
+                    matchIDList = globalIDs(globalNo,:);
+                    matchIDIdx = matchIDList~=0;
+                    maxGlobalIDs = max(globalIDs,[],1);
+
+                    matchIDNames = matchIDList(matchIDIdx);
+                    matchIDNames = cellfun(@num2str,(mat2cell(matchIDNames(:),ones([1 length(matchIDNames)]))),'UniformOutput',false);
+
                     for shuffleNo = 1:nShuffles
-                        tmpGlobalIDs = globalIDs;
-                        matchIDList = globalIDs(globalNo,:);
-                        matchIDIdx = matchIDList~=0;
-                        maxGlobalIDs = max(globalIDs,[],1);
                         % obtain a random ID within the range for each trial...clever clever...jk
                         for maxGlobalShuffleNo = 1:length(maxGlobalIDs)
                             if maxGlobalIDs(maxGlobalShuffleNo)==0
@@ -133,6 +142,7 @@ function [matchedObjMaps euclideanStruct] = displayMatchingObjs(inputImages,glob
                     shuffledSignalFeaturesEuclideanStd(globalNo,1) = nanstd(shuffledSignalFeaturesEuclidean);
 
                     % matchIdx = sum(matchedSignals,2)~=0;
+                    [~, matchedSignals] = getGlobalData(inputImages,globalIDs,options.inputSignals,globalNo);
                     [avgSpikeTrace signalFeatures signalFeaturesEuclideanTmp signalFeaturesNorm] = getSignalFeatures(matchedSignals);
                     signalFeaturesEuclidean(globalNo,1) = signalFeaturesEuclideanTmp;
                 % else
@@ -141,7 +151,7 @@ function [matchedObjMaps euclideanStruct] = displayMatchingObjs(inputImages,glob
                 %     signalFeaturesEuclidean(globalNo,1) = NaN;
                 % end
 
-                subplot(2,2,1:2)
+                subplot(guiRow,guiCol,1:2)
 
                     imagesc(signalFeaturesNorm')
                     % add labels for each feature
@@ -158,41 +168,77 @@ function [matchedObjMaps euclideanStruct] = displayMatchingObjs(inputImages,glob
                     txtVals = round(signalFeatures .* 10^3) ./ 10^3;
                     text(I,J,num2str(txtVals(:)),'HorizontalAlignment','center')
                     title([num2str(globalNo) '/' num2str(nGlobals) ' globalID list: ' num2str(globalIDs(globalNo,:))])
+                    box off;
+                    colormap(gca,[customColormap([])]);
 
-
-                subplot(2,2,4)
+                subplot(guiRow,guiCol,4)
                     % title('example trace')
                     peakROI = [-40:40];
-                    set(gca,'ColorOrder',copper(nMatchedIDs));
+                    % set(gca,'ColorOrder',copper(nMatchedIDs));
                     plot(peakROI, avgSpikeTrace');
-                    box off; axis off;
+                    box off;
+                    % axis off;
                     % add in zero line
                     hold on;
                     xval = 0;
                     x=[xval,xval];
                     y=[min(avgSpikeTrace(:)) max(avgSpikeTrace(:))];
-                    plot(x,y,'r'); box off;
+                    h = plot(x,y,'k'); box off;
+                    % uistack(h,'bottom');
+
+                    legend(matchIDNames,'Location','northeast')
+
+                    % xval = 0;
+                    % x=[xval,xval];
+                    % y=[min(avgSpikeTrace(:)) max(avgSpikeTrace(:))];
+                    % h = plot(x,y,'r'); box off;
+                    % uistack(h,'bottom');
+
                     hold off;
                     title(['euclidean distance: ' num2str(signalFeaturesEuclidean(globalNo)) ' shuffled: ' num2str(shuffledSignalFeaturesEuclideanMean(globalNo))])
                 % imagesc([0:0.1:1]); colorbar
                 % title('reference for main plot')
 
-                % setup the next subplot
-                subplot(2,2,3)
+                subplot(guiRow,guiCol,[5 6])
+                    plotSignalsGraph(matchedSignals,'newAxisColorOrder','');
+                    legend(matchIDNames)
             end
 
+            % setup the next subplot
+            subplot(guiRow,guiCol,3)
             [groupImages matchedSignals] = getGlobalData(inputImages,globalIDs,options.inputSignals,globalNo);
             % groupVector = 1:length(inputImages);
             % [groupedImages] = groupImagesByColor(thresholdImages(groupImages,'binary',1),[]);
             % matchedObjMaps(:,:,globalNo) = createObjMap(groupedImages);
             % imagesc(matchedObjMaps(:,:,globalNo));
-            imagesc(squeeze(nansum(thresholdImages(groupImages,'binary',1),3))/nMatchedIDs*100);
-            colormap(customColormap([]));
+            imagesc(squeeze(nansum(thresholdImages(groupImages,'binary',1,'threshold',0.4),3))/nMatchedIDs*100);
+            colormap(gca,[0 0 0;customColormap([])]);
             title('heatmap of percent overlap object maps')
             colorbar
+            axis equal tight;
+            zoom on;
+            box off
 
             suptitle(['globalID ' num2str(globalNo) '/' num2str(nGlobals) '   f:finish    left/right: forward/back'])
-            [x y reply] = ginput(1);
+
+            set(gcf,'currentch','3');
+            % keyIn = get(gcf,'CurrentCharacter');
+            keyIn = '3';
+            while strcmp(keyIn,'3')
+                keyIn = get(gcf,'CurrentCharacter');
+                % if frameNo==frameNoMax
+                %     frameNo = 1;
+                % end
+                pause(1/options.fps);
+                % frameNo = frameNo + 1;
+                % writeVideo(writerObj,getframe(mainFig));
+            end
+
+            reply = double(keyIn);
+            figure(1929)
+            set(gcf,'currentch','3');
+
+            % [x y reply] = ginput(1);
             % reply = 29;
             if isequal(reply, 102)
                 % return;
@@ -292,6 +338,6 @@ function [avgSpikeTrace signalFeatures signalFeaturesEuclidean signalFeaturesNor
 
     % compute pairwise distance
     % pdist(signalFeaturesNorm')
-    signalFeaturesEuclidean = nanmean(pdist(signalFeatures));
-    % signalFeaturesEuclidean = nanmean(pdist(signalFeaturesNorm));
+    % signalFeaturesEuclidean = nanmean(pdist(signalFeatures));
+    signalFeaturesEuclidean = nanmean(pdist(signalFeaturesNorm));
 end
