@@ -15,6 +15,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% 2016.06.22 [13:20:43] small code change to choosing what steps to perform
 		% 2019.01.23 [09:15:39] Added support for 2018b due to change in findjobj and uicontrol.
 		% 2019.04.17 [11:59:35] Saving turboreg outputs added, in same folder as the log.
+		% 2019.07.11 [20:07:29] - Improved GUI display, added support for ISXD dropped frames.
 	% TODO
 		% Insert NaNs or mean of the movie into dropped frame location, see line 260
 		% Allow easy switching between analyzing all files in a folder together and each file in a folder individually
@@ -78,6 +79,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	options.normalizeMovie = 0;
 	% should the movie be downsampled?
 	options.downsampleMovie = 1;
+	% Regexp for log file to fix dropped frames
+	options.logFileRegexp = '(recording.*.(txt|xml)|.*_metadata.mat)';
 	% ====
 	% get options
 	options = getOptions(options,varargin);
@@ -281,17 +284,19 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				dirInfo = regexp(folderList{fileNum},',','split');
 				thisDir = dirInfo{1};
 			end
-			% start logging for this file
-			display([num2str(fileNum) '/' num2str(length(folderList)) ': ' thisDir]);
-			display([num2str(fileNumToRun) '/' num2str(nFilesToRun) ': ' thisDir]);
 			% check if this directory has been commented out, if so, skip
 			if strfind(thisDir,'#')==1
+				display([num2str(fileNum) '/' num2str(length(folderList)) ': ' thisDir]);
+				display([num2str(fileNumToRun) '/' num2str(nFilesToRun) ': ' thisDir]);
 				display('skipping...')
 				continue;
 			end
 
 			% skip this analysis if files already exist
 			if options.checkConcurrentAnalysis==1
+				display([num2str(fileNum) '/' num2str(length(folderList)) ': ' thisDir]);
+				display([num2str(fileNumToRun) '/' num2str(nFilesToRun) ': ' thisDir]);
+
 				checkSaveString = [thisDir filesep '0runningAnalysisCheck.mat'];
 				if exist(checkSaveString,'file')~=0
 					display('SKIPPING ANALYSIS FOR THIS FOLDER')
@@ -301,6 +306,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				end
 			end
 
+			% start logging for this file
 			display(['cd to: ' obj.defaultObjDir]);
 			cd(obj.defaultObjDir);
 			currentDateTimeStr = datestr(now,'yyyymmdd_HHMMSS','local');
@@ -309,6 +315,11 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			diarySaveStr = [thisDir filesep 'processing_info' filesep currentDateTimeStr '_preprocess.log'];
 			display(['saving diary: ' diarySaveStr])
 			diary(diarySaveStr);
+
+			display([num2str(fileNum) '/' num2str(length(folderList)) ': ' thisDir]);
+			display([num2str(fileNumToRun) '/' num2str(nFilesToRun) ': ' thisDir]);
+
+			options.turboreg
 			% diary([obj.logSavePath filesep currentDateTimeStr '_' obj.folderBaseSaveStr{obj.fileNum} '_preprocessing.log']);
 
 			% get the list of movies
@@ -566,7 +577,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		end
 
 		display('adding in dropped frames if any')
-		listLogFiles = getFileList(thisDir,'recording.*.(txt|xml)');
+		listLogFiles = getFileList(thisDir,options.logFileRegexp);
 
 		if isempty(listLogFiles)
 			display('Add log files to folder in order to add back dropped frames')
@@ -587,6 +598,9 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 					droppedCount = logInfo.DROPPED;
 				case 'inscopixXML'
 					movieFrames = logInfo.frames;
+					droppedCount = logInfo.dropped;
+				case 'inscopixMAT'
+					movieFrames = logInfo.num_samples;
 					droppedCount = logInfo.dropped;
 				otherwise
 					% do nothing
@@ -1318,7 +1332,8 @@ function [turboRegCoords] = turboregCropSelection(options,folderList)
 					% end
 
 					[figHandle figNo] = openFigure(9, '');
-					subplot(1,2,1);imagesc(thisFrame); axis image; colormap gray; title(['Click to drag-n-draw region. Cropped only for motion correction, original movie dimensions retained after registration.' 10 'Double-click region to continue.'])
+					titleStr = ['Click to drag-n-draw region.' 10 'Double-click region to continue.' 10 'Note: Only cropping for motion correction, original movie dimensions retained after registration.'];
+					subplot(1,2,1);imagesc(thisFrame); axis image; colormap gray; title(titleStr)
 					set(0,'DefaultTextInterpreter','none');
 					% suptitle([num2str(fileNumIdx) '\' num2str(nFilesToRun) ': ' 10 strrep(thisDir,'\','/')],'fontSize',12,'plotregion',0.9,'titleypos',0.95);
 					uicontrol('Style','Text','String',[num2str(fileNumIdx) '\' num2str(nFilesToRun) ': ' strrep(thisDir,'\','/')],'Units','normalized','Position',[0.1 0.9 0.8 0.10],'BackgroundColor','white','HorizontalAlignment','Center');
@@ -1331,17 +1346,17 @@ function [turboRegCoords] = turboregCropSelection(options,folderList)
 					switch applyPreviousTurboreg
 						case -1 %'NO | do not duplicate coords across multiple folders'
 							% p = round(getrect);
-							h = subfxn_getImRect();
+							h = subfxn_getImRect(titleStr);
 							p = round(wait(h));
 						case 0 %'YES | duplicate coords across multiple folders'
 							% p = round(getrect);
-							h = subfxn_getImRect();
+							h = subfxn_getImRect(titleStr);
 							p = round(wait(h));
 							coordsStructure.(fileInfo.subject) = p;
 						case -2 %'YES | duplicate coords if subject the same'
 							if ~any(strcmp(fileInfo.subject,fieldnames(coordsStructure)))
 								% p = round(getrect);
-								h = subfxn_getImRect();
+								h = subfxn_getImRect(titleStr);
 								p = round(wait(h));
 								coordsStructure.(fileInfo.subject) = p;
 							else
@@ -1416,9 +1431,9 @@ function [turboRegCoords] = turboregCropSelection(options,folderList)
 		end
 	end
 end
-function h = subfxn_getImRect()
+function h = subfxn_getImRect(titleStr)
 	h = imrect(gca);
-	addNewPositionCallback(h,@(p) title(mat2str(p,3)));
+	addNewPositionCallback(h,@(p) title([titleStr 10 mat2str(p,3)]));
 	fcn = makeConstrainToRectFcn('imrect',get(gca,'XLim'),get(gca,'YLim'));
 	setPositionConstraintFcn(h,fcn);
 end

@@ -22,6 +22,7 @@ function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
 		% should the global ID coordinate be averaged when a match is found for the next iteration? - IMPLEMENTED
 		% 2018.08.27 [18:02:11] - Modified how global coordinates calculated so most recent match isn't given equal weight to all older matches.
 		% 2019.07.03 [11:11:20] (early 2019) - Finished adding image correlation check for matched objects
+		% 2019.07.11 [20:46:23] - Add support for additional image correlation comparison metrics.
 	% notes
 		% the cell array of traces allows us to have arbitrary numbers of trials to align automatically,
 	% TODO
@@ -55,6 +56,8 @@ function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
 	options.imageCorr = 0.6;
 	% Binary: 1 = run image correlation check using options.imageCorr.
 	options.runImageCorr = 1;
+	% Str: type of image correlation to run
+	options.imageCorrType = 'corr2';
 	% Float: turboreg shift will lead to slight offsets from zero, fix that.
 	options.turboregZeroThres = 1e-6;
 	% Binary: 1 = check correlation matches visually
@@ -548,6 +551,16 @@ function [OutStruct] = computeGlobalIdsPairwise(OutStruct,coords,options,nSessio
 			end
 		end
 
+		% Create anonymous function for correlation depending on user input
+		switch options.imageCorrType
+			case 'corr2'
+				imageCorrFxn = @(x,y) corr2(x,y);
+			case 'jaccard'
+				imageCorrFxn = @(x,y) 1-simbin(x>0,y>0,'jaccard');
+			otherwise
+				imageCorrFxn = @(x,y) corr2(x,y);
+		end
+
 		% MATCHED: add matched objects to the global coordinates list
 		if length(matchedGlobalIdx)>=1
 			coordsGlobalCellOld = coordsGlobalCell;
@@ -581,11 +594,11 @@ function [OutStruct] = computeGlobalIdsPairwise(OutStruct,coords,options,nSessio
 							continue;
 						end
 						testImg = inputImages{checkSessionList(jjj)}(:,:,checkIds(jjj));
-						rhoH(1,jjj) = corr2(testImg,thisImg);
+						rhoH(1,jjj) = imageCorrFxn(testImg,thisImg);
 
 						if options.checkImageCorr==1
 							testImg2 = inputImagesOriginal{checkSessionList(jjj)}(:,:,checkIds(jjj));
-							rhoH(2,jjj) = corr2(testImg2,thisImg2);
+							rhoH(2,jjj) = imageCorrFxn(testImg2,thisImg2);
 							linkAx(end+1) = subplot(2,length(checkIds),jjj);imagesc(testImg);axis equal tight;
 							linkAx(end+1) = subplot(2,length(checkIds),length(checkIds)+jjj);imagesc(testImg2);axis equal tight;
 						end
@@ -599,10 +612,10 @@ function [OutStruct] = computeGlobalIdsPairwise(OutStruct,coords,options,nSessio
 
 					% Create a new global cell if fails image correlation test
 					if rhoH>options.imageCorr
-						fprintf('Passed image correlation test! Session %d, Global %d, Local %d\n',i,xGlobal,xLocal);
+						fprintf('Passed image correlation test! Session %d, Global %d, Local %d: %0.2f.\n',i,xGlobal,xLocal,rhoH);
 						coordsGlobalCell{xGlobal}(end+1,:) = localCoords(xLocal,:);
 					else
-						fprintf('Failed image correlation test! Session %d, Global %d, Local %d\n',i,xGlobal,xLocal);
+						fprintf('Failed image correlation test! Session %d, Global %d, Local %d: %0.2f.\n',i,xGlobal,xLocal,rhoH);
 						coordsGlobalCell{end+1} = localCoords(xLocal,:);
 						OutStruct.globalIDs(end+1,i) = xLocal;
 						coordsGlobal(end+1,:) = localCoords(xLocal,:);

@@ -27,9 +27,29 @@ function loadBatchFxns()
 	pathList = strjoin(pathListArray,pathsep);
 	addpath(pathList);
 
+	% Automatically add Inscopix
+	if ismac
+		baseInscopixPath = '';
+	elseif isunix
+		baseInscopixPath = '';
+	elseif ispc
+		baseInscopixPath = 'C:\Program Files\Inscopix\Data Processing';
+	else
+		disp('Platform not supported')
+	end
+	if ~isempty(baseInscopixPath)&&exist(baseInscopixPath,'dir')==7
+		addpath(baseInscopixPath);
+		if exist('isx.Movie','class')==8
+			fprintf('Inscopix Data Processing software added: %s\n',baseInscopixPath)
+		else
+			disp('Check Inscopix Data Processing software install!')
+		end
+	else
+	end
+
 	% add path for Miji, change as needed
 	pathtoMiji = '\Fiji.app\scripts\';
-	if exist(pathtoMiji,'dir')~=0
+	if exist(pathtoMiji,'dir')==7
 		onPath = subfxnCheckPath(pathtoMiji);
 		if onPath==1
 			fprintf('Miji already in PATH: %s.\n',pathtoMiji)
@@ -65,23 +85,23 @@ function loadBatchFxns()
 				addpath(pathtoMiji);
 				fprintf('Added private Miji to path: %s.\n',pathtoMiji)
 			end
+			try
+				currP=pwd;Miji;cd(currP);MIJ.exit;
+			catch err
+				disp(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				disp(repmat('@',1,7))
+				manageMiji('startStop','start');
+				manageMiji('startStop','exit');
+			end
+			% % Get Miji properly loaded in the path
+			% if exist('Miji.m')==2&&exist('MIJ','class')==0
+			% 	resetMiji;
+			% else
+			% end
 		else
 			fprintf('No folder at specified path, retry! %s.\n',pathtoMiji)
 		end
-		try
-			currP=pwd;Miji;cd(currP);MIJ.exit;
-		catch err
-			disp(repmat('@',1,7))
-			disp(getReport(err,'extended','hyperlinks','on'));
-			disp(repmat('@',1,7))
-			manageMiji('startStop','start');
-			manageMiji('startStop','exit');
-		end
-		% % Get Miji properly loaded in the path
-		% if exist('Miji.m')==2&&exist('MIJ','class')==0
-		% 	resetMiji;
-		% else
-		% end
 	else
 		% create privateLoadBatchFxns.m
 	end

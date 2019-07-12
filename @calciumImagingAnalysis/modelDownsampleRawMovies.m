@@ -9,6 +9,7 @@ function obj = modelDownsampleRawMovies(obj)
 	% changelog
 		% 2015.11.25 - Added ability to downsample TIFFs, at the moment assumes that they will be done the inscopix way.
 		% 2017.02.18 - slight change in how determination of already existing movies is performed
+		% 2019.07.11 [19:53:47] - Added support for ISXD Inscopix files via Inscopix Data Processing Software. Also changed way program is run to loop over files and check for each extension in the case a folder as multiple types of files that need to be downsampled (e.g. HDF5, TIF, ISXD).
 
 	try
 		downsampleSettings = inputdlg(...
@@ -17,7 +18,7 @@ function obj = modelDownsampleRawMovies(obj)
 				'Folder to save downsampled HDF5s to:',...
 				'Decompression source root folder(s). Use comma to separate multiple source folders:',...
 				'Downsample factor (in x-y):',...
-				'Regexp for HDF5/TIFF files:',...
+				'Regexp for HDF5 (e.g. "recording.*.hdf5"), TIFF (e.g. "recording.*.tif"), ISXD/Inscopix (e.g. ".*.isxd") files:',...
 				'HDF5 hierarchy name where movie is stored:',...
 				'Max chunk size (MB)',...
 				'Regexp for folders:',...
@@ -80,17 +81,42 @@ function obj = modelDownsampleRawMovies(obj)
 			downsampleOptions.downsampleFactorTwo = str2num(downsampleSettings{12});
 
 			movieList = getFileList([folderListInfo{folderNo} filesep], downsampleOptions.fileFilterRegexp);
+			nMoviesH = length(movieList);
 
-			if ~isempty(regexp(downsampleOptions.fileFilterRegexp,'(.hdf5|.h5)'))
-				display('Downsampling HDF5s...')
-				downsampleHDFMovieFxnObj(movieList,downsampleOptions);
-			elseif ~isempty(regexp(downsampleOptions.fileFilterRegexp,'(.tiff|.tif)'))
-				display('Downsampling TIFFs...')
-				folderPath = folderListInfo{folderNo};
-				downsampleOptions.srcSubfolderFileFilterRegexp = downsampleSettings{9};
-				downsampleOptions.srcSubfolderFileFilterRegexpExt = downsampleSettings{10};
-				downsampleTiffMovieFxnObj(folderPath,downsampleOptions);
+			for movieNo = 1:nMoviesH
+				movieName = movieList{movieNo};
+				[pathstr,name,ext] = fileparts(movieName);
+				fprintf('Downsampling %d/%d: %s\n',movieNo,nMoviesH,movieName);
+				if ~isempty(regexp(ext,'(.hdf5|.h5)'))
+					display('Downsampling HDF5s...')
+					downsampleHDFMovieFxnObj({movieName},downsampleOptions);
+				elseif ~isempty(regexp(ext,'(.isxd)'))
+					display('Downsampling ISXDs...')
+					downsampleIsxdMovieFxnObj({movieName},downsampleOptions);
+				elseif ~isempty(regexp(ext,'(.tiff|.tif)'))
+					if movieNo==1
+						display('Downsampling TIFFs...')
+						folderPath = folderListInfo{folderNo};
+						downsampleOptions.srcSubfolderFileFilterRegexp = downsampleSettings{9};
+						downsampleOptions.srcSubfolderFileFilterRegexpExt = downsampleSettings{10};
+						downsampleTiffMovieFxnObj(folderPath,downsampleOptions);
+					end
+				end
 			end
+
+			% if ~isempty(regexp(downsampleOptions.fileFilterRegexp,'(.hdf5|.h5)'))
+			% 	display('Downsampling HDF5s...')
+			% 	downsampleHDFMovieFxnObj(movieList,downsampleOptions);
+			% elseif ~isempty(regexp(downsampleOptions.fileFilterRegexp,'(.isxd)'))
+			% 	display('Downsampling ISXDs...')
+			% 	downsampleIsxdMovieFxnObj(movieList,downsampleOptions);
+			% elseif ~isempty(regexp(downsampleOptions.fileFilterRegexp,'(.tiff|.tif)'))
+			% 	display('Downsampling TIFFs...')
+			% 	folderPath = folderListInfo{folderNo};
+			% 	downsampleOptions.srcSubfolderFileFilterRegexp = downsampleSettings{9};
+			% 	downsampleOptions.srcSubfolderFileFilterRegexpExt = downsampleSettings{10};
+			% 	downsampleTiffMovieFxnObj(folderPath,downsampleOptions);
+			% end
 			% ioptions.folderListInfo = [folderListInfo{folderNo} filesep];
 			% ioptions.downsampleSaveFolder = [downsampleSettings{2} filesep];
 			% ioptions.downsampleFactor = str2num(downsampleSettings{4});
@@ -325,6 +351,126 @@ function downsampleHDFMovieFxnObj(movieList,options)
 						copyfile(srcFilenameXml,destFilenameXml)
 					end
 				end
+			else
+				display(['skipping: ' inputFilePath])
+			end
+		catch err
+			display(repmat('@',1,7))
+			disp(getReport(err,'extended','hyperlinks','on'));
+			display(repmat('@',1,7))
+		end
+	end
+end
+function downsampleIsxdMovieFxnObj(movieList,options)
+	% downsamples an HDF5 movie, normally the raw recording files
+
+	% display(movieList)
+	cellfun(@display,movieList);
+	nMovies = length(movieList);
+	for movieNo=1:nMovies
+		display(repmat('+',1,21))
+		display(['downsampling ' num2str(movieNo) '/' num2str(nMovies)])
+		inputFilePath = movieList{movieNo};
+		display(['input: ' inputFilePath]);
+		[pathstr,name,ext] = fileparts(inputFilePath);
+		downsampleFilename = [pathstr '\concat_' name '.h5'];
+		srcFilenameTxt = [pathstr filesep name '.txt'];
+		srcFilenameXml = [pathstr filesep name '.xml'];
+		srcFilenameJson = [pathstr filesep 'session.json'];
+		downsampleFilenameAlt = [options.downsampleSaveFolder '\concat_' name '.h5'];
+
+		[~,folderName,~] = fileparts(strip(pathstr,'right',filesep));
+		if isempty(options.downsampleSaveFolder)
+			downsampleSaveFolderMod = options.downsampleSaveFolder;
+		else
+			downsampleSaveFolderMod = [options.downsampleSaveFolder filesep folderName];
+		end
+		if isempty(options.downsampleSaveFolderTwo)
+			downsampleSaveFolderTwoMod = options.downsampleSaveFolderTwo;
+		else
+			downsampleSaveFolderTwoMod = [options.downsampleSaveFolderTwo filesep folderName];
+		end
+		if ~exist(downsampleSaveFolderMod,'dir');mkdir(downsampleSaveFolderMod);end
+		if ~exist(downsampleSaveFolderTwoMod,'dir');mkdir(downsampleSaveFolderTwoMod);end
+
+		if ~isempty(options.downsampleSaveFolder)
+			% Copy JSON files
+			jsonFileList = getFileList(pathstr,'.*.json');
+			if ~isempty(jsonFileList)
+				for jsonNo = 1:length(jsonFileList)
+					jsonSrcFile = jsonFileList{jsonNo};
+					[~,jsonName,ext] = fileparts(jsonSrcFile);
+					jsonDestFile = [downsampleSaveFolderMod filesep jsonName ext];
+					if exist(jsonSrcFile,'file')
+						fprintf('jsonSrcFile = %s\jsonDestFile = %s\n',jsonSrcFile,jsonDestFile)
+						copyfile(jsonSrcFile,jsonDestFile)
+					end
+					if ~isempty(options.downsampleSaveFolderTwo)
+						jsonDestFile = [downsampleSaveFolderTwoMod filesep jsonName ext];
+						if exist(jsonSrcFile,'file')
+							fprintf('jsonSrcFile = %s\jsonDestFile = %s\n',jsonSrcFile,jsonDestFile)
+							copyfile(jsonSrcFile,jsonDestFile)
+						end
+					end
+				end
+			end
+		end
+		% fprintf('downsampleFilename = %s\nsrcFilenameTxt = %s\nsrcFilenameXml = %s\n',downsampleFilename,srcFilenameTxt,srcFilenameXml)
+
+		% currentDateTimeStr = datestr(now,'yyyymmdd_HHMM','local');
+		% mkdir([thisDir filesep 'processing_info'])
+		% diarySaveStr = [thisDir filesep 'processing_info' filesep currentDateTimeStr '_preprocess.log'];
+		% display(['saving diary: ' diarySaveStr])
+		% diary(diarySaveStr);
+
+		try
+			% see if file already exists at the destination
+			if isempty(options.downsampleSaveFolder)&exist(downsampleFilename,'file')==0
+				% check whether to downsample in different location
+				if isempty(options.downsampleSaveFolder)
+					convertInscopixIsxdToHdf5(inputFilePath, 'inputDatasetName', options.datasetName, 'maxChunkSize', options.maxChunkSize,'downsampleFactor',options.downsampleFactor,'outputDatasetName',options.outputDatasetName,'saveFolderTwo',downsampleSaveFolderTwoMod,'downsampleFactorTwo',options.downsampleFactorTwo);
+				else
+					convertInscopixIsxdToHdf5(inputFilePath, 'inputDatasetName', options.datasetName, 'maxChunkSize', options.maxChunkSize,'saveFolder',downsampleSaveFolderMod,'downsampleFactor',options.downsampleFactor,'outputDatasetName',options.outputDatasetName,'saveFolderTwo',downsampleSaveFolderTwoMod,'downsampleFactorTwo',options.downsampleFactorTwo);
+
+					% copy information files to new downsample folder location
+					% destFilenameTxt = [options.downsampleSaveFolder filesep name '.txt'];
+					% destFilenameXml = [options.downsampleSaveFolder filesep name '.xml'];
+					% fprintf('destFilenameTxt = %s\destFilenameXml = %s\n',destFilenameTxt,destFilenameXml)
+					% if exist(srcFilenameTxt,'file')
+					% 	copyfile(srcFilenameTxt,destFilenameTxt)
+					% elseif exist(srcFilenameXml,'file')
+					% 	copyfile(srcFilenameXml,destFilenameXml)
+					% end
+					% if ~isempty(options.downsampleSaveFolderTwo)
+					% 	destFilenameTxt = [options.downsampleSaveFolderTwo filesep name '.txt']
+					% 	destFilenameXml = [options.downsampleSaveFolderTwo filesep name '.xml']
+					% 	if exist(srcFilenameTxt,'file')
+					% 		copyfile(srcFilenameTxt,destFilenameTxt)
+					% 	elseif exist(srcFilenameXml,'file')
+					% 		copyfile(srcFilenameXml,destFilenameXml)
+					% 	end
+					% end
+				end
+			elseif ~isempty(options.downsampleSaveFolder)&exist(downsampleFilenameAlt,'file')==0
+				convertInscopixIsxdToHdf5(inputFilePath, 'inputDatasetName', options.datasetName, 'maxChunkSize', options.maxChunkSize,'saveFolder',downsampleSaveFolderMod,'downsampleFactor',options.downsampleFactor,'outputDatasetName',options.outputDatasetName,'saveFolderTwo',downsampleSaveFolderTwoMod,'downsampleFactorTwo',options.downsampleFactorTwo);
+				% destFilenameTxt = [options.downsampleSaveFolder filesep name '.txt']
+				% destFilenameXml = [options.downsampleSaveFolder filesep name '.xml']
+				% if exist(srcFilenameTxt,'file')
+				% 	copyfile(srcFilenameTxt,destFilenameTxt)
+				% elseif exist(srcFilenameXml,'file')
+				% 	copyfile(srcFilenameXml,destFilenameXml)
+				% end
+
+				% copy information files to new downsample folder location
+				% if ~isempty(options.downsampleSaveFolderTwo)
+				% 	destFilenameTxt = [options.downsampleSaveFolderTwo filesep name '.txt']
+				% 	destFilenameXml = [options.downsampleSaveFolderTwo filesep name '.xml']
+				% 	if exist(srcFilenameTxt,'file')
+				% 		copyfile(srcFilenameTxt,destFilenameTxt)
+				% 	elseif exist(srcFilenameXml,'file')
+				% 		copyfile(srcFilenameXml,destFilenameXml)
+				% 	end
+				% end
 			else
 				display(['skipping: ' inputFilePath])
 			end
