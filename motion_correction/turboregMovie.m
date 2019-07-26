@@ -54,6 +54,8 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	options.saveTurboregCoords = [];
 	% already have registration coordinates
 	options.precomputedRegistrationCooords = [];
+	% already have registration coordinates
+	options.precomputedRegistrationCooordsFullMovie = [];
 	% turboreg options
 	options.RegisType=3;
 	options.SmoothX=80;%10
@@ -193,6 +195,7 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	% ========================
 	% register movie and return without using the rest of the function
 	if ~isempty(options.precomputedRegistrationCooords)
+		disp('Input pre-computed registration coordinates...')
 		ResultsOut = options.precomputedRegistrationCooords;
 		ResultsOutOriginal = ResultsOut;
 		for resultNo=1:size(inputMovie,3)
@@ -209,6 +212,30 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		InterpListSelection = turboRegOptions.Interp;
 		registerMovie();
 		inputMovie = cat(3,inputMovie{:});
+		ResultsOutOriginal = ResultsOut;
+		return;
+	end
+	% ========================
+	% register movie and return without using the rest of the function
+	if ~isempty(options.precomputedRegistrationCooordsFullMovie)
+		disp('Input pre-computed registration coordinates...')
+		ResultsOut = options.precomputedRegistrationCooordsFullMovie;
+		% ResultsOutOriginal = ResultsOut;
+		% for resultNo=1:size(inputMovie,3)
+		% 	ResultsOutTemp{resultNo} = ResultsOut{options.altMovieRegisterNum};
+		% end
+		% ResultsOut = ResultsOutTemp;
+		% Remove NaNs from inputMovie so transfturboreg doesn't run into issue.
+		inputMovie(isnan(inputMovie)) = 0;
+		convertInputMovieToCell();
+		% size(inputMovie)
+		% class(inputMovie)
+		% size(inputMovie{1})
+		% class(inputMovie{1})
+		InterpListSelection = turboRegOptions.Interp;
+		registerMovie();
+		inputMovie = cat(3,inputMovie{:});
+		ResultsOutOriginal = ResultsOut;
 		return;
 	end
 	% ========================

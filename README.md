@@ -42,7 +42,7 @@ Contact: __Biafra Ahanonu, PhD (bahanonu [at] alum.mit.edu)__.
 - Please check the 'Wiki' for further instructions on specific processing/analysis steps and additional information of software used by this package.
 - When issues are encountered, first check the `Common issues and fixes` Wiki page to see if a solution is there. Else, submit a new issue.
 
-![image](https://user-images.githubusercontent.com/5241605/49833336-03ede980-fd4e-11e8-8022-9aa3dedfd5ab.png)
+![image](https://user-images.githubusercontent.com/5241605/61981834-ab532000-afaf-11e9-97c2-4b1d7d759a30.png)
 
 ## Installation
 
@@ -62,7 +62,7 @@ Note
 
 ### Test data
 
-Run `example_downloadTestData.m` to download example one-photon miniature microscope test data to use for testing `calciumImagingAnalysis` preprocessing, cell extraction, and cell classification code.
+Run `example_downloadTestData.m` to download example one-photon miniature microscope test data to use for testing `calciumImagingAnalysis` preprocessing, cell extraction, and cell classification code. The data will be located at `data\2014_04_01_p203_m19_check01_raw` within the repository root directory.
 
 ### Dependencies
 
@@ -173,11 +173,14 @@ Folders should following the format `YYYY_MM_DD_pXXX_mXXX_assayXX_trialXX` where
 
 The general pipeline for processing calcium imaging data is below. This repository includes code to do nearly every step.
 
-![image](https://user-images.githubusercontent.com/5241605/49833336-03ede980-fd4e-11e8-8022-9aa3dedfd5ab.png)
+![image](https://user-images.githubusercontent.com/5241605/61981834-ab532000-afaf-11e9-97c2-4b1d7d759a30.png)
 
 To start using the `calciumImagingAnalysis` class, enter the following into the MATLAB command window.
 
 ```Matlab
+% Loads all directories
+loadBatchFxns;
+
 % Loads the class into an object.
 obj = calciumImagingAnalysis;
 
@@ -371,6 +374,11 @@ globalIDs = alignmentStruct.globalIDs;
 
 ```
 
+The left are raw dorsal striatum cell maps from a single animal. The right shows after cross-session alignment; color is used to indicate a global ID cell (e.g. the same cell matched across multiple days). Thus, same color cell = same cell across sessions.
+
+<a href="https://cloud.githubusercontent.com/assets/5241605/25643108/9bcfccda-2f52-11e7-8514-31968752bd95.gif" target="_blank"><img src="https://cloud.githubusercontent.com/assets/5241605/25643108/9bcfccda-2f52-11e7-8514-31968752bd95.gif" alt="2017_05_02_p545_m121_p215_raw" width="auto" height="400"/></a>
+<a href="https://cloud.githubusercontent.com/assets/5241605/25643473/dd7b11ce-2f54-11e7-8d84-eb98c5ef801c.gif" target="_blank"><img src="https://cloud.githubusercontent.com/assets/5241605/25643473/dd7b11ce-2f54-11e7-8d84-eb98c5ef801c.gif" alt="2017_05_02_p545_m121_p215_corrected_biafraalgorithm2" width="auto" height="400"/></a>
+
 # ImageJ+MATLAB based mouse location tracking
 
 Functions needed (have entire `calciumImagingAnalysis` loaded anyways):
@@ -382,7 +390,10 @@ tracking by overlaying mouse tracker onto the video.
 
 ## Instructions for ImageJ and Matlab
 Example screen after running `mm_tracking` within ImageJ, click to expand.
-<a href="https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png" target="_blank">![image](https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png)</a>
+
+<a href="https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png" alt="image" width="600" height="auto"/></a>
+
+<!-- <a href="https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png" target="_blank">![image](https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png)</a> -->
 
 Once ImageJ is finished, within Matlab run the following code (cleans up the ImageJ tracking by removing small objects and adding NaNs for missing frames along with making a movie to check output). Modify to point toward paths specific for your data.
 
@@ -401,10 +412,12 @@ playMovie(inputTrackingVideo);
 ```
 
 ### Example output from 2017_09_11_p540_m381_openfield01_091112017
-![image](https://user-images.githubusercontent.com/5241605/34800547-2a10a3b0-f619-11e7-9c88-88750c9875cd.png)
+<!-- ![image](https://user-images.githubusercontent.com/5241605/34800547-2a10a3b0-f619-11e7-9c88-88750c9875cd.png) -->
+<img src="https://user-images.githubusercontent.com/5241605/34800547-2a10a3b0-f619-11e7-9c88-88750c9875cd.png" alt="image" width="400" height="auto"/>
 
 Using `createTrackingOverlayVideo` to verify tracking matches animal position on a per frame basis.
-![image](https://user-images.githubusercontent.com/5241605/34800536-19eefcf2-f619-11e7-954f-dba59f4fd427.png)
+<!-- ![image](https://user-images.githubusercontent.com/5241605/34800536-19eefcf2-f619-11e7-954f-dba59f4fd427.png) -->
+<img src="https://user-images.githubusercontent.com/5241605/34800536-19eefcf2-f619-11e7-954f-dba59f4fd427.png" alt="image" width="400" height="auto"/>
 
 ## Acknowledgments
 

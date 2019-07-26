@@ -14,6 +14,7 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
 		% 2018.09 - large speedup by vectorizing corr2 and updating readHDF5 chunking
 		% 2019.03.12 [20:06:13] Added parallel.pool.Constant construct with H5F.open to facilitate opening fid on each worker once and thus saving readHDF5Subset time from continuously loading the same file over and over.
+		% 2019.07.17 [00:29:16] - Added support for sparse input images (mainly ndSparse format).
 	% TODO
 		% Take 2 frames after peak and average to improve SNR
 
@@ -366,6 +367,9 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 				end
 				% corrVals = [];
 				inputImageCrop = squeeze(inputImages{signalNo}(yLow:yHigh,xLow:xHigh));
+                if issparse(inputImageCrop)
+                    inputImageCrop = full(inputImageCrop);
+                end
 				% inputImageCrop = squeeze(inputImages(yLow:yHigh,xLow:xHigh,signalNo));
 
 				% Convert to inputImages class, which should be single or double
@@ -446,6 +450,9 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 					corrVals2Thres = [];
 					% inputImagesThresCrop = squeeze(inputImagesThres(yLow:yHigh,xLow:xHigh,signalNo));
 					inputImagesThresCrop = squeeze(inputImagesThres{signalNo}(yLow:yHigh,xLow:xHigh));
+                    if issparse(inputImagesThresCrop)
+                        inputImagesThresCrop = full(inputImagesThresCrop);
+                    end
 					inputImageCropThres = inputImageCrop.*inputImagesThresCrop;
 
 					% ===

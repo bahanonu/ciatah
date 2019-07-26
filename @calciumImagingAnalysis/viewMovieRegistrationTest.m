@@ -8,7 +8,7 @@ function obj = viewMovieRegistrationTest(obj)
 		%
 
 	% changelog
-		%
+		% 2019.07.26 [14:00:00] - Additional AVI support.
 	% TODO
 		%
 
@@ -206,8 +206,8 @@ function obj = viewMovieRegistrationTest(obj)
 				display([num2str(testNo) '/' num2str(nTestToRun)]);
 				MIJ.createImage([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ', ' num2str(testNo) '/' num2str(nTestToRun) ': ' obj.folderBaseSaveStr{obj.fileNum}],inputMovieRegAll{thisFileNumIdx}{testNo}, true);
 				msgbox('Goto Image->Adjust->Brightness/Contrast and then select different boxes to adjust contrast for easier viewing. Click on movie to open next dialog.','Note to user','modal')
-				MIJ.run('In [+]');
-				MIJ.run('In [+]');
+				% MIJ.run('In [+]');
+				% MIJ.run('In [+]');
 				MIJ.run('Start Animation [\]');
 				if testNo==1
 					uiwait(msgbox('Press OK to move onto dfof version of the movie','Success','modal'));
@@ -362,18 +362,21 @@ function [regCoords] = subfxnCropSelection(options,folderList)
 					inputFilePath = movieList{movieNo};
 
 					[pathstr,name,ext] = fileparts(inputFilePath);
-					if strcmp(ext,'.h5')|strcmp(ext,'.hdf5')
-						hinfo = hdf5info(inputFilePath);
-						hReadInfo = hinfo.GroupHierarchy.Datasets(1);
-						xDim = hReadInfo.Dims(1);
-						yDim = hReadInfo.Dims(2);
-						% select the first frame from the dataset
-						thisFrame = readHDF5Subset(inputFilePath,[0 0 options.refCropFrame],[xDim yDim 1],'datasetName',options.datasetName);
-					elseif strcmp(ext,'.tif')|strcmp(ext,'.tiff')
-						TifLink = Tiff(inputFilePath, 'r'); %Create the Tiff object
-						thisFrame = TifLink.read();%Read in one picture to get the image size and data type
-						TifLink.close(); clear TifLink
-					end
+					% if strcmp(ext,'.h5')|strcmp(ext,'.hdf5')
+					% 	hinfo = hdf5info(inputFilePath);
+					% 	hReadInfo = hinfo.GroupHierarchy.Datasets(1);
+					% 	xDim = hReadInfo.Dims(1);
+					% 	yDim = hReadInfo.Dims(2);
+					% 	% select the first frame from the dataset
+					% 	thisFrame = readHDF5Subset(inputFilePath,[0 0 options.refCropFrame],[xDim yDim 1],'datasetName',options.datasetName);
+					% elseif strcmp(ext,'.tif')|strcmp(ext,'.tiff')
+					% 	TifLink = Tiff(inputFilePath, 'r'); %Create the Tiff object
+					% 	thisFrame = TifLink.read();%Read in one picture to get the image size and data type
+					% 	TifLink.close(); clear TifLink
+					% end
+
+					thisFrame = loadMovieList(inputFilePath,'convertToDouble',0,'frameList',1,'inputDatasetName',options.datasetName);
+					thisFrame = squeeze(thisFrame(:,:,1));
 
 					[figHandle figNo] = openFigure(9, '');
 					subplot(1,2,1);imagesc(thisFrame); axis image; colormap gray; title('click, drag-n-draw region')

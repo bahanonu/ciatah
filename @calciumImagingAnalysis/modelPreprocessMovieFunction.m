@@ -16,6 +16,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% 2019.01.23 [09:15:39] Added support for 2018b due to change in findjobj and uicontrol.
 		% 2019.04.17 [11:59:35] Saving turboreg outputs added, in same folder as the log.
 		% 2019.07.11 [20:07:29] - Improved GUI display, added support for ISXD dropped frames.
+		% 2019.07.22 [16:30:30] - Improved support for multi-iteration turboreg and outputting of turboreg without filtering and with filtering in the same run seamlessly.
+		% 2019.07.26 [14:00:00] - Additional improvements in adding movie borders based on turboreg outputs.
 	% TODO
 		% Insert NaNs or mean of the movie into dropped frame location, see line 260
 		% Allow easy switching between analyzing all files in a folder together and each file in a folder individually
@@ -247,6 +249,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		end
 	end
 	ostruct.folderList = {}
+	ostruct.savedFilePaths = {};
+	ostruct.fileNumList = {};
 	% ========================
 	manageParallelWorkers('parallel',options.turboreg.useParallel,'setNumCores',options.turboreg.nParallelWorkers);
 	% ========================
@@ -258,7 +262,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	nFilesToRun = length(folderListMinusComments);
 	fileNumToRun = 1;
 	%
-	for fileNum=1:nFiles
+	for fileNum = 1:nFiles
 		manageParallelWorkers('parallel',options.turboreg.useParallel,'setNumCores',options.turboreg.nParallelWorkers);
 		movieSaved = 0;
 		fileStartTime = tic;
@@ -338,7 +342,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 
 			if sum(strcmp(analysisOptionList(analysisOptionsIdx),'turboreg'))>0
 				turboRegCoordsTmp2 = turboRegCoords{fileNum};
-				save(optionsSaveStr, 'options','turboRegCoordsTmp2');
+				save(optionsSaveStr, 'options','turboRegCoordsTmp2','analysisOptionList','analysisOptionsIdx');
 			else
 				save(optionsSaveStr, 'options');
 			end
@@ -392,6 +396,12 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 					thisMovie = loadMovieList(movieList,'convertToDouble',0,'frameList',thisFrameList,'inputDatasetName',options.datasetName,'treatMoviesAsContinuous',options.turboreg.treatMoviesAsContinuousSwitch,'loadSpecificImgClass','single');
 				end
 
+				if options.processMoviesSeparately==1
+					resaveCropFileName = '';
+				else
+					resaveCropFileName = '';
+				end
+
 				[~, ~] = openFigure(4242, '');
 					imagesc(squeeze(thisMovie(:,:,1)))
 					box off;
@@ -431,12 +441,13 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 					try
 						switch optionName
 							case 'turboreg'
+								pxToCropAll = 0;
+								ResultsOutOriginal = {};
 								for iternationNo = 1:options.turboreg.numTurboregIterations
 									if strcmp(options.turboreg.filterBeforeRegister,'imagejFFT')
 										% Miji;
 										manageMiji('startStop','start');
 									end
-									ResultsOutOriginal = {};
 									turboregInputMovie();
 
 									% Save output of translation.
@@ -446,9 +457,79 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 										manageMiji('startStop','exit');
 									end
 									% playMovie(thisMovie);
+									if options.turboreg.numTurboregIterations>1
+										pxToCropTmp = getCropValues();
+										pxToCropAll = max([pxToCropAll pxToCropTmp]);
+										fprintf('pxToCropAll: %d\n',pxToCropAll);
+									end
+								end
+
+								% Get the amount of motion and hence amount to crop, directly from turboreg output
+								% gg = cellfun(@(z) cell2mat(cellfun(@(y) cell2mat(cellfun(@(x) max(abs(x.Translation)),y,'UniformOutput',false)),z,'UniformOutput',false)),ResultsOutOriginal,'UniformOutput',false);
+								gg = cellfun(@(z) cell2mat(cellfun(@(y) cell2mat(cellfun(@(x) max(ceil(abs(x.Translation))),y,'UniformOutput',false)),z,'UniformOutput',false)),ResultsOutOriginal,'UniformOutput',false);
+								pxToCropAllTmp = ceil(nanmax(sum(abs(cat(1,gg{:})),1)));
+								fprintf('pxToCropAllTmp: %d\n',pxToCropAllTmp);
+								if pxToCropAllTmp>pxToCropAll
+									disp('Adjusting pxToCropAll')
+									pxToCropAll = pxToCropAllTmp;
+								end
+								if options.pxToCrop<pxToCropAll
+									disp('Adjusting pxToCropAll')
+									pxToCropAll = options.pxToCrop;
+								end
+								fprintf('pxToCropAll: %d\n',pxToCropAll);
+
+								if ~isempty(resaveCropFileName)&&pxToCropAll>0
+									% MAKE IT LOAD THE MOVIE IN PARTS SIMILAR TO TURBOREG SUBSET!
+									% subsetSize = options.turboregNumFramesSubset;
+									% movieLength = size(thisMovie,3);
+									% numSubsets = ceil(movieLength/subsetSize)+1;
+									% subsetList = round(linspace(1,movieLength,numSubsets));
+									% nSubsets = (length(subsetList)-1);
+									% for thisSet = 1:nSubsets
+									% 	subsetStartIdx = subsetList(thisSet);
+									% 	subsetEndIdx = subsetList(thisSet+1);
+									% end
+									fprintf('Loading and adding maximum NaN borders for: %s\n',resaveCropFileName);
+									tmpCropMovie = loadMovieList(resaveCropFileName,'inputDatasetName',options.turboreg.outputDatasetName);
+									if pxToCropAll==0
+										gmask = sum(tmpCropMovie,3);
+										% gmask = isnan(gmask);
+										tmpCropMovie = tmpCropMovie.*(gmask*0+1);
+									else
+										topRowCrop = pxToCropAll; % top row
+										leftColCrop = pxToCropAll; % left column
+										bottomRowCrop = size(tmpCropMovie,1)-pxToCropAll; % bottom row
+										rightColCrop = size(tmpCropMovie,2)-pxToCropAll; % right column
+										% set leftmost columns to NaN
+										tmpCropMovie(1:end,1:leftColCrop,:) = NaN;
+										% set rightmost columns to NaN
+										tmpCropMovie(1:end,rightColCrop:end,:) = NaN;
+										% set top rows to NaN
+										tmpCropMovie(1:topRowCrop,1:end,:) = NaN;
+										% set bottom rows to NaN
+										tmpCropMovie(bottomRowCrop:end,1:end,:) = NaN;
+									end
+
+									movieSaved2 = writeHDF5Data(tmpCropMovie,resaveCropFileName,'datasetname',options.turboreg.outputDatasetName,'addInfo',{options.turboreg,analysisOptionStruct,optionsCopy},'addInfoName',{'/movie/processingSettings','/movie/analysisOperations','/movie/modelPreprocessMovieFunctionOptions'},'deflateLevel',options.deflateLevel)
+									ostruct.savedFilePaths{end+1} = resaveCropFileName;
+									ostruct.fileNumList{end+1} = fileNum;
+									clear tmpCropMovie;
 								end
 							case 'crop'
-								cropInputMovie();
+								if exist('pxToCropAll','var')==1&&pxToCropAll~=0
+									if pxToCropAll~=0
+										if pxToCropAll<options.pxToCrop
+											% [thisMovie] = cropMatrix(thisMovie,'pxToCrop',tmpPxToCrop);
+											cropMatrixPreProcess(pxToCropAll);
+										else
+											% [thisMovie] = cropMatrix(thisMovie,'pxToCrop',options.pxToCrop);
+											cropMatrixPreProcess(options.pxToCrop);
+										end
+									end
+								else
+									cropInputMovie();
+								end
 							case 'medianFilter'
 								medianFilterInputMovie();
 							case 'spatialFilter'
@@ -476,7 +557,9 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 						% save the location of the downsampled dfof for PCA-ICA identification
 					catch err
 						% save the location of the downsampled dfof for PCA-ICA identification
-						ostruct.dfofFilePath{fileNum} = [];
+						% ostruct.savedFilePaths{fileNum} = [];
+						ostruct.savedFilePaths{end+1} = [];
+						ostruct.fileNumList{end+1} = fileNum;
 						display(repmat('@',1,7))
 						disp(getReport(err,'extended','hyperlinks','on'));
 						display(repmat('@',1,7))
@@ -510,7 +593,10 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 						optionsCopy = options;
 						optionsCopy.turboreg = [];
 						movieSaved = writeHDF5Data(thisMovie,savePathStr,'datasetname',options.turboreg.outputDatasetName,'addInfo',{options.turboreg,analysisOptionStruct,optionsCopy},'addInfoName',{'/movie/processingSettings','/movie/analysisOperations','/movie/modelPreprocessMovieFunctionOptions'},'deflateLevel',options.deflateLevel)
-						ostruct.dfofFilePath{fileNum} = savePathStr;
+						% ostruct.savedFilePaths{fileNum} = savePathStr;
+						ostruct.savedFilePaths{end+1} = savePathStr;
+						ostruct.fileNumList{end+1} = fileNum;
+						% ostruct.savedFilePaths{end+1} = savePathStr;
 					end
 					display(repmat('$',1,7))
 					display(['thisMovie: ' class(thisMovie) ' | ' num2str(size(thisMovie))])
@@ -538,7 +624,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			display(repmat('@',1,7))
 			%
 			clear thisMovie
-			ostruct.dfofFilePath{fileNum} = [];
+			% ostruct.savedFilePaths{fileNum} = [];
+			ostruct.savedFilePaths{end+1} = [];
 			fileNumToRun = fileNumToRun + 1;
 			% try to save the current point in the analysis
 			try
@@ -556,12 +643,15 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% pause(20);
 		% pack
 		diary OFF;
-		manageParallelWorkers('parallel',options.turboreg.useParallel,'setNumCores',options.turboreg.nParallelWorkers,'openCloseParallelPool','close');
+		if options.turboreg.resetParallelPool==1
+			manageParallelWorkers('parallel',options.turboreg.useParallel,'setNumCores',options.turboreg.nParallelWorkers,'openCloseParallelPool','close');
+		end
 	end
 	% ask the user for PCA-ICA parameters if not input in the files
-	if options.inputPCAICA==0
-		[ostruct options] = getPcaIcaParams(ostruct,options)
-	end
+	% if options.inputPCAICA==0
+	% 	[ostruct options] = getPcaIcaParams(ostruct,options)
+	% end
+	[ostruct options] = playOutputMovies(ostruct,options)
 
 	toc(startTime)
 
@@ -953,7 +1043,45 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			% thisMovie(:,:,movieSubset) = turboregMovie(thisMovie(:,:,movieSubset),'options',ioptions);
 			% j = whos('turboregThisMovie');j.bytes=j.bytes*9.53674e-7;j
 			j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
-			[thisMovie(:,:,movieSubset), ResultsOutOriginal{thisSet}] = turboregMovie(thisMovie(:,:,movieSubset),'options',ioptions);
+			% [thisMovie(:,:,movieSubset), ResultsOutOriginal{thisSet}] = turboregMovie(thisMovie(:,:,movieSubset),'options',ioptions);
+
+
+			% Register without spatial filtering if requested by user
+			if options.turboreg.saveBeforeFilterRegister==1&&iternationNo==options.turboreg.numTurboregIterations
+				[tmpMovieHere, ResultsOutOriginal{iternationNo}{thisSet}] = turboregMovie(thisMovie(:,:,movieSubset),'options',ioptions);
+
+				tmpMovieNoFilter = thisMovie(:,:,movieSubset);
+				for iternationNo2 = 1:options.turboreg.numTurboregIterations
+					ioptions.precomputedRegistrationCooordsFullMovie = ResultsOutOriginal{iternationNo2}{thisSet};
+					[tmpMovieNoFilter, ~] = turboregMovie(tmpMovieNoFilter,'options',ioptions);
+				end
+				% Crop movie
+				tmpMovieNoFilter = cropInputMovieSlice(tmpMovieNoFilter,options,ResultsOutOriginal);
+
+				thisMovie(:,:,movieSubset) = tmpMovieHere;
+
+				savePathStrTmp = [thisDirSaveStr saveStr '_noSpatialFilter_' num2str(movieNo) '.h5'];
+				resaveCropFileName = savePathStrTmp;
+				if thisSet==1
+					optionsCopy = options;
+					optionsCopy.turboreg = [];
+
+					analysisOptionListTmp = analysisOptionList(analysisOptionsIdx);
+					analysisOptionStruct = struct;for optNo=1:length(analysisOptionListTmp);analysisOptionStruct.([char(optNo+'A'-1) '_' analysisOptionListTmp{optNo}])=1;end
+					% movieSaved = writeHDF5Data(thisMovie,savePathStr,'datasetname',options.turboreg.outputDatasetName,'addInfo',{options.turboreg,analysisOptionStruct,optionsCopy},'addInfoName',{'/movie/processingSettings','/movie/analysisOperations','/movie/modelPreprocessMovieFunctionOptions'},'deflateLevel',options.deflateLevel)
+
+					createHdf5File(savePathStrTmp, options.turboreg.outputDatasetName, tmpMovieNoFilter, 'addInfo',{options.turboreg,analysisOptionStruct,optionsCopy},'addInfoName',{'/movie/processingSettings','/movie/analysisOperations','/movie/modelPreprocessMovieFunctionOptions'},'deflateLevel',options.deflateLevel);
+				else
+					if exist(savePathStrTmp,'file')==2
+						appendDataToHdf5(savePathStrTmp, options.turboreg.outputDatasetName, tmpMovieNoFilter);
+					end
+				end
+				clear tmpMovieHere tmpMovieNoFilter;
+			else
+				[thisMovie(:,:,movieSubset), ResultsOutOriginal{iternationNo}{thisSet}] = turboregMovie(thisMovie(:,:,movieSubset),'options',ioptions);
+			end
+			clear ioptions;
+
 			% if thisSet==1&thisSet~=nSubsets
 			% 	% class(movieSubset)
 			% 	% movieSubset
@@ -983,6 +1111,32 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% size(thisMovie)
 		% imagesc(squeeze(thisMovie(:,:,1)))
 		% 	title(['iteration number: ' num2str(iternationNo)])
+	end
+	function tmpPxToCrop = getCropValues()
+		thisMovieMinMask = zeros([size(thisMovie,1) size(thisMovie,2)]);
+		options.turboreg.registrationFxn
+		switch options.turboreg.registrationFxn
+			case 'imtransform'
+				reverseStr = '';
+				for row=1:size(thisMovie,1)
+					thisMovieMinMask(row,:) = logical(nanmax(isnan(squeeze(thisMovie(3,:,:))),[],2));
+					reverseStr = cmdWaitbar(row,size(thisMovie,1),reverseStr,'inputStr','getting crop amount','waitbarOn',1,'displayEvery',5);
+				end
+			case 'transfturboreg'
+				reverseStr = '';
+				for row=1:size(thisMovie,1)
+					thisMovieMinMask(row,:) = logical(nanmin(squeeze(thisMovie(row,:,:))~=0,[],2)==0);
+					reverseStr = cmdWaitbar(row,size(thisMovie,1),reverseStr,'inputStr','getting crop amount','waitbarOn',1,'displayEvery',5);
+				end
+			otherwise
+				% do nothing
+		end
+		topVal = sum(thisMovieMinMask(1:floor(end/4),floor(end/2)));
+		bottomVal = sum(thisMovieMinMask(end-floor(end/4):end,floor(end/2)));
+		leftVal = sum(thisMovieMinMask(floor(end/2),1:floor(end/4)));
+		rightVal = sum(thisMovieMinMask(floor(end/2),end-floor(end/4):end));
+		tmpPxToCrop = max([topVal bottomVal leftVal rightVal]);
+		display(['[topVal bottomVal leftVal rightVal]: ' num2str([topVal bottomVal leftVal rightVal])])
 	end
 	function cropInputMovie()
 		% turboreg outputs 0s where movement goes off the screen
@@ -1437,32 +1591,44 @@ function h = subfxn_getImRect(titleStr)
 	fcn = makeConstrainToRectFcn('imrect',get(gca,'XLim'),get(gca,'YLim'));
 	setPositionConstraintFcn(h,fcn);
 end
-function [ostruct options] = getPcaIcaParams(ostruct,options)
-	nFiles = length(ostruct.dfofFilePath);
+% function [ostruct options] = getPcaIcaParams(ostruct,options)
+function [ostruct options] = playOutputMovies(ostruct,options)
+	nFiles = length(ostruct.savedFilePaths);
+	maxFrames = 500;
+	movieFrameList = {};
+	numFramesPerPart = 50;
+	numParts = 10;
 	display('pre-allocating movies to display...')
 	for fileNum=1:nFiles
 		try
 			display('+++++++')
-			if isempty(ostruct.dfofFilePath{fileNum})
+			if isempty(ostruct.savedFilePaths{fileNum})
 				display('no movie!')
-				% display([num2str(fileNum) '/' num2str(nFiles) ' skipping: ' ostruct.dfofFilePath{fileNum}]);
+				% display([num2str(fileNum) '/' num2str(nFiles) ' skipping: ' ostruct.savedFilePaths{fileNum}]);
 				continue;
 			else
-				pathInfo = [num2str(fileNum) '/' num2str(nFiles) ': ' ostruct.dfofFilePath{fileNum}];
+				pathInfo = [num2str(fileNum) '/' num2str(nFiles) ': ' ostruct.savedFilePaths{fileNum}];
 				% display(pathInfo);
-				fprintf('%d/%d:%s\n',fileNum,nFiles,ostruct.dfofFilePath{fileNum})
+				fprintf('%d/%d:%s\n',fileNum,nFiles,ostruct.savedFilePaths{fileNum})
 			end
-			movieList = {ostruct.dfofFilePath{fileNum}};
+			movieList = {ostruct.savedFilePaths{fileNum}};
 
 			% movieDims = loadMovieList(movieList,'convertToDouble',0,'frameList',options.frameList,'getMovieDims',1);
+			movieDims = loadMovieList(movieList,'convertToDouble',0,'frameList',[],'getMovieDims',1,'inputDatasetName',options.datasetName);
 
-			options.frameList = [1:ostruct.movieFrames{fileNum}];
+			movieFrames = movieDims.three;
+			if movieFrames>500
+				movieFrames = 500;
+			else
+				% ostruct.movieFrames{fileNum} = movieFrames;
+			end
+			movieFrameList{fileNum} = movieFrames;
+
+			% options.frameList = [1:ostruct.movieFrames{fileNum}];
+			options.frameList = [1:movieFrames];
 
 			% get the movie
 			% thisMovieArray{fileNum} = loadMovieList(movieList,'convertToDouble',0,'frameList',options.frameList);
-
-			numFramesPerPart = 50;
-			numParts = 10;
 
 			% check for size
 
@@ -1470,6 +1636,7 @@ function [ostruct options] = getPcaIcaParams(ostruct,options)
 			% thisMovieArray{fileNum} = loadMovieList(movieList,'convertToDouble',0,'frameList',options.frameList,'loadMovieInEqualParts',[numParts numFramesPerPart]);
 
 		catch err
+			thisMovieArray{fileNum} = [];
 			display(repmat('@',1,7))
 			disp(getReport(err,'extended','hyperlinks','on'));
 			display(repmat('@',1,7))
@@ -1481,33 +1648,45 @@ function [ostruct options] = getPcaIcaParams(ostruct,options)
 	manageMiji('startStop','start');
 	uiwait(msgbox('press OK to view a snippet of analyzed movies','Success','modal'));
 	% ask user for estimate of nPCs and nICs
-	for fileNum=1:nFiles
+	for fileNum = 1:nFiles
 		try
 			display('+++++++')
-			if isempty(ostruct.dfofFilePath{fileNum})
+			if isempty(ostruct.savedFilePaths{fileNum})
 				display('no movie!')
-				% display([num2str(fileNum) '/' num2str(nFiles) ' skipping: ' ostruct.dfofFilePath{fileNum}]);
+				% display([num2str(fileNum) '/' num2str(nFiles) ' skipping: ' ostruct.savedFilePaths{fileNum}]);
 				continue;
 			else
-				pathInfo = [num2str(fileNum) '/' num2str(nFiles) ': ' ostruct.dfofFilePath{fileNum}];
+				pathInfo = [num2str(fileNum) '/' num2str(nFiles) ': ' ostruct.savedFilePaths{fileNum}];
 				display(pathInfo);
 			end
 
 			% get the list of movies
-			movieList = {ostruct.dfofFilePath{fileNum}};
+			movieList = {ostruct.savedFilePaths{fileNum}};
 
-			options.frameList = [1:ostruct.movieFrames{fileNum}];
+			% options.frameList = [1:ostruct.movieFrames{fileNum}];
+			options.frameList = [1:movieFrameList{fileNum}];
 
 			% get the movie
 			% thisMovie = loadMovieList(movieList,'convertToDouble',0,'frameList',options.frameList);
 			thisMovie = thisMovieArray{fileNum};
 
+			if isempty(thisMovie)
+				continue;
+			end
+
+			trueFileNum = ostruct.fileNumList{fileNum};
+
 			% Try with Miji, else use built-in player
 			try
 				% playMovie(thisMovie,'fps',120,'extraTitleText',[10 pathInfo]);
-				MIJ.createImage([num2str(fileNum) '/' num2str(length(ostruct.folderList)) ': ' ostruct.folderList{fileNum}],thisMovie, true);
+				% MIJ.createImage([num2str(fileNum) '/' num2str(length(ostruct.folderList)) ': ' ostruct.folderList{fileNum}],thisMovie, true);
+				% [num2str(trueFileNum) '/' num2str(length(ostruct.folderList)) ': ' ostruct.folderList{trueFileNum}]
+				titleStr = sprintf('%d/%d (%d/%d): %s',trueFileNum,length(ostruct.folderList),fileNum,nFiles,ostruct.folderList{trueFileNum});
+				msgbox('Click movie to open next dialog box.','Success','normal')
+				MIJ.createImage(titleStr,thisMovie, true);
 				if size(thisMovie,1)<300
-					for foobar=1:2; MIJ.run('In [+]'); end
+					% for foobar=1:2; MIJ.run('In [+]'); end
+					for foobar=1:1; MIJ.run('In [+]'); end
 				end
 				for foobar=1:2; MIJ.run('Enhance Contrast','saturated=0.35'); end
 				MIJ.run('Start Animation [\]');
@@ -1517,7 +1696,7 @@ function [ostruct options] = getPcaIcaParams(ostruct,options)
 				disp(repmat('@',1,7))
 				disp(getReport(err,'extended','hyperlinks','on'));
 				disp(repmat('@',1,7))
-				msgbox('Press E to move onto next movie, close this box to continue','Success','modal')
+				msgbox('Press E in movie GUI to move onto next movie, close this box to continue','Success','modal')
 				playMovie(thisMovie);
 			end
 
@@ -1525,15 +1704,15 @@ function [ostruct options] = getPcaIcaParams(ostruct,options)
 				% add arbitrary nPCs and nICs to the output
 				answer = inputdlg({'nPCs','nICs'},'cell extraction estimates',1)
 				if isempty(answer)
-					ostruct.nPCs{fileNum} = [];
-					ostruct.nICs{fileNum} = [];
+					ostruct.nPCs{trueFileNum} = [];
+					ostruct.nICs{trueFileNum} = [];
 				else
-					ostruct.nPCs{fileNum} = str2num(answer{1});
-					ostruct.nICs{fileNum} = str2num(answer{2});
+					ostruct.nPCs{trueFileNum} = str2num(answer{1});
+					ostruct.nICs{trueFileNum} = str2num(answer{2});
 				end
 			else
-				ostruct.nPCs{fileNum} = [];
-				ostruct.nICs{fileNum} = [];
+				ostruct.nPCs{trueFileNum} = [];
+				ostruct.nICs{trueFileNum} = [];
 			end
 		catch err
 			display(repmat('@',1,7))
@@ -1543,4 +1722,67 @@ function [ostruct options] = getPcaIcaParams(ostruct,options)
 	end
 	% MIJ.exit;
 	manageMiji('startStop','exit');
+end
+function inputMovie = cropInputMovieSlice(inputMovie,options,ResultsOutOriginal)
+	% turboreg outputs 0s where movement goes off the screen
+	thisMovieMinMask = zeros([size(inputMovie,1) size(inputMovie,2)]);
+	options.turboreg.registrationFxn
+	switch options.turboreg.registrationFxn
+		case 'imtransform'
+			reverseStr = '';
+			for row=1:size(inputMovie,1)
+				thisMovieMinMask(row,:) = logical(nanmax(isnan(squeeze(inputMovie(3,:,:))),[],2));
+				reverseStr = cmdWaitbar(row,size(inputMovie,1),reverseStr,'inputStr','getting crop amount','waitbarOn',1,'displayEvery',5);
+			end
+		case 'transfturboreg'
+			reverseStr = '';
+			for row=1:size(inputMovie,1)
+				thisMovieMinMask(row,:) = logical(nanmin(squeeze(inputMovie(row,:,:))~=0,[],2)==0);
+				reverseStr = cmdWaitbar(row,size(inputMovie,1),reverseStr,'inputStr','getting crop amount','waitbarOn',1,'displayEvery',5);
+			end
+		otherwise
+			% do nothing
+	end
+	topVal = sum(thisMovieMinMask(1:floor(end/4),floor(end/2)));
+	bottomVal = sum(thisMovieMinMask(end-floor(end/4):end,floor(end/2)));
+	leftVal = sum(thisMovieMinMask(floor(end/2),1:floor(end/4)));
+	rightVal = sum(thisMovieMinMask(floor(end/2),end-floor(end/4):end));
+	tmpPxToCrop = max([topVal bottomVal leftVal rightVal]);
+	display(['[topVal bottomVal leftVal rightVal]: ' num2str([topVal bottomVal leftVal rightVal])])
+	display(['tmpPxToCrop: ' num2str(tmpPxToCrop)])
+	if tmpPxToCrop~=0
+		if tmpPxToCrop<options.pxToCrop
+			pxToCropPreprocess = tmpPxToCrop;
+		else
+			pxToCropPreprocess = options.pxToCrop;
+		end
+	else
+		% [topVal bottomVal leftVal rightVal]
+		% tmpPxToCrop
+		disp('Not cropping movie...')
+		return
+	end
+
+	% gg = cell2mat(cellfun(@(y) cell2mat(cellfun(@(x) max(ceil(abs(x.Translation))),y,'UniformOutput',false)),ResultsOutOriginal{1},'UniformOutput',false));
+	% pxToCropAllTmp = ceil(nanmax(sum(abs(cat(1,gg{:})),1)));
+
+	% if pxToCropAllTmp>pxToCropPreprocess
+	% 	pxToCropPreprocess = pxToCropAllTmp;
+	% end
+
+	topRowCrop = pxToCropPreprocess; % top row
+	leftColCrop = pxToCropPreprocess; % left column
+	bottomRowCrop = size(inputMovie,1)-pxToCropPreprocess; % bottom row
+	rightColCrop = size(inputMovie,2)-pxToCropPreprocess; % right column
+
+	rowLen = size(inputMovie,1);
+	colLen = size(inputMovie,2);
+	% set leftmost columns to NaN
+	inputMovie(1:end,1:leftColCrop,:) = NaN;
+	% set rightmost columns to NaN
+	inputMovie(1:end,rightColCrop:end,:) = NaN;
+	% set top rows to NaN
+	inputMovie(1:topRowCrop,1:end,:) = NaN;
+	% set bottom rows to NaN
+	inputMovie(bottomRowCrop:end,1:end,:) = NaN;
 end

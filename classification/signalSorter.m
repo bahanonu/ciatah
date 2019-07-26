@@ -47,6 +47,9 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 		% 2019.05.22 [22:16:44] - Changes (e.g. move colormap, caxis, etc. calls around) to reduce slow reduction in performance as more cells are chosen.
 		% 2019.06.10 [10:24:54] - Updates to async memory handling to reduce RAM usage.
 		% 2019.06.14/2019.06.15 [22:17:21] - Separate legend and keyboard shortcuts into different window, various GUI improvements.
+		% 2019.07.17 [00:29:16] - Added support for sparse input images (mainly ndSparse format). Reduced memory usage for cases when "options.preComputeImageCutMovies = 0" and "options.inputMovie" is a matrix (NOT a path to a movie) by skipping async/use of parallel workers.
+		% 2019.07.17 [20:37:09] - Added ability to change GUI font.
+		% 2019.07.23 [03:42:48] - Enclosed user selections inside try-catch to better handle invalid input robustly with checks added in the subfxn as needed.
 
 	% TODO
 		% New GUI interface to allow users to scroll through video and see cell activity at that point
@@ -181,6 +184,8 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 	options.axisEqual = 1;
 	% Int: minimum number of events a signal needs to have else will add pseudo peaks
 	options.minEventsAddPeaks = 4;
+	% Int: font size of GUI elements
+	options.fontSize = 10;
 	% get options
 	options = getOptions(options,varargin);
 	% unpack options into current workspace
@@ -349,6 +354,9 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 	% =======
 	% create a cell map to overlay current IC filter onto
 	objMap = createObjMap(inputImages);
+    if issparse(objMap)
+        objMap = full(objMap);
+    end
 
 	% =======
 	% Pre-compute values
@@ -471,7 +479,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 			options.showROITrace = 0;
 			ROItraces = [];
 		else
-			[~, outputMeanImageCorrs, outputMeanImageCorrs2] = createPeakTriggeredImages(options.inputMovie, inputImages, inputSignals,'cropSize',options.cropSize,'signalPeaksArray',signalPeakIdxOriginal,'xCoords',options.coord.xCoords,'yCoords',options.coord.yCoords,'maxPeaksToUse',5,'normalizeOutput',0,'inputImagesThres',inputImagesThres,'readMovieChunks',options.readMovieChunks);
+			[~, outputMeanImageCorrs, outputMeanImageCorrs2] = createPeakTriggeredImages(options.inputMovie, inputImages, inputSignals,'cropSize',options.cropSize,'signalPeaksArray',signalPeakIdxOriginal,'xCoords',options.coord.xCoords,'yCoords',options.coord.yCoords,'maxPeaksToUse',5,'normalizeOutput',0,'inputImagesThres',inputImagesThres,'readMovieChunks',options.readMovieChunks,'outputImageFlag',0);
 			outputMeanImageCorrs(isnan(outputMeanImageCorrs)) = 0;
 			outputMeanImageCorrs2(isnan(outputMeanImageCorrs2)) = 0;
 			peakOutputStat.outputMeanImageCorrs = outputMeanImageCorrs(:);
@@ -496,13 +504,13 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 		figure(45684)
 		subplot(3,1,1)
 		hist(inputSignals(:),100);xlabel('input values');ylabel('counts')
-		title(['input | min: ' num2str(nanmin(inputSignals(:))) ' | max: ' num2str(nanmax(inputSignals(:)))])
+		title(['input | min: ' num2str(nanmin(inputSignals(:))) ' | max: ' num2str(nanmax(inputSignals(:)))],'FontSize',options.fontSize)
 		subplot(3,1,2)
 		hist(options.inputMovie(:),100);xlabel('movie values');ylabel('counts')
-		title(['movie | min: ' num2str(nanmin(options.inputMovie(:))) ' | max: ' num2str(nanmax(options.inputMovie(:)))])
+		title(['movie | min: ' num2str(nanmin(options.inputMovie(:))) ' | max: ' num2str(nanmax(options.inputMovie(:)))],'FontSize',options.fontSize)
 		subplot(3,1,3)
 		hist(ROItraces(:),100);xlabel('ROI values');ylabel('counts')
-		title(['ROI | min: ' num2str(nanmin(ROItraces(:))) ' | max: ' num2str(nanmax(ROItraces(:)))])
+		title(['ROI | min: ' num2str(nanmin(ROItraces(:))) ' | max: ' num2str(nanmax(ROItraces(:)))],'FontSize',options.fontSize)
 	end
 
 	% remove small ICs unless a pre-list is loaded in
@@ -522,6 +530,9 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 		% [~, ~, ~, inputImageSizes] = filterImages(inputImagesThres, inputSignals,'thresholdImages',0);
 		inputImageSizes = sum(sum(inputImagesThres,1),2);
 		inputImageSizes = inputImageSizes(:);
+		if issparse(inputImageSizes)
+			inputImageSizes = full(inputImageSizes);
+		end
 		validPre = valid;
 	end
 
@@ -699,7 +710,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 	subplotTmp(subplotY,subplotX,objMapPlotLoc);
 	imagesc(objMap); axis off;
 	colormap gray;
-	title(['objMap' inputStr]);hold on;
+	title(['objMap' inputStr],'FontSize',options.fontSize);hold on;
 
 	% make color image overlays
 	zeroMap = zeros(size(objMap));
@@ -853,6 +864,9 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 		% get loop specific values
 		directionOfNextChoice=0;
 		thisImage = squeeze(inputImages(:,:,i));
+		if issparse(thisImage)
+			thisImage = full(thisImage);
+		end
 		thisTrace = inputSignals(i,:);
 		testpeaks = signalPeakIdx{i};
 		cellIDStr = ['#' num2str(i) '/' num2str(nImages)];
@@ -863,7 +877,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 				% tic
 
 				if options.showImageCorrWithCharInputMovie==1
-					[~, outputMeanImageCorrs, ~] = createPeakTriggeredImages(options.inputMovie, inputImages(:,:,i), inputSignals(i,:),'cropSize',options.cropSize,'signalPeaksArray',signalPeakIdxOriginal(i),'xCoords',options.coord.xCoords(i),'yCoords',options.coord.yCoords(i),'maxPeaksToUse',5,'normalizeOutput',0,'inputImagesThres',inputImagesThres,'readMovieChunks',options.readMovieChunks,'displayInfo',0,'movieDims',options.inputMovieDims,'runThresCorr',0,'runSecondCorr',0);
+					[~, outputMeanImageCorrs, ~] = createPeakTriggeredImages(options.inputMovie, thisImage, inputSignals(i,:),'cropSize',options.cropSize,'signalPeaksArray',signalPeakIdxOriginal(i),'xCoords',options.coord.xCoords(i),'yCoords',options.coord.yCoords(i),'maxPeaksToUse',5,'normalizeOutput',0,'inputImagesThres',inputImagesThres,'readMovieChunks',options.readMovieChunks,'displayInfo',0,'movieDims',options.inputMovieDims,'runThresCorr',0,'runSecondCorr',0);
 
 					peakOutputStat.outputMeanImageCorrs(i) = outputMeanImageCorrs(:);
 				end
@@ -880,7 +894,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 							end
 							% montageHandle = imagesc(thisImage);
 							% Select whether to use existing peaks or not.
-							if isempty(objCutImagesCollection{i})
+							if isempty(objCutImagesCollection{i})&&ischar(options.inputMovie)==1
 								% [croppedPeakImages croppedPeakImagesCellarray] = viewMontage(options.inputMovie,inputImages(:,:,i),options,thisTrace,[signalPeakIdx{i}],minValMovie,maxValMovie,options.cropSizeLength,i);
 								if exist('objCutImagesAsyncF','var')==1
 									% cellfun(@(x) disp(x),objCutMovieAsyncF)
@@ -889,7 +903,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 									% objCutImagesAsyncF{i}
 									if isempty(objCutImagesAsyncF{i})
 										% objCutMovie = createObjCutMovieSignalSorter(options,testpeaks,thisTrace,inputImages,i,options.cropSizeLength,maxValMovie);
-										[objCutImagesCollection{i}, ~] = viewMontage(options.inputMovie,inputImages(:,:,i),options,thisTrace,[signalPeakIdx{i}],minValMovie,maxValMovie,options.cropSizeLength,i,1);
+										[objCutImagesCollection{i}, ~] = viewMontage(options.inputMovie,thisImage,options,thisTrace,[signalPeakIdx{i}],minValMovie,maxValMovie,options.cropSizeLength,i,1);
 									else
 										% Fetch output, blocks UI until read
 										croppedPeakImages = fetchOutputs(objCutImagesAsyncF{i});
@@ -900,7 +914,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 									end
 								else
 									% objCutMovie = createObjCutMovieSignalSorter(options,testpeaks,thisTrace,inputImages,i,options.cropSizeLength,maxValMovie);
-									[objCutImagesCollection{i}, ~] = viewMontage(options.inputMovie,inputImages(:,:,i),options,thisTrace,[signalPeakIdx{i}],minValMovie,maxValMovie,options.cropSizeLength,i,1);
+									[objCutImagesCollection{i}, ~] = viewMontage(options.inputMovie,thisImage,options,thisTrace,[signalPeakIdx{i}],minValMovie,maxValMovie,options.cropSizeLength,i,1);
 								end
 								p = gcp(); % Get the current parallel pool
 
@@ -930,6 +944,8 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 
 									end
 								end
+							else
+								[objCutImagesCollection{i}, ~] = viewMontage(options.inputMovie,thisImage,options,thisTrace,[signalPeakIdx{i}],minValMovie,maxValMovie,options.cropSizeLength,i,1);
 							end
 
 							j = whos('objCutImagesCollection');j.bytes=j.bytes*9.53674e-7;
@@ -973,8 +989,8 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 								end
 								% s2Pos = get(gca,'position');
 								s2Pos = plotboxpos(gca);
-								cbh = colorbar(gca,'Location','eastoutside','Position',[s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)],'FontSize',6);
-								ylabel(cbh,'Fluorescence (e.g. \DeltaF/F or \DeltaF/\sigma)','FontSize',8);
+								cbh = colorbar(gca,'Location','eastoutside','Position',[s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)],'FontSize',options.fontSize-2);
+								ylabel(cbh,'Fluorescence (e.g. \DeltaF/F or \DeltaF/\sigma)','FontSize',options.fontSize-1);
 							end
 						catch err
 
@@ -989,7 +1005,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 						end
 						try
 							sigDig = 100;
-							title(['imageCorr = ' num2str(round(peakOutputStat.outputMeanImageCorrs(i)*sigDig)/sigDig)]);
+							title(['imageCorr = ' num2str(round(peakOutputStat.outputMeanImageCorrs(i)*sigDig)/sigDig)],'FontSize',options.fontSize);
 							% title([...
 							%     'imageCorr = ' num2str(round(peakOutputStat.outputMeanImageCorrs(i)*sigDig)/sigDig) ',' num2str(peakOutputStat.outputMeanImageCorrs2(i))...
 							%     ' | SNR = ' num2str(round(signalSnr(i)*sigDig)/sigDig)...
@@ -1025,7 +1041,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 				imagesc(thisImageCrop);
 				% colormap gray
 				axis off; % ij square
-				title(['signal ' cellIDStr 10 '(' num2str(sum(valid==1)) ' good)']);
+				title(['signal ' cellIDStr 10 '(' num2str(sum(valid==1)) ' good)'],'FontSize',options.fontSize);
 		end
 
 		% use thresholded image as AlphaData to overlay on cell map, reduce number of times this is accessed to speed-up analysis
@@ -1162,9 +1178,9 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 			axisH.YRuler.Axle.LineStyle = 'none';
 			if isempty(options.inputStr)
 				% title(['signal map' 10 'green/red/gray/blue' 10 'good/bad/undecided/current'])
-				title([strrep(options.inputStr,'_','\_') 10 'Legend: green(good), red(bad), blue(current)'])
+				title([strrep(options.inputStr,'_','\_') 10 'Legend: green(good), red(bad), blue(current)'],'FontSize',options.fontSize)
 			else
-				title([strrep(options.inputStr,'_','\_') 10 'Legend: green(good), red(bad), blue(current)'])
+				title([strrep(options.inputStr,'_','\_') 10 'Legend: green(good), red(bad), blue(current)'],'FontSize',options.fontSize)
 			end
 			% title(strrep(options.inputStr,'_','\_'), 'HandleVisibility' , 'off' )
 		% subplot(subplotY,subplotX,objMapZoomPlotLoc)
@@ -1238,7 +1254,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 				if options.axisEqual==1
 					axis equal tight;
 				end
-				title(['signal ' cellIDStr ' (' num2str(sum(valid==1)) ' good)'],'FontSize',12)
+				title(['signal ' cellIDStr ' (' num2str(sum(valid==1)) ' good)'],'FontSize',options.fontSize)
 				% 10 'Legend: green(good), red(bad), blue(current)'
 				box off;
 				axisH = gca;
@@ -1315,7 +1331,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 				xlabel('frames');
 				ylabel('\DeltaF/F');
 				ylim([minValTraces maxValTraces]);
-				title(['signal peaks ' cellIDStr])
+				title(['signal peaks ' cellIDStr],'FontSize',options.fontSize)
 			% subplot(subplotY,subplotX,tracePlotLoc)
 			subplotTmp(subplotY,subplotX,tracePlotLoc)
 				plot(thisTrace, 'r');
@@ -1323,7 +1339,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 				% ylabel('df/f');
 				axis([0 length(thisTrace) minValTraces maxValTraces]);
 				thisStr = ['SNR = ' num2str(signalSnr(i)) ' | S-ratio = ' num2str(NaN) ' | # peaks = ' num2str(length(testpeaks)) ' | size (px) = ' num2str(inputImageSizes(i))];
-				title(thisStr)
+				title(thisStr,'FontSize',options.fontSize)
 		end
 
 		% get user input
@@ -1343,7 +1359,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 		if ~isempty(options.inputMovie)
 			try
 				% [objCutMovie] = createObjCutMovieSignalSorter(options,testpeaks,thisTrace,inputImages,i);
-				if isempty(objCutMovieCollection{i})
+				if isempty(objCutMovieCollection{i})&&ischar(options.inputMovie)==1
 					if exist('objCutMovieAsyncF','var')==1
 						% cellfun(@(x) disp(x),objCutMovieAsyncF)
 						% clc
@@ -1388,6 +1404,8 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 
 						end
 					end
+				elseif isempty(objCutMovieCollection{i})&&ischar(options.inputMovie)==0
+					objCutMovie = createObjCutMovieSignalSorter(options,testpeaks,thisTrace,inputImages,i,options.cropSizeLength,maxValMovie);
 				else
 					objCutMovie = objCutMovieCollection{i};
 				end
@@ -1425,6 +1443,9 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 					imAlpha(isnan(objCutMovie(:,:,1)))=0;
 					% imAlpha(objCutMovie(:,:,1)==mode(objCutMovie(:)))=0;
 					imagesc(objCutMovie(:,:,1),'AlphaData',imAlpha);
+					if options.axisEqual==1
+						axis equal tight;
+					end
 					set(gca,'color',[0 0 0]);
 				else
 
@@ -1446,11 +1467,6 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 				% keyIn = [];
 				set(gcf,'currentch','3');
 				keyIn = get(gcf,'CurrentCharacter');
-				% strcmp(keyIn,'3')
-				% options.fps = 25;
-
-				% writerObj = VideoWriter(['cell' num2str(i) '.avi']);
-				% open(writerObj);
 
 				if i==1
 					colormap([options.colormap]);
@@ -1460,8 +1476,6 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 					imAlpha=ones(size(objCutMovie(:,:,1)));
 					imAlpha(isnan(objCutMovie(:,:,1)))=0;
 					imAlpha(objCutMovie(:,:,1)==0)=0;
-					% imAlpha(objCutMovie(:,:,1)==mode(objCutMovie(:)))=0;
-					% imagesc(tmpImage,'AlphaData',imAlpha);
 					set(gca,'color',[0 0 0]);
 				end
 
@@ -1481,18 +1495,9 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 				if options.axisEqual==1
 					axis equal tight;
 				end
-				% if i==1
-				% else
-				% 	loopImgHandle = findobj(gca,'Type','image');
-				% end
+
 				set(gca,'color',[0 0 0]);
 				set(gca, 'box','off','XTickLabel',[],'XTick',[],'YTickLabel',[],'YTick',[],'XColor',get(gcf,'Color'),'YColor',get(gcf,'Color'))
-
-				% if i==1
-				% 	if options.axisEqual==1
-				% 		axis equal tight;
-				% 	end
-				% end
 
 				if options.signalLoopTicTocCheck==1
 					toc
@@ -1504,7 +1509,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 					caxis([-0.05 0.1]);
 				end
 
-				title(['Press Q to change movie contrast.' 10 'Press L for legend.'])
+				title(['Press Q to change movie contrast.' 10 'Press L for legend.'],'FontSize',options.fontSize)
 
 				while strcmp(keyIn,'3')
 					keyIn = get(gcf,'CurrentCharacter');
@@ -1558,21 +1563,76 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 			set(gcf,'currentch','3');
 		end
 		figure(mainFig);
-		% objCutMovie(:,:,1) = nanmax(objCutMovie(:));
-		% playMovie(objCutMovie,'fps',15);
 		warning('on','all')
-		% [x,y,reply]=finput(1);
-		% reply = uint8(input);
-		% reply = uint8(input('enter: ','s'))
-		% waitforbuttonpress
-		% reply = double(get(gcf,'CurrentCharacter'));
 
+		try
+			subfxnUserInputGui();
+		catch err
+			disp(repmat('@',1,7))
+			disp(getReport(err,'extended','hyperlinks','on'));
+			disp(repmat('@',1,7))
+		end
+
+		% update images
+		if validPrevious==valid(i)
+		elseif valid(i)==1
+			goodImages = goodImages+currentImageThres;goodImages(goodImages<0) = 0;
+			% badImages = badImages-currentImageThres;badImages(badImages<0) = 0;
+			badImages = badImages-100*goodImages;badImages(badImages<0) = 0;
+			if validPrevious==3
+				neutralImages = neutralImages-currentImageThres;
+			end
+		elseif valid(i)==0
+			if validPrevious==1
+				goodImages = goodImages-currentImageThres;goodImages(goodImages<0) = 0;
+			end
+			badImages = badImages+currentImageThres;badImages(badImages<0) = 0;
+			if validPrevious==3
+				neutralImages = neutralImages-currentImageThres;
+			end
+		end
+		% loop if user gets to either end
+		i=i+directionOfNextChoice;
+		if i<=0; i = nImages; end
+		if i>nImages; i = 1; end
+		% pause(0.001);
+		figure(mainFig);
+
+		% already checked that tmp folder exists, then save
+		try
+			if exist(tmpDir,'file')
+				save([tmpDir filesep 'tmpDecisions_' sessionID '.mat'],'valid');
+			end
+		catch
+
+		end
+
+		loopCount = loopCount+1;
+	end
+	% warning on
+	warning('on','all')
+	warning('query','all')
+	function subfxnUserInputGui()
 		% 'M' make a montage of peak frames
 		if isequal(reply, 109)&&~isempty(options.inputMovie)
 			try
-				[~, ~] = openFigure(options.secondFigNo, '');
+				% [~, ~] = openFigure(options.secondFigNo, '');
+				figure(options.secondFigNo)
+				clf
 				% [croppedPeakImages] = viewMontage(options.inputMovie,inputImages(:,:,i),options,thisTrace,[signalPeakIdx{i}],minValMovie,maxValMovie,options.cropSizeLength,i,1);
-				viewMontage(options.inputMovie,inputImages(:,:,i),options,thisTrace,[signalPeakIdx{i}],minValMovie,maxValMovie,options.cropSizeLength,i,1);
+				croppedPeakImages2 = viewMontage(options.inputMovie,thisImage,options,thisTrace,[signalPeakIdx{i}],minValMovie,maxValMovie,options.cropSizeLength,i,1);
+				imAlpha = ones(size(croppedPeakImages2));
+				imAlpha(isnan(croppedPeakImages2))=0;
+				imagesc(croppedPeakImages2,'AlphaData',imAlpha);
+				if options.axisEqual==1
+					axis equal tight;
+				end
+				set(gca,'color',[0 0 0]);
+				colormap(options.colormap);
+				set(gca, 'box','off','XTickLabel',[],'XTick',[],'YTickLabel',[],'YTick',[],'XColor',get(gcf,'Color'),'YColor',get(gcf,'Color'))
+						set(gca,'color',[0 0 0]);
+
+				% viewMontage(options.inputMovie,thisImage,options,thisTrace,[signalPeakIdx{i}],minValMovie,maxValMovie,options.cropSizeLength,i,1);
 				% set(findobj(gcf,'type','axes'),'hittest','off')
 				colorbar('Location','eastoutside');
 				% colorbar(inputMoviePlotLoc2Handle,'off');
@@ -1580,7 +1640,14 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 				% cbh = colorbar(inputMoviePlotLoc2Handle,'Location','eastoutside','Position',[s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)]);
 
 				suptitle('Press any key to exit')
-				ginput(1);
+				% ginput(1);
+				set(gcf,'currentch','3');
+				keyIn = get(gcf,'CurrentCharacter');
+				drawnow
+				while strcmp(keyIn,'3')
+					keyIn = get(gcf,'CurrentCharacter');
+					pause(1/options.fps);
+				end
 				close(options.secondFigNo);
 			catch err
 				disp(repmat('@',1,7))
@@ -1607,28 +1674,32 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 				options.colormapIdx = 1;
 			end
 			colormap(options.colormap);
+		% 'A' change global font
+		elseif isequal(reply, 97)
+			userInput = inputdlg('New font');
+			userInput = str2num(userInput{1});
+			options.fontSize = userInput;
+			set(findall(gcf,'-property','FontSize'),'FontSize',options.fontSize);
 		% 'L' re-display legend
 		elseif isequal(reply, 108)
 			subfxnCreateLegend();
 		% 'I' display trace with median removed
 		elseif isequal(reply, 105)
-			[~, ~] = openFigure(options.secondFigNo, '');
+			% [~, ~] = openFigure(options.secondFigNo, '');
+			figure(options.secondFigNo)
 				clf
 				set(gcf,'currentch','3');
 				keyIn = get(gcf,'CurrentCharacter');
 
-				imAlpha = ones(size(inputImages(:,:,i)));
-				imAlpha(isnan(inputImages(:,:,i))) = 0;
-				imAlpha(inputImages(:,:,i)==0) = 0;
-				imagesc(inputImages(:,:,i),'AlphaData',imAlpha);
+				imAlpha = ones(size(thisImage));
+				imAlpha(isnan(thisImage)) = 0;
+				imAlpha(thisImage==0) = 0;
+				imagesc(thisImage,'AlphaData',imAlpha);
 				set(gca,'color',[0 0 0]);
 
-				% imagesc(inputImages(:,:,i))
 				axis equal tight
-				% colormap([0 0 0;options.colormap]);
 				colormap([options.colormap]);
 				colorbar
-				% pause
 				suptitle('Current signal source image | Press any key to exit')
 				drawnow
 				while strcmp(keyIn,'3')
@@ -1656,7 +1727,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 					plot(thisTrace,'k');
 					hold on;
 					scatter(testpeaks, min(maxValTraces*0.97,thisTrace(testpeaks)*1.4), 60, '.', 'LineWidth',0.5,'MarkerFaceColor',[0 0 0], 'MarkerEdgeColor',[0 0 0])
-					title('Original')
+					title('Original','FontSize',options.fontSize)
 					box off;zoom on;
 				linkAx(end+1) = subplot(plotYn,1,2);
 					plot(inputSignalNoise{i},'Color',[0.5 0.5 0.5]);
@@ -1669,7 +1740,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 					ss2(isnan(ss2)) = 0;
 					ss1 = ss1 + ss2;
 					scatter(testpeaks, min(maxValTraces*0.97,ss1(testpeaks)*1.4), 60, '.', 'LineWidth',0.5,'MarkerFaceColor',[0 0 0], 'MarkerEdgeColor',[0 0 0]);
-					title('Displayed')
+					title('Displayed','FontSize',options.fontSize)
 					box off;zoom on;
 				linkAx(end+1) = subplot(plotYn,1,3);
 					plot(noiseTmp1,'k');
@@ -1683,7 +1754,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 					ss1 = ss1 + ss2;
 					scatter(testpeaks, min(maxValTraces*0.97,ss1(testpeaks)*1.4), 60, '.', 'LineWidth',0.5,'MarkerFaceColor',[0 0 0], 'MarkerEdgeColor',[0 0 0]);
 
-					title('Median filtered')
+					title('Median filtered','FontSize',options.fontSize)
 					box off;zoom on;
 				linkAx(end+1) = subplot(plotYn,1,4);
 					if ~isempty(options.inputMovie)&&~ischar(options.inputMovie)
@@ -1692,7 +1763,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 							plot(ROItraces,'k');
 							hold on;
 							scatter(testpeaks, min(maxValTraces*0.97,ROItraces(testpeaks)*1.4), 60, '.', 'LineWidth',0.5,'MarkerFaceColor',[0 0 0], 'MarkerEdgeColor',[0 0 0]);
-							title('ROI calculated trace')
+							title('ROI calculated trace','FontSize',options.fontSize)
 							box off;zoom on;
 
 						% frImg = cat(3,inputImagesThres(:,:,i),inputImagesThres(:,:,i));
@@ -1709,7 +1780,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 						%     legend({'Normal','Median removed'})
 						%     title('Least Squares')
 					else
-						title('NO DATA, EXCLUDED: ROI calculated trace')
+						title('NO DATA, EXCLUDED: ROI calculated trace','FontSize',options.fontSize)
 					end
 				linkAx(end+1) = subplot(plotYn,1,5);
 					if ~isempty(options.inputSignalsSecond)
@@ -1717,10 +1788,10 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 						plot(tmpSecondTrace,'k');
 						hold on;
 						scatter(testpeaks, min(maxValTraces*0.97,tmpSecondTrace(testpeaks)*1.4), 60, '.', 'LineWidth',0.5,'MarkerFaceColor',[0 0 0], 'MarkerEdgeColor',[0 0 0]);
-						title('Original trace (secondary)')
+						title('Original trace (secondary)','FontSize',options.fontSize)
 						box off;zoom on;
 					else
-						title('NO DATA, EXCLUDED: Original trace (secondary)')
+						title('NO DATA, EXCLUDED: Original trace (secondary)','FontSize',options.fontSize)
 					end
 
 				suptitle('Press any key to exit | Zoom is enabled on traces, x axes are linked')
@@ -1768,7 +1839,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 			[peakSignalAmplitude, peakIdx] = sort(peakSignalAmplitude,'descend');
 			signalPeakArray = {signalPeakArray(peakIdx)};
 			try
-				compareSignalToMovie(options.inputMovie, inputImages(:,:,i), thisTrace,'waitbarOn',0,'timeSeq',-10:10,'signalPeakArray',signalPeakArray,'cropSize',options.cropSizeLength,'movieMinMax',[minHere maxHere],'inputDatasetName',options.inputDatasetName,'inputMovieDims',options.inputMovieDims,'colormap',options.colormap);
+				compareSignalToMovie(options.inputMovie, thisImage, thisTrace,'waitbarOn',0,'timeSeq',-10:10,'signalPeakArray',signalPeakArray,'cropSize',options.cropSizeLength,'movieMinMax',[minHere maxHere],'inputDatasetName',options.inputDatasetName,'inputMovieDims',options.inputMovieDims,'colormap',options.colormap);
 				% options.movieMin options.movieMax
 			catch err
 				disp(repmat('@',1,7))
@@ -1790,46 +1861,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 		else
 			[valid, directionOfNextChoice, saveData, i] = respondToUserInput(reply,i,valid,directionOfNextChoice,saveData,nImages);
 		end
-
-		% update images
-		if validPrevious==valid(i)
-		elseif valid(i)==1
-			goodImages = goodImages+currentImageThres;goodImages(goodImages<0) = 0;
-			% badImages = badImages-currentImageThres;badImages(badImages<0) = 0;
-			badImages = badImages-100*goodImages;badImages(badImages<0) = 0;
-			if validPrevious==3
-				neutralImages = neutralImages-currentImageThres;
-			end
-		elseif valid(i)==0
-			if validPrevious==1
-				goodImages = goodImages-currentImageThres;goodImages(goodImages<0) = 0;
-			end
-			badImages = badImages+currentImageThres;badImages(badImages<0) = 0;
-			if validPrevious==3
-				neutralImages = neutralImages-currentImageThres;
-			end
-		end
-		% loop if user gets to either end
-		i=i+directionOfNextChoice;
-		if i<=0; i = nImages; end
-		if i>nImages; i = 1; end
-		% pause(0.001);
-		figure(mainFig);
-
-		% already checked that tmp folder exists, then save
-		try
-			if exist(tmpDir,'file')
-				save([tmpDir filesep 'tmpDecisions_' sessionID '.mat'],'valid');
-			end
-		catch
-
-		end
-
-		loopCount = loopCount+1;
 	end
-	% warning on
-	warning('on','all')
-	warning('query','all')
 end
 
 function instructionStr = subfxnCreateLegend()
@@ -1857,7 +1889,8 @@ function instructionStr = subfxnCreateLegend()
 	'w          | change trace min/max',sepStrNum,...
 	'e          | change fps of transient movies',sepStrNum,...
 	'd          | change colormap',sepStrNum,...
-	'l          | create new legend',sepStrNum,sepStrNum,...
+	'l          | create new legend',sepStrNum,...
+	'a          | change GUI font',sepStrNum,sepStrNum,...
 	'===Cell map legend===',sepStrNum,...
 	'green = good',sepStrNum,...
 	'red = bad',sepStrNum,...
@@ -1878,41 +1911,7 @@ function instructionStr = subfxnCreateLegend()
 	h = msgbox_custom(['\fontsize{10}' instructionStr],'signalSorter shortcuts/legend',s);
 	sspos = get(h, 'position'); %makes box bigger
 	scnsize = get(0,'ScreenSize');
-	% dlgSize = [scnsize(3)*0.8 scnsize(4)*0.8];
-	% scnsize(4)-sspos(1)*2
 	set(h, 'position', [0 0 sspos(3)*0.8 sspos(4)*0.8]); %makes box bigger
-	% set(h, 'position', [100 440 1000 100]);
-	% ah = get( h, 'CurrentAxes' );
-	% ch = get( ah, 'Children' );
-	% if ismac
-	% 	cmdWinEditorFont = 'Menlo-Regular';
-	% elseif isunix
-	%     cmdWinEditorFont = 'Consolas';
-	% elseif ispc
-	% 	cmdWinEditorFont = 'Consolas';
-	% else
-	% 	cmdWinEditorFont = '';
-	%     disp('Platform not supported')
-	% end
-	% if isempty(cmdWinEditorFont)
-	% else
-	% 	set(ch, 'FontName', cmdWinEditorFont);
-	% 	% set(ch,'VerticalAlignment','bottom','String',instructionStr,'FontName', cmdWinEditorFont,'FontSize',10);
-	% end
-
-	% 'Solidity>0.8',10,...
-	% suptitleHandle = suptitle(instructionStr);
-	% % set(suptitleHandle,'FontSize',10,'FontWeight','normal');
-	% set(suptitleHandle,'FontSize',15,'FontWeight','normal');
-	% set(suptitleHandle, 'horizontalAlignment', 'left');
-	% set(suptitleHandle, 'units', 'normalized');
-	% h1 = get(suptitleHandle, 'position');
-	% % ha2 = subplot(subplotY,subplotX,inputMoviePlotLoc);
-	% % h2 = get(ha2, 'position');
-	% set(suptitleHandle, 'position', [0.007 -0.3 h1(3)]);
-	% axis off;
-	% % undock the figure
-	% set(343,'windowstyle','modal');set(343,'windowstyle','normal');
 end
 
 function [objCutMovie] = createObjCutMovieSignalSorter(options,testpeaks,thisTrace,inputImages,i,cropSizeLength,maxValMovie)
@@ -1977,7 +1976,10 @@ function [objCutMovie] = createObjCutMovieSignalSorter(options,testpeaks,thisTra
 		tmpImgHere = inputImages;
 	else
 		tmpImgHere = inputImages(:,:,i);
-	end
+    end
+    if issparse(tmpImgHere)
+        tmpImgHere = full(tmpImgHere);
+    end
 	if ischar(options.inputMovie)||iscell(options.inputMovie)
 		objCutMovie = getObjCutMovie(options.inputMovie,tmpImgHere,'createMontage',0,'extendedCrosshairs',2,'crossHairVal',maxValMovie*options.crossHairPercent,'outlines',1,'waitbarOn',0,'cropSize',cropSizeLength,'addPadding',usePadding,'xCoords',xCoords,'yCoords',yCoords,'outlineVal',NaN,'frameList',peakIdxs,'inputDatasetName',options.inputDatasetName,'inputMovieDims',options.inputMovieDims,'hdf5Fid',options.hdf5Fid,'keepFileOpen',options.keepFileOpen);
 	else
@@ -2315,7 +2317,7 @@ function plotSignal(thisTrace,testpeaks,cellIDStr,instructionStr,minValTraces,ma
 	% end
 
 
-	title([cellIDStr instructionStr])
+	title([cellIDStr instructionStr],'FontSize',options.fontSize)
 	xlabel('frames');
 	% ylabel('df/f');
 	axis([0 length(thisTrace) minValTraces maxValTraces]);

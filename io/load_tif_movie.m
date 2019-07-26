@@ -83,7 +83,7 @@ function out = load_tif_movie(filename,downsample_xy,varargin)
 			out.Movie(:,:,frame) = imread(filename, 'tif', 'Index', frame, 'Info', imgInfo);
 			% out.Movie(:,:,frame) = imread(filename, frame);
 			% out.Movie(:,:,frame) = imreadCustom(filename, 'tif', 'Index', frame, 'Info', imgInfo);
-			reverseStr = cmdWaitbar(frame,numel(framesToGrab),reverseStr,'inputStr','loading non-ImageJ tif','waitbarOn',1,'displayEvery',50);
+			reverseStr = cmdWaitbar(frame,numel(framesToGrab),reverseStr,'inputStr','Loading non-ImageJ tif','waitbarOn',1,'displayEvery',50);
 		end
 	end
 	function standardTIFF_new()

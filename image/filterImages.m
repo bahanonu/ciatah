@@ -13,6 +13,7 @@ function [inputImages, inputSignals, valid, imageSizes, imgFeatures] = filterIma
 		% 2014.04.08 [17:17:59] vectorized algorithm, speed increase. for loop left for potential use later.
 		% 2016.08.20 [21:54:11] added some more options for better control of filtering
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
+		% 2019.07.17 [00:29:16] - Added support for sparse input images (mainly ndSparse format).
 	% TODO
 		%
 
@@ -79,6 +80,9 @@ function [inputImages, inputSignals, valid, imageSizes, imgFeatures] = filterIma
 
 	imageSizes = sum(sum(inputImagesCopy,1),2);
 	imageSizes = imageSizes(:);
+	if issparse(imageSizes)
+		imageSizes = full(imageSizes);
+	end
 	% imageSizes
 	[figHandle figNo] = openFigure(98, '');
 		plot(1);

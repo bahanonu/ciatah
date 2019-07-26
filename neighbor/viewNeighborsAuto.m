@@ -72,12 +72,18 @@ function viewNeighborsAuto(inputImages, inputSignals, neighborsCell, varargin)
 	while exitLoop==0
 		directionOfNextChoice = 0;
 		thisFilt = squeeze(inputImages(:,:,cellnum));
+		if issparse(thisFilt)
+			thisFilt = full(thisFilt);
+		end
 		nList = [cellnum neighborsCell{cellnum,1}(:)'];
 		% nList
 		% montage of nearby cells
 		subplot(rowP,colP,1)
 			rgbImage = [];
 			nImgs = inputImages(:,:,nList);
+			if issparse(nImgs)
+				nImgs = full(nImgs);
+			end
 			nMatchCells = size(nImgs,3);
 
 			objCutMovie = getObjCutMovie(nImgs,thisFilt,'createMontage',0,'extendedCrosshairs',0,'crossHairVal',NaN,'outlines',1,'waitbarOn',0,'cropSize',cropSizeLength,'addPadding',usePadding,'xCoords',xCoords,'yCoords',yCoords,'outlineVal',NaN);
@@ -194,6 +200,9 @@ function viewNeighborsAuto(inputImages, inputSignals, neighborsCell, varargin)
 			nCellsH = length(nList);
 			fracMaxVal = 0.2;
 			tmpImgs = inputImages(:,:,nList);
+			if issparse(tmpImgs)
+				tmpImgs = full(tmpImgs);
+			end
 			for cInd1 = 1:nCellsH
 				tmpImgs1 = tmpImgs(:,:,cInd1);
 				tmpImgs1(tmpImgs1<(nanmax(tmpImgs1(:))*fracMaxVal)) = 0;
