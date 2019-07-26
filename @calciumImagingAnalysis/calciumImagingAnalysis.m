@@ -10,6 +10,8 @@ classdef calciumImagingAnalysis < dynamicprops
 
 	% changelog
 		% updated: 2017.01.15 [01:31:54]
+		% 2019.05.08 [10:59:59] - Added check for required toolboxes used in class.
+		% 2019.07.25 [09:39:16] - Updated loading so that users only need to be in the root calciumImagingAnalysis path but required folders do not need to be loaded.
 	% TODO
 		%
 
@@ -26,7 +28,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		MICRON_PER_PIXEL =  2.51; % 2.37;
 
 		defaultObjDir = pwd;
-		classVersion = 'v3.2.3-20190615';
+		classVersion = 'v3.2.4-20190725';
 		serverPath = '';
 		privateSettingsPath = ['private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
 		% place where functions can temporarily story user settings
@@ -444,6 +446,8 @@ classdef calciumImagingAnalysis < dynamicprops
 			display(repmat('*',1,42))
 			display('Constructing calciumImagingAnalysis imaging analysis object...')
 
+			obj.loadBatchFunctionFolders();
+
 			% Because the obj
 			%========================
 			% obj.exampleOption = '';
@@ -571,6 +575,61 @@ classdef calciumImagingAnalysis < dynamicprops
 
 		% set methods, for IO to specific variables in a controlled manner
 		obj = setMainSettings(obj)
+
+		function obj = loadBatchFunctionFolders(obj)
+			% Loads the necessary directories to have the batch functions present.
+			% Biafra Ahanonu
+			% started: 2013.12.24 [08:46:11]
+
+			% Disable the handle graphics warning "The DrawMode property will be removed in a future release. Use the SortMethod property instead." from being displayed. Comment out this line for debugging purposes as needed.
+			warning('off','MATLAB:hg:WillBeRemovedReplaceWith')
+
+			% add controller directory and subdirectories to path
+			functionLocation = dbstack('-completenames');
+			functionLocation = functionLocation(1).file;
+			[functionDir,~,~] = fileparts(functionLocation);
+			[functionDir,~,~] = fileparts(functionDir);
+			fprintf('Adding all non-private folders under: %s\n',functionDir);
+			pathList = genpath(functionDir);
+			pathListArray = strsplit(pathList,pathsep);
+			pathFilter = cellfun(@isempty,regexpi(pathListArray,[filesep '.git']));
+			% pathFilter = cellfun(@isempty,regexpi(pathListArray,[filesep 'docs']));
+			pathListArray = pathListArray(pathFilter);
+
+			if verLessThan('matlab','9.0')
+				pathFilter = cellfun(@isempty,regexpi(pathListArray,[filesep 'cnmfe']));
+				pathFilter1 = cellfun(@isempty,regexpi(pathListArray,[filesep 'cnmf_original']));
+				pathFilter2 = cellfun(@isempty,regexpi(pathListArray,[filesep 'cnmf_current']));
+				pathFilter3 = cellfun(@isempty,regexpi(pathListArray,[filesep 'cvx_rd']));
+				pathListArray = pathListArray(pathFilter&pathFilter1&pathFilter2&pathFilter3);
+			else
+				matchIdx = contains(pathListArray,{[filesep 'cnmfe'],[filesep 'cnmf_original'],[filesep 'cnmf_current'],[filesep 'cvx_rd']});
+				pathListArray = pathListArray(~matchIdx);
+			end
+
+			pathList = strjoin(pathListArray,pathsep);
+			addpath(pathList);
+
+			% Automatically add Inscopix
+			if ismac
+				baseInscopixPath = '';
+			elseif isunix
+				baseInscopixPath = '';
+			elseif ispc
+				baseInscopixPath = 'C:\Program Files\Inscopix\Data Processing';
+			else
+				disp('Platform not supported')
+			end
+			if ~isempty(baseInscopixPath)&&exist(baseInscopixPath,'dir')==7
+				addpath(baseInscopixPath);
+				if exist('isx.Movie','class')==8
+					fprintf('Inscopix Data Processing software added: %s\n',baseInscopixPath)
+				else
+					disp('Check Inscopix Data Processing software install!')
+				end
+			else
+			end
+		end
 
 		function obj = resetMijiClass(obj)
 			% This clears Miji from Java's dynamic path and then re-initializes. Use if Miji is not loading normally.
@@ -868,6 +927,11 @@ classdef calciumImagingAnalysis < dynamicprops
 			loadBatchFxns();
 			cnmfVersionDirLoad('none','displayOutput',0);
 			% [success] = cnmfVersionDirLoad('cnmfe');
+
+			% Load colormaps
+			obj.colormap = customColormap({[0 0 1],[1 1 1],[0.5 0 0],[1 0 0]});
+			obj.colormapAlt = customColormap({[0 0 0.7],[1 1 1],[0.7 0 0]});
+			obj.colormapAlt2 = diverging_map(linspace(0,1,100),[0 0 0.7],[0.7 0 0]);
 
 			% Check required toolboxes are available, warn if not
 			display(repmat('*',1,42))

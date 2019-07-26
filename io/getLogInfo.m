@@ -32,6 +32,8 @@ function [logStruct] = getLogInfo(logFilePath,varargin)
 				[pathstr,name,ext] = fileparts(logFilePath);
 				if strcmp(ext,'.xml')
 					options.logType = 'inscopixXML';
+				elseif strcmp(ext,'.mat')
+					options.logType = 'inscopixMAT';
 				else
 					% do something
 				end
@@ -50,6 +52,8 @@ function [logStruct] = getLogInfo(logFilePath,varargin)
 				[logStruct] = parseInscopixLog(logTxt,options);
 			case 'inscopixXML'
 				[logStruct] = parseInscopixXMLLog(logFilePath,options);
+			case 'inscopixMAT'
+				[logStruct] = parseInscopixMATLog(logFilePath,options);
 			otherwise
 				logStruct.null = true;
 				return
@@ -63,6 +67,11 @@ function [logStruct] = getLogInfo(logFilePath,varargin)
 		logStruct.null = true;
 		logType = NaN;
 	end
+end
+
+function [logStruct] = parseInscopixMATLog(logTxt,options)
+	load(logTxt);
+	logStruct = inputMovieIsxInfo;
 end
 
 function [logStruct] = parseInscopixXMLLog(logTxt,options)

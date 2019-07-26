@@ -115,9 +115,11 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 	% ========================
 	% remove unsupported files
 	movieNo = 1;
-	for iMovie=1:length(movieList)
+	movieTypeList = cell([1 length(movieList)]);
+	for iMovie = 1:length(movieList)
 		thisMoviePath = movieList{iMovie};
 		[options.movieType, supported] = getMovieFileType(thisMoviePath);
+		movieTypeList{iMovie} = options.movieType;
 		if supported==0
 			subfxnDisplay(['removing unsupported file from list: ' thisMoviePath],options);
 		else
@@ -140,6 +142,32 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 		return;
 	end
 	numMovies = length(movieList);
+
+	% Test that Inscopix MATLAB API ISX package installed
+	if any(strcmp(movieTypeList,'isxd'))==1
+		inputFilePathCheck = movieList{find(strcmp(movieTypeList,'isxd'),1,'first')};
+		try
+			inputMovieIsx = isx.Movie.read(inputFilePathCheck);
+		catch
+			if ismac
+				baseInscopixPath = './';
+			elseif isunix
+				baseInscopixPath = './';
+			elseif ispc
+				baseInscopixPath = 'C:\Program Files\Inscopix\Data Processing';
+			else
+				disp('Platform not supported')
+			end
+
+			if exist(baseInscopixPath,'dir')==7
+			else
+				baseInscopixPath = '.\';
+			end
+			pathToISX = uigetdir(baseInscopixPath,'Enter path to Inscopix Data Processing program installation folder (e.g. +isx should be in the directory)');
+			addpath(pathToISX);
+			help isx
+		end
+	end
 
 	% ========================
 	% pre-read each file to allow pre-allocation of output file

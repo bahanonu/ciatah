@@ -1,7 +1,7 @@
 # Biafra Ahanonu
 
 # ignore the private folder where user information is stored
-/private/
+private/
 data/
 signal_extraction/cnmf_current
 signal_extraction/cnmfe

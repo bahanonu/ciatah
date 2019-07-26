@@ -51,6 +51,8 @@ function varargout=msgbox(varargin)
 
 %  Copyright 1984-2010 The MathWorks, Inc.
 
+% 2019.07.11 [10:41:17] - Added ability to re-size window (Biafra).
+
 
 %%%%%%%%%%%%%%%%%%%%
 %%% Nargin Check %%%
@@ -217,7 +219,8 @@ if isempty(figureHandle)
         'WindowStyle'     ,WindowStyle             , ...
         'Toolbar'         ,'none'                  , ...
         'HandleVisibility','on'                    , ...
-        'Tag'             ,MsgboxTag                 ...
+        'Tag'             ,MsgboxTag               , ...
+		'Resize'          ,'on'...
         );
     % should this be 'on' to match the case below?
     %'HandleVisibility','callback'              , ...
@@ -225,9 +228,10 @@ if isempty(figureHandle)
 else
     set(figureHandle,   ...
         'WindowStyle'     ,WindowStyle, ...
-        'HandleVisibility','on'         ...
+        'HandleVisibility','on',         ...
+        'Resize'          ,'on'...
         );
-end 
+end
 
 FigColor=get(figureHandle,'Color');
 
@@ -350,7 +354,7 @@ if ~strcmp(IconString,'none'),
 
     if ~strcmp(IconString,'custom')
         % Cases where IconString will be one of 'help','warn' or 'error'
-        Img = setupStandardIcon(IconAxes, IconString);        
+        Img = setupStandardIcon(IconAxes, IconString);
     else
         % place the icon - if this fails, rethrow the error
         % after deleting the figure
@@ -409,7 +413,7 @@ function [Flag,CreateMode,Interpreter]=InternalCreateFlag(mode)
         if ~isfield(mode,'Interpreter') || ~isfield(mode,'WindowStyle')
             error(message('MATLAB:msgbox:InvalidInput'));
         end
-        
+
         Interpreter=mode.Interpreter;
         mode=mode.WindowStyle;
     end
@@ -435,7 +439,7 @@ function doKeyPress(obj, evd)
 end
 
 function Img = setupStandardIcon(ax, iconName)
-[iconData, alphaData] = matlab.ui.internal.dialog.DialogUtils.imreadDefaultIcon(iconName);  
+[iconData, alphaData] = matlab.ui.internal.dialog.DialogUtils.imreadDefaultIcon(iconName);
 Img=image('CData',iconData,'Parent',ax);
 if ~isempty(alphaData)
     set(Img, 'AlphaData', alphaData)

@@ -8,7 +8,7 @@ function [success] = convertInscopixIsxdToHdf5(inputFilePath,varargin)
 		%
 
 	% changelog
-		%
+		% 2019.07.11 [19:55:24] - Added support for JSON file information to metadata file.
 	% TODO
 		%
 
@@ -59,7 +59,21 @@ function [success] = convertInscopixIsxdToHdf5(inputFilePath,varargin)
 		try
 			inputMovieIsx = isx.Movie.read(inputFilePath);
 		catch
-			pathToISX = uigetdir('\.','Enter path to Inscopix Data Processing program installation folder (e.g. +isx should be in the directory)');
+			if ismac
+				baseInscopixPath = './';
+			elseif isunix
+				baseInscopixPath = './';
+			elseif ispc
+				baseInscopixPath = 'C:\Program Files\Inscopix\Data Processing';
+			else
+				disp('Platform not supported')
+			end
+
+			if exist(baseInscopixPath,'dir')==7
+			else
+				baseInscopixPath = '.\';
+			end
+			pathToISX = uigetdir(baseInscopixPath,'Enter path to Inscopix Data Processing program installation folder (e.g. +isx should be in the directory)');
 			addpath(pathToISX);
 			help isx
 		end
@@ -111,8 +125,21 @@ function [success] = convertInscopixIsxdToHdf5(inputFilePath,varargin)
 			inputMovieIsxInfo.data_type = iMIx.data_type;
 			inputMovieIsxInfo.file_path = iMIx.file_path;
 
+			[pathstr,name,ext] = fileparts(inputFilePath);
+			jsonPaths = getFileList('pathstr','session.json')
+			if isempty(jsonPaths)
+			else
+				sessionJsonValue = jsondecode(fileread(jsonPaths{1}));
+				inputMovieIsxInfo.sessionInfo = sessionJsonValue;
+			end
+
 			fprintf('Saving log file: %s\n',options.newFilenameInfoFile);
 			save(options.newFilenameInfoFile,'inputMovieIsxInfo','-v7.3')
+
+			if ~isempty(options.saveFolderTwo)
+				fprintf('Saving log file: %s\n',options.newFilenameInfoFileTwo);
+				save(options.newFilenameInfoFileTwo,'inputMovieIsxInfo','-v7.3')
+			end
 
 			for currentSubset=1:nSubsets
 				loopStartTime = tic;
