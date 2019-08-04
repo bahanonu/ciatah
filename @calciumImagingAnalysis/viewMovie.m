@@ -605,10 +605,11 @@ function obj = viewMovie(obj)
 			case 'imagej'
 				% Miji;
 				% MIJ.createImage([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) '[' num2str(movieNo) '/' num2str(nMovies) ']' ': ' obj.folderBaseSaveStr{obj.fileNum}], primaryMovie, true);
+				msgbox('Click movie to open next dialog box.','Success','normal')
 				MIJ.createImage(displayStrMovie, primaryMovie, true);
-				if size(primaryMovie,1)<300
-					for foobar=1:3; MIJ.run('In [+]'); end
-				end
+				% if size(primaryMovie,1)<300
+				% 	for foobar=1:3; MIJ.run('In [+]'); end
+				% end
 				for foobar=1:2; MIJ.run('Enhance Contrast','saturated=0.35'); end
 				MIJ.run('Start Animation [\]');
 				clear primaryMovie;

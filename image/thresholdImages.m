@@ -70,7 +70,7 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
 			tmpImage = inputImages; clear inputImages;
 			inputImages(:,:,1) = tmpImage;
 		end
-		
+
 		options.waitbarOn = 0;
 	else
 		return
@@ -114,7 +114,7 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
 		afterEach(D, @nUpdateParforProgress);
 		p = 1;
 		% N = nImages;
-		nInterval = 100;
+		nInterval = round(nImages/10); %100
 	end
 
 	numObjects = [];

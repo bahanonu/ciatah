@@ -35,6 +35,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	options.folderListPath='manual';
 	% whether to skip files being processed by another computer
 	options.checkConcurrentAnalysis = 1;
+	% whether to skip files being processed by another computer
+	options.concurrentAnalysisFilename = obj.concurrentAnalysisFilename;
 	% should each movie in a folder be processed separately?
 	options.processMoviesSeparately = 0;
 	% should the movies be processed or just an ostruct be created?
@@ -236,6 +238,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	options.turboregNumFramesSubset = options.turboreg.turboregNumFramesSubset;
 	options.refCropFrame = options.turboreg.refCropFrame;
 	options.pxToCrop = options.turboreg.pxToCrop;
+	options.checkConcurrentAnalysis = options.turboreg.checkConcurrentAnalysis;
 	% end
 	% ========================
 	% get the frame to use
@@ -301,12 +304,16 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				display([num2str(fileNum) '/' num2str(length(folderList)) ': ' thisDir]);
 				display([num2str(fileNumToRun) '/' num2str(nFilesToRun) ': ' thisDir]);
 
-				checkSaveString = [thisDir filesep '0runningAnalysisCheck.mat'];
+				checkSaveString = [thisDir filesep options.concurrentAnalysisFilename];
 				if exist(checkSaveString,'file')~=0
 					display('SKIPPING ANALYSIS FOR THIS FOLDER')
 					continue
 				else
-
+					% put a temporary file in the directory to cause other scripts to skip
+					display(['saving temporary analysis file: ' checkSaveString])
+					AmericaTheBeautiful = 'Man Will Conquer Space Soon!.';
+					analysisState = 'running';
+					save(checkSaveString,'AmericaTheBeautiful','analysisState');
 				end
 			end
 

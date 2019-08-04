@@ -17,7 +17,7 @@ function createHdf5File(filename, datasetName, inputData, varargin)
 	% Int: chunk size in [x y z] of the dataset, leave empty for auto chunking
 	options.dataDimsChunkCopy = [];
 	options.addInfo = [];
-	% e.g. '/movie/processingSettings'
+	% Char array: cell array of strings matching addInfo, e.g. '/movie/processingSettings'
 	options.addInfoName = [];
 	% get options
 	options = getOptions(options,varargin);

@@ -79,6 +79,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			'Use default options (1 = yes, 0 = no)',...
 			'Runtime Matlab profiler (1 = yes, 0 = no)',...
 			'Regular expression for alternative movie (e.g. non-downsampled, LEAVE blank)',...
+			'View results after cell extraction? (1 = yes, 0 = no)',...
 		},...
 		'Cell extraction parameters for all algorithms',1,...
 		{...
@@ -90,6 +91,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			'0',...
 			'0',...
 			obj.fileFilterRegexpAltCellExtraction,...
+			'1',...
 		},idopts...
 	);setNo = 1;
 	obj.fileFilterRegexp = movieSettings{setNo};setNo = setNo+1;
@@ -100,6 +102,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	options.defaultOptions = str2num(movieSettings{setNo});setNo = setNo+1;
 	options.profiler = str2num(movieSettings{setNo});setNo = setNo+1;
 	obj.fileFilterRegexpAltCellExtraction = movieSettings{setNo};setNo = setNo+1;
+	viewResultsAfter = str2num(movieSettings{setNo});setNo = setNo+1;
 
 	% get files to process
 	[fileIdxArray idNumIdxArray nFilesToAnalyze nFiles] = obj.getAnalysisSubsetsToAnalyze();
@@ -284,7 +287,15 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 						runPCAICASignalFinder();
 						saveRunTimes('pcaica');
 					case 'EM'
-						emOptions = runCELLMaxSignalFinder();
+						try
+							emOptions = runCELLMaxSignalFinder();
+						catch err
+							fprintf('Removing temporary file: %s\n',savestring)
+							delete(savestring)
+							display(repmat('@',1,7))
+							disp(getReport(err,'extended','hyperlinks','on'));
+							display(repmat('@',1,7))
+						end
 						saveRunTimes('cellmax_v3');
 						clear emOptions;
 					case 'EXTRACT'
@@ -320,7 +331,9 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	obj.modelVarsFromFiles();
 	obj.guiEnabled = 0;
 	% obj.viewCreateObjmaps();
-	obj.viewObjmaps();
+	if viewResultsAfter==1
+		obj.viewObjmaps();
+	end
 	obj.guiEnabled = objGuiOld;
 	% ==========================================
 	% ==========================================
@@ -353,7 +366,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		if verLessThan('matlab', '8.4.0')
 			return
 		end
-		runtimeTablePath = [obj.dataSavePathFixed filesep 'database_processing_runtimes.csv'];
+		runtimeTablePath = [obj.dataSavePathFixed filesep 'database_processing_runtimes_' obj.currentDateTimeSessionStr '.csv'];
 		runtimeTableExists = 0;
 		if exist(runtimeTablePath,'file')
 			[runtimeTable] = readExternalTable(runtimeTablePath,'delimiter',',');
@@ -433,6 +446,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		if strcmp(algorithm,'cellmax_v3')
 			try
 				runtimeTable.parallel(addRow,1) = emOptions.useParallel;
+				runtimeTable.runtime_seconds(addRow,1) = emOptions.time.cellmaxRuntime;
 			catch
 				runtimeTable.parallel(addRow,1) = NaN;
 			end
@@ -571,6 +585,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 							'CELLMax | sqOverlap?',...
 							'CELLMax | downsampleFactorTime?',...
 							'CELLMax | downsampleFactorSpace?',...
+							'CELLMax | spatialFilterMovie (0 = no, 1 = yes, after loading)?',...
 						},...
 						dlgStr,1,...
 						{...
@@ -598,7 +613,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 							'0',...
 							'16',...
 							'1',...
-							'1'...
+							'1',...
+							'0'...
 						},AddOpts,2);
 					setNo = 1;
 					options.CELLMax.readMovieChunks = str2num(movieSettings{setNo});setNo = setNo+1;
@@ -627,6 +643,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 					options.CELLMax.sqOverlap = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.CELLMax.downsampleFactorTime = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.CELLMax.downsampleFactorSpace = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.CELLMax.spatialFilterMovie = str2num(movieSettings{setNo});setNo = setNo+1;
 
 				case 'EXTRACT'
 					movieSettings = inputdlg({...

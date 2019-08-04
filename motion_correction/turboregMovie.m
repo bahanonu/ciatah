@@ -257,8 +257,8 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	if ~verLessThan('matlab', '9.2')
 		D = parallel.pool.DataQueue;
 		afterEach(D, @nUpdateParforProgress);
-		p = 1;
-		nInterval = 500;
+		p = 0;
+		nInterval = round(options.maxFrame/30);
 		options_waitbarOn = options.waitbarOn;
 		nFrames = size(inputMovieCropped,3);
 		if nFrames<=(nInterval*2)
@@ -389,7 +389,7 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	function nUpdateParforProgress(~)
 		if ~verLessThan('matlab', '9.2')
 			p = p + 1;
-			if (mod(p,nInterval)==0||p==2||p==nFrames)&&options_waitbarOn==1
+			if (mod(p,nInterval)==0||p==1||p==nFrames)&&options_waitbarOn==1
 				if p==nFrames
 					fprintf('%d%%\n',round(p/nFrames*100))
 				else

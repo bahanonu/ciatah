@@ -236,7 +236,6 @@ function obj = viewObjmaps(obj,varargin)
 				% axis equal tight; box off;
 				% title('Cellmap | Outlines')
 
-
 			subfxnDisplayMovie();
 
 			subplotTmp(rowSubP,colSubP,[3 4 7 8])

@@ -71,8 +71,9 @@ function obj = viewCellExtractionOnMovie(obj,varargin)
 			'video folder(s), separate multiple folders by a comma:',...
 			'side-by-side save folder:',...
 			'analyze specific folder (leave blank if no) ("same" = input folder)',...
-			'create movie montages (0 = no, 1 = yes)',...
+			'create movie montages (0 = no, 1 = signal peak + overlay movie, 2 = only signal-peak movie)',...
 			'create signal-based movie montages (0 = no, 1 = yes)',...
+			'type of signal-based movie ("raw" or "peak")',...
 			'ask for movie list (0 = no, 1 = yes)'...
 			'save movie? (0 = no, 1 = yes)',...
 			'raw imaging movie regexp (leave blank if don''t want raw movie):'...
@@ -89,6 +90,7 @@ function obj = viewCellExtractionOnMovie(obj,varargin)
 			'',...
 			'0',...
 			'0',...
+			'peak',...
 			'0',...
 			'0',...
 			''...
@@ -140,6 +142,7 @@ function obj = viewCellExtractionOnMovie(obj,varargin)
 	analyzeSpecificFolder = movieSettings{i}; i=i+1;
 	createMontageVideosSwitch = str2num(movieSettings{i}); i=i+1;
 	createSignalBasedVideosSwitch = str2num(movieSettings{i}); i=i+1;
+	userSignalBasedType = movieSettings{i}; i=i+1;
 	askForMovieList = str2num(movieSettings{i}); i=i+1;
 	saveCopyOfMovie = str2num(movieSettings{i}); i=i+1;
 	rawFileFilterRegexp = movieSettings{i}; i=i+1;
@@ -338,14 +341,23 @@ function obj = viewCellExtractionOnMovie(obj,varargin)
 					equalizeMovieHistograms()
 				end
 				% =================================================
-				if createSignalBasedVideosSwitch==1
+				if createImageOutlineOnMovieSwitch==1||createImageOutlineOnMovieSwitch==2
+					if createImageOutlineOnMovieSwitch==1
+						[inputSignals, inputImages, signalPeaks, ~] = modelGetSignalsImages(obj,'returnType','filtered');
+					elseif createImageOutlineOnMovieSwitch==2
+						[inputSignals, inputImages, signalPeaks, ~] = modelGetSignalsImages(obj,'returnType','raw');
+					end
+					primaryMovie = createImageOutlineOnMovie(primaryMovie,inputImages,'thresholdOutline',thresholdOutline,'movieVal',NaN);
+				end
+				% =================================================
+				if createSignalBasedVideosSwitch==1||createSignalBasedVideosSwitch==2
 					% [inputSignals inputImages signalPeaks signalPeaksArray] = modelGetSignalsImages(obj,'returnType','filtered');
 					% {rawICfiltersSaveStr,rawICtracesSaveStr}
 					% {rawICfiltersSaveStr,rawROItracesSaveStr}
 					% [inputSignals inputImages signalPeaks signalPeaksArray] = modelGetSignalsImages(obj,'returnType','raw');
 					% [inputSignals, inputImages, ~, ~] = modelGetSignalsImages(obj,'returnType','filtered','regexPairs',{{obj.rawICfiltersSaveStr,obj.rawROItracesSaveStr}});
 					% [inputSignals, inputImages, ~, ~] = modelGetSignalsImages(obj,'returnType','raw','regexPairs',{{obj.rawICfiltersSaveStr,obj.rawROItracesSaveStr}});
-					[inputSignals, inputImages, signalPeaks, ~] = modelGetSignalsImages(obj,'returnType','filtered');
+					% [inputSignals, inputImages, signalPeaks, ~] = modelGetSignalsImages(obj,'returnType','filtered');
 					if iscell(primaryMovie)
 						% [primaryMovie{end+1}] = createSignalBasedMovie(inputSignals(:,frameList(:)),inputImages,'signalType','raw');
 					else
@@ -353,21 +365,29 @@ function obj = viewCellExtractionOnMovie(obj,varargin)
 						primaryMovie{1} = primaryMovieTmp; clear primaryMovieTmp;
 					end
 					% tmpMovie = createSignalBasedMovie(inputSignals(:,frameList(:)),inputImages,'signalType','raw','normalizeOutputMovie','no');
-					tmpMovie = createSignalBasedMovie(inputSignals(:,frameList(:)),inputImages,'signalType','peak','normalizeOutputMovie','no','inputPeaks',signalPeaks(:,frameList(:)));
-					tmpMovie(tmpMovie<0.03) = NaN;
+					tmpMovie = createSignalBasedMovie(inputSignals(:,frameList(:)),inputImages,'signalType',userSignalBasedType,'normalizeOutputMovie','no','inputPeaks',signalPeaks(:,frameList(:)));
+
+					% CHANGE TO USER THRESHOLD
+					% tmpMovie(tmpMovie<0.03) = NaN;
+
 					% tmpMovie(1:20,1:20,1)
 					% imagesc(squeeze(tmpMovie(:,:,1)));colorbar
-					if length(primaryMovie)==2
-						primaryMovie = flip(primaryMovie);
-						identifyingText = flip(identifyingText);
-						% primaryMovie{end+1} = primaryMovie{1};
-						% primaryMovie{1} = primaryMovie{2};
-						% primaryMovie{2} = {};
-						% [primaryMovie{end+1}] = tmpMovie; clear tmpMovie;
-					end
-					[primaryMovie{end+1}] = tmpMovie; clear tmpMovie;
-					if normalizeMovieSwitch==1
-						[primaryMovie{end}] = normalizeVector(single(primaryMovie{end}),'normRange','zeroToOne');
+					if createSignalBasedVideosSwitch==2
+						primaryMovie = tmpMovie;
+						clear tmpMovie;
+					elseif iscell(primaryMovie)
+						if length(primaryMovie)==2
+							primaryMovie = flip(primaryMovie);
+							identifyingText = flip(identifyingText);
+							% primaryMovie{end+1} = primaryMovie{1};
+							% primaryMovie{1} = primaryMovie{2};
+							% primaryMovie{2} = {};
+							% [primaryMovie{end+1}] = tmpMovie; clear tmpMovie;
+						end
+						[primaryMovie{end+1}] = tmpMovie; clear tmpMovie;
+						if normalizeMovieSwitch==1
+							[primaryMovie{end}] = normalizeVector(single(primaryMovie{end}),'normRange','zeroToOne');
+						end
 					end
 					% primaryMovie{end} = primaryMovie{end} - 0.1;
 					% % [inputSignals, ~, ~, ~] = modelGetSignalsImages(obj,'returnType','filtered_traces');
@@ -379,13 +399,13 @@ function obj = viewCellExtractionOnMovie(obj,varargin)
 					identifyingText{end+1} = 'signalBased';
 				end
 				% =================================================
-				if createImageOutlineOnMovieSwitch==1||createImageOutlineOnMovieSwitch==2
-					if createImageOutlineOnMovieSwitch==1
-						[inputSignals, inputImages, signalPeaks, ~] = modelGetSignalsImages(obj,'returnType','filtered');
-					elseif createImageOutlineOnMovieSwitch==2
-						[inputSignals, inputImages, signalPeaks, ~] = modelGetSignalsImages(obj,'returnType','raw');
+				if iscell(primaryMovie)
+					% primaryMovie = montageMovies(primaryMovie);
+					if viewOptions.useIdentifyText==0
+						identifyingText = [];
 					end
-					primaryMovie = createImageOutlineOnMovie(primaryMovie,inputImages,'thresholdOutline',thresholdOutline,'movieVal',NaN);
+					[primaryMovie] = createMontageMovie(primaryMovie,'identifyingText',identifyingText,'normalizeMovies', zeros([length(primaryMovie) 1]),'singleRowMontage',1);
+					primaryMovie = permute(primaryMovie,[2 1 3]);
 				end
 				if saveCopyOfMovie==1
 					savePathName = [obj.videoSaveDir filesep obj.folderBaseSaveStr{obj.fileNum} '_montage_' obj.fileIDArray{obj.fileNum} '.h5'];
