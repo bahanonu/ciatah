@@ -132,7 +132,7 @@ function [inputSnr, inputMse, inputSnrSignal, inputSnrNoise, outputSignal, outpu
 			afterEach(D, @nUpdateParforProgress);
 			p = 1;
 			% N = nSignals;
-			nInterval = 25;
+			nInterval = round(nSignals/30);%25
 			options_waitbarOn = options.waitbarOn;
 		end
 

@@ -91,7 +91,7 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		afterEach(D, @nUpdateParforProgress);
 		p = 1;
 		N = size(inputMovie,3);
-		nInterval = 100;
+		nInterval = round(N/20);%100
 		options_waitbarOn = options.waitbarOn;
 	end
 	%========================
@@ -163,9 +163,9 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 			p = p + 1;
 			if (mod(p,nInterval)==0||p==2||p==nFrames)&&options_waitbarOn==1
 				if p==nFrames
-					fprintf('%d%%\n',round(p/nFrames*100))
+					fprintf('%d\n',round(p/nFrames*100))
 				else
-					fprintf('%d%% | ',round(p/nFrames*100))
+					fprintf('%d|',round(p/nFrames*100))
 				end
 				% cmdWaitbar(p,nSignals,'','inputStr','','waitbarOn',1);
 			end

@@ -44,6 +44,14 @@ classdef calciumImagingAnalysis < dynamicprops
 		% number to current stimulus index
 		stimNum = 1;
 
+		% String: name of the analysis file to put in a folder to indicate to other computers the current computer is analyzing the folder and they should skip
+		concurrentAnalysisFilename = '_currentlyAnalyzingFolderCheck.mat';
+
+		% Cell array strings: List of methods to fast track folder to analyze dialog or skip altogether
+		methodExcludeList = {'showVars','showFolders','setMainSettings','modelAddNewFolders','loadDependencies','saveObj','setStimulusSettings','modelDownsampleRawMovies','setMovieInfo'};
+		methodExcludeListVer2 = {'modelEditStimTable','behaviorProtocolLoad','modelPreprocessMovie','modelModifyMovies','removeConcurrentAnalysisFiles'};
+		methodExcludeListStimuli = {'modelVarsFromFiles'};
+
 		% 0 = load variables from disk, reduce RAM usage. 1 = load from disk to ram, faster for analysis.
 		loadVarsToRam = 0;
 		% show GUI for view functions?
@@ -73,6 +81,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		%
 		stimTriggerOnset = 0;
 		% paths for specific types of files
+		currentDateTimeSessionStr = datestr(now,'yyyymmdd_HHMMSS_FFF','local');
 		currentDateTimeStr = datestr(now,'yyyymmdd','local');
 		picsSavePath = ['private' filesep 'pics' filesep datestr(now,'yyyymmdd','local') filesep];
 		dataSavePath = ['private' filesep 'data' filesep datestr(now,'yyyymmdd','local') filesep];
@@ -92,9 +101,12 @@ classdef calciumImagingAnalysis < dynamicprops
 		% colormap to be used
 		% colormap = customColormap([]);
 		% colormap = customColormap({[0 0 0.7],[1 1 1],[0.7 0 0]});
-		colormap = customColormap({[0 0 1],[1 1 1],[0.5 0 0],[1 0 0]});
-		colormapAlt = customColormap({[0 0 0.7],[1 1 1],[0.7 0 0]});
-		colormapAlt2 = diverging_map(linspace(0,1,100),[0 0 0.7],[0.7 0 0]);
+		% colormap = customColormap({[0 0 1],[1 1 1],[0.5 0 0],[1 0 0]});
+		% colormapAlt = customColormap({[0 0 0.7],[1 1 1],[0.7 0 0]});
+		% colormapAlt2 = diverging_map(linspace(0,1,100),[0 0 0.7],[0.7 0 0]);
+		colormap = parula(100);
+		colormapAlt = parula(100);
+		colormapAlt2 = parula(100);
 		% colormap = customColormap({[27 52 93]/256,[1 1 1],[106 41 50]/256},'nPoints',50);
 		% use for stimulus related viewing functions
 		% frames before/after stimulus to look
@@ -576,6 +588,142 @@ classdef calciumImagingAnalysis < dynamicprops
 		% set methods, for IO to specific variables in a controlled manner
 		obj = setMainSettings(obj)
 
+		function obj = initializeObj(obj)
+			% load dependencies.
+			loadBatchFxns();
+			cnmfVersionDirLoad('none','displayOutput',0);
+			% [success] = cnmfVersionDirLoad('cnmfe');
+
+			% Load colormaps
+			obj.colormap = customColormap({[0 0 1],[1 1 1],[0.5 0 0],[1 0 0]});
+			obj.colormapAlt = customColormap({[0 0 0.7],[1 1 1],[0.7 0 0]});
+			obj.colormapAlt2 = diverging_map(linspace(0,1,100),[0 0 0.7],[0.7 0 0]);
+
+			% Check required toolboxes are available, warn if not
+			display(repmat('*',1,42))
+			toolboxList = {...
+			'distrib_computing_toolbox',...
+			'image_toolbox',...
+			'signal_toolbox',...
+			'statistics_toolbox',...
+			};
+			secondaryToolboxList = {...
+				'video_and_image_blockset',...
+				'bioinformatics_toolbox',...
+				'financial_toolbox',...
+				'neural_network_toolbox',...
+			};
+			allTollboxList = {toolboxList,secondaryToolboxList};
+			nLists = length(allTollboxList);
+			for listNo = 1:nLists
+				toolboxListHere = allTollboxList{listNo};
+				nToolboxes = length(toolboxListHere);
+				if listNo==1
+				else
+					disp('2nd tier toolbox check.')
+				end
+				for toolboxNo = 1:nToolboxes
+					toolboxName = toolboxListHere{toolboxNo};
+					if license('test',toolboxName)==1
+						fprintf('Toolbox available! %s\n',toolboxName)
+					else
+						if listNo==1
+							warning(sprintf('Please install %s toolbox before running calciumImagingAnalysis. This toolbox is likely required.',toolboxName));
+						else
+							warning(sprintf('Please install %s toolbox before running calciumImagingAnalysis. Some features (e.g. for cell extraction) may not work otherwise.',toolboxName));
+						end
+						% if ~verLessThan('matlab', '9.5')
+						%     warning('Please install Neural Network toolbox before running classifySignals');
+						% else
+						%     warning('Please install Deep Learning Toolbox before running classifySignals');
+						% end
+						% return;
+					end
+				end
+			end
+			display(repmat('*',1,42))
+
+			% Ensure date paths are up to date
+			obj.picsSavePath = ['private' filesep 'pics' filesep datestr(now,'yyyymmdd','local') filesep];
+			obj.dataSavePath = ['private' filesep 'data' filesep datestr(now,'yyyymmdd','local') filesep];
+			obj.logSavePath = ['private' filesep 'logs' filesep datestr(now,'yyyymmdd','local') filesep];
+			obj.settingsSavePath = ['private' filesep 'settings'];
+			obj.videoSaveDir = ['private' filesep 'vids' filesep datestr(now,'yyyymmdd','local') filesep];
+
+			% ensure private folders are set
+			if ~exist(obj.picsSavePath,'dir');mkdir(obj.picsSavePath);fprintf('Creating directory: %s\n',obj.picsSavePath);end
+			if ~exist(obj.dataSavePath,'dir');mkdir(obj.dataSavePath);fprintf('Creating directory: %s\n',obj.dataSavePath);end
+			if ~exist(obj.logSavePath,'dir');mkdir(obj.logSavePath);fprintf('Creating directory: %s\n',obj.logSavePath);end
+			if ~exist(obj.settingsSavePath,'dir');mkdir(obj.settingsSavePath);fprintf('Creating directory: %s\n',obj.settingsSavePath);end
+			if ~exist(obj.videoSaveDir,'dir');mkdir(obj.videoSaveDir);fprintf('Creating directory: %s\n',obj.videoSaveDir);end
+
+			% load user specific settings
+			loadUserSettings = ['private' filesep 'settings' filesep 'calciumImagingAnalysisInitialize.m'];
+			if exist(loadUserSettings,'file')~=0
+				run(loadUserSettings);
+			else
+				% create privateLoadBatchFxns.m
+			end
+
+			% if use puts in a single folder or a path to a txt file with folders
+			if ~isempty(obj.rawSignals)&strcmp(class(obj.rawSignals),'char')
+				if isempty(regexp(obj.rawSignals,'.txt'))&exist(obj.rawSignals,'dir')==7
+					% user just inputs a single directory
+					obj.rawSignals = {obj.rawSignals};
+				else
+					% user input a file linking to directories
+					fid = fopen(obj.rawSignals, 'r');
+					tmpData = textscan(fid,'%s','Delimiter','\n');
+					obj.rawSignals = tmpData{1,1};
+					fclose(fid);
+				end
+				obj.inputFolders = obj.rawSignals;
+				obj.dataPath = obj.rawSignals;
+			end
+			% add subject information to object given datapath
+			if ~isempty(obj.dataPath)
+				obj.modelGetFileInfo();
+			else
+				display('No folder paths input, run <a href="matlab: obj.currentMethod=''modelAddNewFolders'';obj">modelAddNewFolders</a> method to add new folders.');
+				% warning('Input data paths for all files!!! option: dataPath')
+			end
+			if ~isempty(obj.discreteStimulusTable)&~strcmp(class(obj.discreteStimulusTable),'table')
+				obj.modelReadTable('table','discreteStimulusTable');
+				obj.modelTableToStimArray('table','discreteStimulusTable','tableArray','discreteStimulusArray','nameArray','stimulusNameArray','idArray','stimulusIdArray','valueName',obj.stimulusTableValueName,'frameName',obj.stimulusTableFrameName);
+			end
+			if ~isempty(obj.continuousStimulusTable)&~strcmp(class(obj.continuousStimulusTable),'table')
+				obj.delimiter = ',';
+				obj.modelReadTable('table','continuousStimulusTable','addFileInfoToTable',1);
+				obj.delimiter = ',';
+				obj.modelTableToStimArray('table','continuousStimulusTable','tableArray','continuousStimulusArray','nameArray','continuousStimulusNameArray','idArray','continuousStimulusIdArray','valueName',obj.stimulusTableValueName,'frameName',obj.stimulusTableFrameName,'grabStimulusColumnFromTable',1);
+			end
+			% load behavior tables
+			if ~isempty(obj.behaviorMetricTable)&~strcmp(class(obj.behaviorMetricTable),'table')
+				obj.modelReadTable('table','behaviorMetricTable');
+				obj.modelTableToStimArray('table','behaviorMetricTable','tableArray','behaviorMetricArray','nameArray','behaviorMetricNameArray','idArray','behaviorMetricIdArray','valueName','value');
+			end
+			% modify stimulus naming scheme
+			if ~isempty(obj.stimulusNameArray)
+				obj.stimulusSaveNameArray = obj.stimulusNameArray;
+				obj.stimulusNameArray = strrep(obj.stimulusNameArray,'_',' ');
+			end
+			% load all the data
+			if ~isempty(obj.rawSignals)&strcmp(class(obj.rawSignals{1}),'char')
+				display('paths input, going to load files')
+				obj.guiEnabled = 0;
+				obj = modelVarsFromFiles(obj);
+				obj.guiEnabled = 1;
+			end
+			% check if signal peaks have already been calculated
+			if isempty(obj.signalPeaks)&~isempty(obj.rawSignals)
+				% obj.computeSignalPeaksFxn();
+			else
+				display('No folder data specified, load data with <a href="matlab: obj.currentMethod=''modelVarsFromFiles'';obj">modelVarsFromFiles</a> method.');
+				% warning('no signal data input!!!')
+			end
+			% load stimulus tables
+		end
+
 		function obj = loadBatchFunctionFolders(obj)
 			% Loads the necessary directories to have the batch functions present.
 			% Biafra Ahanonu
@@ -673,19 +821,51 @@ classdef calciumImagingAnalysis < dynamicprops
 
 		function obj = loadDependencies(obj)
 			scnsize = get(0,'ScreenSize');
-			dependencyStr = {'downloadCnmfGithubRepositories','loadMiji','example_downloadTestData'};
-			[fileIdxArray, ok] = listdlg('ListString',dependencyStr,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','Which dependency to load?');
-			analysisType = dependencyStr{fileIdxArray};
-			switch analysisType
-				case 'downloadCnmfGithubRepositories'
-					[success] = downloadCnmfGithubRepositories();
-				case 'loadMiji'
-					modelAddOutsideDependencies('miji');
-				case 'example_downloadTestData'
-					example_downloadTestData();
-				otherwise
-					% nothing
+			dependencyStr = {'downloadCnmfGithubRepositories','downloadMiji','example_downloadTestData','loadMiji'};
+			dispStr = {'Download CNMF, CNMF-E, and CVX code.','Download Fiji (to run Miji)','Download test one-photon data.','Load Fiji/Miji into MATLAB path.'};
+			[fileIdxArray, ok] = listdlg('ListString',dispStr,'ListSize',[scnsize(3)*0.3 scnsize(4)*0.3],'Name','Which dependencies to load? (Can select multiple)','InitialValue',[1 2 3]);
+			analysisType = dependencyStr(fileIdxArray);
+			dispStr = dispStr(fileIdxArray);
+			for depNo = 1:length(fileIdxArray)
+				display([10 repmat('>',1,42)])
+				disp(dispStr{depNo})
+				switch analysisType{depNo}
+					case 'downloadCnmfGithubRepositories'
+						[success] = downloadCnmfGithubRepositories();
+					case 'downloadMiji'
+						depStr = {'Save Fiji to default directory','Save Fiji to custom directory'};
+						[fileIdxArray, ok] = listdlg('ListString',depStr,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','Which dependency to load?');
+						depStr = depStr{fileIdxArray};
+						if fileIdxArray==1
+							downloadMiji();
+						else
+							downloadMiji('defaultDir','');
+						end
+						% if exist('pathtoMiji','var')
+						% end
+					case 'loadMiji'
+						modelAddOutsideDependencies('miji');
+					case 'example_downloadTestData'
+						example_downloadTestData();
+					otherwise
+						% nothing
+				end
 			end
+		end
+
+		function obj = setMovieInfo(obj)
+			movieSettings = inputdlg({...
+					'Regular expression for raw files (e.g. if raw files all have "concat" in the name, put "concat"): ',...
+					'Regular expression for processed files, skip if no processed files (e.g. if processed files all have "dfof" in the name, put "dfof"): '...
+				},...
+				'Movie information',[1 100],...
+				{...
+					obj.fileFilterRegexpRaw,...
+					obj.fileFilterRegexp...
+				}...
+			);
+			obj.fileFilterRegexpRaw = movieSettings{1};
+			obj.fileFilterRegexp = movieSettings{2};
 		end
 
 		function obj = showProtocolSubjectsSessions(obj)
@@ -695,6 +875,61 @@ classdef calciumImagingAnalysis < dynamicprops
 				subjectList = obj.subjectStr(strcmp(protocolStr,obj.protocol));
 				fprintf('Protocol %s | %d subjects | %d sessions\n',protocolStr,length(unique(subjectList)),length(subjectList))
 				% disp([num2str(i) ' | ' obj.inputFolders{i}])
+			end
+		end
+
+		function obj = removeConcurrentAnalysisFiles(obj)
+			obj.foldersToAnalyze
+			if obj.guiEnabled==1
+				if isempty(obj.foldersToAnalyze)
+					scnsize = get(0,'ScreenSize');
+					[fileIdxArray, ok] = listdlg('ListString',obj.fileIDNameArray,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','which folders to analyze?');
+				else
+					fileIdxArray = obj.foldersToAnalyze;
+				end
+			else
+				if isempty(obj.foldersToAnalyze)
+					fileIdxArray = 1:length(obj.fileIDNameArray);
+				else
+					fileIdxArray = obj.foldersToAnalyze;
+				end
+			end
+
+			% Find all concurrent analysis files and delete them
+			nFolders = length(fileIdxArray);
+			nFoldersTotal = length(obj.inputFolders);
+			for folderNo = 1:nFolders
+				i = fileIdxArray(folderNo);
+				try
+					% disp([num2str(i) ' | ' obj.inputFolders{i}])
+					fileList = getFileList(obj.inputFolders{i},obj.concurrentAnalysisFilename);
+					if ~isempty(fileList)
+						fprintf('%d/%d (%d/%d) will delete analysis file: %s\n',i,nFoldersTotal,folderNo,nFolders,fileList{1})
+					end
+				catch err
+					disp(repmat('@',1,7))
+					disp(getReport(err,'extended','hyperlinks','on'));
+					disp(repmat('@',1,7))
+				end
+			end
+			userInput = input('Continue (1 = yes, 0 = no)? ');
+			if userInput==1
+				for folderNo = 1:nFolders
+					i = fileIdxArray(folderNo);
+					try
+						% disp([num2str(i) ' | ' obj.inputFolders{i}])
+						fprintf('%d/%d (%d/%d): %s\n',i,nFoldersTotal,folderNo,nFolders,obj.inputFolders{i})
+						fileList = getFileList(obj.inputFolders{i},obj.concurrentAnalysisFilename);
+						if ~isempty(fileList)
+							fprintf('Deleting analysis file: %s\n',fileList{1})
+							delete(fileList{1});
+						end
+					catch err
+						disp(repmat('@',1,7))
+						disp(getReport(err,'extended','hyperlinks','on'));
+						disp(repmat('@',1,7))
+					end
+				end
 			end
 		end
 
@@ -922,125 +1157,6 @@ classdef calciumImagingAnalysis < dynamicprops
 			writetable(struct2table(obj.sumStats),savePath,'FileType','text','Delimiter',',');
 		end
 
-		function obj = initializeObj(obj)
-			% load dependencies.
-			loadBatchFxns();
-			cnmfVersionDirLoad('none','displayOutput',0);
-			% [success] = cnmfVersionDirLoad('cnmfe');
-
-			% Load colormaps
-			obj.colormap = customColormap({[0 0 1],[1 1 1],[0.5 0 0],[1 0 0]});
-			obj.colormapAlt = customColormap({[0 0 0.7],[1 1 1],[0.7 0 0]});
-			obj.colormapAlt2 = diverging_map(linspace(0,1,100),[0 0 0.7],[0.7 0 0]);
-
-			% Check required toolboxes are available, warn if not
-			display(repmat('*',1,42))
-			toolboxList = {...
-			'distrib_computing_toolbox',...
-			'image_toolbox',...
-			'signal_toolbox',...
-			'statistics_toolbox',...
-			'video_and_image_blockset',...
-			};
-			% 'neural_network_toolbox'...
-			nToolboxes = length(toolboxList);
-			for toolboxNo = 1:nToolboxes
-				toolboxName = toolboxList{toolboxNo};
-				if license('test',toolboxName)==1
-					fprintf('Toolbox %s available!\n',toolboxName)
-				else
-					warning(sprintf('Please install %s toolbox before running calciumImagingAnalysis.',toolboxName));
-					% if ~verLessThan('matlab', '9.5')
-					%     warning('Please install Neural Network toolbox before running classifySignals');
-					% else
-					%     warning('Please install Deep Learning Toolbox before running classifySignals');
-					% end
-					% return;
-				end
-			end
-			display(repmat('*',1,42))
-
-			% Ensure date paths are up to date
-			obj.picsSavePath = ['private' filesep 'pics' filesep datestr(now,'yyyymmdd','local') filesep];
-			obj.dataSavePath = ['private' filesep 'data' filesep datestr(now,'yyyymmdd','local') filesep];
-			obj.logSavePath = ['private' filesep 'logs' filesep datestr(now,'yyyymmdd','local') filesep];
-			obj.settingsSavePath = ['private' filesep 'settings'];
-			obj.videoSaveDir = ['private' filesep 'vids' filesep datestr(now,'yyyymmdd','local') filesep];
-
-			% ensure private folders are set
-			if ~exist(obj.picsSavePath,'dir');mkdir(obj.picsSavePath);fprintf('Creating directory: %s\n',obj.picsSavePath);end
-			if ~exist(obj.dataSavePath,'dir');mkdir(obj.dataSavePath);fprintf('Creating directory: %s\n',obj.dataSavePath);end
-			if ~exist(obj.logSavePath,'dir');mkdir(obj.logSavePath);fprintf('Creating directory: %s\n',obj.logSavePath);end
-			if ~exist(obj.settingsSavePath,'dir');mkdir(obj.settingsSavePath);fprintf('Creating directory: %s\n',obj.settingsSavePath);end
-			if ~exist(obj.videoSaveDir,'dir');mkdir(obj.videoSaveDir);fprintf('Creating directory: %s\n',obj.videoSaveDir);end
-
-			% load user specific settings
-			loadUserSettings = ['private' filesep 'settings' filesep 'calciumImagingAnalysisInitialize.m'];
-			if exist(loadUserSettings,'file')~=0
-				run(loadUserSettings);
-			else
-				% create privateLoadBatchFxns.m
-			end
-
-			% if use puts in a single folder or a path to a txt file with folders
-			if ~isempty(obj.rawSignals)&strcmp(class(obj.rawSignals),'char')
-				if isempty(regexp(obj.rawSignals,'.txt'))&exist(obj.rawSignals,'dir')==7
-					% user just inputs a single directory
-					obj.rawSignals = {obj.rawSignals};
-				else
-					% user input a file linking to directories
-					fid = fopen(obj.rawSignals, 'r');
-					tmpData = textscan(fid,'%s','Delimiter','\n');
-					obj.rawSignals = tmpData{1,1};
-					fclose(fid);
-				end
-				obj.inputFolders = obj.rawSignals;
-				obj.dataPath = obj.rawSignals;
-			end
-			% add subject information to object given datapath
-			if ~isempty(obj.dataPath)
-				obj.modelGetFileInfo();
-			else
-				display('No folder paths input, run <a href="matlab: obj.currentMethod=''modelAddNewFolders'';obj">modelAddNewFolders</a> method to add new folders.');
-				% warning('Input data paths for all files!!! option: dataPath')
-			end
-			if ~isempty(obj.discreteStimulusTable)&~strcmp(class(obj.discreteStimulusTable),'table')
-				obj.modelReadTable('table','discreteStimulusTable');
-				obj.modelTableToStimArray('table','discreteStimulusTable','tableArray','discreteStimulusArray','nameArray','stimulusNameArray','idArray','stimulusIdArray','valueName',obj.stimulusTableValueName,'frameName',obj.stimulusTableFrameName);
-			end
-			if ~isempty(obj.continuousStimulusTable)&~strcmp(class(obj.continuousStimulusTable),'table')
-				obj.delimiter = ',';
-				obj.modelReadTable('table','continuousStimulusTable','addFileInfoToTable',1);
-				obj.delimiter = ',';
-				obj.modelTableToStimArray('table','continuousStimulusTable','tableArray','continuousStimulusArray','nameArray','continuousStimulusNameArray','idArray','continuousStimulusIdArray','valueName',obj.stimulusTableValueName,'frameName',obj.stimulusTableFrameName,'grabStimulusColumnFromTable',1);
-			end
-			% load behavior tables
-			if ~isempty(obj.behaviorMetricTable)&~strcmp(class(obj.behaviorMetricTable),'table')
-				obj.modelReadTable('table','behaviorMetricTable');
-				obj.modelTableToStimArray('table','behaviorMetricTable','tableArray','behaviorMetricArray','nameArray','behaviorMetricNameArray','idArray','behaviorMetricIdArray','valueName','value');
-			end
-			% modify stimulus naming scheme
-			if ~isempty(obj.stimulusNameArray)
-				obj.stimulusSaveNameArray = obj.stimulusNameArray;
-				obj.stimulusNameArray = strrep(obj.stimulusNameArray,'_',' ');
-			end
-			% load all the data
-			if ~isempty(obj.rawSignals)&strcmp(class(obj.rawSignals{1}),'char')
-				display('paths input, going to load files')
-				obj.guiEnabled = 0;
-				obj = modelVarsFromFiles(obj);
-				obj.guiEnabled = 1;
-			end
-			% check if signal peaks have already been calculated
-			if isempty(obj.signalPeaks)&~isempty(obj.rawSignals)
-				% obj.computeSignalPeaksFxn();
-			else
-				display('No folder data specified, load data with <a href="matlab: obj.currentMethod=''modelVarsFromFiles'';obj">modelVarsFromFiles</a> method.');
-				% warning('no signal data input!!!')
-			end
-			% load stimulus tables
-		end
-
 		function obj = runPipeline(obj,varargin)
 			setFigureDefaults();
 			set(0, 'DefaultUICOntrolFontSize', 14)
@@ -1050,6 +1166,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			'------- SETUP -------',
 			'modelAddNewFolders',
 			'loadDependencies',
+			'setMovieInfo',
 			'resetMijiClass',
 			'',
 			'------- CLASS/BEHAVIOR -------',
@@ -1068,10 +1185,12 @@ classdef calciumImagingAnalysis < dynamicprops
 			'viewMovieFiltering',
 			'viewMovieRegistrationTest',
 			'',
+			'viewMovie',
 			'modelPreprocessMovie',
 			'modelModifyMovies',
 			'modelExtractSignalsFromMovie',
 			'viewCellExtractionOnMovie',
+			'removeConcurrentAnalysisFiles',
 			'',
 			'------- LOAD SIGNAL DATA -------',
 			'modelVarsFromFiles',
@@ -1146,11 +1265,12 @@ classdef calciumImagingAnalysis < dynamicprops
 			[idNumIdxArray, ok] = listdlg('ListString',fxnsToRun,'InitialValue',currentIdx(1),'ListSize',dlgSize,'Name','Sir! I have a plan! Select a calcium imaging analysis method or procedure to run:');
 			if ok==0; return; end
 
-			excludeList = {'showVars','showFolders','setMainSettings','modelAddNewFolders','loadDependencies','saveObj','setStimulusSettings','modelDownsampleRawMovies'};
-
-			excludeListVer2 = {'modelEditStimTable','behaviorProtocolLoad','modelPreprocessMovie','modelModifyMovies'};
-
-			excludeListStimuli = {'modelVarsFromFiles'};
+			% excludeList = {'showVars','showFolders','setMainSettings','modelAddNewFolders','loadDependencies','saveObj','setStimulusSettings','modelDownsampleRawMovies'};
+			% excludeListVer2 = {'modelEditStimTable','behaviorProtocolLoad','modelPreprocessMovie','modelModifyMovies','removeConcurrentAnalysisFiles'};
+			% excludeListStimuli = {'modelVarsFromFiles'};
+			excludeList = obj.methodExcludeList;
+			excludeListVer2 = obj.methodExcludeListVer2;
+			excludeListStimuli = obj.methodExcludeListStimuli;
 
 			if isempty(intersect(fxnsToRun,excludeList))&isempty(intersect(fxnsToRun,excludeListVer2))
 				[guiIdx, ok] = listdlg('ListString',{'Yes','No'},'InitialValue',1,'ListSize',dlgSize,'Name','GUI Enabled?');

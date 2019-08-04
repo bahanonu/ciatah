@@ -11,6 +11,7 @@ Contact: __Biafra Ahanonu, PhD (bahanonu [at] alum.mit.edu)__.
 
 ***
 ## Contents
+- [Quick start guide](#quick-start-guide)
 - [Repository notes](#repository-notes)
 - [Installation](#installation)
 - [Data](#data)
@@ -31,6 +32,39 @@ Contact: __Biafra Ahanonu, PhD (bahanonu [at] alum.mit.edu)__.
 
 ***
 
+## Quick start guide
+
+Below are steps needed to quickly get started using the `calciumImagingAnalysis` software package.
+- Clone the `calciumImagingAnalysis` repository (using GitHub desktop or command line) or download the repository zip and unzip.
+- Point the MATLAB path to the `calciumImagingAnalysis` folder.
+- Run the below MATLAB commands.
+- For Fiji dependency, when path to `Miji.m` (`\Fiji.app\scripts` folder) is requested, likely in `private\programs\FIJI_PATH\Fiji.app\scripts` unless the user requested a custom path or on OSX (in which case, find the install directory).
+- `calciumImagingAnalysis` often uses regular expressions to find relevant movie and other files in folders to analyze. For example, by default it looks for any files containing `concat`, e.g. `concat_recording_20140401_180333.h5` (test data). If you have a file called `rawData_2019_01_01_myInterestingExperiment.avi` and all your raw data files start with `rawData_` then change the regular expression to `rawData_` when requested by the repository. See `setMovieInfo` module.
+- See additional details in [Processing calcium imaging data](#processing-calcium-imaging-data).
+- When issues are encountered, first check the `*Common issues and fixes` Wiki page to see if a solution is there. Else, submit a new issue or email Biafra.
+
+```MATLAB
+% Loads all directories
+loadBatchFxns;
+
+% Loads the class into an object for use in this session
+obj = calciumImagingAnalysis;
+
+% Download and load dependent software packages.
+obj.loadDependencies;
+
+% [optional] Set the names calciumImagingAnalysis will look for in each folder
+obj.setMovieInfo;
+
+% Open the class menu (always do this to load the class menu)
+obj % then hit enter, no semicolon!
+% Alternatively
+obj.runPipeline; % then hit enter!
+
+```
+
+***
+
 ## Repository notes
 - Covers preprocessing of calcium imaging videos, cell and activity trace extraction (with PCA-ICA, CELLMax, EXTRACT, CNMF, and CNMF-E), manual and automated sorting of cell extraction outputs, cross-session alignment of cells, and more.
 - Supports `PCA-ICA`, `CNMF`, and `CNMF-E` cell extraction methods publicly along with `CELLMax` and `EXTRACT` for Schnitzer Lab collaborators. Additional methods can be integrated upon request.
@@ -46,7 +80,7 @@ Contact: __Biafra Ahanonu, PhD (bahanonu [at] alum.mit.edu)__.
 
 ## Installation
 
-Clone the `calciumImagingAnalysis` repository or download a repository zip and unzip.
+Clone the `calciumImagingAnalysis` repository or download the repository zip and unzip.
 - Point the MATLAB path to the `calciumImagingAnalysis` folder.
 - Run `loadBatchFxns.m` before using functions in the directory. This adds all directories and sub-directories to the MATLAB path.
 - Type `obj = calciumImagingAnalysis;` into MATLAB command window and follow instructions that appear after to add data and run analysis.
@@ -76,7 +110,8 @@ MATLAB dependencies (toolboxes used)
 
 ImageJ
 
-- Download Fiji (preferably __2015 December 22__ version): https://imagej.net/Fiji/Downloads.
+- Run `downloadMiji` from `downloads\downloadMiji.m` to download Fiji version appropriate to your platform.
+- Else download Fiji (preferably __2015 December 22__ version): https://imagej.net/Fiji/Downloads.
 - Make sure have Miji in Fiji installation: http://bigwww.epfl.ch/sage/soft/mij/.
 - This is used as an alternative to the `calciumImagingAnalysis` `playMovie.m` function for viewing movies and is needed for some movie modification steps.
 
@@ -98,23 +133,26 @@ Below are a list of the top-level directories and what types of functions or fil
 
 - __@calciumImagingAnalysis__ - Contains `calciumImagingAnalysis` class and associated methods for calcium imaging analysis.
 - ___overloaded__ - Functions that overload core MATLAB functions to add functionality or fix display issues.
-<!-- - __behavior__ - Processing of behavior files (e.g. accelerometer data, Saleae files, etc.). -->
+- __behavior__ - Processing of behavior files (e.g. accelerometer data, Saleae files, etc.).
 - __classification__ - Classification of cells, e.g. manual classification of cell extraction outputs or cross-session grouping of cells.
+- __data__ - Location of test data.
+- __download__ - Functions that help download external code packages or data.
 - __file\_exchange__ - Contains any outside code from MATLAB's File Exchange that are dependencies in repository functions.
 - __hdf5__ - Functions concerned with HDF5 input/output.
 - __image__ - Functions concerned with processing images (or [x y] matrices).
 - __inscopix__ - Functions concerned with Inscopix-specific data processing (e.g. using the ISX MATLAB API).
 - __io__ - Contains functions concerned with file or function input-output.
-- __neighbor__ - Detection and display of neighboring cell information.
-- __movie_processing__ - Functions concerned with preprocessing calcium imaging videos, e.g. spatial filtering, downsampling, etc.
 - __motion_correction__ - Functions concerned with motion correction.
-<!-- - __python__ - Python code, e.g. for processing Saleae data. -->
-<!-- - __serial__ - Code for saving and processing serial port data, e.g. Arduino streaming data. -->
+- __movie_processing__ - Functions concerned with preprocessing calcium imaging videos, e.g. spatial filtering, downsampling, etc.
+- __neighbor__ - Detection and display of neighboring cell information.
+- ___private___ - This directory contains various user settings, output pictures/data/logs from `calciumImagingAnalysis` modules, and more. This directory is NOT included in the MATLAB path, hence is good for storing related scripts without interfering with `calciumImagingAnalysis`.
+- __python__ - Python code, e.g. for processing Saleae data.
+- __serial__ - Code for saving and processing serial port data, e.g. Arduino streaming data.
 - __settings__ - Functions concerned with settings for other functions.
 - __signal\_extraction__ - Functions related to cell extraction, e.g. running PCA-ICA.
 - __signal\_processing__ - Functions to process cell activity traces.
 - __tracking__ - ImageJ and MATLAB functions to track animal location in behavior movies.
-- __unit_tests__ - Functions to validate specific repository functions.
+- __unit_tests__ [optional] - Functions to validate specific repository functions.
 - __video__ - Functions to manipulate or process videos, e.g. making movie montages or adding dropped frames.
 - __view__ - Functions concerned with displaying data or information to the user, normally do not process data.
 
@@ -175,7 +213,7 @@ The general pipeline for processing calcium imaging data is below. This reposito
 
 ![image](https://user-images.githubusercontent.com/5241605/61981834-ab532000-afaf-11e9-97c2-4b1d7d759a30.png)
 
-To start using the `calciumImagingAnalysis` class, enter the following into the MATLAB command window.
+To start using the `calciumImagingAnalysis` software package, enter the following into the MATLAB command window.
 
 ```Matlab
 % Loads all directories
@@ -187,12 +225,14 @@ obj = calciumImagingAnalysis;
 % Open the class menu
 obj % then hit enter, no semicolon!
 % Alternatively
-obj.runPipeline % then hit enter, no semicolon!
+obj.runPipeline; % then hit enter!
 ```
 
-The general order of functions that users should run is:
+The general order of functions that users should run is ([optional] are those not critical for most datasets):
 
-- `modelDownsampleRawMovies`
+- `loadDependencies`
+	- If user is running calciumImagingAnalysis for the first time, this module has several options to download and load CNMF/CNMF-E code for cell extraction, Fiji for viewing/modifying videos (using Miji), and test data from a miniature microscope experiment.
+- `modelDownsampleRawMovies` [optional]
 	- If users have raw calcium imaging data that needs to be spatially downsampled, e.g. raw data from Inscopix nVista software.
 - `modelAddNewFolders`
 	- Users should always use this method first, used to add folders to the current class object.
@@ -200,7 +240,7 @@ The general order of functions that users should run is:
 - `viewMovie`
 	- Users should check that calciumImagingAnalysis loads their movies correctly and that Miji is working.
 	- Remember to check that `Imaging movie regexp:` (regular expression class uses to find user movies within given folders) setting matches name of movies currently in repository.
-- `viewMovieRegistrationTest`
+- `viewMovieRegistrationTest` [optional]
 	- Users can check different spatial filtering and registration settings.
 	- `tregRunX` folders (where `X` is a number) contain details of each run setting. Delete from analysis folder if don't need outputs later.
 	- Remember to adjust contrast in resulting montage movies since different filtering will change the absolute pixel values.
@@ -212,9 +252,11 @@ The general order of functions that users should run is:
 	- Performs cell extraction, currently PCA-ICA with the ability to run more recent algorithms (e.g. CNMF) upon request.
 - `modelVarsFromFiles`
 	- Run after `modelExtractSignalsFromMovie` to load cell image and trace information into the current class object.
+- `viewCellExtractionOnMovie` [optional]
+	- This function overlays the cell extraction outputs on snippets of the processed video, allowing users to check that cell extraction correctly identified all the cells.
 - `computeManualSortSignals`
 	- A GUI to allow users to classify cells and not cells in cell extraction outputs.
-- `modelModifyRegionAnalysis`
+- `modelModifyRegionAnalysis` [optional]
 	- Users are able to select specific cells from cell extraction manual sorting to include in further analyses.
 - `computeMatchObjBtwnTrials`
 	- Method to register cells across imaging sessions. Also includes visual check GUI in `viewMatchObjBtwnSessions` method.
@@ -423,7 +465,7 @@ Using `createTrackingOverlayVideo` to verify tracking matches animal position on
 
 Thanks to Jones G. Parker, PhD (<https://parker-laboratory.com/>) for providing extensive user feedback during development of the `calciumImagingAnalysis` software package.
 
-Additional thanks to Jesse Marshall, Jérôme Lecoq, Tony H. Kim, Hakan Inan, Lacey Kitch, Maggie Larkin, and Elizabeth Otto Hamel for providing certain functions or helping develop aspects of the code used in the software package.
+Additional thanks to Jesse Marshall, Jérôme Lecoq, Tony H. Kim, Hakan Inan, Lacey Kitch, Maggie Larkin, Elizabeth Otto Hamel, and Laurie Burns for providing certain functions or helping develop aspects of the code used in the software package.
 
 ## References
 

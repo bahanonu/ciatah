@@ -16,7 +16,7 @@ function [success] = example_downloadTestData(varargin)
 	%========================
 
 	try
-		rawSavePathDownload = ['data' filesep '2014_04_01_p203_m19_check01_raw']
+		rawSavePathDownload = ['data' filesep '2014_04_01_p203_m19_check01_raw'];
 		if ~exist(rawSavePathDownload,'dir');mkdir(rawSavePathDownload);fprintf('Made folder: %s',rawSavePathDownload);end
 
 		rawSavePathDownload = [rawSavePathDownload filesep 'concat_recording_20140401_180333.h5'];

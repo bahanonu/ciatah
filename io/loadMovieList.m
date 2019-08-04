@@ -468,7 +468,7 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 							tmpMovie = readHDF5Subset(inputFilePath,[0 0 framesToGrab(1)-1],[xDim yDim length(framesToGrab)],'datasetName',thisDatasetName,'displayInfo',options.displayInfo);
 						end
 					else
-						disp('Read frame-by-frame')
+						subfxnDisplay('Read frame-by-frame',options)
 						% read frame-by-frame to save space
 						inputFilePath = thisMoviePath;
 						hinfo = hdf5info(inputFilePath);
