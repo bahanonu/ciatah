@@ -39,8 +39,11 @@ function [xCoords yCoords allCoords] = findCentroid(inputMatrix,varargin)
 		nImages = size(inputMatrix,3);
 	elseif inputDimsLen==2
 		nImages = 1;
-		tmpImage = inputMatrix; clear inputMatrix;
-		inputMatrix(:,:,1) = tmpImage;
+		if issparse(inputMatrix)
+		else
+			tmpImage = inputMatrix; clear inputMatrix;
+			inputMatrix(:,:,1) = tmpImage;
+		end
 		options.waitbarOn = 0;
 	else
 		return

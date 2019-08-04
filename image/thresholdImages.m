@@ -19,6 +19,7 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
 		% 2019.03.05 [19:21:30] Change to using bwareafilt to remove unconnected points from main structure
 		% 2019.04.23 [19:51:26] Deal with images that are all zeros.
 		% 2019.06.02 [22:14:03] - Revert back to slicing the 3D inputImages
+		% 2019.07.17 [00:29:16] - Added support for sparse input images (mainly ndSparse format).
 		% rather than converting to a cell
 	% TODO
 		%
@@ -64,8 +65,12 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
 		nImages = size(inputImages,3);
 	elseif inputDimsLen==2
 		nImages = 1;
-		tmpImage = inputImages; clear inputImages;
-		inputImages(:,:,1) = tmpImage;
+		if issparse(inputImages)
+		else
+			tmpImage = inputImages; clear inputImages;
+			inputImages(:,:,1) = tmpImage;
+		end
+		
 		options.waitbarOn = 0;
 	else
 		return
@@ -119,6 +124,9 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
 	parfor(imageNo=1:nImages,nWorkers)
 		% thisFilt = squeeze(inputImages{imageNo});
 		thisFilt = inputImages(:,:,imageNo);
+        if issparse(thisFilt)
+            thisFilt = full(thisFilt);
+        end
 		% if cellLoad==1
 		% else
 			% thisFilt = squeeze(inputImages(:,:,imageNo));

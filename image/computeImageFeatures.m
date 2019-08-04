@@ -15,6 +15,7 @@ function [imgStats] = computeImageFeatures(inputImages, varargin)
 	% changelog
 		% updated: 2013.11.08 [09:24:12] removeSmallICs now calls a filterImages, name-change due to alteration in function, can slowly replace in codes
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
+		% 2019.07.17 [00:29:16] - Added support for sparse input images (mainly ndSparse format).
 	% TODO
 		%
 
@@ -72,7 +73,11 @@ function [imgStats] = computeImageFeatures(inputImages, varargin)
 		% imagesc(iImage)
 		% imgStats.imageSizes(imageNo) = sum(iImage(:)>0);
 		if options.runRegionprops==1
-			regionStat = regionprops(inputImages(:,:,imageNo), featureList);
+            thisFilt = inputImages(:,:,imageNo);
+            if issparse(thisFilt)
+                thisFilt = full(thisFilt);
+            end
+			regionStat = regionprops(thisFilt, featureList);
 			% regionStat
 			% figure;imagesc(inputImages(:,:,imageNo));
 			for ifeature = featureList
@@ -91,8 +96,13 @@ function [imgStats] = computeImageFeatures(inputImages, varargin)
 			% iImage2 = squeeze(options.addedFeaturesInputImages(:,:,imageNo));
 			% figure(11);imagesc(iImage2);title(num2str(imageNo))
 			% [imageNo xCoords(imageNo) yCoords(imageNo)]
+            thisFilt = options.addedFeaturesInputImages(:,:,imageNo);
+            if issparse(thisFilt)
+                thisFilt = full(thisFilt);
+            end
 			if isnan(xCoords(imageNo))==0
-				t1=getObjCutMovie(options.addedFeaturesInputImages(:,:,imageNo),options.addedFeaturesInputImages(:,:,imageNo),'cropSize',30,'createMontage',0,'crossHairsOn',0,'addPadding',1,'waitbarOn',0,'xCoords',xCoords(imageNo),'yCoords',yCoords(imageNo));
+                % t1=getObjCutMovie(options.addedFeaturesInputImages(:,:,imageNo),options.addedFeaturesInputImages(:,:,imageNo),'cropSize',30,'createMontage',0,'crossHairsOn',0,'addPadding',1,'waitbarOn',0,'xCoords',xCoords(imageNo),'yCoords',yCoords(imageNo));
+				t1 = getObjCutMovie(thisFilt,thisFilt,'cropSize',30,'createMontage',0,'crossHairsOn',0,'addPadding',1,'waitbarOn',0,'xCoords',xCoords(imageNo),'yCoords',yCoords(imageNo));
 				t1 = t1{1};
 				imgStats.imgKurtosis(imageNo) = double(kurtosis(t1(:)));
 				imgStats.imgSkewness(imageNo) = double(skewness(t1(:)));

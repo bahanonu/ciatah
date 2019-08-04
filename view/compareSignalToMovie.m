@@ -13,6 +13,7 @@ function [croppedPeakImages] = compareSignalToMovie(inputMovie, inputImages, inp
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
 		% 2017.02.14 - updated to support extended crosshairs and outlines.
 		% 2019.02.13 [14:52:33] - Update to add support to loading from disk and other speed improvements.
+		% 2019.07.17 [00:29:16] - Added support for sparse input images (mainly ndSparse format).
 	% TODO
 		%
 
@@ -175,7 +176,11 @@ function [croppedPeakImages] = compareSignalToMovie(inputMovie, inputImages, inp
 		end
 
 		% Insure that the peak images are the same class as the input images for calculation purposes
-		croppedPeakImages = cast(croppedPeakImages,class(inputImages));
+		if issparse(inputImages)==1
+			croppedPeakImages = cast(croppedPeakImages,'single');
+		else
+			croppedPeakImages = cast(croppedPeakImages,class(inputImages));
+		end
 
 		firstImg = squeeze(inputImages(yLow:yHigh,xLow:xHigh,signalNo));
 

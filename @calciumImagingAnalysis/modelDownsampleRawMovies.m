@@ -83,6 +83,8 @@ function obj = modelDownsampleRawMovies(obj)
 			movieList = getFileList([folderListInfo{folderNo} filesep], downsampleOptions.fileFilterRegexp);
 			nMoviesH = length(movieList);
 
+			destFolderAll = {};
+			destFolderAll2 = {};
 			for movieNo = 1:nMoviesH
 				movieName = movieList{movieNo};
 				[pathstr,name,ext] = fileparts(movieName);
@@ -92,7 +94,9 @@ function obj = modelDownsampleRawMovies(obj)
 					downsampleHDFMovieFxnObj({movieName},downsampleOptions);
 				elseif ~isempty(regexp(ext,'(.isxd)'))
 					display('Downsampling ISXDs...')
-					downsampleIsxdMovieFxnObj({movieName},downsampleOptions);
+					[downsampleSaveFolderMod, downsampleSaveFolderTwoMod] = downsampleIsxdMovieFxnObj({movieName},downsampleOptions);
+					destFolderAll{end+1} = downsampleSaveFolderMod;
+					destFolderAll2{end+1} = downsampleSaveFolderTwoMod;
 				elseif ~isempty(regexp(ext,'(.tiff|.tif)'))
 					if movieNo==1
 						display('Downsampling TIFFs...')
@@ -140,6 +144,10 @@ function obj = modelDownsampleRawMovies(obj)
 		ioptions.srcSubfolderFileFilterRegexpExt = downsampleSettings{10};
 		[success destFolders] = moveFilesToFolders(downsampleSrcFolder,char(downsampleSaveFolder(:))','options',ioptions);
 		destFolders = unique(destFolders);
+		if isempty(destFolderAll)
+		else
+			destFolders = unique(destFolderAll);
+		end
 		% ============================
 		if ~isempty(downsampleSettings{11})
 			% movie second set of movie files
@@ -151,6 +159,11 @@ function obj = modelDownsampleRawMovies(obj)
 			%
 			ioptions.srcSubfolderFileFilterRegexpExt = downsampleSettings{10};
 			[success destFolders2] = moveFilesToFolders(downsampleSrcFolder,char(downsampleSaveFolder(:))','options',ioptions);
+
+			if isempty(destFolderAll2)
+			else
+				destFolders2 = unique(destFolderAll2);
+			end
 		end
 		% ============================
 		% if ~isempty(downsampleSettings{11})
@@ -210,6 +223,7 @@ function obj = modelDownsampleRawMovies(obj)
 			obj.dataPath = obj.inputFolders;
 			% obj.dataPath = cat(obj.dataPath,destFolders);
 		end
+		obj.modelGetFileInfo();
 	catch err
 		obj.foldersToAnalyze = [];
 		display(repmat('@',1,7))
@@ -361,7 +375,7 @@ function downsampleHDFMovieFxnObj(movieList,options)
 		end
 	end
 end
-function downsampleIsxdMovieFxnObj(movieList,options)
+function [downsampleSaveFolderMod, downsampleSaveFolderTwoMod] = downsampleIsxdMovieFxnObj(movieList,options)
 	% downsamples an HDF5 movie, normally the raw recording files
 
 	% display(movieList)

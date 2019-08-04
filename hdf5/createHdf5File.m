@@ -16,6 +16,9 @@ function createHdf5File(filename, datasetName, inputData, varargin)
 	options.deflateLevel = 1;
 	% Int: chunk size in [x y z] of the dataset, leave empty for auto chunking
 	options.dataDimsChunkCopy = [];
+	options.addInfo = [];
+	% e.g. '/movie/processingSettings'
+	options.addInfoName = [];
 	% get options
 	options = getOptions(options,varargin);
 	% % unpack options into current workspace
@@ -88,4 +91,22 @@ function createHdf5File(filename, datasetName, inputData, varargin)
 	H5S.close(space_id);
 	H5D.close(dset_id);
 	H5F.close(fid);
+
+	% add information about data to HDF5 file
+	if ~isempty(options.addInfo)
+		if ~iscell(options.addInfo)
+			options.addInfo = {options.addInfo};
+			options.addInfoName = {options.addInfoName};
+		end
+		addInfoLen = length(options.addInfo);
+		for addInfoStructNo = 1:addInfoLen
+			thisAddInfo = options.addInfo{addInfoStructNo};
+			infoList = fieldnames(thisAddInfo);
+			nInfo = length(infoList);
+			for fieldNameNo = 1:nInfo
+				thisField = infoList{fieldNameNo};
+				hdf5write(filename,[options.addInfoName{addInfoStructNo} '/' thisField],thisAddInfo.(thisField),'WriteMode','append');
+			end
+		end
+	end
 end

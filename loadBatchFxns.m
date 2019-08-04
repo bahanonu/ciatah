@@ -2,12 +2,26 @@ function loadBatchFxns()
 	% Loads the necessary directories to have the batch functions present.
 	% Biafra Ahanonu
 	% started: 2013.12.24 [08:46:11]
+	% inputs
+		%
+	% outputs
+		%
+
+	% changelog
+		% 2019.07.25 [09:08:59] - Changed so that it adds folders to path from the directory where loadBatchFxns.m is located.
+	% TODO
+		%
 
 	% Disable the handle graphics warning "The DrawMode property will be removed in a future release. Use the SortMethod property instead." from being displayed. Comment out this line for debugging purposes as needed.
 	warning('off','MATLAB:hg:WillBeRemovedReplaceWith')
 
 	% add controller directory and subdirectories to path
-	pathList = genpath(pwd);
+	functionLocation = dbstack('-completenames');
+	functionLocation = functionLocation(1).file;
+	[functionDir,~,~] = fileparts(functionLocation);
+	fprintf('Adding all non-private folders under: %s\n',functionDir);
+	pathList = genpath(functionDir);
+	% pathList = genpath(pwd);
 	pathListArray = strsplit(pathList,pathsep);
 	pathFilter = cellfun(@isempty,regexpi(pathListArray,[filesep '.git']));
 	% pathFilter = cellfun(@isempty,regexpi(pathListArray,[filesep 'docs']));

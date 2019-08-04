@@ -1,4 +1,4 @@
-function [success] = changeFont(varargin)
+function [success] = changeFont(FontSize,varargin)
 	% Changes the font of all values in a figure.
 	% Biafra Ahanonu
 	% started: 2019.05.05 [19:00:24]
@@ -28,6 +28,7 @@ function [success] = changeFont(varargin)
 
 	try
 		success = 0;
+		options.FontSize = FontSize;
 		if isempty(options.FontSize)
 			userInput = inputdlg('New font');
 			userInput = str2num(userInput{1});

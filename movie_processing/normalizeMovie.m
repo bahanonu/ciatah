@@ -91,7 +91,7 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		afterEach(D, @nUpdateParforProgress);
 		p = 1;
 		N = size(inputMovie,3);
-		nInterval = 25;
+		nInterval = 100;
 		options_waitbarOn = options.waitbarOn;
 	end
 	%========================
@@ -435,7 +435,7 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		[inputMovieX, inputMovieY, inputMovieZ] = size(inputMovie);
 		% reshapeValue = size(inputMovie);
 		%Convert array to cell array, allows slicing (not contiguous memory block)
-		inputMovie = squeeze(mat2cell(inputMovie,inputMovieX,inputMovieY,ones(1,inputMovieZ)));
+		% inputMovie = squeeze(mat2cell(inputMovie,inputMovieX,inputMovieY,ones(1,inputMovieZ)));
 
 		reverseStr = '';
 		% parfor_progress(options.maxFrame);
@@ -446,6 +446,7 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		% try;[percent progress] = parfor_progress(nFramesToNormalize);catch;end; dispStepSize = round(nFramesToNormalize/20); dispstat('','init');
 		secondaryNormalizationType = options.secondaryNormalizationType;
 		maxFrame = options.maxFrame;
+		% startState = ticBytes(gcp);
 		parfor frame = 1:nFramesToNormalize
 			% [percent progress] = parfor_progress;if mod(progress,dispStepSize) == 0;dispstat(sprintf('progress %0.1f %',percent));else;end
 			% thisFrame = squeeze(inputMovie(:,:,frame));
@@ -456,16 +457,17 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 			% 	inputMovie(:,:,frame) = thisFrame./tmpFrame;
 			% end
 			% reverseStr = cmdWaitbar(frame,options.maxFrame,reverseStr,'inputStr','normalizing movie','waitbarOn',options.waitbarOn,'displayEvery',5);
-			thisFrame = squeeze(inputMovie{frame});
+			% thisFrame = squeeze(inputMovie{frame});
+			thisFrame = squeeze(inputMovie(:,:,frame));
 			if isempty(secondaryNormalizationType)
-				inputMovie{frame} = fftImage(thisFrame,'options',ioptions);
+				inputMovie(:,:,frame) = fftImage(thisFrame,'options',ioptions);
 			else
 				tmpFrame = fftImage(thisFrame,'options',ioptions);
 				tmpFrameMin = nanmin(tmpFrame(:));
 				if tmpFrameMin<0
 					tmpFrame = tmpFrame + abs(tmpFrameMin);
 				end
-				inputMovie{frame} = thisFrame./tmpFrame;
+				inputMovie(:,:,frame) = thisFrame./tmpFrame;
 			end
 
 			if ~verLessThan('matlab', '9.2')
@@ -485,10 +487,11 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 			% bandpassMatrix(:,:,frame) = imcomplement(bandpassMatrix(:,:,frame));
 			% = bsxfun(@ldivide,squeeze(movie20hz(:,:,1)),filteredFrame
 		end
+		% tocBytes(gcp,startState)
 		dispstat('Finished.','keepprev');
 		% fprintf(1,'\n');
 		% parfor_progress(0);
-		inputMovie = cat(3,inputMovie{:});
+		% inputMovie = cat(3,inputMovie{:});
 
 		% options.secondaryNormalizationType
 		% if isempty(options.secondaryNormalizationType)
