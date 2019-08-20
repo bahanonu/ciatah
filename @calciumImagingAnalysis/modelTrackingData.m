@@ -259,6 +259,7 @@ function obj = modelTrackingData(obj)
 						assayIdx = strcmp(fileAssays,uniquefileAssays{idNum3});
 						fileIdx = dateIdx&subjectIdx&assayIdx;
 						if sum(fileIdx)==0
+							display('skipping...')
 							continue
 						end
 						display('===================')

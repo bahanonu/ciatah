@@ -4,7 +4,8 @@ function [success] = downloadMiji(varargin)
 	% started: 2019.07.30 [09:58:04]
 
 	%========================
-	options.defaultDir = ['private' filesep 'programs'];
+	% options.defaultDir = ['private' filesep 'programs'];
+	options.defaultDir = ['_external_programs'];
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)

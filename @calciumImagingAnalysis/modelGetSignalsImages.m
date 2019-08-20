@@ -303,6 +303,10 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 				obj.signalPeaks{thisFileNum} = signalPeaks;
 				obj.nSignals{thisFileNum} = size(signalPeaks,1);
 			end
+
+			inputSignals = normalizeCELLMaxTraces(inputSignals,inputImages);
+			inputSignals2 = normalizeCELLMaxTraces(inputSignals2,inputImages);
+
 			% inputSignals = extractAnalysisOutput.traces;
 			% inputImages = permute(extractAnalysisOutput.filters,[3 1 2]);
 		end
@@ -337,6 +341,9 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 			% else
 			% 	inputSignals = emAnalysisOutput.dsCellTraces;
 			% end
+			% inputImages = permute(emAnalysisOutput.cellImages,[3 1 2]);
+			inputImages = emAnalysisOutput.cellImages;
+
 			if isfield(emAnalysisOutput,'scaledProbability')
 				display('using scaled probability...')
 				inputSignals = double(emAnalysisOutput.scaledProbability);
@@ -356,10 +363,12 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 
 			inputSignals2 = double(emAnalysisOutput.cellTraces);
 
+			% Convert to dF/F values
+			inputSignals = normalizeCELLMaxTraces(inputSignals,inputImages);
+			inputSignals2 = normalizeCELLMaxTraces(inputSignals2,inputImages);
+
 			% inputSignals = double(emAnalysisOutput.scaledProbabilityAlt);
 
-			% inputImages = permute(emAnalysisOutput.cellImages,[3 1 2]);
-			inputImages = emAnalysisOutput.cellImages;
 
 			if options.loadAlgorithmPeaks==1
 				signalPeaksArray = emAnalysisOutput.eventTimes;

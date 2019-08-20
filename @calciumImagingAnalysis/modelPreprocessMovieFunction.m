@@ -18,6 +18,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% 2019.07.11 [20:07:29] - Improved GUI display, added support for ISXD dropped frames.
 		% 2019.07.22 [16:30:30] - Improved support for multi-iteration turboreg and outputting of turboreg without filtering and with filtering in the same run seamlessly.
 		% 2019.07.26 [14:00:00] - Additional improvements in adding movie borders based on turboreg outputs.
+		% 2019.08.07 [18:23:05] - Fix for using the _noSpatialFilter_ output where was registering to already registered iterations.
 	% TODO
 		% Insert NaNs or mean of the movie into dropped frame location, see line 260
 		% Allow easy switching between analyzing all files in a folder together and each file in a folder individually
@@ -448,9 +449,13 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 					try
 						switch optionName
 							case 'turboreg'
+								subfxnPlotMotionCorrectionMetric();
+
 								pxToCropAll = 0;
 								ResultsOutOriginal = {};
-								for iternationNo = 1:options.turboreg.numTurboregIterations
+								for iterationNo = 1:options.turboreg.numTurboregIterations
+									disp(repmat('>',[1 21]))
+									fprintf('Turboreg iteration %d/%d\n',iterationNo,options.turboreg.numTurboregIterations)
 									if strcmp(options.turboreg.filterBeforeRegister,'imagejFFT')
 										% Miji;
 										manageMiji('startStop','start');
@@ -523,6 +528,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 									ostruct.fileNumList{end+1} = fileNum;
 									clear tmpCropMovie;
 								end
+
+								subfxnPlotMotionCorrectionMetric();
 							case 'crop'
 								if exist('pxToCropAll','var')==1&&pxToCropAll~=0
 									if pxToCropAll~=0
@@ -959,6 +966,24 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		end
 		% =====================
 	end
+	function subfxnPlotMotionCorrectionMetric()
+		figure(1865)
+			try
+				meanG = mean(thisMovie,3);
+				corrMetric=NaN([1 size(thisMovie,3)]);
+				cc = turboRegCoords{fileNum}{movieNo};
+				for i =1:size(thisMovie,3);
+					corrMetric(i)=corr2(meanG(cc(2):cc(4),cc(1):cc(3)),thisMovie(cc(2):cc(4),cc(1):cc(3),i));
+				end
+				plot(corrMetric)
+				hold on;
+				legend({'Original','Motion corrected'})
+			catch err
+				disp(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				disp(repmat('@',1,7))
+			end
+	end
 	function turboregInputMovie()
 		% number of frames to subset
 		subsetSize = options.turboregNumFramesSubset;
@@ -1010,9 +1035,9 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			ioptions.SmoothY = options.turboreg.SmoothY;
 			ioptions.zapMean = options.turboreg.zapMean;
 
-			if iternationNo~=options.turboreg.numTurboregIterations
+			if iterationNo~=options.turboreg.numTurboregIterations
 				ioptions.normalizeBeforeRegister = [];
-			elseif iternationNo==options.turboreg.numTurboregIterations
+			elseif iterationNo==options.turboreg.numTurboregIterations
 				ioptions.normalizeBeforeRegister = options.turboreg.filterBeforeRegister;
 			end
 			% ioptions.normalizeBeforeRegister = options.turboreg.filterBeforeRegister;
@@ -1054,18 +1079,23 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 
 
 			% Register without spatial filtering if requested by user
-			if options.turboreg.saveBeforeFilterRegister==1&&iternationNo==options.turboreg.numTurboregIterations
-				[tmpMovieHere, ResultsOutOriginal{iternationNo}{thisSet}] = turboregMovie(thisMovie(:,:,movieSubset),'options',ioptions);
+			if options.turboreg.saveBeforeFilterRegister==1&&iterationNo==options.turboreg.numTurboregIterations
+				% Motion correct with filtering applied if requested, save for later
+				[tmpMovieWithFilter, ResultsOutOriginal{iterationNo}{thisSet}] = turboregMovie(thisMovie(:,:,movieSubset),'options',ioptions);
 
 				tmpMovieNoFilter = thisMovie(:,:,movieSubset);
-				for iternationNo2 = 1:options.turboreg.numTurboregIterations
-					ioptions.precomputedRegistrationCooordsFullMovie = ResultsOutOriginal{iternationNo2}{thisSet};
-					[tmpMovieNoFilter, ~] = turboregMovie(tmpMovieNoFilter,'options',ioptions);
-				end
+				ioptions.precomputedRegistrationCooordsFullMovie = ResultsOutOriginal{iterationNo}{thisSet};
+				[tmpMovieNoFilter, ~] = turboregMovie(tmpMovieNoFilter,'options',ioptions);
+
+				% for iterationNo2 = 1:options.turboreg.numTurboregIterations
+				% 	ioptions.precomputedRegistrationCooordsFullMovie = ResultsOutOriginal{iterationNo2}{thisSet};
+				% 	[tmpMovieNoFilter, ~] = turboregMovie(tmpMovieNoFilter,'options',ioptions);
+				% end
 				% Crop movie
 				tmpMovieNoFilter = cropInputMovieSlice(tmpMovieNoFilter,options,ResultsOutOriginal);
 
-				thisMovie(:,:,movieSubset) = tmpMovieHere;
+				% Add filtered movie to overall registered subset
+				thisMovie(:,:,movieSubset) = tmpMovieWithFilter;
 
 				savePathStrTmp = [thisDirSaveStr saveStr '_noSpatialFilter_' num2str(movieNo) '.h5'];
 				resaveCropFileName = savePathStrTmp;
@@ -1083,9 +1113,9 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 						appendDataToHdf5(savePathStrTmp, options.turboreg.outputDatasetName, tmpMovieNoFilter);
 					end
 				end
-				clear tmpMovieHere tmpMovieNoFilter;
+				clear tmpMovieWithFilter tmpMovieNoFilter;
 			else
-				[thisMovie(:,:,movieSubset), ResultsOutOriginal{iternationNo}{thisSet}] = turboregMovie(thisMovie(:,:,movieSubset),'options',ioptions);
+				[thisMovie(:,:,movieSubset), ResultsOutOriginal{iterationNo}{thisSet}] = turboregMovie(thisMovie(:,:,movieSubset),'options',ioptions);
 			end
 			clear ioptions;
 
@@ -1117,7 +1147,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		clear ioptions;
 		% size(thisMovie)
 		% imagesc(squeeze(thisMovie(:,:,1)))
-		% 	title(['iteration number: ' num2str(iternationNo)])
+		% 	title(['iteration number: ' num2str(iterationNo)])
 	end
 	function tmpPxToCrop = getCropValues()
 		thisMovieMinMask = zeros([size(thisMovie,1) size(thisMovie,2)]);

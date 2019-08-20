@@ -64,6 +64,9 @@ function [xCoords yCoords allCoords] = findCentroid(inputMatrix,varargin)
 	options_roundCentroidPosition = options.roundCentroidPosition;
 	options_waitbarOn = options.waitbarOn;
 
+	% xCoords = NaN([1 nImages]);
+	% yCoords = NaN([1 nImages]);
+
 	parfor imageNum=1:nImages
 		% threshold image
 		thisImage = squeeze(inputMatrixThreshold(:,:,imageNum));

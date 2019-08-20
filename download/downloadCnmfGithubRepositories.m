@@ -16,7 +16,7 @@ function [success] = downloadCnmfGithubRepositories(varargin)
 	%========================
 
 	try
-		signalExtractionDir = 'signal_extraction';
+		signalExtractionDir = '_external_programs';
 
 		gitNameDisp = {'CNMF-E','CNMF | CaImAn','cvx-rd'};
 		gitRepos = {'https://github.com/bahanonu/CNMF_E/archive/master.zip','https://github.com/flatironinstitute/CaImAn-MATLAB/archive/master.zip','http://web.cvxr.com/cvx/cvx-rd.zip'};
@@ -58,8 +58,8 @@ function [success] = downloadCnmfGithubRepositories(varargin)
 
 		% if cvx is not in the path, ask user for file
 		if isempty(which('cvx_begin'))
-			display('Dialog box: Select cvx_setup.m (likely `calciumImagingAnalysis/signal_extraction/cvx_rd`')
-			[filePath,folderPath,~] = uigetfile(['*.*'],'Select cvx_setup.m (likely `calciumImagingAnalysis/signal_extraction/cvx_rd`');
+			display('Dialog box: Select cvx_setup.m (likely `calciumImagingAnalysis/_external_programs/cvx_rd`')
+			[filePath,folderPath,~] = uigetfile(['*.*'],'Select cvx_setup.m (likely `calciumImagingAnalysis/_external_programs/cvx_rd`');
 			run([folderPath filesep filePath]);
 		end
 

@@ -106,7 +106,7 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	options.meanSubtract = 0;
 	% subtract the mean from each frame?
 	options.meanSubtractNormalize = 0;
-	% highpass or divideByLowpass
+	% String: imagejFFT,matlabDisk,divideByLowpass,highpass,bandpass
 	options.normalizeType = 'divideByLowpass';
 	% name in HDF5 file where data is stored
 	options.inputDatasetName = '/1';
@@ -135,6 +135,9 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	options.showFigs = 1;
 	% cmd line waitbar on?
 	options.waitbarOn = 1;
+
+	% Binary: 1 = return the movie after normalizing, mean subtract, etc.
+	options.returnNormalizedMovie = 0;
 
 	% get options
 	options = getOptions(options,varargin);
@@ -218,7 +221,7 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	% ========================
 	% register movie and return without using the rest of the function
 	if ~isempty(options.precomputedRegistrationCooordsFullMovie)
-		disp('Input pre-computed registration coordinates...')
+		disp('Input pre-computed registration coordinates for full movie...')
 		ResultsOut = options.precomputedRegistrationCooordsFullMovie;
 		% ResultsOutOriginal = ResultsOut;
 		% for resultNo=1:size(inputMovie,3)
@@ -250,6 +253,11 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	% if input crop coordinates are given, save a copy of the uncropped movie and crop the current movie
 	inputMovieCropped = [];
 	cropAndNormalizeInputMovie();
+
+	if options.returnNormalizedMovie==1
+		inputMovie = inputMovieCropped;
+		return;
+	end
 	% ========================
 	manageParallelWorkers('parallel',options.parallel);
 	%========================

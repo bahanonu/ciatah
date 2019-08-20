@@ -89,7 +89,7 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 	if ~verLessThan('matlab', '9.2')
 		D = parallel.pool.DataQueue;
 		afterEach(D, @nUpdateParforProgress);
-		p = 1;
+		p = 0;
 		N = size(inputMovie,3);
 		nInterval = round(N/20);%100
 		options_waitbarOn = options.waitbarOn;
@@ -161,7 +161,7 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 	function nUpdateParforProgress(~)
 		if ~verLessThan('matlab', '9.2')
 			p = p + 1;
-			if (mod(p,nInterval)==0||p==2||p==nFrames)&&options_waitbarOn==1
+			if (mod(p,nInterval)==0||p==1||p==nFrames)&&options_waitbarOn==1
 				if p==nFrames
 					fprintf('%d\n',round(p/nFrames*100))
 				else

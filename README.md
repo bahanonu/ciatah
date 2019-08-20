@@ -84,13 +84,13 @@ Clone the `calciumImagingAnalysis` repository or download the repository zip and
 - Point the MATLAB path to the `calciumImagingAnalysis` folder.
 - Run `loadBatchFxns.m` before using functions in the directory. This adds all directories and sub-directories to the MATLAB path.
 - Type `obj = calciumImagingAnalysis;` into MATLAB command window and follow instructions that appear after to add data and run analysis.
-- Run the `calciumImagingAnalysis` class method `loadDependencies` or type `obj.loadDependencies` after initializing a `calciumImagingAnalysis` object into the command window to add Fiji to path, download CNMF/CNMF-E repositories, download/setup CVX (for CNMF/CNMF-E), and download example data.
+- Run the `calciumImagingAnalysis` class method `loadDependencies` or type `obj.loadDependencies` after initializing a `calciumImagingAnalysis` object into the command window to download and add Fiji to path, download CNMF/CNMF-E repositories, download/setup CVX (for CNMF/CNMF-E), and download example data.
 
 Note
-- Place in folder where MATLAB will have write permissions, as it also creates a `private` subdirectory to store some user information.
+- Place `calciumImagingAnalysis` in a folder where MATLAB will have write permissions, as it also creates a `private` subdirectory to store some user information along with downloading required external software packages.
 - `file_exchange` folder contains File Exchange functions used by `calciumImagingAnalysis`. If does not exist, unzip `file_exchange.zip`.
 - In general, it is best to set the MATLAB startup directory to the `calciumImagingAnalysis` folder. This allows `java.opts` and `startup.m` to set the correct Java memory requirements and load the correct folders into the MATLAB path.
-- If `calciumImagingAnalysis` IS NOT the startup folder, place `java.opts` wherever the startup folder is so the correct Java memory requirements are set (important for using ImageJ/Miji in MATLAB).
+- If `calciumImagingAnalysis` IS NOT the startup folder, place `java.opts` wherever the MATLAB startup folder is so the correct Java memory requirements are set (important for using ImageJ/Miji in MATLAB).
 - If it appears an old `calciumImagingAnalysis` repository is loaded after pulling a new version, run `restoredefaultpath` and check that old `calciumImagingAnalysis` folders are not in the MATLAB path.
 - This version of `calciumImagingAnalysis` has been tested on Windows MATLAB `2015b`, `2017a`, and `2018b`. Moderate testing on Windows and OSX (10.10.5) `2017b` and `2018b`.
 
@@ -99,6 +99,8 @@ Note
 Run `example_downloadTestData.m` to download example one-photon miniature microscope test data to use for testing `calciumImagingAnalysis` preprocessing, cell extraction, and cell classification code. The data will be located at `data\2014_04_01_p203_m19_check01_raw` within the repository root directory.
 
 ### Dependencies
+
+By default external MATLAB-based software packages are stored in `_external_programs`.
 
 MATLAB dependencies (toolboxes used)
 
@@ -110,7 +112,7 @@ MATLAB dependencies (toolboxes used)
 
 ImageJ
 
-- Run `downloadMiji` from `downloads\downloadMiji.m` to download Fiji version appropriate to your platform.
+- Run `downloadMiji` from `downloads\downloadMiji.m` or `obj.loadDependencies` (when class initialized) to download Fiji version appropriate to your platform.
 - Else download Fiji (preferably __2015 December 22__ version): https://imagej.net/Fiji/Downloads.
 - Make sure have Miji in Fiji installation: http://bigwww.epfl.ch/sage/soft/mij/.
 - This is used as an alternative to the `calciumImagingAnalysis` `playMovie.m` function for viewing movies and is needed for some movie modification steps.
@@ -121,7 +123,7 @@ Saleae
 
 CNMF and CNMF-E
 
-- Download repositories by running `downloadCnmfGithubRepositories.m`.
+- Download repositories by running `downloadCnmfGithubRepositories.m` or `obj.loadDependencies` (when class initialized).
 - CNMF: https://github.com/flatironinstitute/CaImAn-MATLAB.
 - CNMF-E: https://github.com/bahanonu/CNMF_E
   - forked from https://github.com/zhoupc/CNMF_E to fix HDF5, movies with NaNs, and other related bugs.
@@ -132,6 +134,7 @@ CNMF and CNMF-E
 Below are a list of the top-level directories and what types of functions or files are within.
 
 - __@calciumImagingAnalysis__ - Contains `calciumImagingAnalysis` class and associated methods for calcium imaging analysis.
+- ___external_programs__ - External software packages (e.g. CNMF, CELLMax, and others) are stored here.
 - ___overloaded__ - Functions that overload core MATLAB functions to add functionality or fix display issues.
 - __behavior__ - Processing of behavior files (e.g. accelerometer data, Saleae files, etc.).
 - __classification__ - Classification of cells, e.g. manual classification of cell extraction outputs or cross-session grouping of cells.
