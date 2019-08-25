@@ -576,6 +576,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 	% filter input for valid signals
 	inputImages = inputImages(:,:,validChoices);
 	inputSignals = inputSignals(validChoices,:);
+
 end
 function viewObjMoviePlayer()
 	% Plays
@@ -647,7 +648,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 		mkdir(tmpDir);
 	end
 
-	subplotTmp = @(x,y,z) subaxis(x,y,z, 'Spacing', 0.07, 'Padding', 0, 'MarginTop', 0.05,'MarginBottom', 0.05,'MarginLeft', 0.03,'MarginRight', 0.07); % ,'Holdaxis',1
+	subplotTmp = @(x,y,z) subaxis(x,y,z, 'Spacing', 0.07, 'Padding', 0, 'MarginTop', 0.1,'MarginBottom', 0.05,'MarginLeft', 0.03,'MarginRight', 0.07); % ,'Holdaxis',1
 	% subplotTmp = @(x,y,z) subplot(x,y,z);
 
 	% mainFig = openFigure(1,'full');
@@ -1587,49 +1588,12 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 				% title(['Press Q to change movie contrast.' 10 'Press Z to toggle zoom on all panels.' 10 'Press L for keyboard shortcut legend.' 10 'signal ' cellIDStr ' (' num2str(sum(valid==1)) ' good)'],'FontSize',options.fontSize)
 				title(['Press Q to change movie contrast.' 10 'Press Z to toggle zoom on all panels.' 10 'Press L for keyboard shortcut legend.'],'FontSize',options.fontSize)
 
-				% pause
-				validData = cat(3,double(valid(:)'==0|valid(:)'>1),double(valid(:)'==1|valid(:)'>1),double(valid(:)'>1))/2;
-				validData(:,valid==0,1) = 1;
-				validData(:,valid==1,2) = 1;
-				% loopImgHandle
-				if i==1
-					% suptitle(' ','plotregion',0.95,'titleypos',0.98)
-					% suptitle('Press Z to toggle zoom on all panels. Press L for keyboard shortcut legend.','plotregion',0.95,'titleypos',0.98)
-					s3Pos = plotboxpos(gca);
-					% axValid = axes('Position',[s3Pos(1) s3Pos(2)-0.03 s3Pos(3) 0.02],'XTick',[],'YTick',[]);
-
-					axValid = axes('Position',[s3Pos(1) 0.98 s3Pos(3) 0.02],'XTick',[],'YTick',[]);
-					validImgHandle = imagesc(axValid,validData);
-					% box off;
-					set(axValid,'XTick',[],'YTick',[])
-					% axis off;
-					xlabel(['Cell (green), non-cell (red), unknown (gray) | ' 'signal ' cellIDStr ' (' num2str(sum(valid==1)) ' good)'],'FontSize',options.fontSize-2)
-					% loopImgHandle
-					% pause
+				% ==========================================
+				% ADD PROGRESS BAR
+				if exist('axValid','var')==1
+					[axValid axValidAll] = subfxnSignalSorterProgressBars(i,valid,inputMoviePlotLocHandle,inputMoviePlotLoc2Handle,options,mainFig,axValid,axValidAll,cellIDStr);
 				else
-					% axValid
-					thisHandle = findobj(axValid,'Type','image');
-					set(thisHandle,'CData',validData);
-					set(mainFig,'CurrentAxes',axValid);
-					xlabel(['Cell (green), non-cell (red), unknown (gray) | ' 'signal ' cellIDStr ' (' num2str(sum(valid==1)) ' good)'],'FontSize',options.fontSize-2)
-				end
-
-				validSorted = sort(valid);
-				validData = cat(3,double(validSorted(:)'==0|validSorted(:)'>1),double(validSorted(:)'==1|validSorted(:)'>1),double(validSorted(:)'>1))/2;
-				validData(:,validSorted==0,1) = 1;
-				validData(:,validSorted==1,2) = 1;
-				if i==1
-					set(mainFig,'CurrentAxes',inputMoviePlotLoc2Handle);
-					s3Pos = plotboxpos(gca);
-					axValidAll = axes('Position',[s3Pos(1) 0.98 s3Pos(3) 0.02],'XTick',[],'YTick',[]);
-					validImgHandle = imagesc(axValidAll,validData);
-					set(axValidAll,'XTick',[],'YTick',[])
-					xlabel(['Percent: cell (green), non-cell (red), unknown (gray).'],'FontSize',options.fontSize-2)
-				else
-					thisHandle = findobj(axValidAll,'Type','image');
-					set(thisHandle,'CData',validData);
-					% set(mainFig,'CurrentAxes',axValid);
-					% xlabel(['Cell (green), non-cell (red), unknown (gray)'],'FontSize',options.fontSize-2)
+					[axValid axValidAll] = subfxnSignalSorterProgressBars(i,valid,inputMoviePlotLocHandle,inputMoviePlotLoc2Handle,options,mainFig,[],[],cellIDStr);
 				end
 
 				set(mainFig,'CurrentAxes',inputMoviePlotLocHandle);
@@ -2013,7 +1977,67 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 		end
 	end
 end
+function [axValid axValidAll] = subfxnSignalSorterProgressBars(i,valid,inputMoviePlotLocHandle,inputMoviePlotLoc2Handle,options,mainFig,axValid,axValidAll,cellIDStr)
+	validData = cat(3,double(valid(:)'==0|valid(:)'>1),double(valid(:)'==1|valid(:)'>1),double(valid(:)'>1))/2;
+	validData(:,valid==0,1) = 1;
+	validData(:,valid==1,2) = 1;
+	% loopImgHandle
+	if i==1
+		% if any(isgraphics('axValid'))==1
+		if ~isempty(axValid)
+			% disp('DELETE colorbar')
+			% delete(axValid)
+			delete(findobj(mainFig,'Tag','colorProgressBar1'));
+		end
+		% suptitle(' ','plotregion',0.95,'titleypos',0.98)
+		colorbar(inputMoviePlotLoc2Handle,'off')
+		s2Pos = plotboxpos(inputMoviePlotLoc2Handle);
+		cbh = colorbar(inputMoviePlotLoc2Handle,'Location','eastoutside','Position',[s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)],'FontSize',options.fontSize-2);
+		ylabel(cbh,'Fluorescence (e.g. \DeltaF/F or \DeltaF/\sigma)','FontSize',options.fontSize-1);
 
+		% suptitle('Press Z to toggle zoom on all panels. Press L for keyboard shortcut legend.','plotregion',0.95,'titleypos',0.98)
+		s3Pos = plotboxpos(gca);
+		% axValid = axes('Position',[s3Pos(1) s3Pos(2)-0.03 s3Pos(3) 0.02],'XTick',[],'YTick',[]);
+
+		axValid = axes('Position',[s3Pos(1) 0.98 s3Pos(3) 0.02],'XTick',[],'YTick',[]);
+		validImgHandle = imagesc(axValid,validData);
+		% box off;
+		set(axValid,'XTick',[],'YTick',[],'Tag','colorProgressBar1')
+		% axis off;
+		xlabel(['Cell (green), non-cell (red), unknown (gray) | ' 'signal ' cellIDStr ' (' num2str(sum(valid==1)) ' good)'],'FontSize',options.fontSize-2)
+		% loopImgHandle
+		% pause
+	else
+		% axValid
+		thisHandle = findobj(axValid,'Type','image');
+		set(thisHandle,'CData',validData);
+		set(mainFig,'CurrentAxes',axValid);
+		xlabel(['Cell (green), non-cell (red), unknown (gray) | ' 'signal ' cellIDStr ' (' num2str(sum(valid==1)) ' good)'],'FontSize',options.fontSize-2)
+	end
+
+	validSorted = sort(valid);
+	validData = cat(3,double(validSorted(:)'==0|validSorted(:)'>1),double(validSorted(:)'==1|validSorted(:)'>1),double(validSorted(:)'>1))/2;
+	validData(:,validSorted==0,1) = 1;
+	validData(:,validSorted==1,2) = 1;
+	if i==1
+		% if any(isgraphics('axValidAll'))==1
+		if ~isempty(axValidAll)
+			delete(findobj(mainFig,'Tag','colorProgressBar2'));
+			% delete(axValidAll)
+		end
+		set(mainFig,'CurrentAxes',inputMoviePlotLoc2Handle);
+		s3Pos = plotboxpos(gca);
+		axValidAll = axes('Position',[s3Pos(1) 0.98 s3Pos(3) 0.02],'XTick',[],'YTick',[]);
+		validImgHandle = imagesc(axValidAll,validData);
+		set(axValidAll,'XTick',[],'YTick',[],'Tag','colorProgressBar2')
+		xlabel(['Percent: cell (green), non-cell (red), unknown (gray).'],'FontSize',options.fontSize-2)
+	else
+		thisHandle = findobj(axValidAll,'Type','image');
+		set(thisHandle,'CData',validData);
+		% set(mainFig,'CurrentAxes',axValid);
+		% xlabel(['Cell (green), non-cell (red), unknown (gray)'],'FontSize',options.fontSize-2)
+	end
+end
 function subfxnLostFocusMainFig(jAxis, jEventData, hFig)
    figure(hFig);
 end

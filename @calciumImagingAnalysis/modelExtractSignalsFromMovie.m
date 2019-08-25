@@ -16,6 +16,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	% changelog
 		% 2016.02.19 - rewrite of code to allow non-overwrite mode, so that multiple computers can connect to the same server and process the same series of folders in parallel while automatically ignoring folders that have already been processed. Could extend to include some date-based measure for analysis re-runs
 		% 2019.04.15 - Added new method of inputting CNMF-E settings using MATLAB editor. More flexible.
+		% 2019.08.20 [12:29:31] - Contrast added to cell size/width decision-making.
 	% TODO
 		%
 
@@ -35,9 +36,9 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	if ~exist(obj.settingsSavePath,'dir');mkdir(obj.settingsSavePath);fprintf('Creating directory: %s\n',obj.settingsSavePath);end
 
 	scnsize = get(0,'ScreenSize');
-	signalExtractionMethodStr = {'PCAICA','PCAICA_old','EM','EXTRACT','CNMF','CNMFE','ROI'};
+	signalExtractionMethodStr = {'EM','PCAICA','PCAICA_old','CNMF','CNMFE','EXTRACT','ROI'};
 	currentIdx = find(strcmp(signalExtractionMethodStr,obj.signalExtractionMethod));
-	signalExtractionMethodDisplayStr = {'PCAICA (Mukamel, 2009) | Hakan/Tony version','PCAICA (Mukamel, 2009) | Jerome version','CELLMax (Lacey/Biafra)','EXTRACT (Hakan)','CNMF (Pnevmatikakis, 2016)','CNMF-E (Zhou, 2018)','ROI - only do after running either PCAICA, CELLMax, EXTRACT, or CNMF'};
+	signalExtractionMethodDisplayStr = {'CELLMax (Lacey/Biafra)','PCAICA (Mukamel, 2009) | Hakan/Tony version','PCAICA (Mukamel, 2009) | Jerome Lecoq version','CNMF (Pnevmatikakis, 2016 or Giovannucci, 2019)','CNMF-E (Zhou, 2018)','EXTRACT (Hakan)','ROI - only do after running either PCAICA, CELLMax, EXTRACT, or CNMF'};
 	[signalIdxArray, ok] = listdlg('ListString',signalExtractionMethodDisplayStr,'ListSize',[scnsize(3)*0.4 scnsize(4)*0.4],'Name','which signal extraction method?','InitialValue',currentIdx);
 	% signalIdxArray
 	signalExtractionMethod = signalExtractionMethodStr(signalIdxArray);
@@ -1381,6 +1382,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				maxProj=max(DFOF,[],3);
 				imagesc(squeeze(maxProj));
 				colormap gray;
+				imcontrast
+				figure(mainFig)
 				% imellipse has different behavior depending on axis in 2015b and 2017a
 				% if verLessThan('matlab','9.0')
 				% 	axis equal;

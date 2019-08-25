@@ -14,6 +14,7 @@ function [success] = modelAddOutsideDependencies(dependencyName,varargin)
 
 	%========================
 	options.exampleOption = '';
+	options.defaultExternalProgramDir = ['_external_programs'];
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -35,8 +36,22 @@ function [success] = modelAddOutsideDependencies(dependencyName,varargin)
 					% pathToMiji = inputdlg('Enter path to Miji.m in Fiji (e.g. \Fiji.app\scripts):',...
 					%              'Miji path', [1 100]);
 					% pathToMiji = pathToMiji{1};
-					display('Dialog box: Enter path to Miji.m in Fiji (likely in "scripts" folder, e.g. \Fiji.app\scripts)')
-					pathToMiji = uigetdir('\.','Enter path to Miji.m in Fiji (likely in "scripts" folder, e.g. \Fiji.app\scripts)');
+					% display('Dialog box: Enter path to Miji.m in Fiji (likely in "scripts" folder, e.g. \Fiji.app\scripts)')
+					checkMijiPath = [options.defaultExternalProgramDir filesep 'Fiji.app' filesep 'scripts'];
+					if exist(checkMijiPath,'dir')==7
+						fprintf('AUTOMATICALLY adding Miji path: %s\n',checkMijiPath);
+						pathToMiji = checkMijiPath;
+					else
+						if exist(options.defaultExternalProgramDir,'dir')==7
+							loadPathHere = options.defaultExternalProgramDir;
+							loadStr = ['Enter path to Miji.m in Fiji (likely in "scripts" folder, e.g. calciumImagingAnalysis\' options.defaultExternalProgramDir '\Fiji.app\scripts)'];
+						else
+							loadPathHere = '\.';
+							loadStr = ['Enter path to Miji.m in Fiji (likely in "scripts" folder, e.g. \Fiji.app\scripts)'];
+						end
+						disp(['Dialog box: ' loadStr])
+						pathToMiji = uigetdir(loadPathHere,loadStr);
+					end
 					if ischar(pathToMiji)
 						privateLoadBatchFxnsPath = 'private\settings\privateLoadBatchFxns.m';
 						if exist(privateLoadBatchFxnsPath,'file')~=0

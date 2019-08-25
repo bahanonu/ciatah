@@ -12,6 +12,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		% updated: 2017.01.15 [01:31:54]
 		% 2019.05.08 [10:59:59] - Added check for required toolboxes used in class.
 		% 2019.07.25 [09:39:16] - Updated loading so that users only need to be in the root calciumImagingAnalysis path but required folders do not need to be loaded.
+		% 2019.08.20 [09:33:32] - Improved loading of folders and Miji to save time.
 	% TODO
 		%
 
@@ -28,7 +29,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		MICRON_PER_PIXEL =  2.51; % 2.37;
 
 		defaultObjDir = pwd;
-		classVersion = 'v3.3.1-20190811';
+		classVersion = 'v3.3.2-20190825';
 		serverPath = '';
 		privateSettingsPath = ['private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
 		% place where functions can temporarily story user settings
@@ -130,7 +131,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		regionModSaveStr = '_regionModSelectUser.mat'
 
 		usrIdxChoiceStr = {'EM','PCAICA','EXTRACT','CNMF','CNMFE','ROI'};
-		usrIdxChoiceDisplay = {'CELLMax (Kitch/Ahanonu)','PCAICA (Mukamel, 2009)','EXTRACT (Inan, 2017)','CNMF (Pnevmatikakis, 2016)','CNMF-E (Zhou, 2018)','ROI'};
+		usrIdxChoiceDisplay = {'CELLMax (Kitch/Ahanonu)','PCAICA (Mukamel, 2009)','EXTRACT (Inan, 2017)','CNMF (Pnevmatikakis, 2016 or Giovannucci, 2019)','CNMF-E (Zhou, 2018)','ROI'};
 		extractionMethodStructSaveStr = struct(...
 			'PCAICA', '_pcaicaAnalysis.mat',...
 			'EM', '_emAnalysis.mat',...
@@ -737,7 +738,6 @@ classdef calciumImagingAnalysis < dynamicprops
 			functionLocation = functionLocation(1).file;
 			[functionDir,~,~] = fileparts(functionLocation);
 			[functionDir,~,~] = fileparts(functionDir);
-			fprintf('Adding all non-private folders under: %s\n',functionDir);
 			pathList = genpath(functionDir);
 			pathListArray = strsplit(pathList,pathsep);
 			pathFilter = cellfun(@isempty,regexpi(pathListArray,[filesep '.git']));
@@ -755,8 +755,19 @@ classdef calciumImagingAnalysis < dynamicprops
 				pathListArray = pathListArray(~matchIdx);
 			end
 
-			pathList = strjoin(pathListArray,pathsep);
-			addpath(pathList);
+			% Remove paths that are already in MATLAB path to save time
+			pathFilter = cellfun(@isempty,pathListArray);
+			pathListArray = pathListArray(~pathFilter);
+			pathFilter = ismember(pathListArray,strsplit(path,pathsep));
+			pathListArray = pathListArray(~pathFilter);
+
+			if isempty(pathListArray)
+				fprintf('MATALB path already has all needed non-private folders under: %s\n',functionDir);
+			else
+				fprintf('Adding all non-private folders under: %s\n',functionDir);
+				pathList = strjoin(pathListArray,pathsep);
+				addpath(pathList);
+			end
 
 			% Automatically add Inscopix
 			if ismac
@@ -768,14 +779,20 @@ classdef calciumImagingAnalysis < dynamicprops
 			else
 				disp('Platform not supported')
 			end
-			if ~isempty(baseInscopixPath)&&exist(baseInscopixPath,'dir')==7
-				addpath(baseInscopixPath);
-				if exist('isx.Movie','class')==8
-					fprintf('Inscopix Data Processing software added: %s\n',baseInscopixPath)
+			pathFilter = ismember(baseInscopixPath,strsplit(path,pathsep));
+			if pathFilter==0
+				if ~isempty(baseInscopixPath)&&exist(baseInscopixPath,'dir')==7
+					addpath(baseInscopixPath);
+
+					if exist('isx.Movie','class')==8
+						fprintf('Inscopix Data Processing software added: %s\n',baseInscopixPath)
+					else
+						disp('Check Inscopix Data Processing software install!')
+					end
 				else
-					disp('Check Inscopix Data Processing software install!')
 				end
 			else
+				fprintf('Inscopix Data Processing software already in path: %s\n',baseInscopixPath)
 			end
 		end
 
@@ -823,7 +840,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			scnsize = get(0,'ScreenSize');
 			dependencyStr = {'downloadCnmfGithubRepositories','downloadMiji','example_downloadTestData','loadMiji'};
 			dispStr = {'Download CNMF, CNMF-E, and CVX code.','Download Fiji (to run Miji)','Download test one-photon data.','Load Fiji/Miji into MATLAB path.'};
-			[fileIdxArray, ok] = listdlg('ListString',dispStr,'ListSize',[scnsize(3)*0.3 scnsize(4)*0.3],'Name','Which dependencies to load? (Can select multiple)','InitialValue',[1 2 3]);
+			[fileIdxArray, ok] = listdlg('ListString',dispStr,'ListSize',[scnsize(3)*0.3 scnsize(4)*0.3],'Name','Where to save Fiji? (Can select multiple)','InitialValue',[1 2 3]);
 			analysisType = dependencyStr(fileIdxArray);
 			dispStr = dispStr(fileIdxArray);
 			for depNo = 1:length(fileIdxArray)

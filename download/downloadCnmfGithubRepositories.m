@@ -4,9 +4,10 @@ function [success] = downloadCnmfGithubRepositories(varargin)
 	% started: 2019.01.14 [10:23:05]
 
 	%========================
+	options.defaultExternalProgramDir = ['_external_programs'];
 	% options.downloadPreprocessed = 0;
 	% get options
-	% options = getOptions(options,varargin);
+	options = getOptions(options,varargin);
 	% display(options)
 	% unpack options into current workspace
 	% fn=fieldnames(options);
@@ -16,7 +17,7 @@ function [success] = downloadCnmfGithubRepositories(varargin)
 	%========================
 
 	try
-		signalExtractionDir = '_external_programs';
+		signalExtractionDir = options.defaultExternalProgramDir;
 
 		gitNameDisp = {'CNMF-E','CNMF | CaImAn','cvx-rd'};
 		gitRepos = {'https://github.com/bahanonu/CNMF_E/archive/master.zip','https://github.com/flatironinstitute/CaImAn-MATLAB/archive/master.zip','http://web.cvxr.com/cvx/cvx-rd.zip'};
@@ -58,9 +59,16 @@ function [success] = downloadCnmfGithubRepositories(varargin)
 
 		% if cvx is not in the path, ask user for file
 		if isempty(which('cvx_begin'))
-			display('Dialog box: Select cvx_setup.m (likely `calciumImagingAnalysis/_external_programs/cvx_rd`')
-			[filePath,folderPath,~] = uigetfile(['*.*'],'Select cvx_setup.m (likely `calciumImagingAnalysis/_external_programs/cvx_rd`');
-			run([folderPath filesep filePath]);
+			checkCVXpath = [options.defaultExternalProgramDir filesep 'cvx_rd'];
+			if exist(checkCVXpath,'dir')==7
+				mfileToRun = [options.defaultExternalProgramDir filesep 'cvx_rd' filesep 'cvx_setup.m'];
+				fprintf('AUTOMATICALLY running cvx_setup.m: %s\n',mfileToRun)
+			else
+				display('Dialog box: Select cvx_setup.m (likely `calciumImagingAnalysis/_external_programs/cvx_rd`')
+				[filePath,folderPath,~] = uigetfile(['*.*'],'Select cvx_setup.m (likely `calciumImagingAnalysis/_external_programs/cvx_rd`');
+				mfileToRun = [folderPath filesep filePath];
+			end
+			run(mfileToRun);
 		end
 
 		success = 1;

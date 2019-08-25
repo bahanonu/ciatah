@@ -34,14 +34,16 @@ Contact: __Biafra Ahanonu, PhD (bahanonu [at] alum.mit.edu)__.
 
 ## Quick start guide
 
-Below are steps needed to quickly get started using the `calciumImagingAnalysis` software package.
+Below are steps needed to quickly get started using the `calciumImagingAnalysis` software package in MATLAB.
 - Clone the `calciumImagingAnalysis` repository (using GitHub desktop or command line) or download the repository zip and unzip.
 - Point the MATLAB path to the `calciumImagingAnalysis` folder.
 - Run the below MATLAB commands.
 - For Fiji dependency, when path to `Miji.m` (`\Fiji.app\scripts` folder) is requested, likely in `private\programs\FIJI_PATH\Fiji.app\scripts` unless the user requested a custom path or on OSX (in which case, find the install directory).
-- `calciumImagingAnalysis` often uses regular expressions to find relevant movie and other files in folders to analyze. For example, by default it looks for any files containing `concat`, e.g. `concat_recording_20140401_180333.h5` (test data). If you have a file called `rawData_2019_01_01_myInterestingExperiment.avi` and all your raw data files start with `rawData_` then change the regular expression to `rawData_` when requested by the repository. See `setMovieInfo` module.
+- `calciumImagingAnalysis` often uses regular expressions to find relevant movie and other files in folders to analyze.
+ - For example, by default it looks for any files containing `concat`, e.g. `concat_recording_20140401_180333.h5` (test data). If you have a file called `rawData_2019_01_01_myInterestingExperiment.avi` and all your raw data files start with `rawData_` then change the regular expression to `rawData_` when requested by the repository. See `setMovieInfo` module.
+- External software packages are downloaded into `_external_programs` folder and should be placed there if done manually.
 - See additional details in [Processing calcium imaging data](#processing-calcium-imaging-data).
-- When issues are encountered, first check the `*Common issues and fixes` Wiki page to see if a solution is there. Else, submit a new issue or email Biafra.
+- When issues are encountered, first check the `*Common issues and fixes` Wiki page to see if a solution is there. Else, submit a new issue or email Biafra (bahanonu [at] alum.mit.edu).
 
 ```MATLAB
 % Loads all directories
@@ -50,7 +52,7 @@ loadBatchFxns;
 % Loads the class into an object for use in this session
 obj = calciumImagingAnalysis;
 
-% Download and load dependent software packages.
+% Download and load dependent software packages into "_external_programs" folder.
 obj.loadDependencies;
 
 % [optional] Set the names calciumImagingAnalysis will look for in each folder
