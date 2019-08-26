@@ -278,6 +278,7 @@ function obj = viewCreateObjmaps(obj,varargin)
 				inputSignalsTmp = inputSignalsTmp(validManual,:);
 				inputImagesTmp = inputImagesTmp(:,:,validManual);
 				signalPeaksTmp = signalPeaksTmp(validManual,:);
+				signalPeakIdxTmp = signalPeakIdxTmp(validManual);
 				% get raw background movie
 				movieList = getFileList(obj.inputFolders{obj.fileNum}, 'concat');
 				if isempty(movieList)
@@ -375,12 +376,17 @@ function obj = viewCreateObjmaps(obj,varargin)
 					inputSignalsTmp = inputSignalsTmp(validRegion,:);
 					inputImagesTmp = inputImagesTmp(:,:,validRegion);
 					signalPeaksTmp = signalPeaksTmp(validRegion,:);
+					signalPeakIdxTmp = signalPeakIdxTmp(validRegion);
 					cellCoords = cellCoords(validRegion,:);
 
 					% look at
 					sortedinputSignals = signalPeaksTmp.*inputSignalsTmp;
 					if isempty(options.signalCutIdx)
-						[signalSnr sortedIdx] = sort(max(sortedinputSignals,[],2),'descend');
+						% [signalSnr sortedIdx] = sort(max(sortedinputSignals,[],2),'descend');
+
+						[signalSnr a] = computeSignalSnr(inputSignalsTmp,'testpeaks',signalPeaksTmp,'testpeaksArray',signalPeakIdxTmp);
+						signalSnr(isinf(signalSnr)) = 0;
+						[signalSnr sortedIdx] = sort(signalSnr,'descend');
 					else
 						[signalSnr sortedIdx] = sort(max(sortedinputSignals(:,options.signalCutIdx),[],2),'descend');
 					end
@@ -525,8 +531,19 @@ function obj = viewCreateObjmaps(obj,varargin)
 					if ~isempty(options.signalCutXline)
 
 					end
-				end
 
+					openFigure(48484848, '');
+
+						plotTracesFigure();
+
+						% rectangle('Position',[0 0 10 3],'FaceColor',[0 0 0],'EdgeColor','none')
+
+						axis tight;
+						if ~isempty(options.signalCutXline)
+
+						end
+					[figHandle figNo] = openFigure(options.mapTraceGraphNo, '');
+				end
 				inputImages2 = inputImages;
 				[inputImages2 boundaryIndices] = thresholdImages(inputImages2,'binary',0,'getBoundaryIndex',0,'threshold',userThreshold);
 				% [inputImages2 boundaryIndices] = thresholdImages(inputImages2,'binary',0,'getBoundaryIndex',0,'threshold',0.2,'imageFilter',options.medianFilterImages,'imageFilterBinary',options.medianFilterImages);

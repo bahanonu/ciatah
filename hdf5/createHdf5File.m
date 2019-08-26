@@ -9,6 +9,7 @@ function createHdf5File(filename, datasetName, inputData, varargin)
 
 	% changelog
 		% 2019.03.25 [17:17:49] - Add support for custom user HDF5 chunking as opposed to previous automatic chunking
+		% 2019.08.20 [11:38:54] - Added additional support for more data types.
 	% TODO
 		%
 	%========================
@@ -66,7 +67,15 @@ function createHdf5File(filename, datasetName, inputData, varargin)
 			dsetType_id = H5T.copy('H5T_NATIVE_DOUBLE');
 		case 'uint16'
 			dsetType_id = H5T.copy('H5T_NATIVE_UINT16');
+		case 'int16'
+			dsetType_id = H5T.copy('H5T_NATIVE_INT16');
+		case 'uint8'
+			dsetType_id = H5T.copy('H5T_NATIVE_UINT8');
+		case 'int8'
+			dsetType_id = H5T.copy('H5T_NATIVE_INT8');
 		otherwise
+			disp(['Data type ' inputClass ' not supported.'])
+			return;
 			% body
 	end
 

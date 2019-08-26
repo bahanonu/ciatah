@@ -32,6 +32,8 @@ function [success] = viewAcceptedRejectedCellExtraction(inputImages,inputSignals
 	options.peakROI = [-20:20];
 	% number of standard deviations above the threshold to count as spike
 	options.numStdsForThresh = 3.0;
+	% Binary: 1 = normalize the cell images
+	options.normalizeCellImages = 1;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -51,7 +53,7 @@ function [success] = viewAcceptedRejectedCellExtraction(inputImages,inputSignals
 		% check whether movie is a string or not, load
 		inputMovieClass = class(inputMovie);
 		if strcmp(inputMovieClass,'char')
-			inputMovie = loadMovieList(inputMovie,'inputDatasetName',options.inputDatasetName,'frameList',options.frameList);
+			% inputMovie = loadMovieList(inputMovie,'inputDatasetName',options.inputDatasetName,'frameList',options.frameList);
 			% [pathstr,name,ext] = fileparts(inputFilePath);
 			% options.newFilename = [pathstr '\concat_' name '.h5'];
 		end
@@ -86,14 +88,14 @@ function [success] = viewAcceptedRejectedCellExtraction(inputImages,inputSignals
 
 		% calculate signal peaks
 		if isempty(options.signalPeaks)
-			[signalPeaks, signalPeaksArray] = computeSignalPeaks(inputSignals,'makePlots', 0,'makeSummaryPlots',0,'waitbarOn',1);
+			[signalPeaks, signalPeaksArray] = computeSignalPeaks(inputSignals(cellsToShow,:),'makePlots', 0,'makeSummaryPlots',0,'waitbarOn',1);
 		else
 			signalPeaks = options.signalPeaks;
 			signalPeaksArray = options.signalPeaksArray;
 		end
 
 		% get the peak statistics
-		[peakOutputStat] = computePeakStatistics(inputSignals,'waitbarOn',1,'testpeaks',signalPeaks,'testpeaksArray',signalPeaksArray,'spikeROI',options.peakROI);
+		[peakOutputStat] = computePeakStatistics(inputSignals(cellsToShow,:),'waitbarOn',1,'testpeaks',signalPeaks,'testpeaksArray',signalPeaksArray,'spikeROI',options.peakROI);
 
 		figure;
 
@@ -102,74 +104,100 @@ function [success] = viewAcceptedRejectedCellExtraction(inputImages,inputSignals
 		minValTraces = nanmin(tracesHere(:));
 		maxValTraces = nanmax(tracesHere(:));
 		for cellNo = 1:length(cellsToShow)
-			cellIdx = cellsToShow(cellNo);
+			try
+				cellIdx = cellsToShow(cellNo);
 
-			thisTrace = inputSignals(cellIdx,:);
+				thisTrace = inputSignals(cellIdx,:);
 
-			% get peaks for this cell
-			peakIdxs = signalPeaksArray{cellIdx};
+				% get peaks for this cell
+				% peakIdxs = signalPeaksArray{cellIdx};
+				peakIdxs = signalPeaksArray{cellNo};
 
-			% get cropped view of the algorithm image
-			inputImageAddObjCut = getObjCutMovie(inputImages,inputImages(:,:,cellIdx),'createMontage',0,'extendedCrosshairs',0,'crossHairsOn',0,'outlines',0,'waitbarOn',0,'cropSize',options.cropSizeLength,'addPadding',1);
-			inputImageAddObjCut = inputImageAddObjCut{1};
-			inputImageAddObjCut = inputImageAddObjCut(:,:,cellIdx);
+				% get cropped view of the algorithm image
+				inputImageAddObjCut = getObjCutMovie(inputImages,inputImages(:,:,cellIdx),'createMontage',0,'extendedCrosshairs',0,'crossHairsOn',0,'outlines',0,'waitbarOn',0,'cropSize',options.cropSizeLength,'addPadding',1);
+				inputImageAddObjCut = inputImageAddObjCut{1};
+				inputImageAddObjCut = inputImageAddObjCut(:,:,cellIdx);
 
-			% get cropped view from the movie
-			objCutMovie = getObjCutMovie(inputMovie(:,:,peakIdxs),inputImages(:,:,cellIdx),'createMontage',0,'extendedCrosshairs',0,'outlines',0,'waitbarOn',0,'cropSize',options.cropSizeLength,'crossHairsOn',0,'addPadding',1);
-			objCutMovie = cat(3,objCutMovie{:});
-			movieFrame = nanmean(objCutMovie,3);
-
-			% create RGB with outline of cell
-			[thresholdedImages boundaryIndices] = thresholdImages(inputImageAddObjCut,'binary',1,'getBoundaryIndex',1,'threshold',options.thresholdOutline);
-			E = normalizeVector(double(movieFrame),'normRange','zeroToOne');
-			tmpImg = zeros([size(E)]);
-			tmpImg([boundaryIndices{:}]) = 1;
-			movieRGB = [];
-			movieRGB(:,:,1) = E+tmpImg;
-			movieRGB(:,:,2) = E;
-			movieRGB(:,:,3) = E;
-
-			subplot(xPlot,yPlot,((cellNo-1)*nPlotsPerCell+1))
-				imagesc(inputImageAddObjCut)
-				box off;axis off;
-				axis equal tight
-
-			subplot(xPlot,yPlot,((cellNo-1)*nPlotsPerCell+2))
-				imagesc(movieRGB)
-				box off;axis off;
-				axis equal tight
-
-				imgRowY = size(movieRGB,1);
-				imgColX = size(movieRGB,2);
-				MICRON_PER_PIXEL = 2.37;
-				options.scaleBarLengthMicron = 20;
-				scaleBarLengthPx = options.scaleBarLengthMicron/MICRON_PER_PIXEL;
-				% [imgColX-scaleBarLengthPx-round(imgColX*0.05) imgRowY-round(imgRowY*0.05) scaleBarLengthPx 5]
-				rectangle('Position',[imgColX-scaleBarLengthPx-imgColX*0.05 imgRowY-imgRowY*0.05 scaleBarLengthPx 5],'FaceColor',[1 1 1],'EdgeColor','none')
-
-			subplot(xPlot,yPlot,((cellNo-1)*nPlotsPerCell+3))
-				spikeCenterTrace = peakOutputStat.spikeCenterTrace{cellIdx};
-				% spikeCenterTrace
-				avgSpikeTrace = peakOutputStat.avgSpikeTrace(cellIdx,:);
-				% avgSpikeTrace
-				peakROI = options.peakROI;
-				peakSignalAmplitude = thisTrace(peakIdxs(:));
-				[peakSignalAmplitude peakIdx] = sort(spikeCenterTrace(:,round(end/2)+1),'descend');
-				spikeCenterTrace = spikeCenterTrace(peakIdx,:);
-				if size(spikeCenterTrace,1)>20
-					spikeCenterTrace = spikeCenterTrace(1:20,:);
+				% get cropped view from the movie
+				if ischar(inputMovie)
+					objCutMovie = getObjCutMovie(inputMovie,inputImages(:,:,cellIdx),'createMontage',0,'extendedCrosshairs',0,'outlines',0,'waitbarOn',0,'cropSize',options.cropSizeLength,'crossHairsOn',0,'addPadding',1,'frameList',peakIdxs);
+				else
+					objCutMovie = getObjCutMovie(inputMovie(:,:,peakIdxs),inputImages(:,:,cellIdx),'createMontage',0,'extendedCrosshairs',0,'outlines',0,'waitbarOn',0,'cropSize',options.cropSizeLength,'crossHairsOn',0,'addPadding',1);
 				end
 
-				plot(repmat(peakROI, [size(spikeCenterTrace,1) 1])', spikeCenterTrace','Color',[4 4 4]/8)
-				hold on;
-				plot(peakROI, avgSpikeTrace,'r', 'LineWidth',3);box off;
-				ylim([minValTraces maxValTraces]);
-				% plot(peakROI, nanmean(spikeCenterTrace),'Color',[1 0 0 1.0], 'LineWidth',2);box off;
-				% add in zero line
-				% xval = 0;
-				% x=[xval,xval];
-				% y=[minValTraces maxValTraces];
-				% plot(x,y,'r'); box off;
+				objCutMovie = cat(3,objCutMovie{:});
+				movieFrame = nanmean(objCutMovie,3);
+
+				% create RGB with outline of cell
+				[thresholdedImages boundaryIndices] = thresholdImages(inputImageAddObjCut,'binary',1,'getBoundaryIndex',1,'threshold',options.thresholdOutline);
+				E = normalizeVector(double(movieFrame),'normRange','zeroToOne');
+				tmpImg = zeros([size(E)]);
+				tmpImg([boundaryIndices{:}]) = 1;
+				movieRGB = [];
+				movieRGB(:,:,1) = E+tmpImg;
+				movieRGB(:,:,2) = E;
+				movieRGB(:,:,3) = E;
+
+				subplot(xPlot,yPlot,((cellNo-1)*nPlotsPerCell+1))
+					if options.normalizeCellImages==1
+						inputImageAddObjCut = normalizeVector(inputImageAddObjCut,'normRange','zeroToOne');
+						imagesc(inputImageAddObjCut)
+						caxis([0 1]);
+					else
+						imagesc(inputImageAddObjCut)
+					end
+					box off;axis off;
+					axis equal tight
+					if cellNo==length(cellsToShow)
+						colorbar('Location','southoutside');
+					end
+
+				subplot(xPlot,yPlot,((cellNo-1)*nPlotsPerCell+2))
+					imagesc(movieRGB)
+					box off;axis off;
+					axis equal tight
+					% colorbar('Location','southoutside');
+
+					imgRowY = size(movieRGB,1);
+					imgColX = size(movieRGB,2);
+					MICRON_PER_PIXEL = 2.37;
+					options.scaleBarLengthMicron = 20;
+					scaleBarLengthPx = options.scaleBarLengthMicron/MICRON_PER_PIXEL;
+					% [imgColX-scaleBarLengthPx-round(imgColX*0.05) imgRowY-round(imgRowY*0.05) scaleBarLengthPx 5]
+					rectangle('Position',[imgColX-scaleBarLengthPx-imgColX*0.05 imgRowY-imgRowY*0.05 scaleBarLengthPx 5],'FaceColor',[1 1 1],'EdgeColor','none')
+
+				subplot(xPlot,yPlot,((cellNo-1)*nPlotsPerCell+3))
+
+					% spikeCenterTrace = peakOutputStat.spikeCenterTrace{cellIdx};
+					% avgSpikeTrace = peakOutputStat.avgSpikeTrace(cellIdx,:);
+					spikeCenterTrace = peakOutputStat.spikeCenterTrace{cellNo};
+					avgSpikeTrace = peakOutputStat.avgSpikeTrace(cellNo,:);
+					% spikeCenterTrace
+					% avgSpikeTrace
+					peakROI = options.peakROI;
+					peakSignalAmplitude = thisTrace(peakIdxs(:));
+					[peakSignalAmplitude peakIdx] = sort(spikeCenterTrace(:,round(end/2)+1),'descend');
+					spikeCenterTrace = spikeCenterTrace(peakIdx,:);
+					if size(spikeCenterTrace,1)>20
+						spikeCenterTrace = spikeCenterTrace(1:20,:);
+					end
+
+					plot(repmat(peakROI, [size(spikeCenterTrace,1) 1])', spikeCenterTrace','Color',[4 4 4]/8)
+					hold on;
+					plot(peakROI, avgSpikeTrace,'r', 'LineWidth',3);box off;
+					ylim([minValTraces maxValTraces]);
+					% plot(peakROI, nanmean(spikeCenterTrace),'Color',[1 0 0 1.0], 'LineWidth',2);box off;
+					% add in zero line
+					% xval = 0;
+					% x=[xval,xval];
+					% y=[minValTraces maxValTraces];
+					% plot(x,y,'r'); box off;
+			catch err
+				success = 0;
+				display(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				display(repmat('@',1,7))
+			end
 		end
 
 		success = 1;

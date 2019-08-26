@@ -1,13 +1,12 @@
-function [success] = downloadCnmfGithubRepositories(varargin)
+function [success] = downloadGithubRepositories(varargin)
 	% Biafra Ahanonu
-	% Downloads CNMF and CNMF-E repositories.
+	% Downloads Github repositories repositories.
 	% started: 2019.01.14 [10:23:05]
 
 	%========================
-	options.defaultExternalProgramDir = ['_external_programs'];
 	% options.downloadPreprocessed = 0;
 	% get options
-	options = getOptions(options,varargin);
+	% options = getOptions(options,varargin);
 	% display(options)
 	% unpack options into current workspace
 	% fn=fieldnames(options);
@@ -17,12 +16,12 @@ function [success] = downloadCnmfGithubRepositories(varargin)
 	%========================
 
 	try
-		signalExtractionDir = options.defaultExternalProgramDir;
+		signalExtractionDir = '_external_programs';
 
-		gitNameDisp = {'CNMF-E','CNMF | CaImAn','cvx-rd'};
-		gitRepos = {'https://github.com/bahanonu/CNMF_E/archive/master.zip','https://github.com/flatironinstitute/CaImAn-MATLAB/archive/master.zip','http://web.cvxr.com/cvx/cvx-rd.zip'};
-		outputDir = {'cnmfe','cnmf_current','cvx_rd'};
-		gitName = {'CNMF_E-master','CaImAn-MATLAB-master','cvx'};
+		gitNameDisp = {'NoRMCorre'};
+		gitRepos = {'https://github.com/flatironinstitute/NoRMCorre/archive/master.zip'};
+		outputDir = {'normcorre'};
+		gitName = {'NoRMCorre-master'};
 		nRepos = length(outputDir);
 
 		for gitNo = 1:nRepos
@@ -57,25 +56,17 @@ function [success] = downloadCnmfGithubRepositories(varargin)
 			% fprintf('\n\n')
 		end
 
-		% if cvx is not in the path, ask user for file
-		if isempty(which('cvx_begin'))
-			checkCVXpath = [options.defaultExternalProgramDir filesep 'cvx_rd'];
-			if exist(checkCVXpath,'dir')==7
-				mfileToRun = [options.defaultExternalProgramDir filesep 'cvx_rd' filesep 'cvx_setup.m'];
-				fprintf('AUTOMATICALLY running cvx_setup.m: %s\n',mfileToRun)
-			else
-				display('Dialog box: Select cvx_setup.m (likely `calciumImagingAnalysis/_external_programs/cvx_rd`')
-				[filePath,folderPath,~] = uigetfile(['*.*'],'Select cvx_setup.m (likely `calciumImagingAnalysis/_external_programs/cvx_rd`');
-				mfileToRun = [folderPath filesep filePath];
-			end
-			run(mfileToRun);
-		end
-
 		success = 1;
 	catch err
 		success = 0;
 		disp('Check internet connection or download and unzip files manually, see:')
-		cellfun(@disp,gitRepos,'UniformOutput',false)
+		try
+			cellfun(@disp,gitRepos,'UniformOutput',false)
+		catch err2
+			display(repmat('@',1,7))
+			disp(getReport(err2,'extended','hyperlinks','on'));
+			display(repmat('@',1,7))
+		end
 		fprintf('\n\n')
 		display(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));

@@ -50,6 +50,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 		% 2019.07.17 [00:29:16] - Added support for sparse input images (mainly ndSparse format). Reduced memory usage for cases when "options.preComputeImageCutMovies = 0" and "options.inputMovie" is a matrix (NOT a path to a movie) by skipping async/use of parallel workers.
 		% 2019.07.17 [20:37:09] - Added ability to change GUI font.
 		% 2019.07.23 [03:42:48] - Enclosed user selections inside try-catch to better handle invalid input robustly with checks added in the subfxn as needed.
+		% 2019.08.19 [18:07:27] - Added zoom and other functionality and a lock-check to prevent skipping forward to new cells based on pressing keyboard too long carrying over keypress into next source output, causing it to skip over outputs. Added progress bar for cell, non-cell, and unknown.
 
 	% TODO
 		% New GUI interface to allow users to scroll through video and see cell activity at that point
@@ -575,6 +576,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 	% filter input for valid signals
 	inputImages = inputImages(:,:,validChoices);
 	inputSignals = inputSignals(validChoices,:);
+
 end
 function viewObjMoviePlayer()
 	% Plays
@@ -646,13 +648,24 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 		mkdir(tmpDir);
 	end
 
-	subplotTmp = @(x,y,z) subaxis(x,y,z, 'Spacing', 0.07, 'Padding', 0, 'MarginTop', 0.05,'MarginBottom', 0.05,'MarginLeft', 0.03,'MarginRight', 0.07);
+	subplotTmp = @(x,y,z) subaxis(x,y,z, 'Spacing', 0.07, 'Padding', 0, 'MarginTop', 0.1,'MarginBottom', 0.05,'MarginLeft', 0.03,'MarginRight', 0.07); % ,'Holdaxis',1
 	% subplotTmp = @(x,y,z) subplot(x,y,z);
 
 	% mainFig = openFigure(1,'full');
 	mainFig = figure(1);
 	% prevent matlab from giving command window focus
 	set(mainFig,'KeyPressFcn', '1;');
+
+	% % Prepare the figure
+	% hFig = figure;  % etc. - prepare the figure
+	% % Get the underlying Java reference
+	% warning off MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame
+	% jFig = get(hFig, 'JavaFrame');
+	% jAxis = jFig.getAxisComponent;
+	% % Set the focus event callback
+	% set(jAxis.getComponent(0),'FocusLostCallback',{@subfxnLostFocusMainFig,hFig});
+	% set(jAxis,'FocusGainedCallback',{@myMatlabFunc,hFig});
+	% perhaps also set the FocusLostCallback here
 
 	% % location of each subplot
 	% if ~isempty(options.inputMovie)
@@ -833,6 +846,8 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 	objCutMovieAsyncF = cell([1 nSignalsHere]);
 	objCutImagesAsyncF = cell([1 nSignalsHere]);
 
+	% suptitle('Press Z to toggle zoom on all panels. Press L for keyboard shortcut legend.','plotregion',0.95,'titleypos',0.98)
+
 	% only exit if user clicks options that calls for saving the data
 	while saveData==0
 		if options.signalLoopTicTocCheck==1
@@ -873,7 +888,12 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 
 		if ~isempty(options.inputMovie)
 			% inputMoviePlotLoc2Handle = subplot(subplotY,subplotX,inputMoviePlotLoc2);
-			inputMoviePlotLoc2Handle = subplotTmp(subplotY,subplotX,inputMoviePlotLoc2);
+			if i==1
+				inputMoviePlotLoc2Handle = subplotTmp(subplotY,subplotX,inputMoviePlotLoc2);
+			else
+				% axes(inputMoviePlotLoc2Handle);
+				set(mainFig,'CurrentAxes',inputMoviePlotLoc2Handle);
+			end
 				% tic
 
 				if options.showImageCorrWithCharInputMovie==1
@@ -969,6 +989,9 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 								if i==1
 									imagesc(croppedPeakImages2,'AlphaData',imAlpha);
 									colormap(options.colormap);
+								else
+									% findobj(gca,'Type','image')
+									% pause
 								end
 								montageHandle = findobj(gca,'Type','image');
 								set(montageHandle,'Cdata',croppedPeakImages2,'AlphaData',imAlpha);
@@ -988,8 +1011,8 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 									axis equal tight;
 								end
 								% s2Pos = get(gca,'position');
-								s2Pos = plotboxpos(gca);
-								cbh = colorbar(gca,'Location','eastoutside','Position',[s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)],'FontSize',options.fontSize-2);
+								s2Pos = plotboxpos(inputMoviePlotLoc2Handle);
+								cbh = colorbar(inputMoviePlotLoc2Handle,'Location','eastoutside','Position',[s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)],'FontSize',options.fontSize-2);
 								ylabel(cbh,'Fluorescence (e.g. \DeltaF/F or \DeltaF/\sigma)','FontSize',options.fontSize-1);
 							end
 						catch err
@@ -1036,7 +1059,12 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 			% show the current image
 			% subplot(subplotY,subplotX,filterPlotLoc)
 			% subplot(subplotY,subplotX,inputMoviePlotLoc2)
-			subplotTmp(subplotY,subplotX,inputMoviePlotLoc2)
+			if i==1
+				inputMoviePlotLoc2Handle = subplotTmp(subplotY,subplotX,inputMoviePlotLoc2);
+			else
+				% axes(inputMoviePlotLoc2Handle);
+				set(mainFig,'CurrentAxes',inputMoviePlotLoc2Handle);
+			end
 				[thisImageCrop] = subfxnCropImages(thisImage);
 				imagesc(thisImageCrop);
 				% colormap gray
@@ -1073,7 +1101,12 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 			% badImages2 = normalizeVector(badImages,'normRange','zeroToOne');
 		% end
 		% subplot(subplotY,subplotX,objMapPlotLoc)
-		subplotTmp(subplotY,subplotX,objMapPlotLoc)
+		if i==1
+			objMapPlotLocHandle = subplotTmp(subplotY,subplotX,objMapPlotLoc);
+		else
+			set(mainFig,'CurrentAxes',objMapPlotLocHandle);
+		end
+
 			% currentImage = squeeze(inputImages(:,:,i));
 			currentImageThres = squeeze(inputImagesThres(:,:,i));
 			Comb(:,:,2) = ones(size(currentImageThres));
@@ -1184,7 +1217,12 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 			end
 			% title(strrep(options.inputStr,'_','\_'), 'HandleVisibility' , 'off' )
 		% subplot(subplotY,subplotX,objMapZoomPlotLoc)
-		subplotTmp(subplotY,subplotX,objMapZoomPlotLoc)
+		if i==1
+			objMapZoomPlotLocHandle = subplotTmp(subplotY,subplotX,objMapZoomPlotLoc);
+		else
+			% axes(objMapZoomPlotLocHandle);
+			set(mainFig,'CurrentAxes',objMapZoomPlotLocHandle);
+		end
 			% CombTmp2Zoom = CombTmp2;
 			% currentImage2(:,:,1) = currentImage;
 			% % currentImage2(:,:,2) = currentImage;
@@ -1254,7 +1292,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 				if options.axisEqual==1
 					axis equal tight;
 				end
-				title(['signal ' cellIDStr ' (' num2str(sum(valid==1)) ' good)'],'FontSize',options.fontSize)
+				title(['signal ' cellIDStr ' (' num2str(sum(valid==1)) ' good)' 10 'Legend: green(good), red(bad), blue(current)'],'FontSize',options.fontSize)
 				% 10 'Legend: green(good), red(bad), blue(current)'
 				box off;
 				axisH = gca;
@@ -1272,7 +1310,11 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 			% tic
 			% plot all signals and the average
 			% subplot(subplotY,subplotX,avgSpikeTracePlot);
-			subplotTmp(subplotY,subplotX,avgSpikeTracePlot);
+			if i==1
+				avgSpikeTracePlotHandle = subplotTmp(subplotY,subplotX,avgSpikeTracePlot);
+			else
+				set(mainFig,'CurrentAxes',avgSpikeTracePlotHandle);
+			end
 				% [slopeRatio] = plotPeakSignal(thisTrace,testpeaks,cellIDStr,instructionStr,minValTraces,maxValTraces,peakROI,peakOutputStat.avgSpikeTrace(i,:),peakOutputStat.slopeRatio(i),peakOutputStat.spikeCenterTrace{i},valid);
 				plotPeakSignal(thisTrace,testpeaks,cellIDStr,instructionStr,minValTraces,maxValTraces,peakROI,peakOutputStat.avgSpikeTrace(i,:),peakOutputStat.slopeRatio(i),peakOutputStat.spikeCenterTrace{i},valid);
 				axisH = gca;
@@ -1283,8 +1325,14 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 				% title(['signal ' cellIDStr]);
 			% plot the trace
 
-			% subplot(subplotY,subplotX,tracePlotLoc)
-			subplotTmp(subplotY,subplotX,tracePlotLoc)
+			% % subplot(subplotY,subplotX,tracePlotLoc)
+			% subplotTmp(subplotY,subplotX,tracePlotLoc)
+			if i==1
+				tracePlotLocHandle = subplotTmp(subplotY,subplotX,tracePlotLoc);
+			else
+				set(mainFig,'CurrentAxes',tracePlotLocHandle);
+			end
+
 				sigDig = 100;
 				thisStr = [...
 					'SNR = ' num2str(round(signalSnr(i)*sigDig)/sigDig)...
@@ -1326,14 +1374,22 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 			% toc
 		else
 			% subplot(subplotY,subplotX,avgSpikeTracePlot);
-			subplotTmp(subplotY,subplotX,avgSpikeTracePlot);
+			if i==1
+				avgSpikeTracePlotHandle = subplotTmp(subplotY,subplotX,avgSpikeTracePlot);
+			else
+				set(mainFig,'CurrentAxes',avgSpikeTracePlotHandle);
+			end
 				plot(peakROI,thisTrace(1:length(peakROI)));
 				xlabel('frames');
 				ylabel('\DeltaF/F');
 				ylim([minValTraces maxValTraces]);
 				title(['signal peaks ' cellIDStr],'FontSize',options.fontSize)
 			% subplot(subplotY,subplotX,tracePlotLoc)
-			subplotTmp(subplotY,subplotX,tracePlotLoc)
+			if i==1
+				tracePlotLocHandle = subplotTmp(subplotY,subplotX,tracePlotLoc);
+			else
+				set(mainFig,'CurrentAxes',tracePlotLocHandle);
+			end
 				plot(thisTrace, 'r');
 				xlabel('frames');
 				% ylabel('df/f');
@@ -1346,7 +1402,22 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 		if i==1
 			figure(mainFig);
 		end
-		set(findobj(gcf,'type','axes'),'hittest','off')
+		% Turn off ability for users to alter existing axes
+		% set(findobj(gcf,'type','axes'),'hittest','off')
+
+
+		set(mainFig,'CurrentAxes',avgSpikeTracePlotHandle);
+			% set(gca,'hittest','off')
+			box off;
+		set(mainFig,'CurrentAxes',tracePlotLocHandle);
+			% set(gca,'hittest','off')
+			box off;
+		set(mainFig,'CurrentAxes',objMapPlotLocHandle);
+			box off;
+		set(mainFig,'CurrentAxes',objMapZoomPlotLocHandle);
+			box off;
+		linkaxes([avgSpikeTracePlotHandle tracePlotLocHandle],'y');
+
 		validPrevious = valid(i);
 		warning('off','all')
 
@@ -1435,7 +1506,11 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 				objCutMovie(1,2,:) = options.movieMax;
 
 				% subplot(subplotY,subplotX,inputMoviePlotLoc)
-				subplotTmp(subplotY,subplotX,inputMoviePlotLoc)
+				if i==1
+					inputMoviePlotLocHandle = subplotTmp(subplotY,subplotX,inputMoviePlotLoc);
+				else
+					set(mainFig,'CurrentAxes',inputMoviePlotLocHandle);
+				end
 				% set title and turn off ability to change
 				if ~isempty(objCutMovie)
 					% imagesc(objCutMovie(:,:,1));
@@ -1490,6 +1565,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 				%     ' | S-ratio = ' num2str(round(peakOutputStat.slopeRatio(i)*sigDig)/sigDig)];
 
 				% title(tmpTitle,'HandleVisibility','off');
+
 				set(gca,'color',[0 0 0]);
 				loopImgHandle = imagesc(objCutMovie(:,:,frameNo),'AlphaData',imAlpha);
 				if options.axisEqual==1
@@ -1509,10 +1585,38 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 					caxis([-0.05 0.1]);
 				end
 
-				title(['Press Q to change movie contrast.' 10 'Press L for legend.'],'FontSize',options.fontSize)
+				% title(['Press Q to change movie contrast.' 10 'Press Z to toggle zoom on all panels.' 10 'Press L for keyboard shortcut legend.' 10 'signal ' cellIDStr ' (' num2str(sum(valid==1)) ' good)'],'FontSize',options.fontSize)
+				title(['Press Q to change movie contrast.' 10 'Press Z to toggle zoom on all panels.' 10 'Press L for keyboard shortcut legend.'],'FontSize',options.fontSize)
 
+				% ==========================================
+				% ADD PROGRESS BAR
+				if exist('axValid','var')==1
+					[axValid axValidAll] = subfxnSignalSorterProgressBars(i,valid,inputMoviePlotLocHandle,inputMoviePlotLoc2Handle,options,mainFig,axValid,axValidAll,cellIDStr);
+				else
+					[axValid axValidAll] = subfxnSignalSorterProgressBars(i,valid,inputMoviePlotLocHandle,inputMoviePlotLoc2Handle,options,mainFig,[],[],cellIDStr);
+				end
+
+				set(mainFig,'CurrentAxes',inputMoviePlotLocHandle);
+				% subplotTmp(subplotY,subplotX,inputMoviePlotLoc)
+
+				% h = zoom;
+				% ax2 = subplotTmp(subplotY,subplotX,objMapPlotLoc);
+				% setAllowAxesZoom(h,ax2,true);
+				% zoom on
+				% get(gcf,'CurrentCharacter')
+				frameNoTotal = 0; % use this to lock
+
+				% set(mainFig,'KeyPressFcn', '1;');
 				while strcmp(keyIn,'3')
-					keyIn = get(gcf,'CurrentCharacter');
+					% figure(mainFig)
+					frameNoTotal = frameNoTotal+1;
+					% disp(frameNoTotal)
+					if frameNoTotal>3
+						keyIn = get(gcf,'CurrentCharacter');
+					else
+						set(gcf,'currentch','3');
+					end
+					% disp(double(keyIn))
 					if ~isempty(objCutMovie)
 						% Use Cdata update instead of imagesc to improve drawnow speed, esp. on Matlab 2018b.
 						set(loopImgHandle,'Cdata',squeeze(objCutMovie(:,:,frameNo)));
@@ -1654,6 +1758,16 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 				disp(getReport(err,'extended','hyperlinks','on'));
 				disp(repmat('@',1,7))
 			end
+		% 'P' display neighboring cells
+		elseif isequal(reply, 112)
+			disp('Paused, press key to resume.')
+			pause;
+		% 'Z' display neighboring cells
+		elseif isequal(reply, 122)
+			% disp('Paused, press key to resume.')
+			% pause;
+			% zoom on;
+			zoom;
 		% 'T' display neighboring cells
 		elseif isequal(reply, 116)
 			overlapDistance = inputdlg('Enter distance to look for neighbors','',[1 50],{'10'});
@@ -1863,6 +1977,70 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 		end
 	end
 end
+function [axValid axValidAll] = subfxnSignalSorterProgressBars(i,valid,inputMoviePlotLocHandle,inputMoviePlotLoc2Handle,options,mainFig,axValid,axValidAll,cellIDStr)
+	validData = cat(3,double(valid(:)'==0|valid(:)'>1),double(valid(:)'==1|valid(:)'>1),double(valid(:)'>1))/2;
+	validData(:,valid==0,1) = 1;
+	validData(:,valid==1,2) = 1;
+	% loopImgHandle
+	if i==1
+		% if any(isgraphics('axValid'))==1
+		if ~isempty(axValid)
+			% disp('DELETE colorbar')
+			% delete(axValid)
+			delete(findobj(mainFig,'Tag','colorProgressBar1'));
+		end
+		% suptitle(' ','plotregion',0.95,'titleypos',0.98)
+		colorbar(inputMoviePlotLoc2Handle,'off')
+		s2Pos = plotboxpos(inputMoviePlotLoc2Handle);
+		cbh = colorbar(inputMoviePlotLoc2Handle,'Location','eastoutside','Position',[s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)],'FontSize',options.fontSize-2);
+		ylabel(cbh,'Fluorescence (e.g. \DeltaF/F or \DeltaF/\sigma)','FontSize',options.fontSize-1);
+
+		% suptitle('Press Z to toggle zoom on all panels. Press L for keyboard shortcut legend.','plotregion',0.95,'titleypos',0.98)
+		s3Pos = plotboxpos(gca);
+		% axValid = axes('Position',[s3Pos(1) s3Pos(2)-0.03 s3Pos(3) 0.02],'XTick',[],'YTick',[]);
+
+		axValid = axes('Position',[s3Pos(1) 0.98 s3Pos(3) 0.02],'XTick',[],'YTick',[]);
+		validImgHandle = imagesc(axValid,validData);
+		% box off;
+		set(axValid,'XTick',[],'YTick',[],'Tag','colorProgressBar1')
+		% axis off;
+		xlabel(['Cell (green), non-cell (red), unknown (gray) | ' 'signal ' cellIDStr ' (' num2str(sum(valid==1)) ' good)'],'FontSize',options.fontSize-2)
+		% loopImgHandle
+		% pause
+	else
+		% axValid
+		thisHandle = findobj(axValid,'Type','image');
+		set(thisHandle,'CData',validData);
+		set(mainFig,'CurrentAxes',axValid);
+		xlabel(['Cell (green), non-cell (red), unknown (gray) | ' 'signal ' cellIDStr ' (' num2str(sum(valid==1)) ' good)'],'FontSize',options.fontSize-2)
+	end
+
+	validSorted = sort(valid);
+	validData = cat(3,double(validSorted(:)'==0|validSorted(:)'>1),double(validSorted(:)'==1|validSorted(:)'>1),double(validSorted(:)'>1))/2;
+	validData(:,validSorted==0,1) = 1;
+	validData(:,validSorted==1,2) = 1;
+	if i==1
+		% if any(isgraphics('axValidAll'))==1
+		if ~isempty(axValidAll)
+			delete(findobj(mainFig,'Tag','colorProgressBar2'));
+			% delete(axValidAll)
+		end
+		set(mainFig,'CurrentAxes',inputMoviePlotLoc2Handle);
+		s3Pos = plotboxpos(gca);
+		axValidAll = axes('Position',[s3Pos(1) 0.98 s3Pos(3) 0.02],'XTick',[],'YTick',[]);
+		validImgHandle = imagesc(axValidAll,validData);
+		set(axValidAll,'XTick',[],'YTick',[],'Tag','colorProgressBar2')
+		xlabel(['Percent: cell (green), non-cell (red), unknown (gray).'],'FontSize',options.fontSize-2)
+	else
+		thisHandle = findobj(axValidAll,'Type','image');
+		set(thisHandle,'CData',validData);
+		% set(mainFig,'CurrentAxes',axValid);
+		% xlabel(['Cell (green), non-cell (red), unknown (gray)'],'FontSize',options.fontSize-2)
+	end
+end
+function subfxnLostFocusMainFig(jAxis, jEventData, hFig)
+   figure(hFig);
+end
 
 function instructionStr = subfxnCreateLegend()
 	% legendFig = figure(343);
@@ -1890,6 +2068,8 @@ function instructionStr = subfxnCreateLegend()
 	'e          | change fps of transient movies',sepStrNum,...
 	'd          | change colormap',sepStrNum,...
 	'l          | create new legend',sepStrNum,...
+	'p          | pause GUI, goto command window',sepStrNum,...
+	'z          | toggle zoom',sepStrNum,...
 	'a          | change GUI font',sepStrNum,sepStrNum,...
 	'===Cell map legend===',sepStrNum,...
 	'green = good',sepStrNum,...
@@ -2392,6 +2572,9 @@ function [valid, directionOfNextChoice, saveData, i] = respondToUserInput(reply,
 	else
 		% forward=1;
 		% valid(i) = 1;
+	end
+	if directionOfNextChoice~=0
+		zoom off;
 	end
 end
 function [outputImage] = subfxnCropImages(inputImages)

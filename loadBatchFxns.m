@@ -9,6 +9,8 @@ function loadBatchFxns()
 
 	% changelog
 		% 2019.07.25 [09:08:59] - Changed so that it adds folders to path from the directory where loadBatchFxns.m is located.
+		% 2019.08.20 [09:18:01] - Improve speed by checking for folders already in MATLAB path.
+		% 2019.08.25 [15:29:36] - Simplified Miji loading
 	% TODO
 		%
 
@@ -19,7 +21,6 @@ function loadBatchFxns()
 	functionLocation = dbstack('-completenames');
 	functionLocation = functionLocation(1).file;
 	[functionDir,~,~] = fileparts(functionLocation);
-	fprintf('Adding all non-private folders under: %s\n',functionDir);
 	pathList = genpath(functionDir);
 	% pathList = genpath(pwd);
 	pathListArray = strsplit(pathList,pathsep);
@@ -38,8 +39,18 @@ function loadBatchFxns()
 		pathListArray = pathListArray(~matchIdx);
 	end
 
-	pathList = strjoin(pathListArray,pathsep);
-	addpath(pathList);
+	% Remove paths that are already in MATLAB path to save time
+	pathFilter = cellfun(@isempty,pathListArray);
+	pathListArray = pathListArray(~pathFilter);
+	pathFilter = ismember(pathListArray,strsplit(path,pathsep));
+	pathListArray = pathListArray(~pathFilter);
+	if isempty(pathListArray)
+		fprintf('MATALB path already has all needed non-private folders under: %s\n',functionDir);
+	else
+		fprintf('Adding all non-private folders under: %s\n',functionDir);
+		pathList = strjoin(pathListArray,pathsep);
+		addpath(pathList);
+	end
 
 	% Automatically add Inscopix
 	if ismac
@@ -51,83 +62,75 @@ function loadBatchFxns()
 	else
 		disp('Platform not supported')
 	end
-	if ~isempty(baseInscopixPath)&&exist(baseInscopixPath,'dir')==7
-		addpath(baseInscopixPath);
-		if exist('isx.Movie','class')==8
-			fprintf('Inscopix Data Processing software added: %s\n',baseInscopixPath)
+
+	pathFilter = ismember(baseInscopixPath,strsplit(path,pathsep));
+	if pathFilter==0
+		if ~isempty(baseInscopixPath)&&exist(baseInscopixPath,'dir')==7
+			addpath(baseInscopixPath);
+
+			if exist('isx.Movie','class')==8
+				fprintf('Inscopix Data Processing software added: %s\n',baseInscopixPath)
+			else
+				disp('Check Inscopix Data Processing software install!')
+			end
 		else
-			disp('Check Inscopix Data Processing software install!')
 		end
 	else
+		fprintf('Inscopix Data Processing software already in path: %s\n',baseInscopixPath)
 	end
 
 	% add path for Miji, change as needed
-	pathtoMiji = '\Fiji.app\scripts\';
-	if exist(pathtoMiji,'dir')==7
-		onPath = subfxnCheckPath(pathtoMiji);
+	loadLocalFunctions = ['private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
+	if exist(loadLocalFunctions,'file')~=0
+		run(loadLocalFunctions);
+	else
+		pathtoMiji = ['_external_programs' filesep 'fiji-win64-20151222' filesep 'Fiji.app' filesep 'scripts\'];
+		% create privateLoadBatchFxns.m
+	end
+	onPath = subfxnCheckPath(pathtoMiji);
+	if exist(pathtoMiji,'dir')==7&&onPath==0
 		if onPath==1
 			fprintf('Miji already in PATH: %s.\n',pathtoMiji)
 		else
 			addpath(pathtoMiji);
-			fprintf('Added default Miji to path: %s.\n',pathtoMiji)
+			fprintf('Added private Miji to path: %s.\n',pathtoMiji)
 		end
-		try
-			currP=pwd;Miji;cd(currP);MIJ.exit;
-		catch err
-			disp(repmat('@',1,7))
-			disp(getReport(err,'extended','hyperlinks','on'));
-			disp(repmat('@',1,7))
-			manageMiji('startStop','start');
-			manageMiji('startStop','exit');
-		end
-		% % Get Miji properly loaded in the path if not already
-		% if exist('MIJ','class')==0
+		openMijiCheck();
+		% % Get Miji properly loaded in the path
+		% if exist('Miji.m')==2&&exist('MIJ','class')==0
 		% 	resetMiji;
+		% else
 		% end
+	elseif onPath==1
+		fprintf('Miji already in MATLAB path: %s\n',pathtoMiji);
+		openMijiCheck()
 	else
-		clear pathtoMiji;
-	end
-
-	loadLocalFunctions = ['private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
-	if exist(loadLocalFunctions,'file')~=0
-		run(loadLocalFunctions);
-		onPath = subfxnCheckPath(pathtoMiji);
-		if exist(pathtoMiji,'dir')==7
-			if onPath==1
-				fprintf('Miji already in PATH: %s.\n',pathtoMiji)
-			else
-				addpath(pathtoMiji);
-				fprintf('Added private Miji to path: %s.\n',pathtoMiji)
-			end
-			try
-				currP=pwd;Miji;cd(currP);MIJ.exit;
-			catch err
-				disp(repmat('@',1,7))
-				disp(getReport(err,'extended','hyperlinks','on'));
-				disp(repmat('@',1,7))
-				manageMiji('startStop','start');
-				manageMiji('startStop','exit');
-			end
-			% % Get Miji properly loaded in the path
-			% if exist('Miji.m')==2&&exist('MIJ','class')==0
-			% 	resetMiji;
-			% else
-			% end
-		else
-			fprintf('No folder at specified path, retry! %s.\n',pathtoMiji)
-		end
-	else
-		% create privateLoadBatchFxns.m
+		fprintf('No folder at specified path, retry! %s.\n',pathtoMiji)
 	end
 	% cnmfVersionDirLoad('none');
 end
+function openMijiCheck()
+	try
+		currP=pwd;
+		Miji;
+		% MIJ.start;
+		cd(currP);
+		MIJ.exit;
+	catch err
+		disp(repmat('@',1,7))
+		disp(getReport(err,'extended','hyperlinks','on'));
+		disp(repmat('@',1,7))
+		manageMiji('startStop','start');
+		manageMiji('startStop','exit');
+	end
+end
 function onPath = subfxnCheckPath(thisRootPath)
 	pathCell = regexp(path, pathsep, 'split');
-			if verLessThan('matlab','9.0')
-				matchIdx = ~cellfun(@isempty,regexpi(pathCell,thisRootPath));
-				% pathListArray = pathListArray(pathFilter&pathFilter1&pathFilter2);
-			else
-				matchIdx = contains(pathCell,thisRootPath);
-			end
+	if verLessThan('matlab','9.0')
+		matchIdx = ~cellfun(@isempty,regexpi(pathCell,thisRootPath));
+		% pathListArray = pathListArray(pathFilter&pathFilter1&pathFilter2);
+	else
+		matchIdx = contains(pathCell,thisRootPath);
+	end
 	onPath = any(matchIdx);
 end

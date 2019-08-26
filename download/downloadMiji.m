@@ -4,7 +4,8 @@ function [success] = downloadMiji(varargin)
 	% started: 2019.07.30 [09:58:04]
 
 	%========================
-	options.defaultDir = ['private' filesep 'programs'];
+	% options.defaultDir = ['private' filesep 'programs'];
+	options.defaultDir = ['_external_programs'];
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -91,7 +92,7 @@ function [success] = downloadMiji(varargin)
 				modelAddOutsideDependencies('miji');
 			elseif exist(unzipPath,'dir')~=7
 				% Unzip the repo file
-				if ~exist(unzipPath,'dir');mkdir(unzipPath);fprintf('Made folder: %s',unzipPath);end
+				if ~exist(unzipPath,'dir');mkdir(unzipPath);fprintf('Made folder: %s\n',unzipPath);end
 				fprintf('Unzipping file %s to %s\n',rawSavePathDownload,unzipPath)
 				% unzipPath = [signalExtractionDir filesep outputDir{gitNo}];
 				filenames = unzip(rawSavePathDownload,unzipPath);
@@ -105,7 +106,12 @@ function [success] = downloadMiji(varargin)
 			% movefile([signalExtractionDir filesep gitName{gitNo}],[signalExtractionDir filesep outputDir{gitNo}]);
 		end
 
-		modelAddOutsideDependencies('miji');
+		if exist('unzipPath','var')&&exist(unzipPath,'dir')==7
+			defaultExternalProgramDir = unzipPath;
+		else
+			defaultExternalProgramDir = options.defaultDir;
+		end
+		modelAddOutsideDependencies('miji','defaultExternalProgramDir',defaultExternalProgramDir);
 
 		success = 1;
 	catch err

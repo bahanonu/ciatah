@@ -6,8 +6,13 @@ data/
 signal_extraction/cnmf_current
 signal_extraction/cnmfe
 signal_extraction/cvx_rd
+_external_programs/*/
+_external_programs/cnmf_current
+_external_programs/cnmfe
+_external_programs/cvx_rd
 
 # Signal extraction dependency zips
+_external_programs/*.zip
 signal_extraction/*.zip
 /*.mat
 

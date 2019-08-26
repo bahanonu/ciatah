@@ -34,14 +34,16 @@ Contact: __Biafra Ahanonu, PhD (bahanonu [at] alum.mit.edu)__.
 
 ## Quick start guide
 
-Below are steps needed to quickly get started using the `calciumImagingAnalysis` software package.
+Below are steps needed to quickly get started using the `calciumImagingAnalysis` software package in MATLAB.
 - Clone the `calciumImagingAnalysis` repository (using GitHub desktop or command line) or download the repository zip and unzip.
 - Point the MATLAB path to the `calciumImagingAnalysis` folder.
 - Run the below MATLAB commands.
 - For Fiji dependency, when path to `Miji.m` (`\Fiji.app\scripts` folder) is requested, likely in `private\programs\FIJI_PATH\Fiji.app\scripts` unless the user requested a custom path or on OSX (in which case, find the install directory).
-- `calciumImagingAnalysis` often uses regular expressions to find relevant movie and other files in folders to analyze. For example, by default it looks for any files containing `concat`, e.g. `concat_recording_20140401_180333.h5` (test data). If you have a file called `rawData_2019_01_01_myInterestingExperiment.avi` and all your raw data files start with `rawData_` then change the regular expression to `rawData_` when requested by the repository. See `setMovieInfo` module.
+- `calciumImagingAnalysis` often uses regular expressions to find relevant movie and other files in folders to analyze.
+ - For example, by default it looks for any files containing `concat`, e.g. `concat_recording_20140401_180333.h5` (test data). If you have a file called `rawData_2019_01_01_myInterestingExperiment.avi` and all your raw data files start with `rawData_` then change the regular expression to `rawData_` when requested by the repository. See `setMovieInfo` module.
+- External software packages are downloaded into `_external_programs` folder and should be placed there if done manually.
 - See additional details in [Processing calcium imaging data](#processing-calcium-imaging-data).
-- When issues are encountered, first check the `*Common issues and fixes` Wiki page to see if a solution is there. Else, submit a new issue or email Biafra.
+- When issues are encountered, first check the `*Common issues and fixes` Wiki page to see if a solution is there. Else, submit a new issue or email Biafra (bahanonu [at] alum.mit.edu).
 
 ```MATLAB
 % Loads all directories
@@ -50,7 +52,7 @@ loadBatchFxns;
 % Loads the class into an object for use in this session
 obj = calciumImagingAnalysis;
 
-% Download and load dependent software packages.
+% Download and load dependent software packages into "_external_programs" folder.
 obj.loadDependencies;
 
 % [optional] Set the names calciumImagingAnalysis will look for in each folder
@@ -84,13 +86,13 @@ Clone the `calciumImagingAnalysis` repository or download the repository zip and
 - Point the MATLAB path to the `calciumImagingAnalysis` folder.
 - Run `loadBatchFxns.m` before using functions in the directory. This adds all directories and sub-directories to the MATLAB path.
 - Type `obj = calciumImagingAnalysis;` into MATLAB command window and follow instructions that appear after to add data and run analysis.
-- Run the `calciumImagingAnalysis` class method `loadDependencies` or type `obj.loadDependencies` after initializing a `calciumImagingAnalysis` object into the command window to add Fiji to path, download CNMF/CNMF-E repositories, download/setup CVX (for CNMF/CNMF-E), and download example data.
+- Run the `calciumImagingAnalysis` class method `loadDependencies` or type `obj.loadDependencies` after initializing a `calciumImagingAnalysis` object into the command window to download and add Fiji to path, download CNMF/CNMF-E repositories, download/setup CVX (for CNMF/CNMF-E), and download example data.
 
 Note
-- Place in folder where MATLAB will have write permissions, as it also creates a `private` subdirectory to store some user information.
+- Place `calciumImagingAnalysis` in a folder where MATLAB will have write permissions, as it also creates a `private` subdirectory to store some user information along with downloading required external software packages.
 - `file_exchange` folder contains File Exchange functions used by `calciumImagingAnalysis`. If does not exist, unzip `file_exchange.zip`.
 - In general, it is best to set the MATLAB startup directory to the `calciumImagingAnalysis` folder. This allows `java.opts` and `startup.m` to set the correct Java memory requirements and load the correct folders into the MATLAB path.
-- If `calciumImagingAnalysis` IS NOT the startup folder, place `java.opts` wherever the startup folder is so the correct Java memory requirements are set (important for using ImageJ/Miji in MATLAB).
+- If `calciumImagingAnalysis` IS NOT the startup folder, place `java.opts` wherever the MATLAB startup folder is so the correct Java memory requirements are set (important for using ImageJ/Miji in MATLAB).
 - If it appears an old `calciumImagingAnalysis` repository is loaded after pulling a new version, run `restoredefaultpath` and check that old `calciumImagingAnalysis` folders are not in the MATLAB path.
 - This version of `calciumImagingAnalysis` has been tested on Windows MATLAB `2015b`, `2017a`, and `2018b`. Moderate testing on Windows and OSX (10.10.5) `2017b` and `2018b`.
 
@@ -99,6 +101,8 @@ Note
 Run `example_downloadTestData.m` to download example one-photon miniature microscope test data to use for testing `calciumImagingAnalysis` preprocessing, cell extraction, and cell classification code. The data will be located at `data\2014_04_01_p203_m19_check01_raw` within the repository root directory.
 
 ### Dependencies
+
+By default external MATLAB-based software packages are stored in `_external_programs`.
 
 MATLAB dependencies (toolboxes used)
 
@@ -110,7 +114,7 @@ MATLAB dependencies (toolboxes used)
 
 ImageJ
 
-- Run `downloadMiji` from `downloads\downloadMiji.m` to download Fiji version appropriate to your platform.
+- Run `downloadMiji` from `downloads\downloadMiji.m` or `obj.loadDependencies` (when class initialized) to download Fiji version appropriate to your platform.
 - Else download Fiji (preferably __2015 December 22__ version): https://imagej.net/Fiji/Downloads.
 - Make sure have Miji in Fiji installation: http://bigwww.epfl.ch/sage/soft/mij/.
 - This is used as an alternative to the `calciumImagingAnalysis` `playMovie.m` function for viewing movies and is needed for some movie modification steps.
@@ -121,7 +125,7 @@ Saleae
 
 CNMF and CNMF-E
 
-- Download repositories by running `downloadCnmfGithubRepositories.m`.
+- Download repositories by running `downloadCnmfGithubRepositories.m` or `obj.loadDependencies` (when class initialized).
 - CNMF: https://github.com/flatironinstitute/CaImAn-MATLAB.
 - CNMF-E: https://github.com/bahanonu/CNMF_E
   - forked from https://github.com/zhoupc/CNMF_E to fix HDF5, movies with NaNs, and other related bugs.
@@ -132,6 +136,7 @@ CNMF and CNMF-E
 Below are a list of the top-level directories and what types of functions or files are within.
 
 - __@calciumImagingAnalysis__ - Contains `calciumImagingAnalysis` class and associated methods for calcium imaging analysis.
+- ___external_programs__ - External software packages (e.g. CNMF, CELLMax, and others) are stored here.
 - ___overloaded__ - Functions that overload core MATLAB functions to add functionality or fix display issues.
 - __behavior__ - Processing of behavior files (e.g. accelerometer data, Saleae files, etc.).
 - __classification__ - Classification of cells, e.g. manual classification of cell extraction outputs or cross-session grouping of cells.

@@ -80,9 +80,7 @@ function [inputSnr, inputMse, inputSnrSignal, inputSnrNoise, outputSignal, outpu
 			end
 		end
 
-		if options.displayOutput==1
-			disp(['SNR type: ' options.SNRtype])
-		end
+
 		% to later calculate the signal idx
 		% outerFun = @(x,y) x+y;
 		nSignals = size(inputSignals,1);
@@ -95,6 +93,11 @@ function [inputSnr, inputMse, inputSnrSignal, inputSnrNoise, outputSignal, outpu
 			testpeaksArray = options.testpeaksArray;
 			options.testpeaksArray = [];
 		end
+
+		if options.displayOutput==1
+			disp(['SNR type: ' options.SNRtype])
+		end
+
 		if isempty(options.testpeaksArrayAlt)
 			testpeaksArrayAlt = [];
 		else

@@ -15,7 +15,7 @@ function [success] = cnmfVersionDirLoad(cnmfVersion,varargin)
 
 	%========================
 	% Relative path assumed for batch_processing package
-	options.signalExtractionRootPath = 'signal_extraction';
+	options.signalExtractionRootPath = '_external_programs';
 	% Binary: 1 = display paths to be added or removed
 	options.displayOutput = 1;
 	% get options
