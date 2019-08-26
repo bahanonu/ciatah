@@ -346,6 +346,10 @@ function obj = computeManualSortSignals(obj)
 						validCNMFE = valid;
 						methodStr = obj.extractionMethodSortedSaveStr.(obj.signalExtractionMethod);
 						saveVariable = {obj.extractionMethodValidVarname.(obj.signalExtractionMethod)};
+					case 'ROI'
+						validROI = valid;
+						methodStr = obj.extractionMethodSortedSaveStr.(obj.signalExtractionMethod);
+						saveVariable = {obj.extractionMethodValidVarname.(obj.signalExtractionMethod)};
 					otherwise
 						% body
 				end
