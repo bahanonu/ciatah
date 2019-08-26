@@ -38,7 +38,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	scnsize = get(0,'ScreenSize');
 	signalExtractionMethodStr = {'EM','PCAICA','PCAICA_old','CNMF','CNMFE','EXTRACT','ROI'};
 	currentIdx = find(strcmp(signalExtractionMethodStr,obj.signalExtractionMethod));
-	signalExtractionMethodDisplayStr = {'CELLMax (Lacey/Biafra)','PCAICA (Mukamel, 2009) | Hakan/Tony version','PCAICA (Mukamel, 2009) | Jerome Lecoq version','CNMF (Pnevmatikakis, 2016 or Giovannucci, 2019)','CNMF-E (Zhou, 2018)','EXTRACT (Hakan)','ROI - only do after running either PCAICA, CELLMax, EXTRACT, or CNMF'};
+	signalExtractionMethodDisplayStr = {'CELLMax (Lacey/Biafra)','PCAICA (Mukamel, 2009) | Hakan/Tony version','PCAICA (Mukamel, 2009) | Jerome Lecoq version','CNMF (Pnevmatikakis, 2016 or Giovannucci, 2019)','CNMF-E (Zhou, 2018)','EXTRACT (Inan, 2017)','ROI - only do after running either PCAICA, CELLMax, EXTRACT, or CNMF'};
 	[signalIdxArray, ok] = listdlg('ListString',signalExtractionMethodDisplayStr,'ListSize',[scnsize(3)*0.4 scnsize(4)*0.4],'Name','which signal extraction method?','InitialValue',currentIdx);
 	% signalIdxArray
 	signalExtractionMethod = signalExtractionMethodStr(signalIdxArray);
@@ -529,9 +529,12 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 					);setNo = 1;
 					options.ROI.threshold = str2num(movieSettings{setNo});setNo = setNo+1;
 
-					signalExtractionMethodStr2 = {'PCAICA','EM','EXTRACT','CNMF'};
+					% signalExtractionMethodStr2 = {'PCAICA','EM','EXTRACT','CNMF'};
+					signalExtractionMethodStr2 = {'EM','PCAICA','CNMF','CNMFE','EXTRACT'};
+
 					currentIdx = find(strcmp(signalExtractionMethodStr2,obj.signalExtractionMethod));
-					signalExtractionMethodDisplayStr2 = {'PCAICA','CELLMax (Lacey)','EXTRACT (Hakan)','CNMF (Pnevmatikakis, 2015)'};
+					% signalExtractionMethodDisplayStr2 = {'PCAICA','CELLMax (Lacey)','EXTRACT (Hakan)','CNMF (Pnevmatikakis, 2015)'};
+					signalExtractionMethodDisplayStr2 = {'CELLMax (Lacey/Biafra)','PCAICA (Mukamel, 2009)','CNMF (Pnevmatikakis, 2016 or Giovannucci, 2019)','CNMF-E (Zhou, 2018)','EXTRACT (Inan, 2017)','ROI - only do after running either PCAICA, CELLMax, EXTRACT, or CNMF'};
 					[signalIdxArray2, ~] = listdlg('ListString',signalExtractionMethodDisplayStr2,'ListSize',[scnsize(3)*0.4 scnsize(4)*0.4],'Name','Which signal extraction method for ROI? SELECT ONE','InitialValue',currentIdx);
 					% signalIdxArray
 					options.ROI.signalExtractionMethod = signalExtractionMethodStr2{signalIdxArray2};
