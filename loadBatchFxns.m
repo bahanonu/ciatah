@@ -95,19 +95,7 @@ function loadBatchFxns()
 			addpath(pathtoMiji);
 			fprintf('Added private Miji to path: %s.\n',pathtoMiji)
 		end
-		try
-			currP=pwd;
-			Miji;
-			% MIJ.start;
-			cd(currP);
-			MIJ.exit;
-		catch err
-			disp(repmat('@',1,7))
-			disp(getReport(err,'extended','hyperlinks','on'));
-			disp(repmat('@',1,7))
-			manageMiji('startStop','start');
-			manageMiji('startStop','exit');
-		end
+		openMijiCheck();
 		% % Get Miji properly loaded in the path
 		% if exist('Miji.m')==2&&exist('MIJ','class')==0
 		% 	resetMiji;
@@ -115,10 +103,26 @@ function loadBatchFxns()
 		% end
 	elseif onPath==1
 		fprintf('Miji already in MATLAB path: %s\n',pathtoMiji);
+		openMijiCheck()
 	else
 		fprintf('No folder at specified path, retry! %s.\n',pathtoMiji)
 	end
 	% cnmfVersionDirLoad('none');
+end
+function openMijiCheck()
+	try
+		currP=pwd;
+		Miji;
+		% MIJ.start;
+		cd(currP);
+		MIJ.exit;
+	catch err
+		disp(repmat('@',1,7))
+		disp(getReport(err,'extended','hyperlinks','on'));
+		disp(repmat('@',1,7))
+		manageMiji('startStop','start');
+		manageMiji('startStop','exit');
+	end
 end
 function onPath = subfxnCheckPath(thisRootPath)
 	pathCell = regexp(path, pathsep, 'split');
