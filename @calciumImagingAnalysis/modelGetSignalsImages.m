@@ -304,8 +304,8 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 				obj.nSignals{thisFileNum} = size(signalPeaks,1);
 			end
 
-			inputSignals = normalizeCELLMaxTraces(inputSignals,inputImages);
-			inputSignals2 = normalizeCELLMaxTraces(inputSignals2,inputImages);
+			inputSignals = normalizeSignalExtractionActivityTraces(inputSignals,inputImages);
+			inputSignals2 = normalizeSignalExtractionActivityTraces(inputSignals2,inputImages);
 
 			% inputSignals = extractAnalysisOutput.traces;
 			% inputImages = permute(extractAnalysisOutput.filters,[3 1 2]);
@@ -364,8 +364,8 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 			inputSignals2 = double(emAnalysisOutput.cellTraces);
 
 			% Convert to dF/F values
-			inputSignals = normalizeCELLMaxTraces(inputSignals,inputImages);
-			inputSignals2 = normalizeCELLMaxTraces(inputSignals2,inputImages);
+			inputSignals = normalizeSignalExtractionActivityTraces(inputSignals,inputImages);
+			inputSignals2 = normalizeSignalExtractionActivityTraces(inputSignals2,inputImages);
 
 			% inputSignals = double(emAnalysisOutput.scaledProbabilityAlt);
 
