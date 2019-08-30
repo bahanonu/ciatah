@@ -14,6 +14,7 @@ function [signalMovie] = createSignalBasedMovie(inputSignals,inputImages,varargi
 
 	% changelog
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
+        % 2019.08.26 [10:45:29] - Additional threshold, peak support
 	% TODO
 		%
 
@@ -31,6 +32,7 @@ function [signalMovie] = createSignalBasedMovie(inputSignals,inputImages,varargi
 	% 'yes', no'
 	options.normalizeOutputMovie = 'yes';
 	options.waitbarOn = 1;
+    options.imageThreshold = 0.4;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -51,9 +53,9 @@ function [signalMovie] = createSignalBasedMovie(inputSignals,inputImages,varargi
 		mSize = size(inputImages);
 		movieDims = [mSize(1) mSize(2) nPts];
 		signalMovie = double(NaN(movieDims));
-		inputImagesBinary = thresholdImages(inputImages,'binary',1);
+		inputImagesBinary = thresholdImages(inputImages,'binary',1,'threshold',options.imageThreshold);
 		if isempty(options.inputPeaks)
-			[signalPeaks, signalPeakIdx] = computeSignalPeaks(inputSignals,'makePlots',0,'makeSummaryPlots',0);
+			[signalPeaks, signalPeakIdx] = computeSignalPeaks(inputSignals,'makePlots',0,'makeSummaryPlots',0,'numStdsForThresh',2.3,'detectMethod','raw');
 		else
 			signalPeaks = options.inputPeaks;
 		end
