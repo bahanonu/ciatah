@@ -65,7 +65,7 @@ function obj = viewMovieRegistrationTest(obj)
 		frameList = str2num(movieSettings{1});
 		nTestToRun = str2num(movieSettings{2});
 		fileFilterRegexp = movieSettings{3};
-		inputDatasetName = movieSettings{4};
+		inputDatasetName = movieSettings{4}; obj.inputDatasetName = inputDatasetName;
 		treatMoviesAsContinuousSwitch = str2num(movieSettings{5});
 		runMotionCorrection = str2num(movieSettings{6});
 		montageDownsampleFactorSpace = str2num(movieSettings{7});
