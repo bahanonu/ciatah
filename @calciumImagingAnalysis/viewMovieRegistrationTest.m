@@ -45,7 +45,8 @@ function obj = viewMovieRegistrationTest(obj)
 				'start:end frames (leave blank for all)',...
 				'number of turboreg test to run',...
 				'movie regular expression',...
-				'HDF5 dataset name',...
+				'Input file HDF5 dataset name',...
+				'Output file HDF5 dataset name (DO NOT CHANGE unless necessary)',...
 				'Treat movie as continuous (1 = yes, 0 = no)',...
 				'Run motion corrections [turboreg] (1 = yes, 0 = no)',...
 				'Spatial downsample montage movie (e.g. 4 for 4x downsampling)',...
@@ -55,6 +56,7 @@ function obj = viewMovieRegistrationTest(obj)
 				'1:500',...
 				'3',...
 				'concat',...
+				obj.inputDatasetName,...
 				'/1',...
 				'1',...
 				'1',...
@@ -65,10 +67,11 @@ function obj = viewMovieRegistrationTest(obj)
 		frameList = str2num(movieSettings{1});
 		nTestToRun = str2num(movieSettings{2});
 		fileFilterRegexp = movieSettings{3};
-		inputDatasetName = movieSettings{4};
-		treatMoviesAsContinuousSwitch = str2num(movieSettings{5});
-		runMotionCorrection = str2num(movieSettings{6});
-		montageDownsampleFactorSpace = str2num(movieSettings{7});
+		inputDatasetName = movieSettings{4}; obj.inputDatasetName = inputDatasetName;
+		outputDatasetName = movieSettings{5};
+		treatMoviesAsContinuousSwitch = str2num(movieSettings{6});
+		runMotionCorrection = str2num(movieSettings{7});
+		montageDownsampleFactorSpace = str2num(movieSettings{8});
 
 		% Get registration settings for each run
 		registrationStruct = {};
@@ -155,7 +158,7 @@ function obj = viewMovieRegistrationTest(obj)
 				newDir = [obj.inputFolders{obj.fileNum} filesep 'tregRun0' num2str(testNo)];
 				savePathStr = [newDir filesep obj.folderBaseSaveStr{obj.fileNum} '_turboreg.h5'];
 				if (~exist(newDir,'dir')) mkdir(newDir); end;
-				movieSaved = writeHDF5Data(inputMovie,savePathStr);
+				movieSaved = writeHDF5Data(inputMovie,savePathStr,'datasetname',outputDatasetName);
 
 				savedMovieList{thisFileNumIdx}{testNo} = savePathStr;
 
@@ -182,8 +185,8 @@ function obj = viewMovieRegistrationTest(obj)
 			inputMovieRegAllTmp = {inputMovie};
 			for testNo = 1:nTestToRun
 				movieListTest = savedMovieList{thisFileNumIdx}{testNo};
-				[inputMovieReg] = loadMovieList(movieListTest,'convertToDouble',0,'frameList',[],'inputDatasetName',inputDatasetName);
-				[inputMovieRegAllTmp{testNo+1}] = loadMovieList(movieListTest,'convertToDouble',0,'frameList',[],'inputDatasetName',inputDatasetName);
+				[inputMovieReg] = loadMovieList(movieListTest,'convertToDouble',0,'frameList',[],'inputDatasetName',outputDatasetName);
+				[inputMovieRegAllTmp{testNo+1}] = loadMovieList(movieListTest,'convertToDouble',0,'frameList',[],'inputDatasetName',outputDatasetName);
 				inputMovieRegAll{thisFileNumIdx}{1} = 1;
 				% if testNo==1
 				%     inputMovieRegAll{thisFileNumIdx}{1} = createSideBySide(inputMovie,inputMovieReg);
