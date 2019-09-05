@@ -13,6 +13,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		% 2019.05.08 [10:59:59] - Added check for required toolboxes used in class.
 		% 2019.07.25 [09:39:16] - Updated loading so that users only need to be in the root calciumImagingAnalysis path but required folders do not need to be loaded.
 		% 2019.08.20 [09:33:32] - Improved loading of folders and Miji to save time.
+		% 2019.08.30 [12:58:37] - Added Java heap space memory check on initialization.
 	% TODO
 		%
 
@@ -476,6 +477,7 @@ classdef calciumImagingAnalysis < dynamicprops
 
 			obj = initializeObj(obj);
 
+			display(repmat('*',1,42))
 			display('Done initializing calciumImagingAnalysis!')
 			display(repmat('*',1,42))
 
@@ -723,6 +725,21 @@ classdef calciumImagingAnalysis < dynamicprops
 				% warning('no signal data input!!!')
 			end
 			% load stimulus tables
+
+			display(repmat('*',1,42))
+			% Check java heap size
+			try
+				javaHeapSpaceSizeGb = java.lang.Runtime.getRuntime.maxMemory*1e-9;
+				if javaHeapSpaceSizeGb<6.5
+					warning(sprintf('Java max heap memory is %0.3f Gb, this is too small to run Miji. Please put "java.opts" file in the MATLAB start-up path and restart MATLB before continuing.\n',javaHeapSpaceSizeGb));
+				else
+					fprintf('Java max heap memory is %0.3f Gb, this should be sufficient to run Miji. Please change "java.opts" file to increase heap space if run into Miji memory errors.\n',javaHeapSpaceSizeGb);
+				end
+			catch err
+				disp(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				disp(repmat('@',1,7))
+			end
 		end
 
 		function obj = loadBatchFunctionFolders(obj)

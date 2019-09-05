@@ -9,6 +9,7 @@ function obj = viewMovieRegistrationTest(obj)
 
 	% changelog
 		% 2019.07.26 [14:00:00] - Additional AVI support.
+		% 2019.08.30 [12:58:37] - Fallback to playMovie in cases of Miji errors and addition of selection for MATLAB player support.
 	% TODO
 		%
 
@@ -72,6 +73,11 @@ function obj = viewMovieRegistrationTest(obj)
 		treatMoviesAsContinuousSwitch = str2num(movieSettings{6});
 		runMotionCorrection = str2num(movieSettings{7});
 		montageDownsampleFactorSpace = str2num(movieSettings{8});
+
+		usrIdxChoiceStr = {'matlab','imagej'};
+		scnsize = get(0,'ScreenSize');
+		[sel, ok] = listdlg('ListString',usrIdxChoiceStr,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','which video player to use?');
+		options.videoPlayer = usrIdxChoiceStr{sel};
 
 		% Get registration settings for each run
 		registrationStruct = {};
@@ -170,11 +176,7 @@ function obj = viewMovieRegistrationTest(obj)
 			end
 		end
 
-		% view the movies
-		% Miji
-		% MIJ.start;
-		manageMiji('startStop','start');
-
+		% Make movie montages
 		for thisFileNumIdx = 1:nFilesToAnalyze
 			thisFileNum = fileIdxArray(thisFileNumIdx);
 			obj.fileNum = thisFileNum;
@@ -198,6 +200,13 @@ function obj = viewMovieRegistrationTest(obj)
 			[inputMovieRegAll{thisFileNumIdx}{2}] = dfofMovie(inputMovieRegAll{thisFileNumIdx}{1});
 
 		end
+
+		% view the movies
+		% Miji
+		% MIJ.start;
+		if strcmp(options.videoPlayer,'imagej')
+			manageMiji('startStop','start');
+		end
 		for thisFileNumIdx = 1:nFilesToAnalyze
 			thisFileNum = fileIdxArray(thisFileNumIdx);
 			obj.fileNum = thisFileNum;
@@ -207,21 +216,49 @@ function obj = viewMovieRegistrationTest(obj)
 			for testNo = 1:nTestToRun
 				display(repmat('*',1,14))
 				display([num2str(testNo) '/' num2str(nTestToRun)]);
-				MIJ.createImage([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ', ' num2str(testNo) '/' num2str(nTestToRun) ': ' obj.folderBaseSaveStr{obj.fileNum}],inputMovieRegAll{thisFileNumIdx}{testNo}, true);
-				msgbox('Goto Image->Adjust->Brightness/Contrast and then select different boxes to adjust contrast for easier viewing. Click on movie to open next dialog.','Note to user','modal')
-				% MIJ.run('In [+]');
-				% MIJ.run('In [+]');
-				MIJ.run('Start Animation [\]');
-				if testNo==1
-					uiwait(msgbox('Press OK to move onto dfof version of the movie','Success','modal'));
-				else
-					uiwait(msgbox('Press OK to move onto next movie','Success','modal'));
+				switch options.videoPlayer
+					case 'matlab'
+						try
+							playMovie(inputMovieRegAll{thisFileNumIdx}{testNo});
+						catch err
+							disp(repmat('@',1,7))
+							disp(getReport(err,'extended','hyperlinks','on'));
+							disp(repmat('@',1,7))
+						end
+					case 'imagej'
+						try
+							MIJ.createImage([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ', ' num2str(testNo) '/' num2str(nTestToRun) ': ' obj.folderBaseSaveStr{obj.fileNum}],inputMovieRegAll{thisFileNumIdx}{testNo}, true);
+							msgbox('Goto Image->Adjust->Brightness/Contrast and then select different boxes to adjust contrast for easier viewing. Click on movie to open next dialog.','Note to user','modal')
+							% MIJ.run('In [+]');
+							% MIJ.run('In [+]');
+							MIJ.run('Start Animation [\]');
+							if testNo==1
+								uiwait(msgbox('Press OK to move onto dfof version of the movie','Success','modal'));
+							else
+								uiwait(msgbox('Press OK to move onto next movie','Success','modal'));
+							end
+							MIJ.run('Close All Without Saving');
+						catch err
+							disp(repmat('@',1,7))
+							disp(getReport(err,'extended','hyperlinks','on'));
+							disp(repmat('@',1,7))
+							try
+								playMovie(inputMovieRegAll{thisFileNumIdx}{testNo});
+							catch err
+								disp(repmat('@',1,7))
+								disp(getReport(err,'extended','hyperlinks','on'));
+								disp(repmat('@',1,7))
+							end
+						end
+					otherwise
+						% body
 				end
-				MIJ.run('Close All Without Saving');
 			end
 		end
 		% MIJ.exit;
-		manageMiji('startStop','exit');
+		if strcmp(options.videoPlayer,'imagej')
+			manageMiji('startStop','exit');
+		end
 	catch err
 		display(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));

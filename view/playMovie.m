@@ -18,6 +18,7 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 		% 2014.02.19 [12:13:36] added dfof and normalization to list of movie modifications
 		% 2014.03.21 [00:43:22] can now label
 		% 2019.05.21 [22:23:42] Major changes to display of images and line plots by updating underlying graphics handle data instead of calling imagesc, plot, etc. Several other plotting changes to make faster and avoid non-responsive keyboard inputs. Changed how line plot is made so loops signal without skips in the plot.
+		% 2019.08.30 [13:44:09] - Updated contrast adjustment selection to also allow use of imcontrast and improved display of two movies contrast.
 
 	% ========================
 	% options
@@ -151,6 +152,8 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 		subplot(subplotRows,subplotCols,subplotNum);
 		imagesc(extraMovieFrame);
 		axHandle2 = gca;
+
+		% axHandle2.Toolbar.Visible = 'off';
 		if colorbarsOn==1
 			set(gcf,'SizeChangedFcn',@(hObject,event) resizeui(hObject,event,axHandle2,colorbarsOn));
 		end
@@ -191,6 +194,9 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 
 	imagesc(squeeze(inputMovie(:,:,1)))
 	axHandle = gca;
+
+	% axHandle.Toolbar.Visible = 'off';
+
 	box off;
 	if ~isempty(options.extraLinePlot)
 		% axis square
@@ -215,7 +221,7 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 		options.extraTitleText = [10,options.extraTitleText];
 	end
 	% supTitleStr = [10,10,10,10,'e:exit    q:exit all    g:goto frame    p:pause/play    r:rewind',10,'f:forward    j:contrast    l:label    i:imagej	c:crop',10,'    d:\DeltaF/F    a:downsample    n:normalize    m:\Deltacolormap    ',10,'+:speed    -:slow    ]:+1 frame    [:-1 frame    movie dims: ' num2str(size(inputMovie)),'    ',strrep(options.extraTitleText,'\','/'),10,repmat(' ',1,7),10,10];
-	supTitleStr = [10,'e:exit    q:exit all    g:goto frame    p:pause/play    r:rewind',10,'f:forward    j:contrast    l:label    i:imagej	c:crop',10,'    d:\DeltaF/F    a:downsample    n:normalize    m:\Deltacolormap    ',10,'+:speed    -:slow    ]:+1 frame    [:-1 frame    movie dims: ' num2str(size(inputMovie)),'    ',strrep(options.extraTitleText,'\','/')];
+	supTitleStr = [10,'E:exit    Q:exit all    G:goto frame    P:pause/play    R:rewind',10,'F:forward    J:adjust contrast    L:label    I:imagej    C:crop',10,'    D:\DeltaF/F    A:downsample    N:normalize    M:change colormap    ',10,'+:speed    -:slow    ]:+1 frame    [:-1 frame    movie dims: ' num2str(size(inputMovie)),'    ',strrep(options.extraTitleText,'\','/')];
 	if isempty(options.extraTitleText)
 		supTitleStr = [supTitleStr 10]
 	end
@@ -347,10 +353,13 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 			% axis square;
 			% axis equal tight
 
-			try
-				caxis([minMovie(1) maxMovie(1)]);
-			catch
-				caxis([-0.05 0.1]);
+			if frame==1
+				try
+					caxis(axHandle,[minMovie(1) maxMovie(1)]);
+				catch
+					caxis(axHandle,[-0.05 0.1]);
+				end
+				% disableDefaultInteractivity(axHandle)
 			end
 
 			if colorbarSwitch==1&&colorbarsOn==1
@@ -449,10 +458,13 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 				% axis square;
 				% axis equal tight;
 
-				try
-					caxis([minMovie(2) maxMovie(2)]);
-				catch
-					caxis([-0.05 0.1]);
+				if frame==1
+					try
+						caxis(axHandle2,[minMovie(2) maxMovie(2)]);
+					catch
+						caxis(axHandle2,[-0.05 0.1]);
+					end
+					% disableDefaultInteractivity(axHandle2)
 				end
 
 				if colorbarSwitchTwo==1&&colorbarsOn==1
@@ -690,25 +702,96 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 				case 102 %'f' %forward
 					dirChange = 1;
 				case 106 %'j' %change contrast
-					[usrIdxChoice ok] = getUserMovieChoice({'optimal','1st movie','2nd movie','1st->2nd','2nd->1st'});
+
+					[usrIdxChoice ok] = getUserMovieChoice({'Adjust 1st movie contrast','Adjust 2nd movie contrast','optimal dF/F','Copy contrast from 1st->2nd','Copy contrast from 2nd->1st'});
+
+
 					if usrIdxChoice==4
 						maxMovie(2) = maxMovie(1);
 						minMovie(2) = minMovie(1);
 					elseif usrIdxChoice==5
 						maxMovie(1) = maxMovie(2);
 						minMovie(1) = minMovie(2);
-					elseif usrIdxChoice==1
+					elseif usrIdxChoice==3
 						maxMovie(1) = 0.15;
 						minMovie(1) = -0.01;
 					else
-						% since optimal is first, adjust to be correct
-						usrIdxChoice = usrIdxChoice-1;
-						answer = inputdlg({'max','min'},'Movie min/max for contrast',1,{num2str(maxMovie(usrIdxChoice)),num2str(minMovie(usrIdxChoice))})
-						maxMovie(usrIdxChoice) = str2num(answer{1});
-						minMovie(usrIdxChoice) = str2num(answer{2});
+						[sel, ok] = listdlg('ListString',{'Adjustable contrast GUI','Contrast input dialog'},'ListSize',[300 300]);
+
+						fixMultiplier = 1e5;
+
+						if usrIdxChoice==1
+							thisFrameTmp = double(thisFrame);
+							thisHandle = axHandle;
+						elseif usrIdxChoice==2&&exist('axHandle2','var')
+							thisFrameTmp = double(extraMovieFrame);
+							thisHandle = axHandle2;
+						else
+							thisFrameTmp = double(thisFrame);
+							thisHandle = axHandle;
+							usrIdxChoice = 1;
+						end
+						if sel==1
+							try
+								% since optimal is first, adjust to be correct
+								% usrIdxChoice = usrIdxChoice-1;
+								warning off
+
+								montageHandle = findobj(thisHandle,'Type','image');
+								set(montageHandle,'Cdata',thisFrameTmp*fixMultiplier,'AlphaData',imAlpha);
+								% minCurr = nanmin(thisFrameTmp(:)*fixMultiplier);
+								% maxCurr = nanmax(thisFrameTmp(:)*fixMultiplier);
+								minCurr = minMovie(usrIdxChoice)*fixMultiplier;
+								maxCurr = maxMovie(usrIdxChoice)*fixMultiplier;
+								caxis(thisHandle,[minCurr maxCurr]);
+
+								htool = imcontrast(thisHandle);
+								set(htool,'WindowStyle','normal');
+								caxis(thisHandle,[minCurr maxCurr]);
+
+								% htoolMan = htool.Children(1).Children(2).Children.Children;
+								% % Change max
+								% htoolMan(2).Vertices(:,1) = htoolMan(2).Vertices(:,1)-10;
+								% htoolMan(5).XData = htoolMan(5).XData-10;
+								% htoolMan(7).Vertices(3:4,1) = htoolMan(7).Vertices(3:4,1)-10;
+								% htoolMinMax(2).String = num2str(str2num(htoolMinMax(2).String)-10);
+
+								% % Change min
+								% htoolMinMax = htool.Children(1).Children(3).Children.Children(2).Children.Children(2).Children;
+
+
+								warning on
+								uiwait(msgbox('Adjust the contrast then hit OK','Contrast'));
+								maxMovie(usrIdxChoice) = str2num(htool.Children(1).Children(3).Children.Children(2).Children.Children(2).Children(2).String)/fixMultiplier;
+								minMovie(usrIdxChoice) = str2num(htool.Children(1).Children(3).Children.Children(2).Children.Children(2).Children(5).String)/fixMultiplier;
+								disp(['New max: ' num2str(maxMovie(usrIdxChoice)) ' and min: ' num2str(minMovie(usrIdxChoice))])
+
+								% montageHandle = findobj(axHandle,'Type','image');
+								% set(montageHandle,'Cdata',thisFrame,'AlphaData',imAlpha);
+								caxis(thisHandle,[minMovie(usrIdxChoice) maxMovie(usrIdxChoice)]);
+								close(htool);
+							catch err
+								disp(repmat('@',1,7))
+								disp(getReport(err,'extended','hyperlinks','on'));
+								disp(repmat('@',1,7))
+							end
+						else
+							try
+								answer = inputdlg({'max','min'},'Movie min/max for contrast',1,{num2str(maxMovie(usrIdxChoice)),num2str(minMovie(usrIdxChoice))})
+								maxMovie(usrIdxChoice) = str2num(answer{1});
+								minMovie(usrIdxChoice) = str2num(answer{2});
+								caxis(thisHandle,[minMovie(usrIdxChoice) maxMovie(usrIdxChoice)]);
+							catch err
+								disp(repmat('@',1,7))
+								disp(getReport(err,'extended','hyperlinks','on'));
+								disp(repmat('@',1,7))
+							end
+						end
+
 					end
 					colorbarSwitch = 1;
 					colorbarSwitchTwo = 1;
+
 				case 108 %'l' %label frame
 					if ~isempty(options.labelLegend)
 						[labelID, ok] = listdlg('ListString',options.labelLegend,'PromptString','toggle label(s), can select multiple to switch','ListSize' ,[400 350]);
@@ -944,7 +1027,7 @@ function [coords] = getCropCoords(thisFrame)
 end
 function [usrIdxChoice ok] = getUserMovieChoice(usrIdxChoiceStr)
 	% usrIdxChoiceStr = {'1st movie','2nd movie'};
-	[sel, ok] = listdlg('ListString',usrIdxChoiceStr);
+	[sel, ok] = listdlg('ListString',usrIdxChoiceStr,'ListSize',[300 300]);
 	usrIdxChoiceList = 1:length(usrIdxChoiceStr);
 	usrIdxChoice = usrIdxChoiceList(sel);
 end

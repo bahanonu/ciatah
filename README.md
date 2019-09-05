@@ -38,7 +38,7 @@ Below are steps needed to quickly get started using the `calciumImagingAnalysis`
 - Clone the `calciumImagingAnalysis` repository (using GitHub desktop or command line) or download the repository zip and unzip.
 - Point the MATLAB path to the `calciumImagingAnalysis` folder.
 - Run the below MATLAB commands.
-- For Fiji dependency, when path to `Miji.m` (`\Fiji.app\scripts` folder) is requested, likely in `private\programs\FIJI_PATH\Fiji.app\scripts` unless the user requested a custom path or on OSX (in which case, find the install directory).
+- For Fiji dependency, when path to `Miji.m` (`\Fiji.app\scripts` folder) is requested, likely in `private\programs\FIJI_PATH\Fiji.app\scripts` unless the user requested a custom path or on OSX (in which case, find Fiji the install directory). If you run into Java heap space memory errors, make sure "java.opts" file is in MATLAB start-up folder or that `calciumImagingAnalysis` folder is the MATLAB start-up folder.
 - `calciumImagingAnalysis` often uses regular expressions to find relevant movie and other files in folders to analyze.
  - For example, by default it looks for any files containing `concat`, e.g. `concat_recording_20140401_180333.h5` (test data). If you have a file called `rawData_2019_01_01_myInterestingExperiment.avi` and all your raw data files start with `rawData_` then change the regular expression to `rawData_` when requested by the repository. See `setMovieInfo` module.
 - External software packages are downloaded into `_external_programs` folder and should be placed there if done manually.
@@ -405,6 +405,8 @@ If the imaging field-of-view includes cells from other brain regions, they can b
 ******************************************
 
 ## Cross-session cell alignment with `computeMatchObjBtwnTrials`
+
+This step allows users to align cells across imaging sessions (e.g. those taken on different days). See the `Cross session cell alignment` wiki page for more details and notes on cross-session alignment.
 
 - Users run `computeMatchObjBtwnTrials` to do cross-day alignment (first row in pictures below).
 - Users then run `viewMatchObjBtwnSessions` to get a sense for how well the alignment ran.
