@@ -19,6 +19,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% 2019.07.22 [16:30:30] - Improved support for multi-iteration turboreg and outputting of turboreg without filtering and with filtering in the same run seamlessly.
 		% 2019.07.26 [14:00:00] - Additional improvements in adding movie borders based on turboreg outputs.
 		% 2019.08.07 [18:23:05] - Fix for using the _noSpatialFilter_ output where was registering to already registered iterations.
+		% 2019.09.06 [23:41:50]/2019.09 - Improved downsampling support.
 	% TODO
 		% Insert NaNs or mean of the movie into dropped frame location, see line 260
 		% Allow easy switching between analyzing all files in a folder together and each file in a folder individually
@@ -868,6 +869,15 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				reverseStr = cmdWaitbar(frame,downZ,reverseStr,'inputStr',[secondaryDownsampleType 'spatially downsampling matrix']);
 			end
 		end
+
+		% Adjust crop coordinates if downsampling in space takes place before turboreg
+		disp(['Adjusting motion correction crop coordinates for spatial downsampling: ' num2str(turboRegCoords{fileNum}{movieNo})]);
+		orderCheck = find(strcmp(analysisOptionList,'downsampleSpace'))<find(strcmp(analysisOptionList,'turboreg'));
+		if ~isempty(turboRegCoords{fileNum}{movieNo})&&orderCheck==1
+			turboRegCoords{fileNum}{movieNo} = floor(turboRegCoords{fileNum}{movieNo}/options.downsampleFactor);
+		end
+		disp(['Adjusted motion correction crop coordinates due to spatial downsampling: ' num2str(turboRegCoords{fileNum}{movieNo})]);
+
 		thisMovie = thisMovie(1:downX,1:downY,:);
 		j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
 		drawnow;

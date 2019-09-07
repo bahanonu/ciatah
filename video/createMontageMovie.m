@@ -3,6 +3,8 @@ function [inputMovies] = createMontageMovie(inputMovies,varargin)
 	% adapted from signalSorter and other subfunction.
 	% Biafra Ahanonu
 	% started: 2015.04.09
+	% changelog
+		% 2019.09.05 [16:42:29]
 	%========================
 	% text to put on each movie
 	options.identifyingText = [];
@@ -55,12 +57,12 @@ function [inputMovies] = createMontageMovie(inputMovies,varargin)
 			% get the movie
 			if strcmp(class(inputMovies{movieNo}),'char')
 				inputMovies{movieNo} = loadMovieList(inputMovies{movieNo},'convertToDouble',options.convertToDouble,'frameList',options.frameList,'inputDatasetName',options.inputDatasetName);
-				if options.downsampleFactorSpace~=1
-					inputMovies{movieNo} = downsampleMovie(inputMovies{movieNo},'downsampleDimension','space','downsampleFactor',options.downsampleFactorSpace);
-				end
-				if options.downsampleFactorTime~=1
-					inputMovies{movieNo} = downsampleMovie(inputMovies{movieNo},'downsampleDimension','time','downsampleFactor',options.downsampleFactorTime);
-				end
+			end
+			if options.downsampleFactorSpace~=1
+				inputMovies{movieNo} = downsampleMovie(inputMovies{movieNo},'downsampleDimension','space','downsampleFactor',options.downsampleFactorSpace);
+			end
+			if options.downsampleFactorTime~=1
+				inputMovies{movieNo} = downsampleMovie(inputMovies{movieNo},'downsampleDimension','time','downsampleFactor',options.downsampleFactorTime);
 			end
 			if options.rotateMovies==1
 				subfxnDisp('rotating...')
