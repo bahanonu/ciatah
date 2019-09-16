@@ -592,6 +592,14 @@ function obj = viewMovie(obj)
 		% MIJ.exit;
 		manageMiji('startStop','exit');
 	end
+	try
+		msgboxHandle = findall(0,'Type','figure','Name','Success');
+		close(msgboxHandle)
+	catch err
+		disp(repmat('@',1,7))
+		disp(getReport(err,'extended','hyperlinks','on'));
+		disp(repmat('@',1,7))
+	end
 
 	function [movieDecision] = playMovieThisFunction()
 		displayStrMovie = [num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) '[' num2str(movieNo) '/' num2str(nMovies) ']' ': ' obj.folderBaseDisplayStr{obj.fileNum}];
@@ -606,7 +614,9 @@ function obj = viewMovie(obj)
 				try
 					% Miji;
 					% MIJ.createImage([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) '[' num2str(movieNo) '/' num2str(nMovies) ']' ': ' obj.folderBaseSaveStr{obj.fileNum}], primaryMovie, true);
-					msgbox('Click movie to open next dialog box.','Success','normal')
+					s.Interpreter = 'tex';
+					s.WindowStyle = 'replace';
+					msgbox('Click movie to open next dialog box.','Success','normal',s)
 					MIJ.createImage(displayStrMovie, primaryMovie, true);
 					% if size(primaryMovie,1)<300
 					% 	for foobar=1:3; MIJ.run('In [+]'); end

@@ -54,6 +54,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 		% 2019.08.19 [18:07:27] - Added zoom and other functionality and a lock-check to prevent skipping forward to new cells based on pressing keyboard too long carrying over keypress into next source output, causing it to skip over outputs. Added progress bar for cell, non-cell, and unknown.
 		% 2019.08.30 [14:46:22] - Update to use imcontrast to adjust image/movie contrast.
 		% 2019.09.12 [15:39:12] - Legend is now closed on exiting signalSorter.
+		% 2019.09.16 [11:39:28] - Improved computing of min/max of movie for display purposes.
 	% TODO
 		% New GUI interface to allow users to scroll through video and see cell activity at that point
 		% DONE: allow option to mark rest as bad signals
@@ -79,6 +80,8 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 	options.frameList = [];
 	% Number of frames to sample of inputMovie to get statistics
 	options.nFrameSampleInputMovie = 10;
+	% Float: (Range: 0:1) fraction of movie to sample of inputMovie to get statistics
+	options.fractionSampleInputMovie = 0.01;
 	% Binary: 1 = read movie from HDD, 0 = load entire movie into RAM
 	options.readMovieChunks = 0;
 	% movie stats
@@ -237,7 +240,17 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 		outputColormap3,...
 		options.colormapColorList];
 	%% ============================
-	instructionStr = subfxnCreateLegend();
+	try
+		instructionStr = subfxnCreateLegend();
+	catch
+		try
+			instructionStr = subfxnCreateLegend();
+		catch err
+			disp(repmat('@',1,7))
+			disp(getReport(err,'extended','hyperlinks','on'));
+			disp(repmat('@',1,7))
+		end
+	end
 	%% ============================
 
 	disp(repmat('=',1,21))
@@ -269,10 +282,14 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 			% offsetMovie{signalPeakFrameNo} = [yLow-1 xLow-1 signalPeaksThis(signalPeakFrameNo)-1];
 			% blockMovie{signalPeakFrameNo} = [length(yLims) length(xLims) 1];
 			% [signalImagesCrop] = readHDF5Subset(inputMovie, offsetMovie, blockMovie,'datasetName',options.inputDatasetName,'displayInfo',0);
-			options.movieMax = NaN;
-			options.movieMin = NaN;
+			% options.movieMax = NaN;
+			% options.movieMin = NaN;
+
+			options.movieMax = nanmax(tmpMovie(:));
+			options.movieMin = nanmin(tmpMovie(:));
 		else
-			tmpMovie = options.inputMovie(1:round(numel(options.inputMovie)*0.05):numel(options.inputMovie));
+			% tmpMovie = options.inputMovie(1:round(numel(options.inputMovie)*0.05):numel(options.inputMovie));
+			tmpMovie = options.inputMovie(floor(linspace(1,numel(options.inputMovie),round(numel(options.inputMovie)*options.fractionSampleInputMovie))));
 		end
 
 		if isnan(options.movieMax)
@@ -306,6 +323,14 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 			end
 		end
 		clear tmpMovie;
+	end
+
+	% Force to not be NaN
+	if isnan(options.movieMax)
+		options.movieMax = 0.1;
+	end
+	if isnan(options.movieMin)
+		options.movieMin = 0;
 	end
 
 

@@ -29,8 +29,11 @@ classdef calciumImagingAnalysis < dynamicprops
 		% Float: estimated um per pixel
 		MICRON_PER_PIXEL =  2.51; % 2.37;
 
+		% Int: set the default UI font size
+		fontSizeGui = 11;
+
 		defaultObjDir = pwd;
-		classVersion = 'v3.3.2-20190825';
+		classVersion = 'v3.4.1-20190916';
 		serverPath = '';
 		privateSettingsPath = ['private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
 		% place where functions can temporarily story user settings
@@ -1193,7 +1196,11 @@ classdef calciumImagingAnalysis < dynamicprops
 
 		function obj = runPipeline(obj,varargin)
 			setFigureDefaults();
-			set(0, 'DefaultUICOntrolFontSize', 14)
+			try
+				set(0, 'DefaultUICOntrolFontSize', obj.fontSizeGui)
+			catch
+				set(0, 'DefaultUICOntrolFontSize', 11)
+			end
 			close all;clc;
 
 			fxnsToRun = {...
@@ -1210,11 +1217,14 @@ classdef calciumImagingAnalysis < dynamicprops
 			'initializeObj',
 			'setMainSettings',
 			'',
-			'------- PREPROCESS -------',
+			'------- DATA CHECK/LOAD/EXPORT -------',
 			'modelGetFileInfo',
 			'modelVerifyDataIntegrity',
 			'modelBatchCopyFiles',
+			'modelLoadSaveData',
+			'modelExportData',
 			'',
+			'------- PREPROCESS -------',
 			'modelDownsampleRawMovies',
 			'viewMovieFiltering',
 			'viewMovieRegistrationTest',
@@ -1222,6 +1232,9 @@ classdef calciumImagingAnalysis < dynamicprops
 			'viewMovie',
 			'modelPreprocessMovie',
 			'modelModifyMovies',
+			'removeConcurrentAnalysisFiles',
+			'',
+			'------- CELL/SIGNAL EXTRACTION -------',
 			'modelExtractSignalsFromMovie',
 			'viewCellExtractionOnMovie',
 			'removeConcurrentAnalysisFiles',

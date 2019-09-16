@@ -286,16 +286,16 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 	firstFrame = squeeze(inputMovie(:,:,1));
 	maxAdjFactor = 1;
 	if ~isempty(options.movieMinMax)
-		minMovie(1) = options.movieMinMax(1);
-		maxMovie(1) = options.movieMinMax(2);
-		minMovie(2) = options.movieMinMax(1);
-		maxMovie(2) = options.movieMinMax(2);
+		minMovie(1) = double(options.movieMinMax(1));
+		maxMovie(1) = double(options.movieMinMax(2));
+		minMovie(2) = double(options.movieMinMax(1));
+		maxMovie(2) = double(options.movieMinMax(2));
 	else
-		maxMovie(1) = nanmax(inputMovie(:));
-		minMovie(1) = nanmin(inputMovie(:));
+		maxMovie(1) = double(nanmax(inputMovie(:)));
+		minMovie(1) = double(nanmin(inputMovie(:)));
 		if ~isempty(options.extraMovie)
-			maxMovie(2) = nanmax(options.extraMovie(:));
-			minMovie(2) = nanmin(options.extraMovie(:));
+			maxMovie(2) = double(nanmax(options.extraMovie(:)));
+			minMovie(2) = double(nanmin(options.extraMovie(:)));
 		end
 	end
 

@@ -1,10 +1,21 @@
 function [success] = example_downloadTestData(varargin)
-	% Biafra Ahanonu
 	% Downloads example test data from Stanford Box
-	% Started September 2018
+	% Biafra Ahanonu
+	% started: September 2018
+	% inputs
+		%
+	% outputs
+		%
+
+	% changelog
+		% 2019.09.16 [13:03:33] - Added 3 new imaging sessions to use for cross-day alignment and made downloading more generalized.
+	% TODO
+		%
 
 	%========================
 	options.downloadPreprocessed = 0;
+	% Download extra files
+	options.downloadExtraFiles = 1;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -16,16 +27,67 @@ function [success] = example_downloadTestData(varargin)
 	%========================
 
 	try
-		rawSavePathDownload = ['data' filesep '2014_04_01_p203_m19_check01_raw'];
-		if ~exist(rawSavePathDownload,'dir');mkdir(rawSavePathDownload);fprintf('Made folder: %s',rawSavePathDownload);end
+		downloadList = {};
+		% downloadList{end+1}.folderName
+		% downloadList{end}.fileName
+		% downloadList{end}.fileUrl
+		% downloadList{end}.metaFile
 
-		rawSavePathDownload = [rawSavePathDownload filesep 'concat_recording_20140401_180333.h5'];
-		if exist(rawSavePathDownload,'file')~=2
-			fprintf('Downloading file to %s\n',rawSavePathDownload)
-			websave(rawSavePathDownload,'https://stanford.box.com/shared/static/jmld9o9s0oemvn6oionr3lf9lwobqk9l.h5');
-		else
-			fprintf('Already downloaded %s\n',rawSavePathDownload)
+		downloadList{end+1}.folderName = '2014_04_01_p203_m19_check01_raw';
+		downloadList{end}.fileName = 'concat_recording_20140401_180333.h5';
+		downloadList{end}.fileUrl = 'https://stanford.box.com/shared/static/jmld9o9s0oemvn6oionr3lf9lwobqk9l.h5';
+		% downloadList{end}.metaFile = '';
+
+		if options.downloadExtraFiles==1
+			downloadList{end+1}.folderName = ['m80' filesep '2014_07_31_p104_m80_PAV03'];
+			downloadList{end}.fileName = 'concat_recording_20140731_105559.h5';
+			downloadList{end}.fileUrl = 'https://stanford.box.com/shared/static/ddgy2zq3as9l3paifd1hltpojk93x9oa.h5';
+			% downloadList{end}.metaFile = 'https://stanford.box.com/shared/static/6qs3dt593uud314ins8qnxrnuj9sdm87.txt';
+
+			downloadList{end+1}.folderName = ['m80' filesep '2014_08_05_p104_m80_PAV04'];
+			downloadList{end}.fileName = 'concat_recording_20140805_180816.h5';
+			downloadList{end}.fileUrl = 'https://stanford.box.com/shared/static/psm56avve4gt3tquc88r7fri2xda9woe.h5';
+			% downloadList{end}.metaFile = 'https://stanford.box.com/shared/static/gf7agxqvp3ks0mr0ovy54t067agdp4tf.txt';
+
+			downloadList{end+1}.folderName = ['m80' filesep '2014_08_06_p104_m80_PAV05'];
+			downloadList{end}.fileName = 'concat_recording_20140806_104210.h5';
+			downloadList{end}.fileUrl = 'https://stanford.box.com/shared/static/ae8qcmkxcv8ax7g1yfs9qjp010gqyip3.h5';
+			% downloadList{end}.metaFile = 'https://stanford.box.com/shared/static/ja18hyade4jmh6czw0vxpxosiu3i9j9e.txt';
 		end
+		nFiles = length(downloadList);
+
+		for fileNo = 1:nFiles
+			fileInfo = downloadList{fileNo};
+			rawSavePathDownload = ['data' filesep fileInfo.folderName];
+			if ~exist(rawSavePathDownload,'dir');mkdir(rawSavePathDownload);fprintf('Made folder: %s',rawSavePathDownload);end
+
+			rawSavePathDownload = [rawSavePathDownload filesep fileInfo.fileName];
+			if exist(rawSavePathDownload,'file')~=2
+				fprintf('Downloading file to %s\n',rawSavePathDownload)
+				websave(rawSavePathDownload,fileInfo.fileUrl);
+			else
+				fprintf('Already downloaded %s\n',rawSavePathDownload)
+			end
+
+			% rawSavePathDownload = [rawSavePathDownload filesep fileInfo.metaFile];
+			% if exist(rawSavePathDownload,'file')~=2
+			% 	fprintf('Downloading file to %s\n',rawSavePathDownload)
+			% 	websave(rawSavePathDownload,fileInfo.metaFile);
+			% else
+			% 	fprintf('Already downloaded %s\n',rawSavePathDownload)
+			% end
+		end
+
+		% rawSavePathDownload = ['data' filesep '2014_04_01_p203_m19_check01_raw'];
+		% if ~exist(rawSavePathDownload,'dir');mkdir(rawSavePathDownload);fprintf('Made folder: %s',rawSavePathDownload);end
+
+		% rawSavePathDownload = [rawSavePathDownload filesep 'concat_recording_20140401_180333.h5'];
+		% if exist(rawSavePathDownload,'file')~=2
+		% 	fprintf('Downloading file to %s\n',rawSavePathDownload)
+		% 	websave(rawSavePathDownload,'https://stanford.box.com/shared/static/jmld9o9s0oemvn6oionr3lf9lwobqk9l.h5');
+		% else
+		% 	fprintf('Already downloaded %s\n',rawSavePathDownload)
+		% end
 
 		if options.downloadPreprocessed==1
 			rawSavePathDownload = ['data' filesep '2014_04_01_p203_m19_check01']
@@ -43,6 +105,9 @@ function [success] = example_downloadTestData(varargin)
 				websave(rawSavePathDownload,'https://stanford.box.com/shared/static/azabf70oky7vriek48pb98jt2c5upj5i.h5');
 			end
 		end
+
+		% disp('Copy and paste the below folder')
+
 		success = 1;
 	catch err
 		success = 0;
