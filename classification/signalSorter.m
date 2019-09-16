@@ -1,5 +1,6 @@
 function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSignals,varargin)
-	% Displays a GUI for sorting images and their associated signals, also does preliminary sorting based on image/signal properties.
+	% Displays a GUI for sorting images (e.g. cells) and their associated signals (e.g. fluorescence activity traces). Also does preliminary sorting based on image/signal properties if requested by user.
+	% See following URL for details of GUI and tips on manual sorting: https://github.com/bahanonu/calciumImagingAnalysis/wiki/Manual-cell-sorting-of-cell-extraction-outputs.
 	% Biafra Ahanonu
 	% started: 2013.10.08
 	% Dependent code
@@ -52,7 +53,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 		% 2019.07.23 [03:42:48] - Enclosed user selections inside try-catch to better handle invalid input robustly with checks added in the subfxn as needed.
 		% 2019.08.19 [18:07:27] - Added zoom and other functionality and a lock-check to prevent skipping forward to new cells based on pressing keyboard too long carrying over keypress into next source output, causing it to skip over outputs. Added progress bar for cell, non-cell, and unknown.
 		% 2019.08.30 [14:46:22] - Update to use imcontrast to adjust image/movie contrast.
-
+		% 2019.09.12 [15:39:12] - Legend is now closed on exiting signalSorter.
 	% TODO
 		% New GUI interface to allow users to scroll through video and see cell activity at that point
 		% DONE: allow option to mark rest as bad signals
@@ -481,7 +482,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 			options.showROITrace = 0;
 			ROItraces = [];
 		else
-			[~, outputMeanImageCorrs, outputMeanImageCorrs2] = createPeakTriggeredImages(options.inputMovie, inputImages, inputSignals,'cropSize',options.cropSize,'signalPeaksArray',signalPeakIdxOriginal,'xCoords',options.coord.xCoords,'yCoords',options.coord.yCoords,'maxPeaksToUse',5,'normalizeOutput',0,'inputImagesThres',inputImagesThres,'readMovieChunks',options.readMovieChunks,'outputImageFlag',0);
+			[~, outputMeanImageCorrs, outputMeanImageCorrs2] = createPeakTriggeredImages(options.inputMovie, inputImages, inputSignals,'cropSize',options.cropSize,'signalPeaksArray',signalPeakIdxOriginal,'xCoords',options.coord.xCoords,'yCoords',options.coord.yCoords,'maxPeaksToUse',5,'normalizeOutput',0,'inputImagesThres',inputImagesThres,'readMovieChunks',options.readMovieChunks,'outputImageFlag',0,'runSecondCorr',1);
 			outputMeanImageCorrs(isnan(outputMeanImageCorrs)) = 0;
 			outputMeanImageCorrs2(isnan(outputMeanImageCorrs2)) = 0;
 			peakOutputStat.outputMeanImageCorrs = outputMeanImageCorrs(:);
@@ -578,6 +579,14 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 	inputImages = inputImages(:,:,validChoices);
 	inputSignals = inputSignals(validChoices,:);
 
+	try
+		msgboxHandle = findall(0,'Type','figure','Name','signalSorter shortcuts/legend');
+		close(msgboxHandle)
+	catch err
+		disp(repmat('@',1,7))
+		disp(getReport(err,'extended','hyperlinks','on'));
+		disp(repmat('@',1,7))
+	end
 end
 function viewObjMoviePlayer()
 	% Plays
@@ -1345,6 +1354,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 					' | Eccentricity = ' num2str(round(imgStats.Eccentricity(i)*sigDig)/sigDig)...
 					10 ...
 					'Perimeter = ' num2str(round(imgStats.Perimeter(i)*sigDig)/sigDig)...
+					' | traceAutoCorr = ' num2str(round(peakOutputStat.traceAutoCorr(i)*sigDig)/sigDig)...
 					' | EquivD = ' num2str(round(imgStats.EquivDiameter(i)*sigDig)/sigDig)];
 					% ' | Solidity = ' num2str(round(imgStats.Solidity(i)*sigDig)/sigDig)...
 				plotSignal(thisTrace,testpeaks,'',thisStr,minValTraces,maxValTraces,options,inputSignalSignal{i},inputSignalNoise{i});

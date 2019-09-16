@@ -21,7 +21,7 @@ function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
 		% 2017.06 - added in option to ensure that duplicate cells are not found.
 		% should the global ID coordinate be averaged when a match is found for the next iteration? - IMPLEMENTED
 		% 2018.08.27 [18:02:11] - Modified how global coordinates calculated so most recent match isn't given equal weight to all older matches.
-		% 2019.07.03 [11:11:20] (early 2019) - Finished adding image correlation check for matched objects
+		% 2019.07.03 [11:11:20] (early 2019) - Finished adding image correlation check for matched objects to be within matchObjBtwnTrials function.
 		% 2019.07.11 [20:46:23] - Add support for additional image correlation comparison metrics.
 	% notes
 		% the cell array of traces allows us to have arbitrary numbers of trials to align automatically,
@@ -58,6 +58,8 @@ function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
 	options.runImageCorr = 1;
 	% Str: type of image correlation to run
 	options.imageCorrType = 'corr2';
+	% Float: fraction of max value to use when binarizing image
+	options.imageCorrThres = 0.3;
 	% Float: turboreg shift will lead to slight offsets from zero, fix that.
 	options.turboregZeroThres = 1e-6;
 	% Binary: 1 = check correlation matches visually
@@ -552,13 +554,17 @@ function [OutStruct] = computeGlobalIdsPairwise(OutStruct,coords,options,nSessio
 		end
 
 		% Create anonymous function for correlation depending on user input
+		ictH = options.imageCorrThres;
+		fprintf('Using %s distance metric.\n',options.imageCorrType)
 		switch options.imageCorrType
 			case 'corr2'
 				imageCorrFxn = @(x,y) corr2(x,y);
 			case 'jaccard'
-				imageCorrFxn = @(x,y) 1-simbin(x>0,y>0,'jaccard');
+				imageCorrFxn = @(x,y) 1-simbin(x>ictH,y>ictH,'jaccard');
+			case 'ochiai'
+				imageCorrFxn = @(x,y) simbin(x>ictH,y>ictH,'ochiai');
 			otherwise
-				imageCorrFxn = @(x,y) corr2(x,y);
+				imageCorrFxn = @(x,y) simbin(x,y,options.imageCorrType);
 		end
 
 		% MATCHED: add matched objects to the global coordinates list
@@ -594,11 +600,13 @@ function [OutStruct] = computeGlobalIdsPairwise(OutStruct,coords,options,nSessio
 							continue;
 						end
 						testImg = inputImages{checkSessionList(jjj)}(:,:,checkIds(jjj));
-						rhoH(1,jjj) = imageCorrFxn(testImg,thisImg);
+						% rhoH(1,jjj) = imageCorrFxn(testImg,thisImg);
+						% Make sure images are normalized to maximum = 1 to allow quick thresholding
+						rhoH(1,jjj) = imageCorrFxn(testImg/nanmax(testImg(:)),thisImg/nanmax(thisImg(:)));
 
 						if options.checkImageCorr==1
 							testImg2 = inputImagesOriginal{checkSessionList(jjj)}(:,:,checkIds(jjj));
-							rhoH(2,jjj) = imageCorrFxn(testImg2,thisImg2);
+							rhoH(2,jjj) = imageCorrFxn(testImg2/nanmax(testImg2(:)),thisImg2/nanmax(thisImg2(:)));
 							linkAx(end+1) = subplot(2,length(checkIds),jjj);imagesc(testImg);axis equal tight;
 							linkAx(end+1) = subplot(2,length(checkIds),length(checkIds)+jjj);imagesc(testImg2);axis equal tight;
 						end

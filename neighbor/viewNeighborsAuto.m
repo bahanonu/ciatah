@@ -268,8 +268,8 @@ function viewNeighborsAuto(inputImages, inputSignals, neighborsCell, varargin)
 			title(['cell-cell image correlations']);
 			box off; axis equal tight
 			hold on;
-			plot([nListLen+0.5 nListLen+0.5],get(gca,'YLim'),'k-','LineWidth',10);
-			plot([nListLen*2+0.5 nListLen*2+0.5],get(gca,'YLim'),'k-','LineWidth',10);
+			% plot([nListLen+0.5 nListLen+0.5],get(gca,'YLim'),'k-','LineWidth',1);
+			% plot([nListLen*2+0.5 nListLen*2+0.5],get(gca,'YLim'),'k-','LineWidth',1);
 			hold off;
 			% datacursormode on
 			caxis([0 1])

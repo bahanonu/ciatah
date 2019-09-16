@@ -10,6 +10,7 @@ function obj = computeManualSortSignals(obj)
 	% changelog
 		% 2014.10.09 - finished re-implementing for behaviorAnalysis class
 		% 2019.05.15 [13:13:10] Added support for reading movie from disk to allow sorting of large imaging movies
+		% 2019.09.09 [18:14:48] - Update to handling uigetfile output.
 	% TODO
 		% ADD PERSONS NAME TO THE FILE
 
@@ -110,6 +111,7 @@ function obj = computeManualSortSignals(obj)
 					% exit if user picks nothing
 					% if folderListInfo==0; return; end
 					movieList = [folderPath filesep filePath];
+					movieList = {movieList};
 				end
 			end
 			% if ~exist('usrIdxChoiceSettings','var')
@@ -241,23 +243,23 @@ function obj = computeManualSortSignals(obj)
 			if strcmp(usrIdxChoiceMovie,'load movie')&&userIdxReadMovieChunks==0
 				% load movies
 				if isempty(movieList)
-					display('Dialog box: select movie to load.')
+					disp('Dialog box: select movie to load.')
 					[filePath,folderPath,~] = uigetfile([currentFolderPath filesep '*.*'],'select movie to load');
 					% exit if user picks nothing
 					% if folderListInfo==0; return; end
 					movieList = [folderPath filesep filePath];
 				end
 				obj.inputDatasetName = userIdxInputDatasetName;
-				[ioptions.inputMovie o m n] = loadMovieList(movieList,'inputDatasetName',userIdxInputDatasetName,'forcePerFrameRead',userIdxForcePerFrameRead,'largeMovieLoad',userIdxLargeMovieLoad);
+				[ioptions.inputMovie, o, m, n] = loadMovieList(movieList,'inputDatasetName',userIdxInputDatasetName,'forcePerFrameRead',userIdxForcePerFrameRead,'largeMovieLoad',userIdxLargeMovieLoad);
 				% 'frameList',1:1000
 				tmpMovie = ioptions.inputMovie(1:10,1:10,:);
 				if nanmean(tmpMovie(:))>0.9
-					display('setting mean to zero')
+					disp('setting mean to zero')
 					ioptions.inputMovie = ioptions.inputMovie-1;
 				end
 			elseif userIdxReadMovieChunks==1
 				if isempty(movieList)
-					display('Dialog box: select movie to load.')
+					disp('Dialog box: select movie to load.')
 					[filePath,folderPath,~] = uigetfile([currentFolderPath filesep '*.*'],'select movie to load');
 					% exit if user picks nothing
 					% if folderListInfo==0; return; end

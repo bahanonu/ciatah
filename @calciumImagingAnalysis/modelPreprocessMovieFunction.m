@@ -869,17 +869,19 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				reverseStr = cmdWaitbar(frame,downZ,reverseStr,'inputStr',[secondaryDownsampleType 'spatially downsampling matrix']);
 			end
 		end
+		thisMovie = thisMovie(1:downX,1:downY,:);
+		j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
 
 		% Adjust crop coordinates if downsampling in space takes place before turboreg
 		disp(['Adjusting motion correction crop coordinates for spatial downsampling: ' num2str(turboRegCoords{fileNum}{movieNo})]);
 		orderCheck = find(strcmp(analysisOptionList,'downsampleSpace'))<find(strcmp(analysisOptionList,'turboreg'));
 		if ~isempty(turboRegCoords{fileNum}{movieNo})&&orderCheck==1
 			turboRegCoords{fileNum}{movieNo} = floor(turboRegCoords{fileNum}{movieNo}/options.downsampleFactor);
+			% Ensure that the turbo crop coordinates are greater than zero
+			turboRegCoords{fileNum}{movieNo} = max(1,turboRegCoords{fileNum}{movieNo});
 		end
 		disp(['Adjusted motion correction crop coordinates due to spatial downsampling: ' num2str(turboRegCoords{fileNum}{movieNo})]);
 
-		thisMovie = thisMovie(1:downX,1:downY,:);
-		j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
 		drawnow;
 		% =====================
 	end

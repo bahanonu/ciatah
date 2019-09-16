@@ -14,7 +14,7 @@ function [success] = resetMiji(varargin)
 		% MIJ.exit
 
 	% changelog
-		%
+		% 2019.09.09 [18:04:10] - Updated to add fallback to modelAddOutsideDependencies to ask for path to Fiji/Miji in case it is not properly in the path or has been moved.
 	% TODO
 		%
 
@@ -58,6 +58,14 @@ function [success] = resetMiji(varargin)
 			disp(repmat('@',1,7))
 			disp(getReport(err,'extended','hyperlinks','on'));
 			disp(repmat('@',1,7))
+
+			try
+				modelAddOutsideDependencies('miji');
+			catch err
+				disp(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				disp(repmat('@',1,7))
+			end
 		end
 	end
 
