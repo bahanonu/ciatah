@@ -41,9 +41,9 @@ Below are steps needed to quickly get started using the `calciumImagingAnalysis`
 - See additional details in [Processing calcium imaging data](#processing-calcium-imaging-data) for running the full processing pipeline.
 - When issues are encountered, first check the `*Common issues and fixes` Wiki page to see if a solution is there. Else, submit a new issue or email Biafra (bahanonu [at] alum.mit.edu).
 - Notes:
-  - There are two sets of test data:
+  - There are two sets of test data that are downloaded:
     - __Single session analysis__: `data\2014_04_01_p203_m19_check01_raw` can be used to test the pipeline until the cross-session alignment step.
-    - __Batch analysis__: `data\m80` contains three imaging sessions that should be processed and can then be used for the cross-session alignment step. Users should try these sessions to get used to batched analysis.
+    - __Batch analysis__: `data\batch` contains three imaging sessions that should be processed and can then be used for the cross-session alignment step. Users should try these sessions to get used to batched analysis.
   - For Fiji dependency, when path to `Miji.m` (`\Fiji.app\scripts` folder) is requested, likely in `private\programs\FIJI_PATH\Fiji.app\scripts` unless the user requested a custom path or on OSX (in which case, find Fiji the install directory).
     - If you run into Java heap space memory errors when Miji tries to load Fiji in MATLAB, make sure "java.opts" file is in MATLAB start-up folder or that `calciumImagingAnalysis` folder is the MATLAB start-up folder.
   - `calciumImagingAnalysis` often uses regular expressions to find relevant movie and other files in folders to analyze.
@@ -60,6 +60,7 @@ loadBatchFxns;
 obj = calciumImagingAnalysis;
 
 % Download and load dependent software packages into "_external_programs" folder.
+% Also download test data into "data" folder.
 obj.loadDependencies;
 
 % [optional] Set the names calciumImagingAnalysis will look for in each folder

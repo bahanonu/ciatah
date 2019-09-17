@@ -8,7 +8,7 @@ function [success] = example_downloadTestData(varargin)
 		%
 
 	% changelog
-		% 2019.09.16 [13:03:33] - Added 3 new imaging sessions to use for cross-day alignment and made downloading more generalized.
+		% 2019.09.16 [13:03:33] - Added three new imaging sessions to use for cross-day alignment and made downloading more generalized.
 	% TODO
 		%
 
@@ -27,6 +27,7 @@ function [success] = example_downloadTestData(varargin)
 	%========================
 
 	try
+		success = 0;
 		downloadList = {};
 		% downloadList{end+1}.folderName
 		% downloadList{end}.fileName
@@ -39,20 +40,32 @@ function [success] = example_downloadTestData(varargin)
 		% downloadList{end}.metaFile = '';
 
 		if options.downloadExtraFiles==1
-			downloadList{end+1}.folderName = ['m80' filesep '2014_07_31_p104_m80_PAV03'];
-			downloadList{end}.fileName = 'concat_recording_20140731_105559.h5';
-			downloadList{end}.fileUrl = 'https://stanford.box.com/shared/static/ddgy2zq3as9l3paifd1hltpojk93x9oa.h5';
-			% downloadList{end}.metaFile = 'https://stanford.box.com/shared/static/6qs3dt593uud314ins8qnxrnuj9sdm87.txt';
+			% downloadList{end+1}.folderName = ['batch' filesep '2014_07_31_p104_m80_PAV03'];
+			% downloadList{end}.fileName = 'concat_recording_20140731_105559.h5';
+			% downloadList{end}.fileUrl = 'https://stanford.box.com/shared/static/ddgy2zq3as9l3paifd1hltpojk93x9oa.h5';
+			% % downloadList{end}.metaFile = 'https://stanford.box.com/shared/static/6qs3dt593uud314ins8qnxrnuj9sdm87.txt';
 
-			downloadList{end+1}.folderName = ['m80' filesep '2014_08_05_p104_m80_PAV04'];
-			downloadList{end}.fileName = 'concat_recording_20140805_180816.h5';
-			downloadList{end}.fileUrl = 'https://stanford.box.com/shared/static/psm56avve4gt3tquc88r7fri2xda9woe.h5';
-			% downloadList{end}.metaFile = 'https://stanford.box.com/shared/static/gf7agxqvp3ks0mr0ovy54t067agdp4tf.txt';
+			% downloadList{end+1}.folderName = ['batch' filesep '2014_08_05_p104_m80_PAV04'];
+			% downloadList{end}.fileName = 'concat_recording_20140805_180816.h5';
+			% downloadList{end}.fileUrl = 'https://stanford.box.com/shared/static/psm56avve4gt3tquc88r7fri2xda9woe.h5';
+			% % downloadList{end}.metaFile = 'https://stanford.box.com/shared/static/gf7agxqvp3ks0mr0ovy54t067agdp4tf.txt';
 
-			downloadList{end+1}.folderName = ['m80' filesep '2014_08_06_p104_m80_PAV05'];
-			downloadList{end}.fileName = 'concat_recording_20140806_104210.h5';
-			downloadList{end}.fileUrl = 'https://stanford.box.com/shared/static/ae8qcmkxcv8ax7g1yfs9qjp010gqyip3.h5';
-			% downloadList{end}.metaFile = 'https://stanford.box.com/shared/static/ja18hyade4jmh6czw0vxpxosiu3i9j9e.txt';
+			% downloadList{end+1}.folderName = ['batch' filesep '2014_08_06_p104_m80_PAV05'];
+			% downloadList{end}.fileName = 'concat_recording_20140806_104210.h5';
+			% downloadList{end}.fileUrl = 'https://stanford.box.com/shared/static/ae8qcmkxcv8ax7g1yfs9qjp010gqyip3.h5';
+			% % downloadList{end}.metaFile = 'https://stanford.box.com/shared/static/ja18hyade4jmh6czw0vxpxosiu3i9j9e.txt';
+
+			downloadList{end+1}.folderName = ['batch' filesep '2014_08_05_p104_m19_PAV08'];
+			downloadList{end}.fileName = 'concat_recording_20140805_162046.h5';
+			downloadList{end}.fileUrl = 'https://stanford.box.com/shared/static/iv3v3iqmji7fd5lvdcere8q6tlb008vb.h5';
+
+			downloadList{end+1}.folderName = ['batch' filesep '2014_08_06_p104_m19_PAV09'];
+			downloadList{end}.fileName = 'concat_recording_20140806_103546.h5';
+			downloadList{end}.fileUrl = 'https://stanford.box.com/shared/static/vyj69a7u2ay9uva9fbsyp34d8kvcvclw.h5';
+
+			downloadList{end+1}.folderName = ['batch' filesep '2014_08_07_p104_m19_PAV10'];
+			downloadList{end}.fileName = 'concat_recording_20140807_102507.h5';
+			downloadList{end}.fileUrl = 'https://stanford.box.com/shared/static/xmhgqx3atceq8f0zwqdctegiqo2d71su.h5';
 		end
 		nFiles = length(downloadList);
 

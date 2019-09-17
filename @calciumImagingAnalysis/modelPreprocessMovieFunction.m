@@ -979,7 +979,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% =====================
 	end
 	function subfxnPlotMotionCorrectionMetric()
-		figure(1865)
+		openFigure(1865)
 			try
 				meanG = mean(thisMovie,3);
 				corrMetric=NaN([1 size(thisMovie,3)]);
