@@ -72,7 +72,7 @@ function [success] = example_downloadTestData(varargin)
 		for fileNo = 1:nFiles
 			fileInfo = downloadList{fileNo};
 			rawSavePathDownload = ['data' filesep fileInfo.folderName];
-			if ~exist(rawSavePathDownload,'dir');mkdir(rawSavePathDownload);fprintf('Made folder: %s',rawSavePathDownload);end
+			if ~exist(rawSavePathDownload,'dir');mkdir(rawSavePathDownload);fprintf('Made folder: %s\n',rawSavePathDownload);end
 
 			rawSavePathDownload = [rawSavePathDownload filesep fileInfo.fileName];
 			if exist(rawSavePathDownload,'file')~=2

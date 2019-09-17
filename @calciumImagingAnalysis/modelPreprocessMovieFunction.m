@@ -99,7 +99,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	%========================
 	startDir = pwd;
 	if options.showFigures==1
-		for figNoFake = [9 4242 456 457 9019]
+		for figNoFake = [9 4242 456 457 9019 1776 1865 1866]
 			[~, ~] = openFigure(figNoFake, '');
 			clf
 		end
@@ -450,7 +450,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 					try
 						switch optionName
 							case 'turboreg'
-								subfxnPlotMotionCorrectionMetric();
+								subfxnPlotMotionCorrectionMetric('start');
 
 								pxToCropAll = 0;
 								ResultsOutOriginal = {};
@@ -530,7 +530,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 									clear tmpCropMovie;
 								end
 
-								subfxnPlotMotionCorrectionMetric();
+								subfxnPlotMotionCorrectionMetric('end');
 							case 'crop'
 								if exist('pxToCropAll','var')==1&&pxToCropAll~=0
 									if pxToCropAll~=0
@@ -978,18 +978,61 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		end
 		% =====================
 	end
-	function subfxnPlotMotionCorrectionMetric()
-		openFigure(1865)
+	function subfxnPlotMotionCorrectionMetric(motionState)
+
 			try
+				colorList = hsv(length(obj.inputFolders));
+
 				meanG = mean(thisMovie,3);
-				corrMetric=NaN([1 size(thisMovie,3)]);
+				corrMetric = NaN([1 size(thisMovie,3)]);
+				corrMetric2 = NaN([1 size(thisMovie,3)]);
 				cc = turboRegCoords{fileNum}{movieNo};
+				meanG_cc = meanG(cc(2):cc(4),cc(1):cc(3));
 				for i =1:size(thisMovie,3);
-					corrMetric(i)=corr2(meanG(cc(2):cc(4),cc(1):cc(3)),thisMovie(cc(2):cc(4),cc(1):cc(3),i));
+					thisFrame_cc = thisMovie(cc(2):cc(4),cc(1):cc(3),i);
+					corrMetric(i) = corr2(meanG_cc,thisFrame_cc);
+					corrMetric2(i) = corr(meanG_cc(:),thisFrame_cc(:),'Type','Spearman');
 				end
-				plot(corrMetric)
+
+				openFigure(1865)
+				% ax1 = [];
+				% ax1(end+1) = subplot(1,2,1)
+					if strcmp(motionState,'start')
+						plot(corrMetric,'Color',colorList(fileNum,:))
+					else
+						plot(corrMetric,':','Color',colorList(fileNum,:)/1.5)
+					end
+					hold on;
+					box off;xlabel('Frames');ylabel('Correlation')
+					title('corr2')
+					% legend({'Original','Motion corrected'})
+					% box off;xlabel('Frames');ylabel('Correlation')
+					% title('corr2')
+				% ax1(end+1) = subplot(1,2,2)
+					suptitle('Correlation of all frames to movie mean')
+					legendStr = cellfun(@(x) {strcat('===',x,sprintf('===\nPre-motion correction corr2')),'Post-motion correction corr2'},obj.folderBaseDisplayStr,'UniformOutput',false);
+					legend([legendStr{:}])
+
+				openFigure(1866)
+					if strcmp(motionState,'start')
+						plot(corrMetric2,'-','Color',colorList(fileNum,:)/2)
+					else
+						plot(corrMetric2,':','Color',colorList(fileNum,:)/3)
+					end
+					hold on;
+					box off;xlabel('Frames');ylabel('Correlation')
+					title('Spearman''s correlation (corr)')
+					% legend({'Original','Motion corrected'}
+					legendStr = cellfun(@(x) {strcat('===',x,sprintf('===\nPre-motion correction Spearman')),'Post-motion correction Spearman'},obj.folderBaseDisplayStr,'UniformOutput',false);
+					legend([legendStr{:}])
+
+				% set(ax1,'Nextplot','add')
+				suptitle('Correlation of all frames to movie mean')
+
+				% legendStr = cellfun(@(x) {strcat('===',x,sprintf('===\nPre-motion correction corr2')),'Pre-motion correction Spearman','Post-motion correction corr2','Post-motion correction Spearman'},obj.folderBaseDisplayStr,'UniformOutput',false);
+				% legend([legendStr{:}])
 				hold on;
-				legend({'Original','Motion corrected'})
+				zoom on;
 			catch err
 				disp(repmat('@',1,7))
 				disp(getReport(err,'extended','hyperlinks','on'));
