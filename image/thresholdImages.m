@@ -25,6 +25,7 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
 		%
 
 	%========================
+	% Float: fraction of image maximum value below which all pixels set to zero (range 0:1)
 	options.threshold = 0.5;
 	options.waitbarOn = 1;
 	options.binary = 0;

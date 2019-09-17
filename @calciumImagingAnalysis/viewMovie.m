@@ -8,7 +8,7 @@ function obj = viewMovie(obj)
 		%
 
 	% changelog
-		%
+		% 2019.08.30 [12:59:44] - Added fallback to playMovie in case of Miji error
 	% TODO
 		%
 	% =====================
@@ -592,6 +592,14 @@ function obj = viewMovie(obj)
 		% MIJ.exit;
 		manageMiji('startStop','exit');
 	end
+	try
+		msgboxHandle = findall(0,'Type','figure','Name','Success');
+		close(msgboxHandle)
+	catch err
+		disp(repmat('@',1,7))
+		disp(getReport(err,'extended','hyperlinks','on'));
+		disp(repmat('@',1,7))
+	end
 
 	function [movieDecision] = playMovieThisFunction()
 		displayStrMovie = [num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) '[' num2str(movieNo) '/' num2str(nMovies) ']' ': ' obj.folderBaseDisplayStr{obj.fileNum}];
@@ -603,23 +611,38 @@ function obj = viewMovie(obj)
 					'Movie decision', ...
 					'yes','motion','other','yes');
 			case 'imagej'
-				% Miji;
-				% MIJ.createImage([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) '[' num2str(movieNo) '/' num2str(nMovies) ']' ': ' obj.folderBaseSaveStr{obj.fileNum}], primaryMovie, true);
-				msgbox('Click movie to open next dialog box.','Success','normal')
-				MIJ.createImage(displayStrMovie, primaryMovie, true);
-				% if size(primaryMovie,1)<300
-				% 	for foobar=1:3; MIJ.run('In [+]'); end
-				% end
-				for foobar=1:2; MIJ.run('Enhance Contrast','saturated=0.35'); end
-				MIJ.run('Start Animation [\]');
-				clear primaryMovie;
-				% uiwait(msgbox('press OK to move onto next movie','Success','modal'));
-				movieDecision = questdlg('Is the movie good?', ...
-					'Movie decision', ...
-					'yes','motion','other','yes');
-				% MIJ.run('Close');
-				MIJ.run('Close All Without Saving');
-				% MIJ.exit;
+				try
+					% Miji;
+					% MIJ.createImage([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) '[' num2str(movieNo) '/' num2str(nMovies) ']' ': ' obj.folderBaseSaveStr{obj.fileNum}], primaryMovie, true);
+					s.Interpreter = 'tex';
+					s.WindowStyle = 'replace';
+					msgbox('Click movie to open next dialog box.','Success','normal',s)
+					MIJ.createImage(displayStrMovie, primaryMovie, true);
+					% if size(primaryMovie,1)<300
+					% 	for foobar=1:3; MIJ.run('In [+]'); end
+					% end
+					for foobar=1:2; MIJ.run('Enhance Contrast','saturated=0.35'); end
+					MIJ.run('Start Animation [\]');
+					clear primaryMovie;
+					% uiwait(msgbox('press OK to move onto next movie','Success','modal'));
+					movieDecision = questdlg('Is the movie good?', ...
+						'Movie decision', ...
+						'yes','motion','other','yes');
+					% MIJ.run('Close');
+					MIJ.run('Close All Without Saving');
+					% MIJ.exit;
+				catch err
+					disp(repmat('@',1,7))
+					disp(getReport(err,'extended','hyperlinks','on'));
+					disp(repmat('@',1,7))
+					try
+						playMovie(primaryMovie);
+					catch err
+						disp(repmat('@',1,7))
+						disp(getReport(err,'extended','hyperlinks','on'));
+						disp(repmat('@',1,7))
+					end
+				end
 
 			otherwise
 				% body

@@ -438,23 +438,36 @@ function obj = viewCellExtractionOnMovie(obj,varargin)
 				movieDecision = 'yes';
 			case 'imagej'
 				msgbox('Change contrast by pressing ctrl+shift+c');
-				% Miji;
-				% MIJ.createImage([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) '[' num2str(movieNo) '/' num2str(nMovies) ']' ': ' obj.folderBaseSaveStr{obj.fileNum}], primaryMovie, true);
-				MIJ.createImage(displayStrMovie, primaryMovie, true);
-				if size(primaryMovie,1)<300
-					for foobar=1:3; MIJ.run('In [+]'); end
+				try
+					% Miji;
+					% MIJ.createImage([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) '[' num2str(movieNo) '/' num2str(nMovies) ']' ': ' obj.folderBaseSaveStr{obj.fileNum}], primaryMovie, true);
+					MIJ.createImage(displayStrMovie, primaryMovie, true);
+					if size(primaryMovie,1)<300
+						for foobar=1:3; MIJ.run('In [+]'); end
+					end
+					for foobar=1:2; MIJ.run('Enhance Contrast','saturated=0.35'); end
+					MIJ.run('Start Animation [\]');
+					clear primaryMovie;
+					uiwait(msgbox('press OK to move onto next movie','Success','modal'));
+					% movieDecision = questdlg('Is the movie good?', ...
+					% 	'Movie decision', ...
+					% 	'yes','motion','other','yes');
+					movieDecision = 'yes';
+					% MIJ.run('Close');
+					MIJ.run('Close All Without Saving');
+					% MIJ.exit;
+				catch err
+					disp(repmat('@',1,7))
+					disp(getReport(err,'extended','hyperlinks','on'));
+					disp(repmat('@',1,7))
+					try
+						playMovie(primaryMovie);
+					catch err
+						disp(repmat('@',1,7))
+						disp(getReport(err,'extended','hyperlinks','on'));
+						disp(repmat('@',1,7))
+					end
 				end
-				for foobar=1:2; MIJ.run('Enhance Contrast','saturated=0.35'); end
-				MIJ.run('Start Animation [\]');
-				clear primaryMovie;
-				% uiwait(msgbox('press OK to move onto next movie','Success','modal'));
-				% movieDecision = questdlg('Is the movie good?', ...
-				% 	'Movie decision', ...
-				% 	'yes','motion','other','yes');
-				movieDecision = 'yes';
-				% MIJ.run('Close');
-				MIJ.run('Close All Without Saving');
-				% MIJ.exit;
 
 			otherwise
 				% body

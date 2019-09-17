@@ -15,6 +15,7 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 		% 2018.09 - large speedup by vectorizing corr2 and updating readHDF5 chunking
 		% 2019.03.12 [20:06:13] Added parallel.pool.Constant construct with H5F.open to facilitate opening fid on each worker once and thus saving readHDF5Subset time from continuously loading the same file over and over.
 		% 2019.07.17 [00:29:16] - Added support for sparse input images (mainly ndSparse format).
+		% 2019.09.10 [20:46:03] - Switched back to NOT converting to cell array, incurred unnecessary overhead and not needed since images/signals sliced properly. Also fix to reduce inputMovie being transferred to all workers in some cases.
 	% TODO
 		% Take 2 frames after peak and average to improve SNR
 
@@ -59,6 +60,8 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 	options.displayInfo = 1;
 	% Input movie dimensions to save time
 	options.movieDims = [];
+	% Binary: 1 = convert input inputSignals matrix to cell array
+	options.convertSignalsToCell = 0;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -165,6 +168,9 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 		options_hdf5Fid = options.hdf5Fid;
 		options_keepFileOpen = options.keepFileOpen;
 
+		options_convertSignalsToCell = options.convertSignalsToCell;
+		options_displayInfo = options.displayInfo;
+
 		movieDims1 = movieDims(1);
 		movieDims2 = movieDims(2);
 		movieDims3 = movieDims(3);
@@ -179,7 +185,8 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 		if options_readMovieChunks==1
 			nWorkers = Inf;
 		else
-			nWorkers = 0;
+			% nWorkers = 0;
+			nWorkers = Inf;
 		end
 
 		% Only implement in Matlab 2017a and above
@@ -192,12 +199,17 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 		% nInterval = round(nSignals/20);
 		nInterval = 20;
 
-		convertInputImagesToCell();
+		if options_convertSignalsToCell==1
+			convertInputImagesToCell();
+		end
 		% size(inputImages)
 		% size(inputImagesThres)
 
 		if options_readMovieChunks==0
 			inputMovieCrop = cell(nSignals,1);
+			if options.displayInfo==1
+				fprintf('Creating crop images: ');
+			end
 			for signalNo = 1:nSignals
 				if isnan(xCoords(signalNo))
 					inputMovieCrop{signalNo} = NaN;
@@ -217,17 +229,20 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 				% adjust for the difference in centroid location if movie is cropped
 				xDiff = 0;
 				yDiff = 0;
-				if xLow<xMin xDiff = xLow-xMin; xLow = xMin; end
-				if xHigh>xMax xDiff = xHigh-xMax; xHigh = xMax; end
-				if yLow<yMin yDiff = yLow-yMin; yLow = yMin; end
-				if yHigh>yMax yDiff = yHigh-yMax; yHigh = yMax; end
+				if xLow<xMin; xDiff = xLow-xMin; xLow = xMin; end
+				if xHigh>xMax; xDiff = xHigh-xMax; xHigh = xMax; end
+				if yLow<yMin; yDiff = yLow-yMin; yLow = yMin; end
+				if yHigh>yMax; yDiff = yHigh-yMax; yHigh = yMax; end
 
 				signalPeaksThis = signalPeaksArray{signalNo};
 				signalPeaksThis = unique(signalPeaksThis);
 				nPeaksToUse = length(signalPeaksThis);
 				if ~isempty(options_maxPeaksToUse)
-					% thisTrace = inputSignals(signalNo,:);
-					thisTrace = inputSignals{signalNo};
+					% if options_convertSignalsToCell==1
+					% 	thisTrace = inputSignals{signalNo};
+					% else
+						thisTrace = inputSignals(signalNo,:);
+					% end
 					peakSignalAmplitude = thisTrace(signalPeaksThis);
 					[~, peakIdx] = sort(peakSignalAmplitude,'descend');
 					signalPeaksThis = signalPeaksThis(peakIdx);
@@ -239,6 +254,11 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 				end
 				signalPeaksThis(signalPeaksThis>movieDims3) = [];
 				inputMovieCrop{signalNo} = inputMovie(yLow:yHigh,xLow:xHigh,signalPeaksThis);
+
+				if ~verLessThan('matlab', '9.2')
+					% Update
+					send(D, signalNo);
+				end
 			end
 		else
 			inputMovieCrop = cell(nSignals,1);
@@ -246,10 +266,29 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 
 		xMax = movieDims2;
 		yMax = movieDims1;
-		% nFrames = size(inputSignals,2);
-		nFrames = size(inputSignals{1},2);
+		% if options_convertSignalsToCell==1
+		% 	nFrames = size(inputSignals{1},2);
+		% else
+			nFrames = size(inputSignals,2);
+		% end
 
-		fprintf('Getting movie images: ');
+		% Only implement in Matlab 2017a and above
+		if ~verLessThan('matlab', '9.2')
+			D = parallel.pool.DataQueue;
+			afterEach(D, @nUpdateParforProgress);
+			p = 1;
+			% N = nSignals;
+		end
+
+		if options.displayInfo==1
+			fprintf('Getting movie images: ');
+		end
+		% ticBytes(gcp);
+		if options_readMovieChunks==0
+			inputMoviePath = '';
+		else
+			inputMoviePath = inputMovie;
+		end
 		parfor(signalNo = 1:nSignals,nWorkers)
 		% for signalNo = 1:nSignals
 			try
@@ -296,17 +335,20 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 				% adjust for the difference in centroid location if movie is cropped
 				xDiff = 0;
 				yDiff = 0;
-				if xLow<xMin xDiff = xLow-xMin; xLow = xMin; end
-				if xHigh>xMax xDiff = xHigh-xMax; xHigh = xMax; end
-				if yLow<yMin yDiff = yLow-yMin; yLow = yMin; end
-				if yHigh>yMax yDiff = yHigh-yMax; yHigh = yMax; end
+				if xLow<xMin; xDiff = xLow-xMin; xLow = xMin; end
+				if xHigh>xMax; xDiff = xHigh-xMax; xHigh = xMax; end
+				if yLow<yMin; yDiff = yLow-yMin; yLow = yMin; end
+				if yHigh>yMax; yDiff = yHigh-yMax; yHigh = yMax; end
 
 				signalPeaksThis = signalPeaksArray{signalNo};
 				signalPeaksThis = unique(signalPeaksThis);
 				nPeaksToUse = length(signalPeaksThis);
 				if ~isempty(options_maxPeaksToUse)
-					% thisTrace = inputSignals(signalNo,:);
-					thisTrace = inputSignals{signalNo};
+					% if options_convertSignalsToCell==1
+						% thisTrace = inputSignals{signalNo};
+					% else
+						thisTrace = inputSignals(signalNo,:);
+					% end
 					peakSignalAmplitude = thisTrace(signalPeaksThis);
 					[~, peakIdx] = sort(peakSignalAmplitude,'descend');
 					signalPeaksThis = signalPeaksThis(peakIdx);
@@ -361,20 +403,26 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 					end
 					% [signalImagesCrop] = readHDF5Subset(inputMovie, offset, block,'datasetName',options_inputDatasetName,'displayInfo',0,'hdf5Fid',options_hdf5Fid,'keepFileOpen',options_keepFileOpen);
 
-					[signalImagesCrop] = readHDF5Subset(inputMovie, offset, block,'datasetName',options_inputDatasetName,'displayInfo',0,'hdf5Fid',hdf5FileWorkerConstant.Value,'keepFileOpen',options_keepFileOpen,'displayInfo',options.displayInfo);
+					[signalImagesCrop] = readHDF5Subset(inputMoviePath, offset, block,'datasetName',options_inputDatasetName,'displayInfo',0,'hdf5Fid',hdf5FileWorkerConstant.Value,'keepFileOpen',options_keepFileOpen,'displayInfo',options_displayInfo);
 
 					%signalImagesCrop = cat(3,signalImagesCrop{:});
 				end
 				% corrVals = [];
-				inputImageCrop = squeeze(inputImages{signalNo}(yLow:yHigh,xLow:xHigh));
-                if issparse(inputImageCrop)
-                    inputImageCrop = full(inputImageCrop);
-                end
+				% if options_convertSignalsToCell==1
+					%inputImageCrop = squeeze(inputImages{signalNo}(yLow:yHigh,xLow:xHigh));
+				% else
+					tmpInputImg = inputImages(:,:,signalNo);
+					inputImageCrop = squeeze(tmpInputImg(yLow:yHigh,xLow:xHigh));
+				% end
+				if issparse(inputImageCrop)
+					inputImageCrop = full(inputImageCrop);
+				end
 				% inputImageCrop = squeeze(inputImages(yLow:yHigh,xLow:xHigh,signalNo));
 
 				% Convert to inputImages class, which should be single or double
 				signalImagesCrop = cast(signalImagesCrop,class(inputImageCrop));
-				if strcmp(class(signalImagesCrop),'single')==0||strcmp(class(signalImagesCrop),'double')==0
+				if isa(signalImagesCrop,'single')==0||isa(signalImagesCrop,'double')==0
+                    % disp('Forcing images to be single datatype')
 					signalImagesCrop = single(signalImagesCrop);
 				end
 				signalImagesCropTmp = signalImagesCrop;
@@ -448,11 +496,16 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 					% corrValsThres = [];
 
 					corrVals2Thres = [];
-					% inputImagesThresCrop = squeeze(inputImagesThres(yLow:yHigh,xLow:xHigh,signalNo));
-					inputImagesThresCrop = squeeze(inputImagesThres{signalNo}(yLow:yHigh,xLow:xHigh));
-                    if issparse(inputImagesThresCrop)
-                        inputImagesThresCrop = full(inputImagesThresCrop);
-                    end
+					% if options_convertSignalsToCell==1
+						% inputImagesThresCrop = squeeze(inputImagesThres{signalNo}(yLow:yHigh,xLow:xHigh));
+					% else
+						tmpInputImagesThres = inputImagesThres(:,:,signalNo);
+						inputImagesThresCrop = squeeze(tmpInputImagesThres(yLow:yHigh,xLow:xHigh));
+						% inputImagesThresCrop = squeeze(inputImagesThres(yLow:yHigh,xLow:xHigh,signalNo));
+					% end
+					if issparse(inputImagesThresCrop)
+						inputImagesThresCrop = full(inputImagesThresCrop);
+					end
 					inputImageCropThres = inputImageCrop.*inputImagesThresCrop;
 
 					% ===
@@ -515,8 +568,11 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 					% take the average of all frames in matrix
 					signalImagesCropSingle = squeeze(nanmean(signalImagesCrop,3));
 
-					% signalImage = NaN(size(squeeze(inputImages(:,:,1))));
-					signalImage = NaN(size(squeeze(inputImages{signalNo})));
+					% if options_convertSignalsToCell==1
+						% signalImage = NaN(size(squeeze(inputImages{signalNo})));
+					% else
+						signalImage = NaN(size(squeeze(inputImages(:,:,signalNo))));
+					% end
 					% size(signalImage)
 					signalImage(yLow:yHigh,xLow:xHigh) = signalImagesCropSingle;
 
@@ -554,6 +610,8 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 			% display(job)
 			% job.EnvironmentVariables
 		end
+		% tocBytes(gcp)
+		% whos
 
 		if ischar(inputMovie)
 			clear hdf5FileWorkerConstant;
@@ -583,8 +641,16 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 	function nUpdateParforProgress(~)
 		if ~verLessThan('matlab', '9.2')
 			p = p + 1;
-			if (mod(p,nInterval)==0||p==nSignals)&&options_waitbarOn==1
-				cmdWaitbar(p,nSignals,'','inputStr','','waitbarOn',1);
+			% if (mod(p,nInterval)==0||p==nSignals)&&options_waitbarOn==1
+			% 	cmdWaitbar(p,nSignals,'','inputStr','','waitbarOn',1);
+			% end
+			if (mod(p,nInterval)==0||p==2||p==nSignals)&&options_waitbarOn==1
+				if p==nSignals
+					fprintf('%d\n',round(p/nSignals*100))
+				else
+					fprintf('%d|',round(p/nSignals*100))
+				end
+				% cmdWaitbar(p,nSignals,'','inputStr','','waitbarOn',1);
 			end
 		end
 	end

@@ -19,6 +19,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% 2019.07.22 [16:30:30] - Improved support for multi-iteration turboreg and outputting of turboreg without filtering and with filtering in the same run seamlessly.
 		% 2019.07.26 [14:00:00] - Additional improvements in adding movie borders based on turboreg outputs.
 		% 2019.08.07 [18:23:05] - Fix for using the _noSpatialFilter_ output where was registering to already registered iterations.
+		% 2019.09.06 [23:41:50]/2019.09 - Improved downsampling support.
 	% TODO
 		% Insert NaNs or mean of the movie into dropped frame location, see line 260
 		% Allow easy switching between analyzing all files in a folder together and each file in a folder individually
@@ -98,7 +99,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	%========================
 	startDir = pwd;
 	if options.showFigures==1
-		for figNoFake = [9 4242 456 457 9019]
+		for figNoFake = [9 4242 456 457 9019 1865 1866 1776]
 			[~, ~] = openFigure(figNoFake, '');
 			clf
 		end
@@ -449,7 +450,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 					try
 						switch optionName
 							case 'turboreg'
-								subfxnPlotMotionCorrectionMetric();
+								subfxnPlotMotionCorrectionMetric('start');
 
 								pxToCropAll = 0;
 								ResultsOutOriginal = {};
@@ -529,7 +530,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 									clear tmpCropMovie;
 								end
 
-								subfxnPlotMotionCorrectionMetric();
+								subfxnPlotMotionCorrectionMetric('end');
 							case 'crop'
 								if exist('pxToCropAll','var')==1&&pxToCropAll~=0
 									if pxToCropAll~=0
@@ -870,6 +871,17 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		end
 		thisMovie = thisMovie(1:downX,1:downY,:);
 		j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
+
+		% Adjust crop coordinates if downsampling in space takes place before turboreg
+		disp(['Adjusting motion correction crop coordinates for spatial downsampling: ' num2str(turboRegCoords{fileNum}{movieNo})]);
+		orderCheck = find(strcmp(analysisOptionList,'downsampleSpace'))<find(strcmp(analysisOptionList,'turboreg'));
+		if ~isempty(turboRegCoords{fileNum}{movieNo})&&orderCheck==1
+			turboRegCoords{fileNum}{movieNo} = floor(turboRegCoords{fileNum}{movieNo}/options.downsampleFactor);
+			% Ensure that the turbo crop coordinates are greater than zero
+			turboRegCoords{fileNum}{movieNo} = max(1,turboRegCoords{fileNum}{movieNo});
+		end
+		disp(['Adjusted motion correction crop coordinates due to spatial downsampling: ' num2str(turboRegCoords{fileNum}{movieNo})]);
+
 		drawnow;
 		% =====================
 	end
@@ -966,18 +978,61 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		end
 		% =====================
 	end
-	function subfxnPlotMotionCorrectionMetric()
-		figure(1865)
+	function subfxnPlotMotionCorrectionMetric(motionState)
+
 			try
+				colorList = hsv(length(obj.inputFolders));
+
 				meanG = mean(thisMovie,3);
-				corrMetric=NaN([1 size(thisMovie,3)]);
+				corrMetric = NaN([1 size(thisMovie,3)]);
+				corrMetric2 = NaN([1 size(thisMovie,3)]);
 				cc = turboRegCoords{fileNum}{movieNo};
+				meanG_cc = meanG(cc(2):cc(4),cc(1):cc(3));
 				for i =1:size(thisMovie,3);
-					corrMetric(i)=corr2(meanG(cc(2):cc(4),cc(1):cc(3)),thisMovie(cc(2):cc(4),cc(1):cc(3),i));
+					thisFrame_cc = thisMovie(cc(2):cc(4),cc(1):cc(3),i);
+					corrMetric(i) = corr2(meanG_cc,thisFrame_cc);
+					corrMetric2(i) = corr(meanG_cc(:),thisFrame_cc(:),'Type','Spearman');
 				end
-				plot(corrMetric)
+
+				openFigure(1865)
+				% ax1 = [];
+				% ax1(end+1) = subplot(1,2,1)
+					if strcmp(motionState,'start')
+						plot(corrMetric,'Color',colorList(fileNum,:))
+					else
+						plot(corrMetric,':','Color',colorList(fileNum,:)/1.5)
+					end
+					hold on;
+					box off;xlabel('Frames');ylabel('Correlation')
+					title('corr2')
+					% legend({'Original','Motion corrected'})
+					% box off;xlabel('Frames');ylabel('Correlation')
+					% title('corr2')
+				% ax1(end+1) = subplot(1,2,2)
+					suptitle('Correlation of all frames to movie mean')
+					legendStr = cellfun(@(x) {strcat('===',x,sprintf('===\nPre-motion correction corr2')),'Post-motion correction corr2'},obj.folderBaseDisplayStr,'UniformOutput',false);
+					legend([legendStr{:}])
+
+				openFigure(1866)
+					if strcmp(motionState,'start')
+						plot(corrMetric2,'-','Color',colorList(fileNum,:)/2)
+					else
+						plot(corrMetric2,':','Color',colorList(fileNum,:)/3)
+					end
+					hold on;
+					box off;xlabel('Frames');ylabel('Correlation')
+					title('Spearman''s correlation (corr)')
+					% legend({'Original','Motion corrected'}
+					legendStr = cellfun(@(x) {strcat('===',x,sprintf('===\nPre-motion correction Spearman')),'Post-motion correction Spearman'},obj.folderBaseDisplayStr,'UniformOutput',false);
+					legend([legendStr{:}])
+
+				% set(ax1,'Nextplot','add')
+				suptitle('Correlation of all frames to movie mean')
+
+				% legendStr = cellfun(@(x) {strcat('===',x,sprintf('===\nPre-motion correction corr2')),'Pre-motion correction Spearman','Post-motion correction corr2','Post-motion correction Spearman'},obj.folderBaseDisplayStr,'UniformOutput',false);
+				% legend([legendStr{:}])
 				hold on;
-				legend({'Original','Motion corrected'})
+				zoom on;
 			catch err
 				disp(repmat('@',1,7))
 				disp(getReport(err,'extended','hyperlinks','on'));

@@ -13,6 +13,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		% 2019.05.08 [10:59:59] - Added check for required toolboxes used in class.
 		% 2019.07.25 [09:39:16] - Updated loading so that users only need to be in the root calciumImagingAnalysis path but required folders do not need to be loaded.
 		% 2019.08.20 [09:33:32] - Improved loading of folders and Miji to save time.
+		% 2019.08.30 [12:58:37] - Added Java heap space memory check on initialization.
 	% TODO
 		%
 
@@ -28,8 +29,11 @@ classdef calciumImagingAnalysis < dynamicprops
 		% Float: estimated um per pixel
 		MICRON_PER_PIXEL =  2.51; % 2.37;
 
+		% Int: set the default UI font size
+		fontSizeGui = 11;
+
 		defaultObjDir = pwd;
-		classVersion = 'v3.3.2-20190825';
+		classVersion = 'v3.4.1-20190916';
 		serverPath = '';
 		privateSettingsPath = ['private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
 		% place where functions can temporarily story user settings
@@ -476,6 +480,7 @@ classdef calciumImagingAnalysis < dynamicprops
 
 			obj = initializeObj(obj);
 
+			display(repmat('*',1,42))
 			display('Done initializing calciumImagingAnalysis!')
 			display(repmat('*',1,42))
 
@@ -723,6 +728,21 @@ classdef calciumImagingAnalysis < dynamicprops
 				% warning('no signal data input!!!')
 			end
 			% load stimulus tables
+
+			display(repmat('*',1,42))
+			% Check java heap size
+			try
+				javaHeapSpaceSizeGb = java.lang.Runtime.getRuntime.maxMemory*1e-9;
+				if javaHeapSpaceSizeGb<6.5
+					warning(sprintf('Java max heap memory is %0.3f Gb, this is too small to run Miji. Please put "java.opts" file in the MATLAB start-up path and restart MATLB before continuing.\n',javaHeapSpaceSizeGb));
+				else
+					fprintf('Java max heap memory is %0.3f Gb, this should be sufficient to run Miji. Please change "java.opts" file to increase heap space if run into Miji memory errors.\n',javaHeapSpaceSizeGb);
+				end
+			catch err
+				disp(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				disp(repmat('@',1,7))
+			end
 		end
 
 		function obj = loadBatchFunctionFolders(obj)
@@ -1176,7 +1196,11 @@ classdef calciumImagingAnalysis < dynamicprops
 
 		function obj = runPipeline(obj,varargin)
 			setFigureDefaults();
-			set(0, 'DefaultUICOntrolFontSize', 14)
+			try
+				set(0, 'DefaultUICOntrolFontSize', obj.fontSizeGui)
+			catch
+				set(0, 'DefaultUICOntrolFontSize', 11)
+			end
 			close all;clc;
 
 			fxnsToRun = {...
@@ -1193,11 +1217,14 @@ classdef calciumImagingAnalysis < dynamicprops
 			'initializeObj',
 			'setMainSettings',
 			'',
-			'------- PREPROCESS -------',
+			'------- DATA CHECK/LOAD/EXPORT -------',
 			'modelGetFileInfo',
 			'modelVerifyDataIntegrity',
 			'modelBatchCopyFiles',
+			'modelLoadSaveData',
+			'modelExportData',
 			'',
+			'------- PREPROCESS -------',
 			'modelDownsampleRawMovies',
 			'viewMovieFiltering',
 			'viewMovieRegistrationTest',
@@ -1205,6 +1232,9 @@ classdef calciumImagingAnalysis < dynamicprops
 			'viewMovie',
 			'modelPreprocessMovie',
 			'modelModifyMovies',
+			'removeConcurrentAnalysisFiles',
+			'',
+			'------- CELL/SIGNAL EXTRACTION -------',
 			'modelExtractSignalsFromMovie',
 			'viewCellExtractionOnMovie',
 			'removeConcurrentAnalysisFiles',

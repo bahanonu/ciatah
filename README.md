@@ -38,14 +38,21 @@ Below are steps needed to quickly get started using the `calciumImagingAnalysis`
 - Clone the `calciumImagingAnalysis` repository (using GitHub desktop or command line) or download the repository zip and unzip.
 - Point the MATLAB path to the `calciumImagingAnalysis` folder.
 - Run the below MATLAB commands.
-- For Fiji dependency, when path to `Miji.m` (`\Fiji.app\scripts` folder) is requested, likely in `private\programs\FIJI_PATH\Fiji.app\scripts` unless the user requested a custom path or on OSX (in which case, find the install directory).
-- `calciumImagingAnalysis` often uses regular expressions to find relevant movie and other files in folders to analyze.
- - For example, by default it looks for any files containing `concat`, e.g. `concat_recording_20140401_180333.h5` (test data). If you have a file called `rawData_2019_01_01_myInterestingExperiment.avi` and all your raw data files start with `rawData_` then change the regular expression to `rawData_` when requested by the repository. See `setMovieInfo` module.
-- External software packages are downloaded into `_external_programs` folder and should be placed there if done manually.
-- See additional details in [Processing calcium imaging data](#processing-calcium-imaging-data).
+- See additional details in [Processing calcium imaging data](#processing-calcium-imaging-data) for running the full processing pipeline.
 - When issues are encountered, first check the `*Common issues and fixes` Wiki page to see if a solution is there. Else, submit a new issue or email Biafra (bahanonu [at] alum.mit.edu).
+- Notes:
+  - There are two sets of test data that are downloaded:
+    - __Single session analysis__: `data\2014_04_01_p203_m19_check01_raw` can be used to test the pipeline until the cross-session alignment step.
+    - __Batch analysis__: `data\batch` contains three imaging sessions that should be processed and can then be used for the cross-session alignment step. Users should try these sessions to get used to batched analysis.
+  - For Fiji dependency, when path to `Miji.m` (`\Fiji.app\scripts` folder) is requested, likely in `private\programs\FIJI_PATH\Fiji.app\scripts` unless the user requested a custom path or on OSX (in which case, find Fiji the install directory).
+    - If you run into Java heap space memory errors when Miji tries to load Fiji in MATLAB, make sure "java.opts" file is in MATLAB start-up folder or that `calciumImagingAnalysis` folder is the MATLAB start-up folder.
+  - `calciumImagingAnalysis` often uses regular expressions to find relevant movie and other files in folders to analyze.
+    - For example, by default it looks for any files containing `concat`, e.g. `concat_recording_20140401_180333.h5` (test data). If you have a file called `rawData_2019_01_01_myInterestingExperiment.avi` and all your raw data files start with `rawData_` then change the regular expression to `rawData_` when requested by the repository. See `setMovieInfo` module.
+  - External software packages are downloaded into `_external_programs` folder and should be placed there if done manually.
 
 ```MATLAB
+% Run these commands in MATLAB to get started.
+
 % Loads all directories
 loadBatchFxns;
 
@@ -53,6 +60,7 @@ loadBatchFxns;
 obj = calciumImagingAnalysis;
 
 % Download and load dependent software packages into "_external_programs" folder.
+% Also download test data into "data" folder.
 obj.loadDependencies;
 
 % [optional] Set the names calciumImagingAnalysis will look for in each folder
@@ -405,6 +413,8 @@ If the imaging field-of-view includes cells from other brain regions, they can b
 ******************************************
 
 ## Cross-session cell alignment with `computeMatchObjBtwnTrials`
+
+This step allows users to align cells across imaging sessions (e.g. those taken on different days). See the `Cross session cell alignment` wiki page for more details and notes on cross-session alignment.
 
 - Users run `computeMatchObjBtwnTrials` to do cross-day alignment (first row in pictures below).
 - Users then run `viewMatchObjBtwnSessions` to get a sense for how well the alignment ran.

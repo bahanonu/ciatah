@@ -16,6 +16,7 @@ function [peakOutputStat] = computePeakStatistics(inputSignals,varargin)
 		% - Use the SNR signal calculated to determine when to end the S ratio calculation
 	% changelog
 		% 2013.12.24 - changed output so that it is a structure, allows more flexibility when adding new statistics.
+		% 2019.09.10 [11:30:07] - Added fano factor, trace frame lagged auto-correlation, parallelization, and misc improvements.
 
 	%========================
 	%
@@ -39,15 +40,17 @@ function [peakOutputStat] = computePeakStatistics(inputSignals,varargin)
 	% number of frames to calculate median filter
 	options.medianFilterLength = 200;
 	options.movAvgFiltSize = [];
+	% Int: how many frames to shift when calculating auto-correlation
+	options.frameShiftAmt = 2;
 	% get options
 	options = getOptions(options,varargin);
-	fn=fieldnames(options);
-	for i=1:length(fn)
-		eval([fn{i} '=options.' fn{i} ';']);
-	end
+	% fn=fieldnames(options);
+	% for i=1:length(fn)
+	% 	eval([fn{i} '=options.' fn{i} ';']);
+	% end
 	%========================
 
-	display('Median filtering before peak statistics')
+	disp('Median filtering before peak statistics')
 	for signalNoNow = 1:size(inputSignals,1)
 		inputSignal = inputSignals(signalNoNow,:);
 		inputSignalMedian = medfilt1(inputSignal,options.medianFilterLength);
@@ -58,44 +61,112 @@ function [peakOutputStat] = computePeakStatistics(inputSignals,varargin)
 		end
 	end
 
+	% peakOutputStat.fwhmSignal = [];
+	% peakOutputStat.slopeRatio = [];
+	% peakOutputStat.avgSpikeTrace = [];
+	% peakOutputStat.avgSpikeVar = [];
+	% peakOutputStat.avgSpikeCorr = [];
+	% peakOutputStat.traceErr = [];
+	% peakOutputStat.fwhmSignal = [];
+	% peakOutputStat.avgFwhm = [];
+	% peakOutputStat.fwhmSignalSignals = [];
+	% peakOutputStat.avgPeakAmplitude = [];
+	% peakOutputStat.traceSkewness = [];
+	% peakOutputStat.traceKurtosis = [];
+	% peakOutputStat.traceFanoFactor = [];
+	% peakOutputStat.traceAutoCorr = [];
+	% peakOutputStat.spikeCenterTrace = [];
+	% peakOutputStat.pwelchPxx = [];
+	% peakOutputStat.pwelchf = [];
 
-	peakOutputStat.fwhmSignal = [];
 	% get a list of all indices to pull out
 	nSignals = size(inputSignals,1);
-	reverseStr = '';
+	% reverseStr = '';
 	if isempty(options.testpeaks)
-		[testpeaks testpeaksArray] = computeSignalPeaks(inputSignals,'waitbarOn',options.waitbarOn,'makeSummaryPlots',0);
+		[testpeaks, testpeaksArray] = computeSignalPeaks(inputSignals,'waitbarOn',options.waitbarOn,'makeSummaryPlots',0);
 	else
 		testpeaks = options.testpeaks;
 		testpeaksArray = options.testpeaksArray;
 	end
-	for i=1:nSignals
+
+	% Only implement in Matlab 2017a and above
+	if ~verLessThan('matlab', '9.2')
+		D = parallel.pool.DataQueue;
+		afterEach(D, @nUpdateParforProgress);
+		p = 0;
+		N = nSignals;
+		nInterval = round(nSignals/30);%25
+		options_waitbarOn = options.waitbarOn;
+	end
+
+	disp('Getting peak statistics: ')
+
+	% optsConstant = parallel.pool.Constant(options);
+	options_onlySlopeRatio = options.onlySlopeRatio;
+	options_psd = options.psd;
+	options_spikeROI = options.spikeROI;
+	options_slopeFrameWindow = options.slopeFrameWindow;
+	options_frameShiftAmt = options.frameShiftAmt;
+
+	parfor i = 1:nSignals
+		% optionsOutCopy = optsConstant.Value;
 		thisSignal = inputSignals(i,:);
-		[peakStat] = peakStats(testpeaksArray{i},thisSignal,spikeROI,slopeFrameWindow,options);
+		[peakStat] = peakStats(testpeaksArray{i},thisSignal,options_spikeROI,options_slopeFrameWindow,options_onlySlopeRatio,options_psd);
 
 		% peakStat
-		peakOutputStat.slopeRatio(i) = peakStat.slopeRatio;
-		if options.onlySlopeRatio==1
+		if options_onlySlopeRatio==1
+			slopeRatio(i) = peakStat.slopeRatio;
 			continue;
 		end
-		peakOutputStat.avgSpikeTrace(i,:) = peakStat.avgSpikeTrace;
-		peakOutputStat.avgSpikeVar(i) = peakStat.avgSpikeVar;
-		peakOutputStat.avgSpikeCorr(i) = peakStat.avgSpikeCorr;
-		peakOutputStat.traceErr(i) = peakStat.traceErr;
-		peakOutputStat.fwhmSignal = [peakOutputStat.fwhmSignal; peakStat.fwhmTrace(:)];
-		peakOutputStat.avgFwhm(i) = nanmean(peakStat.fwhmTrace(:));
-		peakOutputStat.fwhmSignalSignals{i} = peakStat.fwhmTrace(:);
-		peakOutputStat.avgPeakAmplitude(i) = peakStat.avgPeakAmplitude;
-		peakOutputStat.traceSkewness(i) = skewness(thisSignal(:));
-		peakOutputStat.traceKurtosis(i) = kurtosis(thisSignal(:));
-		peakOutputStat.spikeCenterTrace{i} = peakStat.spikeCenterTrace;
-		if options.psd==1
-			peakOutputStat.pwelchPxx{i} = peakStat.pwelchPxx;
-			peakOutputStat.pwelchf{i} = peakStat.pwelchf;
+
+		slopeRatio(i) = peakStat.slopeRatio;
+		avgSpikeTrace(i,:) = peakStat.avgSpikeTrace;
+		avgSpikeVar(i) = peakStat.avgSpikeVar;
+		avgSpikeCorr(i) = peakStat.avgSpikeCorr;
+		traceErr(i) = peakStat.traceErr;
+		fwhmSignal{i} = peakStat.fwhmTrace(:);
+		avgFwhm(i) = nanmean(peakStat.fwhmTrace(:));
+		fwhmSignalSignals{i} = peakStat.fwhmTrace(:);
+		avgPeakAmplitude(i) = peakStat.avgPeakAmplitude;
+		traceSkewness(i) = skewness(thisSignal(:));
+		traceKurtosis(i) = kurtosis(thisSignal(:));
+		traceFanoFactor(i) = (nanstd(thisSignal(:))^2)/nanmean(thisSignal(:));
+		traceAutoCorr(i) = corr(thisSignal(:),circshift(thisSignal(:),options_frameShiftAmt));
+		spikeCenterTrace{i} = peakStat.spikeCenterTrace;
+		if options_psd==1
+			pwelchPxx{i} = peakStat.pwelchPxx;
+			pwelchf{i} = peakStat.pwelchf;
+		end
+
+		if ~verLessThan('matlab', '9.2')
+			send(D, i); % Update
 		end
 
 		% reduce waitbar access
-		reverseStr = cmdWaitbar(i,nSignals,reverseStr,'inputStr','getting statistics','waitbarOn',options.waitbarOn,'displayEvery',50);
+		% reverseStr = cmdWaitbar(i,nSignals,reverseStr,'inputStr','getting statistics','waitbarOn',options.waitbarOn,'displayEvery',50);
+	end
+
+	if options.onlySlopeRatio==1
+		peakOutputStat.slopeRatio = slopeRatio;
+	else
+		peakOutputStat.slopeRatio = single(slopeRatio);
+		peakOutputStat.avgSpikeTrace = single(avgSpikeTrace);
+		peakOutputStat.avgSpikeVar = single(avgSpikeVar);
+		peakOutputStat.avgSpikeCorr = single(avgSpikeCorr);
+		peakOutputStat.traceErr = single(traceErr);
+		peakOutputStat.fwhmSignal = cat(1,fwhmSignal{:});
+		peakOutputStat.avgFwhm = single(avgFwhm);
+		peakOutputStat.fwhmSignalSignals = fwhmSignalSignals;
+		peakOutputStat.avgPeakAmplitude = single(avgPeakAmplitude);
+		peakOutputStat.traceSkewness = single(traceSkewness);
+		peakOutputStat.traceKurtosis = single(traceKurtosis);
+		peakOutputStat.traceFanoFactor = single(traceFanoFactor);
+		peakOutputStat.traceAutoCorr = single(traceAutoCorr);
+		peakOutputStat.spikeCenterTrace = spikeCenterTrace;
+		if options.psd==1
+			peakOutputStat.pwelchPxx = pwelchPxx;
+			peakOutputStat.pwelchf = pwelchf;
+		end
 	end
 
 	if options.fwhmPlot~=0
@@ -122,8 +193,23 @@ function [peakOutputStat] = computePeakStatistics(inputSignals,varargin)
 			end
 		end
 	end
+	function nUpdateParforProgress(~)
+		if ~verLessThan('matlab', '9.2')
+			p = p + 1;
+			if (mod(p,nInterval)==0||p==1||p==nSignals)&&options_waitbarOn==1
+				if p==nSignals
+					fprintf('%d\n',round(p/nSignals*100))
+				else
+					fprintf('%d|',round(p/nSignals*100))
+				end
+				% cmdWaitbar(p,nSignals,'','inputStr','','waitbarOn',1);
+			end
+			% [p mod(p,nInterval)==0 (mod(p,nInterval)==0||p==nSignals)&&options_waitbarOn==1]
+		end
+	end
+end
 
-function [peakStat] = peakStats(testpeaks,inputSignal,spikeROI,slopeFrameWindow,options)
+function [peakStat] = peakStats(testpeaks,inputSignal,spikeROI,slopeFrameWindow,onlySlopeRatio,options_psd)
 	% finds peaks in the data then extracts information from them
 	% [testpeaks dummyVar] = computeSignalPeaks(inputSignal);
 	% if peaks exists, do statistics else return NaNs
@@ -141,7 +227,7 @@ function [peakStat] = peakStats(testpeaks,inputSignal,spikeROI,slopeFrameWindow,
 		areaPrePeak = abs(mean(mean(spikeCenterTrace(:,prePeakIdx),2)));
 		areaPostPeak = abs(mean(mean(spikeCenterTrace(:,postPeaklIdx),2)));
 		peakStat.slopeRatio = (areaPostPeak-areaPrePeak)/(areaPostPeak+areaPrePeak);
-		if options.onlySlopeRatio==1
+		if onlySlopeRatio==1
 			return;
 		end
 
@@ -223,7 +309,7 @@ function [peakStat] = peakStats(testpeaks,inputSignal,spikeROI,slopeFrameWindow,
 			peakStat.fwhmTrace(i) = fwhm(spikeROI,spikeCenterTrace(i,:));
 		end
 
-		if options.psd==1
+		if options_psd==1
 			% get the power-spectrum
 			[peakStat.pwelchPxx peakStat.pwelchf] = pwelch(inputSignal,100,25,512,5);
 		end
@@ -236,12 +322,12 @@ function [peakStat] = peakStats(testpeaks,inputSignal,spikeROI,slopeFrameWindow,
 		peakStat.slopeRatio = NaN;
 		peakStat.fwhmTrace = NaN;
 		peakStat.traceErr = NaN;
-		if options.psd==1
+		if options_psd==1
 			peakStat.pwelchPxx = NaN;
 			peakStat.pwelchf = NaN;
 		end
 	end
-
+end
 function plotStatistics()
 	% figure(92929)
 	% hist(fwhmSignal,[0:nanmax(fwhmSignal)]); box off;
@@ -263,3 +349,4 @@ function plotStatistics()
 	% errorbar(spikeROI, avgSpikeTrace, traceErr);
 	% t=1:length(traceErr);
 	% fill([spikeROI fliplr(spikeROI)],[avgSpikeTrace+traceErr fliplr(avgSpikeTrace-traceErr)],[4 4 4]/8, 'FaceAlpha', 0.4, 'EdgeColor','none')
+end

@@ -63,7 +63,8 @@ function [dataSubset fid] = readHDF5Subset(inputFilePath, offset, block, varargi
 	% display file information for reference
 	if options.displayInfo==1
 		for sNo = 1:nSlabs
-			display(['loading chunk | offset: ' num2str(offset{sNo}) ' | block: ' num2str(block{sNo}) 10]);
+			% display(['loading chunk | offset: ' num2str(offset{sNo}) ' | block: ' num2str(block{sNo}) 10]);
+			disp(['loading chunk | offset: ' num2str(offset{sNo}) ' | block: ' num2str(block{sNo})]);
 		end
 	end
 

@@ -74,7 +74,8 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 	% for i=1:length(fn)
 	%     eval([fn{i} '=options.' fn{i} ';']);
 	% end
-	fprintf('***\nRunning normalization: %s\n',options.normalizationType);
+	% fprintf('***\nRunning normalization: %s\n',options.normalizationType);
+	fprintf('***Running normalization: %s\n',options.normalizationType);
 	if strcmp(options.normalizationType,'bandpassDivisive')
 		options.normalizationType = 'fft';
 	end
