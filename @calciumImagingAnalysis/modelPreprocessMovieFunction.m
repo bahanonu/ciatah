@@ -99,7 +99,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	%========================
 	startDir = pwd;
 	if options.showFigures==1
-		for figNoFake = [9 4242 456 457 9019 1776 1865 1866]
+		for figNoFake = [9 4242 456 457 9019 1865 1866 1776]
 			[~, ~] = openFigure(figNoFake, '');
 			clf
 		end
