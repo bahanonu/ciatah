@@ -863,9 +863,9 @@ classdef calciumImagingAnalysis < dynamicprops
 
 		function obj = loadDependencies(obj)
 			scnsize = get(0,'ScreenSize');
-			dependencyStr = {'downloadCnmfGithubRepositories','downloadMiji','example_downloadTestData','loadMiji'};
-			dispStr = {'Download CNMF, CNMF-E, and CVX code.','Download Fiji (to run Miji)','Download test one-photon data.','Load Fiji/Miji into MATLAB path.'};
-			[fileIdxArray, ok] = listdlg('ListString',dispStr,'ListSize',[scnsize(3)*0.3 scnsize(4)*0.3],'Name','Where to save Fiji? (Can select multiple)','InitialValue',[1 2 3]);
+			dependencyStr = {'downloadMiji','downloadCnmfGithubRepositories','example_downloadTestData','loadMiji'};
+			dispStr = {'Download Fiji (to run Miji)','Download CNMF, CNMF-E, and CVX code.','Download test one-photon data.','Load Fiji/Miji into MATLAB path.'};
+			[fileIdxArray, ok] = listdlg('ListString',dispStr,'ListSize',[scnsize(3)*0.3 scnsize(4)*0.3],'Name','Which dependencies to load? (Can select multiple)','InitialValue',[1 2 3]);
 			analysisType = dependencyStr(fileIdxArray);
 			dispStr = dispStr(fileIdxArray);
 			for depNo = 1:length(fileIdxArray)
@@ -876,7 +876,7 @@ classdef calciumImagingAnalysis < dynamicprops
 						[success] = downloadCnmfGithubRepositories();
 					case 'downloadMiji'
 						depStr = {'Save Fiji to default directory','Save Fiji to custom directory'};
-						[fileIdxArray, ok] = listdlg('ListString',depStr,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','Which dependency to load?');
+						[fileIdxArray, ok] = listdlg('ListString',depStr,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','Where to save Fiji?');
 						depStr = depStr{fileIdxArray};
 						if fileIdxArray==1
 							downloadMiji();

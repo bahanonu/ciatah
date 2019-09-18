@@ -20,7 +20,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% 2019.07.26 [14:00:00] - Additional improvements in adding movie borders based on turboreg outputs.
 		% 2019.08.07 [18:23:05] - Fix for using the _noSpatialFilter_ output where was registering to already registered iterations.
 		% 2019.09.06 [23:41:50]/2019.09 - Improved downsampling support.
-		% 2019.09.17 [19:14:27] - Improved alternative HDF5 dataset name support
+		% 2019.09.17 [19:14:27] - Improved alternative HDF5 dataset name support and added explicit rejection of non-video files for movieList.
 	% TODO
 		% Insert NaNs or mean of the movie into dropped frame location, see line 260
 		% Allow easy switching between analyzing all files in a folder together and each file in a folder individually
@@ -76,6 +76,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	options.refCropFrame = 1;
 	% Int: Defines gzip compression level (0-9). 0 = no compression, 9 = most compression.
 	options.deflateLevel = 1;
+	% Char array: list of file types supported.
+	options.supportedTypes = {'.h5','.hdf5','.tif','.tiff','.avi','.isxd'};
 	% ====
 	% OLD OPTIONS
 	% should the movie be saved?
@@ -355,8 +357,10 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			fn_structdisp(options)
 			% diary([obj.logSavePath filesep currentDateTimeStr '_' obj.folderBaseSaveStr{obj.fileNum} '_preprocessing.log']);
 
-			% get the list of movies
+			% Get the list of movies
 			movieList = getFileList(thisDir, options.fileFilterRegexp);
+			[movieList] = removeUnsupportedFiles(movieList,options);
+
 			% get information from directory
 			fileInfo = getFileInfo(movieList{1});
 			fileInfo
@@ -1537,7 +1541,7 @@ function [turboRegCoords] = turboregCropSelection(options,folderList)
 	folderListMinusComments = find(cellfun(@(x) isempty(x),strfind(folderList,'#')));
 	nFilesToRun = length(folderListMinusComments);
 	nFiles = length(folderList);
-	class(folderListMinusComments)
+	disp(['folderListMinusComments class: ' class(folderListMinusComments)])
 
 	coordsStructure.test = [];
 	for fileNumIdx = 1:nFilesToRun
@@ -1546,6 +1550,7 @@ function [turboRegCoords] = turboregCropSelection(options,folderList)
 		movieList = regexp(folderList{fileNum},',','split');
 		% movieList = movieList{1};
 		movieList = getFileList(movieList, options.fileFilterRegexp);
+		[movieList] = removeUnsupportedFiles(movieList,options);
 		if options.processMoviesSeparately==1
 			nMovies = length(movieList);
 		else
@@ -1563,8 +1568,9 @@ function [turboRegCoords] = turboregCropSelection(options,folderList)
 					dirInfo = regexp(folderList{fileNum},',','split');
 					thisDir = dirInfo{1};
 					display([num2str(fileNumIdx) '/' num2str(nFilesToRun) ': ' thisDir])
-					options.fileFilterRegexp
+					disp(['options.fileFilterRegexp: ' options.fileFilterRegexp])
 					movieList = getFileList(thisDir, options.fileFilterRegexp);
+					[movieList] = removeUnsupportedFiles(movieList,options);
 					cellfun(@disp,movieList);
 					inputFilePath = movieList{movieNo};
 					if nMovies==1
@@ -1872,4 +1878,45 @@ function inputMovie = cropInputMovieSlice(inputMovie,options,ResultsOutOriginal)
 	inputMovie(1:topRowCrop,1:end,:) = NaN;
 	% set bottom rows to NaN
 	inputMovie(bottomRowCrop:end,1:end,:) = NaN;
+end
+function [movieList] = removeUnsupportedFiles(movieList,options)
+	% Reject anything not HDF5, TIF, AVI, or ISXD
+	movieNo = 1;
+	movieTypeList = cell([1 length(movieList)]);
+	for iMovie = 1:length(movieList)
+		thisMoviePath = movieList{iMovie};
+		[options.movieType, supported] = getMovieFileType(thisMoviePath);
+		movieTypeList{iMovie} = options.movieType;
+		if supported==0
+			disp(['+Removing unsupported file from list: ' thisMoviePath]);
+		else
+			tmpMovieList{movieNo} = movieList{iMovie};
+			movieNo = movieNo + 1;
+		end
+	end
+	movieList = tmpMovieList;
+end
+function [movieType, supported] = getMovieFileType(thisMoviePath)
+	% determine how to load movie, don't assume every movie in list is of the same type
+	supported = 1;
+	try
+		[pathstr,name,ext] = fileparts(thisMoviePath);
+	catch
+		movieType = '';
+		supported = 0;
+		return;
+	end
+	% files are assumed to be named correctly (lying does no one any good)
+	if strcmp(ext,'.h5')||strcmp(ext,'.hdf5')
+		movieType = 'hdf5';
+	elseif strcmp(ext,'.tif')||strcmp(ext,'.tiff')
+		movieType = 'tiff';
+	elseif strcmp(ext,'.avi')
+		movieType = 'avi';
+	elseif strcmp(ext,'.isxd')
+		movieType = 'isxd';
+	else
+		movieType = '';
+		supported = 0;
+	end
 end
