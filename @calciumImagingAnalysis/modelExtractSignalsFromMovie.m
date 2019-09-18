@@ -847,7 +847,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	function runROISignalFinder()
 		% Use other algorithms to get an extracted ROI trace
 		movieList = getFileList(obj.inputFolders{obj.fileNum}, fileFilterRegexp);
-		[inputMovie thisMovieSize Npixels Ntime] = loadMovieList(movieList);
+		[inputMovie thisMovieSize Npixels Ntime] = loadMovieList(movieList,'convertToDouble',0,'inputDatasetName',obj.inputDatasetName,'treatMoviesAsContinuous',1);
 		obj.signalExtractionMethod = options.ROI.signalExtractionMethod;
 		obj.guiEnabled = 0;
 		obj.modelVarsFromFiles();
@@ -900,7 +900,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 
 		if oldPCAICA==1
 			display('running PCA-ICA, old version...')
-			[PcaFilters PcaTraces] = runPCA(movieList, '', nPCs, fileFilterRegexp);
+			[PcaFilters PcaTraces] = runPCA(movieList, '', nPCs, fileFilterRegexp,'inputDatasetName',obj.inputDatasetName);
 			if isempty(PcaFilters)
 				display('PCs are empty, skipping...')
 				return;
@@ -1003,6 +1003,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		% whether to use parallel processing
 		% cnmfOptions.use_parallel = 1;
 		cnmfOptions.nonCNMF.parallel = 1;
+		cnmfOptions.nonCNMF.inputDatasetName = obj.inputDatasetName;
 
 		% initialization method ('greedy','greedy_corr','sparse_NMF','HALS') (default: 'greedy')
 		cnmfOptions.init_method = options.CNMF.init_method;
@@ -1259,11 +1260,13 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			cnmfeOptions.ssub = options.CNMFE.ssub;
 			cnmfeOptions.tsub = options.CNMFE.tsub;
 		else
-			% Run the settings fule and transfer to settings
+			% Run the settings file and transfer to settings
 			cnmfeOpts.ssub = 1;
 			run(options.CNMFE.settingsFile);
 			cnmfeOptions = cnmfeOpts;
 		end
+
+		cnmfOptions.nonCNMF.inputDatasetName = obj.inputDatasetName;
 
 		try
 			display(repmat('*',1,14))
