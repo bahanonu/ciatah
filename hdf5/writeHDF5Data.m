@@ -108,13 +108,13 @@ function [success] = writeHDF5Data(inputData,saveDir,varargin)
 			end
 		end
 
-		display('success!!!');
+		disp('success!!!');
 		success = 1;
 	catch err
 		success = 0;
-		display('something went wrong 0_o');
-		display(repmat('@',1,7))
+		warning('Something went wrong 0_o');
+		disp(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));
-		display(repmat('@',1,7))
+		disp(repmat('@',1,7))
 	end
 end

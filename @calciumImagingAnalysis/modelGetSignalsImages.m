@@ -287,10 +287,18 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 			% inputImages = double(permute(cnmfAnalysisOutput.extractedImages,[3 1 2]));
 			inputImages = double(cnmfAnalysisOutput.extractedImages);
 			% inputSignals = double(permute(extractAnalysisOutput.traces, [2 1]));
-			inputSignals = double(cnmfAnalysisOutput.extractedSignals);
-			% inputSignals = double(cnmfAnalysisOutput.extractedSignalsEst);
 
-			inputSignals2 = double(cnmfAnalysisOutput.extractedSignalsEst);
+			switch obj.signalExtractionTraceOutputType
+				case 1
+					inputSignals = double(cnmfAnalysisOutput.extractedSignals);
+					inputSignals2 = double(cnmfAnalysisOutput.extractedSignalsEst);
+				case 2
+					inputSignals = double(cnmfAnalysisOutput.extractedSignalsEst);
+					inputSignals2 = double(cnmfAnalysisOutput.extractedSignals);
+				otherwise
+					inputSignals = double(cnmfAnalysisOutput.extractedSignalsEst);
+					inputSignals2 = double(cnmfAnalysisOutput.extractedSignals);
+			end
 
 			if options.loadAlgorithmPeaks==1
 				signalPeaks = cnmfAnalysisOutput.extractedPeaks>0;
@@ -306,18 +314,21 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 
 			inputSignals = normalizeSignalExtractionActivityTraces(inputSignals,inputImages);
 			inputSignals2 = normalizeSignalExtractionActivityTraces(inputSignals2,inputImages);
-
-			% inputSignals = extractAnalysisOutput.traces;
-			% inputImages = permute(extractAnalysisOutput.filters,[3 1 2]);
 		end
 		if exist('cnmfeAnalysisOutput','var')
-			% inputImages = double(permute(cnmfAnalysisOutput.extractedImages,[3 1 2]));
 			inputImages = double(cnmfeAnalysisOutput.extractedImages);
-			% inputSignals = double(permute(extractAnalysisOutput.traces, [2 1]));
-			% inputSignals = double(cnmfeAnalysisOutput.extractedSignalsEst);
-			inputSignals2 = double(cnmfeAnalysisOutput.extractedSignals);
 
-			inputSignals = double(cnmfeAnalysisOutput.extractedSignalsEst);
+			switch obj.signalExtractionTraceOutputType
+				case 1
+					inputSignals = double(cnmfeAnalysisOutput.extractedSignals);
+					inputSignals2 = double(cnmfeAnalysisOutput.extractedSignalsEst);
+				case 2
+					inputSignals = double(cnmfeAnalysisOutput.extractedSignalsEst);
+					inputSignals2 = double(cnmfeAnalysisOutput.extractedSignals);
+				otherwise
+					inputSignals = double(cnmfeAnalysisOutput.extractedSignalsEst);
+					inputSignals2 = double(cnmfeAnalysisOutput.extractedSignals);
+			end
 
 			if options.loadAlgorithmPeaks==1
 				signalPeaks = cnmfeAnalysisOutput.extractedPeaks>0;
@@ -344,6 +355,24 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 			% inputImages = permute(emAnalysisOutput.cellImages,[3 1 2]);
 			inputImages = emAnalysisOutput.cellImages;
 
+			% switch obj.signalExtractionTraceOutputType
+			% 	case 1
+			% 		%
+			% 	case 2
+			% 		%
+			% 	otherwise
+			% 		%
+			% end
+
+			emOutputType = {'scaledProbability','dsScaledProbability','cellTraces','dsCellTraces'};
+			for emI = 1:length(emOutputType)
+				if isfield(emAnalysisOutput,emOutputType{emI})
+					disp(['Using ' emOutputType{emI} '...'])
+					inputSignals = double(emAnalysisOutput.(emOutputType{emI}));
+					break;
+				end
+			end
+
 			if isfield(emAnalysisOutput,'scaledProbability')
 				display('using scaled probability...')
 				inputSignals = double(emAnalysisOutput.scaledProbability);
@@ -362,6 +391,17 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 			end
 
 			inputSignals2 = double(emAnalysisOutput.cellTraces);
+
+			switch obj.signalExtractionTraceOutputType
+				case 1
+					%
+				case 2
+					inputSignals2Tmp = inputSignals2;
+					inputSignals2 = inputSignals;
+					inputSignals = inputSignals2Tmp;
+				otherwise
+					%
+			end
 
 			% Convert to dF/F values
 			inputSignals = normalizeSignalExtractionActivityTraces(inputSignals,inputImages);

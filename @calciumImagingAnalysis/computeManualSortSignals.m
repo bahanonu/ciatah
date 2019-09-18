@@ -293,6 +293,8 @@ function obj = computeManualSortSignals(obj)
 
 			ioptions.signalLoopTicTocCheck = userIdxSignalLoopTicTocCheck;
 
+			ioptions.inputDatasetName = obj.inputDatasetName;
+
 			% ioptions.classifierFilepath = options.classifierFilepath;
 			% ioptions.classifierType = options.classifierType;
 
