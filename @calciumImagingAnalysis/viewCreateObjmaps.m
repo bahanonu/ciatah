@@ -131,6 +131,7 @@ function obj = viewCreateObjmaps(obj,varargin)
 	[figHandle figNo] = openFigure(85, '');
 	[figHandle figNo] = openFigure(123456, '');
 	[figHandle figNo] = openFigure(7989, '');
+	[figHandle figNo] = openFigure(48484848, '');
 	[figHandle figNo] = openFigure(43, '');
 
 	for thisFileNumIdx = 1:nFilesToAnalyze
@@ -542,6 +543,7 @@ function obj = viewCreateObjmaps(obj,varargin)
 						if ~isempty(options.signalCutXline)
 
 						end
+
 					[figHandle figNo] = openFigure(options.mapTraceGraphNo, '');
 				end
 				inputImages2 = inputImages;
@@ -563,6 +565,7 @@ function obj = viewCreateObjmaps(obj,varargin)
 				suptitle(sprintf('%s | # cells = %d',obj.folderBaseDisplayStr{obj.fileNum},sum(validRegion)))
 				drawnow
 
+				[figHandle figNo] = openFigure(options.mapTraceGraphNo, '');
 				set(figHandle,'PaperUnits','inches','PaperPosition',[0 0 15 10])
 				suptitle(sprintf('%s | # cells = %d',obj.folderBaseDisplayStr{obj.fileNum},sum(validRegion)))
 				binOld = obj.binDownsampleAmount; obj.binDownsampleAmount = [];
@@ -570,9 +573,9 @@ function obj = viewCreateObjmaps(obj,varargin)
 				obj.modelSaveImgToFile([],'objMapLabeled','current',[]);
 				obj.binDownsampleAmount = binOld;
 				if options.onlyShowMapTraceGraph==1
-					return
+					% return
+					continue
 				end
-				% continue
 				% [figHandle figNo] = openFigure(85, '');
 				% 	[inputSignals inputImages signalPeaks signalPeakIdx] = modelGetSignalsImages(obj,'returnType','raw');
 

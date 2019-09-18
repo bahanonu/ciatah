@@ -33,7 +33,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		fontSizeGui = 11;
 
 		defaultObjDir = pwd;
-		classVersion = 'v3.4.1-20190916';
+		classVersion = 'v3.4.2-20190917';
 		serverPath = '';
 		privateSettingsPath = ['private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
 		% place where functions can temporarily story user settings
@@ -48,6 +48,9 @@ classdef calciumImagingAnalysis < dynamicprops
 		folderNum = 1;
 		% number to current stimulus index
 		stimNum = 1;
+
+		% Github repo path, for updating the repository code
+		githubUrl = 'https://github.com/bahanonu/calciumImagingAnalysis';
 
 		% String: name of the analysis file to put in a folder to indicate to other computers the current computer is analyzing the folder and they should skip
 		concurrentAnalysisFilename = '_currentlyAnalyzingFolderCheck.mat';
@@ -83,6 +86,8 @@ classdef calciumImagingAnalysis < dynamicprops
 		modelGetSignalsImagesReturnType = 'filtered'
 		% name of input dataset name for preprocessing
 		inputDatasetName = '/1';
+		% name of output dataset name for preprocessing
+		outputDatasetName = '/1';
 		%
 		stimTriggerOnset = 0;
 		% paths for specific types of files
@@ -893,16 +898,19 @@ classdef calciumImagingAnalysis < dynamicprops
 		function obj = setMovieInfo(obj)
 			movieSettings = inputdlg({...
 					'Regular expression for raw files (e.g. if raw files all have "concat" in the name, put "concat"): ',...
-					'Regular expression for processed files, skip if no processed files (e.g. if processed files all have "dfof" in the name, put "dfof"): '...
+					'Regular expression for processed files, skip if no processed files (e.g. if processed files all have "dfof" in the name, put "dfof"): ',...
+					'[optional, if using HDF5] Input HDF5 file dataset name (e.g. "/images" for raw Inscopix or "/1" for example data, sans quotes): '...
 				},...
 				'Movie information',[1 100],...
 				{...
 					obj.fileFilterRegexpRaw,...
-					obj.fileFilterRegexp...
+					obj.fileFilterRegexp,...
+					obj.inputDatasetName...
 				}...
 			);
 			obj.fileFilterRegexpRaw = movieSettings{1};
 			obj.fileFilterRegexp = movieSettings{2};
+			obj.inputDatasetName = movieSettings{3};
 		end
 
 		function obj = showProtocolSubjectsSessions(obj)
