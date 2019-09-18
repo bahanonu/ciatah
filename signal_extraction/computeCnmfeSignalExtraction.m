@@ -386,7 +386,6 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(inputMovie,varargi
     % cnmfAnalysisOutput = cnmfeAnalysisOutput;
     % save([PATHSTR filesep folderName '_cnmfAnalysis.mat'],'cnmfAnalysisOutput');
 
-
     %% save the workspace for future analysis
     neuron.orderROIs('snr');
     try
