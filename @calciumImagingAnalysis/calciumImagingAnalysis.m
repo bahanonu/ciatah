@@ -217,9 +217,12 @@ classdef calciumImagingAnalysis < dynamicprops
 		classifierCNMFStructSaveStr = '_cnmfAnalysisClassifierDecisions.mat';
 		validCNMFStructVarname = 'validCNMF';
 		structCNMRVarname = 'cnmfAnalysisOutput';
+
 		% PCAICA, EM, EXTRACT, CNMF, CNMFE
 		signalExtractionMethod = 'PCAICA';
 		% signalExtractionMethod = 'EM';
+		% Int: indicates which trace output to use from 1 = primary trace, 2 = secondary trace, etc.
+		signalExtractionTraceOutputType = 1;
 
 		settingOptions = struct(...
 			'analysisType',  {{'group','individual'}},...
@@ -771,12 +774,15 @@ classdef calciumImagingAnalysis < dynamicprops
 
 			if verLessThan('matlab','9.0')
 				pathFilter = cellfun(@isempty,regexpi(pathListArray,[filesep 'cnmfe']));
-				pathFilter1 = cellfun(@isempty,regexpi(pathListArray,[filesep 'cnmf_original']));
-				pathFilter2 = cellfun(@isempty,regexpi(pathListArray,[filesep 'cnmf_current']));
-				pathFilter3 = cellfun(@isempty,regexpi(pathListArray,[filesep 'cvx_rd']));
-				pathListArray = pathListArray(pathFilter&pathFilter1&pathFilter2&pathFilter3);
+				pathFilter = pathFilter & cellfun(@isempty,regexpi(pathListArray,[filesep 'cnmf_original']));
+				pathFilter = pathFilter & cellfun(@isempty,regexpi(pathListArray,[filesep 'cnmf_current']));
+				pathFilter = pathFilter & cellfun(@isempty,regexpi(pathListArray,[filesep 'cvx_rd']));
+				pathFilter = pathFilter & cellfun(@isempty,regexpi(pathListArray,[filesep 'Fiji.app']));
+				pathFilter = pathFilter & cellfun(@isempty,regexpi(pathListArray,[filesep 'fiji-win64-20151222']));
+				% pathListArray = pathListArray(pathFilter&pathFilter1&pathFilter2&pathFilter3&pathFilter4);
+				pathListArray = pathListArray(pathFilter);
 			else
-				matchIdx = contains(pathListArray,{[filesep 'cnmfe'],[filesep 'cnmf_original'],[filesep 'cnmf_current'],[filesep 'cvx_rd']});
+				matchIdx = contains(pathListArray,{[filesep 'cnmfe'],[filesep 'cnmf_original'],[filesep 'cnmf_current'],[filesep 'cvx_rd'],[filesep 'Fiji.app'],[filesep 'fiji-win64-20151222']});
 				pathListArray = pathListArray(~matchIdx);
 			end
 
