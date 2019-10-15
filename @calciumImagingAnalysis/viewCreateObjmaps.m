@@ -356,14 +356,14 @@ function obj = viewCreateObjmaps(obj,varargin)
 					end
 					Comb(:,:,2) = E+0.8*colorObjMaps{2}; % green
 					Comb(:,:,3) = E+0.8*colorObjMaps{3}; % blue
-
-					subplotTmp(2,3,2)
+					linkImgAxes = [];
+					linkImgAxes(end+1) = subplotTmp(2,3,2)
 						imagesc(Comb2)
 						hold on;
 						box off
 						title('Cellmap overlay processed movie')
 						axis equal tight
-					subplotTmp(2,3,1)
+					linkImgAxes(end+1) = subplotTmp(2,3,1)
 						imagesc(Comb)
 						hold on;
 						box off
@@ -559,11 +559,13 @@ function obj = viewCreateObjmaps(obj,varargin)
 				end
 				clear inputImages2
 
-				subplotTmp(2,3,3)
-				imagesc(emImages2); axis equal tight; box off;
-				title('colored cell map')
-				suptitle(sprintf('%s | # cells = %d',obj.folderBaseDisplayStr{obj.fileNum},sum(validRegion)))
-				drawnow
+				linkImgAxes(end+1) = subplotTmp(2,3,3)
+					imagesc(emImages2); axis equal tight; box off;
+					title('colored cell map')
+					suptitle(sprintf('%s | # cells = %d',obj.folderBaseDisplayStr{obj.fileNum},sum(validRegion)))
+					drawnow
+
+				linkaxes(linkImgAxes);
 
 				[figHandle figNo] = openFigure(options.mapTraceGraphNo, '');
 				set(figHandle,'PaperUnits','inches','PaperPosition',[0 0 15 10])

@@ -137,15 +137,8 @@ function [cnmfAnalysisOutput] = computeCnmfSignalExtractionClass(inputMovie,numE
 	manageParallelWorkers('parallel',options.nonCNMF.parallel);
 	% ========================
 	% if cvx is not in the path, ask user for file
-	if isempty(options.nonCNMF.cvxPath)
-		if isempty(which('cvx_begin'))
-			display('Dialog box: select cvx_setup.m.')
-			[filePath,folderPath,~] = uigetfile(['*.*'],'select cvx_setup.m');
-			run([folderPath filesep filePath]);
-		end
-	else
-		run(options.nonCNMF.cvxPath);
-	end
+	runCvxSetup();
+
 	startTimeWithMovie = tic;
 	% re-initialize any options that are dependent on other options
 	options.gSig = 2*options.otherCNMF.tau+1;  % Size of Gaussian kernel  2*tau+1
@@ -290,7 +283,9 @@ function [cnmfAnalysisOutput] = computeCnmfSignalExtractionClass(inputMovie,numE
 		clear initComp ndOriginal filterIdx;
 	end
 
-	CNM.plotCenters()           % plot center of ROIs detected during initialization
+	if options.nonCNMF.showFigures==1
+		CNM.plotCenters()           % plot center of ROIs detected during initialization
+	end
 	CNM.updateSpatial();        % update spatial components
 	CNM.updateTemporal(0);      % update temporal components (do not deconvolve at this point)
 

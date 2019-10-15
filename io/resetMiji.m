@@ -15,6 +15,7 @@ function [success] = resetMiji(varargin)
 
 	% changelog
 		% 2019.09.09 [18:04:10] - Updated to add fallback to modelAddOutsideDependencies to ask for path to Fiji/Miji in case it is not properly in the path or has been moved.
+		% 2019.10.15 [12:29:30] - Added flag to prevent recursive loop between resetMiji and modelAddOutsideDependencies.
 	% TODO
 		%
 
@@ -48,7 +49,10 @@ function [success] = resetMiji(varargin)
 			end
 			clear MIJ miji Miji mij;
 			% Load Miji so paths added to javaclasspath('-dynamic')
-			currP=pwd;Miji;cd(currP);
+			currP=pwd;
+			% Miji;
+			Miji(false);
+			cd(currP);
 			MIJ.exit;
 			% pause(1);
 			% java.lang.Runtime.getRuntime().gc;
@@ -60,7 +64,7 @@ function [success] = resetMiji(varargin)
 			disp(repmat('@',1,7))
 
 			try
-				modelAddOutsideDependencies('miji');
+				modelAddOutsideDependencies('miji','recursionExit',1);
 			catch err
 				disp(repmat('@',1,7))
 				disp(getReport(err,'extended','hyperlinks','on'));

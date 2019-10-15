@@ -117,6 +117,13 @@ function [croppedPeakImages] = compareSignalToMovie(inputMovie, inputImages, inp
 		xHigh = xCoords(signalNo) + cropSize;
 		yLow = yCoords(signalNo) - cropSize;
 		yHigh = yCoords(signalNo) + cropSize;
+
+		% Force to be integer for indexing
+		xLow = round(xLow);
+		xHigh = round(xHigh);
+		yLow = round(yLow);
+		yHigh = round(yHigh);
+
 		% check that not outside movie dimensions
 		xMin = 1;
 		xMax = movieDims(2);

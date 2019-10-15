@@ -220,6 +220,13 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 				xHigh = xCoords(signalNo) + options_cropSize;
 				yLow = yCoords(signalNo) - options_cropSize;
 				yHigh = yCoords(signalNo) + options_cropSize;
+
+				% Force to be integer for indexing
+				xLow = round(xLow);
+				xHigh = round(xHigh);
+				yLow = round(yLow);
+				yHigh = round(yHigh);
+
 				% check that not outside movie dimensions
 				xMin = 1 ;
 				xMax = movieDims2;
@@ -328,6 +335,13 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 				xHigh = xCoords(signalNo) + options_cropSize;
 				yLow = yCoords(signalNo) - options_cropSize;
 				yHigh = yCoords(signalNo) + options_cropSize;
+
+				% Force to be integer for indexing
+				xLow = round(xLow);
+				xHigh = round(xHigh);
+				yLow = round(yLow);
+				yHigh = round(yHigh);
+
 				% check that not outside movie dimensions
 				xMin = 1 ;
 				yMin = 1 ;

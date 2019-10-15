@@ -10,12 +10,18 @@ function loadBatchFxns()
 	% changelog
 		% 2019.07.25 [09:08:59] - Changed so that it adds folders to path from the directory where loadBatchFxns.m is located.
 		% 2019.08.20 [09:18:01] - Improve speed by checking for folders already in MATLAB path.
-		% 2019.08.25 [15:29:36] - Simplified Miji loading
+		% 2019.08.25 [15:29:36] - Simplified Miji loading.
+		% 2019.10.08 [11:18:53] - Checked whether on parallel worker, if so they do not load Miji.
+		% 2019.10.08 [18:01:44] - Make sure default Fiji directories are not included and load Miji sans GUI to reduce issues with users pressing other buttons when Miji appears during initial loading.
+		% 2019.10.11 [09:59:17] - Check that Miji plugins.dir has been added as a Java system property, if so then skip full loading of Miji each time to save time.
+		% 2019.10.15 [12:30:53] - Fixed checking for Fiji path in Unix systems.
 	% TODO
 		%
 
 	% Disable the handle graphics warning "The DrawMode property will be removed in a future release. Use the SortMethod property instead." from being displayed. Comment out this line for debugging purposes as needed.
 	warning('off','MATLAB:hg:WillBeRemovedReplaceWith')
+
+	externalProgramsDir = '_external_programs';
 
 	% add controller directory and subdirectories to path
 	functionLocation = dbstack('-completenames');
@@ -30,12 +36,15 @@ function loadBatchFxns()
 
 	if verLessThan('matlab','9.0')
 		pathFilter = cellfun(@isempty,regexpi(pathListArray,[filesep 'cnmfe']));
-		pathFilter1 = cellfun(@isempty,regexpi(pathListArray,[filesep 'cnmf_original']));
-		pathFilter2 = cellfun(@isempty,regexpi(pathListArray,[filesep 'cnmf_current']));
-		pathFilter3 = cellfun(@isempty,regexpi(pathListArray,[filesep 'cvx_rd']));
-		pathListArray = pathListArray(pathFilter&pathFilter1&pathFilter2&pathFilter3);
+		pathFilter = pathFilter & cellfun(@isempty,regexpi(pathListArray,[filesep 'cnmf_original']));
+		pathFilter = pathFilter & cellfun(@isempty,regexpi(pathListArray,[filesep 'cnmf_current']));
+		pathFilter = pathFilter & cellfun(@isempty,regexpi(pathListArray,[filesep 'cvx_rd']));
+		pathFilter = pathFilter & cellfun(@isempty,regexpi(pathListArray,[filesep 'Fiji.app']));
+		pathFilter = pathFilter & cellfun(@isempty,regexpi(pathListArray,[filesep 'fiji-win64-20151222']));
+		% pathListArray = pathListArray(pathFilter&pathFilter1&pathFilter2&pathFilter3&pathFilter4);
+		pathListArray = pathListArray(pathFilter);
 	else
-		matchIdx = contains(pathListArray,{[filesep 'cnmfe'],[filesep 'cnmf_original'],[filesep 'cnmf_current'],[filesep 'cvx_rd']});
+		matchIdx = contains(pathListArray,{[filesep 'cnmfe'],[filesep 'cnmf_original'],[filesep 'cnmf_current'],[filesep 'cvx_rd'],[filesep 'Fiji.app'],[filesep 'fiji-win64-20151222']});
 		pathListArray = pathListArray(~matchIdx);
 	end
 
@@ -79,40 +88,58 @@ function loadBatchFxns()
 		fprintf('Inscopix Data Processing software already in path: %s\n',baseInscopixPath)
 	end
 
-	% add path for Miji, change as needed
-	loadLocalFunctions = ['private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
-	if exist(loadLocalFunctions,'file')~=0
-		run(loadLocalFunctions);
+	% Only call Miji functions if NOT on a parallel worker
+	if ~isempty(getCurrentTask())
+		disp('Inside MATLAB worker, do not load Miji.')
+	elseif ~isempty(java.lang.System.getProperty('plugins.dir'))
+		disp('Miji JAR files already loaded, skipping. If Miji issue, use "resetMiji".')
 	else
-		pathtoMiji = ['_external_programs' filesep 'fiji-win64-20151222' filesep 'Fiji.app' filesep 'scripts\'];
-		% create privateLoadBatchFxns.m
-	end
-	onPath = subfxnCheckPath(pathtoMiji);
-	if exist(pathtoMiji,'dir')==7&&onPath==0
-		if onPath==1
-			fprintf('Miji already in PATH: %s.\n',pathtoMiji)
+		% add path for Miji, change as needed
+		loadLocalFunctions = ['private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
+		if exist(loadLocalFunctions,'file')~=0
+			run(loadLocalFunctions);
 		else
-			addpath(pathtoMiji);
-			fprintf('Added private Miji to path: %s.\n',pathtoMiji)
+			fijiList = getFileList('_external_programs','fiji-.*-20151222(?!.zip|.dmg)');
+			if ~isempty(fijiList)
+				% pathtoMiji = ['_external_programs' filesep 'fiji-win64-20151222' filesep 'Fiji.app' filesep 'scripts'];
+				pathtoMiji = [fijiList{1} filesep 'Fiji.app' filesep 'scripts'];
+			else
+			end
+			% create privateLoadBatchFxns.m
 		end
-		openMijiCheck();
-		% % Get Miji properly loaded in the path
-		% if exist('Miji.m')==2&&exist('MIJ','class')==0
-		% 	resetMiji;
-		% else
-		% end
-	elseif onPath==1
-		fprintf('Miji already in MATLAB path: %s\n',pathtoMiji);
-		openMijiCheck()
-	else
-		fprintf('No folder at specified path, retry! %s.\n',pathtoMiji)
+		% If no path to Miji, just skip and request user download Fiji/Miji.
+		if exist('pathtoMiji','var')
+			onPath = subfxnCheckPath(pathtoMiji);
+			if exist(pathtoMiji,'dir')==7&&onPath==0
+				if onPath==1
+					fprintf('Miji already in PATH: %s.\n',pathtoMiji)
+				else
+					addpath(pathtoMiji);
+					fprintf('Added private Miji to path: %s.\n',pathtoMiji)
+				end
+				openMijiCheck();
+				% % Get Miji properly loaded in the path
+				% if exist('Miji.m')==2&&exist('MIJ','class')==0
+				% 	resetMiji;
+				% else
+				% end
+			elseif onPath==1
+				fprintf('Miji already in MATLAB path: %s\n',pathtoMiji);
+				openMijiCheck()
+			else
+				fprintf('No folder at specified path (%s), retry! or run below command on command line to set Miji directory:\n\n modelAddOutsideDependencies(''miji'');\n',pathtoMiji)
+			end
+		else
+			disp('Please run "downloadMiji();" to download Fiji and load Miji into MATLAB.')
+		end
 	end
 	% cnmfVersionDirLoad('none');
 end
 function openMijiCheck()
 	try
 		currP=pwd;
-		Miji;
+		% Miji;
+		Miji(false);
 		% MIJ.start;
 		cd(currP);
 		MIJ.exit;

@@ -8,13 +8,14 @@ function [success] = modelAddOutsideDependencies(dependencyName,varargin)
 		%
 
 	% changelog
-		%
+		% 2019.10.15 [12:29:30] - Added flag to prevent recursive loop between resetMiji and modelAddOutsideDependencies.
 	% TODO
 		%
 
 	%========================
 	options.exampleOption = '';
 	options.defaultExternalProgramDir = ['_external_programs'];
+	options.recursionExit = 0;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -60,6 +61,10 @@ function [success] = modelAddOutsideDependencies(dependencyName,varargin)
 							fclose(fid);
 						end
 						addpath(pathToMiji);
+					end
+
+					if options.recursionExit==1
+						return;
 					end
 
 					% % If MIJ class not loaded, load Miji.m.

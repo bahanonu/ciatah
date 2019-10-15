@@ -29,15 +29,38 @@ function manageMiji(varargin)
 		startStop = options.startStop;
 		switch startStop
 			case 'start'
-				% If MIJ class not loaded, load Miji.m.
-				if exist('MIJ')~=8
-					% Load Miji so paths added to javaclasspath('-dynamic')
-					currP=pwd;Miji;cd(currP);
-					MIJ.exit;
+				try
+					% If MIJ class not loaded, load Miji.m.
+					if exist('MIJ','class')~=8
+						% Load Miji so paths added to javaclasspath('-dynamic')
+						currP=pwd;
+						% Miji;
+						Miji(false);
+						cd(currP);
+						MIJ.exit;
+					end
+				catch err
+					disp(repmat('@',1,7))
+					disp(getReport(err,'extended','hyperlinks','on'));
+					disp(repmat('@',1,7))
+
+					disp('Reset Java class path and Miji then try again');
+					resetMiji
+
+					% Try again after resetting Miji.
+					try
+						MIJ.start;
+					catch err
+						disp(repmat('@',1,7))
+						disp('Apparently Miji hates your computer, sorry!')
+						disp(getReport(err,'extended','hyperlinks','on'));
+						disp(repmat('@',1,7))
+						return;
+					end
 				end
 
 				% If Miji.m not in path, ask user
-				if exist('Miji.m')~=2
+				if exist('Miji.m','file')~=2
 					modelAddOutsideDependencies('miji');
 				end
 

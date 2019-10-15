@@ -2,6 +2,8 @@ function obj = modelAddNewFolders(obj,varargin)
 	% Add folders to the class.
 	% Biafra Ahanonu
 	% started: 2014.12.22 (probably before)
+	% changelog
+		% 2019.10.09 [18:28:12] - use inputdlgcol to allow re-sizing of window
 	%========================
 	% Cell array of folders to add, particularly for GUI-less operations
 	options.folderCellArray = {};
@@ -17,7 +19,11 @@ function obj = modelAddNewFolders(obj,varargin)
 	try
 		nExistingFolders = length(obj.inputFolders);
 		if isempty(options.folderCellArray)
-			newFolderList = inputdlg('One new line per folder path. Enter folder path WITHOUT any single/double quotation marks around the path.','Adding folders to calciumImagingAnalysis object.',[21 150]);
+			AddOpts.Resize='on';
+			AddOpts.WindowStyle='normal';
+			AddOpts.Interpreter='tex';
+			% inputdlg
+			newFolderList = inputdlgcol('One new line per folder path. Enter folder path WITHOUT any single/double quotation marks around the path.','Adding folders to calciumImagingAnalysis object.',[21 150],{''},AddOpts);
             if isempty(newFolderList)
                 warning('No folders given. Please re-run modelAddNewFolders.')
                 return

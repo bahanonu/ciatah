@@ -2,6 +2,15 @@ function [success] = downloadMiji(varargin)
 	% Biafra Ahanonu
 	% Downloads the correct Miji version for each OS.
 	% started: 2019.07.30 [09:58:04]
+	% inputs
+		%
+	% outputs
+		%
+
+	% changelog
+		% 2019.10.15 [10:48:10] - Fix so DMGs downloaded for MAC have the proper file extension.
+	% TODO
+		%
 
 	%========================
 	% options.defaultDir = ['private' filesep 'programs'];
@@ -78,7 +87,12 @@ function [success] = downloadMiji(varargin)
 			gitName{gitNo} = outputDir{gitNo};
 
 			% Download git repo zip
-			rawSavePathDownload = [rawSavePathDownload filesep outputDir{gitNo} '.zip'];
+			if ismac
+				rawSavePathDownload = [rawSavePathDownload filesep outputDir{gitNo} '.dmg'];
+			else
+				rawSavePathDownload = [rawSavePathDownload filesep outputDir{gitNo} '.zip'];
+			end
+
 			if exist(rawSavePathDownload,'file')~=2
 				fprintf('Downloading %s file to %s\n',gitRepos{gitNo},rawSavePathDownload)
 				websave(rawSavePathDownload,gitRepos{gitNo});

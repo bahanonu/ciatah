@@ -41,6 +41,8 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 		% 2019.01.16 [07:51:01] Added ISXD support (Inscopix format for v3+).
 		% 2019.03.10 [19:28:47] Improve support for loading 1000s of TIF files by adding some performance improvements, ASSUMES that all tifs being loaded are from the same movie and have similar properties and dimensions. See options.onlyCheckFirstFileInfo.
 		% 2019.06.06 [19:39:17] - Misc code fixes
+		% 2019.10.07 [10:21:09] - Added h5info support and support for 16-bit float types.
+		% 2019.10.09 [17:14:24] - Change dataset reading to handle HDF5 where main dataset is not a top-level directory OR it is a sub-directory that is not the only dataset in the HDF5.
 	% TODO
 		% OPEN
 			% MAKE tiff loading recognize frameList input
@@ -57,7 +59,7 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 	options.supportedTypes = {'.h5','.hdf5','.tif','.tiff','.avi','.isxd'};
 	% movie type
 	options.movieType = 'tiff';
-	% hierarchy name in hdf5 where movie data is located
+	% Str: hierarchy name in hdf5 where movie data is located
 	options.inputDatasetName = '/1';
 	% fallback hierarchy name, e.g. '/images'
 	options.inputDatasetNameBackup = [];
@@ -87,6 +89,8 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 	options.loadMovieInEqualParts = [];
 	% Binary: 1 = only check information for 1st file then populate the rest with identical information, useful for folders with thousands of TIF or other images
 	options.onlyCheckFirstFileInfo = 0;
+	% Binary: 1 = h5info, 0 = hdf5info. DO NOT rely on this, will be deprecated/eliminated soon.
+	options.useH5info = 1;
 	% get options
 	options = getOptions(options,varargin);
 	% unpack options into current workspace
@@ -216,13 +220,17 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 					dims.z(iMovie) = nFrames;
 				end
 			case 'hdf5'
-				%
-				hinfo = hdf5info(thisMoviePath);
-				[hReadInfo, thisDatasetName] = getHdf5Info();
+				if options.useH5info==1
+					hinfo = h5info(thisMoviePath);
+				else
+					hinfo = hdf5info(thisMoviePath);
+				end
+				[hReadInfo, thisDatasetName, datasetDims] = getHdf5Info();
 				if options.displayDiagnosticInfo==1
 					display(hReadInfo)
 					hReadInfo.Name
 				end
+				hReadInfo.Dims = datasetDims;
 				dims.x(iMovie) = hReadInfo.Dims(1);
 				dims.y(iMovie) = hReadInfo.Dims(2);
 				dims.z(iMovie) = hReadInfo.Dims(3);
@@ -429,7 +437,11 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 			% ========================
 			case 'hdf5'
 				if isempty(thisFrameList)&&options.forcePerFrameRead==0
-					hinfo = hdf5info(thisMoviePath);
+					if options.useH5info==1
+						hinfo = h5info(thisMoviePath);
+					else
+						hinfo = hdf5info(thisMoviePath);
+					end
 					% hReadInfo = hinfo.GroupHierarchy.Datasets(1);
 					% datasetNames = {hinfo.GroupHierarchy.Datasets.Name};
 					% thisDatasetName = strmatch(inputDatasetName,datasetNames);
@@ -438,9 +450,17 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 					% read in the file
 					% hReadInfo.Attributes
 					if options.largeMovieLoad==1
-						outputMovie = hdf5read(hReadInfo);
+						if options.useH5info==1
+							outputMovie = h5read(thisMoviePath,options.inputDatasetName);
+						else
+							outputMovie = hdf5read(hReadInfo);
+						end
 					else
-						tmpMovie = hdf5read(hReadInfo);
+						if options.useH5info==1
+							tmpMovie = h5read(thisMoviePath,options.inputDatasetName);
+						else
+							tmpMovie = hdf5read(hReadInfo);
+						end
 						if isempty(options.loadSpecificImgClass)
 						else
 							tmpMovie = cast(tmpMovie,imgClass);
@@ -452,9 +472,14 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 						% if contiguous segment of HDF5 file, read that in as one block to save time if user specifies as such
 						inputFilePath = thisMoviePath;
 						framesToGrab = thisFrameList;
-						hinfo = hdf5info(inputFilePath);
+						if options.useH5info==1
+							hinfo = h5info(inputFilePath);
+						else
+							hinfo = hdf5info(inputFilePath);
+						end
 						% hReadInfo = hinfo.GroupHierarchy.Datasets(1);
-						[hReadInfo, thisDatasetName] = getHdf5Info();
+						[hReadInfo, thisDatasetName, datasetDims] = getHdf5Info();
+						hReadInfo.Dims = datasetDims;
 						xDim = hReadInfo.Dims(1);
 						yDim = hReadInfo.Dims(2);
 
@@ -471,9 +496,14 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 						subfxnDisplay('Read frame-by-frame',options)
 						% read frame-by-frame to save space
 						inputFilePath = thisMoviePath;
-						hinfo = hdf5info(inputFilePath);
+						if options.useH5info==1
+							hinfo = h5info(inputFilePath);
+						else
+							hinfo = hdf5info(inputFilePath);
+						end
 						% hReadInfo = hinfo.GroupHierarchy.Datasets(1);
-						[hReadInfo, thisDatasetName] = getHdf5Info();
+						[hReadInfo, thisDatasetName, datasetDims] = getHdf5Info();
+						hReadInfo.Dims = datasetDims;
 						xDim = hReadInfo.Dims(1);
 						yDim = hReadInfo.Dims(2);
 						% tmpMovie = readHDF5Subset(inputFilePath,[0 0 thisFrameList(1)],[xDim yDim length(thisFrameList)],'datasetName',options.inputDatasetName);
@@ -663,30 +693,68 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 		display(repmat('#',1,3))
 	end
 
-	function [hReadInfo, thisDatasetName] = getHdf5Info()
+	function [hReadInfo, thisDatasetName, datasetDims] = getHdf5Info()
 		if ischar(options.inputDatasetName)
 			try
-				datasetNames = {hinfo.GroupHierarchy.Datasets.Name};
-				thisDatasetName = strmatch(options.inputDatasetName,datasetNames);
-				hReadInfo = hinfo.GroupHierarchy.Datasets(thisDatasetName);
-			catch
-				try
-					datasetNames = {hinfo.GroupHierarchy.Groups.Datasets.Name};
-					thisDatasetName = strmatch(options.inputDatasetName,datasetNames);
-					hReadInfo = hinfo.GroupHierarchy.Groups.Datasets(thisDatasetName);
-				catch
-					nGroups = length(hinfo.GroupHierarchy.Groups);
-					datasetNames = {};
-					for groupNo = 1:nGroups
-						datasetNames{groupNo} = hinfo.GroupHierarchy.Groups(groupNo).Datasets.Name;
-					end
-					thisDatasetName = strmatch(options.inputDatasetName,datasetNames);
-					thisGroupNo = strmatch(options.inputDatasetName,datasetNames);
-					% hReadInfo = hinfo.GroupHierarchy.Groups(thisDatasetName).Datasets;
-					% hinfo.GroupHierarchy.Groups(thisGroupNo).Datasets.Name
-					thisDatasetNo = strmatch(options.inputDatasetName,{hinfo.GroupHierarchy.Groups(thisGroupNo).Datasets.Name});
-					hReadInfo = hinfo.GroupHierarchy.Groups(thisGroupNo).Datasets(thisDatasetNo);
+				if options.useH5info==1
+					datasetNames = {hinfo.Datasets.Name};
+                    % Strip leading forward slash for h5info compatability
+					thisDatasetName = strcmp(options.inputDatasetName(2:end),datasetNames);
+					hReadInfo = hinfo.Datasets(thisDatasetName);
+                    if isempty(hReadInfo)
+                        hReadInfo = h5info(thisMoviePath,options.inputDatasetName);
+                        thisDatasetName = options.inputDatasetName;
+                    end
+					datasetDims = hReadInfo.Dataspace.Size;
+				else
+					datasetNames = {hinfo.GroupHierarchy.Datasets.Name};
+					thisDatasetName = strcmp(options.inputDatasetName,datasetNames);
+					hReadInfo = hinfo.GroupHierarchy.Datasets(thisDatasetName);
+                    if isempty(hReadInfo)
+                        hReadInfo = h5info(thisMoviePath,options.inputDatasetName);
+                        datasetDims = hReadInfo.Dataspace.Size;
+                        thisDatasetName = options.inputDatasetName;
+                    else
+                        datasetDims = hReadInfo.Dims;
+                    end
 				end
+            catch err
+                disp(repmat('@',1,7))
+                disp(getReport(err,'extended','hyperlinks','on'));
+                disp(repmat('@',1,7))
+                try
+                    h5disp(thisMoviePath)
+                catch
+                end
+                try
+                    hReadInfo = h5info(thisMoviePath,options.inputDatasetName);
+                    datasetDims = hReadInfo.Dataspace.Size;
+                    thisDatasetName = options.inputDatasetName;
+                catch err
+                    disp(repmat('@',1,7))
+                    disp(getReport(err,'extended','hyperlinks','on'));
+                    disp(repmat('@',1,7))
+                    try
+                        datasetNames = {hinfo.GroupHierarchy.Groups.Datasets.Name};
+                        thisDatasetName = strmatch(options.inputDatasetName,datasetNames);
+                        hReadInfo = hinfo.GroupHierarchy.Groups.Datasets(thisDatasetName);
+                    catch err
+                        disp(repmat('@',1,7))
+                        disp(getReport(err,'extended','hyperlinks','on'));
+                        disp(repmat('@',1,7))
+                        nGroups = length(hinfo.GroupHierarchy.Groups);
+                        datasetNames = {};
+                        for groupNo = 1:nGroups
+                            datasetNames{groupNo} = hinfo.GroupHierarchy.Groups(groupNo).Datasets.Name;
+                        end
+                        thisDatasetName = strmatch(options.inputDatasetName,datasetNames);
+                        thisGroupNo = strmatch(options.inputDatasetName,datasetNames);
+                        % hReadInfo = hinfo.GroupHierarchy.Groups(thisDatasetName).Datasets;
+                        % hinfo.GroupHierarchy.Groups(thisGroupNo).Datasets.Name
+                        thisDatasetNo = strmatch(options.inputDatasetName,{hinfo.GroupHierarchy.Groups(thisGroupNo).Datasets.Name});
+                        hReadInfo = hinfo.GroupHierarchy.Groups(thisGroupNo).Datasets(thisDatasetNo);
+                    end
+                end
 			end
 		else
 			hReadInfo = hinfo.GroupHierarchy.Datasets(options.inputDatasetName);
