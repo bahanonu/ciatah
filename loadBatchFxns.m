@@ -15,6 +15,7 @@ function loadBatchFxns()
 		% 2019.10.08 [18:01:44] - Make sure default Fiji directories are not included and load Miji sans GUI to reduce issues with users pressing other buttons when Miji appears during initial loading.
 		% 2019.10.11 [09:59:17] - Check that Miji plugins.dir has been added as a Java system property, if so then skip full loading of Miji each time to save time.
 		% 2019.10.15 [12:30:53] - Fixed checking for Fiji path in Unix systems.
+		% 2019.10.15 [21:57:45] - Improved checking for directories that should not be loaded, remove need for verLessThan('matlab','9.0') check.
 	% TODO
 		%
 
@@ -23,7 +24,7 @@ function loadBatchFxns()
 
 	externalProgramsDir = '_external_programs';
 
-	% add controller directory and subdirectories to path
+	% Add calciumImagingAnalysis directory and subdirectories to path, use dbstack to ensure only add in the root directory regardless of where user has current MATLAB folder.
 	functionLocation = dbstack('-completenames');
 	functionLocation = functionLocation(1).file;
 	[functionDir,~,~] = fileparts(functionLocation);
@@ -34,20 +35,23 @@ function loadBatchFxns()
 	% pathFilter = cellfun(@isempty,regexpi(pathListArray,[filesep 'docs']));
 	pathListArray = pathListArray(pathFilter);
 
-	if verLessThan('matlab','9.0')
-		pathFilter = cellfun(@isempty,regexpi(pathListArray,[filesep 'cnmfe']));
-		pathFilter = pathFilter & cellfun(@isempty,regexpi(pathListArray,[filesep 'cnmf_original']));
-		pathFilter = pathFilter & cellfun(@isempty,regexpi(pathListArray,[filesep 'cnmf_current']));
-		pathFilter = pathFilter & cellfun(@isempty,regexpi(pathListArray,[filesep 'cvx_rd']));
-		pathFilter = pathFilter & cellfun(@isempty,regexpi(pathListArray,[filesep 'Fiji.app']));
-		pathFilter = pathFilter & cellfun(@isempty,regexpi(pathListArray,[filesep 'fiji-win64-20151222']));
-		% pathListArray = pathListArray(pathFilter&pathFilter1&pathFilter2&pathFilter3&pathFilter4);
-		pathListArray = pathListArray(pathFilter);
+	% =================================================
+	% Remove directories that should not be loaded by default
+	% matchIdx = contains(pathListArray,{[filesep 'cnmfe'],[filesep 'cnmf_original'],[filesep 'cnmf_current'],[filesep 'cvx_rd'],[filesep 'Fiji.app'],[filesep 'fiji-.*-20151222']});
+	% pathListArray = pathListArray(~matchIdx);
+	if ismac
+		sepChar = filesep;
+	elseif isunix
+		sepChar = filesep;
+	elseif ispc
+		sepChar = '\\';
 	else
-		matchIdx = contains(pathListArray,{[filesep 'cnmfe'],[filesep 'cnmf_original'],[filesep 'cnmf_current'],[filesep 'cvx_rd'],[filesep 'Fiji.app'],[filesep 'fiji-win64-20151222']});
-		pathListArray = pathListArray(~matchIdx);
+		sepChar = filesep;
 	end
+	matchIdx = cellfun(@isempty,regexp(pathListArray,[sepChar '(cnmfe|cnmf_original|cnmf_current|cvx_rd|Fiji\.app|fiji-.*-20151222)']));
+	pathListArray = pathListArray(matchIdx);
 
+	% =================================================
 	% Remove paths that are already in MATLAB path to save time
 	pathFilter = cellfun(@isempty,pathListArray);
 	pathListArray = pathListArray(~pathFilter);
@@ -61,7 +65,8 @@ function loadBatchFxns()
 		addpath(pathList);
 	end
 
-	% Automatically add Inscopix
+	% =================================================
+	% Automatically add Inscopix Data Processing Software
 	if ismac
 		baseInscopixPath = '';
 	elseif isunix
@@ -88,6 +93,8 @@ function loadBatchFxns()
 		fprintf('Inscopix Data Processing software already in path: %s\n',baseInscopixPath)
 	end
 
+	% =================================================
+	% Load Miji
 	% Only call Miji functions if NOT on a parallel worker
 	if ~isempty(getCurrentTask())
 		disp('Inside MATLAB worker, do not load Miji.')

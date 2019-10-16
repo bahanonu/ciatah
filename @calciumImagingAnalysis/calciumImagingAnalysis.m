@@ -14,6 +14,8 @@ classdef calciumImagingAnalysis < dynamicprops
 		% 2019.07.25 [09:39:16] - Updated loading so that users only need to be in the root calciumImagingAnalysis path but required folders do not need to be loaded.
 		% 2019.08.20 [09:33:32] - Improved loading of folders and Miji to save time.
 		% 2019.08.30 [12:58:37] - Added Java heap space memory check on initialization.
+		% 2019.09/10 - Added GUI font option and signalExtractionTraceOutputType.
+		% 2019.10.15 [21:57:45] - Improved checking for directories that should not be loaded, remove need for verLessThan('matlab','9.0') check.
 	% TODO
 		%
 
@@ -30,10 +32,10 @@ classdef calciumImagingAnalysis < dynamicprops
 		MICRON_PER_PIXEL =  2.51; % 2.37;
 
 		% Int: set the default UI font size
-		fontSizeGui = 11;
+		fontSizeGui = 10;
 
 		defaultObjDir = pwd;
-		classVersion = 'v3.4.2-20190917';
+		classVersion = 'v3.4.5-20191015';
 		serverPath = '';
 		privateSettingsPath = ['private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
 		% place where functions can temporarily story user settings
@@ -472,6 +474,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			display('Constructing calciumImagingAnalysis imaging analysis object...')
 
 			obj.loadBatchFunctionFolders();
+			display(repmat('*',1,42))
 
 			% Because the obj
 			%========================
@@ -772,19 +775,22 @@ classdef calciumImagingAnalysis < dynamicprops
 			% pathFilter = cellfun(@isempty,regexpi(pathListArray,[filesep 'docs']));
 			pathListArray = pathListArray(pathFilter);
 
-			if verLessThan('matlab','9.0')
-				pathFilter = cellfun(@isempty,regexpi(pathListArray,[filesep 'cnmfe']));
-				pathFilter = pathFilter & cellfun(@isempty,regexpi(pathListArray,[filesep 'cnmf_original']));
-				pathFilter = pathFilter & cellfun(@isempty,regexpi(pathListArray,[filesep 'cnmf_current']));
-				pathFilter = pathFilter & cellfun(@isempty,regexpi(pathListArray,[filesep 'cvx_rd']));
-				pathFilter = pathFilter & cellfun(@isempty,regexpi(pathListArray,[filesep 'Fiji.app']));
-				pathFilter = pathFilter & cellfun(@isempty,regexpi(pathListArray,[filesep 'fiji-win64-20151222']));
-				% pathListArray = pathListArray(pathFilter&pathFilter1&pathFilter2&pathFilter3&pathFilter4);
-				pathListArray = pathListArray(pathFilter);
+			% =================================================
+			% Remove directories that should not be loaded by default
+			% matchIdx = contains(pathListArray,{[filesep 'cnmfe'],[filesep 'cnmf_original'],[filesep 'cnmf_current'],[filesep 'cvx_rd'],[filesep 'Fiji.app'],[filesep 'fiji-.*-20151222']});
+			% pathListArray = pathListArray(~matchIdx);
+			if ismac
+				sepChar = filesep;
+			elseif isunix
+				sepChar = filesep;
+			elseif ispc
+				sepChar = '\\';
 			else
-				matchIdx = contains(pathListArray,{[filesep 'cnmfe'],[filesep 'cnmf_original'],[filesep 'cnmf_current'],[filesep 'cvx_rd'],[filesep 'Fiji.app'],[filesep 'fiji-win64-20151222']});
-				pathListArray = pathListArray(~matchIdx);
+				sepChar = filesep;
 			end
+			matchIdx = cellfun(@isempty,regexp(pathListArray,[sepChar '(cnmfe|cnmf_original|cnmf_current|cvx_rd|Fiji\.app|fiji-.*-20151222)']));
+			pathListArray = pathListArray(matchIdx);
+			% =================================================
 
 			% Remove paths that are already in MATLAB path to save time
 			pathFilter = cellfun(@isempty,pathListArray);
