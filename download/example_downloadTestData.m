@@ -34,7 +34,7 @@ function [success] = example_downloadTestData(varargin)
 		% downloadList{end}.fileUrl
 		% downloadList{end}.metaFile
 
-		downloadList{end+1}.folderName = '2014_04_01_p203_m19_check01_raw';
+		downloadList{end+1}.folderName = '2014_04_01_p203_m19_check01';
 		downloadList{end}.fileName = 'concat_recording_20140401_180333.h5';
 		downloadList{end}.fileUrl = 'https://stanford.box.com/shared/static/jmld9o9s0oemvn6oionr3lf9lwobqk9l.h5';
 		% downloadList{end}.metaFile = '';

@@ -56,7 +56,7 @@ function obj = viewObjmaps(obj,varargin)
 
 	[fileIdxArray, idNumIdxArray, nFilesToAnalyze, nFiles] = obj.getAnalysisSubsetsToAnalyze();
 
-	subplotTmp = @(x,y,z) subaxis(x,y,z, 'Spacing', 0.05, 'Padding', 0, 'MarginTop', 0.05,'MarginBottom', 0.1,'MarginLeft', 0.03,'MarginRight', 0.02);
+	subplotTmp = @(x,y,z) subaxis(x,y,z, 'Spacing', 0.05, 'Padding', 0.01, 'MarginTop', 0.05,'MarginBottom', 0.1,'MarginLeft', 0.03,'MarginRight', 0.02);
 
 	if obj.guiEnabled==1
 		movieSettings = inputdlg({...
@@ -252,6 +252,8 @@ function obj = viewObjmaps(obj,varargin)
 				axis tight
 				zoom on
 				title('Cell activity traces | zoom on')
+				xlabel('Frames');
+				ylabel('Fluorescence')
 
 			axHandle = subplotTmp(rowSubP,colSubP,2);
 			linkAx(end+1) = axHandle;

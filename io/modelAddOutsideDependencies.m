@@ -38,7 +38,9 @@ function [success] = modelAddOutsideDependencies(dependencyName,varargin)
 					%              'Miji path', [1 100]);
 					% pathToMiji = pathToMiji{1};
 					% display('Dialog box: Enter path to Miji.m in Fiji (likely in "scripts" folder, e.g. \Fiji.app\scripts)')
-					checkMijiPath = [options.defaultExternalProgramDir filesep 'Fiji.app' filesep 'scripts'];
+					fijiList = getFileList(options.defaultExternalProgramDir,'fiji-.*-20151222(?!.zip|.dmg)');
+					checkMijiPath = [fijiList{1} filesep 'Fiji.app' filesep 'scripts'];
+					% checkMijiPath = [options.defaultExternalProgramDir filesep 'Fiji.app' filesep 'scripts'];
 					if exist(checkMijiPath,'dir')==7
 						fprintf('AUTOMATICALLY adding Miji path: %s\n',checkMijiPath);
 						pathToMiji = checkMijiPath;
