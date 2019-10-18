@@ -194,18 +194,19 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		end
 	end
 	function mijiCheck()
-		if exist('Miji.m','file')==2
-			disp(['Miji located in: ' which('Miji.m')]);
-			% Miji is loaded, continue
-		else
-			pathToMiji = inputdlg('Enter path to Miji.m in Fiji (e.g. \Fiji.app\scripts):',...
-						 'Miji path', [1 100]);
-			pathToMiji = pathToMiji{1};
-			privateLoadBatchFxnsPath = 'private\privateLoadBatchFxns.m';
-			fid = fopen(privateLoadBatchFxnsPath,'at');
-			fprintf(fid, '\npathtoMiji = ''%s'';\n', pathToMiji);
-			fclose(fid);
-		end
+		% if exist('Miji.m','file')==2
+		% 	disp(['Miji located in: ' which('Miji.m')]);
+		% 	% Miji is loaded, continue
+		% else
+		% 	pathToMiji = inputdlg('Enter path to Miji.m in Fiji (e.g. \Fiji.app\scripts):',...
+		% 				 'Miji path', [1 100]);
+		% 	pathToMiji = pathToMiji{1};
+		% 	privateLoadBatchFxnsPath = 'private\privateLoadBatchFxns.m';
+		% 	fid = fopen(privateLoadBatchFxnsPath,'at');
+		% 	fprintf(fid, '\npathtoMiji = ''%s'';\n', pathToMiji);
+		% 	fclose(fid);
+		% end
+		modelAddOutsideDependencies('miji');
 	end
 	function [movieTmp] = addText(movieTmp,inputText,fontSize)
 		nFrames = size(movieTmp,3);

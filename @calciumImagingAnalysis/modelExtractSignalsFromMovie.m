@@ -21,7 +21,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		%
 
 	%========================
-	options.signalExtractionRootPath = 'signal_extraction';
+	% Root path for external signal-extraction algorithm folders.
+	options.signalExtractionRootPath = '_external_programs';
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -999,19 +1000,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	end
 	function [cnmfOptions] = runCNMFSignalFinder()
 
-		% if cvx is not in the path, ask user
-		if isempty(which('cvx_begin'))
-			% cvxSetupPathDefault = ['private' filesep 'cvx-w64' filesep 'cvx' filesep 'cvx_setup.m'];
-			cvxSetupPathDefault = ['signal_extraction' filesep 'cvx_rd' filesep 'cvx_setup.m'];
-			if exist(cvxSetupPathDefault,'file')==2
-				cvxSetupPath = cvxSetupPathDefault;
-			else
-				[filePath,folderPath,~] = uigetfile(['*.*'],'select cvx_setup.m');
-				cvxSetupPath = [folderPath filesep filePath];
-			end
-			fprintf('cvx_setup.m at %s\n',cvxSetupPath);
-			run(cvxSetupPath);
-		end
+		% Check CVX is installed and if not, setup.
+		runCvxSetup();
 
 		% Get the number of cells that should be requested
 		switch pcaicaPCsICsSwitchStr
@@ -1246,31 +1236,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	end
 	function [cnmfeOptions] = runCNMFESignalFinder()
 
-		% % if cvx is not in the path, ask user
-		% if isempty(which('cvx_begin'))
-		% 	[filePath,folderPath,~] = uigetfile(['*.*'],'select cvx_setup.m');
-		% 	run([folderPath filesep filePath]);
-		% end
-
-		% % if cvx is not in the path, ask user
-		% if isempty(which('cvx_begin'))
-		% 	[filePath,folderPath,~] = uigetfile(['*.*'],'select cvx_setup.m');
-		% 	run([folderPath filesep filePath]);
-		% end
-
-		% if cvx is not in the path, ask user
-		if isempty(which('cvx_begin'))
-			% cvxSetupPathDefault = ['private' filesep 'cvx-w64' filesep 'cvx' filesep 'cvx_setup.m'];
-			cvxSetupPathDefault = ['signal_extraction' filesep 'cvx_rd' filesep 'cvx_setup.m'];
-			if exist(cvxSetupPathDefault,'file')==2
-				cvxSetupPath = cvxSetupPathDefault;
-			else
-				[filePath,folderPath,~] = uigetfile(['*.*'],'select cvx_setup.m');
-				cvxSetupPath = [folderPath filesep filePath];
-			end
-			fprintf('cvx_setup.m at %s\n',cvxSetupPath);
-			run(cvxSetupPath);
-		end
+		% Check CVX is installed and if not, setup.
+		runCvxSetup();
 
 		% switch pcaicaPCsICsSwitchStr
 		% 	case 'Subject'

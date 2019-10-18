@@ -1086,24 +1086,26 @@ function [usrIdxChoice ok] = getUserMovieChoice(usrIdxChoiceStr)
 	usrIdxChoice = usrIdxChoiceList(sel);
 end
 function subfxn_imageJ(inputMovie)
-	if exist('Miji.m','file')==2
-		display(['Miji located in: ' which('Miji.m')]);
-		% Miji is loaded, continue
-	else
-		% pathToMiji = inputdlg('Enter path to Miji.m in Fiji (e.g. \Fiji.app\scripts):',...
-		%              'Miji path', [1 100]);
-		% pathToMiji = pathToMiji{1};
-		pathToMiji = uigetdir('\.','Enter path to Miji.m in Fiji (e.g. \Fiji.app\scripts)');
-		if ischar(pathToMiji)
-			% privateLoadBatchFxnsPath = 'private\privateLoadBatchFxns.m';
-			% if exist(privateLoadBatchFxnsPath,'file')~=0
-			% 	fid = fopen(privateLoadBatchFxnsPath,'at')
-			% 	fprintf(fid, '\npathtoMiji = ''%s'';\n', pathToMiji);
-			% 	fclose(fid);
-			% end
-			addpath(pathToMiji);
-		end
-	end
+	% if exist('Miji.m','file')==2
+	% 	display(['Miji located in: ' which('Miji.m')]);
+	% 	% Miji is loaded, continue
+	% else
+	% 	% pathToMiji = inputdlg('Enter path to Miji.m in Fiji (e.g. \Fiji.app\scripts):',...
+	% 	%              'Miji path', [1 100]);
+	% 	% pathToMiji = pathToMiji{1};
+	% 	pathToMiji = uigetdir('\.','Enter path to Miji.m in Fiji (e.g. \Fiji.app\scripts)');
+	% 	if ischar(pathToMiji)
+	% 		% privateLoadBatchFxnsPath = 'private\privateLoadBatchFxns.m';
+	% 		% if exist(privateLoadBatchFxnsPath,'file')~=0
+	% 		% 	fid = fopen(privateLoadBatchFxnsPath,'at')
+	% 		% 	fprintf(fid, '\npathtoMiji = ''%s'';\n', pathToMiji);
+	% 		% 	fclose(fid);
+	% 		% end
+	% 		addpath(pathToMiji);
+	% 	end
+	% end
+
+	modelAddOutsideDependencies('miji');
 
 	% Miji;
 	% MIJ.start;

@@ -756,6 +756,20 @@ classdef calciumImagingAnalysis < dynamicprops
 			end
 		end
 
+		function obj = setup(obj)
+			uiwait(msgbox(['calciumImagingAnalysis setup will:' 10 '1 - check and download dependencies as needed,' 10 '2 - then ask for a list of folders to include for analysis,' 10 '3 - and finally name for movie files to look for.' 10 10 'Press OK to continue.'],'Note to user','modal'));
+
+			% Download and load dependent software packages into "_external_programs" folder.
+			% Also download test data into "data" folder.
+			obj.loadDependencies;
+
+			% Add folders containing imaging data.
+			obj.modelAddNewFolders;
+
+			% [optional] Set the names calciumImagingAnalysis will look for in each folder
+			obj.setMovieInfo;
+		end
+
 		function obj = loadBatchFunctionFolders(obj)
 			% Loads the necessary directories to have the batch functions present.
 			% Biafra Ahanonu
@@ -1226,6 +1240,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			fxnsToRun = {...
 			'------- SETUP -------',
 			'modelAddNewFolders',
+			'setup',
 			'loadDependencies',
 			'setMovieInfo',
 			'resetMijiClass',

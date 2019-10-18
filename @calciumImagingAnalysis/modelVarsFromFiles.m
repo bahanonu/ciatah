@@ -40,10 +40,15 @@ function obj = modelVarsFromFiles(obj)
 
 	optFieldnames = fieldnames(obj.filterImageOptions);
 	if obj.guiEnabled==1
-		usrInput = inputdlg([optFieldnames; {'numStdsForThresh'}; {'loadVarsToRam'}; {'reportMidpoint'}],...
-			'Automatic filtering parameters',1,...
-			[cellfun(@num2str,struct2cell(obj.filterImageOptions),'UniformOutput',false); {'2.5'}; {num2str(obj.loadVarsToRam)}; {'0'}]...
-		);
+		AddOpts.Resize='on';
+		AddOpts.WindowStyle='normal';
+		AddOpts.Interpreter='tex';
+
+		% usrInput = inputdlg([...
+		usrInput = inputdlgcol([...
+			optFieldnames; {'numStdsForThresh'}; {'loadVarsToRam'}; {'reportMidpoint'}],...
+			'Automatic classification parameters',[1 35],...
+			[cellfun(@num2str,struct2cell(obj.filterImageOptions),'UniformOutput',false); {'2.5'}; {num2str(obj.loadVarsToRam)}; {'0'}],AddOpts,2);
 		for fieldnameNo = 1:length(optFieldnames)
 			obj.filterImageOptions.(optFieldnames{fieldnameNo}) = str2num(usrInput{fieldnameNo});
 		end
@@ -317,6 +322,11 @@ function obj = modelVarsFromFiles(obj)
 					obj.validManual{fileNum} = validCNMFE;
 					obj.valid{fileNum}.(obj.signalExtractionMethod).manual = validCNMFE;
 					clear validCNMFE;
+				end
+				if exist(obj.extractionMethodValidVarname.('ROI'),'var')
+					obj.validManual{fileNum} = validROI;
+					obj.valid{fileNum}.(obj.signalExtractionMethod).manual = validROI;
+					clear validROI;
 				end
 				display('clearing manual variable...')
 			end
