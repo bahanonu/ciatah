@@ -14,7 +14,8 @@ _external_programs/cvx_rd
 # Signal extraction dependency zips
 _external_programs/*.zip
 signal_extraction/*.zip
-/*.mat
+*.mat
+*.h5
 
 # Windows default autosave extension
 *.asv
