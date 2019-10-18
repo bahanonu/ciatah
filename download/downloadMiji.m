@@ -120,11 +120,13 @@ function [success] = downloadMiji(varargin)
 			% movefile([signalExtractionDir filesep gitName{gitNo}],[signalExtractionDir filesep outputDir{gitNo}]);
 		end
 
-		if exist('unzipPath','var')&&exist(unzipPath,'dir')==7
-			defaultExternalProgramDir = unzipPath;
-		else
-			defaultExternalProgramDir = options.defaultDir;
-		end
+		% if exist('unzipPath','var')&&exist(unzipPath,'dir')==7
+		% 	defaultExternalProgramDir = unzipPath;
+		% else
+		% 	defaultExternalProgramDir = options.defaultDir;
+		% end
+		% modelAddOutsideDependencies('miji','defaultExternalProgramDir',defaultExternalProgramDir);
+		defaultExternalProgramDir = options.defaultDir;
 		modelAddOutsideDependencies('miji','defaultExternalProgramDir',defaultExternalProgramDir);
 
 		success = 1;
