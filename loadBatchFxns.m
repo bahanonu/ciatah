@@ -104,7 +104,7 @@ function loadBatchFxns()
 		% add path for Miji, change as needed
 		loadLocalFunctions = ['private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
 		% First check for Fiji in _external_programs dir with path for this specific computer, since privateLoadBatchFxns might not generalize.
-		fijiList = getFileList('_external_programs','fiji-.*-20151222(?!.zip|.dmg)');
+		fijiList = getFileList(externalProgramsDir,'fiji-.*-20151222(?!.zip|.dmg)');
 		if ~isempty(fijiList)
 			% pathtoMiji = ['_external_programs' filesep 'fiji-win64-20151222' filesep 'Fiji.app' filesep 'scripts'];
 			pathtoMiji = [fijiList{1} filesep 'Fiji.app' filesep 'scripts'];
