@@ -220,6 +220,21 @@ function obj = computeManualSortSignals(obj)
 					% valid = obj.validAuto{obj.fileNum};
 					ioptions.minValConstant = -10;
 					ioptions.threshold = 0.4;
+				case 'ROI'
+					% if skipReload==0
+					% 	[rawSignals, rawImages, signalPeaks, signalPeaksArray, ~, ~, rawSignals2] = modelGetSignalsImages(obj,'returnType','raw');
+					% end
+					if usrIdxChoiceAutoValid==3
+						previousDecisionList = getFileList(currentFolderPath, strrep(obj.extractionMethodSortedSaveStr.(obj.signalExtractionMethod),'.mat',''));
+						if ~isempty(previousDecisionList)
+							display(['loading previous decisions: ' previousDecisionList{1}])
+							load(previousDecisionList{1});
+							valid = validROI;
+						end
+					end
+					% valid = obj.validAuto{obj.fileNum};
+					ioptions.minValConstant = -10;
+					ioptions.threshold = 0.4;
 				otherwise
 					% body
 			end

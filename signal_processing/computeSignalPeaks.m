@@ -253,9 +253,9 @@ function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(sign
 	catch err
 		signalPeaks = [];
 		signalPeaksArray = {};
-		display(repmat('@',1,7))
+		disp(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));
-		display(repmat('@',1,7))
+		disp(repmat('@',1,7))
 	end
 	% summary of general statistics for this set of IC data
 	try
@@ -263,9 +263,9 @@ function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(sign
 			viewSpikeSummary(signalMatrix,signalPeaks);
 		end
 	catch err
-		display(repmat('@',1,7))
+		disp(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));
-		display(repmat('@',1,7))
+		disp(repmat('@',1,7))
 	end
 	function nUpdateParforProgress(~)
 		if ~verLessThan('matlab', '9.2')
@@ -525,7 +525,8 @@ function [testpeaks] = computePeakForSignal(inputSignal, options)
 	end
 
 	% get standard deviation of current signal
-	inputSignalStd = std(inputSignal(:));
+	% inputSignalStd = std(inputSignal(:));
+	inputSignalStd = nanstd(inputSignal(:));
 	thisStdThreshold = inputSignalStd*numStdsForThresh;
 
 	% =======

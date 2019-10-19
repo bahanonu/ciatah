@@ -21,7 +21,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		%
 
 	%========================
-	options.signalExtractionRootPath = 'signal_extraction';
+	% Root path for external signal-extraction algorithm folders.
+	options.signalExtractionRootPath = '_external_programs';
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -273,6 +274,18 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 					end
 				end
 
+				% Check that the regular expression will find a movie, if not skip folder and notify user
+				movieList = getFileList(obj.inputFolders{obj.fileNum}, fileFilterRegexp);
+				if isempty(movieList)
+					errorStr = sprintf('No movie found matching %s in %s.\n',fileFilterRegexp,obj.inputFolders{obj.fileNum});
+					warning(errorStr)
+					% s.WindowStyle = 'non-modal';
+					s.Interpreter = 'tex';
+					s.WindowStyle = 'replace';
+					h = msgbox_custom(['\fontsize{10}' errorStr],'WARNING: cell-extraction',s);
+					return;
+				end
+
 				% save temporary file to prevent file checking from starting multiple runs on the same folder
 				savestring = [thisDirSaveStr saveID{1}];
 				display(['saving temporary: ' savestring])
@@ -305,10 +318,12 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 						clear extractAnalysisOutput;
 						%
 					case 'CNMF'
+						[success] = cnmfVersionDirLoad(options.CNMF.originalCurrentSwitch);
 						[cnmfOptions] = runCNMFSignalFinder();
 						saveRunTimes('cnmf');
 						clear cnmfOptions;
 					case 'CNMFE'
+						[success] = cnmfVersionDirLoad('cnmfe');
 						[cnmfOptions] = runCNMFESignalFinder();
 						saveRunTimes('cnmfe');
 						clear cnmfOptions;
@@ -594,6 +609,11 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 							'CELLMax | exitEarlySaveSparse (0 = no, 1 = yes)?',...
 							'CELLMax | numFramesSampleFitNoiseSigma (Int, frames)?',...
 							'CELLMax | recalculateFinalTraces (0 = no, 1 = yes)?',...
+							'CELLMax | dsInitializeThreshold (Float, range 0:1)?',...
+							'CELLMax | numSigmasThresh (Float)?',...
+							'CELLMax | numPhotonsPerSigma (Int)?',...
+							'CELLMax | upsampleFullIters (Int)?',...
+							'CELLMax | removeAutoCorrThres (Float, range 0:1)?',...
 						},...
 						dlgStr,1,...
 						{...
@@ -626,7 +646,12 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 							'0',...
 							'0',...
 							'1000',...
-							'1'...
+							'1',...
+							'0.01',...
+							'0',...
+							'10',...
+							'2',...
+							'0.65'...
 						},AddOpts,2);
 					setNo = 1;
 					options.CELLMax.readMovieChunks = str2num(movieSettings{setNo});setNo = setNo+1;
@@ -660,6 +685,11 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 					options.CELLMax.exitEarlySaveSparse = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.CELLMax.numFramesSampleFitNoiseSigma = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.CELLMax.recalculateFinalTraces = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.CELLMax.dsInitializeThreshold = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.CELLMax.numSigmasThresh = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.CELLMax.numPhotonsPerSigma = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.CELLMax.upsampleFullIters = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.CELLMax.removeAutoCorrThres = str2num(movieSettings{setNo});setNo = setNo+1;
 
 				case 'EXTRACT'
 					movieSettings = inputdlg({...
@@ -970,19 +1000,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	end
 	function [cnmfOptions] = runCNMFSignalFinder()
 
-		% if cvx is not in the path, ask user
-		if isempty(which('cvx_begin'))
-			% cvxSetupPathDefault = ['private' filesep 'cvx-w64' filesep 'cvx' filesep 'cvx_setup.m'];
-			cvxSetupPathDefault = ['signal_extraction' filesep 'cvx_rd' filesep 'cvx_setup.m'];
-			if exist(cvxSetupPathDefault,'file')==2
-				cvxSetupPath = cvxSetupPathDefault;
-			else
-				[filePath,folderPath,~] = uigetfile(['*.*'],'select cvx_setup.m');
-				cvxSetupPath = [folderPath filesep filePath];
-			end
-			fprintf('cvx_setup.m at %s\n',cvxSetupPath);
-			run(cvxSetupPath);
-		end
+		% Check CVX is installed and if not, setup.
+		runCvxSetup();
 
 		% Get the number of cells that should be requested
 		switch pcaicaPCsICsSwitchStr
@@ -1217,31 +1236,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	end
 	function [cnmfeOptions] = runCNMFESignalFinder()
 
-		% % if cvx is not in the path, ask user
-		% if isempty(which('cvx_begin'))
-		% 	[filePath,folderPath,~] = uigetfile(['*.*'],'select cvx_setup.m');
-		% 	run([folderPath filesep filePath]);
-		% end
-
-		% % if cvx is not in the path, ask user
-		% if isempty(which('cvx_begin'))
-		% 	[filePath,folderPath,~] = uigetfile(['*.*'],'select cvx_setup.m');
-		% 	run([folderPath filesep filePath]);
-		% end
-
-		% if cvx is not in the path, ask user
-		if isempty(which('cvx_begin'))
-			% cvxSetupPathDefault = ['private' filesep 'cvx-w64' filesep 'cvx' filesep 'cvx_setup.m'];
-			cvxSetupPathDefault = ['signal_extraction' filesep 'cvx_rd' filesep 'cvx_setup.m'];
-			if exist(cvxSetupPathDefault,'file')==2
-				cvxSetupPath = cvxSetupPathDefault;
-			else
-				[filePath,folderPath,~] = uigetfile(['*.*'],'select cvx_setup.m');
-				cvxSetupPath = [folderPath filesep filePath];
-			end
-			fprintf('cvx_setup.m at %s\n',cvxSetupPath);
-			run(cvxSetupPath);
-		end
+		% Check CVX is installed and if not, setup.
+		runCvxSetup();
 
 		% switch pcaicaPCsICsSwitchStr
 		% 	case 'Subject'
@@ -1530,7 +1526,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				end
 
 				% ask user for nPCs/ICs
-				numExpectedSignalsArray = inputdlg(subjectList,'number of PCs/ICs to use [PCs ICs] or for CNMF # of components [nComponents nComponents]',[1 100],defaultList);
+				numExpectedSignalsArray = inputdlg(subjectList,[obj.signalExtractionMethod ' | # of PCs/ICs to use [PCs ICs] or for CNMF # of components [nComponents nComponents]'],[1 150],defaultList);
 				for subjectNum = 1:length(subjectList)
 					obj.numExpectedSignals.(obj.signalExtractionMethod).(subjectList{subjectNum}) = str2num(numExpectedSignalsArray{subjectNum});
 				end
@@ -1559,7 +1555,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 
 				% ask user for nPCs/ICs and store
 				defaultList
-				numExpectedSignalsArray = inputdlg(obj.folderBasePlaneSaveStr,'number of PCs/ICs to use [PCs ICs]',[1 100],defaultList);
+				numExpectedSignalsArray = inputdlg(obj.folderBasePlaneSaveStr,[obj.signalExtractionMethod ' | # of PCs/ICs to use [PCs ICs] or for CNMF # of components [nComponents nComponents]'],[1 150],defaultList);
 				for folderNo = 1:nFolders
 					obj.numExpectedSignals.(obj.signalExtractionMethod).Folders{folderNo} = str2num(numExpectedSignalsArray{folderNo});
 				end

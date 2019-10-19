@@ -108,6 +108,9 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(inputMovie,varargi
     % ========================
     options
 
+    % if cvx is not in the path, ask user for file
+    runCvxSetup();
+
     % Make sure consistent
     options.bg_ssub = options.ssub;
 

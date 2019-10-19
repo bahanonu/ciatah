@@ -18,6 +18,7 @@ function [dataSubset fid] = readHDF5Subset(inputFilePath, offset, block, varargi
 		% 2019.02.13 - Updated to support when user ask for multiple offsets at the same location in file.
 		% 2019.02.13 [17:57:55] - Improved duplicate frame support, finds differences in frames, loads all unique as a single slab, then loads remaining and re-organizes to be in correct order.
 		% 2019.05.03 [15:42:08] - Additional 4D support in cases where a 3D offset/block request is made.
+		% 2019.10.10 [12:52:54] - Add correction for frame order. Select hyperslab in HDF5 makes blocks in sorted order, so after reading the explicit offset ordering is not the original unsorted order.
 	% TODO
 		% DONE: Make support for duplicate frames more robust so minimize the number of file reads.
 
@@ -93,9 +94,13 @@ function [dataSubset fid] = readHDF5Subset(inputFilePath, offset, block, varargi
 
 	try
 		offSetAll = cat(1,offset{:});
-		offSetUnique = unique(offSetAll,'rows');
+		offSetUnique = unique(offSetAll,'stable','rows');
+        % offSetUnique
+        % offSetAll
 		% Check if there are duplicates (read in each frame-by-frame if so) else continue as normal.
-		if size(offSetAll)==size(offSetUnique)
+		% if size(offSetAll,1)==size(offSetUnique,1)
+        if size(offSetAll)==size(offSetUnique)
+            frameCorrectOrder = [];
 			for sNo = 1:nSlabs
 				% offset and size of the block to get, flip dimensions so in format that H5S wants
 				offsetFlip = fliplr(offset{sNo});
@@ -109,15 +114,21 @@ function [dataSubset fid] = readHDF5Subset(inputFilePath, offset, block, varargi
 					H5S.select_hyperslab(file_space_id,'H5S_SELECT_SET',offsetFlip,[],[],blockFlip);
 				else
 					H5S.select_hyperslab(file_space_id,'H5S_SELECT_OR',offsetFlip,[],[],blockFlip);
-				end
+                end
+                frameCorrectOrder(end+1) = offsetFlip(1);
 				%output = H5S.select_valid(file_space_id)
 				%[start,finish] = H5S.get_select_bounds(file_space_id)
 				% select the data subset
-			end
+            end
+            % [start,finish] = H5S.get_select_bounds(file_space_id)
+            % blocklist = H5S.get_select_hyper_blocklist(file_space_id,0,H5S.get_select_hyper_nblocks(file_space_id))
 			dataSubset = H5D.read(dset_id,'H5ML_DEFAULT',mem_space_id,file_space_id,plist);
-		else
+            [~,frameCorrectOrder] = sort(frameCorrectOrder,'ascend');
+            dataSubset(:,:,frameCorrectOrder) = dataSubset(:,:,1:length(frameCorrectOrder));
+            % playMovie(dataSubset)
+        else
 			if options.displayInfo==1
-				display('Input offsets not unique! Using backup method.')
+				disp('Input offsets not unique! Using backup method.')
 			end
 			% dataSubset = {};
 			offSetAll = cat(1,offset{:});
@@ -136,6 +147,7 @@ function [dataSubset fid] = readHDF5Subset(inputFilePath, offset, block, varargi
 
 			nSlabsTmp = length(offSetUnique);
 
+			frameCorrectOrder = [];
 			for sNoTmp = 1:nSlabsTmp
 				% offset and size of the block to get, flip dimensions so in format that H5S wants
 				offsetFlip = fliplr(offSetUnique{sNoTmp});
@@ -150,6 +162,7 @@ function [dataSubset fid] = readHDF5Subset(inputFilePath, offset, block, varargi
 				else
 					H5S.select_hyperslab(file_space_id,'H5S_SELECT_OR',offsetFlip,[],[],blockFlip);
 				end
+                frameCorrectOrder(end+1) = offsetFlip(1);
 				%output = H5S.select_valid(file_space_id)
 				%[start,finish] = H5S.get_select_bounds(file_space_id)
 				% select the data subset
@@ -157,9 +170,11 @@ function [dataSubset fid] = readHDF5Subset(inputFilePath, offset, block, varargi
 			end
 			dataSubset = H5D.read(dset_id,'H5ML_DEFAULT',mem_space_id,file_space_id,plist);
 			% dataSubset = cat(3,dataSubset{:});
+			[~,frameCorrectOrder] = sort(frameCorrectOrder,'ascend');
+			dataSubset(:,:,frameCorrectOrder) = dataSubset(:,:,1:length(frameCorrectOrder));
 
 			idList = 1:nSlabs;
-			remainIdx = idList(setdiff(idList,keptIdx));
+			remainIdx = idList(setdiff(idList,keptIdx,'stable'));
 			offSetRemain = offset(remainIdx);
 			blockRemain = block(remainIdx);
 			nSlabsTmp = length(offSetRemain);
@@ -178,6 +193,10 @@ function [dataSubset fid] = readHDF5Subset(inputFilePath, offset, block, varargi
 		end
 	catch err
 		display(repmat('=',1,7))
+        display(repmat('@',1,7))
+		disp(getReport(err,'extended','hyperlinks','on'));
+		display(repmat('@',1,7))
+
 		offsetError = cat(1,offset{:});
 		blockError = cat(1,block{:});
 		% size(offset);
@@ -186,10 +205,6 @@ function [dataSubset fid] = readHDF5Subset(inputFilePath, offset, block, varargi
 		disp(['blockError: ' blockError]);
 		disp(['offset: ' size(offset)]);
 		disp(['block: ' size(block)]);
-
-		display(repmat('@',1,7))
-		disp(getReport(err,'extended','hyperlinks','on'));
-		display(repmat('@',1,7))
 
 		if options.errorRun==1
 			return;

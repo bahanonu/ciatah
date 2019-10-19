@@ -31,7 +31,7 @@ function [cnmfAnalysisOutput] = computeCnmfSignalExtractionOriginal(inputMovie,n
 	% HDF5 dataset name
 	options.nonCNMF.inputDatasetName = '/1';
 	% HDF5 dataset name
-	options.nonCNMF.showFigures = 1;
+	options.nonCNMF.showFigures = 0;
 	% whether to use the old set of initialization parameters
 	options.nonCNMF.useOldInitializationSetParams = 0;
 
@@ -108,11 +108,8 @@ function [cnmfAnalysisOutput] = computeCnmfSignalExtractionOriginal(inputMovie,n
 	%========================
 	try
 		% if cvx is not in the path, ask user for file
-		if isempty(which('cvx_begin'))
-			display('Dialog box: select cvx_setup.m.')
-			[filePath,folderPath,~] = uigetfile(['*.*'],'select cvx_setup.m');
-			run([folderPath filesep filePath]);
-		end
+		runCvxSetup();
+
 		startTimeWithMovie = tic;
 		% re-initialize any options that are dependent on other options
 		options.gSig = 2*options.otherCNMF.tau+1;  % Size of Gaussian kernel  2*tau+1
@@ -192,8 +189,8 @@ function [cnmfAnalysisOutput] = computeCnmfSignalExtractionOriginal(inputMovie,n
 		end
 
 		% display centers of found components
-		Cn =  correlation_image(Y); %max(Y,[],3); %std(Y,[],3); % image statistic (only for display purposes)
 		if options.nonCNMF.showFigures==1&~isempty(center)
+			Cn =  correlation_image(Y); %max(Y,[],3); %std(Y,[],3); % image statistic (only for display purposes)
 			[figHandle figNo] = openFigure(1337, '');
 			clf
 			imagesc(Cn);
@@ -211,12 +208,16 @@ function [cnmfAnalysisOutput] = computeCnmfSignalExtractionOriginal(inputMovie,n
 		%% update spatial components
 		Yr = reshape(Y,d,T);
 		clear Y;
+		options.show_sum = 1;
+		disp('===Updating spatial components')
 		[A,b,Cin] = update_spatial_components(Yr,Cin,fin,Ain,P,cnmfOptions);
 
 		%% update temporal components
+		disp('===Updating temporal components')
 		[C,f,Y_res,P,S] = update_temporal_components_parallel(Yr,A,b,Cin,fin,P,cnmfOptions);
 
 		%% merge found components
+		disp('===Merging components')
 		[Am,Cm,K_m,merged_ROIs,P,Sm] = merge_components(Y_res,A,b,C,f,P,S,cnmfOptions);
 		% flag for displaying merging example
 		if options.nonCNMF.showFigures==1
@@ -243,9 +244,12 @@ function [cnmfAnalysisOutput] = computeCnmfSignalExtractionOriginal(inputMovie,n
 		end
 
 		%% repeat
+		disp('===Updating spatial components again...')
 		[A2,b2,Cm] = update_spatial_components(Yr,Cm,f,Am,P,cnmfOptions);
+		disp('===Updating temporal components again...')
 		[C2,f2,Y_res,P,S2] = update_temporal_components_parallel(Yr,A2,b2,Cm,f,P,cnmfOptions);
 		K_m = size(C2,1);
+		disp('===Extracting dF/F traces...')
 		[C_df,~,S_df] = extract_DF_F(Yr,[A2,b2],[C2;f2],S2,K_m+1); % extract DF/F values (optional)
 
 		% order components
@@ -316,8 +320,8 @@ function [cnmfAnalysisOutput] = computeCnmfSignalExtractionOriginal(inputMovie,n
 
 		% cnmfAnalysisOutput
 	catch err
-		display(repmat('@',1,7))
+		disp(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));
-		display(repmat('@',1,7))
+		disp(repmat('@',1,7))
 	end
 end

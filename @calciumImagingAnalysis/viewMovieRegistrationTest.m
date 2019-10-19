@@ -16,25 +16,25 @@ function obj = viewMovieRegistrationTest(obj)
 	try
 		[fileIdxArray idNumIdxArray nFilesToAnalyze nFiles] = obj.getAnalysisSubsetsToAnalyze();
 
-		% check that Miji exists, if not, have user enter information
-		if exist('Miji.m','file')==2
-			display(['Miji located in: ' which('Miji.m')]);
-			% Miji is loaded, continue
-		else
-			% pathToMiji = inputdlg('Enter path to Miji.m in Fiji (e.g. \Fiji.app\scripts):',...
-			%              'Miji path', [1 100]);
-			% pathToMiji = pathToMiji{1};
-			pathToMiji = uigetdir('\.','Enter path to Miji.m in Fiji (e.g. \Fiji.app\scripts)');
-			if ischar(pathToMiji)
-				privateLoadBatchFxnsPath = 'private\privateLoadBatchFxns.m';
-				if exist(privateLoadBatchFxnsPath,'file')~=0
-					fid = fopen(privateLoadBatchFxnsPath,'at')
-					fprintf(fid, '\npathtoMiji = ''%s'';\n', pathToMiji);
-					fclose(fid);
-				end
-				addpath(pathToMiji);
-			end
-		end
+		% % check that Miji exists, if not, have user enter information
+		% if exist('Miji.m','file')==2
+		% 	display(['Miji located in: ' which('Miji.m')]);
+		% 	% Miji is loaded, continue
+		% else
+		% 	% pathToMiji = inputdlg('Enter path to Miji.m in Fiji (e.g. \Fiji.app\scripts):',...
+		% 	%              'Miji path', [1 100]);
+		% 	% pathToMiji = pathToMiji{1};
+		% 	pathToMiji = uigetdir('\.','Enter path to Miji.m in Fiji (e.g. \Fiji.app\scripts)');
+		% 	if ischar(pathToMiji)
+		% 		privateLoadBatchFxnsPath = 'private\privateLoadBatchFxns.m';
+		% 		if exist(privateLoadBatchFxnsPath,'file')~=0
+		% 			fid = fopen(privateLoadBatchFxnsPath,'at')
+		% 			fprintf(fid, '\npathtoMiji = ''%s'';\n', pathToMiji);
+		% 			fclose(fid);
+		% 		end
+		% 		addpath(pathToMiji);
+		% 	end
+		% end
 
 		for figNoFake = [9 4242 456 457 9019]
 			[~, ~] = openFigure(figNoFake, '');
@@ -78,6 +78,11 @@ function obj = viewMovieRegistrationTest(obj)
 		scnsize = get(0,'ScreenSize');
 		[sel, ok] = listdlg('ListString',usrIdxChoiceStr,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','which video player to use?');
 		options.videoPlayer = usrIdxChoiceStr{sel};
+
+		% check that Miji exists, if not, have user enter information
+		if strcmp(options.videoPlayer,'imagej')
+			modelAddOutsideDependencies('miji');
+		end
 
 		% Get registration settings for each run
 		registrationStruct = {};

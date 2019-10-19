@@ -27,7 +27,7 @@ function [inputSnr, inputMse, inputSnrSignal, inputSnrNoise, outputSignal, outpu
 	options.SNRtype = 'mean(signal)/std(noise)';
 	% frames around which to remove the signal for noise estimation
 	options.timeSeq = (-10:10);
-	% Str: iterativeRemove = find peaks and remove only once signal below options.noiseSigmaThreshold.
+	% Str: iterativeRemove = find peaks and remove only once signal below options.noiseSigmaThreshold. original = original just eliminating timeSeq around the area.
 	options.signalCalcType = 'iterativeRemoveSignal';
 	% Int: number of iterations for signalCalcType = 'iterativeRemoveSignal'
 	options.signalCalcIters = 1;
@@ -55,6 +55,7 @@ function [inputSnr, inputMse, inputSnrSignal, inputSnrNoise, outputSignal, outpu
 	% Median filter the data
 	options.medianFilter = 1;
 	options.subtractMean = 1;
+	options.addMeanDisp = 0;
 	% number of frames to calculate median filter
 	options.medianFilterLength = 200;
 	% the size of the moving average
@@ -144,7 +145,8 @@ function [inputSnr, inputMse, inputSnrSignal, inputSnrNoise, outputSignal, outpu
 			% loopSignal = inputSignals(signalNo,:);
 			loopSignal = inputSignals{signalNo};
 			if options.subtractMean==1
-				loopSignal = loopSignal - nanmean(loopSignal(:));
+				loopMean = nanmean(loopSignal(:));
+				loopSignal = loopSignal - loopMean;
 			end
 			loopSignalConstant = loopSignal;
 			testpeaks = testpeaksArray{signalNo};
@@ -198,6 +200,11 @@ function [inputSnr, inputMse, inputSnrSignal, inputSnrNoise, outputSignal, outpu
 							% loopSignal
 							outputSignal{signalNo} = loopSignal;
 							outputNoise{signalNo} = noiseSignal;
+
+							if options.addMeanDisp==1&options.subtractMean==1
+								outputSignal{signalNo} = outputSignal{signalNo}+loopMean;
+								outputNoise{signalNo} = outputNoise{signalNo}+loopMean;
+							end
 
 							% pltSignal = loopSignalConstant;
 							% figure;plot(pltSignal,'k');hold on;plot(outputSignal{signalNo}+max(pltSignal),'r');hold on;plot(outputNoise{signalNo}+max(pltSignal),'b');legend('original','signal','noise');box off; xlabel('frames');ylabel('Signal intensity change');drawnow

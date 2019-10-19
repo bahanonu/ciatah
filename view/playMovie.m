@@ -211,6 +211,15 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 		set(gcf,'SizeChangedFcn',@(hObject,event) resizeui(hObject,event,axHandle,colorbarsOn));
 	end
 
+	% =================================================
+	% GUI elements
+	frameSlider = uicontrol('style','slider','Units', 'normalized','position',[15 1 80 3]/100,...
+		'min',1,'max',nFrames,'Value',1,'SliderStep',[1/(nFrames*0.1) 0.05],'callback',@frameCallback,'Enable','inactive','ButtonDownFcn',@pauseLoopCallback);
+	% addlistener(frameSlider,'Value','PostSet',@pauseLoopCallback);
+	% waitfor(source,'Value')
+	% addlistener(frameSlider, 'Value', 'PostSet',@frameCallback);
+	frameText = uicontrol('style','edit','Units', 'normalized','position',[1 1 14 3]/100,'FontSize',9);
+
 
 	% ==========================================
 	% TITLE AND COMMANDS
@@ -301,10 +310,15 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 
 	colorbarSwitch = 1;
 	colorbarSwitchTwo = 1;
+	pauseLoop = 0;
 
 	try
 		while loopSignal==1
 			% [figHandle figNo] = openFigure(42, '');
+
+			set(frameSlider,'Value',frame)
+			set(frameText,'string',['Frame ' num2str(frame) '/' num2str(nFrames)])
+
 			% =====================
 			if options.runImageJ==1;
 				subfxn_imageJ(inputMovie);
@@ -608,7 +622,13 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 			% =====================
 			% [x,y,reply]=ginput(1);
 			clearKey = 1;
-			pause(1/options.fps);
+			% pauseLoop
+			if pauseLoop==1
+				% pause
+				waitfor(frameSlider,'Enable');
+			else
+				pause(1/options.fps);
+			end
 			drawnow
 			% uiwait(gcf, 1/options.fps)
 			if options.fps>options.fpsMax
@@ -680,6 +700,8 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 				case 112 %'p' %pause
 					% dirChange = 0;
 					ginput(1);
+					% while waitforbuttonpress~=0
+					% end
 				case 29 %backarrow
 					dirChange = 1;
 					clearKey = 0;
@@ -962,7 +984,9 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 			% 	if strcmp(thisKey,'f'); break; end;
 			% 	if strcmp(thisKey,'p'); pause; thisKey=[]; end;
 			% end
-			frame = frame+round(dirChange);
+			if pauseLoop==0
+				frame = frame+round(dirChange);
+			end
 			if frame>nFrames
 				if options.recordMovie~=0
 					loopSignal = 0;
@@ -1002,6 +1026,36 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 		% drawnow
 		% keyIn
 	end
+	function pauseLoopCallback(source,eventdata)
+		% disp('sss')
+		set(frameSlider,'Enable','on')
+		addlistener(frameSlider,'Value','PostSet',@frameCallbackChange);
+		% pauseLoop = 1;
+		pauseLoop = 0;
+	end
+	function blankCallback(source,eventdata)
+	end
+	function frameCallbackChange(source,eventdata)
+		frame = max(1,round(get(frameSlider,'value')));
+		set(frameText,'visible','on','string',['Frame ' num2str(frame) '/' num2str(nFrames)])
+	end
+	function frameCallback(source,eventdata)
+		% pauseLoop = 1;
+		frame = max(1,round(get(frameSlider,'value')));
+		% disp(num2str(frame))
+		% signalNo = max(1,round(get(signalSlider,'value')));
+		% set(frameSlider,'value',frame);
+		set(frameText,'visible','on','string',['Frame ' num2str(frame) '/' num2str(nFrames)])
+		pauseLoop = 0;
+		% pauseLoop
+		addlistener(frameSlider,'Value','PostSet',@blankCallback);
+		set(frameSlider,'Enable','inactive')
+		% breakLoop = 1;
+
+		% Update the frame line indicator
+		% set(mainFig,'CurrentAxes',signalAxes)
+			% frameLineHandle.XData = [frameNo frameNo];
+	end
 end
 function [coords] = getCropCoords(thisFrame)
 	% figure(9);
@@ -1032,24 +1086,26 @@ function [usrIdxChoice ok] = getUserMovieChoice(usrIdxChoiceStr)
 	usrIdxChoice = usrIdxChoiceList(sel);
 end
 function subfxn_imageJ(inputMovie)
-	if exist('Miji.m','file')==2
-		display(['Miji located in: ' which('Miji.m')]);
-		% Miji is loaded, continue
-	else
-		% pathToMiji = inputdlg('Enter path to Miji.m in Fiji (e.g. \Fiji.app\scripts):',...
-		%              'Miji path', [1 100]);
-		% pathToMiji = pathToMiji{1};
-		pathToMiji = uigetdir('\.','Enter path to Miji.m in Fiji (e.g. \Fiji.app\scripts)');
-		if ischar(pathToMiji)
-			% privateLoadBatchFxnsPath = 'private\privateLoadBatchFxns.m';
-			% if exist(privateLoadBatchFxnsPath,'file')~=0
-			% 	fid = fopen(privateLoadBatchFxnsPath,'at')
-			% 	fprintf(fid, '\npathtoMiji = ''%s'';\n', pathToMiji);
-			% 	fclose(fid);
-			% end
-			addpath(pathToMiji);
-		end
-	end
+	% if exist('Miji.m','file')==2
+	% 	display(['Miji located in: ' which('Miji.m')]);
+	% 	% Miji is loaded, continue
+	% else
+	% 	% pathToMiji = inputdlg('Enter path to Miji.m in Fiji (e.g. \Fiji.app\scripts):',...
+	% 	%              'Miji path', [1 100]);
+	% 	% pathToMiji = pathToMiji{1};
+	% 	pathToMiji = uigetdir('\.','Enter path to Miji.m in Fiji (e.g. \Fiji.app\scripts)');
+	% 	if ischar(pathToMiji)
+	% 		% privateLoadBatchFxnsPath = 'private\privateLoadBatchFxns.m';
+	% 		% if exist(privateLoadBatchFxnsPath,'file')~=0
+	% 		% 	fid = fopen(privateLoadBatchFxnsPath,'at')
+	% 		% 	fprintf(fid, '\npathtoMiji = ''%s'';\n', pathToMiji);
+	% 		% 	fclose(fid);
+	% 		% end
+	% 		addpath(pathToMiji);
+	% 	end
+	% end
+
+	modelAddOutsideDependencies('miji');
 
 	% Miji;
 	% MIJ.start;

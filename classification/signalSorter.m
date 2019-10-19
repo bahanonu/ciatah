@@ -6,7 +6,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 	% Dependent code
 		% getOptions.m, createObjMap.m, removeSmallICs.m, identifySpikes.m, etc., see repository
 	% inputs
-		% inputImages - [N x y] matrix where N = number of images, x/y are dimensions. Use permute(inputImages,[3 1 2]) if you use [x y N] for matrix indexing.
+		% inputImages - [x y N] matrix where N = number of images, x/y are dimensions. Use permute(inputImages,[2 3 1]) if you use [N x y] for matrix indexing.
 		% inputSignals - [N time] matrix where N = number of signals (traces) and time = frames.
 		% inputID - obsolete, kept for compatibility, just input empty []
 		% nSignals - obsolete, kept for compatibility
@@ -55,8 +55,12 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 		% 2019.08.30 [14:46:22] - Update to use imcontrast to adjust image/movie contrast.
 		% 2019.09.12 [15:39:12] - Legend is now closed on exiting signalSorter.
 		% 2019.09.16 [11:39:28] - Improved computing of min/max of movie for display purposes.
+		% 2019.10.03 [15:37:36] - Added a check for inputImages and inputSignals dimensions. Exit function if incorrect to avoid later errors. We do not silently transpose or permute the matrices since that can cause other issues.
+		% 2019.10.09 [22:10:38] - New feature! Can now use B to toggle between movie montage of peaks and using a line to specifically select locations of the movie to view. Useful for checking problematic or interesting peaks.
+		% 2019.10.10 [11:41:47] - Additional improvements to frame select feature and readHDF5Subset unique fix to ensure movie montage shows images in order of largest peak.
+		% 2019.10.13 [16:53:12] - Changed keyboard legend to be a figure so don't have an extra pop-up menu chilling around and easier to access on small screens when sorting.
 	% TODO
-		% New GUI interface to allow users to scroll through video and see cell activity at that point
+		% DONE: New GUI interface to allow users to scroll through video and see cell activity at that point
 		% DONE: allow option to mark rest as bad signals
 		% c should make an obj cut movie for 10 or so signals
 		% set viewMontageso it uses minValTraces maxValTraces
@@ -66,6 +70,10 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 	% ===MOVIE SETTINGS===
 	% Matrix or str: used to find movie frames at peaks. Matrix, movie matching inputImages/inputSignals src. Str, path to the HDF5 movie.
 	options.inputMovie = [];
+	% Binary: 1 = normal movie cut images, 0 = user can select frame to use to view activity
+	options.peakTrigMovieMontage = 1;
+	% Int: number of frames before and after an event to view for peak-based movie montage.
+	options.nMovieFrames = 10;
 	% IGNORE: Raw (not processed) movie matching inputImages/inputSignals src, used to find movie frames at peaks
 	options.inputMovieRaw = [];
 	% Vector: 3 element vector indicating [x y frames]
@@ -202,8 +210,16 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 		eval([fn{i} '=options.' fn{i} ';']);
 	end
 	display(options)
+
+	% Check the input dimensions and warn user if they are incorrect
 	disp(['inputImages size: ' num2str(size(inputImages))])
 	disp(['inputSignals size: ' num2str(size(inputSignals))])
+	if size(inputImages,3)~=size(inputSignals,1)
+		disp(sprintf('Number of signals or cells in input images (%d) and activity traces (%d) DO NOT match. Please make sure input images are [x y cellNo] and input signals are [cellNo frames] format. Exiting function...',size(inputImages,3),size(inputSignals,1)))
+		return;
+	else
+		disp(sprintf('Number of signals or cells in input images (%d) and activity traces (%d) DO match. Continuing...',size(inputImages,3),size(inputSignals,1)))
+	end
 
 	% ==========================================
 	% COLORMAP SETUP
@@ -262,6 +278,11 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 	end
 
 	if ~isempty(options.inputMovie)
+		if ischar(options.inputMovie)&options.readMovieChunks==0
+			disp('Based on input configuration, movie needs to be loaded')
+			options.inputMovie = loadMovieList(options.inputMovie,'frameList',options.frameList,'inputDatasetName',options.inputDatasetName,'largeMovieLoad',1);
+		end
+
 		if ischar(options.inputMovie)||iscell(options.inputMovie)
 			movieDims = loadMovieList(options.inputMovie,'frameList',options.frameList,'inputDatasetName',options.inputDatasetName,'getMovieDims',1);
 			options.inputMovieDims = [movieDims.one movieDims.two movieDims.three];
@@ -396,7 +417,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 	[imgStats] = computeImageFeatures(inputImagesThres,'thresholdImages',1);
 
 	if isempty(options.signalPeaks)
-		[signalPeaks, signalPeakIdx] = computeSignalPeaks(inputSignals,'makePlots', 0,'makeSummaryPlots',0,'waitbarOn',1,'numStdsForThresh',options.numStdsForThresh);
+		[signalPeaks, signalPeakIdx] = computeSignalPeaks(inputSignals,'makePlots', 0,'makeSummaryPlots',0,'waitbarOn',1,'numStdsForThresh',options.numStdsForThresh,'detectMethod','raw');
 	else
 		signalPeaks = options.signalPeaks;
 		signalPeakIdx = options.signalPeaksArray;
@@ -605,6 +626,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 	inputSignals = inputSignals(validChoices,:);
 
 	try
+		close(findall(0,'Type','figure','Name','Key legend'))
 		msgboxHandle = findall(0,'Type','figure','Name','signalSorter shortcuts/legend');
 		close(msgboxHandle)
 	catch err
@@ -683,8 +705,8 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 		mkdir(tmpDir);
 	end
 
-	subplotTmp = @(x,y,z) subaxis(x,y,z, 'Spacing', 0.07, 'Padding', 0, 'MarginTop', 0.1,'MarginBottom', 0.05,'MarginLeft', 0.03,'MarginRight', 0.07); % ,'Holdaxis',1
-	% subplotTmp = @(x,y,z) subplot(x,y,z);
+	subplotCustom = @(x,y,z) subaxis(x,y,z, 'Spacing', 0.07, 'Padding', 0, 'MarginTop', 0.1,'MarginBottom', 0.07,'MarginLeft', 0.03,'MarginRight', 0.07); % ,'Holdaxis',1
+	% subplotCustom = @(x,y,z) subplot(x,y,z);
 
 	% mainFig = openFigure(1,'full');
 	mainFig = figure(1);
@@ -755,7 +777,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 
 	% plot the cell map to provide context
 	% subplot(subplotY,subplotX,objMapPlotLoc);
-	subplotTmp(subplotY,subplotX,objMapPlotLoc);
+	subplotCustom(subplotY,subplotX,objMapPlotLoc);
 	imagesc(objMap); axis off;
 	colormap gray;
 	title(['objMap' inputStr],'FontSize',options.fontSize,'Interpreter','tex');hold on;
@@ -881,6 +903,20 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 	objCutMovieAsyncF = cell([1 nSignalsHere]);
 	objCutImagesAsyncF = cell([1 nSignalsHere]);
 
+	% Setup frame callback
+	sliderPos = 2;
+	nFrames = size(inputSignals,2);
+	frameSlider = uicontrol('style','slider','Units', 'normalized','position',[15 0 83 sliderPos]/100,...
+			'min',1,'max',nFrames,'Value',1,'SliderStep',[1/nFrames 10*(1/nFrames)],'callback',@movieCallback);
+	set(frameSlider,'Enable','off');
+	frameNo = max(1,round(get(frameSlider,'value')));
+	addlistener(frameSlider, 'Value', 'PostSet',@frameCallback);
+	['Frame ' num2str(frameNo) '/' num2str(nFrames)]
+	frameText = uicontrol('style','edit','Units', 'normalized','position',[1 0 14 sliderPos]/100,'FontSize',9,'string','Disabled. Press B to active');
+	set(frameText,'ForegroundColor',[0.7 0.7 0.7]);
+	zoomHandle = [];
+	frameLineHandle = [];
+
 	% suptitle('Press Z to toggle zoom on all panels. Press L for keyboard shortcut legend.','plotregion',0.95,'titleypos',0.98)
 
 	% only exit if user clicks options that calls for saving the data
@@ -924,7 +960,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 		if ~isempty(options.inputMovie)
 			% inputMoviePlotLoc2Handle = subplot(subplotY,subplotX,inputMoviePlotLoc2);
 			if i==1
-				inputMoviePlotLoc2Handle = subplotTmp(subplotY,subplotX,inputMoviePlotLoc2);
+				inputMoviePlotLoc2Handle = subplotCustom(subplotY,subplotX,inputMoviePlotLoc2);
 			else
 				% axes(inputMoviePlotLoc2Handle);
 				set(mainFig,'CurrentAxes',inputMoviePlotLoc2Handle);
@@ -1095,7 +1131,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 			% subplot(subplotY,subplotX,filterPlotLoc)
 			% subplot(subplotY,subplotX,inputMoviePlotLoc2)
 			if i==1
-				inputMoviePlotLoc2Handle = subplotTmp(subplotY,subplotX,inputMoviePlotLoc2);
+				inputMoviePlotLoc2Handle = subplotCustom(subplotY,subplotX,inputMoviePlotLoc2);
 			else
 				% axes(inputMoviePlotLoc2Handle);
 				set(mainFig,'CurrentAxes',inputMoviePlotLoc2Handle);
@@ -1137,7 +1173,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 		% end
 		% subplot(subplotY,subplotX,objMapPlotLoc)
 		if i==1
-			objMapPlotLocHandle = subplotTmp(subplotY,subplotX,objMapPlotLoc);
+			objMapPlotLocHandle = subplotCustom(subplotY,subplotX,objMapPlotLoc);
 		else
 			set(mainFig,'CurrentAxes',objMapPlotLocHandle);
 		end
@@ -1253,7 +1289,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 			% title(strrep(options.inputStr,'_','\_'), 'HandleVisibility' , 'off' )
 		% subplot(subplotY,subplotX,objMapZoomPlotLoc)
 		if i==1
-			objMapZoomPlotLocHandle = subplotTmp(subplotY,subplotX,objMapZoomPlotLoc);
+			objMapZoomPlotLocHandle = subplotCustom(subplotY,subplotX,objMapZoomPlotLoc);
 		else
 			% axes(objMapZoomPlotLocHandle);
 			set(mainFig,'CurrentAxes',objMapZoomPlotLocHandle);
@@ -1327,7 +1363,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 				if options.axisEqual==1
 					axis equal tight;
 				end
-				title(['signal ' cellIDStr ' (' num2str(sum(valid==1)) ' good)' 10 'Legend: green(good), red(bad), blue(current)'],'FontSize',options.fontSize,'Interpreter','tex')
+				title(['signal ' cellIDStr ' (' num2str(sum(valid==1)) ' good)' 10 'Legend: green(good), red(bad), blue(current)' 10 'Press L for keyboard shortcut legend.'],'FontSize',options.fontSize,'Interpreter','tex')
 				% 10 'Legend: green(good), red(bad), blue(current)'
 				box off;
 				axisH = gca;
@@ -1346,7 +1382,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 			% plot all signals and the average
 			% subplot(subplotY,subplotX,avgSpikeTracePlot);
 			if i==1
-				avgSpikeTracePlotHandle = subplotTmp(subplotY,subplotX,avgSpikeTracePlot);
+				avgSpikeTracePlotHandle = subplotCustom(subplotY,subplotX,avgSpikeTracePlot);
 			else
 				set(mainFig,'CurrentAxes',avgSpikeTracePlotHandle);
 			end
@@ -1361,9 +1397,9 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 			% plot the trace
 
 			% % subplot(subplotY,subplotX,tracePlotLoc)
-			% subplotTmp(subplotY,subplotX,tracePlotLoc)
+			% subplotCustom(subplotY,subplotX,tracePlotLoc)
 			if i==1
-				tracePlotLocHandle = subplotTmp(subplotY,subplotX,tracePlotLoc);
+				tracePlotLocHandle = subplotCustom(subplotY,subplotX,tracePlotLoc);
 			else
 				set(mainFig,'CurrentAxes',tracePlotLocHandle);
 			end
@@ -1383,6 +1419,27 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 					' | EquivD = ' num2str(round(imgStats.EquivDiameter(i)*sigDig)/sigDig)];
 					% ' | Solidity = ' num2str(round(imgStats.Solidity(i)*sigDig)/sigDig)...
 				plotSignal(thisTrace,testpeaks,'',thisStr,minValTraces,maxValTraces,options,inputSignalSignal{i},inputSignalNoise{i});
+
+				if options.peakTrigMovieMontage==0
+					set(mainFig,'CurrentAxes',tracePlotLocHandle);
+					% set(mainFig,'CurrentAxes',signalAxes)
+						% zoomHandle = zoom;
+						% set(zoomHandle,'ActionPostCallback',@sliderZoomCallback);
+						peakSignalAmplitude = thisTrace(signalPeakIdx{i}(:));
+						% peakSignalAmplitude
+						[peakSignalAmplitude, peakIdx] = sort(peakSignalAmplitude,'descend');
+
+						set(frameSlider,'value',signalPeakIdx{i}(peakIdx(1)));
+						% Create handle for frame indicator line
+						frNoCall = max(1,round(get(frameSlider,'value')));
+						frameLineHandle = line([frNoCall frNoCall],[get(gca,'YLim')],'Color',[0 0 0]);
+						uistack(frameLineHandle,'bottom');
+						frameCallback();
+
+					nFrames = size(inputSignals,2);
+					set(frameSlider,'min',1,'max',nFrames,'SliderStep',[1/nFrames 10*(1/nFrames)])
+				end
+
 				if ~isempty(options.inputMovie)&&options.showROITrace==1&&~ischar(options.inputMovie)
 					hold on
 					% [tmpTrace] = applyImagesToMovie(inputImagesThres(:,:,i),options.inputMovie,'alreadyThreshold',1,'waitbarOn',0);
@@ -1411,7 +1468,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 		else
 			% subplot(subplotY,subplotX,avgSpikeTracePlot);
 			if i==1
-				avgSpikeTracePlotHandle = subplotTmp(subplotY,subplotX,avgSpikeTracePlot);
+				avgSpikeTracePlotHandle = subplotCustom(subplotY,subplotX,avgSpikeTracePlot);
 			else
 				set(mainFig,'CurrentAxes',avgSpikeTracePlotHandle);
 			end
@@ -1422,7 +1479,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 				title(['signal peaks ' cellIDStr],'FontSize',options.fontSize,'Interpreter','tex')
 			% subplot(subplotY,subplotX,tracePlotLoc)
 			if i==1
-				tracePlotLocHandle = subplotTmp(subplotY,subplotX,tracePlotLoc);
+				tracePlotLocHandle = subplotCustom(subplotY,subplotX,tracePlotLoc);
 			else
 				set(mainFig,'CurrentAxes',tracePlotLocHandle);
 			end
@@ -1466,7 +1523,9 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 		if ~isempty(options.inputMovie)
 			try
 				% [objCutMovie] = createObjCutMovieSignalSorter(options,testpeaks,thisTrace,inputImages,i);
-				if isempty(objCutMovieCollection{i})&&ischar(options.inputMovie)==1
+				if options.peakTrigMovieMontage==0
+					movieCallback();
+				elseif isempty(objCutMovieCollection{i})&&ischar(options.inputMovie)==1
 					if exist('objCutMovieAsyncF','var')==1
 						% cellfun(@(x) disp(x),objCutMovieAsyncF)
 						% clc
@@ -1499,6 +1558,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 						optionsCpy.outlinesObjCutMovie = options.outlinesObjCutMovie;
 						% optionsCpy = options;
 						optionsCpy.hdf5Fid = [];
+						optionsCpy.nMovieFrames = options.nMovieFrames;
 					end
 					for kk = (i+1):(i+options.nSignalsLoadAsync)
 						% Don't try to load signals out of range
@@ -1543,7 +1603,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 
 				% subplot(subplotY,subplotX,inputMoviePlotLoc)
 				if i==1
-					inputMoviePlotLocHandle = subplotTmp(subplotY,subplotX,inputMoviePlotLoc);
+					inputMoviePlotLocHandle = subplotCustom(subplotY,subplotX,inputMoviePlotLoc);
 				else
 					set(mainFig,'CurrentAxes',inputMoviePlotLocHandle);
 				end
@@ -1627,7 +1687,12 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 				end
 
 				% title(['Press Q to change movie contrast.' 10 'Press Z to toggle zoom on all panels.' 10 'Press L for keyboard shortcut legend.' 10 'signal ' cellIDStr ' (' num2str(sum(valid==1)) ' good)'],'FontSize',options.fontSize)
-				title(['Press Q to change movie contrast.' 10 'Press Z to toggle zoom on all panels.' 10 'Press L for keyboard shortcut legend.'],'FontSize',options.fontSize,'Interpreter','tex')
+				if options.peakTrigMovieMontage==1
+					title(['Press Q to change movie contrast.' 10 'Press Z to toggle zoom on all panels.' 10 'Press B to select specific frame for movie' 10 'Frame slider at bottom.'],'FontSize',options.fontSize,'Interpreter','tex')
+				else
+					title(['Press Q to change movie contrast.' 10 'Press Z to toggle zoom on all panels.' 10 'Press B to switch to movie montage.' 10 'Zoom enabled in trace panel.'],'FontSize',options.fontSize,'Interpreter','tex')
+					% title(['INTERFACE LOCKED until press B again.'],'FontSize',options.fontSize,'Interpreter','tex');
+				end
 
 				% ==========================================
 				% ADD PROGRESS BAR
@@ -1638,16 +1703,24 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 				end
 
 				set(mainFig,'CurrentAxes',inputMoviePlotLocHandle);
-				% subplotTmp(subplotY,subplotX,inputMoviePlotLoc)
+				% subplotCustom(subplotY,subplotX,inputMoviePlotLoc)
 
 				% h = zoom;
-				% ax2 = subplotTmp(subplotY,subplotX,objMapPlotLoc);
+				% ax2 = subplotCustom(subplotY,subplotX,objMapPlotLoc);
 				% setAllowAxesZoom(h,ax2,true);
 				% zoom on
 				% get(gcf,'CurrentCharacter')
 				frameNoTotal = 0; % use this to lock
 
+				if options.peakTrigMovieMontage==0
+					% zoom on;
+					zoomHandle = zoom;
+					zoomHandle.Enable = 'on';
+					set(zoomHandle,'ActionPostCallback',@sliderZoomCallback);
+				end
+
 				% set(mainFig,'KeyPressFcn', '1;');
+				% while strcmp(keyIn,'3')|(options.peakTrigMovieMontage==0&~strcmp(keyIn,'b'))
 				while strcmp(keyIn,'3')
 					% figure(mainFig)
 					frameNoTotal = frameNoTotal+1;
@@ -1693,6 +1766,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 				% close(writerObj);
 
 			catch err
+				size(objCutMovie)
 				disp(repmat('@',1,7))
 				disp(getReport(err,'extended','hyperlinks','on'));
 				disp(repmat('@',1,7))
@@ -1803,7 +1877,31 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 		elseif isequal(reply, 112)
 			disp('Paused, press key to resume.')
 			pause;
-		% 'Z' display neighboring cells
+		% 'B' toggle movie frame montage and frame select
+		elseif isequal(reply, 98)
+			if options.peakTrigMovieMontage==1
+				options.peakTrigMovieMontage = 0;
+				set(frameSlider,'Enable','on');
+				set(frameText,'ForegroundColor',[0 0 0]);
+				% zoom on;
+				set(mainFig,'CurrentAxes',inputMoviePlotLocHandle);
+
+				% title(['INTERFACE LOCKED until press B again.'],'FontSize',options.fontSize,'Interpreter','tex');
+				% set(mainFig,'CurrentAxes',tracePlotLocHandle);
+				% % set(mainFig,'CurrentAxes',signalAxes)
+				% 	zoomHandle = zoom;
+				% 	set(zoomHandle,'ActionPostCallback',@sliderZoomCallback);
+
+				% 	% Create handle for frame indicator line
+				% 	frameLineHandle = line([1 1],[get(gca,'YLim')],'Color',[0 0 0]);
+				% 	uistack(frameLineHandle,'bottom');
+
+			else
+				options.peakTrigMovieMontage = 1;
+				set(frameSlider,'Enable','off');
+				set(frameText,'ForegroundColor',[0.7 0.7 0.7],'String','Disabled. Press B to active');
+			end
+		% 'Z' toggle zoom
 		elseif isequal(reply, 122)
 			% disp('Paused, press key to resume.')
 			% pause;
@@ -2061,6 +2159,121 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 			[valid, directionOfNextChoice, saveData, i] = respondToUserInput(reply,i,valid,directionOfNextChoice,saveData,nImages);
 		end
 	end
+	function sliderZoomCallback(source,eventdata)
+		% When user zooms in on the activity trace, adjust the slider range accordingly
+		% disp('CHECK1')
+		nFrames = size(inputSignals,2);
+		xlimHere = get(tracePlotLocHandle,'XLim');
+		frameNoCall = max(1,round(get(frameSlider,'value')));
+		frameNoCall = min(xlimHere(2)+1,max(xlimHere(1)-1,round(frameNoCall)));
+		if frameNoCall<xlimHere(1)|frameNoCall>xlimHere(2)
+			frameNoCall = round(mean(xlimHere(:)));
+		end
+		set(frameSlider,'value',frameNoCall);
+		set(frameSlider,'min',xlimHere(1),'max',xlimHere(2),'SliderStep',[1/nFrames 10*(1/nFrames)])
+	end
+	function frameCallback(source,eventdata)
+		% Whenever the frame slider is moved, update the frame text and indicator line
+
+		frameNoCall = max(1,round(get(frameSlider,'value')));
+		% signalNo = max(1,round(get(signalSlider,'value')));
+		nFrames = size(inputSignals,2);
+		set(frameSlider,'value',frameNoCall);
+		set(frameText,'visible','on','string',['Frame ' num2str(frameNoCall) '/' num2str(nFrames)])
+
+		breakLoop = 1;
+
+		% Update the frame line indicator
+		set(mainFig,'CurrentAxes',tracePlotLocHandle)
+            if isvalid(frameLineHandle)
+                frameLineHandle.XData = [frameNoCall frameNoCall];
+            end
+	end
+	function movieCallback(source,eventdata)
+		% return;
+		% disp('Outputs1')
+		try
+			frameNoCall = max(1,round(get(frameSlider,'value')));
+			% signalNo = max(1,round(get(signalSlider,'value')));
+			thisCellImg = inputImages(:,:,i);
+			breakLoop = 0;
+			if ~isempty(options.inputMovie)
+				% Get the image cut movie
+				% set(mainFig,'CurrentAxes',movieAxes)
+					% cla reset
+					frameListHere = frameNoCall+[-options.nMovieFrames:options.nMovieFrames];
+					% frameListHere(frameListHere>nFrames) = [];
+					% frameListHere(frameListHere<1) = [];
+					nFrames = size(inputSignals,2);
+					frameListHere(frameListHere>nFrames) = nFrames;
+					frameListHere(frameListHere<1) = 1;
+					% frameListHere
+					% options
+					if ischar(options.inputMovie)||iscell(options.inputMovie)
+						objCutMovie = getObjCutMovie(options.inputMovie,thisCellImg,'createMontage',0,'extendedCrosshairs',0,'outlines',0,'waitbarOn',0,'cropSize',options.cropSize,'crossHairsOn',0,'addPadding',0,'frameList',frameListHere);
+					else
+						tmpMovieHere = options.inputMovie(:,:,frameListHere);
+						objCutMovie = getObjCutMovie(tmpMovieHere,thisCellImg,'createMontage',0,'extendedCrosshairs',0,'outlines',0,'waitbarOn',0,'cropSize',options.cropSize,'crossHairsOn',0,'addPadding',0,'frameList',frameListHere);
+					end
+					objCutImg = getObjCutMovie(thisCellImg,thisCellImg,'createMontage',0,'extendedCrosshairs',0,'outlines',0,'waitbarOn',0,'cropSize',options.cropSize,'crossHairsOn',0,'addPadding',0);
+					objCutImg = objCutImg{1};
+					objCutMovie = objCutMovie{1};
+					thresholdOutline = options.thresholdOutline;
+					[thresholdedImages, boundaryIndices] = thresholdImages(objCutImg,'binary',1,'getBoundaryIndex',1,'threshold',thresholdOutline);
+					if length(frameListHere)>1
+						for zzzz = 1:size(objCutMovie,3)
+							tmpFrame = objCutMovie(:,:,zzzz);
+							tmpFrame([boundaryIndices{:}]) = NaN;
+							objCutMovie(:,:,zzzz) = tmpFrame;
+						end
+					end
+					imAlpha = ones(size(objCutMovie(:,:,1)));
+					imAlpha(isnan(objCutMovie(:,:,1))) = 0;
+					imAlpha(objCutMovie(:,:,1)==0) = 0;
+					set(loopImgHandle,'Cdata',squeeze(objCutMovie(:,:,1)),'AlphaData',imAlpha);
+					% set(loopImgHandle,'AlphaData',imAlpha);
+					% 	i = 1;
+					% 	% size(objCutMovie)
+					% 	% axHandle = imagesc(objCutMovie(:,:,i),'AlphaData',~isnan(tmpFrame));
+					% 	set(movieImgHandle,'CData',objCutMovie(:,:,i),'AlphaData',~isnan(tmpFrame));
+
+					% 	% axis equal tight;
+					% 	% colormap(movieAxes,'gray')
+					% 	% colorbar;
+					% 	% set(gca,'Color',[1 0 0])
+					% 	% box off
+					% 	caxis(options.caxisRange)
+					% 	title(['Movie frame #' num2str(frameNo)])
+					% 	set(pauseHandle,'String','Pause movie');
+					% 	while breakLoop==0
+					% 		set(movieImgHandle,'CData',objCutMovie(:,:,i));
+					% 		i = i+1;
+					% 		if i==size(objCutMovie,3)
+					% 			i = 1;
+					% 		end
+					% 		pause(1/options.fps);
+					% 	end
+					% else
+					% 	objCutMovie = nanmean(objCutMovie,3);
+					% 	objCutMovie([boundaryIndices{:}]) = NaN;
+					% 	imagesc(objCutMovie,'AlphaData',~isnan(objCutMovie));
+					% 		axis equal tight;
+					% 		% colormap(customColormap([]));
+					% 		colormap(movieAxes,'gray')
+					% 		colorbar;
+					% 		set(gca,'Color',[1 0 0])
+					% 		caxis(options.caxisRange)
+					% 		title(['Movie frame #' num2str(frameNo)])
+					% 		drawnow
+					% 		box off
+					% end
+			end
+		catch err
+			disp(repmat('@',1,7))
+			disp(getReport(err,'extended','hyperlinks','on'));
+			disp(repmat('@',1,7))
+		end
+	end
 end
 function [axValid axValidAll] = subfxnSignalSorterProgressBars(i,valid,inputMoviePlotLocHandle,inputMoviePlotLoc2Handle,options,mainFig,axValid,axValidAll,cellIDStr)
 	validData = cat(3,double(valid(:)'==0|valid(:)'>1),double(valid(:)'==1|valid(:)'>1),double(valid(:)'>1))/2;
@@ -2156,6 +2369,7 @@ function instructionStr = subfxnCreateLegend()
 	'p          | pause GUI, goto command window',sepStrNum,...
 	'z          | toggle zoom',sepStrNum,...
 	'a          | change GUI font',sepStrNum,sepStrNum,...
+	'b          | Toggle movie frame select',sepStrNum,sepStrNum,...
 	'===Cell map legend===',sepStrNum,...
 	'green = good',sepStrNum,...
 	'red = bad',sepStrNum,...
@@ -2170,21 +2384,30 @@ function instructionStr = subfxnCreateLegend()
 	'slopeRatio>0.02',sepStrNum,sepStrNum];
 	% msgbox(instructionStr)
 
-	s.Interpreter = 'tex';
-	% s.WindowStyle = 'non-modal';
-	s.WindowStyle = 'replace';
-	h = msgbox_custom(['\fontsize{10}' instructionStr],'signalSorter shortcuts/legend',s);
-	sspos = get(h, 'position'); %makes box bigger
-	scnsize = get(0,'ScreenSize');
-	set(h, 'position', [0 0 sspos(3)*0.8 sspos(4)*0.8]); %makes box bigger
+	tmpHandle = figure(2)
+	close(tmpHandle)
+	tmpHandle = figure(2)
+	clf
+	set(tmpHandle,'Name','Key legend','NumberTitle','off')
+	uicontrol('style','text','string',instructionStr,'Units', 'normalized','position',[1 1 80 90]/100,'horizontalAlignment', 'left')
+	suptitle('signalSorter shortcuts/legend')
+	axis off
+
+	% s.Interpreter = 'tex';
+	% % s.WindowStyle = 'non-modal';
+	% s.WindowStyle = 'replace';
+	% h = msgbox_custom(['\fontsize{10}' instructionStr],'signalSorter shortcuts/legend',s);
+	% sspos = get(h, 'position'); %makes box bigger
+	% scnsize = get(0,'ScreenSize');
+	% set(h, 'position', [0 0 sspos(3)*1 sspos(4)*1]); %makes box bigger
 end
 
 function [objCutMovie] = createObjCutMovieSignalSorter(options,testpeaks,thisTrace,inputImages,i,cropSizeLength,maxValMovie)
 	usePadding = 1;
 	% i = 1;
 	% frames
-	preOffset = 10;
-	postOffset = 10;
+	preOffset = options.nMovieFrames;
+	postOffset = options.nMovieFrames;
 	timeVector = (-preOffset:postOffset)';
 	if ischar(options.inputMovie)||iscell(options.inputMovie)
 		% movieDims = loadMovieList(options.inputMovie,'frameList',[],'inputDatasetName',options.inputDatasetName,'getMovieDims',1,'displayInfo',0);
@@ -2268,7 +2491,9 @@ function [objCutMovie] = createObjCutMovieSignalSorter(options,testpeaks,thisTra
 	% diffDiffMatrix(:,:,round(size(diffDiffMatrix,3)/2)) = options.movieMax;
 	nStimMovies = 2;
 	objCutMovieNum = objCutMovieNum+nStimMovies;
-	for iii = 1:nStimMovies;objCutMovie = cat(3, diffDiffMatrix, objCutMovie);end
+	for iii = 1:nStimMovies
+		objCutMovie = cat(3, diffDiffMatrix, objCutMovie);
+	end
 	% dimDiff = maxSignalsToShow + nStimMovies - round(size(objCutMovie,3)/length(timeVector));
 	dimDiff = maxSignalsToShow + nStimMovies - objCutMovieNum;
 	% disp('===')
@@ -2659,7 +2884,13 @@ function [valid, directionOfNextChoice, saveData, i] = respondToUserInput(reply,
 		% valid(i) = 1;
 	end
 	if directionOfNextChoice~=0
-		zoom off;
+		try
+			zoom off;
+		catch err
+			disp(repmat('@',1,7))
+			disp(getReport(err,'extended','hyperlinks','on'));
+			disp(repmat('@',1,7))
+		end
 	end
 end
 function [outputImage] = subfxnCropImages(inputImages)

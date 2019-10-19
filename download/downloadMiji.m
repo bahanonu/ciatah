@@ -2,6 +2,15 @@ function [success] = downloadMiji(varargin)
 	% Biafra Ahanonu
 	% Downloads the correct Miji version for each OS.
 	% started: 2019.07.30 [09:58:04]
+	% inputs
+		%
+	% outputs
+		%
+
+	% changelog
+		% 2019.10.15 [10:48:10] - Fix so DMGs downloaded for MAC have the proper file extension.
+	% TODO
+		%
 
 	%========================
 	% options.defaultDir = ['private' filesep 'programs'];
@@ -78,7 +87,12 @@ function [success] = downloadMiji(varargin)
 			gitName{gitNo} = outputDir{gitNo};
 
 			% Download git repo zip
-			rawSavePathDownload = [rawSavePathDownload filesep outputDir{gitNo} '.zip'];
+			if ismac
+				rawSavePathDownload = [rawSavePathDownload filesep outputDir{gitNo} '.dmg'];
+			else
+				rawSavePathDownload = [rawSavePathDownload filesep outputDir{gitNo} '.zip'];
+			end
+
 			if exist(rawSavePathDownload,'file')~=2
 				fprintf('Downloading %s file to %s\n',gitRepos{gitNo},rawSavePathDownload)
 				websave(rawSavePathDownload,gitRepos{gitNo});
@@ -88,7 +102,7 @@ function [success] = downloadMiji(varargin)
 
 			unzipPath = [signalExtractionDir filesep outputDir{gitNo}];
 			if ismac
-				uiwait(msgbox(['Congrats! You are special and on a Mac. Please go to "' signalExtractionDir '" folder, install Fiji, *then* click OK!']));
+				uiwait(msgbox(['Congrats! You are special and on a Mac. Please go to "' signalExtractionDir '" folder, install Fiji there (drag icon into folder), *then* click OK!']));
 				modelAddOutsideDependencies('miji');
 			elseif exist(unzipPath,'dir')~=7
 				% Unzip the repo file
@@ -106,11 +120,13 @@ function [success] = downloadMiji(varargin)
 			% movefile([signalExtractionDir filesep gitName{gitNo}],[signalExtractionDir filesep outputDir{gitNo}]);
 		end
 
-		if exist('unzipPath','var')&&exist(unzipPath,'dir')==7
-			defaultExternalProgramDir = unzipPath;
-		else
-			defaultExternalProgramDir = options.defaultDir;
-		end
+		% if exist('unzipPath','var')&&exist(unzipPath,'dir')==7
+		% 	defaultExternalProgramDir = unzipPath;
+		% else
+		% 	defaultExternalProgramDir = options.defaultDir;
+		% end
+		% modelAddOutsideDependencies('miji','defaultExternalProgramDir',defaultExternalProgramDir);
+		defaultExternalProgramDir = options.defaultDir;
 		modelAddOutsideDependencies('miji','defaultExternalProgramDir',defaultExternalProgramDir);
 
 		success = 1;

@@ -9,18 +9,11 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 
 	% changelog
 		% 2014.02.17 added in mean subtraction/division to function
-		% 2017.08.18 [09:02:42] changed medfilt2 to have symmetric padding from default zero padding
+		% 2017.08.18 [09:02:42] changed medfilt2 to have symmetric padding from default zero padding.
+		% 2019.10.08 [09:14:33] - Add option for user to input crop coordinates in case they have a NaN or other border from motion correction, so that does not affect spatial filtering. User can also now input a char for inputMovie and have it load within the function to help reduce memory overhead
 	% TODO
 		%
 
-	% input is an image, convert to movie
-	if length(size(inputMovie))==2
-		inputMovieDims = 2;
-		inputMovieTmp(:,:,1) = inputMovie;
-		inputMovie = inputMovieTmp;
-	else
-		inputMovieDims = 3;
-	end
 	%========================
 	% fft,bandpassDivisive,lowpassFFTDivisive,imfilterSmooth,imfilter,meanSubtraction,meanDivision,negativeRemoval
 	options.normalizationType = 'meanDivision';
@@ -64,9 +57,18 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 	options.medianFilterPadding = 'symmetric';
 	% Version of pad image to use for FFT, 1 = original, 2 = make image dimensions power of 2 (speeds up computation in many cases).
 	options.padImageVersion = 2;
-	% ===
+	% Int vector: empty = do not crop else pixel coordinates of a square to crop following convention [left-column top-row right-column bottom-row]
+	options.cropCoords = [];
+	% Binary: 1 = removes NaN from the movie since they will cause problems for most filtering functions. 0 = do not remove NaNs (ONLY use if movie has none or using options.cropCoords)
+	options.runNanCheck = 1;
 	% cmd line waitbar on?
 	options.waitbarOn = 1;
+	% ===
+	% Str: hierarchy name in hdf5 where movie data is located
+	options.inputDatasetName = '/1';
+	% list of specific frames to load
+	options.frameList = [];
+	% ===
 	% get options
 	options = getOptions(options,varargin);
 	% unpack options into current workspace
@@ -84,7 +86,25 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		options.secondaryNormalizationType = 'lowpassFFTDivisive';
 		options.bandpassType = 'lowpass';
 	end
+	%========================
 
+	% Load movie directly in function if path, to save memory in some cases.
+	if ischar(inputMovie)==1
+		% ischar(inputMovie)
+		inputMovie = loadMovieList(inputMovie,'frameList',options.frameList,'inputDatasetName',options.inputDatasetName,'getMovieDims',0,'displayInfo',1,'largeMovieLoad',1);
+		% size(inputMovie)
+		options.maxFrame = size(inputMovie,3);
+	end
+
+	%========================
+	% input is an image, convert to movie
+	if length(size(inputMovie))==2
+		inputMovieDims = 2;
+		inputMovieTmp(:,:,1) = inputMovie;
+		inputMovie = inputMovieTmp;
+	else
+		inputMovieDims = 3;
+	end
 	%========================
 	% Only implement in Matlab 2017a and above
 	if ~verLessThan('matlab', '9.2')
@@ -174,18 +194,19 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		end
 	end
 	function mijiCheck()
-		if exist('Miji.m','file')==2
-			disp(['Miji located in: ' which('Miji.m')]);
-			% Miji is loaded, continue
-		else
-			pathToMiji = inputdlg('Enter path to Miji.m in Fiji (e.g. \Fiji.app\scripts):',...
-						 'Miji path', [1 100]);
-			pathToMiji = pathToMiji{1};
-			privateLoadBatchFxnsPath = 'private\privateLoadBatchFxns.m';
-			fid = fopen(privateLoadBatchFxnsPath,'at');
-			fprintf(fid, '\npathtoMiji = ''%s'';\n', pathToMiji);
-			fclose(fid);
-		end
+		% if exist('Miji.m','file')==2
+		% 	disp(['Miji located in: ' which('Miji.m')]);
+		% 	% Miji is loaded, continue
+		% else
+		% 	pathToMiji = inputdlg('Enter path to Miji.m in Fiji (e.g. \Fiji.app\scripts):',...
+		% 				 'Miji path', [1 100]);
+		% 	pathToMiji = pathToMiji{1};
+		% 	privateLoadBatchFxnsPath = 'private\privateLoadBatchFxns.m';
+		% 	fid = fopen(privateLoadBatchFxnsPath,'at');
+		% 	fprintf(fid, '\npathtoMiji = ''%s'';\n', pathToMiji);
+		% 	fclose(fid);
+		% end
+		modelAddOutsideDependencies('miji');
 	end
 	function [movieTmp] = addText(movieTmp,inputText,fontSize)
 		nFrames = size(movieTmp,3);
@@ -411,7 +432,9 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 	end
 	function subfxnFft()
 		disp('Running Matlab FFT')
-		inputMovie(isnan(inputMovie)) = 0;
+		if options.runNanCheck==1
+			inputMovie(isnan(inputMovie)) = 0;
+		end
 		% bandpassMatrix = zeros(size(inputMovie));
 		% get options
 		ioptions.showImages = options.showImages;
@@ -447,6 +470,26 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		% try;[percent progress] = parfor_progress(nFramesToNormalize);catch;end; dispStepSize = round(nFramesToNormalize/20); dispstat('','init');
 		secondaryNormalizationType = options.secondaryNormalizationType;
 		maxFrame = options.maxFrame;
+		coords = options.cropCoords;
+
+		if ~isempty(options.cropCoords)
+			thisFrame1 = squeeze(inputMovie(coords(2):coords(4), coords(1):coords(3),1));
+			thisFrame2 = squeeze(inputMovie(:,:,1));
+			disp(['Cropping movie just for FFT (' num2str(size(thisFrame1)) '), original movie size remains the same (' num2str(size(thisFrame2)) ').'])
+			% a,b are left/right column values
+			a = coords(1);
+			b = coords(3);
+			% c,d are top/bottom row values
+			c = coords(2);
+			d = coords(4);
+		else
+			a = [];
+			b = [];
+			c = [];
+			d = [];
+		end
+
+		opts2 = parallel.pool.Constant(ioptions);
 		% startState = ticBytes(gcp);
 		parfor frame = 1:nFramesToNormalize
 			% [percent progress] = parfor_progress;if mod(progress,dispStepSize) == 0;dispstat(sprintf('progress %0.1f %',percent));else;end
@@ -459,17 +502,30 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 			% end
 			% reverseStr = cmdWaitbar(frame,options.maxFrame,reverseStr,'inputStr','normalizing movie','waitbarOn',options.waitbarOn,'displayEvery',5);
 			% thisFrame = squeeze(inputMovie{frame});
-			thisFrame = squeeze(inputMovie(:,:,frame));
+			thisFrame = inputMovie(:,:,frame);
+			thisFrame = squeeze(thisFrame);
+
 			if isempty(secondaryNormalizationType)
-				inputMovie(:,:,frame) = fftImage(thisFrame,'options',ioptions);
+				if isempty(coords)
+					thisFrame = fftImage(thisFrame,'options',opts2.Value);
+				else
+					thisFrame(c:d, a:b) = fftImage(thisFrame(c:d, a:b),'options',opts2.Value);
+				end
 			else
-				tmpFrame = fftImage(thisFrame,'options',ioptions);
+				if isempty(coords)
+					tmpFrame = fftImage(thisFrame,'options',opts2.Value);
+				else
+					tmpFrame = thisFrame;
+					tmpFrame(c:d, a:b) = fftImage(thisFrame(c:d, a:b),'options',opts2.Value);
+				end
 				tmpFrameMin = nanmin(tmpFrame(:));
 				if tmpFrameMin<0
 					tmpFrame = tmpFrame + abs(tmpFrameMin);
 				end
-				inputMovie(:,:,frame) = thisFrame./tmpFrame;
+				thisFrame = thisFrame./tmpFrame;
 			end
+
+			inputMovie(:,:,frame) = thisFrame;
 
 			if ~verLessThan('matlab', '9.2')
 				send(D, frame); % Update
@@ -554,8 +610,9 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 			reverseStr = '';
 			% options.secondaryNormalizationType
 			% nanmean(inputMovieFFT(:))
-
-			inputMovieFFT(isnan(inputMovieFFT)) = 0;
+			if options.runNanCheck==1
+				inputMovieFFT(isnan(inputMovieFFT)) = 0;
+			end
 
 			% inputMovie = squeeze(mat2cell(inputMovie,inputMovieX,inputMovieY,ones(1,inputMovieZ)));
 			% parfor frame=1:options.maxFrame
@@ -720,11 +777,13 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		% reshapeValue = size(inputMovie);
 		%Convert array to cell array, allows slicing (not contiguous memory block)
 		% inputMovie = squeeze(mat2cell(inputMovie,inputMovieX,inputMovieY,ones(1,inputMovieZ)));
-
+		runNanCheck = options.runNanCheck;
 		parfor frame=1:nFrames
 			thisFrame = squeeze(inputMovie(:,:,frame));
 			% thisFrame = inputMovie{frame};
-			thisFrame(isnan(thisFrame))=nanmean(thisFrame(:));
+			if runNanCheck==1
+				thisFrame(isnan(thisFrame)) = nanmean(thisFrame(:));
+			end
 			inputMovie(:,:,frame) = imfilter(thisFrame, movieFilter,options_boundaryType);
 			% inputMovie{frame} = imfilter(thisFrame, movieFilter,options_boundaryType);
 			% reverseStr = cmdWaitbar(frame,nFrames,reverseStr,'inputStr','imfilter normalizing movie','waitbarOn',options.waitbarOn,'displayEvery',5);
@@ -749,9 +808,12 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		nFrames = size(inputMovie,3);
 		inputMovieFiltered = zeros(size(inputMovie),class(inputMovie));
 		reverseStr = '';
+		runNanCheck = options.runNanCheck;
 		for frame=1:nFrames
 			thisFrame = squeeze(inputMovie(:,:,frame));
-			thisFrame(isnan(thisFrame))=nanmean(thisFrame(:));
+			if runNanCheck==1
+				thisFrame(isnan(thisFrame))=nanmean(thisFrame(:));
+			end
 			inputMovieFiltered(:,:,frame) = imfilter(thisFrame, movieFilter,options.boundaryType);
 			reverseStr = cmdWaitbar(frame,nFrames,reverseStr,'inputStr','normalizing movie','waitbarOn',options.waitbarOn,'displayEvery',5);
 		end

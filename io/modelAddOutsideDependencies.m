@@ -8,13 +8,14 @@ function [success] = modelAddOutsideDependencies(dependencyName,varargin)
 		%
 
 	% changelog
-		%
+		% 2019.10.15 [12:29:30] - Added flag to prevent recursive loop between resetMiji and modelAddOutsideDependencies.
 	% TODO
 		%
 
 	%========================
 	options.exampleOption = '';
 	options.defaultExternalProgramDir = ['_external_programs'];
+	options.recursionExit = 0;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -32,16 +33,31 @@ function [success] = modelAddOutsideDependencies(dependencyName,varargin)
 				if exist('Miji.m','file')==2
 					display(['Miji located in: ' which('Miji.m')]);
 					% Miji is loaded, continue
+				elseif ~isempty(java.lang.System.getProperty('plugins.dir'))
+					disp('Miji JAR files already loaded, skipping. If Miji issue, use "resetMiji".')
 				else
 					% pathToMiji = inputdlg('Enter path to Miji.m in Fiji (e.g. \Fiji.app\scripts):',...
 					%              'Miji path', [1 100]);
 					% pathToMiji = pathToMiji{1};
 					% display('Dialog box: Enter path to Miji.m in Fiji (likely in "scripts" folder, e.g. \Fiji.app\scripts)')
-					checkMijiPath = [options.defaultExternalProgramDir filesep 'Fiji.app' filesep 'scripts'];
-					if exist(checkMijiPath,'dir')==7
-						fprintf('AUTOMATICALLY adding Miji path: %s\n',checkMijiPath);
-						pathToMiji = checkMijiPath;
-					else
+					fijiList = getFileList(options.defaultExternalProgramDir,'(Fiji.app|fiji-.*-20151222(?!.zip|.dmg))');
+					if ~isempty(fijiList)
+						if ismac
+							checkMijiPath = [fijiList{1} filesep 'scripts'];
+						elseif isunix
+							checkMijiPath = [fijiList{1} filesep 'Fiji.app' filesep 'scripts'];
+						elseif ispc
+							checkMijiPath = [fijiList{1} filesep 'Fiji.app' filesep 'scripts'];
+						else
+							checkMijiPath = [fijiList{1} filesep 'Fiji.app' filesep 'scripts'];
+						end
+						% checkMijiPath = [options.defaultExternalProgramDir filesep 'Fiji.app' filesep 'scripts'];
+						if exist(checkMijiPath,'dir')==7
+							fprintf('AUTOMATICALLY adding Miji path: %s\n',checkMijiPath);
+							pathToMiji = checkMijiPath;
+						end
+					end
+					if exist('pathToMiji','var')==0
 						if exist(options.defaultExternalProgramDir,'dir')==7
 							loadPathHere = options.defaultExternalProgramDir;
 							loadStr = ['Enter path to Miji.m in Fiji (likely in "scripts" folder, e.g. calciumImagingAnalysis\' options.defaultExternalProgramDir '\Fiji.app\scripts)'];
@@ -60,6 +76,10 @@ function [success] = modelAddOutsideDependencies(dependencyName,varargin)
 							fclose(fid);
 						end
 						addpath(pathToMiji);
+					end
+
+					if options.recursionExit==1
+						return;
 					end
 
 					% % If MIJ class not loaded, load Miji.m.

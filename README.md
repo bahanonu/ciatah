@@ -20,6 +20,7 @@ Contact: __Biafra Ahanonu, PhD (bahanonu [at] alum.mit.edu)__.
 	- [Preprocessing calcium imaging movies with  `modelPreprocessMovie`](#preprocessing-calcium-imaging-movies-with-modelpreprocessmovie)
 	- [Manual movie cropping with  `modelModifyMovies`](#manual-movie-cropping-with-modelmodifymovies)
 	- [Extracting cells with  `modelExtractSignalsFromMovie`](#extracting-cells-with-modelextractsignalsfrommovie)
+	- [Loading cell-extraction output data with `modelVarsFromFiles`](#loading-cell-extraction-output-data-with-modelvarsfromfiles)
 	- [Validating cell extraction with  `viewCellExtractionOnMovie`](#validating-cell-extraction-with--viewcellextractiononmovie)
 	- [Sorting cell extraction outputs with `computeManualSortSignals`](#sorting-cell-extraction-outputs-with-computemanualsortsignals)
 	- [Removing cells not within brain region with  `modelModifyRegionAnalysis`](#removing-cells-not-within-brain-region-with-modelmodifyregionanalysis)
@@ -35,21 +36,38 @@ Contact: __Biafra Ahanonu, PhD (bahanonu [at] alum.mit.edu)__.
 ## Quick start guide
 
 Below are steps needed to quickly get started using the `calciumImagingAnalysis` software package in MATLAB.
-- Clone the `calciumImagingAnalysis` repository (using GitHub desktop or command line) or download the repository zip and unzip.
-- Point the MATLAB path to the `calciumImagingAnalysis` folder.
+- Clone the `calciumImagingAnalysis` repository (using [GitHub desktop](https://desktop.github.com/) or command line) or download the repository zip and unzip.
+- Point the MATLAB path to the `calciumImagingAnalysis` root folder (*NOT* `@calciumImagingAnalysis` sub-folder in the repository).
 - Run the below MATLAB commands.
+
+```MATLAB
+% Run these commands in MATLAB to get started.
+
+% Loads the class into an object for use in this session
+obj = calciumImagingAnalysis;
+
+% Runs routines to check dependencies and help user get setup.
+obj.setup;
+
+% Open the class menu (always type `obj` then enter load the class/modules menu)
+obj % then hit enter, no semicolon!
+
+```
+
 - See additional details in [Processing calcium imaging data](#processing-calcium-imaging-data) for running the full processing pipeline.
 - When issues are encountered, first check the `*Common issues and fixes` Wiki page to see if a solution is there. Else, submit a new issue or email Biafra (bahanonu [at] alum.mit.edu).
 - Notes:
   - There are two sets of test data that are downloaded:
     - __Single session analysis__: `data\2014_04_01_p203_m19_check01_raw` can be used to test the pipeline until the cross-session alignment step.
     - __Batch analysis__: `data\batch` contains three imaging sessions that should be processed and can then be used for the cross-session alignment step. Users should try these sessions to get used to batched analysis.
-  - For Fiji dependency, when path to `Miji.m` (`\Fiji.app\scripts` folder) is requested, likely in `private\programs\FIJI_PATH\Fiji.app\scripts` unless the user requested a custom path or on OSX (in which case, find Fiji the install directory).
-    - If you run into Java heap space memory errors when Miji tries to load Fiji in MATLAB, make sure "java.opts" file is in MATLAB start-up folder or that `calciumImagingAnalysis` folder is the MATLAB start-up folder.
-  - `calciumImagingAnalysis` often uses regular expressions to find relevant movie and other files in folders to analyze.
-    - For example, by default it looks for any files containing `concat`, e.g. `concat_recording_20140401_180333.h5` (test data). If you have a file called `rawData_2019_01_01_myInterestingExperiment.avi` and all your raw data files start with `rawData_` then change the regular expression to `rawData_` when requested by the repository. See `setMovieInfo` module.
+  - For Fiji dependency, when path to `Miji.m` (e.g. `\Fiji.app\scripts` folder) is requested, likely in `calciumImagingAnalysis\_external_programs\FIJI_FOLDER\Fiji.app\scripts` where `FIJI_FOLDER` varies depending on OS, unless the user requested a custom path or on OSX (in which case, find Fiji the install directory).
+    - If you run into Java heap space memory errors when Miji tries to load Fiji in MATLAB, make sure "java.opts" file is in MATLAB start-up folder or that `calciumImagingAnalysis` folder is the MATLAB start-up folder ([instructions on changing](https://www.mathworks.com/help/matlab/matlab_env/matlab-startup-folder.html)).
+  - `calciumImagingAnalysis` often uses [regular expressions](https://www.cheatography.com/davechild/cheat-sheets/regular-expressions/) to find relevant movie and other files in folders to analyze.
+    - For example, by default it looks for any movie files in a folder containing `concat`, e.g. `concat_recording_20140401_180333.h5` (test data). If you have a file called `rawData_2019_01_01_myInterestingExperiment.avi` and all your raw data files start with `rawData_` then change the regular expression to `rawData_` when requested by the repository. See `setMovieInfo` module to change after adding new folders.
+  - `calciumImagingAnalysis` generally assumes users have imaging data associated with *one* imaging session and animal in a given folder. Follow folder naming conventions in [Data](#data) for best experience.
   - External software packages are downloaded into `_external_programs` folder and should be placed there if done manually.
 
+Note: more advance users can run setup as below.
 ```MATLAB
 % Run these commands in MATLAB to get started.
 
@@ -61,27 +79,30 @@ obj = calciumImagingAnalysis;
 
 % Download and load dependent software packages into "_external_programs" folder.
 % Also download test data into "data" folder.
+% Normally only need to one once after first downloading calciumImagingAnalysis package.
 obj.loadDependencies;
+
+% Add folders containing imaging data.
+obj.modelAddNewFolders;
 
 % [optional] Set the names calciumImagingAnalysis will look for in each folder
 obj.setMovieInfo;
 
-% Open the class menu (always do this to load the class menu)
-obj % then hit enter, no semicolon!
-% Alternatively
+% Open class menu to pick module to run.
 obj.runPipeline; % then hit enter!
-
 ```
 
 ***
 
 ## Repository notes
-- Covers preprocessing of calcium imaging videos, cell and activity trace extraction (with PCA-ICA, CELLMax, EXTRACT, CNMF, and CNMF-E), manual and automated sorting of cell extraction outputs, cross-session alignment of cells, and more.
-- Supports `PCA-ICA`, `CNMF`, and `CNMF-E` cell extraction methods publicly along with `CELLMax` and `EXTRACT` for Schnitzer Lab collaborators. Additional methods can be integrated upon request.
-- Most extensively tested on Windows MATLAB `2015b` and `2017a`. Moderate testing on Windows and OSX (10.10.5) `2017b` and `2018b`. Individual functions and `calciumImagingAnalysis` class should work on other MATLAB versions after `2015b`, but submit an issue if errors occur.
-- This repository consists of code used in
+- Covers preprocessing of calcium imaging videos, cell and activity trace extraction (supports the following methods: PCA-ICA, CELLMax, EXTRACT, CNMF, CNMF-E, and ROI), manual and automated sorting of cell extraction outputs, cross-session alignment of cells, and more.
+- Supports `PCA-ICA`, `CNMF`, `CNMF-E`, and `ROI` cell extraction methods publicly along with `CELLMax` and `EXTRACT` for Schnitzer Lab collaborators. Additional methods can be integrated upon request.
+- Most extensively tested on Windows MATLAB `2018b` and `2019a`. Moderate testing on Windows MATLAB `2015b`, `2017a`, `2017b`, and `2018b` along with OSX (10.10.5) `2017b` and `2018b`. Individual functions and `calciumImagingAnalysis` class should work on other MATLAB versions after `2015b`, but submit an issue if errors occur. Newer MATLAB version preferred.
+- This repository consists of code used in and released with
   - G. Corder*, __B. Ahanonu*__, B. F. Grewe, D. Wang, M. J. Schnitzer, and G. Scherrer (2019). An amygdalar neural ensemble encoding the unpleasantness of painful experiences. _Science_, 363, 276-281. http://science.sciencemag.org/content/363/6424/276.
-  - and similar code helped process data in: J.G. Parker*, J.D. Marshall*, __B. Ahanonu__, Y.W. Wu, T.H. Kim, B.F. Grewe, Y. Zhang, J.Z. Li, J.B. Ding, M.D. Ehlers, and M.J. Schnitzer (2018). Diametric neural ensemble dynamics in parkinsonian and dyskinetic states. _Nature_, 557, 177–182. https://doi.org/10.1038/s41586-018-0090-6.
+  - and similar code helped process imaging or behavioral data in:
+    - J.G. Parker*, J.D. Marshall*, __B. Ahanonu__, Y.W. Wu, T.H. Kim, B.F. Grewe, Y. Zhang, J.Z. Li, J.B. Ding, M.D. Ehlers, and M.J. Schnitzer (2018). Diametric neural ensemble dynamics in parkinsonian and dyskinetic states. _Nature_, 557, 177–182. https://doi.org/10.1038/s41586-018-0090-6.
+    - Y. Li, A. Mathis, B.F. Grewe, J.A. Osterhout, B. Ahanonu, M.J. Schnitzer, V.N. Murthy, and C. Dulac (2017). Neuronal representation of social information in the medial amygdala of awake behaving mice. Cell, 171(5), 1176-1190. https://doi.org/10.1016/j.cell.2017.10.015.
 - Code developed while in [Prof. Mark Schnitzer's lab](http://pyramidal.stanford.edu/) at Stanford University.
 - Please check the 'Wiki' for further instructions on specific processing/analysis steps and additional information of software used by this package.
 - When issues are encountered, first check the `Common issues and fixes` Wiki page to see if a solution is there. Else, submit a new issue.
@@ -92,7 +113,7 @@ obj.runPipeline; % then hit enter!
 
 Clone the `calciumImagingAnalysis` repository or download the repository zip and unzip.
 - Point the MATLAB path to the `calciumImagingAnalysis` folder.
-- Run `loadBatchFxns.m` before using functions in the directory. This adds all directories and sub-directories to the MATLAB path.
+- Run `loadBatchFxns.m` before using functions in the directory. This adds all needed directories and sub-directories to the MATLAB path.
 - Type `obj = calciumImagingAnalysis;` into MATLAB command window and follow instructions that appear after to add data and run analysis.
 - Run the `calciumImagingAnalysis` class method `loadDependencies` or type `obj.loadDependencies` after initializing a `calciumImagingAnalysis` object into the command window to download and add Fiji to path, download CNMF/CNMF-E repositories, download/setup CVX (for CNMF/CNMF-E), and download example data.
 
@@ -102,41 +123,49 @@ Note
 - In general, it is best to set the MATLAB startup directory to the `calciumImagingAnalysis` folder. This allows `java.opts` and `startup.m` to set the correct Java memory requirements and load the correct folders into the MATLAB path.
 - If `calciumImagingAnalysis` IS NOT the startup folder, place `java.opts` wherever the MATLAB startup folder is so the correct Java memory requirements are set (important for using ImageJ/Miji in MATLAB).
 - If it appears an old `calciumImagingAnalysis` repository is loaded after pulling a new version, run `restoredefaultpath` and check that old `calciumImagingAnalysis` folders are not in the MATLAB path.
-- This version of `calciumImagingAnalysis` has been tested on Windows MATLAB `2015b`, `2017a`, and `2018b`. Moderate testing on Windows and OSX (10.10.5) `2017b` and `2018b`.
+<!-- - This version of `calciumImagingAnalysis` has been tested on Windows MATLAB `2015b`, `2017a`, and `2018b`. Moderate testing on Windows and OSX (10.10.5) `2017b` and `2018b`. -->
 
 ### Test data
 
-Run `example_downloadTestData.m` to download example one-photon miniature microscope test data to use for testing `calciumImagingAnalysis` preprocessing, cell extraction, and cell classification code. The data will be located at `data\2014_04_01_p203_m19_check01_raw` within the repository root directory.
+To download test data, run `loadDependencies` module (e.g. `obj.loadDependencies`) and select `Download test one-photon data.` option to download example one-photon miniature microscope test data to use for testing `calciumImagingAnalysis` preprocessing, cell extraction, and cell classification code. The data will be located in the `data` folder within the repository root directory.
+
+Else run `example_downloadTestData.m` if haven't started an instance of calciumImagingAnalysis.
 
 ### Dependencies
 
 By default external MATLAB-based software packages are stored in `_external_programs`.
 
-MATLAB dependencies (toolboxes used)
+#### MATLAB Toolbox dependencies
 
-- distrib_computing_toolbox
-- image_toolbox
-- signal_toolbox
-- statistics_toolbox
-- video_and_image_blockset
+- Primary toolboxes
+  - distrib_computing_toolbox
+  - image_toolbox
+  - signal_toolbox
+  - statistics_toolbox
+- Secondary toolboxes (not required for main pre-processing pipeline)
+  - video_and_image_blockset
+  - bioinformatics_toolbox
+  - financial_toolbox
+  - neural_network_toolbox
 
-ImageJ
+#### ImageJ
 
 - Run `downloadMiji` from `downloads\downloadMiji.m` or `obj.loadDependencies` (when class initialized) to download Fiji version appropriate to your platform.
 - Else download Fiji (preferably __2015 December 22__ version): https://imagej.net/Fiji/Downloads.
 - Make sure have Miji in Fiji installation: http://bigwww.epfl.ch/sage/soft/mij/.
 - This is used as an alternative to the `calciumImagingAnalysis` `playMovie.m` function for viewing movies and is needed for some movie modification steps.
 
-Saleae
+#### Saleae
 
+- *Only download* if doing behavior and imaging experiments that use this DAQ device to collect data.
 - Download 1.2.26: https://support.saleae.com/logic-software/legacy-software/older-software-releases#1-2-26-download.
 
-CNMF and CNMF-E
+#### CNMF and CNMF-E
 
-- Download repositories by running `downloadCnmfGithubRepositories.m` or `obj.loadDependencies` (when class initialized).
+- Download repositories by running `downloadCnmfGithubRepositories.m` or `obj.loadDependencies` (when class is initialized).
 - CNMF: https://github.com/flatironinstitute/CaImAn-MATLAB.
 - CNMF-E: https://github.com/bahanonu/CNMF_E
-  - forked from https://github.com/zhoupc/CNMF_E to fix HDF5, movies with NaNs, and other related bugs.
+  - forked from https://github.com/zhoupc/CNMF_E to fix HDF5, movies with NaNs, and other related compatibility issues.
 - CVX: http://cvxr.com/cvx/download/.
   - Download `All platforms` (_Redistributable: free solvers only_), e.g. http://web.cvxr.com/cvx/cvx-rd.zip.
 
@@ -285,8 +314,8 @@ Users should spatially filter one-photon or other data with background noise (e.
 
 - You'll get an output like the below:
 	- __A__: The top left is without any filtering while the other 3 are with different bandpass filtering options.
-	- __B__: Cell ΔF/F intensity profile from the raw movie.
-	- __C__: Same cell ΔF/F intensity profile from the bottom/left movie (note the y-axis is the same as above).
+	- __B__: Cell ΔF/F intensity profile from the raw movie. Obtain by selecting `Analyze->Plot profile` from Fiji menu after selecting a square segment running through a cell.
+	- __C__: Same cell ΔF/F intensity profile from the bottom/left movie (note the y-axis is the same as above). Obtained in same manner as __B__.
 
 ![image](https://user-images.githubusercontent.com/5241605/59561146-695ab580-8fd1-11e9-892b-ce1f5fc7800e.png)
 
@@ -327,21 +356,36 @@ If users need to eliminate specific regions of their movie before running cell e
 
 ## Extracting cells with `modelExtractSignalsFromMovie`
 
-Users can run PCA-ICA, CNMF, and CNMF-E by following the below set of option screens.
+Users can run PCA-ICA, CNMF, CNMF-E, and ROI cell extraction by following the below set of option screens. Details on running the new Schnitzer lab cell-extraction methods will be added here after they are released.
 
 We normally estimate the number of PCs and ICs on the high end, manually sort to get an estimate of the number of cells, then run PCA-ICA again with IC 1.5-3x the number of cells and PCs 1-1.5x number of ICs.
 
-To run CNMF and CNMF-E, place the respective repositories in `signal_extraction\cnmf_current` and `signal_extraction\cnmfe`, respectively.
+To run CNMF or CNMF-E, run `loadDependencies` module (e.g. `obj.loadDependencies`) after calciumImagingAnalysis class is loaded. CVX (a CNMF dependency) will also be downloaded and `cvx_setup` run to automatically set it up.
 
 ![image](https://user-images.githubusercontent.com/5241605/49830421-fa608380-fd45-11e8-8d9a-47a3d2921111.png)
 
-The resulting output (on `Figure 43`) at the end should look something like:
+The resulting output (on _Figure 45+_) at the end should look something like:
 
-![image](https://user-images.githubusercontent.com/5241605/51728907-c2c44700-2026-11e9-9614-1a57c3a60f5f.png)
+![image](https://user-images.githubusercontent.com/5241605/67053021-fe42fc00-f0f4-11e9-980c-88f463cb5043.png)
+
+<!-- ![image](https://user-images.githubusercontent.com/5241605/51728907-c2c44700-2026-11e9-9614-1a57c3a60f5f.png) -->
 
 ******************************************
 
-## Validating cell extraction with  `viewCellExtractionOnMovie`
+## Loading cell-extraction output data with `modelVarsFromFiles`
+
+In general, after running cell-extraction (`modelExtractSignalsFromMovie`) on a dataset, run the `modelVarsFromFiles` module. This allows `calciumImagingAnalysis` to load/pre-load information about that cell-extraction run.
+
+If you had to restart MATLAB or are just loading calciumImagingAnalysis fresh but have previously run cell extraction, run this method before doing anything else with that cell-extraction data.
+
+A menu will pop-up like below when `modelVarsFromFiles` is loaded, you can normally just leave the defaults as is.
+
+![image](https://user-images.githubusercontent.com/5241605/67052600-7f00f880-f0f3-11e9-9555-96fe32b4de6d.png)
+
+
+******************************************
+
+## Validating cell extraction with `viewCellExtractionOnMovie`
 
 After users have run cell extraction, they should check that cells are not being missed during the process. Running the method `viewCellExtractionOnMovie` will create a movie with outlines of cell extraction outputs overlaid on the movie.
 

@@ -21,6 +21,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% 2019.08.07 [18:23:05] - Fix for using the _noSpatialFilter_ output where was registering to already registered iterations.
 		% 2019.09.06 [23:41:50]/2019.09 - Improved downsampling support.
 		% 2019.09.17 [19:14:27] - Improved alternative HDF5 dataset name support and added explicit rejection of non-video files for movieList.
+		% 2019.09.24 [11:47:24] - filterBeforeRegister now outputs a tag in the filename
 	% TODO
 		% Insert NaNs or mean of the movie into dropped frame location, see line 260
 		% Allow easy switching between analyzing all files in a folder together and each file in a folder individually
@@ -214,6 +215,9 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			'PromptString','select at which stages to save a file. if option not selected for analysis, will be ignored',...
 			'ListSize',[scnsize(3)*0.4 scnsize(4)*0.3]);
 	end
+
+	% Update file filter to the last saved out option
+	% obj.fileFilterRegexp
 
 	if ok~=1
 		return
@@ -459,6 +463,9 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				for optionIdx = analysisOptionsIdx
 					thisMovie = single(thisMovie);
 					optionName = analysisOptionList{optionIdx};
+					if strcmp(optionName,'turboreg')&~isempty(options.turboreg.filterBeforeRegister)
+						saveStr = [saveStr '_' 'spatialFiltBfReg'];
+					end
 					saveStr = [saveStr '_' optionName];
 					display(repmat('*',1,7));
 					display([optionName ' movie...']);

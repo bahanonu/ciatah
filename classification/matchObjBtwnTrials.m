@@ -148,7 +148,7 @@ function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
 			end
 		end
 		% for centroid
-		[xCoords yCoords] = findCentroid(inputImages{options.trialToAlign},'roundCentroidPosition',0);
+		[xCoords, yCoords] = findCentroid(inputImages{options.trialToAlign},'roundCentroidPosition',0);
 		referenceObjMapCentroid = zeros(size(referenceObjMap(:,:,1)));
 		refIdx = sub2ind(size(referenceObjMapCentroid),round(yCoords),round(xCoords));
 		referenceObjMapCentroid(refIdx) = 1;
@@ -162,9 +162,9 @@ function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
 				if options.trialToAlign==trialNo
 					continue
 				end
-				display(repmat('#',1,7))
+				disp(repmat('#',1,7))
 				for correctionNo=1:nCorrections
-					display(['trial ' num2str(trialNo) '/' num2str(nSessions) ' | correction ' num2str(correctionNo) '/' num2str(nCorrections)]);
+					disp(['trial ' num2str(trialNo) '/' num2str(nSessions) ' | correction ' num2str(correctionNo) '/' num2str(nCorrections)]);
 					% inputImagesTurboreg = permute(inputImages{trialNo},[2 3 1]);
 					inputImagesTurboreg = inputImages{trialNo};
 					% attach the reference cellMap to the current images to be analyzed
@@ -200,9 +200,9 @@ function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
 					for switchNo = 1:length(switchStrArray)
 						switch switchStrArray{switchNo}
 							case 'optional'
-								display('+++++aligning optional images...')
+								disp('+++++aligning optional images...')
 								for addIdx=1:length(options.additionalAlignmentImages)
-									display(['+++++additional set ' num2str(addIdx)])
+									disp(['+++++additional set ' num2str(addIdx)])
 									size(referenceObjMapAdditional{addIdx})
 									size(objectMapAdditional{addIdx}{trialNo})
 									objMapsToTurboreg = cat(3,referenceObjMapAdditional{addIdx},objectMapAdditional{addIdx}{trialNo});
@@ -210,14 +210,14 @@ function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
 									objectMapAdditionalTmp = turboregMovie(objMapsToTurboreg,'options',ioptions);
 									objectMapAdditional{addIdx}{trialNo} = objectMapAdditionalTmp(:,:,2);
 									ioptions.altMovieRegister = inputImagesTurboreg;
-									[inputImagesTurboreg registrationCoords{trialNo}{correctionNo}.(switchStrArray{switchNo})] = turboregMovie(objMapsToTurboreg,'options',ioptions);
+									[inputImagesTurboreg, registrationCoords{trialNo}{correctionNo}.(switchStrArray{switchNo})] = turboregMovie(objMapsToTurboreg,'options',ioptions);
 									% (:,:,1) = objectMapAdditional{options.trialToAlign};
 								end
 							case 'centroid'
 								% % now re-run the turboreg instead aligning the points, should produce an improved turboreg
-								display('+++++centroid align...')
+								disp('+++++centroid align...')
 								% [xCoords yCoords] = findCentroid(permute(inputImagesTurboreg,[3 1 2]));
-								[xCoords yCoords] = findCentroid(inputImagesTurboreg,'roundCentroidPosition',0);
+								[xCoords, yCoords] = findCentroid(inputImagesTurboreg,'roundCentroidPosition',0);
 								newLocalObjMap = zeros(size(referenceObjMap(:,:,1)));
 								refIdx = sub2ind(size(newLocalObjMap),round(yCoords),round(xCoords));
 								newLocalObjMap(refIdx) = 1;
@@ -230,14 +230,14 @@ function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
 								objMapsToTurboreg = cat(3,referenceObjMapCentroidTmp,newLocalObjMap);
 								%
 								ioptions.altMovieRegister = inputImagesTurboreg;
-								[inputImagesTurboreg registrationCoords{trialNo}{correctionNo}.(switchStrArray{switchNo})] = turboregMovie(objMapsToTurboreg,'options',ioptions);
+								[inputImagesTurboreg, registrationCoords{trialNo}{correctionNo}.(switchStrArray{switchNo})] = turboregMovie(objMapsToTurboreg,'options',ioptions);
 
 								if ~isempty(options.altInputImagesToRegister)
-									[options.altInputImagesToRegister{trialNo}, ~] = turboregMovie(options.altInputImagesToRegister{trialNo},'precomputedRegistrationCooords',registrationCoords{trialNo}{correctionNo}.(switchStrArray{switchNo}))
+									[options.altInputImagesToRegister{trialNo}, ~] = turboregMovie(options.altInputImagesToRegister{trialNo},'precomputedRegistrationCooords',registrationCoords{trialNo}{correctionNo}.(switchStrArray{switchNo}));
 								end
 								% inputImagesTurboreg = manualMotionCorrection(referenceObjMapCentroidTmp,newLocalObjMap,'altMovieRegister',inputImagesTurboreg,'altImgDisplayRegister',{referenceObjMap,objectMap{trialNo}});
 							case 'normal'
-								display('+++++normal align...')
+								disp('+++++normal align...')
 									% objectMap{trialNo} = createObjMap(permute(inputImagesTurboreg,[3 1 2]));
 									objectMap{trialNo} = createObjMap(inputImagesTurboreg);
 									objMapsToTurboreg = cat(3,referenceObjMap,objectMap{trialNo});
@@ -250,11 +250,11 @@ function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
 									[inputImagesTurboreg registrationCoords{trialNo}{correctionNo}.(switchStrArray{switchNo})] = turboregMovie(objMapsToTurboreg,'options',ioptions);
 
 									if ~isempty(options.altInputImagesToRegister)
-										[options.altInputImagesToRegister{trialNo}, ~] = turboregMovie(options.altInputImagesToRegister{trialNo},'precomputedRegistrationCooords',registrationCoords{trialNo}{correctionNo}.(switchStrArray{switchNo}))
+										[options.altInputImagesToRegister{trialNo}, ~] = turboregMovie(options.altInputImagesToRegister{trialNo},'precomputedRegistrationCooords',registrationCoords{trialNo}{correctionNo}.(switchStrArray{switchNo}));
 									end
 							case 'binary'
 								% now align with binary
-								% display('+++++binary align...')
+								% disp('+++++binary align...')
 									% objMapsToTurboreg = cat(3,referenceObjMapBinary,objectMapBinary{trialNo});
 									% ioptions.altMovieRegister = inputImagesTurboreg;
 									% ioptions.parallel = 1;
@@ -272,7 +272,7 @@ function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
 					% thresholdInputImages{trialNo} = thresholdImages(inputImages{trialNo},'binary',0,'waitbarOn',1);
 					objectMapBinary{trialNo} = createObjMap(inputImages{trialNo}>0);
 					objectMap{trialNo} = createObjMap(inputImages{trialNo});
-					[figHandle figNo] = openFigure(59857, '');
+					[~, ~] = openFigure(59857, '');
 					xplot = 4;
 					yplot = 2;
 					subplotNo = 1;
@@ -302,7 +302,7 @@ function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
 
 		% get the centroid locations of all objects
 		for i=1:nSessions
-			[xCoords yCoords] = findCentroid(inputImages{i},'roundCentroidPosition',0);
+			[xCoords, yCoords] = findCentroid(inputImages{i},'roundCentroidPosition',0);
 			coords{i} = [xCoords; yCoords]';
 		end
 
@@ -316,7 +316,8 @@ function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
 			case 'clustering'
 				[OutStruct] = computeGlobalIdsClustering(OutStruct,coords,options,nSessions);
 			otherwise
-				error
+				warning('Incorrect analysis type option!');
+				% error
 		end
 
 		% get turboreged object maps
@@ -345,9 +346,9 @@ function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
 		% OutStruct.matchedObjMaps = displayMatchingObjs(inputImages,OutStruct)
 
 	catch err
-		display(repmat('@',1,7))
+		disp(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));
-		display(repmat('@',1,7))
+		disp(repmat('@',1,7))
 	end
 end
 
@@ -382,14 +383,14 @@ function [OutStruct] = computeGlobalIdsClustering(OutStruct,coords,options,nSess
 			distanceMatrix(offSetIdx+(1:nLocalCentroids), offSetIdx+(1:nLocalCentroids))=1e3;
 		end
 		figNo = 888;
-		[figHandle figNo] = openFigure(figNo, '');imagesc(log10(distanceMatrix));
-		[figHandle figNo] = openFigure(figNo, '');;hist(distanceMatrix(:),1e2);zoom on
+		[~, ~] = openFigure(figNo, '');imagesc(log10(distanceMatrix));
+		[~, ~] = openFigure(figNo, '');hist(distanceMatrix(:),1e2);zoom on
 		OutStruct.distanceMatrix = distanceMatrix;
 
 		% get clusters
 		hClustTree=linkage(distanceMatrix, 'complete');
 		% hClustTree=linkage(distanceMatrix, 'ward');
-		[figHandle figNo] = openFigure(figNo, '');
+		[~, ~] = openFigure(figNo, '');
 		dendrogram(hClustTree); zoom on
 		% clusters=cluster(hClustTree,'criterion','distance','cutoff',options.maxDistance);
 		clusters=cluster(hClustTree,'maxclust',round(size(distanceMatrix,1)/3));
@@ -419,7 +420,7 @@ function [OutStruct] = computeGlobalIdsClustering(OutStruct,coords,options,nSess
 					localClusters = clusters(offSetIdx+(1:nLocalCentroids));
 					iLocalIdx = find(localClusters==iCluster);
 					if length(iLocalIdx)>1
-						display('same objects matched within trial, skipping...');
+						disp('same objects matched within trial, skipping...');
 					end
 					if ~isempty(iLocalIdx)&length(iLocalIdx)==1
 						OutStruct.globalIDs(clusterNo,trial) = iLocalIdx;
@@ -427,18 +428,18 @@ function [OutStruct] = computeGlobalIdsClustering(OutStruct,coords,options,nSess
 					end
 				end
 
-				iGlobalIdx = iGlobalIdx(find(iGlobalIdx~=0));
+				iGlobalIdx = iGlobalIdx(iGlobalIdx~=0);
 				% average the location of the global ID coordinates
 				if ~isempty(iGlobalIdx)
 					OutStruct.coordsGlobal(clusterNo,1) = mean(coordsGlobal(iGlobalIdx,1));
 					OutStruct.coordsGlobal(clusterNo,2) = mean(coordsGlobal(iGlobalIdx,2));
 				end
 			end
-			[figHandle figNo] = openFigure(figNo, '');;imagesc(OutStruct.globalIDs);
+			[~,~] = openFigure(figNo, '');imagesc(OutStruct.globalIDs);
 		catch err
-			display(repmat('@',1,7))
+			disp(repmat('@',1,7))
 			disp(getReport(err,'extended','hyperlinks','on'));
-			display(repmat('@',1,7))
+			disp(repmat('@',1,7))
 		end
 end
 
@@ -517,7 +518,7 @@ function [OutStruct] = computeGlobalIdsPairwise(OutStruct,coords,options,nSessio
 			ignoreIdx = duplicateIdx;
 			ignoreIdx(minLocalIdxDup) = [];
 			% ignoreIdx = duplicateIdx(duplicateIdx~=minLocalIdxDup);
-			% display([num2str(duplicateIdx(:)') ' | ' num2str(ignoreIdx(:)') ' | ' num2str(distanceIdx(:)') '| ' num2str(minLocalIdxDup(:)')])
+			% disp([num2str(duplicateIdx(:)') ' | ' num2str(ignoreIdx(:)') ' | ' num2str(distanceIdx(:)') '| ' num2str(minLocalIdxDup(:)')])
 			minDistances(ignoreIdx) = ignoreDistanceReplace;
 		end
 
@@ -613,7 +614,7 @@ function [OutStruct] = computeGlobalIdsPairwise(OutStruct,coords,options,nSessio
 					end
 					if options.checkImageCorr==1
 						linkaxes(linkAx); zoom on;
-						rhoH
+						display(rhoH)
 						pause
 					end
 					rhoH = nanmean(rhoH);
@@ -656,7 +657,7 @@ function [OutStruct] = computeGlobalIdsPairwise(OutStruct,coords,options,nSessio
 end
 
 function plotCoords(coords,figNo,specialID)
-	[figHandle figNo] = openFigure(figNo, '');clf
+	[~, ~] = openFigure(figNo, '');clf
 	zoom on
 	nCoords = length(coords);
 	colorMatrix = hsv(nCoords);
@@ -682,7 +683,7 @@ function plotCoords(coords,figNo,specialID)
 end
 
 function plotObjectMap(objectMap,figNo)
-	[figHandle figNo] = openFigure(figNo, '');colormap jet;
+	[~, ~] = openFigure(figNo, '');colormap jet;
 	zoom on
 	nSessions = length(objectMap);
 	for i=1:nSessions
@@ -710,11 +711,11 @@ function [inputImages] = checkImageDimensions(inputImages)
 			inputImages{i} = cropMatrix(inputImages{i},'inputCoords',inputCoords,'cropOrNaN','crop');
 			% inputImages{i} = permute(inputImages{i},[3 1 2]);
 			% inputImages{i} = inputImages{i};
-			display(['trial ' num2str(i) '/' num2str(nSessions) ' cropped!']);
-			% display('not all images have the same dimensions! option to crop not implemented yet.');
+			disp(['trial ' num2str(i) '/' num2str(nSessions) ' cropped!']);
+			% disp('not all images have the same dimensions! option to crop not implemented yet.');
 			% return;
 		else
-			display(['trial ' num2str(i) '/' num2str(nSessions) ' passed dimension checks!']);
+			disp(['trial ' num2str(i) '/' num2str(nSessions) ' passed dimension checks!']);
 		end
 	end
 end

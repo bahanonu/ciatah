@@ -96,14 +96,15 @@ function obj = modelModifyMovies(obj)
 				moviePath = movieList{1};
 				[frameListTmp] = subfxnVerifyFrameList(frameList,moviePath,inputDatasetName,loadMovieInEqualParts);
 				[primaryMovie] = loadMovieList(moviePath,'convertToDouble',0,'frameList',frameListTmp(:),'inputDatasetName',inputDatasetName);
+				clear movieMask;
 
 				while ~strcmp(movieDecision,'done')
 					% ranMovie = rand([1000 1000 20]);
 
 					try
 						[movieMask] = subfxnCreateMask(movieMaskArray{thisFileNumIdx});
-
 					catch
+						movieMask = [];
 						display('No mask')
 					end
 
@@ -116,7 +117,7 @@ function obj = modelModifyMovies(obj)
 						end
 
 						MIJ.createImage(obj.folderBaseSaveStr{obj.fileNum}, primaryMovie, true);
-						for foobar=1:2; MIJ.run('In [+]'); end
+						% for foobar=1:2; MIJ.run('In [+]'); end
 						for foobar=1:2; MIJ.run('Enhance Contrast','saturated=0.35'); end
 						% uiwait(msgbox('select region of movie to keep','Success','modal'));
 						movieDecision = questdlg(['Should movie be cropped?' 10 'YES (draw ROI of area to keep then request to draw another)' 10 'NO (skips this movie)' 10 'DONE (end ROI drawing, move onto cropping or next movie).'], ...

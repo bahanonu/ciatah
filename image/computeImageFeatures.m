@@ -17,6 +17,7 @@ function [imgStats] = computeImageFeatures(inputImages, varargin)
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
 		% 2019.07.17 [00:29:16] - Added support for sparse input images (mainly ndSparse format).
 		% 2019.09.10 [20:51:00] - Converted to parfor and removed unpacking options, bad practice.
+        % 2019.10.02 [21:25:36] - Updated addedFeatures support for parfor and allowed this feature to be properly accessed by users.
 	% TODO
 		%
 
@@ -40,6 +41,8 @@ function [imgStats] = computeImageFeatures(inputImages, varargin)
 	options.xCoords = [];
 	options.yCoords = [];
 
+	options.parforAltSwitch = 0;
+
 	options = getOptions(options,varargin);
 	% unpack options into current workspace
 	% fn=fieldnames(options);
@@ -48,7 +51,7 @@ function [imgStats] = computeImageFeatures(inputImages, varargin)
 	% end
 	%========================
 
-	parforAltSwitch = 0;
+	parforAltSwitch = options.parforAltSwitch;
 	% switch nargin
 	% 	case 2
 	% 		parforAltSwitch = 1;
@@ -145,12 +148,13 @@ function [imgStats] = computeImageFeatures(inputImages, varargin)
 
 
 	if ~verLessThan('matlab', '9.2'); p=1;end
-	disp('Computing alternative image features...')
 
 	if parforAltSwitch==1
+        disp('Computing alternative image features with parfor...')
 		imgKurtosis = NaN([1 nImages]);
 		imgSkewness = NaN([1 nImages]);
 		if options.addedFeatures==1
+            addedFeaturesInputImages = options.addedFeaturesInputImages;
 			parfor imageNo = 1:nImages
 				thisFilt = addedFeaturesInputImages(:,:,imageNo);
 				if issparse(thisFilt)
@@ -173,7 +177,8 @@ function [imgStats] = computeImageFeatures(inputImages, varargin)
 			imgStats.imgKurtosis = imgKurtosis;
 			imgStats.imgSkewness = imgSkewness;
 		end
-	else
+    else
+        disp('Computing alternative image features...')
 		for imageNo = 1:nImages
 			if options.addedFeatures==1
 				% iImage2 = squeeze(options.addedFeaturesInputImages(:,:,imageNo));
