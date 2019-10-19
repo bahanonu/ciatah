@@ -21,7 +21,7 @@ Contact: __Biafra Ahanonu, PhD (bahanonu [at] alum.mit.edu)__.
 	- [Manual movie cropping with  `modelModifyMovies`](#manual-movie-cropping-with-modelmodifymovies)
 	- [Extracting cells with  `modelExtractSignalsFromMovie`](#extracting-cells-with-modelextractsignalsfrommovie)
 	- [Loading cell-extraction output data with `modelVarsFromFiles`](#loading-cell-extraction-output-data-with-modelvarsfromfiles)
-	- [Validating cell extraction with  `viewCellExtractionOnMovie`](#validating-cell-extraction-with--viewcellextractiononmovie)
+	- [Validating cell extraction with  `viewCellExtractionOnMovie`](#validating-cell-extraction-with-viewcellextractiononmovie)
 	- [Sorting cell extraction outputs with `computeManualSortSignals`](#sorting-cell-extraction-outputs-with-computemanualsortsignals)
 	- [Removing cells not within brain region with  `modelModifyRegionAnalysis`](#removing-cells-not-within-brain-region-with-modelmodifyregionanalysis)
 	- [Cross-session cell alignment with  `computeMatchObjBtwnTrials`](#cross-session-cell-alignment-with-computematchobjbtwntrials)
