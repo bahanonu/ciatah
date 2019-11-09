@@ -38,6 +38,7 @@ function [success] = downloadMiji(varargin)
 
 		if ~exist(signalExtractionDir,'dir');mkdir(signalExtractionDir);fprintf('Made folder: %s',signalExtractionDir);end
 
+		% Identify which version of Fiji to download based on OS type/version.
 		% mexw32                32 bit MATLAB on Windows
 		% mexw64                64 bit MATLAB on Windows
 		% mexglx                32 bit MATLAB on Linux
@@ -59,16 +60,6 @@ function [success] = downloadMiji(varargin)
 		gitRepos = {urlH.(sysArch)};
 		outputDir = {''};
 		gitName = {''};
-
-		% if ismac
-		%
-		% elseif isunix
-		%
-		% elseif ispc
-		%
-		% else
-		% 	disp('Platform not supported')
-		% end
 
 		nRepos = length(outputDir);
 

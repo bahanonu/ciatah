@@ -17,6 +17,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		% 2016.02.19 - rewrite of code to allow non-overwrite mode, so that multiple computers can connect to the same server and process the same series of folders in parallel while automatically ignoring folders that have already been processed. Could extend to include some date-based measure for analysis re-runs
 		% 2019.04.15 - Added new method of inputting CNMF-E settings using MATLAB editor. More flexible.
 		% 2019.08.20 [12:29:31] - Contrast added to cell size/width decision-making.
+		% 2019.10.29 [17:21:23] - Added a check to make sure that filenames produced are valid MATLAB ones for settings, e.g. for CNMF-e.
 	% TODO
 		%
 
@@ -39,7 +40,13 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	scnsize = get(0,'ScreenSize');
 	signalExtractionMethodStr = {'EM','PCAICA','PCAICA_old','CNMF','CNMFE','EXTRACT','ROI'};
 	currentIdx = find(strcmp(signalExtractionMethodStr,obj.signalExtractionMethod));
-	signalExtractionMethodDisplayStr = {'CELLMax (Lacey/Biafra)','PCAICA (Mukamel, 2009) | Hakan/Tony version','PCAICA (Mukamel, 2009) | Jerome Lecoq version','CNMF (Pnevmatikakis, 2016 or Giovannucci, 2019)','CNMF-E (Zhou, 2018)','EXTRACT (Inan, 2017)','ROI - only do after running either PCAICA, CELLMax, EXTRACT, or CNMF'};
+	signalExtractionMethodDisplayStr = {'CELLMax | Lacey Kitch & Biafra Ahanonu',...
+	'PCAICA (Mukamel, 2009) | Hakan Inan & Tony Kim version',...
+	'PCAICA (Mukamel, 2009) | Eran Mukamel, Jerome Lecoq, Lacey Kitch, Maggie Carr & Biafra Ahanonu version',...
+	'CNMF | Pnevmatikakis, 2016 or Giovannucci, 2019',...
+	'CNMF-E | Zhou, 2018',...
+	'EXTRACT | Inan, 2017',...
+	'ROI - only do after running either PCAICA, CELLMax, EXTRACT, or CNMF'};
 	[signalIdxArray, ok] = listdlg('ListString',signalExtractionMethodDisplayStr,'ListSize',[scnsize(3)*0.4 scnsize(4)*0.4],'Name','which signal extraction method?','InitialValue',currentIdx);
 	% signalIdxArray
 	signalExtractionMethod = signalExtractionMethodStr(signalIdxArray);
@@ -837,6 +844,10 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 							newFile = newFile(1:namelengthmax-2);
 						end
 
+						% Make sure contains valid name so MATLAB can run m-file code later.
+						% newFile = strrep(newFile,'-','_');
+                        newFile = matlab.lang.makeValidName(newFile);
+
 						newSettings = ['private' filesep 'settings' filesep newFile '.m'];
 
 						fprintf('Copying "%s" to\n"%s"\n\n',originalSettings,newSettings);
@@ -1171,7 +1182,6 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 						% Add and remove necessary CNMF directories from path
 						[success] = cnmfVersionDirLoad('current');
 
-
 						cnmfOptions.nonCNMF.parallel = 1;
 						cnmfOptions.merge_thr = 0.85;
 						cnmfOptions.ssub = options.CNMF.ssub;
@@ -1268,8 +1278,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			display(repmat('*',1,14))
 			startTime = tic;
 			cnmfeAnalysisOutput = [];
-			[cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(movieList{1},'options',cnmfeOptions);
-			% [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction_batch(movieList{1},'options',cnmfeOptions);
+			% [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(movieList{1},'options',cnmfeOptions);
+			[cnmfeAnalysisOutput] = computeCnmfeSignalExtraction_batch(movieList{1},'options',cnmfeOptions);
 
 			% [figHandle figNo] = openFigure(1337, '');hold off;
 			% obj.modelSaveImgToFile([],'initializationROIs_',1337,[obj.folderBaseSaveStr{obj.fileNum} '_run0' num2str(parameterSetNo)]);

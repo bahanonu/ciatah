@@ -35,7 +35,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		fontSizeGui = 10;
 
 		defaultObjDir = pwd;
-		classVersion = 'v3.4.5-20191015';
+		classVersion = 'v3.5.1-20191109';
 		serverPath = '';
 		privateSettingsPath = ['private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
 		% place where functions can temporarily story user settings
@@ -253,12 +253,12 @@ classdef calciumImagingAnalysis < dynamicprops
 			'downsampleSaveFolder','USER_PATH',...
 			'downsampleSrcFolder','USER_PATH',...
 			'downsampleFactor','4',...
-			'fileFilterRegexp','recording.*.hdf5',...
+			'fileFilterRegexp','(recording.*.hdf5|recording.*.tif|.*.isxd)',...
 			'datasetName','/images',...
 			'maxChunkSize','25000',...
 			'srcFolderFilterRegexp','201\d',...
-			'srcSubfolderFileFilterRegexp','recording.*.(txt|xml)',...
-			'srcSubfolderFileFilterRegexpExt','(.txt|.xml)',...
+			'srcSubfolderFileFilterRegexp','(recording.*.(txt|xml)|*.gpio)',...
+			'srcSubfolderFileFilterRegexpExt','(.txt|.xml|.gpio)',...
 			'downsampleSaveFolderTwo','',...
 			'downsampleFactorTwo','2',...
 			'outputDatasetName','/1'...
@@ -472,6 +472,14 @@ classdef calciumImagingAnalysis < dynamicprops
 
 			display(repmat('*',1,42))
 			display('Constructing calciumImagingAnalysis imaging analysis object...')
+
+			% Ensure that default directory is the calciumImagingAnalysis repository root
+			functionLocation = dbstack('-completenames');
+			functionLocation = functionLocation(1).file;
+			[functionDir,~,~] = fileparts(functionLocation);
+			[functionDir,~,~] = fileparts(functionDir);
+			obj.defaultObjDir = functionDir;
+			clear functionDir functionLocation;
 
 			obj.loadBatchFunctionFolders();
 			display(repmat('*',1,42))
@@ -1229,7 +1237,15 @@ classdef calciumImagingAnalysis < dynamicprops
 		end
 
 		function obj = runPipeline(obj,varargin)
-			setFigureDefaults();
+			try
+				setFigureDefaults();
+			catch err
+				disp(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				disp(repmat('@',1,7))
+				obj.loadBatchFunctionFolders();
+			end
+
 			try
 				set(0, 'DefaultUICOntrolFontSize', obj.fontSizeGui)
 			catch
@@ -1372,7 +1388,7 @@ classdef calciumImagingAnalysis < dynamicprops
 				usrIdxChoiceDisplay = obj.usrIdxChoiceDisplay;
 				% use current string as default
 				currentIdx = find(strcmp(usrIdxChoiceStr,obj.signalExtractionMethod));
-				[sel, ok] = listdlg('ListString',usrIdxChoiceDisplay,'InitialValue',currentIdx,'ListSize',dlgSize,'Name','Cell extraction algorithm to use for analysis');
+				[sel, ok] = listdlg('ListString',usrIdxChoiceDisplay,'InitialValue',currentIdx,'ListSize',dlgSize,'Name','Get to the data! Cell extraction algorithm to use for analysis?');
 				if ok==0; return; end
 				% (Americans love a winner)
 				usrIdxChoiceList = {2,1};
@@ -1387,13 +1403,13 @@ classdef calciumImagingAnalysis < dynamicprops
 				% set(0, 'DefaultUICOntrolFontSize', 16)
 				% select subjects to analyze
 				subjectStrUnique = unique(obj.subjectStr);
-				[subjIdxArray, ok] = listdlg('ListString',subjectStrUnique,'ListSize',dlgSize,'Name','which subjects to analyze?');
+				[subjIdxArray, ok] = listdlg('ListString',subjectStrUnique,'ListSize',dlgSize,'Name','Which subjects to analyze?');
 				if ok==0; return; end
 				subjToAnalyze = subjectStrUnique(subjIdxArray);
 				subjToAnalyze = find(ismember(obj.subjectStr,subjToAnalyze));
 				% get assays to analyze
 				assayStrUnique = unique(obj.assay(subjToAnalyze));
-				[assayIdxArray, ok] = listdlg('ListString',assayStrUnique,'ListSize',dlgSize,'Name','which assays to analyze?');
+				[assayIdxArray, ok] = listdlg('ListString',assayStrUnique,'ListSize',dlgSize,'Name','Which assays to analyze?');
 				if ok==0; return; end
 				assayToAnalyze = assayStrUnique(assayIdxArray);
 				assayToAnalyze = find(ismember(obj.assay,assayToAnalyze));

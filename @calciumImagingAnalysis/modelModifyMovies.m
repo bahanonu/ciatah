@@ -9,6 +9,7 @@ function obj = modelModifyMovies(obj)
 
 	% changelog
 		% 2019.06.10 [11:01:55] - Added support for non-Miji based masking.
+		% 2019.10.28 [15:58:45] - Cast the movie mask to be same type as the movie to deal with integer movie inputs.
 	% TODO
 		%
 
@@ -111,7 +112,7 @@ function obj = modelModifyMovies(obj)
 					if strcmp(options.videoPlayer,'imagej')
 						try
 							if ~isempty(movieMask)
-								primaryMovie = bsxfun(@times,primaryMovie,movieMask);
+								primaryMovie = bsxfun(@times,primaryMovie,cast(movieMask,class(primaryMovie)));
 							end
 						catch
 						end
@@ -152,7 +153,7 @@ function obj = modelModifyMovies(obj)
 					elseif strcmp(options.videoPlayer,'matlab')
 						try
 							if ~isempty(movieMask)
-								primaryMovie = bsxfun(@times,primaryMovie,movieMask);
+								primaryMovie = bsxfun(@times,primaryMovie,cast(movieMask,class(primaryMovie)));
 							end
 						catch
 						end
@@ -312,7 +313,7 @@ function subfxnEditMovies(inputFolderHere,fileFilterRegexp,replaceFileFilterRege
 	moviePath = movieList{1};
 	[frameListSaveTmp] = subfxnVerifyFrameList(frameListSave,moviePath,inputDatasetName,loadMovieInEqualParts);
 	[primaryMovie] = loadMovieList(moviePath,'convertToDouble',0,'frameList',frameListSaveTmp,'inputDatasetName',inputDatasetName,'largeMovieLoad',1);
-	primaryMovie = bsxfun(@times,primaryMovie,movieMask);
+	primaryMovie = bsxfun(@times,primaryMovie,cast(movieMask,class(primaryMovie)));
 
 		subplot(2,2,subplotNo);imagesc(primaryMovie(:,:,round(end/2)));title(folderBaseDisplayStr);axis equal tight;colorbar; colormap gray;
 		% colormap(customColormap([]))

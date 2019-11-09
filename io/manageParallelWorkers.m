@@ -9,23 +9,30 @@ function [success] = manageParallelWorkers(varargin)
 
 	% changelog
 		% 2016.11.29 - change to use java.lang to query directly the number of logical cores available to make compatible with hyperthreaded and non-hyperthreaded CPUs.
+		% 2019.10.18 [11:26:41] - Added ability to disable automatic loading of parallel pool when parfor is called combined with option for user to disable loading of parallel pool.
+		% 2019.10.29 [13:33:20] - Added check for user setting to auto-load parallel pool, if they have disabled then do not load pool using manageParallelWorkers.
 	% TODO
 		%
 
 	success = 0;
 	%========================
-	% options to open/close parpool: 'open' or 'close'
+	% Str: options to open/close parpool: 'open' or 'close'
 	options.openCloseParallelPool = 'open';
-	% 1 = open parallel pool, 0 = do not open parallel pool
+	% Binary: 1 = open parallel pool, 0 = do not open parallel pool
 	options.parallel = 1;
-	% maximum number of logical cores and hence workers to start
+	% Int: maximum number of logical cores and hence workers to start
 	options.maxCores = [];
-	% maximum number of logical cores and hence workers to start
+	% Int: maximum number of logical cores and hence workers to start
 	options.setNumCores = [];
-	% which profile to use when launching workers
+	% Str: which profile to use when launching workers
 	options.parallelProfile = 'local';
+	% Binary: 1 = disable parallel pool automatic loading (by parfor or parent functions using manageParallelWorkers), 0 = use Parallel Toolbox like normal
+	options.disableParallelPoolAutoload = 0;
+	% Binary: 1 = bypass all checks and force parallel pool to be created.
+	options.forceParpoolStart = 0;
 	% get options
 	options = getOptions(options,varargin);
+	% options = getOptions(options,varargin,'getFunctionDefaults',1);
 	% display(options)
 	% unpack options into current workspace
 	% fn=fieldnames(options);
@@ -41,6 +48,22 @@ function [success] = manageParallelWorkers(varargin)
 			% display('Already inside parfor loop')
 			return;
 		end
+		if options.forceParpoolStart==1
+		else
+			if options.disableParallelPoolAutoload==1
+				% parSet = parallel.Settings;
+				% parSet.Pool.AutoCreate = false;
+				% return;
+			else
+				% Check whether user has disabled auto-load, if so, they do not run manageParallelWorkers
+				parSet = parallel.Settings;
+				if parSet.Pool.AutoCreate==false
+					disp('User has set parSet.Pool.AutoCreate to false, DO NOT auto-start parallel pool.')
+					return;
+				end
+			end
+		end
+
 		switch options.openCloseParallelPool
 			case 'open'
 				if ~isempty(gcp('nocreate')) | ~options.parallel

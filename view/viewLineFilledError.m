@@ -9,7 +9,7 @@ function [success] = viewLineFilledError(inputMean,inputStd,varargin)
 		% success - Binary 1 = ran without errors, 0 = encountered errors
 
 	% Changelog
-		%
+		% 2019.11.04 [21:55:39] - Check and remove NaNs so fill does not run into errors.
 	% TODO
 		%
 
@@ -55,6 +55,11 @@ function [success] = viewLineFilledError(inputMean,inputStd,varargin)
 		colorMatrixError = repmat(options.errorColor,[2 1]);
 		randColor = randsample(10,1,false);
 		randColor = 1;
+		% Remove NaNs
+		nanIdx = isnan(x(:))|isnan(y(:))|isnan(dy(:));
+		x = x(~nanIdx);
+		y = y(~nanIdx);
+		dy = dy(~nanIdx);
 		h = fill([x(:);flipud(x(:))],[y(:)-dy(:);flipud(y(:)+dy(:))],colorMatrixError(randColor,:),'linestyle','none');
 		% set(h,'facealpha',options.errorAlpha)
 		lh = line(x,y,'Color',colorMatrix(randColor,:)/1.5,'LineWidth',options.linewidth);

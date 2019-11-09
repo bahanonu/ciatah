@@ -16,6 +16,7 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 		% 2019.03.12 [20:06:13] Added parallel.pool.Constant construct with H5F.open to facilitate opening fid on each worker once and thus saving readHDF5Subset time from continuously loading the same file over and over.
 		% 2019.07.17 [00:29:16] - Added support for sparse input images (mainly ndSparse format).
 		% 2019.09.10 [20:46:03] - Switched back to NOT converting to cell array, incurred unnecessary overhead and not needed since images/signals sliced properly. Also fix to reduce inputMovie being transferred to all workers in some cases.
+		% 2019.10.29 [13:51:04] - Added support for parallel.pool.Constant when PCT auto-start parallel pool disabled.
 	% TODO
 		% Take 2 frames after peak and average to improve SNR
 
@@ -95,11 +96,15 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 			options.keepFileOpen = 1;
 
 			fcnOpenHdf5Worker = @() H5F.open(inputMovie);
-			if options.keepFileOpen==1
-				% fcnCloseHdf5Worker = @() H5F.close(inputMovie);
-				hdf5FileWorkerConstant = parallel.pool.Constant(fcnOpenHdf5Worker,@H5F.close);
+			if isempty(gcp)
+				hdf5FileWorkerConstant = fcnOpenHdf5Worker;
 			else
-				hdf5FileWorkerConstant = parallel.pool.Constant(fcnOpenHdf5Worker);
+				if options.keepFileOpen==1
+					% fcnCloseHdf5Worker = @() H5F.close(inputMovie);
+					hdf5FileWorkerConstant = parallel.pool.Constant(fcnOpenHdf5Worker,@H5F.close);
+				else
+					hdf5FileWorkerConstant = parallel.pool.Constant(fcnOpenHdf5Worker);
+				end
 			end
 		else
 			movieDims = size(inputMovie);

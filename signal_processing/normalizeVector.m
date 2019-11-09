@@ -3,7 +3,7 @@ function [outputVector] = normalizeVector(inputVector,varargin)
     % Biafra Ahanonu
     % started: 2014.01.14 [23:42:58]
     % inputs
-    	%
+    	% inputVector - 1D vector of any unit type. If a matrix, will normalize with respect the the entire matrix.
     % outputs
     	%
 
@@ -13,6 +13,7 @@ function [outputVector] = normalizeVector(inputVector,varargin)
     	%
 
     %========================
+    % Str: oneToNegativeOne, oneToOne, zeroToOne, zeroToOneSoft, zeroCentered, zeroCenteredCorrect, dfof
     options.normRange = 'oneToNegativeOne';
     % get options
     options = getOptions(options,varargin);

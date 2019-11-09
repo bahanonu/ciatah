@@ -272,10 +272,9 @@ function obj = viewObjmaps(obj,varargin)
 				% ylabel(cbh,'Raw extraction image value','FontSize',15);
 				% colorbar(inputMoviePlotLoc2Handle,'off')
 
-			set(gcf,'SizeChangedFcn',@(hObject,event) resizeui(hObject,event,axHandle));
+			set(gcf,'SizeChangedFcn',{@resizeui,axHandle});
 
 			linkaxes(linkAx);
-
 
 			% =======
 			plotSets = [2000 5000];
@@ -297,9 +296,9 @@ function obj = viewObjmaps(obj,varargin)
 					try
 						output1 = createObjMap(groupImagesByColor(inputImagesTmp,rand([size(inputImagesTmp,3) 1]),'thresholdImages',1));
 					catch err
-						display(repmat('@',1,7))
+						disp(repmat('@',1,7))
 						disp(getReport(err,'extended','hyperlinks','on'));
-						display(repmat('@',1,7))
+						disp(repmat('@',1,7))
 						output1 = createObjMap(groupImagesByColor(inputImages(:,:,logical(valid)),rand([size(inputImages,3) 1]),'thresholdImages',1));
 					end
 					% imagesc(max(inputImages(:,:,logical(valid)),[],3))
@@ -346,16 +345,16 @@ function obj = viewObjmaps(obj,varargin)
 				suptitle(titleStr)
 
 		catch err
-			display(repmat('@',1,7))
+			disp(repmat('@',1,7))
 			disp(getReport(err,'extended','hyperlinks','on'));
-			display(repmat('@',1,7))
+			disp(repmat('@',1,7))
 			try
 				[~,~] = openFigure(45+thisFileNumIdx, '');
 				subfxnDisplayMovie()
 			catch err
-				display(repmat('@',1,7))
+				disp(repmat('@',1,7))
 				disp(getReport(err,'extended','hyperlinks','on'));
-				display(repmat('@',1,7))
+				disp(repmat('@',1,7))
 			end
 			try
 				for iii = [45 2000]
@@ -363,9 +362,9 @@ function obj = viewObjmaps(obj,varargin)
 					suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType])
 				end
 			catch err
-				display(repmat('@',1,7))
+				disp(repmat('@',1,7))
 				disp(getReport(err,'extended','hyperlinks','on'));
-				display(repmat('@',1,7))
+				disp(repmat('@',1,7))
 			end
 		end
 	end

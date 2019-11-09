@@ -11,6 +11,7 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		% 2014.02.17 added in mean subtraction/division to function
 		% 2017.08.18 [09:02:42] changed medfilt2 to have symmetric padding from default zero padding.
 		% 2019.10.08 [09:14:33] - Add option for user to input crop coordinates in case they have a NaN or other border from motion correction, so that does not affect spatial filtering. User can also now input a char for inputMovie and have it load within the function to help reduce memory overhead
+		% 2019.10.29 [13:51:04] - Added support for parallel.pool.Constant when PCT auto-start parallel pool disabled.
 	% TODO
 		%
 
@@ -489,7 +490,11 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 			d = [];
 		end
 
-		opts2 = parallel.pool.Constant(ioptions);
+		if isempty(gcp)
+			opts2.Value = parallel.pool.Constant(ioptions);
+		else
+			opts2 = parallel.pool.Constant(ioptions);
+		end
 		% startState = ticBytes(gcp);
 		parfor frame = 1:nFramesToNormalize
 			% [percent progress] = parfor_progress;if mod(progress,dispStepSize) == 0;dispstat(sprintf('progress %0.1f %',percent));else;end
