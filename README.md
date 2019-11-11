@@ -122,7 +122,7 @@ Clone the `calciumImagingAnalysis` repository or download the repository zip and
 
 Note
 - Place `calciumImagingAnalysis` in a folder where MATLAB will have write permissions, as it also creates a `private` subdirectory to store some user information along with downloading required external software packages.
-- `file_exchange` folder contains File Exchange functions used by `calciumImagingAnalysis`. If does not exist, unzip `file_exchange.zip`.
+- `file_exchange` folder contains File Exchange functions used by `calciumImagingAnalysis`.
 - In general, it is best to set the MATLAB startup directory to the `calciumImagingAnalysis` folder. This allows `java.opts` and `startup.m` to set the correct Java memory requirements and load the correct folders into the MATLAB path.
 - If `calciumImagingAnalysis` IS NOT the startup folder, place `java.opts` wherever the MATLAB startup folder is so the correct Java memory requirements are set (important for using ImageJ/Miji in MATLAB).
 - If it appears an old `calciumImagingAnalysis` repository is loaded after pulling a new version, run `restoredefaultpath` and check that old `calciumImagingAnalysis` folders are not in the MATLAB path.
