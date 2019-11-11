@@ -69,6 +69,8 @@ function viewNeighborsAuto(inputImages, inputSignals, neighborsCell, varargin)
 	% instructions
 	instructionStr =  ['Controls: left/right arrow:forward/back | e:exit | g:(goto cell #)' 10 ' cell #s low-high from top to bottom | top trace = this cell' 10];
 
+
+	set(21, 'KeyPressFcn', @(source,eventdata) figure(21));
 	while exitLoop==0
 		directionOfNextChoice = 0;
 		thisFilt = squeeze(inputImages(:,:,cellnum));

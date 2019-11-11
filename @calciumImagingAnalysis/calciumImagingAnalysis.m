@@ -1298,11 +1298,11 @@ classdef calciumImagingAnalysis < dynamicprops
 			'modelModifyRegionAnalysis',
 			'',
 			'------- PREPROCESS VERIFICATION -------',
-			'viewObjmaps',
 			'viewMovie',
+			'viewObjmaps',
+			'viewCreateObjmaps',
 			'viewSubjectMovieFrames'
 			'viewMovieCreateSideBySide',
-			'viewCreateObjmaps',
 			'',
 			'------- TRACKING -------',
 			'modelTrackingData',

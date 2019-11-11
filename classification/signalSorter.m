@@ -62,6 +62,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 		% 2019.11.07 [19:25:18] - Added in ability to user to click on the cellmap to go to that cell. Users can now also go the most recently sorted cell for convenience.
 		% 2019.11.09 [14:03:42] - Mouse is no longer invisible on the figure, callback to detect mouse click on cellmaps and trigger ability for user to select cells, and other improvements.
 		% 2019.11.09 [14:37:15] - Remove many commented out code. And added removal of unconnected components from main component when thresholding images.
+		% 2019.11.10 [20:21:03] - Made sorting will re-run in case of chooseSignals error, e.g. if GUI is overwritten.
 	% TODO
 		% DONE: New GUI interface to allow users to scroll through video and see cell activity at that point
 		% DONE: allow option to mark rest as bad signals
@@ -558,8 +559,18 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 	nSignals = size(inputImages,3);
 	disp(['# signals: ' num2str(nSignals)]);
 
-	% Run the main decision-making function
-	choices = chooseSignals(options,1:nSignals, inputImages,inputSignals,objMap, valid, inputStr,tmpDir,sessionID,signalPeakIdx,signalSnr,inputImagesThres,inputImageSizes,peakOutputStat,ROItraces,imgStats,inputSignalSignal,inputSignalNoise,inputImagesBoundaryIndices,signalPeakIdxOriginal,signalPeaksOriginal,instructionStr);
+	% Re-run in case of any errors or problems with the GUI
+	safeExit = 0;
+	while safeExit==0
+		try
+			% Run the main decision-making function
+			[choices, safeExit] = chooseSignals(options,1:nSignals, inputImages,inputSignals,objMap, valid, inputStr,tmpDir,sessionID,signalPeakIdx,signalSnr,inputImagesThres,inputImageSizes,peakOutputStat,ROItraces,imgStats,inputSignalSignal,inputSignalNoise,inputImagesBoundaryIndices,signalPeakIdxOriginal,signalPeaksOriginal,instructionStr);
+		catch err
+			disp(repmat('@',1,7))
+			disp(getReport(err,'extended','hyperlinks','on'));
+			disp(repmat('@',1,7))
+		end
+	end
 
 	% Assume all skips were good ICs that user forgot to enter
 	validChoices = choices;;
@@ -653,7 +664,7 @@ function plotSignalStatistics(inputSignals,inputImageSizes,inputStr,pointColor, 
 	end
 	warning on;
 end
-function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,objMap, valid, inputStr,tmpDir,sessionID,signalPeakIdx,signalSnr,inputImagesThres,inputImageSizes,peakOutputStat,ROItraces,imgStats,inputSignalSignal,inputSignalNoise,inputImagesBoundaryIndices,signalPeakIdxOriginal,signalPeaksOriginal,instructionStr)
+function [valid, safeExit] = chooseSignals(options,signalList, inputImages,inputSignals,objMap, valid, inputStr,tmpDir,sessionID,signalPeakIdx,signalSnr,inputImagesThres,inputImageSizes,peakOutputStat,ROItraces,imgStats,inputSignalSignal,inputSignalNoise,inputImagesBoundaryIndices,signalPeakIdxOriginal,signalPeaksOriginal,instructionStr)
 	% manually decide which signals are good or bad, pre-computed values input to speed up movement through signals
 
 	warning('off','all')
@@ -818,6 +829,8 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 	frameLineHandle = [];
 
 	lastSortedSignal = i;
+
+	safeExit = 0;
 
 	% only exit if user clicks options that calls for saving the data
 	while saveData==0
@@ -1566,6 +1579,7 @@ function [valid] = chooseSignals(options,signalList, inputImages,inputSignals,ob
 	% warning on
 	warning('on','all')
 	warning('query','all')
+	safeExit = 1;
 	function subfxnUserInputGui()
 		% 'M' make a montage of peak frames
 		if isequal(reply, 109)&&~isempty(options.inputMovie)

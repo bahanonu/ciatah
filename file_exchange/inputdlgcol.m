@@ -443,7 +443,14 @@ Data.Offset = DefOffset;
 set(InputFig ,'Visible','on','UserData',Data);
 % This drawnow is a hack to work around a bug
 drawnow
-set(findall(InputFig),'Units','normalized','HandleVisibility','callback');
+% For Matlab 2019b compatibility
+try
+	set(findall(InputFig),'Units','normalized','HandleVisibility','callback');
+catch
+	set(findall(InputFig),'HandleVisibility','callback');
+end
+
+% set(findall(InputFig),'Units','normalized','HandleVisibility','callback');
 set(InputFig,'Units','points')
 try
     uiwait(InputFig);
