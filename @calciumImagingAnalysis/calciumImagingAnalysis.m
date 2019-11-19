@@ -58,7 +58,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		concurrentAnalysisFilename = '_currentlyAnalyzingFolderCheck.mat';
 
 		% Cell array strings: List of methods to fast track folder to analyze dialog or skip altogether
-		methodExcludeList = {'showVars','showFolders','setMainSettings','modelAddNewFolders','loadDependencies','saveObj','setStimulusSettings','modelDownsampleRawMovies','setMovieInfo'};
+		methodExcludeList = {'showVars','showFolders','setMainSettings','modelAddNewFolders','loadDependencies','saveObj','setStimulusSettings','modelDownsampleRawMovies','setMovieInfo','setup'};
 		methodExcludeListVer2 = {'modelEditStimTable','behaviorProtocolLoad','modelPreprocessMovie','modelModifyMovies','removeConcurrentAnalysisFiles'};
 		methodExcludeListStimuli = {'modelVarsFromFiles'};
 
