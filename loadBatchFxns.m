@@ -16,6 +16,7 @@ function loadBatchFxns()
 		% 2019.10.11 [09:59:17] - Check that Miji plugins.dir has been added as a Java system property, if so then skip full loading of Miji each time to save time.
 		% 2019.10.15 [12:30:53] - Fixed checking for Fiji path in Unix systems.
 		% 2019.10.15 [21:57:45] - Improved checking for directories that should not be loaded, remove need for verLessThan('matlab','9.0') check.
+		% 2019.11.13 [18:06:02] - Updated to make contains not include less than 9.1.
 	% TODO
 		%
 
@@ -171,7 +172,7 @@ function openMijiCheck()
 end
 function onPath = subfxnCheckPath(thisRootPath)
 	pathCell = regexp(path, pathsep, 'split');
-	if verLessThan('matlab','9.0')
+	if verLessThan('matlab','9.1')
 		matchIdx = ~cellfun(@isempty,regexpi(pathCell,thisRootPath));
 		% pathListArray = pathListArray(pathFilter&pathFilter1&pathFilter2);
 	else
