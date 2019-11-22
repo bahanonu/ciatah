@@ -1144,6 +1144,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		% make a list of all possible combinations
 		paramNames = fieldnames(paramSet);
 		nParams = length(paramNames);
+		paraSpace = [];
 		paramStr = 'paraSpace = combvec(';
 		for paramNo = 1:nParams
 			paramStr = [paramStr '1:' num2str(length(paramSet.(paramNames{paramNo})))];

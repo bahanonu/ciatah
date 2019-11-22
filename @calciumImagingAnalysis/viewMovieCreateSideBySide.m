@@ -57,7 +57,7 @@ function obj = viewMovieCreateSideBySide(obj)
 	scnsize = get(0,'ScreenSize');
 	[videoTrialRegExpIdx, ok] = listdlg('ListString',videoTrialRegExpList,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','video string type (N = number)');
 	% % =====================
-	[fileIdxArray idNumIdxArray nFilesToAnalyze nFiles] = obj.getAnalysisSubsetsToAnalyze();
+	[fileIdxArray, idNumIdxArray, nFilesToAnalyze, nFiles] = obj.getAnalysisSubsetsToAnalyze();
 	for thisFileNumIdx = 1:nFilesToAnalyze
 		try
 			fileNum = fileIdxArray(thisFileNumIdx);
@@ -80,7 +80,7 @@ function obj = viewMovieCreateSideBySide(obj)
 				else
 					frameListTmp = frameList;
 				end
-				local_getVideoRegexp();
+				videoTrialRegExp = local_getVideoRegexp();
 				% videoTrialRegExp
 				vidList = getFileList(videoDir,videoTrialRegExp);
 				if ~isempty(vidList)
@@ -113,16 +113,13 @@ function obj = viewMovieCreateSideBySide(obj)
 			display(repmat('@',1,7))
 		end
 	end
-	function local_getVideoRegexp()
+	function videoTrialRegExp = local_getVideoRegexp()
 		switch videoTrialRegExpIdx
 			case 1
 				videoTrialRegExp = [obj.date{obj.fileNum} '_' obj.protocol{obj.fileNum} '_' obj.fileIDArray{obj.fileNum}];
 			case 2
 				dateTmp = strsplit(obj.date{obj.fileNum},'_');
 				videoTrialRegExp = strcat(dateTmp{1}(end-1:end),dateTmp{2},dateTmp{3},'-',obj.subjectStr{obj.fileNum},'-',obj.assay{obj.fileNum});
-			case 2
-				dateTmp = strsplit(obj.date{obj.fileNum},'_');
-				videoTrialRegExp = strcat(dateTmp{1}(end-1:end),dateTmp{2},dateTmp{3},'_',obj.subjectStr{obj.fileNum},'_',obj.assay{obj.fileNum});
 			case 3
 				videoTrialRegExp = [obj.subjectStr{obj.fileNum} '_' obj.assay{obj.fileNum}]
 			otherwise
