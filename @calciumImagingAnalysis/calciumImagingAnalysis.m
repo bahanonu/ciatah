@@ -450,7 +450,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			warning on;
 			clc
 			% ' Calcium Imaging Analysis Class
-			display([...
+			disp([...
 			'calciumImagingAnalysis' 10 ...
 			'A software package for analyzing one- and two-photon calcium imaging datasets.' 10 10 ...
 			'Biafra Ahanonu <<a href="emailto:bahanonu@alum.mit.edu">bahanonu@alum.mit.edu</a>>' 10 ...
@@ -470,8 +470,8 @@ classdef calciumImagingAnalysis < dynamicprops
 			':::::::::::::::::::::::::::::::::::::::::::::' 10 ...
 			'=============================================' 10])
 
-			display(repmat('*',1,42))
-			display('Constructing calciumImagingAnalysis imaging analysis object...')
+			disp(repmat('*',1,42))
+			disp('Constructing calciumImagingAnalysis imaging analysis object...')
 
 			% Ensure that default directory is the calciumImagingAnalysis repository root
 			functionLocation = dbstack('-completenames');
@@ -482,14 +482,14 @@ classdef calciumImagingAnalysis < dynamicprops
 			clear functionDir functionLocation;
 
 			obj.loadBatchFunctionFolders();
-			display(repmat('*',1,42))
+			disp(repmat('*',1,42))
 
 			% Because the obj
 			%========================
 			% obj.exampleOption = '';
 			% get options
 			obj = getOptions(obj,varargin);
-			% display(options)
+			% disp(options)
 			% unpack options into current workspace
 			% fn=fieldnames(options);
 			% for i=1:length(fn)
@@ -499,15 +499,15 @@ classdef calciumImagingAnalysis < dynamicprops
 
 			obj = initializeObj(obj);
 
-			display(repmat('*',1,42))
-			display('Done initializing calciumImagingAnalysis!')
-			display(repmat('*',1,42))
+			disp(repmat('*',1,42))
+			disp('Done initializing calciumImagingAnalysis!')
+			disp(repmat('*',1,42))
 
-			display([...
+			disp([...
 			'Run processing pipeline by typing below (or clicking link) into command window (no semi-colon!):' 10 ...
 			'<a href="matlab: obj">obj</a>'])
 
-			% display([...
+			% disp([...
 			% 'Run processing pipeline by typing into command window:' 10 ...
 			% '<a href="">obj.runPipelineProcessing</a>' 10 ...
 			% 'or for advanced features: ' 10 ...
@@ -625,7 +625,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			obj.colormapAlt2 = diverging_map(linspace(0,1,100),[0 0 0.7],[0.7 0 0]);
 
 			% Check required toolboxes are available, warn if not
-			display(repmat('*',1,42))
+			disp(repmat('*',1,42))
 			toolboxList = {...
 			'distrib_computing_toolbox',...
 			'image_toolbox',...
@@ -666,7 +666,7 @@ classdef calciumImagingAnalysis < dynamicprops
 					end
 				end
 			end
-			display(repmat('*',1,42))
+			disp(repmat('*',1,42))
 
 			% Ensure date paths are up to date
 			obj.picsSavePath = ['private' filesep 'pics' filesep datestr(now,'yyyymmdd','local') filesep];
@@ -709,7 +709,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			if ~isempty(obj.dataPath)
 				obj.modelGetFileInfo();
 			else
-				display('No folder paths input, run <a href="matlab: obj.currentMethod=''modelAddNewFolders'';obj">modelAddNewFolders</a> method to add new folders.');
+				disp('No folder paths input, run <a href="matlab: obj.currentMethod=''modelAddNewFolders'';obj">modelAddNewFolders</a> method to add new folders.');
 				% warning('Input data paths for all files!!! option: dataPath')
 			end
 			if ~isempty(obj.discreteStimulusTable)&~strcmp(class(obj.discreteStimulusTable),'table')
@@ -734,7 +734,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			end
 			% load all the data
 			if ~isempty(obj.rawSignals)&strcmp(class(obj.rawSignals{1}),'char')
-				display('paths input, going to load files')
+				disp('paths input, going to load files')
 				obj.guiEnabled = 0;
 				obj = modelVarsFromFiles(obj);
 				obj.guiEnabled = 1;
@@ -743,12 +743,12 @@ classdef calciumImagingAnalysis < dynamicprops
 			if isempty(obj.signalPeaks)&~isempty(obj.rawSignals)
 				% obj.computeSignalPeaksFxn();
 			else
-				display('No folder data specified, load data with <a href="matlab: obj.currentMethod=''modelVarsFromFiles'';obj">modelVarsFromFiles</a> method.');
+				disp('No folder data specified, load data with <a href="matlab: obj.currentMethod=''modelVarsFromFiles'';obj">modelVarsFromFiles</a> method.');
 				% warning('no signal data input!!!')
 			end
 			% load stimulus tables
 
-			display(repmat('*',1,42))
+			disp(repmat('*',1,42))
 			% Check java heap size
 			try
 				javaHeapSpaceSizeGb = java.lang.Runtime.getRuntime.maxMemory*1e-9;
@@ -876,9 +876,9 @@ classdef calciumImagingAnalysis < dynamicprops
 			% 		% Miji;
 			% 		% MIJ.exit;
 			% 	catch err
-			% 		display(repmat('@',1,7))
+			% 		disp(repmat('@',1,7))
 			% 		disp(getReport(err,'extended','hyperlinks','on'));
-			% 		display(repmat('@',1,7))
+			% 		disp(repmat('@',1,7))
 			% 	end
 			% end
 
@@ -888,7 +888,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		function obj = display(obj)
 			% Overload display method so can run object by just typing 'obj' in command window.
 			obj.runPipeline;
-			% display('hello');
+			% disp('hello');
 		end
 
 		function obj = showVars(obj)
@@ -903,7 +903,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			analysisType = dependencyStr(fileIdxArray);
 			dispStr = dispStr(fileIdxArray);
 			for depNo = 1:length(fileIdxArray)
-				display([10 repmat('>',1,42)])
+				disp([10 repmat('>',1,42)])
 				disp(dispStr{depNo})
 				switch analysisType{depNo}
 					case 'downloadCnmfGithubRepositories'
@@ -1079,11 +1079,11 @@ classdef calciumImagingAnalysis < dynamicprops
 			else
 				savePath = obj.objSaveLocation;
 			end
-			display(['saving to: ' savePath])
+			disp(['saving to: ' savePath])
 			try
 			  save(savePath,'obj','-v7.3');
 			catch
-			  display('Problem saving, choose new location...')
+			  disp('Problem saving, choose new location...')
 			  obj.objSaveLocation = [];
 			  obj.saveObj();
 			end
@@ -1119,11 +1119,11 @@ classdef calciumImagingAnalysis < dynamicprops
 				obj.sumStats.distances.sessionStr(end+1:end+nPtsAdd,1) = {theseFieldnames{subjNo}};
 			end
 			savePath = [obj.dataSavePath obj.protocol{obj.fileNum} '_cellDistanceStatsAligned.tab'];
-			display(['saving data to: ' savePath])
+			disp(['saving data to: ' savePath])
 			writetable(struct2table(obj.sumStats.distances),savePath,'FileType','text','Delimiter','\t');
 
 			% return;
-			display('===')
+			disp('===')
 			% Get all the cell centroids
 			theseFieldnames = fieldnames(obj.globalIDs.matchCoords)
 			for subjNo = 1:length(theseFieldnames)
@@ -1141,7 +1141,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			end
 
 			savePath = [obj.dataSavePath obj.protocol{obj.fileNum} '_cellCentroidsAligned.tab'];
-			display(['saving data to: ' savePath])
+			disp(['saving data to: ' savePath])
 			writetable(struct2table(obj.sumStats.centroids),savePath,'FileType','text','Delimiter','\t');
 
 
@@ -1174,7 +1174,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			end
 
 			savePath = [obj.dataSavePath obj.protocol{obj.fileNum} '_globalIDNums.tab'];
-			display(['saving data to: ' savePath])
+			disp(['saving data to: ' savePath])
 			writetable(struct2table(obj.sumStats.globalIDs),savePath,'FileType','text','Delimiter','\t');
 
 		end
@@ -1191,14 +1191,14 @@ classdef calciumImagingAnalysis < dynamicprops
 				try
 					thisFileNum = fileIdxArray(thisFileNumIdx);
 					obj.fileNum = thisFileNum;
-					% display(repmat('=',1,21))
+					% disp(repmat('=',1,21))
 					fprintf('%s\n %d/%d (%d/%d): %s\n',repmat('=',1,21),thisFileNumIdx,nFilesToAnalyze,thisFileNum,nFiles,obj.fileIDNameArray{obj.fileNum})
-					% display([num2str(thisFileNum) '/' num2str(nFiles) ': ' obj.fileIDNameArray{obj.fileNum}]);
+					% disp([num2str(thisFileNum) '/' num2str(nFiles) ': ' obj.fileIDNameArray{obj.fileNum}]);
 
 					% try
 					methodNum = 2;
 					if methodNum==1
-						display('Using previously computed centroids...')
+						disp('Using previously computed centroids...')
 						[inputSignals inputImages signalPeaks signalPeaksArray valid] = modelGetSignalsImages(obj,'returnOnlyValid',1);
 						xCoords = obj.objLocations{obj.fileNum}.(obj.signalExtractionMethod)(valid,1);
 						yCoords = obj.objLocations{obj.fileNum}.(obj.signalExtractionMethod)(valid,2);
@@ -1225,14 +1225,14 @@ classdef calciumImagingAnalysis < dynamicprops
 					obj.sumStats.cellPairs(end+1:end+nPtsAdd,1) = 1:nPtsAdd;
 					obj.sumStats.sessionStr(end+1:end+nPtsAdd,1) = {obj.fileIDArray{obj.fileNum}};
 				catch err
-					display(repmat('@',1,7))
+					disp(repmat('@',1,7))
 					disp(getReport(err,'extended','hyperlinks','on'));
-					display(repmat('@',1,7))
+					disp(repmat('@',1,7))
 				end
 			end
 
 			savePath = [obj.dataSavePath obj.protocol{obj.fileNum} '_cellDistanceStats.csv'];
-			display(['saving data to: ' savePath])
+			disp(['saving data to: ' savePath])
 			writetable(struct2table(obj.sumStats),savePath,'FileType','text','Delimiter',',');
 		end
 
@@ -1320,7 +1320,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			options.fxnsToRun = fxnsToRun;
 			% get options
 			options = getOptions(options,varargin);
-			% display(options)
+			% disp(options)
 			% unpack options into current workspace
 			% fn=fieldnames(options);
 			% for i=1:length(fn)
@@ -1460,7 +1460,7 @@ classdef calciumImagingAnalysis < dynamicprops
 						for folderNo = 1:length(obj.dataPath)
 							filesToLoad = getFileList(obj.dataPath{folderNo},missingRegexp);
 							if isempty(filesToLoad)
-								display(['no extracted signals: ' obj.dataPath{folderNo}])
+								disp(['no extracted signals: ' obj.dataPath{folderNo}])
 								validFoldersIdx2(end+1) = folderNo;
 							end
 						end
@@ -1486,7 +1486,7 @@ classdef calciumImagingAnalysis < dynamicprops
 						for folderNo = 1:length(obj.dataPath)
 							filesToLoad = getFileList(obj.dataPath{folderNo},cellRegexp);
 							if ~isempty(filesToLoad)
-								display(['has extracted signals: ' obj.dataPath{folderNo}])
+								disp(['has extracted signals: ' obj.dataPath{folderNo}])
 								validFoldersIdx2(end+1) = folderNo;
 							end
 						end
@@ -1497,7 +1497,7 @@ classdef calciumImagingAnalysis < dynamicprops
 						for folderNo = 1:length(obj.dataPath)
 							filesToLoad = getFileList(obj.dataPath{folderNo},movieRegexp);
 							if ~isempty(filesToLoad)
-								display(['has movie file: ' obj.dataPath{folderNo}])
+								disp(['has movie file: ' obj.dataPath{folderNo}])
 								validFoldersIdx2(end+1) = folderNo;
 							end
 						end
@@ -1508,7 +1508,7 @@ classdef calciumImagingAnalysis < dynamicprops
 							filesToLoad = getFileList(obj.dataPath{folderNo},obj.fileFilterRegexp);
 							if isempty(filesToLoad)
 								validFoldersIdx2(end+1) = folderNo;
-								display(['missing dfof: ' obj.dataPath{folderNo}])
+								disp(['missing dfof: ' obj.dataPath{folderNo}])
 							end
 						end
 						validFoldersIdx = intersect(validFoldersIdx,validFoldersIdx2)
@@ -1529,16 +1529,16 @@ classdef calciumImagingAnalysis < dynamicprops
 						end
 						validFoldersIdx = [];
 						missingRegexp = strrep(missingRegexp,'.mat','');
-						display(['missingRegexp: ' missingRegexp])
+						disp(['missingRegexp: ' missingRegexp])
 						for folderNo = 1:length(obj.inputFolders)
 							filesToLoad = getFileList(obj.inputFolders{folderNo},missingRegexp);
 							% filesToLoad
 							%filesToLoad
 							if isempty(filesToLoad)
 								validFoldersIdx(end+1) = folderNo;
-								display(['not manually sorted: ' obj.dataPath{folderNo}])
+								disp(['not manually sorted: ' obj.dataPath{folderNo}])
 							else
-								display(['manually sorted: ' obj.dataPath{folderNo}])
+								disp(['manually sorted: ' obj.dataPath{folderNo}])
 							end
 						end
 					case 'manually sorted folders'
@@ -1556,13 +1556,13 @@ classdef calciumImagingAnalysis < dynamicprops
 						end
 						validFoldersIdx = [];
 						missingRegexp = strrep(missingRegexp,'.mat','');
-						display(['missingRegexp: ' missingRegexp])
+						disp(['missingRegexp: ' missingRegexp])
 						for folderNo = 1:length(obj.inputFolders)
 							filesToLoad = getFileList(obj.inputFolders{folderNo},missingRegexp);
 							%filesToLoad
 							if ~isempty(filesToLoad)
 								validFoldersIdx(end+1) = folderNo;
-								display(['manually sorted: ' obj.dataPath{folderNo}])
+								disp(['manually sorted: ' obj.dataPath{folderNo}])
 							end
 						end
 					case 'manual classification already in obj'
@@ -1592,17 +1592,17 @@ classdef calciumImagingAnalysis < dynamicprops
 			end
 			for thisFxn=fxnsToRun
 				try
-					display(repmat('!',1,21))
+					disp(repmat('!',1,21))
 					if ismethod(obj,thisFxn)
-						display(['Running: obj.' thisFxn{1}]);
+						disp(['Running: obj.' thisFxn{1}]);
 						obj.(thisFxn{1});
 					else
-						display(['Method not supported, skipping: obj.' thisFxn{1}]);
+						disp(['Method not supported, skipping: obj.' thisFxn{1}]);
 					end
 				catch err
-					display(repmat('@',1,7))
+					disp(repmat('@',1,7))
 					disp(getReport(err,'extended','hyperlinks','on'));
-					display(repmat('@',1,7))
+					disp(repmat('@',1,7))
 					if strcmp(obj.defaultObjDir,pwd)~=1
 						restoredefaultpath;
 						cd(obj.defaultObjDir);
@@ -1620,7 +1620,7 @@ classdef calciumImagingAnalysis < dynamicprops
 				cd(obj.defaultObjDir);
 			end
 
-			display([10 10 ...
+			disp([10 10 ...
 			'Run processing pipeline by typing below (or clicking link) into command window (no semi-colon!):' 10 ...
 			'<a href="matlab: obj">obj</a>'])
 		end
