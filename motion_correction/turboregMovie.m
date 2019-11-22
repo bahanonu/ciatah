@@ -153,20 +153,21 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	% ========================
 	% check that Miji is present
 	if strcmp(options.normalizeType,'imagejFFT')|strcmp(options.normalizeBeforeRegister,'imagejFFT')
-		if exist('Miji.m','file')==2
-			disp(['Miji located in: ' which('Miji.m')]);
-			% Miji is loaded, continue
-		else
-			pathToMiji = inputdlg('Enter path to Miji.m in Fiji (e.g. \Fiji.app\scripts):',...
-						 'Miji path', [1 100]);
-			if ~isempty(pathToMiji)
-				pathToMiji = pathToMiji{1};
-				privateLoadBatchFxnsPath = 'private\privateLoadBatchFxns.m';
-				fid = fopen(privateLoadBatchFxnsPath,'at')
-				fprintf(fid, '\npathtoMiji = ''%s'';\n', pathToMiji);
-				fclose(fid);
-			end
-		end
+		% if exist('Miji.m','file')==2
+		% 	disp(['Miji located in: ' which('Miji.m')]);
+		% 	% Miji is loaded, continue
+		% else
+		% 	pathToMiji = inputdlg('Enter path to Miji.m in Fiji (e.g. \Fiji.app\scripts):',...
+		% 				 'Miji path', [1 100]);
+		% 	if ~isempty(pathToMiji)
+		% 		pathToMiji = pathToMiji{1};
+		% 		privateLoadBatchFxnsPath = 'private\privateLoadBatchFxns.m';
+		% 		fid = fopen(privateLoadBatchFxnsPath,'at')
+		% 		fprintf(fid, '\npathtoMiji = ''%s'';\n', pathToMiji);
+		% 		fclose(fid);
+		% 	end
+		% end
+		modelAddOutsideDependencies('miji');
 	end
 	% ========================
 	inputMovieClass = class(inputMovie);

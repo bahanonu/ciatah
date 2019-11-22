@@ -8,7 +8,7 @@ function obj = viewCellExtractionOnMovie(obj,varargin)
 		%
 
 	% changelog
-		%
+		% 2019.10.29 [16:31:37] - Added a check for already loaded files
 	% TODO
 		% Give users the option to scroll back and forth by having a horizontal scrollbar
 
@@ -185,6 +185,19 @@ function obj = viewCellExtractionOnMovie(obj,varargin)
 	obj.inputDatasetName = movieSettings{i}; i=i+1;
 	downsampleFactorView = str2num(movieSettings{i}); i=i+1;
 	noCrop = 0;
+
+
+	% % =====================
+	% Check files already loaded
+	try
+		[rawSignals rawImages signalPeaks signalPeaksArray, ~, ~, rawSignals2] = modelGetSignalsImages(obj,'returnType','raw');
+		skipReload = 1;
+	catch
+		obj.guiEnabled = 0;
+		obj.modelVarsFromFiles();
+		obj.guiEnabled = 1;
+		skipReload = 0;
+	end
 	% % =====================
 	if strcmp(options.videoPlayer,'imagej')&saveCopyOfMovie==0
 		% Miji

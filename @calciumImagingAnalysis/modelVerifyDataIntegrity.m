@@ -16,7 +16,7 @@ function obj = modelVerifyDataIntegrity(obj)
 	signalExtractionMethodStr = {'pipelineCheck','movieInformation','hdf5_datasetnames','movies_signals','duplicates','movieStatistics','stimulusIndex','manualSortingStatistics','concatMovies'};
 	[fileIdxArray, ok] = listdlg('ListString',signalExtractionMethodStr,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','which signal extraction method?');
 	analysisType = signalExtractionMethodStr{fileIdxArray};
-	[fileIdxArray idNumIdxArray nFilesToAnalyze nFiles] = obj.getAnalysisSubsetsToAnalyze();
+	[fileIdxArray, idNumIdxArray, nFilesToAnalyze, nFiles] = obj.getAnalysisSubsetsToAnalyze();
 	currentDateTimeStr = datestr(now,'yyyymmdd_HHMM','local');
 
 	switch analysisType
@@ -136,6 +136,7 @@ function obj = modelVerifyDataIntegrity(obj)
 			% validFoldersIdx = intersect(validFoldersIdx,validFoldersIdx2)
 
 		case 'stimulusIndex'
+			nameArray = obj.stimulusNameArray;
 			for idNumIdx = 1:length(idNumIdxArray)
 				idNum = idNumIdxArray(idNumIdx);
 				obj.stimNum = idNum;

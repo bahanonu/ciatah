@@ -76,3 +76,4 @@ function [CovEvals PcaTraces PcaFilters nPCs] = calculatePCA(inputMovie,nPCs)
     for i=1:nPCs
         PcaFilters(:,i)=PcaFilters(:,i)/norm(PcaFilters(:,i));
     end
+end

@@ -486,13 +486,13 @@ function [regCoords] = subfxnCropSelection(options,folderList)
 					display('not implemented')
 				otherwise
 					% if no option selected, uses the entire FOV for each image
-					display('not implemented')
+					disp('not implemented')
 					regCoords{fileNum}{movieNo}=[];
 			end
 		end
 	end
 end
-function [inputMovie] = cropInputMovie(inputMovie)
+function [thisMovie] = cropInputMovie(thisMovie)
 	% turboreg outputs 0s where movement goes off the screen
 	thisMovieMinMask = zeros([size(thisMovie,1) size(thisMovie,2)]);
 	options.turboreg.registrationFxn

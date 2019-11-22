@@ -23,6 +23,7 @@ function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
 		% 2018.08.27 [18:02:11] - Modified how global coordinates calculated so most recent match isn't given equal weight to all older matches.
 		% 2019.07.03 [11:11:20] (early 2019) - Finished adding image correlation check for matched objects to be within matchObjBtwnTrials function.
 		% 2019.07.11 [20:46:23] - Add support for additional image correlation comparison metrics.
+		% 2019.10.29 [13:07:18] - Added support for sparse (ndSparse) array inputs.
 	% notes
 		% the cell array of traces allows us to have arbitrary numbers of trials to align automatically,
 	% TODO
@@ -139,14 +140,26 @@ function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
 		ioptions.registrationFxn = 'transfturboreg';
 		% =======
 		% turboreg all object maps to particular trial's map
-		referenceObjMap(:,:,1) = objectMap{options.trialToAlign};
-		% for binary alignment
-		referenceObjMapBinary(:,:,1) = objectMapBinary{options.trialToAlign};
-		if ~isempty(options.additionalAlignmentImages)
-			for addIdx=1:length(options.additionalAlignmentImages)
-				referenceObjMapAdditional{addIdx}(:,:,1) = objectMapAdditional{addIdx}{options.trialToAlign};
+		if issparse(objectMap{options.trialToAlign})
+			referenceObjMap(:,:,1) = full(objectMap{options.trialToAlign});
+			% for binary alignment
+			referenceObjMapBinary(:,:,1) = full(objectMapBinary{options.trialToAlign});
+			if ~isempty(options.additionalAlignmentImages)
+				for addIdx=1:length(options.additionalAlignmentImages)
+					referenceObjMapAdditional{addIdx}(:,:,1) = full(objectMapAdditional{addIdx}{options.trialToAlign});
+				end
+			end
+		else
+			referenceObjMap(:,:,1) = objectMap{options.trialToAlign};
+			% for binary alignment
+			referenceObjMapBinary(:,:,1) = objectMapBinary{options.trialToAlign};
+			if ~isempty(options.additionalAlignmentImages)
+				for addIdx=1:length(options.additionalAlignmentImages)
+					referenceObjMapAdditional{addIdx}(:,:,1) = objectMapAdditional{addIdx}{options.trialToAlign};
+				end
 			end
 		end
+
 		% for centroid
 		[xCoords, yCoords] = findCentroid(inputImages{options.trialToAlign},'roundCentroidPosition',0);
 		referenceObjMapCentroid = zeros(size(referenceObjMap(:,:,1)));
@@ -587,6 +600,9 @@ function [OutStruct] = computeGlobalIdsPairwise(OutStruct,coords,options,nSessio
 					% Check that it is highly correlated with existing images, else make a new global cell
 					rhoH = NaN([1 length(checkIds)]);
 					thisImg = inputImages{i}(:,:,xLocal);
+					if issparse(thisImg)
+						thisImg = full(thisImg);
+					end
 					if options.checkImageCorr==1
 						rhoH = NaN([2 length(checkIds)]);
 						thisImg2 = inputImagesOriginal{i}(:,:,xLocal);
@@ -601,6 +617,9 @@ function [OutStruct] = computeGlobalIdsPairwise(OutStruct,coords,options,nSessio
 							continue;
 						end
 						testImg = inputImages{checkSessionList(jjj)}(:,:,checkIds(jjj));
+						if issparse(testImg)
+							testImg = full(testImg);
+						end
 						% rhoH(1,jjj) = imageCorrFxn(testImg,thisImg);
 						% Make sure images are normalized to maximum = 1 to allow quick thresholding
 						rhoH(1,jjj) = imageCorrFxn(testImg/nanmax(testImg(:)),thisImg/nanmax(thisImg(:)));
@@ -688,7 +707,7 @@ function plotObjectMap(objectMap,figNo)
 	nSessions = length(objectMap);
 	for i=1:nSessions
 		subplot(3,ceil(nSessions/3),i);
-		imagesc(objectMap{i});
+		imagesc(full(objectMap{i}));
 		colormap(customColormap([]));
 		box off; axis off;
 	end

@@ -17,6 +17,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		% 2016.02.19 - rewrite of code to allow non-overwrite mode, so that multiple computers can connect to the same server and process the same series of folders in parallel while automatically ignoring folders that have already been processed. Could extend to include some date-based measure for analysis re-runs
 		% 2019.04.15 - Added new method of inputting CNMF-E settings using MATLAB editor. More flexible.
 		% 2019.08.20 [12:29:31] - Contrast added to cell size/width decision-making.
+		% 2019.10.29 [17:21:23] - Added a check to make sure that filenames produced are valid MATLAB ones for settings, e.g. for CNMF-e.
+		% 2019.11.10 [20:34:42] - Add a warning with some common tips for users if error during cell extraction. Skip modelVarsFromFiles and viewObjmaps loading to reduce user confusion for any folders that had issues during cell extraction.
 	% TODO
 		%
 
@@ -39,7 +41,13 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	scnsize = get(0,'ScreenSize');
 	signalExtractionMethodStr = {'EM','PCAICA','PCAICA_old','CNMF','CNMFE','EXTRACT','ROI'};
 	currentIdx = find(strcmp(signalExtractionMethodStr,obj.signalExtractionMethod));
-	signalExtractionMethodDisplayStr = {'CELLMax (Lacey/Biafra)','PCAICA (Mukamel, 2009) | Hakan/Tony version','PCAICA (Mukamel, 2009) | Jerome Lecoq version','CNMF (Pnevmatikakis, 2016 or Giovannucci, 2019)','CNMF-E (Zhou, 2018)','EXTRACT (Inan, 2017)','ROI - only do after running either PCAICA, CELLMax, EXTRACT, or CNMF'};
+	signalExtractionMethodDisplayStr = {'CELLMax | Lacey Kitch & Biafra Ahanonu',...
+	'PCAICA (Mukamel, 2009) | Hakan Inan & Tony Kim version',...
+	'PCAICA (Mukamel, 2009) | Eran Mukamel, Jerome Lecoq, Lacey Kitch, Maggie Carr & Biafra Ahanonu version',...
+	'CNMF | Pnevmatikakis, 2016 or Giovannucci, 2019',...
+	'CNMF-E | Zhou, 2018',...
+	'EXTRACT | Inan, 2017',...
+	'ROI - only do after running either PCAICA, CELLMax, EXTRACT, or CNMF'};
 	[signalIdxArray, ok] = listdlg('ListString',signalExtractionMethodDisplayStr,'ListSize',[scnsize(3)*0.4 scnsize(4)*0.4],'Name','which signal extraction method?','InitialValue',currentIdx);
 	% signalIdxArray
 	signalExtractionMethod = signalExtractionMethodStr(signalIdxArray);
@@ -208,7 +216,9 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	% ==========================================
 	% Run signal extraction for each over all folders
 	nFolders = length(fileIdxArray);
-	for thisFileNumIdx = 1:length(fileIdxArray)
+	successList = [];
+	errorList = [];
+	for thisFileNumIdx = 1:nFolders
 		try
 			% currentDateTimeStr = char(datetime('now','TimeZone','local','Format','yyyyMMdd_HHmm'));
 
@@ -306,9 +316,9 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 						catch err
 							fprintf('Removing temporary file: %s\n',savestring)
 							delete(savestring)
-							display(repmat('@',1,7))
+							disp(repmat('@',1,7))
 							disp(getReport(err,'extended','hyperlinks','on'));
-							display(repmat('@',1,7))
+							disp(repmat('@',1,7))
 						end
 						saveRunTimes('cellmax_v3');
 						clear emOptions;
@@ -333,27 +343,67 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				toc(startTime)
 				diary OFF;
 			end
+			successList(end+1) = fileNum;
 		catch err
-			display(repmat('@',1,7))
+			disp(repmat('@',1,7))
 			disp(getReport(err,'extended','hyperlinks','on'));
-			display(repmat('@',1,7))
+			disp(repmat('@',1,7))
+			try
+				errorList(end+1) = fileNum
+			catch
+			end
 		end
 	end
 	% ==========================================
 	% ==========================================
-	% add information about the extracted signals to the object for later processing
-	objGuiOld = obj.guiEnabled;
-	obj.guiEnabled = 0;
-	obj.modelVarsFromFiles();
-	obj.guiEnabled = 0;
-	% obj.viewCreateObjmaps();
-	if viewResultsAfter==1
-		obj.viewObjmaps();
+	if ~isempty(successList)
+		obj.foldersToAnalyze = successList;
+		% add information about the extracted signals to the object for later processing
+		objGuiOld = obj.guiEnabled;
+		obj.guiEnabled = 0;
+		obj.modelVarsFromFiles();
+		obj.guiEnabled = 0;
+		% obj.viewCreateObjmaps();
+		if viewResultsAfter==1
+			obj.viewObjmaps();
+		end
+		obj.guiEnabled = objGuiOld;
+		try
+			if ~isempty(successList)
+				disp(repmat('=',1,21))
+				disp(['Successful ran the following folders: ' num2str(successList)])
+				disp(repmat('=',1,21))
+			end
+		catch
+		end
 	end
-	obj.guiEnabled = objGuiOld;
+	if isempty(successList)|length(successList)~=nFolders
+		try
+			if ~isempty(errorList)
+				disp(repmat('=',1,21))
+				disp(['Error in the following folders: ' num2str(errorList)])
+				disp('Re-run after checking below warning tips.')
+				disp(repmat('=',1,21))
+			end
+		catch
+		end
+		subfxnRunWarning();
+	end
 	% ==========================================
 	% ==========================================
-
+	function subfxnRunWarning()
+		warning([10 ...
+			repmat('=',1,21) 10 ...
+			'Error during cell extraction with "modelExtractSignalsFromMovie". Some tips:' 10 ...
+			'- Make sure REGEXP for finding movie is correct.' 10 ...
+			'- Make sure folder has files in it and is accessible to MATLAB.' 10 ...
+			'- Try and avoid running cell extraction of extremely small movies (e.g. 100x100 movie with 25 frames).' 10 ...
+			'- Make sure folder added with "modelAddNewFolders" points to an actual folder and not a file.' 10 ...
+			'- CNMF and CNMF-E: check that they are installed under "_external_programs" folder.' 10 ...
+			'- PCA-ICA: make sure there are MORE frames than PCs and ICs requested, else PCA-ICA will not run.' 10 ...
+			'- ROI: make sure you have run a previous cell-extraction method.' 10 ...
+			repmat('=',1,21) 10])
+	end
 	function getAlgorithmRootPath(algorithmFile,algorithmName,obj)
 		if exist(algorithmFile,'file')~=2
 			pathToAlgorithm = uigetdir('\.',sprintf('Enter path to %s root folder (e.g. from github)',algorithmName));
@@ -837,6 +887,10 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 							newFile = newFile(1:namelengthmax-2);
 						end
 
+						% Make sure contains valid name so MATLAB can run m-file code later.
+						% newFile = strrep(newFile,'-','_');
+                        newFile = matlab.lang.makeValidName(newFile);
+
 						newSettings = ['private' filesep 'settings' filesep newFile '.m'];
 
 						fprintf('Copying "%s" to\n"%s"\n\n',originalSettings,newSettings);
@@ -1090,6 +1144,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		% make a list of all possible combinations
 		paramNames = fieldnames(paramSet);
 		nParams = length(paramNames);
+		paraSpace = [];
 		paramStr = 'paraSpace = combvec(';
 		for paramNo = 1:nParams
 			paramStr = [paramStr '1:' num2str(length(paramSet.(paramNames{paramNo})))];
@@ -1171,7 +1226,6 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 						% Add and remove necessary CNMF directories from path
 						[success] = cnmfVersionDirLoad('current');
 
-
 						cnmfOptions.nonCNMF.parallel = 1;
 						cnmfOptions.merge_thr = 0.85;
 						cnmfOptions.ssub = options.CNMF.ssub;
@@ -1228,9 +1282,9 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				end
 				% =======
 			catch err
-				display(repmat('@',1,7))
+				disp(repmat('@',1,7))
 				disp(getReport(err,'extended','hyperlinks','on'));
-				display(repmat('@',1,7))
+				disp(repmat('@',1,7))
 			end
 		end
 	end
@@ -1268,8 +1322,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			display(repmat('*',1,14))
 			startTime = tic;
 			cnmfeAnalysisOutput = [];
-			[cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(movieList{1},'options',cnmfeOptions);
-			% [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction_batch(movieList{1},'options',cnmfeOptions);
+			% [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction(movieList{1},'options',cnmfeOptions);
+			[cnmfeAnalysisOutput] = computeCnmfeSignalExtraction_batch(movieList{1},'options',cnmfeOptions);
 
 			% [figHandle figNo] = openFigure(1337, '');hold off;
 			% obj.modelSaveImgToFile([],'initializationROIs_',1337,[obj.folderBaseSaveStr{obj.fileNum} '_run0' num2str(parameterSetNo)]);
@@ -1300,9 +1354,9 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			status = rmdir(cnmfeAnalysisOutput.P.folder_analysis,'s')
 			% _source_extraction
 		catch err
-			display(repmat('@',1,7))
+			disp(repmat('@',1,7))
 			disp(getReport(err,'extended','hyperlinks','on'));
-			display(repmat('@',1,7))
+			disp(repmat('@',1,7))
 
 			% To allow deletion of cnmfe temporary directory
 			fclose('all')
@@ -1313,9 +1367,9 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				display(repmat('*',1,21))
 				status = rmdir(cnmfeAnalysisOutput.P.folder_analysis,'s')
 			catch err
-				display(repmat('@',1,7))
+				disp(repmat('@',1,7))
 				disp(getReport(err,'extended','hyperlinks','on'));
-				display(repmat('@',1,7))
+				disp(repmat('@',1,7))
 			end
 		end
 	end

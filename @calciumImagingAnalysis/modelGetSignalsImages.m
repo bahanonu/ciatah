@@ -10,7 +10,7 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 	% changelog
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
 	% TODO
-		%
+		% Give a user a warning() output if there are no or empty cell-extraction outputs
 
 	%========================
 	% which table to read in
@@ -312,6 +312,7 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 				obj.nSignals{thisFileNum} = size(signalPeaks,1);
 			end
 
+			% Convert units to relative dF/F for later analysis
 			inputSignals = normalizeSignalExtractionActivityTraces(inputSignals,inputImages);
 			inputSignals2 = normalizeSignalExtractionActivityTraces(inputSignals2,inputImages);
 		end
@@ -343,6 +344,10 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 			end
 			% inputSignals = extractAnalysisOutput.traces;
 			% inputImages = permute(extractAnalysisOutput.filters,[3 1 2]);
+
+			% Convert units to relative dF/F for later analysis
+			inputSignals = normalizeSignalExtractionActivityTraces(inputSignals,inputImages);
+			inputSignals2 = normalizeSignalExtractionActivityTraces(inputSignals2,inputImages);
 		end
 		% if exist(obj.structEMVarname,'var')
 		if exist('emAnalysisOutput','var')

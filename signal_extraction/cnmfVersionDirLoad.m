@@ -10,6 +10,7 @@ function [success] = cnmfVersionDirLoad(cnmfVersion,varargin)
 	% changelog
 		% 2019.01.23 [09:14:54] - Added support for Matlab versions without `contains` function.
 		% 2019.03.03 [20:58:33] - Added removal of cvx from path since they overload `narginchk` which can cause warnings.
+		% 2019.11.13 [18:05:12] - Updated to make contains not include less than 9.1.
 	% TODO
 		%
 
@@ -73,7 +74,7 @@ function subfxnRemovePathHere(listOfRootPaths,options)
 		thisRootPath = listOfRootPaths{pathNo};
 		pathCell = regexp(path, pathsep, 'split');
 
-		if verLessThan('matlab','9.0')
+		if verLessThan('matlab','9.1')
 			matchIdx = ~cellfun(@isempty,regexpi(pathCell,thisRootPath));
 			% pathListArray = pathListArray(pathFilter&pathFilter1&pathFilter2);
 		else

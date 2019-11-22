@@ -31,6 +31,7 @@ function obj = modelVarsFromFiles(obj)
 	for figNo = [98 1996 1997 95 99]
 		openFigure(figNo, '');
 	end
+	drawnow;
 
 	signalExtractionMethod = obj.signalExtractionMethod;
 	% usrIdxChoiceStr = {'PCAICA','EM'};

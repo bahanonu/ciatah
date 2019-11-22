@@ -12,6 +12,8 @@ function [PcaOutputSpatial PcaOutputTemporal PcaOutputSingularValues PcaInfo] = 
         % PcaOutputTemporal - [nPCs frames] output traces from
         % PcaOutputSingularValues - PCA singular values.
         % PcaInfo - structure with information about this PCA run.
+    % changelog
+    	% 2019.11.10 [18:35:33] - Make sure M and mean_M are of the same class. - Biafra
     %========================
     options.frameList = [];
     options.convert_to_double = 0;
@@ -55,7 +57,7 @@ function [PcaOutputSpatial PcaOutputTemporal PcaOutputSingularValues PcaInfo] = 
 
     % Make each frame zero-mean in place
     mean_M = mean(M,1);
-    M = bsxfun(@minus, M, mean_M);
+    M = bsxfun(@minus, cast(M,class(mean_M)), mean_M);
 
     % PCA
     %------------------------------------------------------------

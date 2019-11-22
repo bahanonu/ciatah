@@ -1,5 +1,5 @@
 function [options] = getSettings(functionName)
-    % Send back default options to getOptions.
+    % Send back default options to getOptions, users can modify settings here.
     % Biafra Ahanonu
     % started: 2014.12.10
     %
@@ -20,14 +20,18 @@ function [options] = getSettings(functionName)
                 options.idArray = 'stimulusIdArray';
                 options.stimFramesOnly = 0;
             case 'manageParallelWorkers'
-                % open or close parpool
+                % Str: options to open/close parpool: 'open' or 'close'
                 options.openCloseParallelPool = 'open';
-                % execute parallel workers
+                % Binary: 1 = open parallel pool, 0 = do not open parallel pool
                 options.parallel = 1;
-                % maximum number of logical cores and hence workers to start
-                options.maxCores = 6;
-                % which profile to use when launching workers
+                % Int: maximum number of logical cores and hence workers to start
+                options.maxCores = [];
+                % Int: maximum number of logical cores and hence workers to start
+                options.setNumCores = [];
+                % Str: which profile to use when launching workers
                 options.parallelProfile = 'local';
+                % Binary: 1 = disable parallel pool automatic loading (by parfor or parent functions using manageParallelWorkers), 0 = use Parallel Toolbox like normal
+                options.disableParallelPoolAutoload = 0;
             case 'getFileInfo'
                 display(['loading default settings: ' functionName])
                 options.assayList = {...

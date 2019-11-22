@@ -13,16 +13,18 @@ cnmfeOpts.runMerge = 1;
 cnmfeOpts.runRemoveFalsePositives = 1;
 % ===COMPUTATION
 % Float: GB, memory space you allow to use in MATLAB
-cnmfeOpts.memory_size_to_use = 32; %
+cnmfeOpts.memory_size_to_use = 8; %
 % Float: GB, memory space you allow to use in MATLAB
-cnmfeOpts.memory_size_per_patch = 1.2; % 0.6
+cnmfeOpts.memory_size_per_patch = 0.6; % 0.6
 % Int vector: patch size in pixels
-cnmfeOpts.patch_dims = [128, 128]; % [64, 64]
+cnmfeOpts.patch_dims = [64, 64]; % [64, 64]
+% Int: number of frames per batch, leave blank to turn off batch
+cnmfeOpts.batch_frames = 1000;
 % ===SPATIAL
 % Int: pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
 cnmfeOpts.gSig = 3;
 % Int: pixel, neuron diameter
-cnmfeOpts.gSiz = 11;
+cnmfeOpts.gSiz = 13;
 % Int: spatial downsampling factor
 cnmfeOpts.ssub = 1;
 % Binary: movie has dendrites?
@@ -50,7 +52,7 @@ cnmfeOpts.nb = 1;
 % Int: when the ring model used, it is the radius of the ring used in the background model. otherwise, it's just the width of the overlapping area
 cnmfeOpts.ring_radius = 18;
 % Int: downsample background for a faster speed
-cnmfeOpts.bg_ssub = 1;
+cnmfeOpts.bg_ssub = 2;
 % ===MERGING
 % Float: 0 to 1, thresholds for merging neurons; [spatial overlap ratio, temporal correlation of calcium traces, spike correlation]
 cnmfeOpts.merge_thr = 0.65;

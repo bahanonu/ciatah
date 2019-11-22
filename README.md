@@ -9,6 +9,8 @@ Software package for analyzing one- and two-photon calcium imaging datasets. Inc
 
 Contact: __Biafra Ahanonu, PhD (bahanonu [at] alum.mit.edu)__.
 
+Made is USA. :us:
+
 ***
 ## Contents
 - [Quick start guide](#quick-start-guide)
@@ -21,7 +23,7 @@ Contact: __Biafra Ahanonu, PhD (bahanonu [at] alum.mit.edu)__.
 	- [Manual movie cropping with  `modelModifyMovies`](#manual-movie-cropping-with-modelmodifymovies)
 	- [Extracting cells with  `modelExtractSignalsFromMovie`](#extracting-cells-with-modelextractsignalsfrommovie)
 	- [Loading cell-extraction output data with `modelVarsFromFiles`](#loading-cell-extraction-output-data-with-modelvarsfromfiles)
-	- [Validating cell extraction with  `viewCellExtractionOnMovie`](#validating-cell-extraction-with-viewcellextractiononmovie)
+	- [Validating cell extraction with  `viewCellExtractionOnMovie`](#validating-cell-extraction-with--viewcellextractiononmovie)
 	- [Sorting cell extraction outputs with `computeManualSortSignals`](#sorting-cell-extraction-outputs-with-computemanualsortsignals)
 	- [Removing cells not within brain region with  `modelModifyRegionAnalysis`](#removing-cells-not-within-brain-region-with-modelmodifyregionanalysis)
 	- [Cross-session cell alignment with  `computeMatchObjBtwnTrials`](#cross-session-cell-alignment-with-computematchobjbtwntrials)
@@ -39,6 +41,7 @@ Below are steps needed to quickly get started using the `calciumImagingAnalysis`
 - Clone the `calciumImagingAnalysis` repository (using [GitHub desktop](https://desktop.github.com/) or command line) or download the repository zip and unzip.
 - Point the MATLAB path to the `calciumImagingAnalysis` root folder (*NOT* `@calciumImagingAnalysis` sub-folder in the repository).
 - Run the below MATLAB commands.
+- [Optional] Users on Windows systems should download `Everything` (https://www.voidtools.com/). It is a very useful and fast search engine that can allow users to quickly get lists of folders then need to analyze in `calciumImagingAnalysis`.
 
 ```MATLAB
 % Run these commands in MATLAB to get started.
@@ -119,7 +122,7 @@ Clone the `calciumImagingAnalysis` repository or download the repository zip and
 
 Note
 - Place `calciumImagingAnalysis` in a folder where MATLAB will have write permissions, as it also creates a `private` subdirectory to store some user information along with downloading required external software packages.
-- `file_exchange` folder contains File Exchange functions used by `calciumImagingAnalysis`. If does not exist, unzip `file_exchange.zip`.
+- `file_exchange` folder contains File Exchange functions used by `calciumImagingAnalysis`.
 - In general, it is best to set the MATLAB startup directory to the `calciumImagingAnalysis` folder. This allows `java.opts` and `startup.m` to set the correct Java memory requirements and load the correct folders into the MATLAB path.
 - If `calciumImagingAnalysis` IS NOT the startup folder, place `java.opts` wherever the MATLAB startup folder is so the correct Java memory requirements are set (important for using ImageJ/Miji in MATLAB).
 - If it appears an old `calciumImagingAnalysis` repository is loaded after pulling a new version, run `restoredefaultpath` and check that old `calciumImagingAnalysis` folders are not in the MATLAB path.
@@ -147,6 +150,19 @@ By default external MATLAB-based software packages are stored in `_external_prog
   - bioinformatics_toolbox
   - financial_toolbox
   - neural_network_toolbox
+
+#### Parallel Computing Toolbox (PCT)
+
+By default both `calciumImagingAnalysis` and PCT auto-start a parallel pool for functions that use parallelization (e.g. or calls to `parfor`). For some users this may not be desired, in that case go to MATLAB preferences and uncheck the below.
+
+![image](https://user-images.githubusercontent.com/5241605/67807212-99bb6180-fa51-11e9-81e1-9ab0fac8847a.png)
+
+Or enter the following commands into the MATLAB command window:
+
+```Matlab
+parSet = parallel.Settings;
+parSet.Pool.AutoCreate = false;
+```
 
 #### ImageJ
 
@@ -305,6 +321,31 @@ The general order of functions that users should run is ([optional] are those no
 	- __Note: it is heavily advised that throughout a particular animal's imaging sessions, that you keep the acquisition frame dimensions identical.__ This makes cross-session registration easier. Else you will have to crop all sessions for that animal to the same size ensuring that the area of interest is present in each.
 
 ******************************************
+
+## Spatially downsample raw movies or convert to HDF5 with `modelDownsampleRawMovies`
+
+Users have the ability to spatially downsample raw movies, often necessary to denoise the data, save storage space, and improve runtimes of later processing steps. For most data, users can downsample 2 or 4 times in each spatial dimension while still retaining sufficient pixels per cell to facilitate cell-extraction.
+
+To run, either select `modelDownsampleRawMovies` in the GUI menu or type the below command after initializing a calciumImagingAnalysis obj.
+
+```Matlab
+obj.modelDownsampleRawMovies;
+```
+
+This will pop-up the following screen. Users can
+- input several folders where ISXD files are by separating each folder path with a comma (`Folder(s) where raw HDF5s are located`),
+- specify a common root folder to save files to (`Folder to save downsampled HDF5s to:`),
+- and input a root directory that contains the sub-folders with the raw data (`Decompression source root folder(s)`).
+The function will automatically put each file in its corresponding folder, __make sure folder names are unique__ (this should be done anyways for data analysis reasons).
+
+![image](https://user-images.githubusercontent.com/5241605/67715130-71b2fc00-f986-11e9-970e-9d1252c25db8.png)
+
+
+### Converting Inscopix ISXD files to HDF5
+
+To convert from Inscopix ISXD file format (output by nVista v3+ and nVoke) to HDF5 run `modelDownsampleRawMovies` without changing the regular expression or make sure it looks for `.*.isxd` or similar. Users will need the latest version of the [Inscopix Data Processing Software](https://www.inscopix.com/nVista#Data_Analysis) as these functions take advantage of their API. If calciumImagingAnalysis cannot automatically find the API, it will ask the user to direct it to the _root_ location of the Inscopix Data Processing Software (see below).
+
+![image](https://user-images.githubusercontent.com/5241605/67715327-df5f2800-f986-11e9-9f91-eeabe7688fed.png)
 
 ## Check movie registration before pre-processing with `viewMovieRegistrationTest`
 
@@ -479,6 +520,13 @@ The left are raw dorsal striatum cell maps from a single animal. The right shows
 
 <a href="https://cloud.githubusercontent.com/assets/5241605/25643108/9bcfccda-2f52-11e7-8514-31968752bd95.gif" target="_blank"><img src="https://cloud.githubusercontent.com/assets/5241605/25643108/9bcfccda-2f52-11e7-8514-31968752bd95.gif" alt="2017_05_02_p545_m121_p215_raw" width="auto" height="400"/></a>
 <a href="https://cloud.githubusercontent.com/assets/5241605/25643473/dd7b11ce-2f54-11e7-8d84-eb98c5ef801c.gif" target="_blank"><img src="https://cloud.githubusercontent.com/assets/5241605/25643473/dd7b11ce-2f54-11e7-8d84-eb98c5ef801c.gif" alt="2017_05_02_p545_m121_p215_corrected_biafraalgorithm2" width="auto" height="400"/></a>
+
+### View cross-session cell alignment with `viewMatchObjBtwnSessions`
+
+
+
+### Save cross-session cell alignment with `computeMatchObjBtwnTrials`
+
 
 # ImageJ+MATLAB based mouse location tracking
 

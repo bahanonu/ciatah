@@ -159,7 +159,11 @@ function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(sign
 		% end
 
 		% startState = ticBytes(gcp);
-		optsConstant = parallel.pool.Constant(optionsOut);
+		if isempty(gcp)
+			optsConstant.Value = optionsOut;
+		else
+			optsConstant = parallel.pool.Constant(optionsOut);
+		end
 		optionsCopy_addedAnalysis = options.addedAnalysis;
 		optionsCopy_convertSignalsToCell = options.convertSignalsToCell;
 		parfor signalNum = 1:nSignals
