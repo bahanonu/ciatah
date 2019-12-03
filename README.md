@@ -9,7 +9,7 @@ Software package for analyzing one- and two-photon calcium imaging datasets. Inc
 
 Contact: __Biafra Ahanonu, PhD (bahanonu [at] alum.mit.edu)__.
 
-Made is USA. :us:
+Made is USA.
 
 ***
 ## Contents
