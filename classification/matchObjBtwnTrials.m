@@ -24,6 +24,7 @@ function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
 		% 2019.07.03 [11:11:20] (early 2019) - Finished adding image correlation check for matched objects to be within matchObjBtwnTrials function.
 		% 2019.07.11 [20:46:23] - Add support for additional image correlation comparison metrics.
 		% 2019.10.29 [13:07:18] - Added support for sparse (ndSparse) array inputs.
+		% 2019.12.05 [10:37:17] - Fix for cases in which cells are lost when cropping all movies to the same size before starting cross-session alignment.
 	% notes
 		% the cell array of traces allows us to have arbitrary numbers of trials to align automatically,
 	% TODO
@@ -232,8 +233,12 @@ function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
 								% [xCoords yCoords] = findCentroid(permute(inputImagesTurboreg,[3 1 2]));
 								[xCoords, yCoords] = findCentroid(inputImagesTurboreg,'roundCentroidPosition',0);
 								newLocalObjMap = zeros(size(referenceObjMap(:,:,1)));
+
 								refIdx = sub2ind(size(newLocalObjMap),round(yCoords),round(xCoords));
+								% Remove any NaN centroids to enable alignment
+								refIdx(isnan(refIdx)) = [];
 								newLocalObjMap(refIdx) = 1;
+
 								% se = strel('disk',2,8);
 								se = strel('ball',10,5,0);
 								referenceObjMapCentroidTmp = imdilate(referenceObjMapCentroid,se);
