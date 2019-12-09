@@ -491,7 +491,7 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		end
 
 		if isempty(gcp)
-			opts2.Value = parallel.pool.Constant(ioptions);
+			opts2.Value = ioptions;
 		else
 			opts2 = parallel.pool.Constant(ioptions);
 		end

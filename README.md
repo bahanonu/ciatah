@@ -375,6 +375,7 @@ After users instantiate an object of the `calciumImagingAnalysis` class and ente
 Next the user is presented with a series of options for motion correction, image registration, and cropping.:
 
 - The options highlighted in green are those that should be considered by users.
+- Users can over their mouse over each option to get tips on what they mean.
 - In particular, make sure that `inputDatasetName` is correct for HDF5 files and that `fileFilterRegexp` matches the form of the calcium imaging movie files to be analyzed.
 - After this, the user is asked to let the algorithm know how many frames of the movie to analyze (defaults to all frames).
 - Then the user is asked to select a region to use for motion correction. In general, it is best to select areas with high contrast and static markers such as blood vessels. Stay away from the edge of the movie or areas outside the brain (e.g. the edge of microendoscope GRIN lens in one-photon miniature microscope movies).
