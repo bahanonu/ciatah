@@ -369,7 +369,6 @@ After users instantiate an object of the `calciumImagingAnalysis` class and ente
 - If users are using the test dataset, it is recommended that they do not use temporal downsampling.
 - Vertical and horizontal stripes can be removed via `stripeRemoval` step. Remember to select correct `stripOrientationRemove`,`stripSize`, and `stripfreqLowExclude` options in the preprocessing options menu.
 
-
 ![image](https://user-images.githubusercontent.com/5241605/49827992-93d86700-fd3f-11e8-9936-d7143bbec3db.png)
 
 Next the user is presented with a series of options for motion correction, image registration, and cropping.:
@@ -381,6 +380,16 @@ Next the user is presented with a series of options for motion correction, image
 - Then the user is asked to select a region to use for motion correction. In general, it is best to select areas with high contrast and static markers such as blood vessels. Stay away from the edge of the movie or areas outside the brain (e.g. the edge of microendoscope GRIN lens in one-photon miniature microscope movies).
 
 ![image](https://user-images.githubusercontent.com/5241605/49828665-4ceb7100-fd41-11e8-9da6-9f5a510f1c13.png)
+
+### Save/load settings
+
+Users can also enable saving and loading of previously selected pre-processing settings by changing the red option below.
+
+![image](https://user-images.githubusercontent.com/5241605/70419318-10b52400-1a1a-11ea-9b43-782ac6624042.png)
+
+Settings loaded from previous run (e.g. of `modelPreprocessMovie`) or file (e.g. from `viewMovieRegistrationTest` runs) are highlighted in orange. Settings that user has just changed are still highlighted in green.
+
+![image](https://user-images.githubusercontent.com/5241605/70418766-e6169b80-1a18-11ea-9713-f5a8301fe1c1.png)
 
 The algorithm will then run all the requested preprocessing steps and presented the user with the option of viewing a slice of the processed file. Users have now completed pre-processing.
 
