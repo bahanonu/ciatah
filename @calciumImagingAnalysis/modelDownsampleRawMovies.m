@@ -14,7 +14,9 @@ function obj = modelDownsampleRawMovies(obj)
 
 	try
 		[newFolderListCell] = subfxnSelectFolders();
-		obj.downsampleRawOptions.folderListInfo = strjoin(newFolderListCell,',');
+		if ~isempty(newFolderListCell)
+			obj.downsampleRawOptions.folderListInfo = strjoin(newFolderListCell,',');
+		end
 
 		downsampleSettings = inputdlg(...
 			{...
@@ -502,12 +504,14 @@ end
 
 function [newFolderListCell] = subfxnSelectFolders()
 	nExistingFolders = 0;
-	usrIdxChoiceStr = {'manually enter folders to list','GUI select folders'};
+	usrIdxChoiceStr = {'manually enter folders to list','GUI select folders','Use existing folder list'};
 	scnsize = get(0,'ScreenSize');
 	[sel, ok] = listdlg('ListString',usrIdxChoiceStr,'ListSize',[scnsize(3)*0.3 scnsize(4)*0.3],'Name','How to add folders with movies to downsample?');
 	inputMethod = usrIdxChoiceStr{sel};
 
 	switch inputMethod
+		case 'Use existing folder list'
+			newFolderListCell = {};
 		case 'manually enter folders to list'
 			AddOpts.Resize='on';
 			AddOpts.WindowStyle='normal';

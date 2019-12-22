@@ -111,7 +111,7 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction_batch(inputMovie,v
 	try
 		disp(repmat('=',1,21))
 		disp('Running CNMF-e batch wrapper script')
-		options
+		fn_structdisp(options)
 
 		% if cvx is not in the path, ask user for file
 		runCvxSetup();

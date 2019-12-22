@@ -21,7 +21,9 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% 2019.08.07 [18:23:05] - Fix for using the _noSpatialFilter_ output where was registering to already registered iterations.
 		% 2019.09.06 [23:41:50]/2019.09 - Improved downsampling support.
 		% 2019.09.17 [19:14:27] - Improved alternative HDF5 dataset name support and added explicit rejection of non-video files for movieList.
-		% 2019.09.24 [11:47:24] - filterBeforeRegister now outputs a tag in the filename
+		% 2019.09.24 [11:47:24] - filterBeforeRegister now outputs a tag in the filename.
+		% 2019.12.08 [23:20:25] - Allow users to load prior settings.
+		% 2019.12.19 [20:00:12] - Make sure that the list to choose saving outputs matches any re-ordering done in the pre-processing selection list. Also make sure if downsampleSpace comes before turboreg that it doesn't throw an error looking for turboRegCoords.
 	% TODO
 		% Insert NaNs or mean of the movie into dropped frame location, see line 260
 		% Allow easy switching between analyzing all files in a folder together and each file in a folder individually
@@ -164,19 +166,25 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 
 
 	analysisOptionList = {'medianFilter','spatialFilter','stripeRemoval','turboreg','fft_highpass','crop','dfof','dfstd','medianFilter','downsampleTime','downsampleSpace','fft_lowpass'};
+	analysisOptionListStr = analysisOptionList;
+	analysisOptionListStr(strcmp(analysisOptionListStr,'crop')) = {'crop (add NaN border after motion correction)'};
 	defaultChoiceList = {'turboreg','crop','dfof','downsampleTime'};
 	%defaultChoiceIdx = find(cellfun(@(x) sum(strcmp(x,defaultChoiceList)),analysisOptionList));
 	defaultChoiceIdx = find(ismember(analysisOptionList,defaultChoiceList));
 	try
 		ok = 1;
 		[figHandle figNo] = openFigure(1776, '');clf;
-		[hListbox jListbox jScrollPane jDND] = reorderableListbox('String',analysisOptionList,'Units','normalized','Position',[0.5 0 0.5 0.95],'Max',Inf,'Min',0,'Value',defaultChoiceIdx);
+		[hListbox jListbox jScrollPane jDND] = reorderableListbox('String',analysisOptionListStr,'Units','normalized','Position',[0.5 0 0.5 0.95],'Max',Inf,'Min',0,'Value',defaultChoiceIdx);
 		uicontrol('Style','Text','String',['Analysis step selection and ordering' 10 '=======' 10 'We can know only that we know nothing.' 10 'And that is the highest degree of human wisdom.' 10 10 '1: Click items to select.' 10 '2: Drag to re-order analysis.' 10 '3: Click command window and press ENTER to continue.'],'Units','normalized','Position',[0 0.4 0.5 0.60],'BackgroundColor','white','HorizontalAlignment','Left');
 		uicontrol('Style','Text','String',USAflagStr,'Units','normalized','Position',[0 0 0.5 0.3],'BackgroundColor','white','HorizontalAlignment','Left','FontName','FixedWidth','FontSize',8,'HorizontalAlignment','left');
 		pause
 		% hListbox.String(hListbox.Value)
 		analysisOptionsIdx = hListbox.Value;
 		analysisOptionList = hListbox.String;
+		analysisOptionList(strcmp(analysisOptionList,'crop (add NaN border after motion correction)')) = {'crop'};
+
+		analysisOptionListStr = analysisOptionList;
+		analysisOptionListStr(strcmp(analysisOptionListStr,'crop')) = {'crop (add NaN border after motion correction)'};
 	catch err
 		display(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));
@@ -198,7 +206,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 
 	try
 		[figHandle figNo] = openFigure(1776, '');clf;
-		[hListbox jListbox jScrollPane jDND] = reorderableListbox('String',analysisOptionList,'Units','normalized','Position',[0.5 0 0.5 0.95],'Max',Inf,'Min',0,'Value',defaultSaveIdx);
+		[hListbox jListbox jScrollPane jDND] = reorderableListbox('String',analysisOptionListStr,'Units','normalized','Position',[0.5 0 0.5 0.95],'Max',Inf,'Min',0,'Value',defaultSaveIdx);
 		uicontrol('Style','Text','String',['Analysis steps to save' 10 '=======' 10 'Gentlemen, you can not fight in here! This is the War Room.' 10 10 '1: Click analysis steps to save output' 10 '2: Click command window and press ENTER to continue'],'Units','normalized','Position',[0 0.4 0.5 0.60],'BackgroundColor','white','HorizontalAlignment','Left');
 		uicontrol('Style','Text','String',USAflagStr,'Units','normalized','Position',[0 0 0.5 0.3],'BackgroundColor','white','HorizontalAlignment','Left','FontName','FixedWidth','FontSize',8,'HorizontalAlignment','left');
 		pause
@@ -227,28 +235,75 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	if isempty(defaultSaveIdx)
 		defaultSaveIdx = find(ismember(analysisOptionList,defaultSaveList));
 	end
-	% ========================
 
+	% ========================
 	movieSettings = inputdlg({...
+			'Select frames to use during preprocessing (e.g. 1:1000). **Leave blank to use all movie frames**:',...
 			'Regular expression for raw files (e.g. if raw files all have "concat" in the name, put "concat"): ',...
 			'[optional, if using HDF5] Input HDF5 file dataset name (e.g. "/images" for raw Inscopix or "/1" for example data, sans quotes): ',...
-			'[optional, if using HDF5] Output HDF5 file dataset name (see above): '...
+			'[optional, if using HDF5] Output HDF5 file dataset name (see above): ',...
+			'[optional] (0) Use default preprocessing settings, (1) Save settings or load previously saved settings: '...
 		},...
-		'view movie settings',[1 100],...
+		'Preprocessing settings',[1 100],...
 		{...
+			num2str(options.frameList),...
 			obj.fileFilterRegexpRaw,...
 			obj.inputDatasetName,...
-			obj.outputDatasetName...
+			obj.outputDatasetName,...
+			num2str(obj.saveLoadPreprocessingSettings)...
 		}...
 	);
-	obj.fileFilterRegexpRaw = movieSettings{1};
-	obj.inputDatasetName = movieSettings{2};
-	obj.outputDatasetName = movieSettings{3};
+	movieSettings
+	options.frameList = str2num(movieSettings{1});
+	obj.fileFilterRegexpRaw = movieSettings{2};
+	obj.inputDatasetName = movieSettings{3};
+	obj.outputDatasetName = movieSettings{4};
+	obj.saveLoadPreprocessingSettings = str2num(movieSettings{5});
 
+	if obj.saveLoadPreprocessingSettings==1
+		currentDateTimeStr = datestr(now,'yyyymmdd_HHMMSS','local');
+		settingsSaveStr = [obj.settingsSavePath filesep currentDateTimeStr '_modelPreprocessMovieFunction_settings.mat'];
+		uiwait(msgbox(['Settings saved to obj.preprocessSettings and MAT-file: ' settingsSaveStr]))
+	end
+	% '[options, if motion correcting] Motion correction reference frame: '...
+	% num2str(obj.motionCorrectionRefFrame)...
+	% obj.motionCorrectionRefFrame = str2num(movieSettings{4});
+
+	% ========================
 	% ask user for options if particular analysis selected
 	% if sum(ismember({analysisOptionList{analysisOptionsIdx}},'turboreg'))==1
-	options.turboreg = obj.getRegistrationSettings('processing options');
-	options.turboreg
+
+	% Ask user for main preprocessing settings, load previous settings if desired.
+	previousPreprocessSettings = [];
+	if obj.saveLoadPreprocessingSettings==1
+		try
+			usrIdxChoiceStr = {'Automatic (saved in class).','Manually load from file.'};
+			scnsize = get(0,'ScreenSize');
+			[sel, ok] = listdlg('ListString',usrIdxChoiceStr,'ListSize',[scnsize(3)*0.4 scnsize(4)*0.25],'Name','How to load previous settings? Press enter if no previous settings.');
+			if sel==1
+				if isstruct(obj.preprocessSettings)
+					previousPreprocessSettings = obj.preprocessSettings;
+				end
+			else
+				% [settingsName,settingsFolderPath,~] = uigetfile('*.*','select text file that points to analysis folders','example.txt');
+				[settingsName,settingsFolderPath,~] = uigetfile('*.*','Select previous preprocessing settings file.','_modelPreprocessMovieFunction_settings.mat');
+				previousPreprocessSettings = load([settingsFolderPath settingsName],'preprocessingSettingsAll');
+				previousPreprocessSettings = previousPreprocessSettings.preprocessingSettingsAll;
+			end
+		catch err
+			disp(repmat('@',1,7))
+			disp(getReport(err,'extended','hyperlinks','on'));
+			disp(repmat('@',1,7))
+		end
+	else
+	end
+	[options.turboreg, preprocessingSettingsAll] = obj.getRegistrationSettings('Processing options','inputSettings',previousPreprocessSettings);
+	fn_structdisp(options.turboreg)
+
+	if obj.saveLoadPreprocessingSettings==1
+		save(settingsSaveStr,'preprocessingSettingsAll','-v7.3');
+		obj.preprocessSettings = preprocessingSettingsAll;
+	end
 
 	options.datasetName = options.turboreg.inputDatasetName;
 	obj.inputDatasetName = options.turboreg.inputDatasetName;
@@ -264,8 +319,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	% end
 	% ========================
 	% get the frame to use
-	usrIdxChoice = inputdlg('select frame range (e.g. 1:1000), leave blank for all frames');
-	options.frameList = str2num(usrIdxChoice{1});
+	% usrIdxChoice = inputdlg('select frame range (e.g. 1:1000), leave blank for all frames');
+	% options.frameList = str2num(usrIdxChoice{1});
 	% ========================
 	% allow the user to pre-select all the targets
 	if sum(strcmp(analysisOptionList(analysisOptionsIdx),'turboreg'))>0
@@ -907,15 +962,17 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		thisMovie = thisMovie(1:downX,1:downY,:);
 		j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
 
-		% Adjust crop coordinates if downsampling in space takes place before turboreg
-		disp(['Adjusting motion correction crop coordinates for spatial downsampling: ' num2str(turboRegCoords{fileNum}{movieNo})]);
-		orderCheck = find(strcmp(analysisOptionList,'downsampleSpace'))<find(strcmp(analysisOptionList,'turboreg'));
-		if ~isempty(turboRegCoords{fileNum}{movieNo})&&orderCheck==1
-			turboRegCoords{fileNum}{movieNo} = floor(turboRegCoords{fileNum}{movieNo}/options.downsampleFactor);
-			% Ensure that the turbo crop coordinates are greater than zero
-			turboRegCoords{fileNum}{movieNo} = max(1,turboRegCoords{fileNum}{movieNo});
+		if exist('turboRegCoords','var')
+			% Adjust crop coordinates if downsampling in space takes place before turboreg
+			disp(['Adjusting motion correction crop coordinates for spatial downsampling: ' num2str(turboRegCoords{fileNum}{movieNo})]);
+			orderCheck = find(strcmp(analysisOptionList,'downsampleSpace'))<find(strcmp(analysisOptionList,'turboreg'));
+			if ~isempty(turboRegCoords{fileNum}{movieNo})&&orderCheck==1
+				turboRegCoords{fileNum}{movieNo} = floor(turboRegCoords{fileNum}{movieNo}/options.downsampleFactor);
+				% Ensure that the turbo crop coordinates are greater than zero
+				turboRegCoords{fileNum}{movieNo} = max(1,turboRegCoords{fileNum}{movieNo});
+			end
+			disp(['Adjusted motion correction crop coordinates due to spatial downsampling: ' num2str(turboRegCoords{fileNum}{movieNo})]);
 		end
-		disp(['Adjusted motion correction crop coordinates due to spatial downsampling: ' num2str(turboRegCoords{fileNum}{movieNo})]);
 
 		drawnow;
 		% =====================
@@ -1472,7 +1529,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			display(repmat('$',1,7))
 			j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
 
-			thisMovie(:,:,movieSubset) = removeStripsFromMovie(single(thisMovie(:,:,movieSubset)),'stripOrientation',options.turboreg.stripOrientationRemove,'meanFilterSize',options.turboreg.stripSize,'freqLowExclude',options.turboreg.stripfreqLowExclude,'waitbarOn',1);
+			thisMovie(:,:,movieSubset) = removeStripsFromMovie(single(thisMovie(:,:,movieSubset)),'stripOrientation',options.turboreg.stripOrientationRemove,'meanFilterSize',options.turboreg.stripSize,'freqLowExclude',options.turboreg.stripfreqLowExclude,'bandpassType',stripfreqBandpassType,'freqHighExclude',stripfreqHighExclude,'waitbarOn',1);
 
 			toc(subsetStartTime)
 		end
@@ -1537,9 +1594,10 @@ end
 function [turboRegCoords] = turboregCropSelection(options,folderList)
 	% Biafra Ahanonu
 	% 2013.11.10 [19:28:53]
-	usrIdxChoiceStr = {'NO | do not duplicate coords across multiple folders','YES | duplicate coords across multiple folders','YES | duplicate coords if subject the same','YES | duplicate coords across ALL folders'};
+	usrIdxChoiceStr = {'NO | do not duplicate area coords across multiple folders','YES | duplicate area coords across multiple folders','YES | duplicate area coords if subject (animal) the same','YES | duplicate area coords across ALL folders'};
 	scnsize = get(0,'ScreenSize');
-	[sel, ok] = listdlg('ListString',usrIdxChoiceStr,'ListSize',[scnsize(3)*0.4 scnsize(4)*0.4],'Name','use coordinates over multiple folders?');
+	[sel, ok] = listdlg('ListString',usrIdxChoiceStr,'ListSize',[scnsize(3)*0.4 scnsize(4)*0.4],'Name','Motion correction area coordinates (area used to get registration translation coordinates)');
+	% : use over multiple folders?
 	usrIdxChoiceList = {-1,0,-2,0};
 	applyPreviousTurboreg = usrIdxChoiceList{sel};
 	if sel==4

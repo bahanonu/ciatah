@@ -17,6 +17,7 @@ _external_programs/*.dmg
 signal_extraction/*.zip
 *.mat
 *.h5
+desktop.ini
 
 # Windows default autosave extension
 *.asv

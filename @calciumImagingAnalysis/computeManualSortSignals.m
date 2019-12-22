@@ -473,7 +473,7 @@ function [settingStruct] = subfxnGetSettings(inputTitleStr,fileFilterRegexp,inpu
 	uiXIncrement = 0.03;
 	uiYOffset = 0.90;
 	uiTxtSize = 0.3;
-	uiBoxSize = 0.4;
+	uiBoxSize = 0.65;
 	[figHandle figNo] = openFigure(1337, '');
 	clf
 	uicontrol('Style','Text','String',inputTitleStr,'Units','normalized','Position',[0.0 uiYOffset-uiXIncrement*(0) 0.3 0.05],'BackgroundColor','white','HorizontalAlignment','Left');

@@ -10,6 +10,7 @@ function obj = viewMovieRegistrationTest(obj)
 	% changelog
 		% 2019.07.26 [14:00:00] - Additional AVI support.
 		% 2019.08.30 [12:58:37] - Fallback to playMovie in cases of Miji errors and addition of selection for MATLAB player support.
+		% 2019.12.08 [23:33:25] - Save out settings structure to allow users to load it in again later for actual pre-processing.
 	% TODO
 		%
 
@@ -86,8 +87,9 @@ function obj = viewMovieRegistrationTest(obj)
 
 		% Get registration settings for each run
 		registrationStruct = {};
+		settingsStruct = {};
 		for testNo = 1:nTestToRun
-			[registrationStruct{testNo}] = obj.getRegistrationSettings(['test settings: ' num2str(testNo) '/' num2str(nTestToRun)]);
+			[registrationStruct{testNo}, settingsStruct{testNo}] = obj.getRegistrationSettings(['test settings: ' num2str(testNo) '/' num2str(nTestToRun)]);
 		end
 
 		% get information to ask user to select coordinates to use later
@@ -172,12 +174,13 @@ function obj = viewMovieRegistrationTest(obj)
 				movieSaved = writeHDF5Data(inputMovie,savePathStr,'datasetname',outputDatasetName);
 
 				savedMovieList{thisFileNumIdx}{testNo} = savePathStr;
+				preprocessingSettingsAll = settingsStruct{testNo};
 
 				% save the options used
 				savestring = [newDir filesep 'settings.mat'];
 				display(['saving: ' savestring])
 				% save(savestring,saveVariable{i},'-v7.3','emOptions');
-				save(savestring,'thisRegistrationSettings','cropCoords','movieList','frameListTmp');
+				save(savestring,'thisRegistrationSettings','cropCoords','movieList','frameListTmp','preprocessingSettingsAll');
 			end
 		end
 
@@ -264,6 +267,8 @@ function obj = viewMovieRegistrationTest(obj)
 		if strcmp(options.videoPlayer,'imagej')
 			manageMiji('startStop','exit');
 		end
+
+		uiwait(msgbox('Users can load settings saved to "settings.mat" in each "tregRun" folder in "modelPreprocessMovie" to re-use those same settings for actual movie processing.'))
 	catch err
 		display(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));

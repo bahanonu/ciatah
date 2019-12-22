@@ -50,6 +50,10 @@ function [success] = downsampleHdf5Movie(inputFilePath, varargin)
 	% end
 	%========================
 
+	% Check that options.dataDimsChunkCopy
+
+
+
 	if ~isempty(options.saveFolder)
 		[pathstr,name,ext] = fileparts(options.newFilename);
 		options.newFilename = [options.saveFolder filesep name '.h5'];

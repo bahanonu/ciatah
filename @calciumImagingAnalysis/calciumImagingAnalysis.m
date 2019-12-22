@@ -35,13 +35,16 @@ classdef calciumImagingAnalysis < dynamicprops
 		fontSizeGui = 10;
 
 		defaultObjDir = pwd;
-		classVersion = 'v3.5.1-20191109';
+		classVersion = 'v3.6.1-20191208';
 		serverPath = '';
 		privateSettingsPath = ['private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
 		% place where functions can temporarily story user settings
 		functionSettings = struct(...
 			'null', NaN...
 		);
+
+		% user information
+		userName = 'USA';
 
 		% counters and stores
 		% index of current folder
@@ -264,14 +267,18 @@ classdef calciumImagingAnalysis < dynamicprops
 			'outputDatasetName','/1'...
 		);
 
+		% Pre-processing options
+		% Empty by default, if user opts to keep pre-process settings, this is saved as a struct.
+		preprocessSettings = [];
+		saveLoadPreprocessingSettings = 0;
+		motionCorrectionRefFrame = 100;
+
 		% io folders
 		inputFolders = {};
 		videoDir = '';
 		videoSaveDir = '';
 		trackingDir = '';
 		stimulusDir = '';
-		% user information
-		userName = 'USA';
 		% if want to automatically save object to a specific location.
 		objSaveLocation = [];
 
@@ -608,7 +615,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		% helper
 		[inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, validType, inputSignals2] = modelGetSignalsImages(obj,varargin)
 		[fileIdxArray, idNumIdxArray, nFilesToAnalyze, nFiles] = getAnalysisSubsetsToAnalyze(obj)
-		[turboregSettingStruct] = getRegistrationSettings(obj,inputTitleStr)
+		[preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSettings(obj,inputTitleStr,varargin)
 
 		% set methods, for IO to specific variables in a controlled manner
 		obj = setMainSettings(obj)
@@ -1290,7 +1297,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			'viewCellExtractionOnMovie',
 			'removeConcurrentAnalysisFiles',
 			'',
-			'------- LOAD SIGNAL DATA -------',
+			'------- LOAD CELL-EXTRACTION/SIGNAL DATA -------',
 			'modelVarsFromFiles',
 			'',
 			'------- SIGNAL SORTING -------',
@@ -1357,7 +1364,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			% runs all currently implemented view functions
 
 			scnsize = get(0,'ScreenSize');
-			dlgSize = [scnsize(3)*0.8 scnsize(4)*0.8];
+			dlgSize = [scnsize(3)*0.4 scnsize(4)*0.6];
 
 			currentIdx = find(strcmp(fxnsToRun,obj.currentMethod));
 			[idNumIdxArray, ok] = listdlg('ListString',fxnsToRun,'InitialValue',currentIdx(1),'ListSize',dlgSize,'Name','Sir! I have a plan! Select a calcium imaging analysis method or procedure to run:');
@@ -1476,10 +1483,10 @@ classdef calciumImagingAnalysis < dynamicprops
 							case 'CNMF'
 								cellRegexp = obj.rawCNMFStructSaveStr;
 							case 'CNMFE'
-								missingRegexp = obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod);
+								cellRegexp = obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod);
 							otherwise
 								% cellRegexp = {obj.rawPCAICAStructSaveStr,obj.rawICfiltersSaveStr};
-								missingRegexp = obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod);
+								cellRegexp = obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod);
 						end
 						cellRegexp = strrep(cellRegexp,'.mat','');
 						validFoldersIdx2 = [];

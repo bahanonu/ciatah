@@ -19,7 +19,7 @@ cnmfeOpts.memory_size_per_patch = 0.6; % 0.6
 % Int vector: patch size in pixels
 cnmfeOpts.patch_dims = [64, 64]; % [64, 64]
 % Int: number of frames per batch, leave blank to turn off batch
-cnmfeOpts.batch_frames = 1000;
+cnmfeOpts.batch_frames = [];
 % ===SPATIAL
 % Int: pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
 cnmfeOpts.gSig = 3;

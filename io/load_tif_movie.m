@@ -147,12 +147,25 @@ function out = load_tif_movie(filename,downsample_xy,varargin)
 
 		tiffID = Tiff(filename,'r');
 
+		% tiffID.setDirectory(1);
+		% rgbTiff = size(read(tiffID),3);
 		for frameNo = 1:nFramesDim
 			% out.Movie(:,:,frameNo) = fread(fileID, [fileInfo.Width fileInfo.Height], fileType, 0, byteorder)';
 			% out.Movie(:,:,frameNo) = fread(fileID, [imgWidth(1) imgHeight(1)], fileType, 0, byteorder)';
 			% fseek(fileID, StripOffsets(frameNo), 'bof');
 			tiffID.setDirectory(framesToGrab2(frameNo));
-			out.Movie(:,:,frameNo) = read(tiffID);
+			% rgbTiff = size(read(tiffID),3);
+			%if rgbTiff==1
+			try
+				out.Movie(:,:,frameNo) = read(tiffID);
+			catch
+				tmpFrame = read(tiffID);
+				out.Movie(:,:,frameNo) = tmpFrame(:,:,1);
+			end
+			%elseif rgbTiff==3
+			%	tmpFrame = read(tiffID);
+			%	out.Movie(:,:,frameNo) = tmpFrame(:,:,1);
+			%end
 			reverseStr = cmdWaitbar(frameNo,nFrames,reverseStr,'inputStr','loading ImageJ tif','waitbarOn',1,'displayEvery',50);
 		end
 		% playMovie(out.Movie)

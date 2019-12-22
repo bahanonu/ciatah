@@ -8,7 +8,8 @@ function [inputMovie] = removeStripsFromMovie(inputMovie,varargin)
 		% inputMovie = [x y frames] 3D matrix movie with stripes removed.
 
 	% changelog
-		%
+		% 2019.06.30 [21:16:15]
+		% 2019.12.07 [17:22:29] - Added option to see stripe FFT cutoff filter and updated some text.
 	% TODO
 		%
 
@@ -17,11 +18,12 @@ function [inputMovie] = removeStripsFromMovie(inputMovie,varargin)
 	options.stripOrientation = 'vertical';
 	% Int: Number of pixels to use for mean filter for filter mask
 	options.meanFilterSize = 7;
-	% Int: Higest frequency to exclude from strip filter.
+	% Int: Lowest frequency of stripe to exclude from strip filter.
 	options.freqLowExclude = 10;
-	% IGNORE Int: Higest frequency to exclude from strip filter.
+	% Int: Highest frequency to exclude from strip filter. IGNORE UNLESS bandpassType=="bandpass".
 	options.freqHighExclude = 50;
-
+	% Binary: plot the FFT filter.
+	options.displayFilter = 0;
 
 	% ===
 	% options for fft, do not alter
@@ -134,8 +136,16 @@ function [inputMovie] = removeStripsFromMovie(inputMovie,varargin)
 		stripCutoffFilter = 1-stripCutoffFilter;
 		stripCutoffFilter = normalizeVector(stripCutoffFilter,'normRange','zeroToOne');
 		stripCutoffFilter(isnan(stripCutoffFilter)) = 1;
-		% figure;imagesc(stripCutoffFilter);axis equal tight;colormap gray
-		% figure;imagesc(cutoffFilter);axis equal tight;colormap gray
+
+		if options.displayFilter==1
+			figure;
+			subplot(1,2,1);
+				imagesc(stripCutoffFilter);axis equal tight;colormap gray
+				title('stripCutoffFilter')
+			subplot(1,2,2);
+				imagesc(cutoffFilter);axis equal tight;colormap gray
+				title('cutoffFilter')
+		end
 
 		% ========================
 		manageParallelWorkers('parallel',options.parallel);
