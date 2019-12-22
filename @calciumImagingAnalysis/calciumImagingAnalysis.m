@@ -1297,7 +1297,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			'viewCellExtractionOnMovie',
 			'removeConcurrentAnalysisFiles',
 			'',
-			'------- LOAD SIGNAL DATA -------',
+			'------- LOAD CELL-EXTRACTION/SIGNAL DATA -------',
 			'modelVarsFromFiles',
 			'',
 			'------- SIGNAL SORTING -------',
@@ -1364,7 +1364,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			% runs all currently implemented view functions
 
 			scnsize = get(0,'ScreenSize');
-			dlgSize = [scnsize(3)*0.8 scnsize(4)*0.8];
+			dlgSize = [scnsize(3)*0.4 scnsize(4)*0.6];
 
 			currentIdx = find(strcmp(fxnsToRun,obj.currentMethod));
 			[idNumIdxArray, ok] = listdlg('ListString',fxnsToRun,'InitialValue',currentIdx(1),'ListSize',dlgSize,'Name','Sir! I have a plan! Select a calcium imaging analysis method or procedure to run:');
@@ -1483,10 +1483,10 @@ classdef calciumImagingAnalysis < dynamicprops
 							case 'CNMF'
 								cellRegexp = obj.rawCNMFStructSaveStr;
 							case 'CNMFE'
-								missingRegexp = obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod);
+								cellRegexp = obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod);
 							otherwise
 								% cellRegexp = {obj.rawPCAICAStructSaveStr,obj.rawICfiltersSaveStr};
-								missingRegexp = obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod);
+								cellRegexp = obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod);
 						end
 						cellRegexp = strrep(cellRegexp,'.mat','');
 						validFoldersIdx2 = [];

@@ -64,6 +64,8 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 	options.runNanCheck = 1;
 	% cmd line waitbar on?
 	options.waitbarOn = 1;
+	% Binary: 1 = yes, normalize Matlab FFT test movies
+	options.normalizeMatlabFftTestMovies = 0;
 	% ===
 	% Str: hierarchy name in hdf5 where movie data is located
 	options.inputDatasetName = '/1';
@@ -660,7 +662,8 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 					inputMovieDuplicate{freqNo} = inputMovieDuplicate{freqNo} + 1.1*abs(minMovie);
 				end
 
-				inputMovieDivide{freqNo} = bsxfun(@rdivide,inputMovieDuplicate{freqNo},inputImageTest{freqNo});
+				% inputMovieDivide{freqNo} = bsxfun(@rdivide,inputMovieDuplicate{freqNo},inputImageTest{freqNo});
+				inputMovieDivide{freqNo} = bsxfun(@rdivide,inputMovieDuplicate{freqNo},inputMovieFFT);
 				% if isempty(options.secondaryNormalizationType)
 				% else
 				% 	inputMovieDivide{freqNo} = inputImageTest{freqNo};
@@ -678,6 +681,7 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 			% reverseStr = cmdWaitbar(freqNo,nFreqs,reverseStr,'inputStr','normalizing movie','displayEvery',5);
 		end
 		% moptions.identifyingText = strsplit(num2str(freqList),' ');
+		% moptions.normalizeMovies = options.normalizeMatlabFftTestMovies;
 		moptions.singleRowMontage = 1;
 		moptions.fontSize = fontSize;
 		[inputMovieDuplicate] = createMontageMovie(inputMovieDuplicate,'options',moptions);

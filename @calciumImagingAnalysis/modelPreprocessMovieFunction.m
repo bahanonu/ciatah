@@ -23,6 +23,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% 2019.09.17 [19:14:27] - Improved alternative HDF5 dataset name support and added explicit rejection of non-video files for movieList.
 		% 2019.09.24 [11:47:24] - filterBeforeRegister now outputs a tag in the filename.
 		% 2019.12.08 [23:20:25] - Allow users to load prior settings.
+		% 2019.12.19 [20:00:12] - Make sure that the list to choose saving outputs matches any re-ordering done in the pre-processing selection list. Also make sure if downsampleSpace comes before turboreg that it doesn't throw an error looking for turboRegCoords.
 	% TODO
 		% Insert NaNs or mean of the movie into dropped frame location, see line 260
 		% Allow easy switching between analyzing all files in a folder together and each file in a folder individually
@@ -181,6 +182,9 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		analysisOptionsIdx = hListbox.Value;
 		analysisOptionList = hListbox.String;
 		analysisOptionList(strcmp(analysisOptionList,'crop (add NaN border after motion correction)')) = {'crop'};
+
+		analysisOptionListStr = analysisOptionList;
+		analysisOptionListStr(strcmp(analysisOptionListStr,'crop')) = {'crop (add NaN border after motion correction)'};
 	catch err
 		display(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));
@@ -958,15 +962,17 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		thisMovie = thisMovie(1:downX,1:downY,:);
 		j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
 
-		% Adjust crop coordinates if downsampling in space takes place before turboreg
-		disp(['Adjusting motion correction crop coordinates for spatial downsampling: ' num2str(turboRegCoords{fileNum}{movieNo})]);
-		orderCheck = find(strcmp(analysisOptionList,'downsampleSpace'))<find(strcmp(analysisOptionList,'turboreg'));
-		if ~isempty(turboRegCoords{fileNum}{movieNo})&&orderCheck==1
-			turboRegCoords{fileNum}{movieNo} = floor(turboRegCoords{fileNum}{movieNo}/options.downsampleFactor);
-			% Ensure that the turbo crop coordinates are greater than zero
-			turboRegCoords{fileNum}{movieNo} = max(1,turboRegCoords{fileNum}{movieNo});
+		if exist('turboRegCoords','var')
+			% Adjust crop coordinates if downsampling in space takes place before turboreg
+			disp(['Adjusting motion correction crop coordinates for spatial downsampling: ' num2str(turboRegCoords{fileNum}{movieNo})]);
+			orderCheck = find(strcmp(analysisOptionList,'downsampleSpace'))<find(strcmp(analysisOptionList,'turboreg'));
+			if ~isempty(turboRegCoords{fileNum}{movieNo})&&orderCheck==1
+				turboRegCoords{fileNum}{movieNo} = floor(turboRegCoords{fileNum}{movieNo}/options.downsampleFactor);
+				% Ensure that the turbo crop coordinates are greater than zero
+				turboRegCoords{fileNum}{movieNo} = max(1,turboRegCoords{fileNum}{movieNo});
+			end
+			disp(['Adjusted motion correction crop coordinates due to spatial downsampling: ' num2str(turboRegCoords{fileNum}{movieNo})]);
 		end
-		disp(['Adjusted motion correction crop coordinates due to spatial downsampling: ' num2str(turboRegCoords{fileNum}{movieNo})]);
 
 		drawnow;
 		% =====================
