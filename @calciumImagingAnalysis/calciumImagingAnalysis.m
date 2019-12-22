@@ -1651,6 +1651,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			'<a href="matlab: obj">obj</a>'])
 		end
 		function [idNumIdxArray, ok] = pipelineListBox(obj,fxnsToRun,inputTxt,currentIdx)
+			% Part of this function is based on http://undocumentedmatlab.com/articles/setting-listbox-mouse-actions/.
 			try
 				ok = 0;
 				tts.('SETUP') = 'Methods for setting up the class.';
