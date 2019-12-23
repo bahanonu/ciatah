@@ -6,7 +6,7 @@ function [inputMovies] = createMontageMovie(inputMovies,varargin)
 	% changelog
 		% 2019.09.05 [16:42:29]
 	%========================
-	% text to put on each movie
+	% Cell array of strings: each cell contains text to overlay on each movie.
 	options.identifyingText = [];
 	% font size for identifyingText
 	options.fontSize = 15;
@@ -159,7 +159,7 @@ end
 function [movieTmp] = addText(movieTmp,inputText,fontSize)
 	% 2016.07.01 [15:05:03] - improved
 	nFrames = size(movieTmp,3);
-	maxVal = nanmax(movieTmp(:));
+	maxVal = nanmax(movieTmp(:))*0.9;
 	minVal = nanmin(movieTmp(:));
 	% minVal = NaN;
 	reverseStr = '';

@@ -16,6 +16,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		% 2019.08.30 [12:58:37] - Added Java heap space memory check on initialization.
 		% 2019.09/10 - Added GUI font option and signalExtractionTraceOutputType.
 		% 2019.10.15 [21:57:45] - Improved checking for directories that should not be loaded, remove need for verLessThan('matlab','9.0') check.
+		% 2019.12.22 [09:01:38] - Re-vamped selection list dialog boxes for methods, cell-extraction, folders, etc. Now loads as a figure and for some (like methods list) has tooltips that describe each list item.
 	% TODO
 		%
 
@@ -35,7 +36,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		fontSizeGui = 10;
 
 		defaultObjDir = pwd;
-		classVersion = 'v3.6.1-20191208';
+		classVersion = 'v3.7.1-20191222';
 		serverPath = '';
 		privateSettingsPath = ['private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
 		% place where functions can temporarily story user settings
@@ -61,7 +62,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		concurrentAnalysisFilename = '_currentlyAnalyzingFolderCheck.mat';
 
 		% Cell array strings: List of methods to fast track folder to analyze dialog or skip altogether
-		methodExcludeList = {'showVars','showFolders','setMainSettings','modelAddNewFolders','loadDependencies','saveObj','setStimulusSettings','modelDownsampleRawMovies','setMovieInfo','setup'};
+		methodExcludeList = {'showVars','showFolders','setMainSettings','modelAddNewFolders','loadDependencies','saveObj','setStimulusSettings','modelDownsampleRawMovies','setMovieInfo','setup','update'};
 		methodExcludeListVer2 = {'modelEditStimTable','behaviorProtocolLoad','modelPreprocessMovie','modelModifyMovies','removeConcurrentAnalysisFiles'};
 		methodExcludeListStimuli = {'modelVarsFromFiles'};
 
@@ -785,6 +786,11 @@ classdef calciumImagingAnalysis < dynamicprops
 			obj.setMovieInfo;
 		end
 
+		function obj = update(obj)
+			uiwait(msgbox('The calciumImagingAnalysis GitHub website will open. Click "Clone or download" button to download most recent version of calciumImagingAnalysis.'))
+			web(obj.githubUrl);
+		end
+
 		function obj = loadBatchFunctionFolders(obj)
 			% Loads the necessary directories to have the batch functions present.
 			% Biafra Ahanonu
@@ -1264,6 +1270,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			'------- SETUP -------',
 			'modelAddNewFolders',
 			'setup',
+			'update',
 			'loadDependencies',
 			'setMovieInfo',
 			'resetMijiClass',
@@ -1367,7 +1374,11 @@ classdef calciumImagingAnalysis < dynamicprops
 			dlgSize = [scnsize(3)*0.4 scnsize(4)*0.6];
 
 			currentIdx = find(strcmp(fxnsToRun,obj.currentMethod));
-			[idNumIdxArray, ok] = listdlg('ListString',fxnsToRun,'InitialValue',currentIdx(1),'ListSize',dlgSize,'Name','Sir! I have a plan! Select a calcium imaging analysis method or procedure to run:');
+			% Only keep the 1st method if it is twice in the function list.
+			[~,duplicateIdx] = unique(fxnsToRun,'stable');
+			currentIdx = intersect(currentIdx,duplicateIdx);
+			% [idNumIdxArray, ok] = listdlg('ListString',fxnsToRun,'InitialValue',currentIdx(1),'ListSize',dlgSize,'Name','Sir! I have a plan! Select a calcium imaging analysis method or procedure to run:');
+			[idNumIdxArray, ok] = obj.pipelineListBox(fxnsToRun,['"Sir! I have a plan!" Select a calciumImagingAnalysis method or procedure to run. Hover over items for tooltip descriptions.'],currentIdx);
 			if ok==0; return; end
 
 			% excludeList = {'showVars','showFolders','setMainSettings','modelAddNewFolders','loadDependencies','saveObj','setStimulusSettings','modelDownsampleRawMovies'};
@@ -1378,7 +1389,8 @@ classdef calciumImagingAnalysis < dynamicprops
 			excludeListStimuli = obj.methodExcludeListStimuli;
 
 			if isempty(intersect(fxnsToRun,excludeList))&isempty(intersect(fxnsToRun,excludeListVer2))
-				[guiIdx, ok] = listdlg('ListString',{'Yes','No'},'InitialValue',1,'ListSize',dlgSize,'Name','GUI Enabled?');
+				% [guiIdx, ok] = listdlg('ListString',{'Yes','No'},'InitialValue',1,'ListSize',dlgSize,'Name','GUI Enabled?');
+				[guiIdx, ok] = obj.pipelineListBox({'Yes','No'},['GUI Enabled?'],1);
 				if ok==0; return; end
 				% idNumIdxArray
 				% turn off gui elements, run in batch
@@ -1395,7 +1407,8 @@ classdef calciumImagingAnalysis < dynamicprops
 				usrIdxChoiceDisplay = obj.usrIdxChoiceDisplay;
 				% use current string as default
 				currentIdx = find(strcmp(usrIdxChoiceStr,obj.signalExtractionMethod));
-				[sel, ok] = listdlg('ListString',usrIdxChoiceDisplay,'InitialValue',currentIdx,'ListSize',dlgSize,'Name','Get to the data! Cell extraction algorithm to use for analysis?');
+				% [sel, ok] = listdlg('ListString',usrIdxChoiceDisplay,'InitialValue',currentIdx,'ListSize',dlgSize,'Name','Get to the data! Cell extraction algorithm to use for analysis?');
+				[sel, ok] = obj.pipelineListBox(usrIdxChoiceDisplay,['"Get to the data!" Cell extraction algorithm to use for analysis?'],currentIdx);
 				if ok==0; return; end
 				% (Americans love a winner)
 				usrIdxChoiceList = {2,1};
@@ -1410,13 +1423,15 @@ classdef calciumImagingAnalysis < dynamicprops
 				% set(0, 'DefaultUICOntrolFontSize', 16)
 				% select subjects to analyze
 				subjectStrUnique = unique(obj.subjectStr);
-				[subjIdxArray, ok] = listdlg('ListString',subjectStrUnique,'ListSize',dlgSize,'Name','Which subjects to analyze?');
+				% [subjIdxArray, ok] = listdlg('ListString',subjectStrUnique,'ListSize',dlgSize,'Name','Which subjects to analyze?');
+				[subjIdxArray, ok] = obj.pipelineListBox(subjectStrUnique,['Which subjects to analyze?'],1);
 				if ok==0; return; end
 				subjToAnalyze = subjectStrUnique(subjIdxArray);
 				subjToAnalyze = find(ismember(obj.subjectStr,subjToAnalyze));
 				% get assays to analyze
 				assayStrUnique = unique(obj.assay(subjToAnalyze));
-				[assayIdxArray, ok] = listdlg('ListString',assayStrUnique,'ListSize',dlgSize,'Name','Which assays to analyze?');
+				% [assayIdxArray, ok] = listdlg('ListString',assayStrUnique,'ListSize',dlgSize,'Name','Which assays to analyze?');
+				[assayIdxArray, ok] = obj.pipelineListBox(assayStrUnique,['Which assays to analyze?'],1);
 				if ok==0; return; end
 				assayToAnalyze = assayStrUnique(assayIdxArray);
 				assayToAnalyze = find(ismember(obj.assay,assayToAnalyze));
@@ -1427,7 +1442,8 @@ classdef calciumImagingAnalysis < dynamicprops
 				% end
 				useAltValid = {'no additional filter','manual index entry','manually sorted folders','not manually sorted folders','manual classification already in obj',['has ' obj.signalExtractionMethod ' extracted cells'],['missing ' obj.signalExtractionMethod ' extracted cells'],'fileFilterRegexp','valid auto',['has ' obj.fileFilterRegexp ' movie file']};
 				useAltValidStr = {'no additional filter','manual index entry','manually sorted folders','not manually sorted folders','manual classification already in obj',['has extracted cells'],'missing extracted cells','fileFilterRegexp','valid auto','movie file'};
-				[choiceIdx, ok] = listdlg('ListString',useAltValid,'ListSize',dlgSize,'Name','Choose additional folder sorting filters');
+				% [choiceIdx, ok] = listdlg('ListString',useAltValid,'ListSize',dlgSize,'Name','Choose additional folder sorting filters');
+				[choiceIdx, ok] = obj.pipelineListBox(useAltValid,['Choose additional folder sorting filters'],1);
 				if ok==0; return; end
 
 				if ok==1
@@ -1577,14 +1593,16 @@ classdef calciumImagingAnalysis < dynamicprops
 					otherwise
 						% body
 				end
-				[fileIdxArray, ok] = listdlg('ListString',selectList,'ListSize',dlgSize,'Name','which folders to analyze?','InitialValue',validFoldersIdx);
+				% [fileIdxArray, ok] = listdlg('ListString',selectList,'ListSize',dlgSize,'Name','which folders to analyze?','InitialValue',validFoldersIdx);
+				[fileIdxArray, ok] = obj.pipelineListBox(selectList,['Which folders to analyze?'],validFoldersIdx);
 				if ok==0; return; end
 
 				obj.foldersToAnalyze = fileIdxArray;
 				if isempty(obj.stimulusNameArray)|~isempty(intersect(fxnsToRun,excludeListVer2))|~isempty(intersect(fxnsToRun,excludeListStimuli))
 					obj.discreteStimuliToAnalyze = [];
 				else
-					[idNumIdxArray, ok] = listdlg('ListString',obj.stimulusNameArray,'ListSize',dlgSize,'Name','which stimuli to analyze?');
+					% [idNumIdxArray, ok] = listdlg('ListString',obj.stimulusNameArray,'ListSize',dlgSize,'Name','which stimuli to analyze?');
+					[idNumIdxArray, ok] = obj.pipelineListBox(obj.stimulusNameArray,['Which stimuli to analyze?'],1);
 					if ok==0; return; end
 
 					obj.discreteStimuliToAnalyze = idNumIdxArray;
@@ -1592,7 +1610,8 @@ classdef calciumImagingAnalysis < dynamicprops
 			elseif ~isempty(intersect(fxnsToRun,excludeListVer2))
 				folderNumList = strsplit(num2str(1:length(obj.inputFolders)),' ');
 				selectList = strcat(folderNumList(:),'/',num2str(length(obj.inputFolders)),' | ',obj.date(:),' _ ',obj.protocol(:),' _ ',obj.fileIDArray(:),' | ',obj.inputFolders(:));
-				[fileIdxArray, ok] = listdlg('ListString',selectList,'ListSize',dlgSize,'Name','which folders to analyze?','InitialValue',1);
+				% [fileIdxArray, ok] = listdlg('ListString',selectList,'ListSize',dlgSize,'Name','which folders to analyze?','InitialValue',1);
+				[fileIdxArray, ok] = obj.pipelineListBox(selectList,['Which folders to analyze?'],1);
 				if ok==0; return; end
 
 				obj.foldersToAnalyze = fileIdxArray;
@@ -1630,6 +1649,140 @@ classdef calciumImagingAnalysis < dynamicprops
 			disp([10 10 ...
 			'Run processing pipeline by typing below (or clicking link) into command window (no semi-colon!):' 10 ...
 			'<a href="matlab: obj">obj</a>'])
+		end
+		function [idNumIdxArray, ok] = pipelineListBox(obj,fxnsToRun,inputTxt,currentIdx)
+			% Part of this function is based on http://undocumentedmatlab.com/articles/setting-listbox-mouse-actions/.
+			try
+				ok = 0;
+				tts.('SETUP') = 'Methods for setting up the class.';
+				tts.('modelAddNewFolders') = 'Add new folders to calciumImagingAnalysis.';
+				tts.('setup') = 'Setup calciumImagingAnalysis if running for the 1st time or need to re-install dependencies (e.g. Fiji).';
+				tts.('loadDependencies') = 'Download and setup calciumImagingAnalysis dependencies.';
+				tts.('setMovieInfo') = 'Set information';
+				tts.('resetMijiClass') = 'Reset Fiji (e.g. Miji) if having problems loading.';
+				tts.('CLASS_BEHAVIOR') = 'Methods for modifying calciumImagingAnalysis behavior or saving.';
+				tts.('showVars') = 'Show all properties for this instance of calciumImagingAnalysis.';
+				tts.('showFolders') = 'Show all folders users have loaded into the class.';
+				tts.('saveObj') = 'Save this instance of the object for later loading.';
+				tts.('initializeObj') = 'IGNORE.';
+				tts.('setMainSettings') = 'IGNORE.';
+				tts.('DATA_CHECK_LOAD_EXPORT') = 'Methods for verify data and updating calciumImagingAnalysis meta-data.';
+				tts.('modelGetFileInfo') = 'Update information about each folder loaded into the class. Information derived from folder name.';
+				tts.('modelVerifyDataIntegrity') = 'Various sub-methods to verify data is valid and that certain files are present in each folder.';
+				tts.('modelBatchCopyFiles') = 'Batch copy files from one location to another or to move files to sub-folders within each folder (e.g. if users want to archive particular files).';
+				tts.('modelLoadSaveData') = 'IGNORE.';
+				tts.('modelExportData') = 'IGNORE.';
+				tts.('PREPROCESS') = 'Methods for pre-processing imaging movies.';
+				tts.('modelDownsampleRawMovies') = 'Spatially downsample large raw movies. Done in chunks so can process movies larger than available RAM.';
+				tts.('viewMovieFiltering') = 'IGNORE.';
+				tts.('viewMovieRegistrationTest') = 'Allows users to test several pre-processing setting to choose one that works best for their dataset.<br>Mainly focused on motion correction and spatial filtering.';
+				tts.('viewMovie') = 'Allows users to view their movie in several ways for each folder.';
+				tts.('modelPreprocessMovie') = 'Main pre-processing method to do motion correction, spatial filtering, calculate relative fluorescence, etc.';
+				tts.('modelModifyMovies') = 'Used to add user-defined borders to the movie.<br>e.g. if want to blank out areas outside GRIN lens so they do not interfere with cell extraction, etc.';
+				tts.('removeConcurrentAnalysisFiles') = 'Removes temporary files created when running analysis across multiple workstations in "modelPreprocessMovie" or "modelExtractSignalsFromMovie".';
+				tts.('CELL_SIGNAL_EXTRACTION') = 'Methods related to cell extraction.';
+				tts.('modelExtractSignalsFromMovie') = 'Main method to allow pre-processing';
+				tts.('viewCellExtractionOnMovie') = 'Overlays cell-extraction outputs on the imaging movie to allow users to verify cell shape, that cells were not missed, etc.';
+				% tts.('removeConcurrentAnalysisFiles') = '';
+				tts.('LOAD_CELL_EXTRACTION_SIGNAL_DATA') = 'Methods relating to loading cell-extraction data into calciumImagingAnalysis.';
+				tts.('modelVarsFromFiles') = 'Load cell-extraction data into calciumImagingAnalysis.<br>RUN EACH TIME re-loading calciumImagingAnalysis and have already run cell extraction on the folders added to calciumImagingAnalysis.';
+				tts.('SIGNAL_SORTING') = 'Methods relating to sorting/classification of cell-extraction outputs.';
+				tts.('computeManualSortSignals') = 'A GUI that allows ';
+				tts.('modelModifyRegionAnalysis') = '';
+				tts.('PREPROCESS_VERIFICATION') = '';
+				% tts.('viewMovie') = '';
+				tts.('viewObjmaps') = 'Creates several figures displaying cell-extraction outputs from each selected folder.';
+				tts.('viewCreateObjmaps') = 'Creates several figures displaying cell-extraction outputs from each selected folder.';
+				tts.('viewSubjectMovieFrames') = 'Takes frames or cell-extraction cell maps from each folder associated with an animal and displays them as a movie to help aid in visual inspection of cross-session alignment possibilities.';
+				tts.('viewMovieCreateSideBySide') = 'Combines synchronized imaging and behavior or other experimental videos to allow side-by-side comparisons.';
+				tts.('TRACKING') = 'Methods related to tracking animals.';
+				tts.('modelTrackingData') = 'After running ImageJ-based tracking, use this module to clean-up the data and overlay it on the behavior movie.';
+				tts.('viewOverlayTrackingToVideo') = 'Creates a video where the animal''s computed centroid and velocity is overlaid on the video.';
+				tts.('ACROSS_SESSION_ANALYSIS__COMPUTE_VIEW') = 'Methods related to aligning cells across imaging sessions.';
+				% tts.('viewSubjectMovieFrames') = '';
+				tts.('computeMatchObjBtwnTrials') = 'Main method to match cell-extraction outputs (e.g. cells) across imaging sessions.';
+				tts.('viewMatchObjBtwnSessions') = 'Allows users to visualize cross session matches and outputs videos to help with assessment as well.';
+				tts.('modelSaveMatchObjBtwnTrials') = 'IGNORE for now. Will allow users to save output of cross-session matching.';
+				tts.('computeCellDistances') = 'Computes the cell-cell distance for all cells in each imaging session and outputs as a CSV table.<br>Should be used to assess the largest distance to still count cells as matching during cross-session matching.';
+				tts.('computeCrossDayDistancesAlignment') = 'Computes the cell-cell distance of all cross-session matched cells.<br>e.g. ideally all will be below the cross-session cell distance cutoff.';
+
+				tooltipStruct = tts;
+
+				hFig = figure;
+				uicontrol('Style','Text','String',[inputTxt 10 'Press ENTER to continue, ESC to exit.'],'Units','normalized','Position',[5 90 90 10]/100,'BackgroundColor','white','HorizontalAlignment','Left');
+
+				% currentIdx = find(strcmp(fxnsToRun,obj.currentMethod));
+
+				hListbox = uicontrol(hFig, 'style','listbox','Units', 'normalized','position',[5,5,90,85]/100, 'string',fxnsToRun,'Value',currentIdx);
+				set(hListbox,'Max',2,'Min',0);
+				set(hListbox,'KeyPressFcn',@(src,evnt)onKeyPressRelease(evnt,'press',hFig))
+				% Get the listbox's underlying Java control
+				jScrollPane = findjobj(hListbox);
+				% We got the scrollpane container - get its actual contained listbox control
+				jListbox = jScrollPane.getViewport.getComponent(0);
+				% Convert to a callback-able reference handle
+				jListbox = handle(jListbox, 'CallbackProperties');
+				% set(hListbox, 'TooltipString','sss');
+				% Set the mouse-movement event callback
+				set(jListbox, 'MouseMovedCallback', {@mouseMovedCallback,hListbox,tooltipStruct});
+
+				figure(hFig)
+				uicontrol(hListbox)
+				set(hFig, 'KeyPressFcn', @(source,eventdata) figure(hFig));
+				hListboxStruct = [];
+				uiwait(hFig)
+				commandwindow
+				% disp(hListboxStruct)
+				% fxnsToRun{hListboxStruct.Value}
+				if isempty(hListboxStruct)
+					uiwait(msgbox('Please re-select a module then press enter. Do not close figure manually.'))
+					idNumIdxArray = 1;
+					ok = 0;
+				else
+					idNumIdxArray = hListboxStruct.Value;
+					ok = 1;
+				end
+			catch err
+				ok = 0;
+				idNumIdxArray = 1;
+				disp(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				disp(repmat('@',1,7))
+			end
+			function onKeyPressRelease(evnt, pressRelease,hFig)
+				% disp(evnt)
+				% disp(pressRelease)
+				if strcmp(evnt.Key,'return')
+					hListboxStruct.Value = hListbox.Value;
+					% hListboxStruct = struct(hListbox);
+					close(hFig)
+				end
+				% If escape, close.
+				if strcmp(evnt.Key,'escape')
+					hListboxStruct = [];
+					close(hFig)
+				end
+			end
+			function mouseMovedCallback(jListbox, jEventData, hListbox,tooltipStruct)
+				% Get the currently-hovered list-item
+				mousePos = java.awt.Point(jEventData.getX, jEventData.getY);
+				hoverIndex = jListbox.locationToIndex(mousePos) + 1;
+				listValues = get(hListbox,'string');
+				hoverValue = listValues{hoverIndex};
+
+				% Replace odd values for the section dividers.
+				hoverValue = regexprep(hoverValue,'------- | -------','');
+				hoverValue = regexprep(hoverValue,':|/| |','_');
+
+				% Modify the tooltip based on the hovered item
+				if any(strcmp(fieldnames(tooltipStruct),hoverValue))
+					msgStr = sprintf('<html><b>%s</b>: <br>%s</html>', hoverValue, tooltipStruct.(hoverValue));
+				else
+					% msgStr = sprintf('<html><b>%s</b>: %s</html>', hoverValue, hoverValue);
+					msgStr = sprintf('<html><b>No tooltip.</b></html>', hoverValue, hoverValue);
+				end
+				set(hListbox, 'TooltipString',msgStr);
+			end
 		end
 	end
 end
