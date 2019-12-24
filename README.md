@@ -7,9 +7,9 @@
 Software package for analyzing one- and two-photon calcium imaging datasets. Includes a GUI to allow users to do large-scale batch analysis, accessed via the repository's `calciumImagingAnalysis` class. The underlying functions can also be used to create GUI-less, command line-ready analysis pipelines. Includes code for determining animal locations (e.g. in open-field assay).
 <!-- <hr> -->
 
-Contact: __Biafra Ahanonu, PhD (bahanonu [at] alum.mit.edu)__.
+Contact: __Biafra Ahanonu, PhD (bahanonu [at] alum [dot] mit [dot] edu)__.
 
-Made is USA.
+Made in USA.
 
 ***
 ## Contents
