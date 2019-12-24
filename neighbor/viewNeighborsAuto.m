@@ -166,7 +166,8 @@ function viewNeighborsAuto(inputImages, inputSignals, neighborsCell, varargin)
 		% plot the traces
 		subplot(rowP,colP,[2:3 5:6 8:9])
 			% nList = [cellnum neighborsCell{cellnum,1}(:)'];
-			plotSignalsGraph(inputSignals, 'plotList', flipdim(nList(:),1),'newAxisColorOrder','','minAdd',0,'maxIncrementPercent',1.1);
+			% plotSignalsGraph(inputSignals, 'plotList', flipdim(nList(:),1),'newAxisColorOrder','','minAdd',0,'maxIncrementPercent',1.1);
+			plotSignalsGraph(inputSignals, 'plotList', flipdim(nList(:),1),'newAxisColorOrder','lines','minAdd',0,'maxIncrementPercent',1.1);
 			axis tight
 			xlabel('Time (frames)')
 			ylabel('Cell activity')
