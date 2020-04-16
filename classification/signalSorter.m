@@ -818,7 +818,7 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 	sliderPos = 2;
 	nFrames = size(inputSignals,2);
 	frameSlider = uicontrol('style','slider','Units', 'normalized','position',[15 0 83 sliderPos]/100,...
-			'min',1,'max',nFrames,'Value',1,'SliderStep',[1/nFrames 10*(1/nFrames)],'callback',@movieCallback);
+			'min',1,'max',nFrames,'Value',1,'SliderStep',[1/nFrames (nFrames*0.07)*(1/nFrames)],'callback',@movieCallback);
 	set(frameSlider,'Enable','off');
 	frameNo = max(1,round(get(frameSlider,'value')));
 	addlistener(frameSlider, 'Value', 'PostSet',@frameCallback);
@@ -1243,7 +1243,7 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 				frameCallback();
 
 				nFrames = size(inputSignals,2);
-				set(frameSlider,'min',1,'max',nFrames,'SliderStep',[1/nFrames 10*(1/nFrames)])
+				set(frameSlider,'min',1,'max',nFrames,'SliderStep',[1/nFrames (nFrames*0.07)*(1/nFrames)])
 			end
 
 			if ~isempty(options.inputMovie)&&options.showROITrace==1&&~ischar(options.inputMovie)
@@ -1942,7 +1942,12 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 			frameNoCall = round(mean(xlimHere(:)));
 		end
 		set(frameSlider,'value',frameNoCall);
-		set(frameSlider,'min',xlimHere(1),'max',xlimHere(2),'SliderStep',[1/nFrames 10*(1/nFrames)])
+		try
+			nFrameTmp = round(xlimHere(2) - xlimHere(1));
+			set(frameSlider,'min',xlimHere(1),'max',xlimHere(2),'SliderStep',[1/nFrameTmp (nFrameTmp*0.07)*(1/nFrameTmp)])
+		catch
+			set(frameSlider,'min',xlimHere(1),'max',xlimHere(2),'SliderStep',[1/nFrames (nFrames*0.07)*(1/nFrames)])
+		end
 	end
 	function frameCallback(source,eventdata)
 		% Whenever the frame slider is moved, update the frame text and indicator line

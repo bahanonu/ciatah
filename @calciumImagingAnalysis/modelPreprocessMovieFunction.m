@@ -24,6 +24,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% 2019.09.24 [11:47:24] - filterBeforeRegister now outputs a tag in the filename.
 		% 2019.12.08 [23:20:25] - Allow users to load prior settings.
 		% 2019.12.19 [20:00:12] - Make sure that the list to choose saving outputs matches any re-ordering done in the pre-processing selection list. Also make sure if downsampleSpace comes before turboreg that it doesn't throw an error looking for turboRegCoords.
+		% 2020.04.02 [17:57:03] - Adding dropped frames explicit user-facing step (fixDropFrames) instead of implicitly done in the background to make more clear to user.
 	% TODO
 		% Insert NaNs or mean of the movie into dropped frame location, see line 260
 		% Allow easy switching between analyzing all files in a folder together and each file in a folder individually
@@ -165,10 +166,10 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			'=============================================' 10];
 
 
-	analysisOptionList = {'medianFilter','spatialFilter','stripeRemoval','turboreg','fft_highpass','crop','dfof','dfstd','medianFilter','downsampleTime','downsampleSpace','fft_lowpass'};
+	analysisOptionList = {'medianFilter','spatialFilter','stripeRemoval','turboreg','fft_highpass','crop','dfof','dfstd','medianFilter','fixDropFrames','downsampleTime','downsampleSpace','fft_lowpass'};
 	analysisOptionListStr = analysisOptionList;
 	analysisOptionListStr(strcmp(analysisOptionListStr,'crop')) = {'crop (add NaN border after motion correction)'};
-	defaultChoiceList = {'turboreg','crop','dfof','downsampleTime'};
+	defaultChoiceList = {'turboreg','crop','dfof','fixDropFrames','downsampleTime'};
 	%defaultChoiceIdx = find(cellfun(@(x) sum(strcmp(x,defaultChoiceList)),analysisOptionList));
 	defaultChoiceIdx = find(ismember(analysisOptionList,defaultChoiceList));
 	try
@@ -177,6 +178,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		[hListbox jListbox jScrollPane jDND] = reorderableListbox('String',analysisOptionListStr,'Units','normalized','Position',[0.5 0 0.5 0.95],'Max',Inf,'Min',0,'Value',defaultChoiceIdx);
 		uicontrol('Style','Text','String',['Analysis step selection and ordering' 10 '=======' 10 'We can know only that we know nothing.' 10 'And that is the highest degree of human wisdom.' 10 10 '1: Click items to select.' 10 '2: Drag to re-order analysis.' 10 '3: Click command window and press ENTER to continue.'],'Units','normalized','Position',[0 0.4 0.5 0.60],'BackgroundColor','white','HorizontalAlignment','Left');
 		uicontrol('Style','Text','String',USAflagStr,'Units','normalized','Position',[0 0 0.5 0.3],'BackgroundColor','white','HorizontalAlignment','Left','FontName','FixedWidth','FontSize',8,'HorizontalAlignment','left');
+		% exitHandle = uicontrol('style','pushbutton','Units', 'normalized','position',[5 85 50 3]/100,'FontSize',9,'string','Click here to finish','callback',@subfxnCloseFig,'HorizontalAlignment','Left');
 		pause
 		% hListbox.String(hListbox.Value)
 		analysisOptionsIdx = hListbox.Value;
@@ -526,18 +528,20 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 					display([optionName ' movie...']);
 
 					%% ADD BACK DROPPED FRAMES
-					try
-						if strcmp(optionName,'downsampleTime')
-							subfxnAddDroppedFrames();
-						end
-					catch err
-						% save the location of the downsampled dfof for PCA-ICA identification
-						display(repmat('@',1,7))
-						disp(getReport(err,'extended','hyperlinks','on'));
-						display(repmat('@',1,7))
-					end
+					% try
+					% 	if strcmp(optionName,'downsampleTime')
+					% 		subfxnAddDroppedFrames();
+					% 	end
+					% catch err
+					% 	% save the location of the downsampled dfof for PCA-ICA identification
+					% 	display(repmat('@',1,7))
+					% 	disp(getReport(err,'extended','hyperlinks','on'));
+					% 	display(repmat('@',1,7))
+					% end
 					try
 						switch optionName
+							case 'fixDropFrames';
+								subfxnAddDroppedFrames();
 							case 'turboreg'
 								subfxnPlotMotionCorrectionMetric('start');
 
@@ -785,6 +789,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		folderLogInfoList = cellfun(@(x) {getLogInfo(x)},listLogFiles,'UniformOutput',false);
 		folderFrameNumList = {};
 		droppedCountList = {};
+		dropType = 'add';
 		for cellNo = 1:length(folderLogInfoList)
 			logInfo = folderLogInfoList{cellNo}{1};
 			fileType = logInfo.fileType;
@@ -798,6 +803,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				case 'inscopixMAT'
 					movieFrames = logInfo.num_samples;
 					droppedCount = logInfo.dropped;
+					dropType = 'replace';
 				otherwise
 					% do nothing
 			end
@@ -843,6 +849,23 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		inputMovieDroppedF0 = zeros([size(thisMovie,1) size(thisMovie,2)]);
 		nRows = size(thisMovie,1);
 		reverseStr = '';
+
+		switch dropType
+			case 'add'
+
+			case 'replace'
+				% Set dropped frames to NaN to ignore in mean calculation
+				thisMovie(:,:,droppedFrames) = NaN;
+
+				% Only use non-dropped frames to get mean since by default 0s.
+				% framesToUse = setdiff(1:size(thisMovie,3),droppedFrames);
+				% for rowNo=
+				% 	inputMovieDroppedF0(rowNo,:) = nanmean(squeeze(thisMovie(rowNo,:,framesToUse)),2);
+				% 	if mod(rowNo,5)==0;reverseStr = cmdWaitbar(rowNo,nRows,reverseStr,'inputStr','calculating mean...','waitbarOn',1,'displayEvery',5);end
+				% end
+			otherwise
+				% Do nothing
+		end
 		for rowNo=1:nRows
 			inputMovieDroppedF0(rowNo,:) = nanmean(squeeze(thisMovie(rowNo,:,:)),2);
 			if mod(rowNo,5)==0;reverseStr = cmdWaitbar(rowNo,nRows,reverseStr,'inputStr','calculating mean...','waitbarOn',1,'displayEvery',5);end
@@ -853,10 +876,18 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		thisMovie(:,:,(end+1):(end+length(droppedFrames))) = 0;
 		display(['post-corrected movie size: ' num2str(size(thisMovie))])
 
-		% vectorized way: get the setdiff(dropped,totalFrames), use this corrected frame indexes and map onto the actual frames in raw movie, shift all frames in original matrix to new position then add in mean to dropped frame indexes
-		display('adding in dropped frames to matrix...')
-		correctFrameIdx = setdiff(1:size(thisMovie,3),droppedFrames);
-		thisMovie(:,:,correctFrameIdx) = thisMovie(:,:,1:originalNumMovieFrames);
+		switch dropType
+			case 'add'
+				% vectorized way: get the setdiff(dropped,totalFrames), use this corrected frame indexes and map onto the actual frames in raw movie, shift all frames in original matrix to new position then add in mean to dropped frame indexes
+				display('adding in dropped frames to matrix...')
+				correctFrameIdx = setdiff(1:size(thisMovie,3),droppedFrames);
+				thisMovie(:,:,correctFrameIdx) = thisMovie(:,:,1:originalNumMovieFrames);
+			case 'replace'
+				% Do nothing, dropped frames already in the movie.
+			otherwise
+				% Do nothing
+		end
+
 		nDroppedFrames = length(droppedFrames);
 		reverseStr = '';
 		for droppedFrameNo = 1:nDroppedFrames

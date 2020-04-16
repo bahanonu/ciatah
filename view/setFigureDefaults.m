@@ -26,7 +26,7 @@ function setFigureDefaults()
 	defaultUIFontStr = 'Consolas';
 
 	% Change the command window and editor fonts
-	FontSize = 12;
+	FontSize = 10;
 	% java.awt.Font.BOLD
 	if ismac
 		cmdWinEditorFont = 'Menlo-Regular';
@@ -38,8 +38,8 @@ function setFigureDefaults()
 	    disp('Platform not supported')
 	end
 
-	com.mathworks.services.FontPrefs.setCodeFont(java.awt.Font(cmdWinEditorFont,0,FontSize))
-    com.mathworks.services.FontPrefs.setTextFont(java.awt.Font(cmdWinEditorFont,0,FontSize))
+	com.mathworks.services.FontPrefs.setCodeFont(java.awt.Font(cmdWinEditorFont,0,FontSize*2))
+    com.mathworks.services.FontPrefs.setTextFont(java.awt.Font(cmdWinEditorFont,0,FontSize*2))
 
 	% 'DefaultLineLineSmoothing','on',...
 	% 'DefaultPatchLineSmoothing','on',...

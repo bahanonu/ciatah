@@ -467,12 +467,14 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 						thisCellmap = createObjMap(groupedImagesRates);
 						thisCellmap(1,1) = 1;
 						thisCellmap(1,2) = nGlobalIDs;
+						setCmapHere = @(nGlobalIDs) colormap([0 0 0; [1 1 1]*0.3; hsv(nGlobalIDs)]);
 						[~, ~] = openFigure(sessionNo, '');
 							clf
 							imagesc(thisCellmap+1);box off;axis off
 							% title(strrep(strcat(obj.subjectStr(obj.fileNum),{' '},obj.assay(obj.fileNum)),'_',' '),'FontSize', 35)
 							% title(strrep(obj.folderBaseSaveStr(obj.fileNum),'_',' '))
-							colormap([1 1 1; 0.9 0.9 0.9; hsv(nGlobalIDs)]);
+							% colormap([1 1 1; 0.9 0.9 0.9; hsv(nGlobalIDs)]);
+							setCmapHere(nGlobalIDs);
 							set(sessionNo,'PaperUnits','inches','PaperPosition',[0 0 9 9])
 							obj.modelSaveImgToFile([],[folderSaveName{matchingNumbers} 'Session' filesep thisSubjectStr],sessionNo,strcat(thisFileID));
 						[~, ~] = openFigure(thisFigNo, '');
@@ -485,7 +487,8 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 							% title(strrep(obj.folderBaseSaveStr(obj.fileNum),'_',' '))
 							% colormap(customColormap([]))
 							% colormap([1 1 1; hsv(nGlobalIDs)]);
-							colormap([1 1 1; 0.9 0.9 0.9; hsv(nGlobalIDs)]);
+							setCmapHere(nGlobalIDs);
+							% colormap([1 1 1; 0.9 0.9 0.9; hsv(nGlobalIDs)]);
 							% drawnow;
 							obj.modelSaveImgToFile([],[folderSaveName{matchingNumbers} 'All'],thisFigNo,obj.subjectStr{obj.fileNum});
 					catch err
@@ -636,13 +639,13 @@ function [groupImages matchedSignals] = getGlobalData(inputImages,globalIDs,inpu
 		end
 	end
 end
-function [] = creatObjMapGlobalOverlay()
+function [] = creatObjMapGlobalOverlay(inputImages)
 
 	inputImages = inputImages(:,:,valid);
 	% register images based on cross session alignment
 	globalRegCoords = obj.globalRegistrationCoords.(obj.subjectStr{obj.fileNum});
 	if ~isempty(globalRegCoords)
-		display('registering images')
+		disp('registering images')
 		% get the global coordinate number based
 		globalRegCoords = globalRegCoords{strcmp(obj.assay{obj.fileNum},obj.globalIDFolders.(obj.subjectStr{obj.fileNum}))};
 		if ~isempty(globalRegCoords)
@@ -651,20 +654,18 @@ function [] = creatObjMapGlobalOverlay()
 				fn=fieldnames(globalRegCoords{iterationNo});
 				for i=1:length(fn)
 					localCoords = globalRegCoords{iterationNo}.(fn{i});
-					[inputImages localCoords] = turboregMovie(inputImages,'precomputedRegistrationCooords',localCoords);
+					[inputImages, localCoords] = turboregMovie(inputImages,'precomputedRegistrationCooords',localCoords);
 				end
 			end
 			% inputImages = permute(inputImages,[3 1 2]);
 		end
 	end
-
+	movieList = '';
 	movieFrame = loadMovieList(movieList{1},'convertToDouble',0,'frameList',1:2);
 	movieFrame = squeeze(movieFrame(:,:,1));
 
-
-
 	validAuto = obj.validAuto{obj.fileNum};
-	display('==============')
+	disp('==============')
 	if isempty(obj.validRegionMod)
 		validRegionMod = ones(size(validAuto));
 	else

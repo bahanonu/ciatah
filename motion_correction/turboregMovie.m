@@ -70,16 +70,16 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	% options.Interp='bicubic';
 	options.Interp='bilinear';
 	% normal options
-	% if loading movie inside function, provide framelist
+	% Int vector: if loading movie inside function, provide frameList to load specific frames
 	options.frameList = [];
-	%
+	% Int: which frame in the inputMovie to use as a reference to register all other frames to.
 	options.refFrame = 1;
+	% Matrix: same type as the inputMovie, this will be appended to the end of the movie and used as the reference frame. This is for cases in which the reference frame is not contained in the movie.
+	options.refFrameMatrix = [];
 	% whether to use 'imtransform' (Matlab) or 'transfturboreg' (C)
 	options.registrationFxn = 'transfturboreg';
 	% 1 = take turboreg rotation, 0 = no rotation
 	options.turboregRotation = 1;
-	% normal options
-	options.refFrameMatrix = [];
 	% max number of frames in the input matrix
 	options.maxFrame = [];
 	% number of frames to subset when registering

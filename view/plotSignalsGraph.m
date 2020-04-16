@@ -91,14 +91,16 @@ function plotSignalsGraph(IcaTraces,varargin)
 	incrementAmountAll = mean(nanmax(tmpTrace,[],2)*options.maxIncrementPercent);
 	for i=2:size(tmpTrace,1)
 		if isempty(options.incrementAmount)
-			incrementAmount = nanmean(tmpTrace(i-1,:));
+			% incrementAmount = nanmean(tmpTrace(i-1,:));
+			incrementAmount = nanmax(tmpTrace(i-1,:));
+			minIncrementAmount = abs(nanmin(tmpTrace(i,:)));
 			if incrementAmount<options.minAdd
 				incrementAmount = options.minAdd;
 			end
 		else
 			incrementAmount = incrementAmount+options.incrementAmount;
 		end
-		tmpTrace(i,:)=tmpTrace(i,:)+incrementAmount+incrementAmountAll;
+		tmpTrace(i,:)=tmpTrace(i,:)+incrementAmount+incrementAmountAll+minIncrementAmount;
 		if options.smoothTrace==1
 			movAvgFiltSize = 3;
 			tmpTrace(i,:) = filtfilt(ones(1,movAvgFiltSize)/movAvgFiltSize,1,tmpTrace(i,:));

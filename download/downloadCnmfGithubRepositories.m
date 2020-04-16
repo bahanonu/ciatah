@@ -2,6 +2,8 @@ function [success] = downloadCnmfGithubRepositories(varargin)
 	% Biafra Ahanonu
 	% Downloads CNMF and CNMF-E repositories.
 	% started: 2019.01.14 [10:23:05]
+	% changelog
+		% 2020.04.03 [14:02:33] - Save downloaded compressed files (e.g. zips) to a sub-folder.
 
 	%========================
 	options.defaultExternalProgramDir = ['_external_programs'];
@@ -33,7 +35,7 @@ function [success] = downloadCnmfGithubRepositories(varargin)
 				continue;
 			end
 			% Make directory
-			rawSavePathDownload = [signalExtractionDir];
+			rawSavePathDownload = [signalExtractionDir filesep '_downloads'];
 			if ~exist(rawSavePathDownload,'dir');mkdir(rawSavePathDownload);fprintf('Made folder: %s',rawSavePathDownload);end
 
 			% Download git repo zip

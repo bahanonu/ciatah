@@ -97,6 +97,33 @@ function obj = modelVarsFromFiles(obj)
 				fprintf('%d/%d (%d/%d): %s\n',thisFileNumIdx,nFilesToAnalyze,fileNum,nFiles,obj.fileIDNameArray{obj.fileNum});
 			end
 
+			signalExtractionMethodOriginal = signalExtractionMethod;
+			if obj.nwbLoadFiles==1
+				signalExtractionMethod = 'NWB';
+			end
+			switch signalExtractionMethod
+				case 'NWB'
+					% Check whether to use override NWB regular expression, else use calciumImagingAnalysis defaults.
+					if isempty(obj.nwbFileRegexp)
+						filesToLoad = getFileList([obj.dataPath{fileNum} filesep obj.nwbFileFolder],obj.extractionMethodSaveStr.(obj.signalExtractionMethod));
+					else
+						filesToLoad = getFileList([obj.dataPath{fileNum} filesep obj.nwbFileFolder],obj.nwbFileRegexp);
+					end
+
+					if ~isempty(filesToLoad)
+						nwbOpts.algorithm = obj.signalExtractionMethod;
+						nwbOpts.groupImages = obj.nwbGroupImages;
+						nwbOpts.groupSignalSeries = obj.nwbGroupSignalSeries;
+						[signalImages,signalTraces,infoStruct] = loadNeurodataWithoutBorders(filesToLoad{1},'options',nwbOpts);
+					else
+						% No NWB, check for CIA file format being present in the folder.
+						disp('No NWB files, checking for calciumImagingAnalysis files.')
+						signalExtractionMethod = signalExtractionMethodOriginal;
+					end
+					rawFiles = 1;
+				otherwise
+			end
+
 			switch signalExtractionMethod
 				case 'PCAICA'
 					% [signalTraces signalImages signalPeaks signalPeaksArray] = modelGetSignalsImages(obj,'returnType','sorted');
@@ -168,10 +195,14 @@ function obj = modelVarsFromFiles(obj)
 						clear IcaFilters IcaTraces;
 					end
 					rawFiles = 1;
-				case 'EM'
+				case {'EM','CELLMax'}
 					regexPairs = {...
-						{obj.rawEMStructSaveStr,obj.sortedEMStructSaveStr,obj.classifierEMStructSaveStr}...
+						obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod),...
+						obj.extractionMethodSortedSaveStr.(obj.signalExtractionMethod),...
+						obj.extractionMethodClassifierSaveStr.(obj.signalExtractionMethod)...
 					};
+						% {obj.rawEMStructSaveStr,obj.sortedEMStructSaveStr,obj.classifierEMStructSaveStr}...
+					% };
 					% get list of files to load
 					filesToLoad = getFileList(obj.dataPath{fileNum},strrep(regexPairs{1},'.mat',''));
 					if isempty(filesToLoad)
@@ -182,6 +213,9 @@ function obj = modelVarsFromFiles(obj)
 					for i=1:length(filesToLoad)
 						display(['loading: ' filesToLoad{i}]);
 						load(filesToLoad{i});
+					end
+					if exist('cellmaxAnalysisOutput','var')
+						emAnalysisOutput = cellmaxAnalysisOutput;
 					end
 					% signalImages = permute(emAnalysisOutput.cellImages,[3 1 2]);
 					signalImages = emAnalysisOutput.cellImages;
@@ -286,6 +320,8 @@ function obj = modelVarsFromFiles(obj)
 				otherwise
 					% body
 			end
+
+			signalExtractionMethod = signalExtractionMethodOriginal;
 
 			display(['signalTraces: ' num2str(size(signalTraces))])
 			display(['signalImages: ' num2str(size(signalImages))])

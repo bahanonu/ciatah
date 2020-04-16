@@ -25,6 +25,10 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	%========================
 	% Root path for external signal-extraction algorithm folders.
 	options.signalExtractionRootPath = '_external_programs';
+	% 1 = save NWB output, 2 = do not save NWB output.
+	options.saveNwbOutput = 0;
+	% Str: save to this sub-folder of analyzed folder, leave blank to save in root folder.
+	options.nwbSaveFolder = obj.nwbFileFolder;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -39,15 +43,18 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	if ~exist(obj.settingsSavePath,'dir');mkdir(obj.settingsSavePath);fprintf('Creating directory: %s\n',obj.settingsSavePath);end
 
 	scnsize = get(0,'ScreenSize');
-	signalExtractionMethodStr = {'EM','PCAICA','PCAICA_old','CNMF','CNMFE','EXTRACT','ROI'};
+	signalExtractionMethodStr = {'CELLMax','PCAICA','CNMF','CNMFE','EXTRACT','ROI','EM','PCAICA_old'};
 	currentIdx = find(strcmp(signalExtractionMethodStr,obj.signalExtractionMethod));
-	signalExtractionMethodDisplayStr = {'CELLMax | Lacey Kitch & Biafra Ahanonu',...
+	signalExtractionMethodDisplayStr = {...
+	'CELLMax | Lacey Kitch & Biafra Ahanonu',...
 	'PCAICA (Mukamel, 2009) | Hakan Inan & Tony Kim version',...
-	'PCAICA (Mukamel, 2009) | Eran Mukamel, Jerome Lecoq, Lacey Kitch, Maggie Carr & Biafra Ahanonu version',...
 	'CNMF | Pnevmatikakis, 2016 or Giovannucci, 2019',...
 	'CNMF-E | Zhou, 2018',...
 	'EXTRACT | Inan, 2017',...
-	'ROI - only do after running either PCAICA, CELLMax, EXTRACT, or CNMF'};
+	'ROI - only do after running either PCAICA, CELLMax, EXTRACT, or CNMF',...
+	'CELLMax [EM] | Lacey Kitch & Biafra Ahanonu',...
+	'PCAICA (Mukamel, 2009) | Eran Mukamel, Jerome Lecoq, Lacey Kitch, Maggie Carr & Biafra Ahanonu version',...
+	};
 	[signalIdxArray, ok] = listdlg('ListString',signalExtractionMethodDisplayStr,'ListSize',[scnsize(3)*0.4 scnsize(4)*0.4],'Name','which signal extraction method?','InitialValue',currentIdx);
 	% signalIdxArray
 	signalExtractionMethod = signalExtractionMethodStr(signalIdxArray);
@@ -64,6 +71,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				oldPCAICA = 1;
 				signalExtractionMethod = {'PCAICA'};
 			case 'EM'
+				getAlgorithmRootPath('CELLMax_Wrapper.m','CELLMax',obj);
+			case 'CELLMax'
 				getAlgorithmRootPath('CELLMax_Wrapper.m','CELLMax',obj);
 			case 'EXTRACT'
 				getAlgorithmRootPath('extractor.m','EXTRACT',obj);
@@ -90,6 +99,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			'Runtime Matlab profiler (1 = yes, 0 = no)',...
 			'Regular expression for alternative movie (e.g. non-downsampled, LEAVE blank)',...
 			'View results after cell extraction? (1 = yes, 0 = no)',...
+			'Save NWB output? (1 = yes, 0 = no)',...
 		},...
 		'Cell extraction parameters for all algorithms',1,...
 		{...
@@ -102,6 +112,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			'0',...
 			obj.fileFilterRegexpAltCellExtraction,...
 			'1',...
+			num2str(obj.nwbLoadFiles),...
 		},idopts...
 	);setNo = 1;
 	obj.fileFilterRegexp = movieSettings{setNo};setNo = setNo+1;
@@ -113,6 +124,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	options.profiler = str2num(movieSettings{setNo});setNo = setNo+1;
 	obj.fileFilterRegexpAltCellExtraction = movieSettings{setNo};setNo = setNo+1;
 	viewResultsAfter = str2num(movieSettings{setNo});setNo = setNo+1;
+	options.saveNwbOutput = str2num(movieSettings{setNo});setNo = setNo+1;
 
 	% get files to process
 	[fileIdxArray idNumIdxArray nFilesToAnalyze nFiles] = obj.getAnalysisSubsetsToAnalyze();
@@ -134,7 +146,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			case 'PCAICA'
 				obj.signalExtractionMethod = signalExtractionMethod{signalExtractNo};
 				pcaicaPCsICsSwitchStr = subfxnNumExpectedSignals();
-			case 'EM'
+			case {'EM','CELLMax'}
 				obj.signalExtractionMethod = signalExtractionMethod{signalExtractNo};
 				cellmaxIntMethod = {'grid','ica'};
 				[signalIdxArray, ok] = listdlg('ListString',cellmaxIntMethod,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','Which type of initialization method to use for CELLMax?');
@@ -247,6 +259,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 
 				% set the save variable names and determine whether to skip files
 				thisDirSaveStr = [obj.inputFolders{obj.fileNum} filesep obj.date{obj.fileNum} '_' obj.protocol{obj.fileNum} '_' obj.fileIDArray{obj.fileNum}];
+				thisDirSaveStrPath = [obj.inputFolders{obj.fileNum}];
+				thisDirSaveStrFile = [obj.date{obj.fileNum} '_' obj.protocol{obj.fileNum} '_' obj.fileIDArray{obj.fileNum}];
 				switch signalExtractionMethod{signalExtractNo}
 					case 'ROI'
 						% saveID = {obj.rawROItracesSaveStr};
@@ -262,6 +276,9 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 					case 'EM'
 						saveID = {obj.rawEMStructSaveStr};
 						saveVariable = {'emAnalysisOutput'};
+					case 'CELLMax'
+						saveID = {obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod)};
+						saveVariable = {obj.extractionMethodStructVarname.(obj.signalExtractionMethod)};
 					case 'EXTRACT'
 						saveID = {obj.rawEXTRACTStructSaveStr};
 						saveVariable = {'extractAnalysisOutput'};
@@ -310,7 +327,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 					case 'PCAICA'
 						runPCAICASignalFinder();
 						saveRunTimes('pcaica');
-					case 'EM'
+					case {'EM','CELLMax'}
 						try
 							emOptions = runCELLMaxSignalFinder();
 						catch err
@@ -403,6 +420,20 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			'- PCA-ICA: make sure there are MORE frames than PCs and ICs requested, else PCA-ICA will not run.' 10 ...
 			'- ROI: make sure you have run a previous cell-extraction method.' 10 ...
 			repmat('=',1,21) 10])
+	end
+	function subfxnSaveNwbFiles(inputImages,inputTraces)
+		% Save NWB output if requested
+		if options.saveNwbOutput==1
+			if isempty(options.nwbSaveFolder)
+				nwbSavePath = [thisDirSaveStr obj.extractionMethodSaveStr.(obj.signalExtractionMethod) '.nwb'];
+			else
+				tmpDirHere = [thisDirSaveStrPath filesep options.nwbSaveFolder];
+				if (~exist(tmpDirHere,'dir')) mkdir(tmpDirHere); end;
+				nwbSavePath = [tmpDirHere filesep thisDirSaveStrFile obj.extractionMethodSaveStr.(obj.signalExtractionMethod) '.nwb'];
+			end
+			nwbOpts.fpathYML = [obj.externalProgramsDir filesep 'nwb_schnitzer_lab' filesep 'ExampleMetadata.yml'];
+			[success] = saveNeurodataWithoutBorders(inputImages,inputTraces,obj.signalExtractionMethod,nwbSavePath,'options',nwbOpts);
+		end
 	end
 	function getAlgorithmRootPath(algorithmFile,algorithmName,obj)
 		if exist(algorithmFile,'file')~=2
@@ -624,7 +655,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 					options.PCAICA.term_tol = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.PCAICA.max_iter = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.PCAICA
-				case 'EM'
+				case {'EM','CELLMax'}
 					AddOpts.Resize='on';
 					AddOpts.WindowStyle='normal';
 					AddOpts.Interpreter='tex';
@@ -964,6 +995,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			save(savestring,saveVariable{i},'tracesSaveDimOrder','roiAnalysisOutput','-v7.3');
 		end
 		% =======
+		% Save output in NWB format if requested by user.
+		subfxnSaveNwbFiles(roiAnalysisOutput.filters,{roiAnalysisOutput.traces});
 	end
 	function runPCAICASignalFinder()
 		switch pcaicaPCsICsSwitchStr
@@ -1051,6 +1084,9 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			end
 		end
 		% =======
+
+		% Save output in NWB format if requested by user.
+		subfxnSaveNwbFiles(IcaFilters,{IcaTraces});
 	end
 	% function [emOptions] = runEMSignalFinder()
 	function [emOptions] = runCELLMaxSignalFinder()
@@ -1206,15 +1242,34 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		end
 		emAnalysisOutput
 
-		% =======
-		% save output components
-		for i=1:length(saveID)
-			savestring = [thisDirSaveStr saveID{i}];
-			display(['saving: ' savestring])
-			save(savestring,saveVariable{i},'-v7.3','emOptions');
-			% save(savestring,saveVariable{i},'emOptions');
+		if strcmp(signalExtractionMethod,'CELLMax')
+			% Save CELLMax output using the cellmax output structure name, e.g. cellmaxAnalysisOutput
+			structSaveName = obj.extractionMethodStructVarname.(obj.signalExtractionMethod);
+			tmpStruct.(structSaveName) = emAnalysisOutput;
+			tmpStruct.emOptions = emOptions;
+			% =======
+			% save output components
+			for i=1:length(saveID)
+				savestring = [thisDirSaveStr saveID{i}];
+				display(['saving: ' savestring])
+				save(savestring,'-struct', 'tmpStruct','-v7.3');
+				% save(savestring,saveVariable{i},'emOptions');
+			end
+			% =======
+		else
+			% =======
+			% save output components
+			for i=1:length(saveID)
+				savestring = [thisDirSaveStr saveID{i}];
+				display(['saving: ' savestring])
+				save(savestring,saveVariable{i},'-v7.3','emOptions');
+				% save(savestring,saveVariable{i},'emOptions');
+			end
+			% =======
 		end
-		% =======
+
+		% Save output in NWB format if requested by user.
+		subfxnSaveNwbFiles(emAnalysisOutput.cellImages,{emAnalysisOutput.scaledProbability,emAnalysisOutput.cellTraces});
 	end
 	function [extractAnalysisOutput] = runEXTRACTSignalFinder()
 		movieList = getFileList(obj.inputFolders{obj.fileNum}, fileFilterRegexp);
@@ -1367,6 +1422,9 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			save(savestring,saveVariable{i},'-v7.3');
 		end
 		% =======
+
+		% Save output in NWB format if requested by user.
+		subfxnSaveNwbFiles(extractAnalysisOutput.filters,{extractAnalysisOutput.traces});
 	end
 	function [cnmfOptions] = runCNMFSignalFinder()
 
@@ -1597,6 +1655,9 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 					save(savestring,saveVariable{i},'-v7.3');
 				end
 				% =======
+
+				% Save output in NWB format if requested by user.
+				subfxnSaveNwbFiles(cnmfAnalysisOutput.extractedImages,{cnmfAnalysisOutput.extractedSignals,cnmfAnalysisOutput.extractedSignalsEst});
 			catch err
 				disp(repmat('@',1,7))
 				disp(getReport(err,'extended','hyperlinks','on'));
@@ -1660,6 +1721,10 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				save(savestring,saveVariable{i},'-v7.3');
 			end
 			% =======
+
+			% Save output in NWB format if requested by user.
+			subfxnSaveNwbFiles(cnmfeAnalysisOutput.extractedImages,{cnmfeAnalysisOutput.extractedSignals,cnmfeAnalysisOutput.extractedSignalsEst});
+
 			% To allow deletion of cnmfe temporary directory
 			fclose('all')
 			%
@@ -1692,7 +1757,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	function [gridWidth gridSpacing] = subfxnSignalSizeSpacing()
 		subjectList = unique(obj.subjectStr(fileIdxArray));
 
-		if strcmp(signalExtractionMethod{signalExtractNo},'EM')
+		if any(strcmp(signalExtractionMethod{signalExtractNo},{'EM','CELLMax'}))
 			if ~isempty(options.CELLMax.gridSpacing) & ~isempty(options.CELLMax.gridWidth)
 				display('Use manually entered values.')
 				for thisSubjectStr=subjectList
@@ -1780,7 +1845,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				uimenu('Parent',mymenu,'Label','Zoom','Accelerator','z','Callback',@(src,evt)zoom(mainFig,'on'));
 				uimenu('Parent',mymenu,'Label','Zoom','Accelerator','x','Callback',@(src,evt)zoom(mainFig,'off'));
 				box off;
-				title(sprintf('Select (green) a region covering one cell (best to select one near another cell).\nDouble-click region to continue.\nEnable zoom with crtl+Z = zoom on, ctrl+x = zoom off. Turn off to re-enable cell size selection'))
+				title(sprintf('%s | Select (green) a region covering one cell (best to select one near another cell).\nDouble-click region to continue.\nEnable zoom with crtl+Z = zoom on, ctrl+x = zoom off. Turn off to re-enable cell size selection',signalExtractionMethod{signalExtractNo}))
 
 				% open up first picture
 				movieDims = size(DFOF);

@@ -27,7 +27,10 @@ function [outputColormap] = customColormap(colorList,varargin)
 	%========================
 
 	try
-		if ~iscell(colorList)&~isempty(colorList)
+		if nargin==0
+			colorList = {[0 0 1], [1 1 1], [1 0 0]};
+		end
+		if (~iscell(colorList)&~isempty(colorList))
 			colorList2 = {};
 			for i = 1:size(colorList,1)
 				colorList2{end+1} = colorList(i,:);

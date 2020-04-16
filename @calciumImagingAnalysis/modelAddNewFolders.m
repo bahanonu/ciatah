@@ -5,6 +5,7 @@ function obj = modelAddNewFolders(obj,varargin)
 	% changelog
 		% 2019.10.09 [18:28:12] - use inputdlgcol to allow re-sizing of window
 		% 2019.11.18 [15:15:47] - Add the ability for users to use GUI to add folders as alternative option.
+		% 2020.01.16 [12:28:29] - Choosing how to enter files and manual enter list of files now uses uicontrol and figure to reduce number of pop-ups and increase flexibility.
 	%========================
 	% Cell array of folders to add, particularly for GUI-less operations
 	options.folderCellArray = {};
@@ -20,24 +21,61 @@ function obj = modelAddNewFolders(obj,varargin)
 	try
 		nExistingFolders = length(obj.inputFolders);
 		if isempty(options.folderCellArray)
-
+			sel = 0
 			usrIdxChoiceStr = {'manually enter folders to list','GUI select folders'};
 			scnsize = get(0,'ScreenSize');
-			[sel, ok] = listdlg('ListString',usrIdxChoiceStr,'ListSize',[scnsize(3)*0.3 scnsize(4)*0.3],'Name','How to add folders to calciumImagingAnalysis?');
+			try
+				hFig = figure;
+				uicontrol('Style','Text','String',['How to add folders to calciumImagingAnalysis?'],'Units','normalized','Position',[5 89 90 10]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold');				
+				hListbox = uicontrol(hFig, 'style','listbox','Units', 'normalized','position',[5,5,90,80]/100, 'string',usrIdxChoiceStr,'Value',1);
+				set(hListbox,'Max',2,'Min',0);
+				set(hListbox,'KeyPressFcn',@(src,evnt)onKeyPressRelease(evnt,'press',hFig))
+				figure(hFig)
+				uicontrol(hListbox)
+				set(hFig, 'KeyPressFcn', @(source,eventdata) figure(hFig));
+				uiwait(hFig)
+			catch err
+				disp(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				disp(repmat('@',1,7))
+
+				[sel, ok] = listdlg('ListString',usrIdxChoiceStr,'ListSize',[scnsize(3)*0.3 scnsize(4)*0.3],'Name','How to add folders to calciumImagingAnalysis?');
+			end
 			inputMethod = usrIdxChoiceStr{sel};
 
 			switch inputMethod
 				case 'manually enter folders to list'
-					AddOpts.Resize='on';
-					AddOpts.WindowStyle='normal';
-					AddOpts.Interpreter='tex';
-					% inputdlg
-					newFolderList = inputdlgcol('One new line per folder path. Enter folder path WITHOUT any single/double quotation marks around the path.','Adding folders to calciumImagingAnalysis object.',[21 150],{''},AddOpts);
-					if isempty(newFolderList)
-						warning('No folders given. Please re-run modelAddNewFolders.')
-						return
+					newFolderList = '';
+					try
+
+						hFig = figure;
+						figure(hFig)
+
+						
+						uicontrol('Style','Text','String',['Adding folders to calciumImagingAnalysis object.'],'Units','normalized','Position',[5 95 90 3]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold');
+						uicontrol('Style','Text','String',['One new line per folder path. Enter folder path WITHOUT any single/double quotation marks around the path.'],'Units','normalized','Position',[5 90 90 6]/100,'BackgroundColor','white','HorizontalAlignment','Left');
+						exitHandle = uicontrol('style','pushbutton','Units', 'normalized','position',[5 85 50 3]/100,'FontSize',9,'string','Click here to finish','callback',@subfxnCloseFig,'HorizontalAlignment','Left');
+
+						hListbox = uicontrol(hFig, 'style','edit','Units', 'normalized','position',[5,5,90,80]/100, 'string','','FontSize',obj.fontSizeGui,'HorizontalAlignment','left');
+						set(hListbox,'Max',2,'Min',0);
+						uiwait(hFig)
+						% hListboxStruct.Value = hListbox.string;
+					catch err
+						disp(repmat('@',1,7))
+						disp(getReport(err,'extended','hyperlinks','on'));
+						disp(repmat('@',1,7))
+
+						AddOpts.Resize='on';
+						AddOpts.WindowStyle='normal';
+						AddOpts.Interpreter='tex';
+						% inputdlg
+						newFolderList = inputdlgcol('One new line per folder path. Enter folder path WITHOUT any single/double quotation marks around the path.','Adding folders to calciumImagingAnalysis object.',[21 150],{''},AddOpts);
+						if isempty(newFolderList)
+							warning('No folders given. Please re-run modelAddNewFolders.')
+							return
+						end
+						newFolderList = newFolderList{1,1};
 					end
-					newFolderList = newFolderList{1,1};
 					% size(newFolderList)
 					% class(newFolderList)
 
@@ -123,5 +161,23 @@ function obj = modelAddNewFolders(obj,varargin)
 		display(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));
 		display(repmat('@',1,7))
+	end
+	function subfxnCloseFig(src,event)
+		newFolderList = hListbox.String;
+		close(hFig)
+	end
+	function onKeyPressRelease(evnt, pressRelease,hFig)
+		% disp(evnt)
+		% disp(pressRelease)
+		if strcmp(evnt.Key,'return')
+			sel = hListbox.Value;
+			% hListboxStruct = struct(hListbox);
+			close(hFig)
+		end
+		% If escape, close.
+		if strcmp(evnt.Key,'escape')
+			sel = 1;
+			close(hFig)
+		end
 	end
 end

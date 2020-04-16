@@ -213,8 +213,14 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 
 	% =================================================
 	% GUI elements
+	if nFrames<11
+		sliderStepF = [1/(nFrames) 0.05];
+	else
+		sliderStepF = [1/(nFrames*0.1) 0.05];
+	end
+	
 	frameSlider = uicontrol('style','slider','Units', 'normalized','position',[15 1 80 3]/100,...
-		'min',1,'max',nFrames,'Value',1,'SliderStep',[1/(nFrames*0.1) 0.05],'callback',@frameCallback,'Enable','inactive','ButtonDownFcn',@pauseLoopCallback);
+		'min',1,'max',nFrames,'Value',1,'SliderStep',sliderStepF,'callback',@frameCallback,'Enable','inactive','ButtonDownFcn',@pauseLoopCallback);
 	% addlistener(frameSlider,'Value','PostSet',@pauseLoopCallback);
 	% waitfor(source,'Value')
 	% addlistener(frameSlider, 'Value', 'PostSet',@frameCallback);

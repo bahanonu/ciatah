@@ -4,12 +4,17 @@
 
 <hr>
 
-Software package for analyzing one- and two-photon calcium imaging datasets. Includes a GUI to allow users to do large-scale batch analysis, accessed via the repository's `calciumImagingAnalysis` class. The underlying functions can also be used to create GUI-less, command line-ready analysis pipelines. Includes code for determining animal locations (e.g. in open-field assay).
+Software package for analyzing one- and two-photon calcium imaging datasets.
+- Includes a GUI to allow users to do large-scale batch analysis, accessed via the repository's `calciumImagingAnalysis` class.
+- The underlying functions can also be used to create GUI-less, command line-ready analysis pipelines.
+- Includes code for determining animal position (e.g. in open-field assay).
+- Supports [Neurodata Without Borders](https://www.nwb.org/) data standard (see [calcium imaging tutorial](https://neurodatawithoutborders.github.io/matnwb/tutorials/html/ophys.html)) for cell-extraction (e.g. outputs of PCA-ICA, CNMF, etc.).
 <!-- <hr> -->
 
 Contact: __Biafra Ahanonu, PhD (bahanonu [at] alum [dot] mit [dot] edu)__.
 
-Made in USA.
+Made in USA.<br>
+<img src="https://user-images.githubusercontent.com/5241605/71493809-322a5400-27ff-11ea-9b2d-52ff20b5f332.png" align="center" title="USA" alt="USA" width="auto" height="50">
 
 ***
 ## Contents
@@ -41,6 +46,7 @@ Below are steps needed to quickly get started using the `calciumImagingAnalysis`
 - Clone the `calciumImagingAnalysis` repository (using [GitHub desktop](https://desktop.github.com/) or command line) or download the repository zip and unzip.
 - Point the MATLAB path to the `calciumImagingAnalysis` root folder (*NOT* `@calciumImagingAnalysis` sub-folder in the repository).
 - Run the below MATLAB commands.
+- After, likely want to run `modelAddNewFolders` first in order to add folders containing imaging data to the current class object.
 - [Optional] Users on Windows systems should download `Everything` (https://www.voidtools.com/). It is a very useful and fast search engine that can allow users to quickly get lists of folders then need to analyze in `calciumImagingAnalysis`.
 
 ```MATLAB
@@ -57,6 +63,25 @@ obj % then hit enter, no semicolon!
 
 ```
 
+### `calciumImagingAnalysis` main GUI notes
+- All main decisions for choosing a method/procedure to run, cell-extraction algorithm, and which folders to analyze are in a single window.
+- The GUI will real-time update the selected folders based on the selections in the subject, assay, and folder filter areas.
+- Sections not relevant for a specific method are grayed out.
+- Tab to cycle through selection areas. Green background is the currently selected area, dark gray background is area that had previously been selected but is not the active area, and white background is for areas that have not been selected yet.
+- Hover mouse over method names for tooltip that gives additional information.
+
+__For example, selecting middle two assays automatically changes selection in `Loaded folders` section.__
+
+<a href="https://user-images.githubusercontent.com/5241605/79494880-96ed0280-7fd8-11ea-85e1-05a13dc26e90.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/79494880-96ed0280-7fd8-11ea-85e1-05a13dc26e90.png" alt="image" width="45%" height="auto"/></a>
+<a href="https://user-images.githubusercontent.com/5241605/79494959-b97f1b80-7fd8-11ea-8197-7be457d24638.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/79494959-b97f1b80-7fd8-11ea-8197-7be457d24638.png" alt="image" width="45%" height="auto"/></a>
+
+__Certain sections become available when user selects the appropriate method (e.g. cell-extraction method available when selecting `modelExtractSignalsFromMovie`).__
+
+<a href="https://user-images.githubusercontent.com/5241605/79495026-d4ea2680-7fd8-11ea-8d4d-02164e1af1d6.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/79495026-d4ea2680-7fd8-11ea-8d4d-02164e1af1d6.png" alt="image" width="50%" height="auto"/></a>
+
+
+### Additional quick start notes
+
 - See additional details in [Processing calcium imaging data](#processing-calcium-imaging-data) for running the full processing pipeline.
 - When issues are encountered, first check the `*Common issues and fixes` Wiki page to see if a solution is there. Else, submit a new issue or email Biafra (bahanonu [at] alum.mit.edu).
 - Notes:
@@ -70,7 +95,7 @@ obj % then hit enter, no semicolon!
   - `calciumImagingAnalysis` generally assumes users have imaging data associated with *one* imaging session and animal in a given folder. Follow folder naming conventions in [Data](#data) for best experience.
   - External software packages are downloaded into `_external_programs` folder and should be placed there if done manually.
 
-Note: more advance users can run setup as below.
+Users can alternatively run setup as below.
 ```MATLAB
 % Run these commands in MATLAB to get started.
 
@@ -106,7 +131,7 @@ obj.runPipeline; % then hit enter!
   - and similar code helped process imaging or behavioral data in:
     - J.G. Parker*, J.D. Marshall*, __B. Ahanonu__, Y.W. Wu, T.H. Kim, B.F. Grewe, Y. Zhang, J.Z. Li, J.B. Ding, M.D. Ehlers, and M.J. Schnitzer (2018). Diametric neural ensemble dynamics in parkinsonian and dyskinetic states. _Nature_, 557, 177–182. https://doi.org/10.1038/s41586-018-0090-6.
     - Y. Li, A. Mathis, B.F. Grewe, J.A. Osterhout, B. Ahanonu, M.J. Schnitzer, V.N. Murthy, and C. Dulac (2017). Neuronal representation of social information in the medial amygdala of awake behaving mice. Cell, 171(5), 1176-1190. https://doi.org/10.1016/j.cell.2017.10.015.
-- Code developed while in [Prof. Mark Schnitzer's lab](http://pyramidal.stanford.edu/) at Stanford University.
+- Code mostly developed while in [Prof. Mark Schnitzer's lab](http://pyramidal.stanford.edu/) at Stanford University. Credit to those who helped in [Acknowledgments](#acknowledgments).
 - Please check the 'Wiki' for further instructions on specific processing/analysis steps and additional information of software used by this package.
 - When issues are encountered, first check the `Common issues and fixes` Wiki page to see if a solution is there. Else, submit a new issue.
 
@@ -223,14 +248,17 @@ The class generally operates on the principal that a single imaging session is c
 The naming convention in general is below. Both TIF and AVI raw files are converted to HDF5 after processing since that format offers more flexibility during cell extraction and other steps.
 
 ### Input and output files
-- Raw: `concat_.*.(h5|tif)`
-- Processed: `folderName_(processing steps).h5`, where `folderName` is the directory name where the calcium imaging movies are located.
+- Default raw imaging data filename: `concat_.*.(h5|tif)`.
+- Default raw processed data filename: `folderName_(processing steps).h5`, where `folderName` is the directory name where the calcium imaging movies are located.
 - Main files output by `calciumImagingAnalysis`. Below, `.*` normally indicates the folder name prefixed to the filename.
 	- `.*_pcaicaAnalysis.mat`: Where PCA-ICA outputs are stored.
 	- `.*_ICdecisions_.*.mat`: Where decisions for cell (=1) and not cell (=0) are stored in a `valid` variable.
 	- `.*_regionModSelectUser.mat`: A mask of the region (=1) to include in further analyses.
 	- `.*_turboreg_crop_dfof_1.h5`: Processed movie, in this case motion corrected, cropped, and Δ_F/F_.
 	- `processing_info`: a folder containing preprocessing information.
+
+### NWB Support
+calciumImagingAnalysis supports NWB format and by default will output cell-extraction analysis as calciumImagingAnalysis format unless user specifies otherwise. NWB files are by default stored in the `nwbFiles` sub-folder. This can be changed by setting the `obj.nwbFileFolder` property to a different folder name.
 
 ### Preferred folder naming format
 
@@ -351,6 +379,8 @@ To convert from Inscopix ISXD file format (output by nVista v3+ and nVoke) to HD
 
 Users should spatially filter one-photon or other data with background noise (e.g. neuropil). To get a feel for how the different spatial filtering affects SNR/movie data before running the full processing pipeline, run `viewMovieRegistrationTest` module. Then select either `matlab divide by lowpass before registering` or `matlab bandpass before registering` then change `filterBeforeRegFreqLow` and `filterBeforeRegFreqHigh` settings, see below.
 
+Within each folder will be a sub-folder called `preprocRunTest` inside of which is a series of sub-folders called `preprocRun##` that will contain a file called `settings.mat` that can be loaded into `modelPreprocessMovie` so the same settings that worked during the test can be used during the actual pre-processing run.
+
 ![image](https://user-images.githubusercontent.com/5241605/52497447-f3f65880-2b8a-11e9-8875-c6b408e5c011.png)
 
 - You'll get an output like the below:
@@ -381,7 +411,7 @@ Next the user is presented with a series of options for motion correction, image
 
 ![image](https://user-images.githubusercontent.com/5241605/49828665-4ceb7100-fd41-11e8-9da6-9f5a510f1c13.png)
 
-### Save/load settings
+### Save/load preprocessing settings
 
 Users can also enable saving and loading of previously selected pre-processing settings by changing the red option below.
 
@@ -542,7 +572,7 @@ The left are raw dorsal striatum cell maps from a single animal. The right shows
 
 Functions needed (have entire `calciumImagingAnalysis` loaded anyways):
 - `mm_tracking.ijm` is the tracking function for use in ImageJ, place in
-`plugins` folder.
+`plugins` folder. If already had `calciumImagingAnalysis` download Fiji, place in the `_external_programs/[Fiji directory]/Fiji.app/plugins` folder.
 - `removeIncorrectObjs.m` is a function to clean-up the ImageJ output.
 - `createTrackingOverlayVideo` is a way to check the output from the
 tracking by overlaying mouse tracker onto the video.
@@ -553,6 +583,17 @@ Example screen after running `mm_tracking` within ImageJ, click to expand.
 <a href="https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png" alt="image" width="600" height="auto"/></a>
 
 <!-- <a href="https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png" target="_blank">![image](https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png)</a> -->
+
+After the above screen, there will be multiple other screens culminating in one where a threshold is chosen that is used to remove non-animal pixels from analysis. The threshold matters quite a bit and the script ignores anything that isn't red (i.e. larger than threshold) OR not within the range specified by the parameters below.
+
+![image](https://user-images.githubusercontent.com/5241605/71494852-8c2f1780-2807-11ea-93b7-8c51e21116b3.png)
+
+The script opens the AVI as a virtual stack and asks for the threshold is so that I can quickly scan through the entire movie to make sure the set threshold works even with slight/major changes in illumination, e.g. the below threshold will work across many frames
+
+![image](https://user-images.githubusercontent.com/5241605/71494077-7f0f2a00-2801-11ea-9144-f1fc6b04c27a.png)
+
+If the threshold is set to low, certain frames will not have the animal detected, e.g. if the lighting changes.
+![image](https://user-images.githubusercontent.com/5241605/71494720-7e2cc700-2806-11ea-976e-3e9b70b00861.png)
 
 Once ImageJ is finished, within Matlab run the following code (cleans up the ImageJ tracking by removing small objects and adding NaNs for missing frames along with making a movie to check output). Modify to point toward paths specific for your data.
 
@@ -615,11 +656,11 @@ Please cite [Corder*, Ahanonu*, et al. 2019](http://science.sciencemag.org/conte
 ```
 
 ## Questions?
-Please email any additional questions not covered in the repository to `bahanonu [at] alum.mit.edu`.
+Please email any additional questions not covered in the repository to `bahanonu [at] alum.mit.edu` or open an issue.
 
 ## License
 
-Copyright (C) 2013-2019 Biafra Ahanonu
+Copyright (C) 2013-2020 Biafra Ahanonu
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 

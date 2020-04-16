@@ -31,7 +31,7 @@ function [success] = saveMatrixToFile(inputMatrix,savePath,varargin)
 	% HDF5: append (don't blank HDF5 file) or new (blank HDF5 file)
 	options.writeMode = 'new';
 	% Int: Defines gzip compression level (0-9). 0 = no compression, 9 = most compression.
-	options.deflateLevel = 0;
+	options.deflateLevel = 1;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)

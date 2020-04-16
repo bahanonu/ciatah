@@ -48,7 +48,7 @@ function main(parameters){
 	// extra invert (obj should be black on white)
 	Dialog.addCheckbox("invert movie colors (obj black on white)?", true);
 	// automatically threshold?
-	Dialog.addCheckbox("automatically threshold?", true);
+	Dialog.addCheckbox("automatically threshold?", false);
 	Dialog.addString("auto threshold type (Minimum, Otsu, MaxEntropy)", "Minimum",80);
 	Dialog.addNumber("slice to estimate automatic threshold: ", 200);
 	Dialog.addNumber("number slices to preview: ", 500);
@@ -60,9 +60,9 @@ function main(parameters){
 	Dialog.addNumber("erode iterations: ", 1);
 	Dialog.addNumber("dilate iterations: ", 3);
 	// whether to look at a file containing a list of relevant movies
-	Dialog.addCheckbox("analyze movies from a list file", true);
+	Dialog.addCheckbox("analyze movies from a list file", false);
 	//
-	Dialog.addCheckbox("open avi dialog?", true);
+	Dialog.addCheckbox("open avi dialog?", false);
 	Dialog.addNumber("first frame movie (0=all): ", 0);
 	Dialog.addNumber("last frame movie: ", 0);
 	//

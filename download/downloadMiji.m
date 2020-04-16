@@ -9,6 +9,7 @@ function [success] = downloadMiji(varargin)
 
 	% changelog
 		% 2019.10.15 [10:48:10] - Fix so DMGs downloaded for MAC have the proper file extension.
+		% 2020.04.03 [14:02:33] - Save downloaded compressed files (e.g. zips) to a sub-folder.
 	% TODO
 		%
 
@@ -71,7 +72,7 @@ function [success] = downloadMiji(varargin)
 			% 	continue;
 			% end
 			% Make directory
-			rawSavePathDownload = [signalExtractionDir];
+			rawSavePathDownload = [signalExtractionDir filesep '_downloads'];
 			if ~exist(rawSavePathDownload,'dir');mkdir(rawSavePathDownload);fprintf('Made folder: %s',rawSavePathDownload);end
 
 			[pathstr,outputDir{gitNo},ext] = fileparts(gitRepos{gitNo});
