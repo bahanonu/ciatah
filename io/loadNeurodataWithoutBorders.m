@@ -16,13 +16,18 @@ function [inputImages,inputTraces,infoStruct] = loadNeurodataWithoutBorders(inpu
 	% DESCRIPTION
 	% cellmax, pcaica, cnmf, cnmfe, extract, roi
 	options.algorithm = '';
+	% String: main name for image mask group
 	options.groupImages = '/processing/ophys/ImageSegmentation/PlaneSegmentation';
 	options.planeNo = 1;
+	% Dataset name for image masks
 	options.imagesName = 'image_mask';
+	% String: main name for fluorescence series
 	options.groupSignalSeries = '/processing/ophys/Fluorescence/RoiResponseSeries';
-	options.groupSignalSeriesAlt = '/processing/ophys/Fluorescence/Series';
+	% Cell array of strings: alternative names for fluorescence series
+	options.groupSignalSeriesAlt = {'/processing/ophys/Fluorescence/Series'};
 	options.signalsName = 'data';
-	options.signalSeriesNo = 1;
+	% Int: user specified series number if needed
+	options.signalSeriesNo = [];
 	% 1 = load images, 0 = do not load images (e.g. when user only wants the traces)
 	options.loadImages = 1;
 	% get options
@@ -47,30 +52,38 @@ function [inputImages,inputTraces,infoStruct] = loadNeurodataWithoutBorders(inpu
 		if ~ischar(inputFilePath)
 			return;
 		end
+		try
+			imagesGroupName = [options.groupImages num2str(options.planeNo) '/' options.imagesName];
+			imagesGroupNameAttr = [options.groupImages num2str(options.planeNo)];
+			% Check exist else use different default
+			h5info(inputFilePath,imagesGroupName);
+		catch
+			imagesGroupName = [options.groupImages '/' options.imagesName];
+			imagesGroupNameAttr = [options.groupImages];
+		end
+
 		if options.loadImages==1
-			try
-				imagesGroupName = [options.groupImages num2str(options.planeNo) '/' options.imagesName];
-				% Check exist else use different default
-				h5info(inputFilePath,imagesGroupName);
-			catch
-				imagesGroupName = [options.groupImages '/' options.imagesName];
-			end
 			fprintf('Loading: %s file -> %s.\n',inputFilePath,imagesGroupName);
 			inputImages = h5read(inputFilePath,imagesGroupName);
 		else
 			inputImages = [];
 		end
 
-		roitestNames = {options.groupSignalSeries,options.groupSignalSeriesAlt};
+		roitestNames = {options.groupSignalSeries,options.groupSignalSeriesAlt{:}};
 		tracesGroupNameFinal = '';
-		for ggg = 1:length(roitestNames)
-			for fff = 1:2
+		nNums = 2;
+		numList = [1:nNums NaN];
+		if ~isempty(options.signalSeriesNo)
+			numList = [options.signalSeriesNo numList];
+		end
+		% Iterate until find the correct name for activity series
+		for nameNo = 1:length(roitestNames)
+			for seriesNo = numList
 				try
-					% tracesGroupName = [options.groupSignalSeries num2str(options.signalSeriesNo) '/' options.signalsName];
-					if fff==1
-						tracesGroupName = [roitestNames{ggg} num2str(fff) '/' options.signalsName];
+					if isnan(seriesNo)==1
+						tracesGroupName = [roitestNames{nameNo} '/' options.signalsName];
 					else
-						tracesGroupName = [roitestNames{ggg} '/' options.signalsName];
+						tracesGroupName = [roitestNames{nameNo} num2str(seriesNo) '/' options.signalsName];
 					end
 					% Check exist else use different default
 					h5info(inputFilePath,tracesGroupName);
@@ -84,7 +97,9 @@ function [inputImages,inputTraces,infoStruct] = loadNeurodataWithoutBorders(inpu
 
 		disp(['inputImages: ' num2str(size(inputImages))]);
 		disp(['inputTraces: ' num2str(size(inputTraces))]);
-		tmp = h5readatt(inputFilePath,options.groupImages,'description');
+
+		% Get description if later need cell-extraction information
+		tmp = h5readatt(inputFilePath,imagesGroupNameAttr,'description');
 		infoStruct.description = tmp;
 	catch err
 		disp(repmat('@',1,7))

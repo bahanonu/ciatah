@@ -250,8 +250,8 @@ classdef calciumImagingAnalysis < dynamicprops
 		% Str: blank, use calciumImagingAnalysis regexp, else force use of this regexp for NWB files
 		nwbFileRegexp = '';
 		% Name of H5 group for images and signal series in NWB files
-		nwbGroupImages = '/processing/ophys/ImageSegmentation/PlaneSegmentation1';
-		nwbGroupSignalSeries = '/processing/ophys/fluorescence/Series';
+		nwbGroupImages = '/processing/ophys/ImageSegmentation/PlaneSegmentation';
+		nwbGroupSignalSeries = '/processing/ophys/Fluorescence/RoiResponseSeries';
 
 		settingOptions = struct(...
 			'analysisType',  {{'group','individual'}},...

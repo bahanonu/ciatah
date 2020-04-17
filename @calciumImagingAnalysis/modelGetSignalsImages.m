@@ -9,6 +9,7 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 
 	% changelog
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
+		% 2020.04.16 [19:59:43] - Small fix to NWB file checking.
 	% TODO
 		% Give a user a warning() output if there are no or empty cell-extraction outputs
 
@@ -229,7 +230,7 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 		if obj.nwbLoadFiles==1
 			% Check whether to use override NWB regular expression, else use calciumImagingAnalysis defaults.
 			if isempty(obj.nwbFileRegexp)
-				filesToLoad = getFileList([obj.dataPath{thisFileNum} filesep obj.nwbFileFolder],obj.extractionMethodSaveStr.(obj.signalExtractionMethod));
+				filesToLoad = getFileList([obj.dataPath{thisFileNum} filesep obj.nwbFileFolder],[obj.extractionMethodSaveStr.(obj.signalExtractionMethod) '*.nwb']);
 			else
 				filesToLoad = getFileList([obj.dataPath{thisFileNum} filesep obj.nwbFileFolder],obj.nwbFileRegexp);
 			end
