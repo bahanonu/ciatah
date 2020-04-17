@@ -33,6 +33,8 @@ function [success] = saveNeurodataWithoutBorders(image_masks,roi_response_data,a
 		success = 0;
 		metadata = yaml.ReadYaml(options.fpathYML);
 		data_path = outputFilePath;
+
+		% Get datatype name
 		if contains(data_path,'extract')
 		    data_type='extract';
 		elseif contains(data_path,'cnmf') && ~contains(data_path,'cnmfe')
@@ -47,6 +49,8 @@ function [success] = saveNeurodataWithoutBorders(image_masks,roi_response_data,a
 		    data_type='pcaica';
 		elseif contains(data_path,'roi')
 		    data_type='roi';
+	    else
+	    	data_type = algorithm;
 		end
 
 		tmpData = roi_response_data;

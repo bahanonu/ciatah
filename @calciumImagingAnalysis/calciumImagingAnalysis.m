@@ -147,8 +147,8 @@ classdef calciumImagingAnalysis < dynamicprops
 		% Region analysis
 		regionModSaveStr = '_regionModSelectUser.mat'
 
-		usrIdxChoiceStr = {'EM','PCAICA','EXTRACT','CNMF','CNMFE','ROI'};
-		usrIdxChoiceDisplay = {'CELLMax (Kitch/Ahanonu)','PCAICA (Mukamel, 2009)','EXTRACT (Inan, 2017)','CNMF (Pnevmatikakis, 2016 or Giovannucci, 2019)','CNMF-E (Zhou, 2018)','ROI'};
+		usrIdxChoiceStr = {'CELLMax','PCAICA','CNMF','CNMFE','EXTRACT','ROI','EM'};
+		usrIdxChoiceDisplay = {'CELLMax (Kitch/Ahanonu)','PCAICA (Mukamel, 2009)','CNMF (Giovannucci, 2019)','CNMF-E (Zhou, 2018)','EXTRACT (Inan, 2017)','ROI','CELLMax [EM] (Kitch/Ahanonu)'};
 
 		% PCAICA, EM, EXTRACT, CNMF, CNMFE
 		signalExtractionMethod = 'PCAICA';
@@ -922,6 +922,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			% Download and load dependent software packages into "_external_programs" folder.
 			% Also download test data into "data" folder.
 			obj.loadDependencies;
+			disp('Finished loading dependencies, now choose folders to add...');
 
 			% Add folders containing imaging data.
 			obj.modelAddNewFolders;
@@ -1119,6 +1120,8 @@ classdef calciumImagingAnalysis < dynamicprops
 						else
 							disp('NWB Schema types already loaded!')
 						end
+						% Add NWB folders to path.
+						obj.loadBatchFunctionFolders;
 					otherwise
 						% nothing
 				end
