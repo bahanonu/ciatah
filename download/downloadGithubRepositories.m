@@ -1,12 +1,22 @@
 function [success] = downloadGithubRepositories(varargin)
-	% Biafra Ahanonu
 	% Downloads Github repositories repositories.
+	% Biafra Ahanonu
 	% started: 2019.01.14 [10:23:05]
+	% changelog
+		% 2020.04.03 [11:15:32] - Allow inputs to use getOptions. Also allow force updating of git repository.
+		% 2020.04.03 [14:02:33] - Save downloaded compressed files (e.g. zips) to a sub-folder.
 
 	%========================
-	% options.downloadPreprocessed = 0;
+	% 1 = force update of the git repository, 0 = skip if already downloaded
+	options.forceUpdate = 0;
+	options.signalExtractionDir = '_external_programs';
+	options.gitNameDisp = {'NoRMCorre'};
+	options.gitRepos = {'https://github.com/flatironinstitute/NoRMCorre/archive/master.zip'};
+	options.outputDir = {'normcorre'};
+	options.gitName = {'NoRMCorre-master'};
+
 	% get options
-	% options = getOptions(options,varargin);
+	options = getOptions(options,varargin);
 	% display(options)
 	% unpack options into current workspace
 	% fn=fieldnames(options);
@@ -16,12 +26,12 @@ function [success] = downloadGithubRepositories(varargin)
 	%========================
 
 	try
-		signalExtractionDir = '_external_programs';
+		signalExtractionDir = options.signalExtractionDir;
 
-		gitNameDisp = {'NoRMCorre'};
-		gitRepos = {'https://github.com/flatironinstitute/NoRMCorre/archive/master.zip'};
-		outputDir = {'normcorre'};
-		gitName = {'NoRMCorre-master'};
+		gitNameDisp = options.gitNameDisp;
+		gitRepos = options.gitRepos;
+		outputDir = options.outputDir;
+		gitName = options.gitName;
 		nRepos = length(outputDir);
 
 		for gitNo = 1:nRepos
@@ -32,7 +42,7 @@ function [success] = downloadGithubRepositories(varargin)
 				continue;
 			end
 			% Make directory
-			rawSavePathDownload = [signalExtractionDir];
+			rawSavePathDownload = [signalExtractionDir filesep '_downloads'];
 			if ~exist(rawSavePathDownload,'dir');mkdir(rawSavePathDownload);fprintf('Made folder: %s',rawSavePathDownload);end
 
 			% Download git repo zip

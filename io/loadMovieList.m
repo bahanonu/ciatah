@@ -10,7 +10,7 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 	% 	nPixels
 	% 	nFrames
 	% options
-	% options.supportedTypes = {'.h5','.hdf5','.tif','.tiff','.avi'};
+	% options.supportedTypes = {'.h5','.nwb','.hdf5','.tif','.tiff','.avi'};
 	% % movie type
 	% options.movieType = 'tiff';
 	% % hierarchy name in hdf5 where movie is
@@ -43,6 +43,7 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 		% 2019.06.06 [19:39:17] - Misc code fixes
 		% 2019.10.07 [10:21:09] - Added h5info support and support for 16-bit float types.
 		% 2019.10.09 [17:14:24] - Change dataset reading to handle HDF5 where main dataset is not a top-level directory OR it is a sub-directory that is not the only dataset in the HDF5.
+		% 2020.04.05 [16:27:11] - Added check to support reading NWB as HDF5 file.
 	% TODO
 		% OPEN
 			% MAKE tiff loading recognize frameList input
@@ -56,11 +57,13 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 			% add ability to degrade gracefully with HDF5 dataset names, so try several backup datasetnames if one doesn't work
 
 	% ========================
-	options.supportedTypes = {'.h5','.hdf5','.tif','.tiff','.avi','.isxd'};
+	options.supportedTypes = {'.h5','.hdf5','.nwb','.tif','.tiff','.avi','.isxd'};
 	% movie type
 	options.movieType = 'tiff';
 	% Str: hierarchy name in hdf5 where movie data is located
 	options.inputDatasetName = '/1';
+	% Str: default NWB hierarchy names in HDF5 file where movie data is located, will look in the order indicates
+	options.defaultNwbDatasetName = {'/acquisition/TwoPhotonSeries/data'};
 	% fallback hierarchy name, e.g. '/images'
 	options.inputDatasetNameBackup = [];
 	% convert file movie to double?
@@ -775,6 +778,8 @@ function [movieType, supported] = getMovieFileType(thisMoviePath)
 	end
 	% files are assumed to be named correctly (lying does no one any good)
 	if strcmp(ext,'.h5')||strcmp(ext,'.hdf5')
+		movieType = 'hdf5';
+	elseif strcmp(ext,'.nwb')
 		movieType = 'hdf5';
 	elseif strcmp(ext,'.tif')||strcmp(ext,'.tiff')
 		movieType = 'tiff';

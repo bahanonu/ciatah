@@ -212,24 +212,29 @@ function [inputImageFiltered, additionalOutput] = fftImage(inputImage,varargin)
 					fftshow2(inputImageFFT,'log')
 					axis square;
 					title('frequency spectrum of image')
+					box off;
 				subplot(2,3,2)
 					imagesc(cutoffFilter)
 					axis square;
 					title('filter')
+					box off;
 				subplot(2,3,3)
 					inputImageFFTFiltered(1,1) = max(inputImageFFT(:));
 					inputImageFFTFiltered(1,2) = min(inputImageFFT(:));
 					fftshow2(inputImageFFTFiltered,'log')
 					axis square;
 					title('frequency spectrum of cutoff')
+					box off;
 				subplot(2,3,4)
 					imagesc(inputImage)
 					axis square;
 					title(['input image, mean= ' num2str(nanmean(inputImage(:)))])
+					box off;
 				subplot(2,3,5)
 					imagesc(inputImageFilteredNorm)
 					axis square;
 					title(['fft image, mean=' num2str(nanmean(inputImageFiltered(:)))])
+					box off;
 				subplot(2,3,6)
 					% imagesc(horzcat(inputImageNorm,inputImageFilteredNorm))
 					% title('combined images')
@@ -237,6 +242,8 @@ function [inputImageFiltered, additionalOutput] = fftImage(inputImage,varargin)
 					imagesc(imageDiff);
 					axis square;
 					title(['difference, mean=' num2str(nanmean(imageDiff(:)))])
+					box off;
+				changeFont(14);
 				drawnow
 			end
 			additionalOutput.inputImageFFT = inputImageFFT;

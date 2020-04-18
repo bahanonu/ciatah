@@ -36,7 +36,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		fontSizeGui = 10;
 
 		defaultObjDir = pwd;
-		classVersion = 'v3.7.1-20191222';
+		classVersion = 'v3.9.0-20200416';
 		serverPath = '';
 		privateSettingsPath = ['private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
 		% place where functions can temporarily story user settings
@@ -57,6 +57,8 @@ classdef calciumImagingAnalysis < dynamicprops
 
 		% Github repo path, for updating the repository code
 		githubUrl = 'https://github.com/bahanonu/calciumImagingAnalysis';
+		% Folder to put downloaded external programs
+		externalProgramsDir = '_external_programs';
 
 		% String: name of the analysis file to put in a folder to indicate to other computers the current computer is analyzing the folder and they should skip
 		concurrentAnalysisFilename = '_currentlyAnalyzingFolderCheck.mat';
@@ -145,8 +147,24 @@ classdef calciumImagingAnalysis < dynamicprops
 		% Region analysis
 		regionModSaveStr = '_regionModSelectUser.mat'
 
-		usrIdxChoiceStr = {'EM','PCAICA','EXTRACT','CNMF','CNMFE','ROI'};
-		usrIdxChoiceDisplay = {'CELLMax (Kitch/Ahanonu)','PCAICA (Mukamel, 2009)','EXTRACT (Inan, 2017)','CNMF (Pnevmatikakis, 2016 or Giovannucci, 2019)','CNMF-E (Zhou, 2018)','ROI'};
+		usrIdxChoiceStr = {'CELLMax','PCAICA','CNMF','CNMFE','EXTRACT','ROI','EM'};
+		usrIdxChoiceDisplay = {'CELLMax (Kitch/Ahanonu)','PCAICA (Mukamel, 2009)','CNMF (Giovannucci, 2019)','CNMF-E (Zhou, 2018)','EXTRACT (Inan, 2017)','ROI','CELLMax [EM] (Kitch/Ahanonu)'};
+
+		% PCAICA, EM, EXTRACT, CNMF, CNMFE
+		signalExtractionMethod = 'PCAICA';
+		% signalExtractionMethod = 'EM';
+		% Int: indicates which trace output to use from 1 = primary trace, 2 = secondary trace, etc.
+		signalExtractionTraceOutputType = 1;
+
+		extractionMethodSaveStr = struct(...
+			'PCAICA', '_pcaicaAnalysis',...
+			'EM', '_emAnalysis',...
+			'CELLMax','_cellmaxAnalysis',...
+			'EXTRACT', '_extractAnalysis',...
+			'CNMF', '_cnmfAnalysis',...
+			'CNMFE', '_cnmfeAnalysis',...
+			'ROI', '_roiAnalysis'...
+		);
 		extractionMethodStructSaveStr = struct(...
 			'PCAICA', '_pcaicaAnalysis.mat',...
 			'EM', '_emAnalysis.mat',...
@@ -224,11 +242,16 @@ classdef calciumImagingAnalysis < dynamicprops
 		validCNMFStructVarname = 'validCNMF';
 		structCNMRVarname = 'cnmfAnalysisOutput';
 
-		% PCAICA, EM, EXTRACT, CNMF, CNMFE
-		signalExtractionMethod = 'PCAICA';
-		% signalExtractionMethod = 'EM';
-		% Int: indicates which trace output to use from 1 = primary trace, 2 = secondary trace, etc.
-		signalExtractionTraceOutputType = 1;
+		% NWB-related properties
+		% Whether to load NWB files, e.g. from modelExtractSignalsFromMovie
+		nwbLoadFiles = 0;
+		% Str: sub-folder where NWB files are stored. Leave blank to load from current folder.
+		nwbFileFolder = 'nwbFiles';
+		% Str: blank, use calciumImagingAnalysis regexp, else force use of this regexp for NWB files
+		nwbFileRegexp = '';
+		% Name of H5 group for images and signal series in NWB files
+		nwbGroupImages = '/processing/ophys/ImageSegmentation/PlaneSegmentation';
+		nwbGroupSignalSeries = '/processing/ophys/Fluorescence/RoiResponseSeries';
 
 		settingOptions = struct(...
 			'analysisType',  {{'group','individual'}},...
@@ -378,6 +401,125 @@ classdef calciumImagingAnalysis < dynamicprops
 		behaviorMetricTable = {};
 		behaviorMetricNameArray = {};
 		behaviorMetricIdArray = {};
+
+		% List of available calciumImagingAnalysis methods
+		methodsList = {...
+		'------- SETUP -------',
+		'modelAddNewFolders',
+		'setup',
+		'update',
+		'loadDependencies',
+		'setMovieInfo',
+		'resetMijiClass',
+		'',
+		'------- CLASS/BEHAVIOR -------',
+		'showVars',
+		'showFolders',
+		'saveObj',
+		'initializeObj',
+		'setMainSettings',
+		'',
+		'------- DATA CHECK/LOAD/EXPORT -------',
+		'modelGetFileInfo',
+		'modelVerifyDataIntegrity',
+		'modelBatchCopyFiles',
+		'modelLoadSaveData',
+		'modelExportData',
+		'',
+		'------- PREPROCESS -------',
+		'modelDownsampleRawMovies',
+		'viewMovieFiltering',
+		'viewMovieRegistrationTest',
+		'',
+		'viewMovie',
+		'modelPreprocessMovie',
+		'modelModifyMovies',
+		'removeConcurrentAnalysisFiles',
+		'',
+		'------- CELL/SIGNAL EXTRACTION -------',
+		'modelExtractSignalsFromMovie',
+		'viewCellExtractionOnMovie',
+		'removeConcurrentAnalysisFiles',
+		'',
+		'------- LOAD CELL-EXTRACTION/SIGNAL DATA -------',
+		'modelVarsFromFiles',
+		'',
+		'------- SIGNAL SORTING -------',
+		'computeManualSortSignals',
+		'modelModifyRegionAnalysis',
+		'',
+		'------- PREPROCESS VERIFICATION -------',
+		'viewMovie',
+		'viewObjmaps',
+		'viewCreateObjmaps',
+		'viewSubjectMovieFrames'
+		'viewMovieCreateSideBySide',
+		'',
+		'------- TRACKING -------',
+		'modelTrackingData',
+		'viewOverlayTrackingToVideo',
+		'',
+		'------- ACROSS SESSION ANALYSIS: COMPUTE/VIEW -------',
+		'viewSubjectMovieFrames',
+		'computeMatchObjBtwnTrials',
+		'viewMatchObjBtwnSessions',
+		'modelSaveMatchObjBtwnTrials',
+		'computeCellDistances',
+		'computeCrossDayDistancesAlignment'
+		};
+
+		% Tooltips for calciumImagingAnalysis methods
+		tts = struct(...
+			'SETUP', 'Methods for setting up the class.',...
+			'modelAddNewFolders', 'Add new folders to calciumImagingAnalysis.',...
+			'setup', 'Setup calciumImagingAnalysis if running for the 1st time or need to re-install dependencies (e.g. Fiji).',...
+			'update', 'Update calciumImagingAnalysis, direct user toward relevant web address.',...
+			'loadDependencies', 'Download and setup calciumImagingAnalysis dependencies.',...
+			'setMovieInfo', 'Set information',...
+			'resetMijiClass', 'Reset Fiji (e.g. Miji) if having problems loading.',...
+			'CLASS_BEHAVIOR', 'Methods for modifying calciumImagingAnalysis behavior or saving.',...
+			'showVars', 'Show all properties for this instance of calciumImagingAnalysis.',...
+			'showFolders', 'Show all folders users have loaded into the class.',...
+			'saveObj', 'Save this instance of the object for later loading.',...
+			'initializeObj', 'IGNORE.',...
+			'setMainSettings', 'IGNORE.',...
+			'DATA_CHECK_LOAD_EXPORT', 'Methods for verify data and updating calciumImagingAnalysis meta-data.',...
+			'modelGetFileInfo', 'Update information about each folder loaded into the class. Information derived from folder name.',...
+			'modelVerifyDataIntegrity', 'Various sub-methods to verify data is valid and that certain files are present in each folder.',...
+			'modelBatchCopyFiles', 'Batch copy files from one location to another or to move files to sub-folders within each folder (e.g. if users want to archive particular files).',...
+			'modelLoadSaveData', 'IGNORE.',...
+			'modelExportData', 'IGNORE.',...
+			'PREPROCESS', 'Methods for pre-processing imaging movies.',...
+			'modelDownsampleRawMovies', 'Spatially downsample large raw movies. Done in chunks so can process movies larger than available RAM.',...
+			'viewMovieFiltering', 'IGNORE.',...
+			'viewMovieRegistrationTest', 'Allows users to test several pre-processing setting to choose one that works best for their dataset.<br>Mainly focused on motion correction and spatial filtering.',...
+			'viewMovie', 'Allows users to view their movie in several ways for each folder.',...
+			'modelPreprocessMovie', 'Main pre-processing method to do motion correction, spatial filtering, calculate relative fluorescence, etc.',...
+			'modelModifyMovies', 'Used to add user-defined borders to the movie.<br>e.g. if want to blank out areas outside GRIN lens so they do not interfere with cell extraction, etc.',...
+			'removeConcurrentAnalysisFiles', 'Removes temporary files created when running analysis across multiple workstations in "modelPreprocessMovie" or "modelExtractSignalsFromMovie".',...
+			'CELL_SIGNAL_EXTRACTION', 'Methods related to cell extraction.',...
+			'modelExtractSignalsFromMovie', 'Main method to allow pre-processing',...
+			'viewCellExtractionOnMovie', 'Overlays cell-extraction outputs on the imaging movie to allow users to verify cell shape, that cells were not missed, etc.',...
+			'LOAD_CELL_EXTRACTION_SIGNAL_DATA', 'Methods relating to loading cell-extraction data into calciumImagingAnalysis.',...
+			'modelVarsFromFiles', 'Load cell-extraction data into calciumImagingAnalysis.<br>RUN EACH TIME re-loading calciumImagingAnalysis and have already run cell extraction on the folders added to calciumImagingAnalysis.',...
+			'SIGNAL_SORTING', 'Methods relating to sorting/classification of cell-extraction outputs.',...
+			'computeManualSortSignals', 'A GUI that allows ',...
+			'modelModifyRegionAnalysis', '',...
+			'PREPROCESS_VERIFICATION', '',...
+			'viewObjmaps', 'Creates several figures displaying cell-extraction outputs from each selected folder.',...
+			'viewCreateObjmaps', 'Creates several figures displaying cell-extraction outputs from each selected folder.',...
+			'viewSubjectMovieFrames', 'Takes frames or cell-extraction cell maps from each folder associated with an animal and displays them as a movie to help aid in visual inspection of cross-session alignment possibilities.',...
+			'viewMovieCreateSideBySide', 'Combines synchronized imaging and behavior or other experimental videos to allow side-by-side comparisons.',...
+			'TRACKING', 'Methods related to tracking animals.',...
+			'modelTrackingData', 'After running ImageJ-based tracking, use this module to clean-up the data and overlay it on the behavior movie.',...
+			'viewOverlayTrackingToVideo', 'Creates a video where the animal''s computed centroid and velocity is overlaid on the video.',...
+			'ACROSS_SESSION_ANALYSIS__COMPUTE_VIEW', 'Methods related to aligning cells across imaging sessions.',...
+			'computeMatchObjBtwnTrials', 'Main method to match cell-extraction outputs (e.g. cells) across imaging sessions.',...
+			'viewMatchObjBtwnSessions', 'Allows users to visualize cross session matches and outputs videos to help with assessment as well.',...
+			'modelSaveMatchObjBtwnTrials', 'IGNORE for now. Will allow users to save output of cross-session matching.',...
+			'computeCellDistances', 'Computes the cell-cell distance for all cells in each imaging session and outputs as a CSV table.<br>Should be used to assess the largest distance to still count cells as matching during cross-session matching.',...
+			'computeCrossDayDistancesAlignment', 'Computes the cell-cell distance of all cross-session matched cells.<br>e.g. ideally all will be below the cross-session cell distance cutoff.'...
+		);
 	end
 	properties(GetAccess = 'public', SetAccess = 'private')
 		% public read access, but private write access.
@@ -653,7 +795,7 @@ classdef calciumImagingAnalysis < dynamicprops
 				nToolboxes = length(toolboxListHere);
 				if listNo==1
 				else
-					disp('2nd tier toolbox check.')
+					disp('2nd tier toolbox check (not required for main pre-processing pipeline).')
 				end
 				for toolboxNo = 1:nToolboxes
 					toolboxName = toolboxListHere{toolboxNo};
@@ -661,14 +803,14 @@ classdef calciumImagingAnalysis < dynamicprops
 						fprintf('Toolbox available! %s\n',toolboxName)
 					else
 						if listNo==1
-							warning(sprintf('Please install %s toolbox before running calciumImagingAnalysis. This toolbox is likely required.',toolboxName));
+							warning('Please install %s toolbox before running calciumImagingAnalysis. This toolbox is likely required.',toolboxName);
 						else
-							warning(sprintf('Please install %s toolbox before running calciumImagingAnalysis. Some features (e.g. for cell extraction) may not work otherwise.',toolboxName));
+							warning('Please install %s toolbox before running calciumImagingAnalysis. Some features (e.g. for cell extraction) may not work otherwise.',toolboxName);
 						end
 						% if ~verLessThan('matlab', '9.5')
-						%     warning('Please install Neural Network toolbox before running classifySignals');
+						%	  warning('Please install Neural Network toolbox before running classifySignals');
 						% else
-						%     warning('Please install Deep Learning Toolbox before running classifySignals');
+						%	  warning('Please install Deep Learning Toolbox before running classifySignals');
 						% end
 						% return;
 					end
@@ -699,7 +841,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			end
 
 			% if use puts in a single folder or a path to a txt file with folders
-			if ~isempty(obj.rawSignals)&strcmp(class(obj.rawSignals),'char')
+			if ~isempty(obj.rawSignals)&ischar(obj.rawSignals)
 				if isempty(regexp(obj.rawSignals,'.txt'))&exist(obj.rawSignals,'dir')==7
 					% user just inputs a single directory
 					obj.rawSignals = {obj.rawSignals};
@@ -741,7 +883,7 @@ classdef calciumImagingAnalysis < dynamicprops
 				obj.stimulusNameArray = strrep(obj.stimulusNameArray,'_',' ');
 			end
 			% load all the data
-			if ~isempty(obj.rawSignals)&strcmp(class(obj.rawSignals{1}),'char')
+			if ~isempty(obj.rawSignals)&ischar(obj.rawSignals{1})
 				disp('paths input, going to load files')
 				obj.guiEnabled = 0;
 				obj = modelVarsFromFiles(obj);
@@ -760,8 +902,10 @@ classdef calciumImagingAnalysis < dynamicprops
 			% Check java heap size
 			try
 				javaHeapSpaceSizeGb = java.lang.Runtime.getRuntime.maxMemory*1e-9;
-				if javaHeapSpaceSizeGb<6.5
-					warning(sprintf('Java max heap memory is %0.3f Gb, this is too small to run Miji. Please put "java.opts" file in the MATLAB start-up path and restart MATLB before continuing.\n',javaHeapSpaceSizeGb));
+				if javaHeapSpaceSizeGb<6.7
+					javaErrorStr = sprintf('Java max heap memory is %0.3f Gb, this is too small to run Miji.\n\nPlease put "java.opts" file in the MATLAB start-up path or change MATALB start-up folder to calciumImagingAnalysis root folder and restart MATLB before continuing.\n',javaHeapSpaceSizeGb);
+					warning(javaErrorStr);
+					msgbox(javaErrorStr,'Note to user','modal')
 				else
 					fprintf('Java max heap memory is %0.3f Gb, this should be sufficient to run Miji. Please change "java.opts" file to increase heap space if run into Miji memory errors.\n',javaHeapSpaceSizeGb);
 				end
@@ -778,6 +922,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			% Download and load dependent software packages into "_external_programs" folder.
 			% Also download test data into "data" folder.
 			obj.loadDependencies;
+			disp('Finished loading dependencies, now choose folders to add...');
 
 			% Add folders containing imaging data.
 			obj.modelAddNewFolders;
@@ -825,8 +970,8 @@ classdef calciumImagingAnalysis < dynamicprops
 			end
 			matchIdx = cellfun(@isempty,regexp(pathListArray,[sepChar '(cnmfe|cnmf_original|cnmf_current|cvx_rd|Fiji\.app|fiji-.*-20151222)']));
 			pathListArray = pathListArray(matchIdx);
-			% =================================================
 
+			% =================================================
 			% Remove paths that are already in MATLAB path to save time
 			pathFilter = cellfun(@isempty,pathListArray);
 			pathListArray = pathListArray(~pathFilter);
@@ -841,7 +986,8 @@ classdef calciumImagingAnalysis < dynamicprops
 				addpath(pathList);
 			end
 
-			% Automatically add Inscopix
+			% =================================================
+			% Automatically add Inscopix Data Processing Software
 			if ismac
 				baseInscopixPath = '';
 			elseif isunix
@@ -901,8 +1047,20 @@ classdef calciumImagingAnalysis < dynamicprops
 		function obj = display(obj)
 			% Overload display method so can run object by just typing 'obj' in command window.
 			obj.runPipeline;
-			% disp('hello');
+			% display('hello');
 		end
+		% function delete(obj)
+			% Warn the user before deleting class
+		% end
+
+		% function obj = delete(obj)
+		% 	% Overload delete method to verify with user.
+		% 	scnsize = get(0,'ScreenSize');
+		% 	dependencyStr = {'downloadCnmfGithubRepositories','loadMiji','example_downloadTestData'};
+		% 	[fileIdxArray, ok] = listdlg('ListString',dependencyStr,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','Which dependency to load?');
+			% obj.runPipeline;
+		% 	% disp('hello');
+		% end
 
 		function obj = showVars(obj)
 			obj.disp;
@@ -910,20 +1068,20 @@ classdef calciumImagingAnalysis < dynamicprops
 
 		function obj = loadDependencies(obj)
 			scnsize = get(0,'ScreenSize');
-			dependencyStr = {'downloadMiji','downloadCnmfGithubRepositories','example_downloadTestData','loadMiji'};
-			dispStr = {'Download Fiji (to run Miji)','Download CNMF, CNMF-E, and CVX code.','Download test one-photon data.','Load Fiji/Miji into MATLAB path.'};
-			[fileIdxArray, ok] = listdlg('ListString',dispStr,'ListSize',[scnsize(3)*0.3 scnsize(4)*0.3],'Name','Which dependencies to load? (Can select multiple)','InitialValue',[1 2 3]);
-			analysisType = dependencyStr(fileIdxArray);
+			dependencyStr = {'downloadMiji','downloadCnmfGithubRepositories','example_downloadTestData','loadMiji','downloadNeuroDataWithoutBorders'};
+			dispStr = {'Download Fiji (to run Miji)','Download CNMF, CNMF-E, and CVX code.','Download test one-photon data.','Load Fiji/Miji into MATLAB path.','Download NWB (NeuroDataWithoutBorders)'};
+			[fileIdxArray, ~] = listdlg('ListString',dispStr,'ListSize',[scnsize(3)*0.3 scnsize(4)*0.3],'Name','Which dependencies to load? (Can select multiple)','InitialValue',[1 2 3 5]);
+			analysisTypeD = dependencyStr(fileIdxArray);
 			dispStr = dispStr(fileIdxArray);
 			for depNo = 1:length(fileIdxArray)
 				disp([10 repmat('>',1,42)])
 				disp(dispStr{depNo})
-				switch analysisType{depNo}
+				switch analysisTypeD{depNo}
 					case 'downloadCnmfGithubRepositories'
 						[success] = downloadCnmfGithubRepositories();
 					case 'downloadMiji'
 						depStr = {'Save Fiji to default directory','Save Fiji to custom directory'};
-						[fileIdxArray, ok] = listdlg('ListString',depStr,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','Where to save Fiji?');
+						[fileIdxArray, ~] = listdlg('ListString',depStr,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','Where to save Fiji?');
 						depStr = depStr{fileIdxArray};
 						if fileIdxArray==1
 							downloadMiji();
@@ -936,10 +1094,42 @@ classdef calciumImagingAnalysis < dynamicprops
 						modelAddOutsideDependencies('miji');
 					case 'example_downloadTestData'
 						example_downloadTestData();
+					case 'downloadNeuroDataWithoutBorders'
+						optionsH.signalExtractionDir = obj.externalProgramsDir;
+						optionsH.gitNameDisp = {'nwb_schnitzer_lab','yamlmatlab','matnwb'};
+						optionsH.gitRepos = {'https://github.com/schnitzer-lab/nwb_schnitzer_lab','https://github.com/ewiger/yamlmatlab','https://github.com/NeurodataWithoutBorders/matnwb'};
+						optionsH.gitRepos = cellfun(@(x) [x '/archive/master.zip'],optionsH.gitRepos,'UniformOutput',false);
+						optionsH.outputDir = optionsH.gitNameDisp;
+						optionsH.gitName = cellfun(@(x) [x '-master'],optionsH.gitNameDisp,'UniformOutput',false);
+						[success] = downloadGithubRepositories('options',optionsH);
+
+						% Load NWB Schema as needed
+						if exist('types.core.Image')==0
+							try
+								disp('Generating matnwb types core files with "generateCore.m"')
+								origPath = pwd;
+								mat2nwbPath = [obj.defaultObjDir filesep obj.externalProgramsDir filesep 'matnwb'];
+								disp(['cd ' mat2nwbPath])
+								cd(mat2nwbPath);
+								generateCore;
+								disp(['cd ' origPath])
+								cd(origPath);
+							catch
+								cd(obj.defaultObjDir);
+							end
+						else
+							disp('NWB Schema types already loaded!')
+						end
+						% Add NWB folders to path.
+						obj.loadBatchFunctionFolders;
 					otherwise
 						% nothing
 				end
 			end
+		end
+
+		function obj = downloadLatestGithubVersion(obj)
+			% Blank function
 		end
 
 		function obj = setMovieInfo(obj)
@@ -975,7 +1165,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			if obj.guiEnabled==1
 				if isempty(obj.foldersToAnalyze)
 					scnsize = get(0,'ScreenSize');
-					[fileIdxArray, ok] = listdlg('ListString',obj.fileIDNameArray,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','which folders to analyze?');
+					[fileIdxArray, ~] = listdlg('ListString',obj.fileIDNameArray,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','which folders to analyze?');
 				else
 					fileIdxArray = obj.foldersToAnalyze;
 				end
@@ -1045,15 +1235,32 @@ classdef calciumImagingAnalysis < dynamicprops
 			userInput = inputdlg('CAXIS min max');str2num(userInput{1});
 			S = findobj(gcf,'Type','Axes');
 			% C = cell2mat(get(S,'Clim'));
-			C = str2num(xxx{1});
+			C = str2num(userInput{1});
 			% C = [-1 7];
 			set(S,'CLim',C);
 		end
 
-		function obj = changeFont(obj)
-			userInput = inputdlg('New font');
-			userInput = str2num(userInput{1});
-			set(findall(gcf,'-property','FontSize'),'FontSize',userInput);
+		function obj = changeFont(obj,varargin)
+			%========================
+			% DESCRIPTION
+			options.fontSize = [];
+			% get options
+			options = getOptions(options,varargin);
+			% disp(options)
+			% unpack options into current workspace
+			% fn=fieldnames(options);
+			% for i=1:length(fn)
+			% 	eval([fn{i} '=options.' fn{i} ';']);
+			% end
+			%========================
+
+			if isempty(options.fontSize)
+				userInput = inputdlg('New font');
+				userInput = str2num(userInput{1});
+				set(findall(gcf,'-property','FontSize'),'FontSize',userInput);
+			else
+				set(findall(gcf,'-property','FontSize'),'FontSize',options.fontSize);
+			end
 		end
 
 		function obj = checkToolboxes(obj)
@@ -1138,7 +1345,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			% return;
 			disp('===')
 			% Get all the cell centroids
-			theseFieldnames = fieldnames(obj.globalIDs.matchCoords)
+			theseFieldnames = fieldnames(obj.globalIDs.matchCoords);
 			for subjNo = 1:length(theseFieldnames)
 				fprintf('%s\n',theseFieldnames{subjNo})
 			% hexscatter(allCentroids(:,1),allCentroids(:,2),'res',50);
@@ -1158,7 +1365,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			writetable(struct2table(obj.sumStats.centroids),savePath,'FileType','text','Delimiter','\t');
 
 
-			theseFieldnames = fieldnames(obj.globalIDs)
+			theseFieldnames = fieldnames(obj.globalIDs);
 			for subjNo = 1:length(theseFieldnames)
 				fprintf('%s\n',theseFieldnames{subjNo})
 			% hexscatter(allCentroids(:,1),allCentroids(:,2),'res',50);
@@ -1166,8 +1373,8 @@ classdef calciumImagingAnalysis < dynamicprops
 					continue;
 				end
 
-				globalIDs = obj.globalIDs.(theseFieldnames{subjNo});
-				globalIDsIdx = logical(sum(globalIDs~=0,2)>1);
+				globalIDsD = obj.globalIDs.(theseFieldnames{subjNo});
+				globalIDsIdx = logical(sum(globalIDsD~=0,2)>1);
 				% globalIDs = globalIDs(globalIDsIdx,:);
 				globalIDsIdx = sum(globalIDsIdx);
 
@@ -1181,9 +1388,9 @@ classdef calciumImagingAnalysis < dynamicprops
 				% nGlobalSessions = size(globalIDs,2);
 				% nGIds = size(globalIDs,1);
 				% for gID = 1:nGlobalSessions
-			 %        cumProb(gID) = sum(sum(~(globalIDs==0),2)==gID)/nGIds;
-			 %        nAlignSum(gID) = sum(sum(~(globalIDs==0),2)==gID);
-			 %    end
+			 %		  cumProb(gID) = sum(sum(~(globalIDs==0),2)==gID)/nGIds;
+			 %		  nAlignSum(gID) = sum(sum(~(globalIDs==0),2)==gID);
+			 %	 end
 			end
 
 			savePath = [obj.dataSavePath obj.protocol{obj.fileNum} '_globalIDNums.tab'];
@@ -1198,7 +1405,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			obj.sumStats.cellPairs = [];
 			obj.sumStats.sessionStr = {};
 
-			[fileIdxArray idNumIdxArray nFilesToAnalyze nFiles] = obj.getAnalysisSubsetsToAnalyze();
+			[fileIdxArray, idNumIdxArray, nFilesToAnalyze, nFiles] = obj.getAnalysisSubsetsToAnalyze();
 
 			for thisFileNumIdx = 1:nFilesToAnalyze
 				try
@@ -1212,19 +1419,19 @@ classdef calciumImagingAnalysis < dynamicprops
 					methodNum = 2;
 					if methodNum==1
 						disp('Using previously computed centroids...')
-						[inputSignals inputImages signalPeaks signalPeaksArray valid] = modelGetSignalsImages(obj,'returnOnlyValid',1);
+						[inputSignals, inputImages, signalPeaks, signalPeaksArray, valid] = modelGetSignalsImages(obj,'returnOnlyValid',1);
 						xCoords = obj.objLocations{obj.fileNum}.(obj.signalExtractionMethod)(valid,1);
 						yCoords = obj.objLocations{obj.fileNum}.(obj.signalExtractionMethod)(valid,2);
 						% npts = length(xCoords);
 						% distanceMatrix = diag(zeros(1,npts))+squareform(distMatrix);
 					else
 					% catch
-						[inputSignals inputImages signalPeaks signalPeaksArray valid] = modelGetSignalsImages(obj);
+						[inputSignals, inputImages, signalPeaks, signalPeaksArray, valid] = modelGetSignalsImages(obj);
 						nIDs = length(obj.stimulusNameArray);
 						nSignals = size(inputSignals,1);
-						if isempty(inputImages);continue;end;
+						if isempty(inputImages);continue;end
 						% [xCoords yCoords] = findCentroid(inputImages);
-						[xCoords yCoords] = findCentroid(inputImages,'thresholdValue',0.4,'imageThreshold',0.4,'roundCentroidPosition',0);
+						[xCoords, yCoords] = findCentroid(inputImages,'thresholdValue',0.4,'imageThreshold',0.4,'roundCentroidPosition',0);
 						% continue;
 					end
 					distMatrix = pdist([xCoords(:)*obj.MICRON_PER_PIXEL yCoords(:)*obj.	MICRON_PER_PIXEL]);
@@ -1248,7 +1455,6 @@ classdef calciumImagingAnalysis < dynamicprops
 			disp(['saving data to: ' savePath])
 			writetable(struct2table(obj.sumStats),savePath,'FileType','text','Delimiter',',');
 		end
-
 		function obj = runPipeline(obj,varargin)
 			try
 				setFigureDefaults();
@@ -1258,7 +1464,6 @@ classdef calciumImagingAnalysis < dynamicprops
 				disp(repmat('@',1,7))
 				obj.loadBatchFunctionFolders();
 			end
-
 			try
 				set(0, 'DefaultUICOntrolFontSize', obj.fontSizeGui)
 			catch
@@ -1266,70 +1471,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			end
 			close all;clc;
 
-			fxnsToRun = {...
-			'------- SETUP -------',
-			'modelAddNewFolders',
-			'setup',
-			'update',
-			'loadDependencies',
-			'setMovieInfo',
-			'resetMijiClass',
-			'',
-			'------- CLASS/BEHAVIOR -------',
-			'showVars',
-			'showFolders',
-			'saveObj',
-			'initializeObj',
-			'setMainSettings',
-			'',
-			'------- DATA CHECK/LOAD/EXPORT -------',
-			'modelGetFileInfo',
-			'modelVerifyDataIntegrity',
-			'modelBatchCopyFiles',
-			'modelLoadSaveData',
-			'modelExportData',
-			'',
-			'------- PREPROCESS -------',
-			'modelDownsampleRawMovies',
-			'viewMovieFiltering',
-			'viewMovieRegistrationTest',
-			'',
-			'viewMovie',
-			'modelPreprocessMovie',
-			'modelModifyMovies',
-			'removeConcurrentAnalysisFiles',
-			'',
-			'------- CELL/SIGNAL EXTRACTION -------',
-			'modelExtractSignalsFromMovie',
-			'viewCellExtractionOnMovie',
-			'removeConcurrentAnalysisFiles',
-			'',
-			'------- LOAD CELL-EXTRACTION/SIGNAL DATA -------',
-			'modelVarsFromFiles',
-			'',
-			'------- SIGNAL SORTING -------',
-			'computeManualSortSignals',
-			'modelModifyRegionAnalysis',
-			'',
-			'------- PREPROCESS VERIFICATION -------',
-			'viewMovie',
-			'viewObjmaps',
-			'viewCreateObjmaps',
-			'viewSubjectMovieFrames'
-			'viewMovieCreateSideBySide',
-			'',
-			'------- TRACKING -------',
-			'modelTrackingData',
-			'viewOverlayTrackingToVideo',
-			'',
-			'------- ACROSS SESSION ANALYSIS: COMPUTE/VIEW -------',
-			'viewSubjectMovieFrames',
-			'computeMatchObjBtwnTrials',
-			'viewMatchObjBtwnSessions',
-			'modelSaveMatchObjBtwnTrials',
-			'computeCellDistances',
-			'computeCrossDayDistancesAlignment'
-			};
+			fxnsToRun = obj.methodsList;
 			%========================
 			options.fxnsToRun = fxnsToRun;
 			% get options
@@ -1378,7 +1520,12 @@ classdef calciumImagingAnalysis < dynamicprops
 			[~,duplicateIdx] = unique(fxnsToRun,'stable');
 			currentIdx = intersect(currentIdx,duplicateIdx);
 			% [idNumIdxArray, ok] = listdlg('ListString',fxnsToRun,'InitialValue',currentIdx(1),'ListSize',dlgSize,'Name','Sir! I have a plan! Select a calcium imaging analysis method or procedure to run:');
-			[idNumIdxArray, ok] = obj.pipelineListBox(fxnsToRun,['"Sir! I have a plan!" Select a calciumImagingAnalysis method or procedure to run. Hover over items for tooltip descriptions.'],currentIdx);
+
+			[idNumIdxArray, fileIdxArray, ok] = obj.calciumImagingAnalysisMainGui(fxnsToRun,['calciumImagingAnalysis: "Sir! I have a plan!" Hover over methods for tooltip descriptions.'],currentIdx);
+			obj.foldersToAnalyze = fileIdxArray;
+			bypassUI = 1;
+
+			% [idNumIdxArray, ok] = obj.pipelineListBox(fxnsToRun,['"Sir! I have a plan!" Select a calciumImagingAnalysis method or procedure to run. Hover over items for tooltip descriptions.'],currentIdx);
 			if ok==0; return; end
 
 			% excludeList = {'showVars','showFolders','setMainSettings','modelAddNewFolders','loadDependencies','saveObj','setStimulusSettings','modelDownsampleRawMovies'};
@@ -1397,11 +1544,10 @@ classdef calciumImagingAnalysis < dynamicprops
 				obj.guiEnabled = guiIdx==1;
 			end
 
-
 			fxnsToRun = {fxnsToRun{idNumIdxArray}};
 			obj.currentMethod = fxnsToRun{1};
 
-			if isempty(intersect(fxnsToRun,excludeList))
+			if bypassUI==0&isempty(intersect(fxnsToRun,excludeList))
 				scnsize = get(0,'ScreenSize');
 				usrIdxChoiceStr = obj.usrIdxChoiceStr;
 				usrIdxChoiceDisplay = obj.usrIdxChoiceDisplay;
@@ -1409,12 +1555,13 @@ classdef calciumImagingAnalysis < dynamicprops
 				currentIdx = find(strcmp(usrIdxChoiceStr,obj.signalExtractionMethod));
 				% [sel, ok] = listdlg('ListString',usrIdxChoiceDisplay,'InitialValue',currentIdx,'ListSize',dlgSize,'Name','Get to the data! Cell extraction algorithm to use for analysis?');
 				[sel, ok] = obj.pipelineListBox(usrIdxChoiceDisplay,['"Get to the data!" Cell extraction algorithm to use for analysis?'],currentIdx);
+
 				if ok==0; return; end
 				% (Americans love a winner)
 				usrIdxChoiceList = {2,1};
 				obj.signalExtractionMethod = usrIdxChoiceStr{sel};
 			end
-			if ~isempty(obj.inputFolders)&isempty(intersect(fxnsToRun,excludeList))&isempty(intersect(fxnsToRun,excludeListVer2))
+			if bypassUI==0&~isempty(obj.inputFolders)&isempty(intersect(fxnsToRun,excludeList))&isempty(intersect(fxnsToRun,excludeListVer2))
 				if isempty(obj.protocol)
 					obj.modelGetFileInfo();
 				end
@@ -1452,148 +1599,9 @@ classdef calciumImagingAnalysis < dynamicprops
 					useAltValid = 0;
 				end
 				% useAltValid = 0;
-				switch useAltValid
-					case 'manual index entry'
-					 theseSettings = inputdlg({...
-							 'list (separated by commas) of indexes'
-						 },...
-						 'Folders to process',1,...
-						 {...
-							 '1'
-						 }...
-					 );
-					 validFoldersIdx = str2num(theseSettings{1});
-					case 'missing extracted cells'
-						switch obj.signalExtractionMethod
-							case 'PCAICA'
-								missingRegexp = {obj.rawPCAICAStructSaveStr,obj.rawICfiltersSaveStr};
-							case 'EM'
-								missingRegexp = obj.rawEMStructSaveStr;
-							case 'EXTRACT'
-								missingRegexp = obj.rawEXTRACTStructSaveStr;
-							case 'CNMF'
-								missingRegexp = obj.rawCNMFStructSaveStr;
-							case 'CNMFE'
-								missingRegexp = obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod);
-							otherwise
-								missingRegexp = obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod);
-						end
-						missingRegexp = strrep(missingRegexp,'.mat','');
-						validFoldersIdx2 = [];
-						for folderNo = 1:length(obj.dataPath)
-							filesToLoad = getFileList(obj.dataPath{folderNo},missingRegexp);
-							if isempty(filesToLoad)
-								disp(['no extracted signals: ' obj.dataPath{folderNo}])
-								validFoldersIdx2(end+1) = folderNo;
-							end
-						end
-						validFoldersIdx = intersect(validFoldersIdx,validFoldersIdx2)
-					case 'has extracted cells'
-						switch obj.signalExtractionMethod
-							case 'PCAICA'
-								cellRegexp = {obj.rawPCAICAStructSaveStr,obj.rawICfiltersSaveStr};
-							case 'EM'
-								cellRegexp = obj.rawEMStructSaveStr;
-							case 'EXTRACT'
-								cellRegexp = obj.rawEXTRACTStructSaveStr;
-							case 'CNMF'
-								cellRegexp = obj.rawCNMFStructSaveStr;
-							case 'CNMFE'
-								cellRegexp = obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod);
-							otherwise
-								% cellRegexp = {obj.rawPCAICAStructSaveStr,obj.rawICfiltersSaveStr};
-								cellRegexp = obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod);
-						end
-						cellRegexp = strrep(cellRegexp,'.mat','');
-						validFoldersIdx2 = [];
-						for folderNo = 1:length(obj.dataPath)
-							filesToLoad = getFileList(obj.dataPath{folderNo},cellRegexp);
-							if ~isempty(filesToLoad)
-								disp(['has extracted signals: ' obj.dataPath{folderNo}])
-								validFoldersIdx2(end+1) = folderNo;
-							end
-						end
-						validFoldersIdx = intersect(validFoldersIdx,validFoldersIdx2)
-					case 'movie file'
-						movieRegexp = obj.fileFilterRegexp;
-						validFoldersIdx2 = [];
-						for folderNo = 1:length(obj.dataPath)
-							filesToLoad = getFileList(obj.dataPath{folderNo},movieRegexp);
-							if ~isempty(filesToLoad)
-								disp(['has movie file: ' obj.dataPath{folderNo}])
-								validFoldersIdx2(end+1) = folderNo;
-							end
-						end
-						validFoldersIdx = intersect(validFoldersIdx,validFoldersIdx2)
-					case 'fileFilterRegexp'
-						validFoldersIdx2 = [];
-						for folderNo = 1:length(obj.dataPath)
-							filesToLoad = getFileList(obj.dataPath{folderNo},obj.fileFilterRegexp);
-							if isempty(filesToLoad)
-								validFoldersIdx2(end+1) = folderNo;
-								disp(['missing dfof: ' obj.dataPath{folderNo}])
-							end
-						end
-						validFoldersIdx = intersect(validFoldersIdx,validFoldersIdx2)
-					case 'valid auto'
-						validFoldersIdx = find(cell2mat(cellfun(@isempty,obj.validAuto,'UniformOutput',0)));
-					case 'not manually sorted folders'
-						switch obj.signalExtractionMethod
-							case 'PCAICA'
-								missingRegexp = obj.sortedICdecisionsSaveStr;
-							case 'EM'
-								missingRegexp = obj.sortedEMStructSaveStr;
-							case 'EXTRACT'
-								missingRegexp = obj.sortedEXTRACTStructSaveStr;
-							case 'CNMF'
-								missingRegexp = obj.sortedCNMFStructSaveStr;
-							otherwise
-								missingRegexp = obj.extractionMethodSortedSaveStr.(obj.signalExtractionMethod);
-						end
-						validFoldersIdx = [];
-						missingRegexp = strrep(missingRegexp,'.mat','');
-						disp(['missingRegexp: ' missingRegexp])
-						for folderNo = 1:length(obj.inputFolders)
-							filesToLoad = getFileList(obj.inputFolders{folderNo},missingRegexp);
-							% filesToLoad
-							%filesToLoad
-							if isempty(filesToLoad)
-								validFoldersIdx(end+1) = folderNo;
-								disp(['not manually sorted: ' obj.dataPath{folderNo}])
-							else
-								disp(['manually sorted: ' obj.dataPath{folderNo}])
-							end
-						end
-					case 'manually sorted folders'
-						switch obj.signalExtractionMethod
-							case 'PCAICA'
-								missingRegexp = obj.sortedICdecisionsSaveStr;
-							case 'EM'
-								missingRegexp = obj.sortedEMStructSaveStr;
-							case 'EXTRACT'
-								missingRegexp = obj.sortedEXTRACTStructSaveStr;
-							case 'CNMF'
-								missingRegexp = obj.sortedCNMFStructSaveStr;
-							otherwise
-								missingRegexp = obj.extractionMethodSortedSaveStr.(obj.signalExtractionMethod);
-						end
-						validFoldersIdx = [];
-						missingRegexp = strrep(missingRegexp,'.mat','');
-						disp(['missingRegexp: ' missingRegexp])
-						for folderNo = 1:length(obj.inputFolders)
-							filesToLoad = getFileList(obj.inputFolders{folderNo},missingRegexp);
-							%filesToLoad
-							if ~isempty(filesToLoad)
-								validFoldersIdx(end+1) = folderNo;
-								disp(['manually sorted: ' obj.dataPath{folderNo}])
-							end
-						end
-					case 'manual classification already in obj'
-						validFoldersIdx = find(arrayfun(@(x) ~isempty(x{1}),obj.validManual));
-					otherwise
-						% body
-				end
-				% [fileIdxArray, ok] = listdlg('ListString',selectList,'ListSize',dlgSize,'Name','which folders to analyze?','InitialValue',validFoldersIdx);
+				[validFoldersIdx] = pipelineFolderFilter(obj,useAltValid,validFoldersIdx);
+
+				% [fileIdxArray, ok] = listdlg('ListString',selectList,'ListSize',dlgSize,'Name','Which folders to analyze?','InitialValue',validFoldersIdx);
 				[fileIdxArray, ok] = obj.pipelineListBox(selectList,['Which folders to analyze?'],validFoldersIdx);
 				if ok==0; return; end
 
@@ -1607,16 +1615,27 @@ classdef calciumImagingAnalysis < dynamicprops
 
 					obj.discreteStimuliToAnalyze = idNumIdxArray;
 				end
-			elseif ~isempty(intersect(fxnsToRun,excludeListVer2))
+			elseif bypassUI==0&~isempty(intersect(fxnsToRun,excludeListVer2))
 				folderNumList = strsplit(num2str(1:length(obj.inputFolders)),' ');
 				selectList = strcat(folderNumList(:),'/',num2str(length(obj.inputFolders)),' | ',obj.date(:),' _ ',obj.protocol(:),' _ ',obj.fileIDArray(:),' | ',obj.inputFolders(:));
-				% [fileIdxArray, ok] = listdlg('ListString',selectList,'ListSize',dlgSize,'Name','which folders to analyze?','InitialValue',1);
+				% [fileIdxArray, ok] = listdlg('ListString',selectList,'ListSize',dlgSize,'Name','Which folders to analyze?','InitialValue',1);
 				[fileIdxArray, ok] = obj.pipelineListBox(selectList,['Which folders to analyze?'],1);
 				if ok==0; return; end
 
 				obj.foldersToAnalyze = fileIdxArray;
+			else
+				if isempty(obj.stimulusNameArray)|~isempty(intersect(fxnsToRun,excludeListVer2))|~isempty(intersect(fxnsToRun,excludeListStimuli))
+					obj.discreteStimuliToAnalyze = [];
+				else
+					% [idNumIdxArray, ok] = listdlg('ListString',obj.stimulusNameArray,'ListSize',dlgSize,'Name','which stimuli to analyze?');
+					[idNumIdxArray, ok] = obj.pipelineListBox(obj.stimulusNameArray,['Which stimuli to analyze?'],1);
+					if ok==0; return; end
+
+					obj.discreteStimuliToAnalyze = idNumIdxArray;
+				end
 			end
-			for thisFxn=fxnsToRun
+
+			for thisFxn = fxnsToRun
 				try
 					disp(repmat('!',1,21))
 					if ismethod(obj,thisFxn)
@@ -1650,72 +1669,500 @@ classdef calciumImagingAnalysis < dynamicprops
 			'Run processing pipeline by typing below (or clicking link) into command window (no semi-colon!):' 10 ...
 			'<a href="matlab: obj">obj</a>'])
 		end
-		function [idNumIdxArray, ok] = pipelineListBox(obj,fxnsToRun,inputTxt,currentIdx)
-			% Part of this function is based on http://undocumentedmatlab.com/articles/setting-listbox-mouse-actions/.
+
+		function [validFoldersIdx] = pipelineFolderFilter(obj,useAltValid,validFoldersIdx)
+			switch useAltValid
+				case 'manual index entry'
+				theseSettings = inputdlg({...
+						'list (separated by commas) of indexes'
+						},...
+							'Folders to process',1,...
+						{...
+							'1'
+						}...
+					);
+				validFoldersIdx = str2num(theseSettings{1});
+				case 'missing extracted cells'
+					switch obj.signalExtractionMethod
+						case 'PCAICA'
+							missingRegexp = {obj.rawPCAICAStructSaveStr,obj.rawICfiltersSaveStr};
+						case 'EM'
+							missingRegexp = obj.rawEMStructSaveStr;
+						case 'EXTRACT'
+							missingRegexp = obj.rawEXTRACTStructSaveStr;
+						case 'CNMF'
+							missingRegexp = obj.rawCNMFStructSaveStr;
+						case 'CNMFE'
+							missingRegexp = obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod);
+						otherwise
+							missingRegexp = obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod);
+					end
+					missingRegexp = strrep(missingRegexp,'.mat','');
+					validFoldersIdx2 = [];
+					for folderNo = 1:length(obj.dataPath)
+						filesToLoad = getFileList(obj.dataPath{folderNo},missingRegexp);
+						if isempty(filesToLoad)
+							disp(['no extracted signals: ' obj.dataPath{folderNo}])
+							validFoldersIdx2(end+1) = folderNo;
+						end
+					end
+					validFoldersIdx = intersect(validFoldersIdx,validFoldersIdx2);
+				case 'has extracted cells'
+					switch obj.signalExtractionMethod
+						case 'PCAICA'
+							cellRegexp = {obj.rawPCAICAStructSaveStr,obj.rawICfiltersSaveStr};
+						case 'EM'
+							cellRegexp = obj.rawEMStructSaveStr;
+						case 'EXTRACT'
+							cellRegexp = obj.rawEXTRACTStructSaveStr;
+						case 'CNMF'
+							cellRegexp = obj.rawCNMFStructSaveStr;
+						case 'CNMFE'
+							cellRegexp = obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod);
+						otherwise
+							% cellRegexp = {obj.rawPCAICAStructSaveStr,obj.rawICfiltersSaveStr};
+							cellRegexp = obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod);
+					end
+					cellRegexp = strrep(cellRegexp,'.mat','');
+					validFoldersIdx2 = [];
+					for folderNo = 1:length(obj.dataPath)
+						filesToLoad = getFileList(obj.dataPath{folderNo},cellRegexp);
+						if ~isempty(filesToLoad)
+							disp(['has extracted signals: ' obj.dataPath{folderNo}])
+							validFoldersIdx2(end+1) = folderNo;
+						end
+					end
+					validFoldersIdx = intersect(validFoldersIdx,validFoldersIdx2);
+				case 'movie file'
+					movieRegexp = obj.fileFilterRegexp;
+					validFoldersIdx2 = [];
+					for folderNo = 1:length(obj.dataPath)
+						filesToLoad = getFileList(obj.dataPath{folderNo},movieRegexp);
+						if ~isempty(filesToLoad)
+							disp(['has movie file: ' obj.dataPath{folderNo}])
+							validFoldersIdx2(end+1) = folderNo;
+						end
+					end
+					validFoldersIdx = intersect(validFoldersIdx,validFoldersIdx2);
+				case 'fileFilterRegexp'
+					validFoldersIdx2 = [];
+					for folderNo = 1:length(obj.dataPath)
+						filesToLoad = getFileList(obj.dataPath{folderNo},obj.fileFilterRegexp);
+						if isempty(filesToLoad)
+							validFoldersIdx2(end+1) = folderNo;
+							disp(['missing dfof: ' obj.dataPath{folderNo}])
+						end
+					end
+					validFoldersIdx = intersect(validFoldersIdx,validFoldersIdx2);
+				case 'valid auto'
+					validFoldersIdx = find(cell2mat(cellfun(@isempty,obj.validAuto,'UniformOutput',0)));
+				case 'not manually sorted folders'
+					switch obj.signalExtractionMethod
+						case 'PCAICA'
+							missingRegexp = obj.sortedICdecisionsSaveStr;
+						case 'EM'
+							missingRegexp = obj.sortedEMStructSaveStr;
+						case 'EXTRACT'
+							missingRegexp = obj.sortedEXTRACTStructSaveStr;
+						case 'CNMF'
+							missingRegexp = obj.sortedCNMFStructSaveStr;
+						otherwise
+							missingRegexp = obj.extractionMethodSortedSaveStr.(obj.signalExtractionMethod);
+					end
+					validFoldersIdx = [];
+					missingRegexp = strrep(missingRegexp,'.mat','');
+					disp(['missingRegexp: ' missingRegexp])
+					for folderNo = 1:length(obj.inputFolders)
+						filesToLoad = getFileList(obj.inputFolders{folderNo},missingRegexp);
+						% filesToLoad
+						%filesToLoad
+						if isempty(filesToLoad)
+							validFoldersIdx(end+1) = folderNo;
+							disp(['not manually sorted: ' obj.dataPath{folderNo}])
+						else
+							disp(['manually sorted: ' obj.dataPath{folderNo}])
+						end
+					end
+				case 'manually sorted folders'
+					switch obj.signalExtractionMethod
+						case 'PCAICA'
+							missingRegexp = obj.sortedICdecisionsSaveStr;
+						case 'EM'
+							missingRegexp = obj.sortedEMStructSaveStr;
+						case 'EXTRACT'
+							missingRegexp = obj.sortedEXTRACTStructSaveStr;
+						case 'CNMF'
+							missingRegexp = obj.sortedCNMFStructSaveStr;
+						otherwise
+							missingRegexp = obj.extractionMethodSortedSaveStr.(obj.signalExtractionMethod);
+					end
+					validFoldersIdx = [];
+					missingRegexp = strrep(missingRegexp,'.mat','');
+					disp(['missingRegexp: ' missingRegexp])
+					for folderNo = 1:length(obj.inputFolders)
+						filesToLoad = getFileList(obj.inputFolders{folderNo},missingRegexp);
+						%filesToLoad
+						if ~isempty(filesToLoad)
+							validFoldersIdx(end+1) = folderNo;
+							disp(['manually sorted: ' obj.dataPath{folderNo}])
+						end
+					end
+				case 'manual classification already in obj'
+					validFoldersIdx = find(arrayfun(@(x) ~isempty(x{1}),obj.validManual));
+				otherwise
+					% body
+			end
+		end
+		function [idNumIdxArray, validFoldersIdx, ok] = calciumImagingAnalysisMainGui(obj,fxnsToRun,inputTxt,currentIdx)
+			% Main GUI for calciumImagingAnalysis startup
 			try
 				ok = 0;
-				tts.('SETUP') = 'Methods for setting up the class.';
-				tts.('modelAddNewFolders') = 'Add new folders to calciumImagingAnalysis.';
-				tts.('setup') = 'Setup calciumImagingAnalysis if running for the 1st time or need to re-install dependencies (e.g. Fiji).';
-				tts.('loadDependencies') = 'Download and setup calciumImagingAnalysis dependencies.';
-				tts.('setMovieInfo') = 'Set information';
-				tts.('resetMijiClass') = 'Reset Fiji (e.g. Miji) if having problems loading.';
-				tts.('CLASS_BEHAVIOR') = 'Methods for modifying calciumImagingAnalysis behavior or saving.';
-				tts.('showVars') = 'Show all properties for this instance of calciumImagingAnalysis.';
-				tts.('showFolders') = 'Show all folders users have loaded into the class.';
-				tts.('saveObj') = 'Save this instance of the object for later loading.';
-				tts.('initializeObj') = 'IGNORE.';
-				tts.('setMainSettings') = 'IGNORE.';
-				tts.('DATA_CHECK_LOAD_EXPORT') = 'Methods for verify data and updating calciumImagingAnalysis meta-data.';
-				tts.('modelGetFileInfo') = 'Update information about each folder loaded into the class. Information derived from folder name.';
-				tts.('modelVerifyDataIntegrity') = 'Various sub-methods to verify data is valid and that certain files are present in each folder.';
-				tts.('modelBatchCopyFiles') = 'Batch copy files from one location to another or to move files to sub-folders within each folder (e.g. if users want to archive particular files).';
-				tts.('modelLoadSaveData') = 'IGNORE.';
-				tts.('modelExportData') = 'IGNORE.';
-				tts.('PREPROCESS') = 'Methods for pre-processing imaging movies.';
-				tts.('modelDownsampleRawMovies') = 'Spatially downsample large raw movies. Done in chunks so can process movies larger than available RAM.';
-				tts.('viewMovieFiltering') = 'IGNORE.';
-				tts.('viewMovieRegistrationTest') = 'Allows users to test several pre-processing setting to choose one that works best for their dataset.<br>Mainly focused on motion correction and spatial filtering.';
-				tts.('viewMovie') = 'Allows users to view their movie in several ways for each folder.';
-				tts.('modelPreprocessMovie') = 'Main pre-processing method to do motion correction, spatial filtering, calculate relative fluorescence, etc.';
-				tts.('modelModifyMovies') = 'Used to add user-defined borders to the movie.<br>e.g. if want to blank out areas outside GRIN lens so they do not interfere with cell extraction, etc.';
-				tts.('removeConcurrentAnalysisFiles') = 'Removes temporary files created when running analysis across multiple workstations in "modelPreprocessMovie" or "modelExtractSignalsFromMovie".';
-				tts.('CELL_SIGNAL_EXTRACTION') = 'Methods related to cell extraction.';
-				tts.('modelExtractSignalsFromMovie') = 'Main method to allow pre-processing';
-				tts.('viewCellExtractionOnMovie') = 'Overlays cell-extraction outputs on the imaging movie to allow users to verify cell shape, that cells were not missed, etc.';
-				% tts.('removeConcurrentAnalysisFiles') = '';
-				tts.('LOAD_CELL_EXTRACTION_SIGNAL_DATA') = 'Methods relating to loading cell-extraction data into calciumImagingAnalysis.';
-				tts.('modelVarsFromFiles') = 'Load cell-extraction data into calciumImagingAnalysis.<br>RUN EACH TIME re-loading calciumImagingAnalysis and have already run cell extraction on the folders added to calciumImagingAnalysis.';
-				tts.('SIGNAL_SORTING') = 'Methods relating to sorting/classification of cell-extraction outputs.';
-				tts.('computeManualSortSignals') = 'A GUI that allows ';
-				tts.('modelModifyRegionAnalysis') = '';
-				tts.('PREPROCESS_VERIFICATION') = '';
-				% tts.('viewMovie') = '';
-				tts.('viewObjmaps') = 'Creates several figures displaying cell-extraction outputs from each selected folder.';
-				tts.('viewCreateObjmaps') = 'Creates several figures displaying cell-extraction outputs from each selected folder.';
-				tts.('viewSubjectMovieFrames') = 'Takes frames or cell-extraction cell maps from each folder associated with an animal and displays them as a movie to help aid in visual inspection of cross-session alignment possibilities.';
-				tts.('viewMovieCreateSideBySide') = 'Combines synchronized imaging and behavior or other experimental videos to allow side-by-side comparisons.';
-				tts.('TRACKING') = 'Methods related to tracking animals.';
-				tts.('modelTrackingData') = 'After running ImageJ-based tracking, use this module to clean-up the data and overlay it on the behavior movie.';
-				tts.('viewOverlayTrackingToVideo') = 'Creates a video where the animal''s computed centroid and velocity is overlaid on the video.';
-				tts.('ACROSS_SESSION_ANALYSIS__COMPUTE_VIEW') = 'Methods related to aligning cells across imaging sessions.';
-				% tts.('viewSubjectMovieFrames') = '';
-				tts.('computeMatchObjBtwnTrials') = 'Main method to match cell-extraction outputs (e.g. cells) across imaging sessions.';
-				tts.('viewMatchObjBtwnSessions') = 'Allows users to visualize cross session matches and outputs videos to help with assessment as well.';
-				tts.('modelSaveMatchObjBtwnTrials') = 'IGNORE for now. Will allow users to save output of cross-session matching.';
-				tts.('computeCellDistances') = 'Computes the cell-cell distance for all cells in each imaging session and outputs as a CSV table.<br>Should be used to assess the largest distance to still count cells as matching during cross-session matching.';
-				tts.('computeCrossDayDistancesAlignment') = 'Computes the cell-cell distance of all cross-session matched cells.<br>e.g. ideally all will be below the cross-session cell distance cutoff.';
+				tooltipStruct = obj.tts;
 
-				tooltipStruct = tts;
+				excludeList = obj.methodExcludeList;
+				excludeListVer2 = obj.methodExcludeListVer2;
+
+				subjectStrUnique = unique(obj.subjectStr);
+				assayStrUnique = unique(obj.assay);
+				usrIdxChoiceStr = obj.usrIdxChoiceStr;
+				usrIdxChoiceDisplay = obj.usrIdxChoiceDisplay;
+				% use current string as default
+				currentCellExtIdx = find(strcmp(usrIdxChoiceStr,obj.signalExtractionMethod));
+				folderNumList = strsplit(num2str(1:length(obj.inputFolders)),' ');
+				selectList = strcat(folderNumList(:),'/',num2str(length(obj.inputFolders)),' | ',obj.date(:),' _ ',obj.protocol(:),' _ ',obj.fileIDArray(:),' | ',obj.inputFolders(:));
+
+				useAltValid = {'no additional filter','manually sorted folders','not manually sorted folders','manual classification already in obj',['has ' obj.signalExtractionMethod ' extracted cells'],['missing ' obj.signalExtractionMethod ' extracted cells'],'fileFilterRegexp','valid auto',['has ' obj.fileFilterRegexp ' movie file'],'manual index entry'};
+				useAltValidStr = {'no additional filter','manually sorted folders','not manually sorted folders','manual classification already in obj',['has extracted cells'],'missing extracted cells','fileFilterRegexp','valid auto','movie file','manual index entry'};
+
+				hFig = figure;
+				hListboxS = struct;
+				mt = -10;
+				set(hFig,'Name','calciumImagingAnalysis: start-up GUI','NumberTitle','off')
+				uicontrol('Style','text','String',[inputTxt 10 'Press TAB to select next section, ENTER to continue, and ESC to exit.'],'Units','normalized','Position',[1 95 90 5]/100,'BackgroundColor','white','HorizontalAlignment','Left');
+
+				% set(hFig,'Color',[0,0,0]);
+				% currentIdx = find(strcmp(fxnsToRun,obj.currentMethod));
+
+				% set(hListboxS.cellExtractFiletype,'Callback',@(src,evt){set(src,'background',[1 1 1]*0.9)});
+				selBoxInfo.methods.Tag = 'methodBox';
+				selBoxInfo.cellExtract.Tag = 'cellExtractionBox';
+				selBoxInfo.cellExtractFiletype.Tag = 'cellExtractionBox';
+				selBoxInfo.folderFilt.Tag = 'folderFilt';
+				selBoxInfo.subject.Tag = 'subjectBox';
+				selBoxInfo.assay.Tag = 'assayBox';
+				selBoxInfo.folders.Tag = 'folders';
+				selBoxInfo.guiEnabled.Tag = 'folders';
+
+				selBoxInfo.methods.Value = currentIdx;
+				selBoxInfo.cellExtract.Value = currentCellExtIdx;
+				if obj.nwbLoadFiles==1;ggg=2;else;ggg=1;end;
+				selBoxInfo.cellExtractFiletype.Value = ggg;
+				selBoxInfo.folderFilt.Value = 1;
+				selBoxInfo.subject.Value = 1:length(subjectStrUnique);
+				selBoxInfo.assay.Value = 1:length(assayStrUnique);
+				selBoxInfo.folders.Value = 1:length(selectList);
+				if obj.guiEnabled==1;ggg=1;else;ggg=2;end;
+				selBoxInfo.guiEnabled.Value = ggg;
+
+				selBoxInfo.methods.string = fxnsToRun;
+				selBoxInfo.cellExtract.string = usrIdxChoiceDisplay;
+				selBoxInfo.cellExtractFiletype.string = {'calciumImagingAnalysis format','NeuroDataWithoutBorders (NWB) format'};
+				selBoxInfo.folderFilt.string = useAltValid;
+				selBoxInfo.subject.string = subjectStrUnique;
+				selBoxInfo.assay.string = assayStrUnique;
+				selBoxInfo.folders.string = selectList;
+				selBoxInfo.guiEnabled.string = {'GUI in methods enabled','GUI in methods disabled'};
+
+				selBoxInfo.methods.title = 'Select a calciumImagingAnalysis method:';
+				selBoxInfo.cellExtract.title = 'Cell-extraction method:';
+				selBoxInfo.cellExtractFiletype.title = 'Cell-extraction file format:';
+				selBoxInfo.folderFilt.title = 'Folder select filters:';
+				selBoxInfo.assay.title = 'Folder assay names:';
+				selBoxInfo.subject.title = 'Animal IDs:';
+				selBoxInfo.folders.title = 'Loaded folders:';
+				selBoxInfo.guiEnabled.title = 'GUI (for methods that ask for options):';
+
+				selBoxInfo.methods.loc = [0,8,38,85];
+				selBoxInfo.cellExtract.loc = [50+mt,81,24-mt/2,12];
+				selBoxInfo.cellExtractFiletype.loc = [50+mt,73,24-mt/2,5];
+				selBoxInfo.folderFilt.loc = [75+mt-mt/2,73,25-mt/2,20];
+				selBoxInfo.subject.loc = [50+mt,51,24-mt/2,18];
+				selBoxInfo.assay.loc = [75+mt-mt/2,51,25-mt/2,18];
+				selBoxInfo.folders.loc = [50+mt,0,50-mt,48];
+				selBoxInfo.guiEnabled.loc = [0,0,38,5];
+
+				tmpList2 = fieldnames(selBoxInfo);
+				for ff = 1:length(tmpList2)
+					try
+						hListboxS.(tmpList2{ff}) = uicontrol(hFig, 'style','listbox','Units','normalized','position',selBoxInfo.(tmpList2{ff}).loc/100, 'string',selBoxInfo.(tmpList2{ff}).string,'Value',selBoxInfo.(tmpList2{ff}).Value,'Tag',selBoxInfo.(tmpList2{ff}).Tag);
+						if strcmp('methods',tmpList2{ff})==1
+							set(hListboxS.(tmpList2{ff}),'background',[0.8 0.9 0.8]);
+						end
+
+						selBoxInfo.(tmpList2{ff}).titleLoc = selBoxInfo.(tmpList2{ff}).loc;
+						selBoxInfo.(tmpList2{ff}).titleLoc(2) = selBoxInfo.(tmpList2{ff}).loc(2)+selBoxInfo.(tmpList2{ff}).loc(4);
+						selBoxInfo.(tmpList2{ff}).titleLoc(4) = 2;
+
+						uicontrol('Style','Text','String',selBoxInfo.(tmpList2{ff}).title,'Units','normalized','Position',selBoxInfo.(tmpList2{ff}).titleLoc/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','Bold');
+						set(hListboxS.(tmpList2{ff}),'Max',2,'Min',0);
+					catch
+					end
+				end
+				hListbox = hListboxS.methods;
+				% set(hListbox,'KeyPressFcn',@(src,evnt)onKeyPressRelease(src,evnt,'press',hFig))
+
+				% jTmp = findjobj(hListboxS.cellExtract);jTmp.setSelectionAppearanceReflectsFocus(0);
+
+				fxnToAttach = {'KeyReleaseFcn','Callback'};%, 'ButtonDownFcn' KeyReleaseFcn
+				for fxnNo = 1:length(fxnToAttach)
+					set(hListbox,fxnToAttach{fxnNo},@(src,evnt) onKeyPressRelease(src,evnt,'press',hFig))
+					set(hListboxS.cellExtract,fxnToAttach{fxnNo},@(src,evnt) onKeyPressRelease(src,evnt,'press',hFig))
+					set(hListboxS.cellExtractFiletype,fxnToAttach{fxnNo},@(src,evnt) onKeyPressRelease(src,evnt,'press',hFig))
+					set(hListboxS.assay,fxnToAttach{fxnNo},@(src,evnt) onKeyPressRelease(src,evnt,'press',hFig))
+					set(hListboxS.subject,fxnToAttach{fxnNo},@(src,evnt) onKeyPressRelease(src,evnt,'press',hFig))
+					set(hListboxS.folderFilt,fxnToAttach{fxnNo},@(src,evnt) onKeyPressRelease(src,evnt,'press',hFig))
+					set(hListboxS.folders,fxnToAttach{fxnNo},@(src,evnt) onKeyPressRelease(src,evnt,'press',hFig))
+				end
+
+				% Assign focus lost callbacks to each selection box
+				tmpList1 = fieldnames(hListboxS);
+				for ff = 1:length(tmpList1)
+					jScrollPane = findjobj(hListboxS.(tmpList1{ff}));
+					jListbox = jScrollPane.getViewport.getComponent(0);
+					set(jListbox, 'FocusGainedCallback',{@onFocusGain});
+					set(jListbox, 'FocusLostCallback',{@onFocusLost});
+					% set(jListbox, 'PropertyChangeCallback',{@onPropertyChange});
+					% jListbox
+				end
+
+				% set(gcf,'WindowKeyPressFcn',@(src,evnt) onKeyPressRelease(src,evnt,'press',hFig));
+
+				% See http://undocumentedmatlab.com/articles/setting-listbox-mouse-actions/.
+				% set(hListbox,'KeyPressFcn',@(src,evnt)onKeyPressRelease(evnt,'press',hFig))
+				% Get the listbox's underlying Java control
+				jScrollPane = findjobj(hListbox);
+				% We got the scrollpane container - get its actual contained listbox control
+				jListbox = jScrollPane.getViewport.getComponent(0);
+				% Convert to a callback-able reference handle
+				jListbox = handle(jListbox, 'CallbackProperties');
+				% set(hListbox, 'TooltipString','sss');
+				% Set the mouse-movement event callback
+				set(jListbox, 'MouseMovedCallback', {@mouseMovedCallback,hListbox,tooltipStruct});
+
+				% [guiIdx, ok] = obj.pipelineListBox({'Yes','No'},['GUI Enabled?'],1);
+				% if ok==0; return; end
+				% idNumIdxArray
+				% turn off gui elements, run in batch
+
+
+				figure(hFig)
+				uicontrol(hListbox)
+				% set(hFig, 'KeyPressFcn', @(src,event) onFigKeyPress(src,event,hListboxS));
+				hListboxStruct = [];
+				hListboxStruct.ValueFolder = get(hListboxS.folders,'Value');
+				hListboxStruct.Value = hListbox.Value;
+				hListboxStruct.guiIdx = get(hListboxS.guiEnabled,'Value');
+				hListboxStruct.nwbLoadFiles = get(hListboxS.cellExtractFiletype,'Value');
+				if hListboxStruct.nwbLoadFiles==1;hListboxStruct.nwbLoadFiles=0;else;hListboxStruct.nwbLoadFiles=1;end
+				% Make sure GUI is up-to-date on first display.
+				onKeyPressRelease([],[],'press',hFig);
+
+				uiwait(hFig)
+				commandwindow
+				% disp(hListboxStruct)
+				% fxnsToRun{hListboxStruct.Value}
+				if isempty(hListboxStruct)
+					uiwait(msgbox('Please re-select a module then press enter. Do not close figure manually.'))
+					idNumIdxArray = 1;
+					ok = 0;
+				else
+					idNumIdxArray = hListboxStruct.Value;
+					validFoldersIdx = hListboxStruct.ValueFolder;
+					obj.guiEnabled = hListboxStruct.guiIdx==1;
+					if hListboxStruct.nwbLoadFiles==1;hListboxStruct.nwbLoadFiles=0;else;hListboxStruct.nwbLoadFiles=1;end
+					obj.nwbLoadFiles = hListboxStruct.nwbLoadFiles;
+					ok = 1;
+				end
+				% idNumIdxArray = get(hListboxS.folders,'Value');
+			catch err
+				ok = 0;
+				idNumIdxArray = 1;
+				validFoldersIdx = 1;
+				disp(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				disp(repmat('@',1,7))
+			end
+
+			function onPropertyChange(src,event)
+				% set(src,'selectionBackground',javax.swing.plaf.ColorUIResource(0.9,0.8,0.8));
+			end
+			% function onFigKeyPress(source,eventdata,hListboxS)
+			function onFocusGain(src,event)
+				% disp('ddd')
+				% figure(hFig)
+				tmpList = fieldnames(hListboxS);
+				for ff = 1:length(tmpList)
+					% jScrollPane = findjobj(hListboxS.(tmpList1{ff}));
+					% jListbox = jScrollPane.getViewport.getComponent(0);
+					% set(src,'background',javax.swing.plaf.ColorUIResource(0.8,0.8,0.8));
+					% set(jListbox, 'selectionForeground',javax.swing.plaf.ColorUIResource(0.9,0.1,0.1));
+					% set(jListbox, 'selectionForeground',javax.swing.plaf.ColorUIResource(0.9,0.1,0.1));
+					% set(hListboxS.(tmpList{ff}),'background',[1 1 1]);
+				end
+				% set(src,'selectionBackground',javax.swing.plaf.ColorUIResource(0.9,0.1,0.1));
+				set(src,'background',javax.swing.plaf.ColorUIResource(0.8,0.9,0.8));
+				% gco
+				% set(gco,'background',[1 1 1]*0.9);
+			end
+			function onFocusLost(src,event)
+				% disp('ddd')
+				% figure(hFig)
+				% tmpList = fieldnames(hListboxS);
+				% for ff = 1:length(tmpList)
+				% 	set(hListboxS.(tmpList{ff}),'background',[1 1 1]);
+				% end
+				% set(src,'background',javax.swing.plaf.ColorUIResource(1,1,1));
+				set(src,'background',javax.swing.plaf.ColorUIResource(0.2,0.2,0.2));
+				% set(src,'selectionBackground',javax.swing.plaf.ColorUIResource(0.9,0.1,0.1));
+				% gco
+				% set(gco,'background',[1 1 1]*0.9);
+			end
+			function onMousePress(evnt,pressRelease,hFig)
+				%
+			end
+			function onKeyPressRelease(src, evnt, pressRelease,hFig)
+				% disp(evnt)
+				% disp(pressRelease)
+				% disp('ddd')
+				figure(hFig)
+				tmpList = fieldnames(hListboxS);
+				for ff = 1:length(tmpList)
+					set(hListboxS.(tmpList{ff}),'background',[1 1 1]);
+				end
+				% set(gco,'background',[1 1 1]*0.9);
+
+				if isempty(intersect(fxnsToRun{get(hListbox,'Value')},excludeList))
+					set(hListboxS.cellExtract,'Enable','on');
+					set(hListboxS.assay,'Enable','on');
+					set(hListboxS.subject,'Enable','on');
+					set(hListboxS.folderFilt,'Enable','on');
+					set(hListboxS.folders,'Enable','on');
+				else
+					set(hListboxS.cellExtract,'Enable','off');
+					set(hListboxS.assay,'Enable','off');
+					set(hListboxS.subject,'Enable','off');
+					set(hListboxS.folderFilt,'Enable','off');
+					set(hListboxS.folders,'Enable','off');
+				end
+
+				if isempty(intersect(fxnsToRun{get(hListbox,'Value')},excludeListVer2))
+
+				else
+					set(hListboxS.cellExtract,'Enable','off');
+					% set(hListboxS.assay,'Enable','off');
+					% set(hListboxS.subject,'Enable','off');
+					% set(hListboxS.folderFilt,'Enable','off');
+					% set(hListboxS.folders,'Enable','off');
+				end
+
+				% if any(strcmp('methodBox',get(src,'Tag')))
+
+					obj.signalExtractionMethod = usrIdxChoiceStr{get(hListboxS.cellExtract,'Value')};
+					% currentCellExtIdx = find(strcmp(usrIdxChoiceStr,obj.signalExtractionMethod));
+
+					% filter for folders chosen by the user
+					subjToAnalyze = subjectStrUnique(get(hListboxS.subject,'Value'));
+					subjToAnalyze = find(ismember(obj.subjectStr,subjToAnalyze));
+
+					assayToAnalyze = assayStrUnique(get(hListboxS.assay,'Value'));
+					assayToAnalyze = find(ismember(obj.assay,assayToAnalyze));
+
+					validFoldersIdx = intersect(subjToAnalyze,assayToAnalyze);
+
+					% if ok==1
+						useAltValid = useAltValidStr{get(hListboxS.folderFilt,'Value')};
+					% else
+						% useAltValid = 0;
+					% end
+
+					[validFoldersIdx] = pipelineFolderFilter(obj,useAltValid,validFoldersIdx);
+
+					if strcmp(get(src,'Tag'),'folders')~=1
+						set(hListboxS.folders,'Value',validFoldersIdx);
+					end
+					% assayStrUnique = unique(obj.assay(subjToAnalyze));
+					% set(hListboxS.assay,'string',assayStrUnique);
+				% else
+
+				% end
+				try
+					evnt.Key;
+					keyCheck = 1;
+				catch
+					keyCheck = 0;
+				end
+				if keyCheck==1
+					if strcmp(evnt.Key,'return')
+						% hListboxStruct.Value = hListbox.Value;
+						hListboxStruct.ValueFolder = get(hListboxS.folders,'Value');
+						hListboxStruct.Value = hListbox.Value;
+						hListboxStruct.guiIdx = get(hListboxS.guiEnabled,'Value');
+						hListboxStruct.nwbLoadFiles = get(hListboxS.cellExtractFiletype,'Value');
+						% hListboxStruct = struct(hListbox);
+						close(hFig)
+					else
+						% disp('Check')
+					end
+					% If escape, close.
+					if strcmp(evnt.Key,'escape')
+						hListboxStruct = [];
+						close(hFig)
+					end
+				end
+				% catch
+				% end
+			end
+			function mouseMovedCallback(jListbox, jEventData, hListbox,tooltipStruct)
+				% Get the currently-hovered list-item
+				mousePos = java.awt.Point(jEventData.getX, jEventData.getY);
+				hoverIndex = jListbox.locationToIndex(mousePos) + 1;
+				listValues = get(hListbox,'string');
+				hoverValue = listValues{hoverIndex};
+
+				% Replace odd values for the section dividers.
+				hoverValue = regexprep(hoverValue,'------- | -------','');
+				hoverValue = regexprep(hoverValue,':|/| |','_');
+
+				% Modify the tooltip based on the hovered item
+				if any(strcmp(fieldnames(tooltipStruct),hoverValue))
+					msgStr = sprintf('<html><b>%s</b>: <br>%s</html>', hoverValue, tooltipStruct.(hoverValue));
+				else
+					% msgStr = sprintf('<html><b>%s</b>: %s</html>', hoverValue, hoverValue);
+					msgStr = sprintf('<html><b>No tooltip.</b></html>', hoverValue, hoverValue);
+				end
+				set(hListbox, 'TooltipString',msgStr);
+			end
+		end
+
+		function [idNumIdxArray, ok] = pipelineListBox(obj,fxnsToRun,inputTxt,currentIdx)
+			% Part of this function is based on http://undocumentedmatlab.com/articles/setting-listbox-mouse-actions/.
+
+			try
+				ok = 0;
+				tooltipStruct = obj.tts;
 
 				hFig = figure;
 				uicontrol('Style','Text','String',[inputTxt 10 'Press ENTER to continue, ESC to exit.'],'Units','normalized','Position',[5 90 90 10]/100,'BackgroundColor','white','HorizontalAlignment','Left');
 
 				% currentIdx = find(strcmp(fxnsToRun,obj.currentMethod));
 
-				hListbox = uicontrol(hFig, 'style','listbox','Units', 'normalized','position',[5,5,90,85]/100, 'string',fxnsToRun,'Value',currentIdx);
+				hListbox = uicontrol(hFig, 'style','listbox','Units', 'normalized','position',[5,5,90,85]/100, 'string',fxnsToRun,'Value',currentIdx,'Tag','methodBox');
+
 				set(hListbox,'Max',2,'Min',0);
-				set(hListbox,'KeyPressFcn',@(src,evnt)onKeyPressRelease(evnt,'press',hFig))
+				% set(hListbox,'KeyPressFcn',@(src,evnt)onKeyPressRelease(src,evnt,'press',hFig))
+				set(hListbox,'KeyReleaseFcn',@(src,evnt)onKeyPressRelease(src,evnt,'press',hFig))
+
+				% set(hListbox,'KeyPressFcn',@(src,evnt)onKeyPressRelease(evnt,'press',hFig))
 				% Get the listbox's underlying Java control
 				jScrollPane = findjobj(hListbox);
 				% We got the scrollpane container - get its actual contained listbox control
@@ -1749,13 +2196,18 @@ classdef calciumImagingAnalysis < dynamicprops
 				disp(getReport(err,'extended','hyperlinks','on'));
 				disp(repmat('@',1,7))
 			end
-			function onKeyPressRelease(evnt, pressRelease,hFig)
+			function onMousePress(evnt,pressRelease,hFig)
+				%
+			end
+			function onKeyPressRelease(src, evnt, pressRelease,hFig)
 				% disp(evnt)
 				% disp(pressRelease)
 				if strcmp(evnt.Key,'return')
 					hListboxStruct.Value = hListbox.Value;
 					% hListboxStruct = struct(hListbox);
 					close(hFig)
+				else
+					% disp('Check')
 				end
 				% If escape, close.
 				if strcmp(evnt.Key,'escape')

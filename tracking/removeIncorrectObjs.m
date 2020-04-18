@@ -9,6 +9,8 @@ function [trackingTableFilteredCell] = removeIncorrectObjs(tablePath,varargin)
 
     % changelog
         % updated: 2014.05.01 - improved speed by switching to more matrix operations-based filtering
+		% 2020.01.27 [17:10:43] - Code clean-up and changed default cut-off values to Inf deal with NaNs rows when they should not be marked as NaNs on some datasets.
+		% 2020.02.24 [20:41:44] - Updated plots to make clearer to users.
     % TODO
         % make assumption of columns NOT hardcoded as is currently
         % add parallel support
@@ -30,9 +32,9 @@ function [trackingTableFilteredCell] = removeIncorrectObjs(tablePath,varargin)
     % information table to add pxToCm
     options.subjectInfoTable = [];
     % px/frame to use as a cutoff.
-    options.velocityCutoff = 30*8;
+    options.velocityCutoff = Inf; % 30*8
     % cm/s to use as a cutoff.
-    options.velocityCutoffCm = 90;
+    options.velocityCutoffCm = Inf; % 90
     % analyze files by folder and group all files into a single folder
     options.groupFilesInFolder = 0;
     % whether to flip the file folder ordering
@@ -169,11 +171,13 @@ function [trackingTableFilteredCell] = removeIncorrectObjs(tablePath,varargin)
 
             [~, ~] = openFigure(pathNo, '');
             colormap gray;
-            subplot(2,2,1)
+            subplot(2,3,1)
                 subfxn_plotAnimalTracks();
                 axis equal tight;
                 colormap(gca,gray)
-            subplot(2,2,2)
+				title(['Animal trace overlayed on arena' 10 'green = start, red = end'])
+				box off;
+            subplot(2,3,2)
                 if ~isempty(options.inputMovie)
                     if strcmp(class(options.inputMovie{pathNo}),'char')|strcmp(class(options.inputMovie{pathNo}),'cell')
                         options.inputMovie{pathNo} = loadMovieList(options.inputMovie{pathNo},'convertToDouble',0,'frameList',50:51,'inputDatasetName',options.inputDatasetName);
@@ -199,18 +203,22 @@ function [trackingTableFilteredCell] = removeIncorrectObjs(tablePath,varargin)
                 plot(trackingTableFiltered.XM(10),trackingTableFiltered.YM(10),'.r','MarkerSize', 30);
                 axis equal tight;
                 colormap(gca,jet)
-            subplot(2,2,[3 4])
+				title(['Animal occupancy (n = ' num2str(length(xValCoords)) ' total frames'])
+				colorbar
+				box off
+            subplot(2,3,[4 5 6])
                 nrows = size(trackingTableFiltered,1);
                 timeVector = (1:nrows)/options.framesPerSecond/60;
+				yyaxis left
                 if options.groupFilesInFolder==1
-                    if sum(strcmp('XM_cm',tableNames));
+                    if sum(strcmp('XM_cm',tableNames))
                         plotVelocity = tsmovavg(trackingTableFiltered.velocity_cm*options.framesPerSecond,'s',options.framesPerSecond,1);
                         gscatter(timeVector,plotVelocity,trackingTableFiltered.file,[],[],[],'off')
-                        ylabel('cm/s');xlabel(['minutes | total frames = ' num2str(nrows)]);
+                        ylabel('cm/s');
                     else
                         plotVelocity = tsmovavg(trackingTableFiltered.velocity*options.framesPerSecond,'s',options.framesPerSecond,1);
                         gscatter(timeVector,plotVelocity,trackingTableFiltered.file,[],[],[],'off')
-                        ylabel('px/s');xlabel(['minutes | total frames = ' num2str(nrows)]);
+                        ylabel('px/s');
                     end
                     % set(gcf, 'Color', 'None')
                     legendStr = strrep(unique(strrep(trackingTableFiltered.file,'_',' ')),{'recording'},'');
@@ -218,23 +226,53 @@ function [trackingTableFilteredCell] = removeIncorrectObjs(tablePath,varargin)
                     legendStr = strrep(legendStr,'.tracking','');
                     legend(sort(legendStr),'location','eastoutside')
                 else
-                    if sum(strcmp('XM_cm',tableNames));
+                    if sum(strcmp('XM_cm',tableNames))
                         plotVelocity = tsmovavg(trackingTableFiltered.velocity_cm*options.framesPerSecond,'s',options.framesPerSecond,1);
                         plot(timeVector,plotVelocity)
-                        ylabel('cm/s');xlabel(['minutes | total frames = ' num2str(nrows)]);
+                        ylabel('cm/s');
                     else
                         plotVelocity = tsmovavg(trackingTableFiltered.velocity*options.framesPerSecond,'s',options.framesPerSecond,1);
                         plot(timeVector,plotVelocity)
-                        ylabel('px/s');xlabel(['minutes | total frames = ' num2str(nrows)]);
+                        ylabel('px/s');
                     end
-                end
+				end
+				xlabel(['Time (min) | total frames = ' num2str(nrows)]);
+				title('Speed and cumulative distance traveled')
                 axis tight
                 box off;
                 % hold on; plot([1 size(trackingTableFiltered,1)],[2 2],'r');
                 % hold on; plot([1 size(trackingTableFiltered,1)],[options.velocityCutoff options.velocityCutoff],'r');
                 % hold on;
-            drawnow
-            display('=====')
+           
+			
+			subplot(2,3,3)
+				yyaxis right
+				plot(timeVector,cumsum(plotVelocity,'omitnan'),'-','LineWidth',4);
+				if sum(strcmp('XM_cm',tableNames))
+					ylabel('Cumulative distance traveled (cm)')
+				else
+					ylabel('Cumulative distance traveled (px)')
+				end
+				title('Cumulative distance traveled')
+				xlabel('Time (min)')
+				axis tight;axis square
+                box off;
+				
+            subplot(2,3,[4 5 6])
+				yyaxis right
+				hold on;
+				if sum(strcmp('XM_cm',tableNames))
+					hA = plot(timeVector,cumsum(plotVelocity,'omitnan')/100,'-','LineWidth',4);
+					ylabel('Cumulative distance traveled (m)')
+				else
+					hA = plot(timeVector,cumsum(plotVelocity,'omitnan'),'-','LineWidth',4);
+					ylabel('Cumulative distance traveled (px)')
+				end
+				%uistack(hA,'bottom')
+				
+			drawnow
+			changeFont(14)
+            disp('=====')
 
             % subplot(2,1,1)
             %     plot(trackingTableFiltered.XM_cm,trackingTableFiltered.YM_cm,'r','LineWidth',0.1)
@@ -314,7 +352,7 @@ function [trackingTableFilteredCell] = removeIncorrectObjs(tablePath,varargin)
         missingIdx = setdiff(completeGroupingVarSet,groupingVarTmp);
         % if missing idx, add NaN rows
         if ~isempty(missingIdx)
-            display('adding missing data')
+            disp('adding missing data')
             tableNames = fieldnames(trackingTableFiltered);
             tableNames = setdiff(tableNames,{'Properties','Row','Variables',options.groupingVar});
             tmpTable.(options.groupingVar) = missingIdx';
@@ -325,11 +363,11 @@ function [trackingTableFilteredCell] = removeIncorrectObjs(tablePath,varargin)
                 % trackingTableFiltered.(tableNames{i})(1)
                 % determine whether the cell array contains strings
                 if iscellstr(trackingTableFiltered.(tableNames{i}))
-                    display('adding characters')
+                    disp('adding characters')
                     repeatSize = [nMissing 1];
                     tmpTable.(tableNames{i}) = repmat({NAME},repeatSize);
                 else
-                    display('adding numbers')
+                    disp('adding numbers')
                     tmpTable.(tableNames{i}) = nan([1 nMissing])';
                 end
                 % tmpTable.(tableNames{i})(1)
@@ -343,13 +381,13 @@ function [trackingTableFilteredCell] = removeIncorrectObjs(tablePath,varargin)
         ydiff = [0; diff(trackingTableFiltered.YM)];
         trackingTableFiltered.velocity = sqrt(xdiff.^2 + ydiff.^2);
         tableNames = fieldnames(trackingTableFiltered);
-        if sum(strcmp('XM_cm',tableNames));
+        if sum(strcmp('XM_cm',tableNames))
             xdiff = [0; diff(trackingTableFiltered.XM_cm)];
             ydiff = [0; diff(trackingTableFiltered.YM_cm)];
             trackingTableFiltered.velocity_cm = sqrt(xdiff.^2 + ydiff.^2);
         end
 
-        if sum(strcmp('XM_cm',tableNames));
+        if sum(strcmp('XM_cm',tableNames))
             velocityFilterIdx = trackingTableFiltered.velocity_cm*options.framesPerSecond>=options.velocityCutoffCm;
         else
             velocityFilterIdx = trackingTableFiltered.velocity>=options.velocityCutoff;
@@ -359,7 +397,7 @@ function [trackingTableFilteredCell] = removeIncorrectObjs(tablePath,varargin)
         % trackingTableFiltered = trackingTableFiltered(velocityFilterIdx,:);
         % velocity = velocity(velocityFilterIdx);
         if ~isempty(velocityFilterIdx)
-            display('removing incorrect velocity rows')
+            disp('removing incorrect velocity rows')
             tableNames = fieldnames(trackingTableFiltered);
             tableNames = setdiff(tableNames,{'Properties','Row','Variables',options.groupingVar});
             tmpTable.(options.groupingVar) = velocityFilterIdx(:);
@@ -387,7 +425,7 @@ function [trackingTableFilteredCell] = removeIncorrectObjs(tablePath,varargin)
             % trackingTableFiltered(1:2,:)
             % add NaNs to output table
 
-            if sum(strcmp('XM_cm',tableNames));
+            if sum(strcmp('XM_cm',tableNames))
                 trackingTableFiltered = trackingTableFiltered(trackingTableFiltered.velocity_cm*options.framesPerSecond<options.velocityCutoffCm,:);
             else
                 trackingTableFiltered = trackingTableFiltered(trackingTableFiltered.velocity<options.velocityCutoff,:);

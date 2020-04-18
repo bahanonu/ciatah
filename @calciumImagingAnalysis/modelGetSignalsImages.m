@@ -9,12 +9,12 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 
 	% changelog
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
+		% 2020.04.16 [19:59:43] - Small fix to NWB file checking.
 	% TODO
 		% Give a user a warning() output if there are no or empty cell-extraction outputs
 
 	%========================
-	% which table to read in
-	% 'filtered' or 'raw'
+	% Type of file to return: 'filtered' or 'raw'
 	options.returnType = 'filtered';
 	options.returnOnlyValid = 0;
 	options.emSaveSorted = '_emAnalysisSorted.mat';
@@ -29,6 +29,7 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 	% decide whether to load algorithm peaks by default
 	options.loadAlgorithmPeaks = 0;
 	% SignalsImages, Images, Signals
+	% which table to read in
 	% options.getSpecificData = 'SignalsImages';
 	%
 	options.regexPairs = {...
@@ -81,13 +82,15 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 			options.returnType = 'raw';
 		case 'raw_CellMax'
 			options.regexPairs = {{obj.rawEMStructSaveStr}};
+			options.regexPairs = {{obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod)}};
 			options.returnType = 'raw';
 		otherwise
 			switch obj.signalExtractionMethod
 				case 'PCAICA'
 					options.regexPairs = {{obj.rawPCAICAStructSaveStr},{obj.rawICfiltersSaveStr,obj.rawICtracesSaveStr},{obj.sortedICfiltersSaveStr,obj.sortedICtracesSaveStr}};
-				case 'EM'
-					options.regexPairs = {{obj.rawEMStructSaveStr}};
+				case {'EM','CELLMax'}
+					% options.regexPairs = {{obj.rawEMStructSaveStr}};
+					options.regexPairs = {{obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod)}};
 				case 'EXTRACT'
 					options.regexPairs = {{obj.rawEXTRACTStructSaveStr}};
 				case 'CNMF'
@@ -220,43 +223,76 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 		filesToLoad = [];
 		fileToLoadNo = 1;
 		nRegExps = length(regexPairs);
-		while isempty(filesToLoad)
-			filesToLoad = getFileList(obj.dataPath{thisFileNum},strrep(regexPairs{fileToLoadNo},'.mat',''));
-			fileToLoadNo = fileToLoadNo+1;
-			if fileToLoadNo>nRegExps
-				break;
-			end
-		end
-		if isempty(filesToLoad)
-		% if(~exist(filesToLoad{1}, 'file'))
-			display('no files');
-			inputSignals = [];
-			inputImages = [];
-			signalPeaks = [];
-			signalPeaksArray = [];
-			return;
-		end
-		% rawFiles = 0;
-		% % get secondary list of files to load
-		% % |strcmp(options.returnType,'raw')
-		% if isempty(filesToLoad)
-		%     filesToLoad = getFileList(obj.dataPath{thisFileNum},regexPairs{2});
-		%     rawFiles = 1;
-		% end
-		% load files in order
-		for i=1:length(filesToLoad)
-			display(['loading: ' filesToLoad{i}]);
-			try
-				load(filesToLoad{i});
-			catch err
-				display(repmat('@',1,7))
-				disp(getReport(err,'extended','hyperlinks','on'));
-				display(repmat('@',1,7))
-				pause(3)
-				display(['trying, loading again: ' filesToLoad{i}]);
-				load(filesToLoad{i});
+
+		% Flag for whether to load the default calciumImagingAnalysis filetype
+		loadCiaFiles = 1;
+
+		if obj.nwbLoadFiles==1
+			% Check whether to use override NWB regular expression, else use calciumImagingAnalysis defaults.
+			if isempty(obj.nwbFileRegexp)
+				filesToLoad = getFileList([obj.dataPath{thisFileNum} filesep obj.nwbFileFolder],[obj.extractionMethodSaveStr.(obj.signalExtractionMethod) '*.nwb']);
+			else
+				filesToLoad = getFileList([obj.dataPath{thisFileNum} filesep obj.nwbFileFolder],obj.nwbFileRegexp);
 			end
 
+			if ~isempty(filesToLoad)
+				nwbOpts.algorithm = obj.signalExtractionMethod;
+				nwbOpts.groupImages = obj.nwbGroupImages;
+				nwbOpts.groupSignalSeries = obj.nwbGroupSignalSeries;
+				[inputImages,inputSignals,infoStruct] = loadNeurodataWithoutBorders(filesToLoad{1},'options',nwbOpts);
+
+				if nargout>=7
+					% If user request second signal series, load it from data.
+					nwbOpts.signalSeriesNo = 2;
+					nwbOpts.loadImages = 0;
+					[~,inputSignals,~] = loadNeurodataWithoutBorders(filesToLoad{1},'options',nwbOpts);
+				end
+				loadCiaFiles = 0;
+			end
+		else
+
+		end
+
+		if loadCiaFiles==1
+			while isempty(filesToLoad)
+				filesToLoad = getFileList(obj.dataPath{thisFileNum},strrep(regexPairs{fileToLoadNo},'.mat',''));
+				fileToLoadNo = fileToLoadNo+1;
+				if fileToLoadNo>nRegExps
+					break;
+				end
+			end
+			if isempty(filesToLoad)
+			% if(~exist(filesToLoad{1}, 'file'))
+				display('no files');
+				inputSignals = [];
+				inputImages = [];
+				signalPeaks = [];
+				signalPeaksArray = [];
+				return;
+			end
+			% rawFiles = 0;
+			% % get secondary list of files to load
+			% % |strcmp(options.returnType,'raw')
+			% if isempty(filesToLoad)
+			%     filesToLoad = getFileList(obj.dataPath{thisFileNum},regexPairs{2});
+			%     rawFiles = 1;
+			% end
+			% load files in order
+
+			for i=1:length(filesToLoad)
+				display(['loading: ' filesToLoad{i}]);
+				try
+					load(filesToLoad{i});
+				catch err
+					display(repmat('@',1,7))
+					disp(getReport(err,'extended','hyperlinks','on'));
+					display(repmat('@',1,7))
+					pause(3)
+					display(['trying, loading again: ' filesToLoad{i}]);
+					load(filesToLoad{i});
+				end
+
+			end
 		end
 
 		if exist('pcaicaAnalysisOutput','var')
@@ -350,7 +386,10 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 			inputSignals2 = normalizeSignalExtractionActivityTraces(inputSignals2,inputImages);
 		end
 		% if exist(obj.structEMVarname,'var')
-		if exist('emAnalysisOutput','var')
+		if exist('emAnalysisOutput','var')|exist('cellmaxAnalysisOutput','var')
+			if exist('cellmaxAnalysisOutput','var')
+				emAnalysisOutput = cellmaxAnalysisOutput;
+			end
 			% inputSignals = emAnalysisOutput.dsCellTraces;
 			% if length(emAnalysisOutput.dsCellTraces)==1
 			% 	inputSignals = emAnalysisOutput.cellTraces;
@@ -575,6 +614,8 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 					inputImages = inputImages(:,:,valid);
 				case 'filteredAndRegistered'
 					inputImages = inputImages(:,:,valid);
+					% register images based on manual registration if performed
+
 					% register images based on cross session alignment
 					globalRegCoords = obj.globalRegistrationCoords.(obj.subjectStr{thisFileNum});
 					if ~isempty(globalRegCoords)

@@ -287,6 +287,8 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 					% globalCoordHere = obj.globalIDCoords.(thisSubjectStr).globalCoords(globalNo,:);
 					tmpCentroids = [];
 					% for 1:nSessions
+					sessionIdxList = [];
+					sessionList = [];
 					for sessionNo = 1:nSessions
 						obj.fileNum = validFoldersIdx(sessionNo);
 						thisFileID = obj.fileIDArray{obj.fileNum};
@@ -297,6 +299,8 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 						if sessionIdx~=0
 							tt = obj.globalIDCoords.(thisSubjectStr).localCoords{sessionNo}(sessionIdx,:);
 							tmpCentroids = cat(1,tmpCentroids,tt);
+							sessionIdxList(end+1) = sessionIdx;
+							sessionList(end+1) = obj.fileNum;
 						end
 					end
 					% [~,~,tmpCentroids] = findCentroid(tmpGlobalImg,'thresholdValue',0.4,'imageThreshold',0.4,'roundCentroidPosition',0);
@@ -352,22 +356,35 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 					openFigure(1112);
 						subplot(1,2,1)
 						% [~,~,tmpCentroids] = findCentroid(outputCutMovie{globalNo},'thresholdValue',0.4,'imageThreshold',0.4,'roundCentroidPosition',0);
+						% tmpCentroids
+						% allCentroids
 						plot(tmpCentroids(:,1),tmpCentroids(:,2),'k.');
+						hold on;
+						% figure(1112)
+						% pause
+						% plot(allCentroids(:,1),allCentroids(:,2),'k.');
 						% ylim([0 options.cellmapZoomPx*2+1])
 						% xlim([0 options.cellmapZoomPx*2+1])
-						axis equal
-						hold on;
+						% axis equal
+						% if globalNo==1
+							xlabel('X (px)')
+							ylabel('Y (px)')
+							box off;
+							title('Individual points for all matched cells')
+						% % end
+						axis equal tight
 
 					% openFigure(1113);
 						subplot(1,2,2)
 						hexscatter(allCentroids(:,1),allCentroids(:,2),'res',50);
 						colorbar
-						axis equal
+						title('Heat plot')
+						% axis equal
+						axis equal tight
 						% ylim([0 options.cellmapZoomPx*2+1])
 						% xlim([0 options.cellmapZoomPx*2+1])
 
-
-					if zzz2<10&size(tmpGlobalImg,3)>=(nSessions-1)
+					if zzz2<17&size(tmpGlobalImg,3)>=(nSessions-1)
 						[outputCutMovie{globalNo}] = getObjCutMovie(tmpGlobalImg,tmpGlobalImg(:,:,1),'waitbarOn',0,'cropSize',options.cellmapZoomPx,'addPaddingForce',1,'createMontage',0,'xCoords',round(globalCoordHere(1)),'yCoords',round(globalCoordHere(2)),'crossHairsOn',0);
 						outputCutMovie{globalNo} = outputCutMovie{globalNo}{1};
 
@@ -377,19 +394,34 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 							outputCutMovieThres{globalNo} = thresholdImages(outputCutMovie{globalNo},'binary',1,'waitbarOn',0,'threshold',0.5);
 							outputCutMovieThres{globalNo} = nanmean(outputCutMovieThres{globalNo},3);
 							imagesc(outputCutMovieThres{globalNo})
+							title(num2str(globalNo))
 							axis off; axis equal tight;
 						[~,~,tmpCentroids] = findCentroid(outputCutMovie{globalNo},'thresholdValue',0.4,'imageThreshold',0.4,'roundCentroidPosition',0);
-						openFigure(1114);
+
+						nRowH = 6;
+						multiVal = ceil(zzz2/nRowH);
+						openFigure(1114+(multiVal-1));
 							colormap gray
 							tmpVar = outputCutMovie{globalNo};
 							for hh = 1:size(tmpVar,3)
 								% subplot(10,nSessions,(globalNo-1)*nSessions+hh)
-								subplot(10,nSessions,(zzz2-1)*nSessions+hh)
+								% subplot(16,nSessions,(zzz2-1)*nSessions+hh)
+								subplot(nRowH,nSessions,((zzz2-1)*nSessions+hh)-(multiVal-1)*(nRowH*nSessions))
 									hhhTmp = thresholdImages(tmpVar(:,:,hh),'binary',0,'waitbarOn',0,'threshold',0.4);
 									imagesc(hhhTmp);
 									hold on;
 									plot(tmpCentroids(hh,1),tmpCentroids(hh,2),'r+');
 									axis equal tight;
+									try
+										if hh==1
+											ylabel(num2str(globalNo))
+										end
+										title([num2str(sessionList(hh)) ' | ' num2str(sessionIdxList(hh))])
+									catch err
+										disp(repmat('@',1,7))
+										disp(getReport(err,'extended','hyperlinks','on'));
+										disp(repmat('@',1,7))
+									end
 							end
 							hold on;
 							% axis off; axis equal tight;
@@ -408,10 +440,17 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 					display(repmat('@',1,7))
 				end
 			end
+			drawnow
+			openFigure(1112);
+				suptitle('Errors in cell alignment to "global" match cell centroid')
+			openFigure(1110);
+				suptitle('Overlap of matched cells detected across at least (nSessions-1) sessions')
+			openFigure(1114);
+				suptitle('Example cells matched across sessions')
+
 			newSubjStr = sprintf('%s_%d',thisSubjectStr,options.alignmentSetNum);
 			obj.globalIDs.matchCoords.(newSubjStr) = allCentroids;
 			obj.globalIDs.distances.(newSubjStr) = allDistances;
-			drawnow
 			% return;
 			% pause
 
@@ -467,12 +506,14 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 						thisCellmap = createObjMap(groupedImagesRates);
 						thisCellmap(1,1) = 1;
 						thisCellmap(1,2) = nGlobalIDs;
+						setCmapHere = @(nGlobalIDs) colormap([0 0 0; [1 1 1]*0.3; hsv(nGlobalIDs)]);
 						[~, ~] = openFigure(sessionNo, '');
 							clf
 							imagesc(thisCellmap+1);box off;axis off
 							% title(strrep(strcat(obj.subjectStr(obj.fileNum),{' '},obj.assay(obj.fileNum)),'_',' '),'FontSize', 35)
 							% title(strrep(obj.folderBaseSaveStr(obj.fileNum),'_',' '))
-							colormap([1 1 1; 0.9 0.9 0.9; hsv(nGlobalIDs)]);
+							% colormap([1 1 1; 0.9 0.9 0.9; hsv(nGlobalIDs)]);
+							setCmapHere(nGlobalIDs);
 							set(sessionNo,'PaperUnits','inches','PaperPosition',[0 0 9 9])
 							obj.modelSaveImgToFile([],[folderSaveName{matchingNumbers} 'Session' filesep thisSubjectStr],sessionNo,strcat(thisFileID));
 						[~, ~] = openFigure(thisFigNo, '');
@@ -485,7 +526,8 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 							% title(strrep(obj.folderBaseSaveStr(obj.fileNum),'_',' '))
 							% colormap(customColormap([]))
 							% colormap([1 1 1; hsv(nGlobalIDs)]);
-							colormap([1 1 1; 0.9 0.9 0.9; hsv(nGlobalIDs)]);
+							setCmapHere(nGlobalIDs);
+							% colormap([1 1 1; 0.9 0.9 0.9; hsv(nGlobalIDs)]);
 							% drawnow;
 							obj.modelSaveImgToFile([],[folderSaveName{matchingNumbers} 'All'],thisFigNo,obj.subjectStr{obj.fileNum});
 					catch err
@@ -636,13 +678,13 @@ function [groupImages matchedSignals] = getGlobalData(inputImages,globalIDs,inpu
 		end
 	end
 end
-function [] = creatObjMapGlobalOverlay()
+function [] = creatObjMapGlobalOverlay(inputImages)
 
 	inputImages = inputImages(:,:,valid);
 	% register images based on cross session alignment
 	globalRegCoords = obj.globalRegistrationCoords.(obj.subjectStr{obj.fileNum});
 	if ~isempty(globalRegCoords)
-		display('registering images')
+		disp('registering images')
 		% get the global coordinate number based
 		globalRegCoords = globalRegCoords{strcmp(obj.assay{obj.fileNum},obj.globalIDFolders.(obj.subjectStr{obj.fileNum}))};
 		if ~isempty(globalRegCoords)
@@ -651,20 +693,18 @@ function [] = creatObjMapGlobalOverlay()
 				fn=fieldnames(globalRegCoords{iterationNo});
 				for i=1:length(fn)
 					localCoords = globalRegCoords{iterationNo}.(fn{i});
-					[inputImages localCoords] = turboregMovie(inputImages,'precomputedRegistrationCooords',localCoords);
+					[inputImages, localCoords] = turboregMovie(inputImages,'precomputedRegistrationCooords',localCoords);
 				end
 			end
 			% inputImages = permute(inputImages,[3 1 2]);
 		end
 	end
-
+	movieList = '';
 	movieFrame = loadMovieList(movieList{1},'convertToDouble',0,'frameList',1:2);
 	movieFrame = squeeze(movieFrame(:,:,1));
 
-
-
 	validAuto = obj.validAuto{obj.fileNum};
-	display('==============')
+	disp('==============')
 	if isempty(obj.validRegionMod)
 		validRegionMod = ones(size(validAuto));
 	else

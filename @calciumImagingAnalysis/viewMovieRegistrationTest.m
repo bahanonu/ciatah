@@ -171,7 +171,7 @@ function obj = viewMovieRegistrationTest(obj)
 				end
 				% [inputMovie] = cropInputMovie(inputMovie);
 
-				newDir = [obj.inputFolders{obj.fileNum} filesep 'tregRun0' num2str(testNo)];
+				newDir = [obj.inputFolders{obj.fileNum} filesep 'preprocRunTest' filesep 'preprocRun0' num2str(testNo)];
 				savePathStr = [newDir filesep obj.folderBaseSaveStr{obj.fileNum} '_turboreg.h5'];
 				if (~exist(newDir,'dir')) mkdir(newDir); end;
 				movieSaved = writeHDF5Data(inputMovie,savePathStr,'datasetname',outputDatasetName);
@@ -271,7 +271,7 @@ function obj = viewMovieRegistrationTest(obj)
 			manageMiji('startStop','exit');
 		end
 
-		uiwait(msgbox('Users can load settings saved to "settings.mat", in each "tregRun" sub-folder within each folder that was just tested, in "modelPreprocessMovie" to re-use those same settings for actual movie processing.'))
+		uiwait(msgbox('Users can load settings saved to "settings.mat", in each "preprocRun" sub-folder inside "preprocRunTest" folder within each folder that was just tested, in "modelPreprocessMovie" to re-use those same settings for actual movie processing.'))
 	catch err
 		display(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));

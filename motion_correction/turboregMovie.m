@@ -57,29 +57,32 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	% already have registration coordinates
 	options.precomputedRegistrationCooordsFullMovie = [];
 	% turboreg options
-	options.RegisType=3;
-	options.SmoothX=80;%10
-	options.SmoothY=80;%10
-	% options.minGain=0.4;
-	options.minGain=0.0;
-	movieDim = size(inputMovie);
-	options.Levels=nestFxnCalculatePyramidDepth(min(movieDim(1),movieDim(2)));
-	options.Lastlevels=1;
-	options.Epsilon=1.192092896E-07;
-	options.zapMean=0;
-	% options.Interp='bicubic';
-	options.Interp='bilinear';
+		% Int: Registration type. 1 = affine (parallelism maintained), 3 = projective (parallelism not guaranteed, and allow rotation to be detected).
+		options.RegisType = 3;
+		% Int: size of pixels to smooth in X and Y
+		options.SmoothX=80;%10
+		options.SmoothY=80;%10
+		%
+		% options.minGain=0.4;
+		options.minGain=0.0;
+		movieDim = size(inputMovie);
+		options.Levels=nestFxnCalculatePyramidDepth(min(movieDim(1),movieDim(2)));
+		options.Lastlevels=1;
+		options.Epsilon=1.192092896E-07;
+		options.zapMean=0;
+		% options.Interp='bicubic';
+		options.Interp='bilinear';
 	% normal options
-	% if loading movie inside function, provide framelist
+	% Int vector: if loading movie inside function, provide frameList to load specific frames
 	options.frameList = [];
-	%
+	% Int: which frame in the inputMovie to use as a reference to register all other frames to.
 	options.refFrame = 1;
+	% Matrix: same type as the inputMovie, this will be appended to the end of the movie and used as the reference frame. This is for cases in which the reference frame is not contained in the movie.
+	options.refFrameMatrix = [];
 	% whether to use 'imtransform' (Matlab) or 'transfturboreg' (C)
 	options.registrationFxn = 'transfturboreg';
 	% 1 = take turboreg rotation, 0 = no rotation
 	options.turboregRotation = 1;
-	% normal options
-	options.refFrameMatrix = [];
 	% max number of frames in the input matrix
 	options.maxFrame = [];
 	% number of frames to subset when registering
@@ -524,15 +527,26 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 				% else
 				% 	MatrixMotCorrDispl(:,i)=[ResultsOut{i}.Translation(1) ResultsOut{i}.Translation(2) 0];
 				% end
-				% get the skew/translation matrix from turboreg
-				SkewingMat=ResultsOut{i}.Skew;
-				translateMat=[0 0 0;0 0 0;ResultsOut{i}.Translation(2) ResultsOut{i}.Translation(1) 0];
-				xform=translateMat+SkewingMat;
-				% get the transformation
-				tform=maketform(TransformationType,double(xform));
 				% transform movie given results of turboreg
 				switch registrationFxnOption
 					case 'imtransform'
+						% get the skew/translation matrix from turboreg
+						SkewingMat = ResultsOut{i}.Skew;
+						% if turboregRotationOption==1
+						% 	rotMat = [...
+						% 			cos(ResultsOut{i}.Rotation) sin(ResultsOut{i}.Rotation) 0;...
+						% 			-sin(ResultsOut{i}.Rotation) cos(ResultsOut{i}.Rotation) 0;...
+						% 			0 0 0];
+						% else
+						% 	rotMat = [0 0 0;0 0 0;0 0 0];
+						% end
+						translateMat = [0 0 0;...
+										0 0 0;...
+										ResultsOut{i}.Translation(2) ResultsOut{i}.Translation(1) 0];
+						% xform = translateMat + SkewingMat + rotMat;
+						xform = translateMat + SkewingMat;
+						% get the transformation
+						tform = maketform(TransformationType,double(xform));
 						% movieDataTemp{i} = imwarp(movieDataTemp{i},tform,char(InterpListSelection),'FillValues',0);
 						% InterpListSelection = 'nearest';
 						movieDataTemp{i} = single(imtransform(movieDataTemp{i},tform,char(InterpListSelection),...
