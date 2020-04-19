@@ -10,6 +10,7 @@ function [inputMovie] = removeStripsFromMovie(inputMovie,varargin)
 	% changelog
 		% 2019.06.30 [21:16:15]
 		% 2019.12.07 [17:22:29] - Added option to see stripe FFT cutoff filter and updated some text.
+		% 2020.04.19 [16:15:50] - Added parfor and progress support.
 	% TODO
 		%
 
@@ -151,42 +152,62 @@ function [inputMovie] = removeStripsFromMovie(inputMovie,varargin)
 		manageParallelWorkers('parallel',options.parallel);
 		% ========================
 		%Get dimension information about 3D movie matrix
-		[inputMovieX inputMovieY inputMovieZ] = size(inputMovie);
-		reshapeValue = size(inputMovie);
+		% [inputMovieX inputMovieY inputMovieZ] = size(inputMovie);
+		% reshapeValue = size(inputMovie);
 		%Convert array to cell array, allows slicing (not contiguous memory block)
-		inputMovie = squeeze(mat2cell(inputMovie,inputMovieX,inputMovieY,ones(1,inputMovieZ)));
+		% inputMovie = squeeze(mat2cell(inputMovie,inputMovieX,inputMovieY,ones(1,inputMovieZ)));
 
-		reverseStr = '';
+		% reverseStr = '';
 		% parfor_progress(options.maxFrame);
 		% dispstat('','init');
 		% fprintf(1,'FFT movie:  ');
 		nFramesToNormalize = options.maxFrame;
-		try;[percent progress] = parfor_progress(nFramesToNormalize);catch;end; dispStepSize = round(nFramesToNormalize/20); dispstat('','init');
+		% try;[percent progress] = parfor_progress(nFramesToNormalize);catch;end; dispStepSize = round(nFramesToNormalize/20); dispstat('','init');
 		secondaryNormalizationType = options.secondaryNormalizationType;
 		maxFrame = options.maxFrame;
 
 		ioptions.showImages = options.showImages;
 		ioptions.cutoffFilter = stripCutoffFilter;
 
-		for frame=1:nFramesToNormalize
-			thisFrame = squeeze(inputMovie{frame});
+		%========================
+		% Only implement in Matlab 2017a and above
+		if ~verLessThan('matlab', '9.2')
+			D = parallel.pool.DataQueue;
+			afterEach(D, @nUpdateParforProgress);
+			p = 0;
+			N = size(inputMovie,3);
+			nInterval = round(N/20);%100
+			options_waitbarOn = options.waitbarOn;
+			nFrames = nFramesToNormalize;
+		end
+		%========================
+
+		parfor frame = 1:nFramesToNormalize
+			% thisFrame = squeeze(inputMovie{frame});
+			thisFrame = squeeze(inputMovie(:,:,frame));
 			if isempty(secondaryNormalizationType)
-				inputMovie{frame} = fftImage(thisFrame,'options',ioptions);
+				% inputMovie{frame} = fftImage(thisFrame,'options',ioptions);
+				inputMovie(:,:,frame) = fftImage(thisFrame,'options',ioptions);
 			else
 				tmpFrame = fftImage(thisFrame,'options',ioptions);
 				tmpFrameMin = nanmin(tmpFrame(:));
 				if tmpFrameMin<0
 					tmpFrame = tmpFrame + abs(tmpFrameMin);
 				end
-				inputMovie{frame} = thisFrame./tmpFrame;
+				% inputMovie{frame} = thisFrame./tmpFrame;
+				inputMovie(:,:,frame) = thisFrame./tmpFrame;
 			end
-			if mod(frame,round(maxFrame/10))==0
+
+			if ~verLessThan('matlab', '9.2')
+				send(D, frame); % Update progress bar
+			end
+			%if mod(frame,round(maxFrame/10))==0
 				% fprintf ('%2.0f-',frame/options.maxFrame*100);drawnow
 				% fprintf(1,'\b%d',i);
 				% fprintf(1,'=');drawnow
-			end
+			%end
 		end
-		inputMovie = cat(3,inputMovie{:});
+		% inputMovie = cat(3,inputMovie{:});
 	catch err
 		if iscell(inputMovie)
 			inputMovie = cat(3,inputMovie{:});
@@ -194,6 +215,20 @@ function [inputMovie] = removeStripsFromMovie(inputMovie,varargin)
 		display(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));
 		display(repmat('@',1,7))
+	end
+	function nUpdateParforProgress(~)
+		if ~verLessThan('matlab', '9.2')
+			p = p + 1;
+			if (mod(p,nInterval)==0||p==1||p==nFrames)&&options_waitbarOn==1
+				if p==nFrames
+					fprintf('%d\n',round(p/nFrames*100))
+				else
+					fprintf('%d|',round(p/nFrames*100))
+				end
+				% cmdWaitbar(p,nSignals,'','inputStr','','waitbarOn',1);
+			end
+			% [p mod(p,nInterval)==0 (mod(p,nInterval)==0||p==nSignals)&&options_waitbarOn==1]
+		end
 	end
 	function [cutoffFilter] = createCutoffFilter(testImage,bandpassMask,lowFreq,highFreq,bandpassType,padImage)
 		cutoffFilter = [];

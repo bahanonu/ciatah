@@ -265,7 +265,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	if obj.saveLoadPreprocessingSettings==1
 		currentDateTimeStr = datestr(now,'yyyymmdd_HHMMSS','local');
 		settingsSaveStr = [obj.settingsSavePath filesep currentDateTimeStr '_modelPreprocessMovieFunction_settings.mat'];
-		uiwait(msgbox(['Settings saved to obj.preprocessSettings and MAT-file: ' settingsSaveStr]))
+		% uiwait(msgbox(['Settings saved to obj.preprocessSettings and MAT-file: ' settingsSaveStr]))
 	end
 	% '[options, if motion correcting] Motion correction reference frame: '...
 	% num2str(obj.motionCorrectionRefFrame)...
@@ -281,7 +281,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		try
 			usrIdxChoiceStr = {'Automatic (saved in class).','Manually load from file.'};
 			scnsize = get(0,'ScreenSize');
-			[sel, ok] = listdlg('ListString',usrIdxChoiceStr,'ListSize',[scnsize(3)*0.4 scnsize(4)*0.25],'Name','How to load previous settings? Press enter if no previous settings.');
+			[sel, ok] = listdlg('ListString',usrIdxChoiceStr,'ListSize',[scnsize(3)*0.4 scnsize(4)*0.25],'Name','How to load previous settings? Press enter if no previous settings.','PromptString',{['Settings saved to "obj.preprocessSettings" and in MAT-file:'],settingsSaveStr});
 			if sel==1
 				if isstruct(obj.preprocessSettings)
 					previousPreprocessSettings = obj.preprocessSettings;
@@ -1560,7 +1560,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			display(repmat('$',1,7))
 			j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
 
-			thisMovie(:,:,movieSubset) = removeStripsFromMovie(single(thisMovie(:,:,movieSubset)),'stripOrientation',options.turboreg.stripOrientationRemove,'meanFilterSize',options.turboreg.stripSize,'freqLowExclude',options.turboreg.stripfreqLowExclude,'bandpassType',stripfreqBandpassType,'freqHighExclude',stripfreqHighExclude,'waitbarOn',1);
+			thisMovie(:,:,movieSubset) = removeStripsFromMovie(single(thisMovie(:,:,movieSubset)),'stripOrientation',options.turboreg.stripOrientationRemove,'meanFilterSize',options.turboreg.stripSize,'freqLowExclude',options.turboreg.stripfreqLowExclude,'bandpassType',options.turboreg.stripfreqBandpassType,'freqHighExclude',options.turboreg.stripfreqHighExclude,'waitbarOn',1);
 
 			toc(subsetStartTime)
 		end

@@ -399,7 +399,7 @@ After users instantiate an object of the `calciumImagingAnalysis` class and ente
 - See below for a series of windows to get started, the options for motion correction, cropping unneeded regions, Δ_F/F_, and temporal downsampling were selected for use in the study associated with this repository.
 - If users have not specified the path to Miji, a window appears asking them to select the path to Miji's `scripts` folder.
 - If users are using the test dataset, it is recommended that they do not use temporal downsampling.
-- Vertical and horizontal stripes can be removed via `stripeRemoval` step. Remember to select correct `stripOrientationRemove`,`stripSize`, and `stripfreqLowExclude` options in the preprocessing options menu.
+- Vertical and horizontal stripes in movies (e.g. CMOS camera artifacts) can be removed via `stripeRemoval` step. Remember to select correct `stripOrientationRemove`,`stripSize`, and `stripfreqLowExclude` options in the preprocessing options menu.
 
 ![image](https://user-images.githubusercontent.com/5241605/49827992-93d86700-fd3f-11e8-9936-d7143bbec3db.png)
 

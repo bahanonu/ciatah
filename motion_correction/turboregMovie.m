@@ -1,5 +1,5 @@
 function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
-	% Motion corrects (using turboreg) a movie; both turboreg (to get 2D translation coordinates) and registering images have been parallelized. Can also turboreg to one set of images and apply the registration to another set (e.g. for cross-day alignment).
+	% Motion corrects (using turboreg) a movie. Both turboreg (to get 2D translation coordinates) and registering images (transfturboreg, imwarp, imtransform) have been parallelized. Can also turboreg to one set of images and apply the registration to another set (e.g. for cross-day alignment). Spatial filtering is applied after obtaining registration coordinates but before transformation, this reduced chance that 0s or NaNs at edge after transformation mess with proper spatial filtering.
 	% Biafra Ahanonu
 	% started 2013.11.09 [11:04:18]
 	% modified from code created by Jerome Lecoq in 2011 and parallel code update by biafra ahanonu
@@ -18,36 +18,41 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		% 2016.01.16 [19:38:08] - Added additional normalization options
 		% 2016.09.xx - parallel switch now forces parfor to not open up a parallel pool of workers if switch = 0
 		% 2019.01.15 [15:59:21] - Remove NaNs from inputMovie when using precomputedRegistrationCooords.
+		% 2020.04.18 [19:04:13] - Update creation of xform to by default include rotation along with translation and skew.
+	% TO-DO
+		% Add support for "imregtform" based registration.
 
 	% ========================
-	% using a compiled version of the ANSI C code developed by Philippe Thevenaz.
+	% Using a compiled version of the ANSI C code developed by Philippe Thevenaz.
 	%
-	% It uses a MEX file as a gateway between the C code and MATLAB code.
-	% All C codes files are available in subfolder 'C'. The interface file is
-	% 'turboreg.c'. The main file from Turboreg is 'regFlt3d.c'. Original code
-	% has been modified to move new image calculation from C to Matlab to provide
-	% additional flexibility.
-	% ========================
-	% SETTINGS
-		% zapMean - If 'zapMean' is set to 'FALSE', the input data is left untouched. If zapMean is set to 'TRUE', the test data is modified by removing its average value, and the reference data is also modified by removing its average value prior to optimization.
-		% minGain - An iterative algorithm needs a convergence criterion. If 'minGain' is set to '0.0', new tries will be performed as long as numerical accuracy permits. If 'minGain' is set between '0.0' and '1.0', the computations will stop earlier, possibly to the price of some loss of accuracy. If 'minGain' is set to '1.0', the algorithm pretends to have reached convergence as early as just after the very first successful attempt.
-		% epsilon - The specification of machine-accuracy is normally machine-dependent. The proposed value has shown good results on a variety of systems; it is the C-constant FLT_EPSILON.
-		% levels - This variable specifies how deep the multi-resolution pyramid is. By convention, the finest level is numbered '1', which means that a pyramid of depth '1' is strictly equivalent to no pyramid at all. For best registration results, the rule of thumb is to select a number of levels such that the coarsest representation of the data is a cube between 30 and 60 pixels on each side. Default value ensure that values
-		% lastLevel - It is possible to short-cut the optimization before reaching the finest stages, which are the most time-consuming. The variable 'lastLevel' specifies which is the finest level on which optimization is to be performed. If 'lastLevel' is set to the same value as 'levels', the registration will take place on the coarsest stage only. If 'lastLevel' is set to '1', the optimization will take advantage of the whole multi-resolution pyramid.
+	% It uses a MEX file as a gateway between the C code and MATLAB code. All C codes files are available in subfolder 'C'. The interface file is 'turboreg.c'. The main file from Turboreg is 'regFlt3d.c'. Original code has been modified to move new image calculation from C to Matlab to provide additional flexibility.
 	% ========================
 	% NOTES
 		% If you get error on the availability of turboreg, please consider creating the mex file for your system using the following command in the C folder : mex turboreg.c regFlt3d.c svdcmp.c reg3.c reg2.c reg1.c reg0.c quant.c pyrGetSz.c pyrFilt.c getPut.c convolve.c BsplnWgt.c BsplnTrf.c phil.c
-		% if getting blank frames with transfturboreg, install Visual C++ Redistributable Packages for Visual Studio 2013 (http://www.microsoft.com/en-us/download/details.aspx?id=40784)
-	% ================================================
+		% If getting blank frames with transfturboreg, install Visual C++ Redistributable Packages for Visual Studio 2013 (http://www.microsoft.com/en-us/download/details.aspx?id=40784)
+		% See https://github.com/bahanonu/calciumImagingAnalysis/wiki/Preprocessing:-Motion-Correction#compiling-turboreg-and-transfturboreg-mex-file.
+	% ========================
 
 	% check that input is not empty
-	disp('starting turboreg...');
+	disp('Starting motion correction (turboreg)...');
 	if isempty(inputMovie)
+		disp('Empty movie matrix, exiting motion correction...')
 		return;
 	end
 
 	% ========================
 	% get options
+	% =======IMPORTANT OPTIONS=====
+	% Str: dataset name in HDF5 file where data is stored, if inputMovie is a path to a movie.
+	options.inputDatasetName = '/1';
+	% Int vector: if loading movie inside function, provide frameList to load specific frames
+	options.frameList = [];
+	% Int: which frame in the inputMovie to use as a reference to register all other frames to.
+	options.refFrame = 1;
+	% Matrix: same type as the inputMovie, this will be appended to the end of the movie and used as the reference frame. This is for cases in which the reference frame is not contained in the movie.
+	options.refFrameMatrix = [];
+	% whether to use 'imtransform' or 'imwarp' (Matlab) or 'transfturboreg' (C)
+	options.registrationFxn = 'transfturboreg';
 	% display options for verification of input
 	options.displayOptions = 0;
 	% character string, path to save turboreg coordinates
@@ -56,31 +61,42 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	options.precomputedRegistrationCooords = [];
 	% already have registration coordinates
 	options.precomputedRegistrationCooordsFullMovie = [];
-	% turboreg options
-		% Int: Registration type. 1 = affine (parallelism maintained), 3 = projective (parallelism not guaranteed, and allow rotation to be detected).
+	% =======TURBOREG OPTIONS=======
+		% =======
+		% SETTINGS
+		% zapMean - If 'zapMean' is set to 'FALSE', the input data is left untouched. If zapMean is set to 'TRUE', the test data is modified by removing its average value, and the reference data is also modified by removing its average value prior to optimization.
+		% minGain - An iterative algorithm needs a convergence criterion. If 'minGain' is set to '0.0', new tries will be performed as long as numerical accuracy permits. If 'minGain' is set between '0.0' and '1.0', the computations will stop earlier, possibly to the price of some loss of accuracy. If 'minGain' is set to '1.0', the algorithm pretends to have reached convergence as early as just after the very first successful attempt.
+		% epsilon - The specification of machine-accuracy is normally machine-dependent. The proposed value has shown good results on a variety of systems; it is the C-constant FLT_EPSILON.
+		% levels - This variable specifies how deep the multi-resolution pyramid is. By convention, the finest level is numbered '1', which means that a pyramid of depth '1' is strictly equivalent to no pyramid at all. For best registration results, the rule of thumb is to select a number of levels such that the coarsest representation of the data is a cube between 30 and 60 pixels on each side. Default value ensure that values
+		% lastLevel - It is possible to short-cut the optimization before reaching the finest stages, which are the most time-consuming. The variable 'lastLevel' specifies which is the finest level on which optimization is to be performed. If 'lastLevel' is set to the same value as 'levels', the registration will take place on the coarsest stage only. If 'lastLevel' is set to '1', the optimization will take advantage of the whole multi-resolution pyramid.
+		% =======
+		% Int: Registration type.
+			% affine (parallelism maintained)
+			% projective (parallelism not guaranteed)
+			% See https://www.mathworks.com/help/images/matrix-representation-of-geometric-transformations.html.
+			% Int values and meaning
+			% 1 - affine,     no rotation, no skew
+			% 2 - affine,     rotation,    no skew
+			% 3 - projective, rotation,    no skew
+			% 4 - affine,     no rotation, skew
+			% 5 - projective, rotation,    no skew
 		options.RegisType = 3;
-		% Int: size of pixels to smooth in X and Y
-		options.SmoothX=80;%10
-		options.SmoothY=80;%10
-		%
-		% options.minGain=0.4;
-		options.minGain=0.0;
-		movieDim = size(inputMovie);
-		options.Levels=nestFxnCalculatePyramidDepth(min(movieDim(1),movieDim(2)));
-		options.Lastlevels=1;
-		options.Epsilon=1.192092896E-07;
-		options.zapMean=0;
-		% options.Interp='bicubic';
-		options.Interp='bilinear';
-	% normal options
-	% Int vector: if loading movie inside function, provide frameList to load specific frames
-	options.frameList = [];
-	% Int: which frame in the inputMovie to use as a reference to register all other frames to.
-	options.refFrame = 1;
-	% Matrix: same type as the inputMovie, this will be appended to the end of the movie and used as the reference frame. This is for cases in which the reference frame is not contained in the movie.
-	options.refFrameMatrix = [];
-	% whether to use 'imtransform' (Matlab) or 'transfturboreg' (C)
-	options.registrationFxn = 'transfturboreg';
+		% Int: amount of smoothing along the x and y respectively. They give the half-width of a recursive Gaussian smoothing window.
+		options.SmoothX = 80;%10
+		options.SmoothY = 80;%10
+		% Float: Between 0 and 1.
+		options.minGain = 0.0; %0.4;
+		% Int
+		options.Levels = nestFxnCalculatePyramidDepth(min(size(inputMovie,1),size(inputMovie,2)));
+		% Int
+		options.Lastlevels = 1;
+		% Float
+		options.Epsilon = 1.192092896E-07;
+		% Binary
+		options.zapMean = 0;
+		% Str: type of interpolation to use.
+		options.Interp = 'bilinear'; %'bicubic'
+	% =======NORMAL OPTIONS=======
 	% 1 = take turboreg rotation, 0 = no rotation
 	options.turboregRotation = 1;
 	% max number of frames in the input matrix
@@ -93,11 +109,11 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	options.closeMatlabPool = 0;
 	% add a black edge around movie
 	options.blackEdge = 0;
-	% coordinates to crop, [] = entire FOV, 'manual' = usr input, [top-left-row top-left-col bottom-right-row bottom-right-col]
+	% Int vector: coordinates to crop, [] = entire FOV, 'manual' = usr input, [top-left-row top-left-col bottom-right-row bottom-right-col]
 	options.cropCoords = [];
-	% whether to remove the edges
+	% Binary: 1 = remove the edges of the movie
 	options.removeEdges = 0;
-	% amount of pixels around the border to crop in primary movie
+	% Int: amount of pixels around the border to crop in primary movie (inputMovie)
 	options.pxToCrop = 4;
 	% alternative movie to register
 	options.altMovieRegister = [];
@@ -111,8 +127,6 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	options.meanSubtractNormalize = 0;
 	% String: imagejFFT,matlabDisk,divideByLowpass,highpass,bandpass
 	options.normalizeType = 'divideByLowpass';
-	% name in HDF5 file where data is stored
-	options.inputDatasetName = '/1';
 	% bandpass after turboreg but before registering
 	options.bandpassBeforeRegister = 0;
 	% normalize movie (highpass, etc.) before registering
@@ -128,12 +142,12 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	options.normalizeBandpassType = 'bandpass';
 	% binary or gaussian
 	options.normalizeBandpassMask = 'gaussian';
-
 	% whether to save the lowpass version before registering, empty if no, string with file path if yes
 	options.saveNormalizeBeforeRegister = [];
 	% for options.bandpassBeforeRegister
 	options.freqLow = 1;
 	options.freqHigh = 4;
+
 	% 1 = show figures during processing
 	options.showFigs = 1;
 	% cmd line waitbar on?
@@ -185,18 +199,19 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	% inputMovie(isnan(inputMovie)) = 0;
 	% ========================
 	% add turboreg options to turboRegOptions structure
-	turboRegOptions.RegisType=options.RegisType;
-	turboRegOptions.SmoothX=options.SmoothX;
-	turboRegOptions.SmoothY=options.SmoothY;
-	turboRegOptions.minGain=options.minGain;
-	turboRegOptions.Levels=options.Levels;
-	turboRegOptions.Lastlevels=options.Lastlevels;
-	turboRegOptions.Epsilon=options.Epsilon;
-	turboRegOptions.zapMean=options.zapMean;
-	turboRegOptions.Interp=options.Interp;
-	if (turboRegOptions.RegisType==1 || turboRegOptions.RegisType==2)
+	turboRegOptions.RegisType = options.RegisType;
+	turboRegOptions.SmoothX = options.SmoothX;
+	turboRegOptions.SmoothY = options.SmoothY;
+	turboRegOptions.minGain = options.minGain;
+	turboRegOptions.Levels = options.Levels;
+	turboRegOptions.Lastlevels = options.Lastlevels;
+	turboRegOptions.Epsilon = options.Epsilon;
+	turboRegOptions.zapMean = options.zapMean;
+	turboRegOptions.Interp = options.Interp;
+	if any(turboRegOptions.RegisType==[1 2 4])
 		TransformationType='affine';
 	else
+		% 3 5
 		TransformationType='projective';
 	end
 	% ========================
@@ -495,6 +510,7 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		if options.turboregRotation==1
 			disp('Using rotation in registration')
 		end
+		fprintf('Performing %s registration and %s transformation.\n',options.registrationFxn,TransformationType);
 		% ResultsOut{1}.Rotation
 		nSubsets = (length(subsetList)-1);
 		for thisSet=1:nSubsets
@@ -517,6 +533,20 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 			% size(ResultsOut)
 			nMovieSubsets = length(movieSubset);
 			try [percent, progress] = parfor_progress(nMovieSubsets);catch;end; dispStepSize = round(nMovieSubsets/20); dispstat('','init');
+
+			% Create anonymous transform function to save CPU cycles in loop
+			switch TransformationType
+				case 'affine'
+					transformFxn = @(xform) affine2d(xform);
+					% tform = affine2d(double(xform));
+				case 'projective'
+					transformFxn = @(xform) projective2d(xform);
+					% tform = projective2d(double(xform));
+				otherwise
+					transformFxn = @(xform) affine2d(xform);
+					% tform = affine2d(double(xform));
+			end
+
 			parfor (i = movieSubset,nWorkers)
 				[percent, progress] = parfor_progress;
 				% if mod(progress,dispStepSize) == 0;dispstat(sprintf('progress %0.1f %',percent));else;end
@@ -527,11 +557,10 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 				% else
 				% 	MatrixMotCorrDispl(:,i)=[ResultsOut{i}.Translation(1) ResultsOut{i}.Translation(2) 0];
 				% end
-				% transform movie given results of turboreg
+
+				% Transform movie given results of turboreg
 				switch registrationFxnOption
-					case 'imtransform'
-						% get the skew/translation matrix from turboreg
-						SkewingMat = ResultsOut{i}.Skew;
+					case {'imtransform','imwarp'}
 						% if turboregRotationOption==1
 						% 	rotMat = [...
 						% 			cos(ResultsOut{i}.Rotation) sin(ResultsOut{i}.Rotation) 0;...
@@ -540,21 +569,50 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 						% else
 						% 	rotMat = [0 0 0;0 0 0;0 0 0];
 						% end
-						translateMat = [0 0 0;...
-										0 0 0;...
-										ResultsOut{i}.Translation(2) ResultsOut{i}.Translation(1) 0];
-						% xform = translateMat + SkewingMat + rotMat;
-						xform = translateMat + SkewingMat;
-						% get the transformation
-						tform = maketform(TransformationType,double(xform));
-						% movieDataTemp{i} = imwarp(movieDataTemp{i},tform,char(InterpListSelection),'FillValues',0);
-						% InterpListSelection = 'nearest';
-						movieDataTemp{i} = single(imtransform(movieDataTemp{i},tform,char(InterpListSelection),...
-							'UData',[1 size(movieDataTemp{i},2)]-ResultsOut{i}.Origin(2)-1,...
-							'VData',[1 size(movieDataTemp{i},1)]-ResultsOut{i}.Origin(1)-1,...
-							'XData',[1 size(movieDataTemp{i},2)]-ResultsOut{i}.Origin(2)-1,...
-							'YData',[1 size(movieDataTemp{i},1)]-ResultsOut{i}.Origin(1)-1,...
-							'fill',NaN));
+
+						% translateMat =...
+						% 	[0 0 0;...
+						% 	0 0 0;...
+						% 	ResultsOut{i}.Translation(2) ResultsOut{i}.Translation(1) 0];
+						% xform = translateMat + SkewingMat;
+
+						% Get the skew/translation/rotation matrix from turboreg
+						SkewingMat = ResultsOut{i}.Skew;
+
+						rotMat = [...
+							cos(ResultsOut{i}.Rotation) sin(ResultsOut{i}.Rotation) 0;...
+							-sin(ResultsOut{i}.Rotation) cos(ResultsOut{i}.Rotation) 0;...
+							0 0 1];
+
+						translateMat =...
+							[1 0 0;...
+							0 1 0;...
+							ResultsOut{i}.Translation(2) ResultsOut{i}.Translation(1) 1];
+
+						xform = translateMat*SkewingMat*rotMat;
+
+						if strcmp(registrationFxnOption,'imtransform')==1
+							% Perform the transformation
+							tform = maketform(TransformationType,double(xform));
+							% InterpListSelection = 'nearest';
+							movieDataTemp{i} = single(imtransform(movieDataTemp{i},tform,char(InterpListSelection),...
+								'UData',[1 size(movieDataTemp{i},2)]-ResultsOut{i}.Origin(2)-1,...
+								'VData',[1 size(movieDataTemp{i},1)]-ResultsOut{i}.Origin(1)-1,...
+								'XData',[1 size(movieDataTemp{i},2)]-ResultsOut{i}.Origin(2)-1,...
+								'YData',[1 size(movieDataTemp{i},1)]-ResultsOut{i}.Origin(1)-1,...
+								'fill',NaN));
+						elseif strcmp(registrationFxnOption,'imwarp')==1
+							tform = transformFxn(double(xform));
+							% Define input spatial referencing.
+							RI = imref2d(size(movieDataTemp{i}),[[1 size(movieDataTemp{i},2)]-ResultsOut{i}.Origin(2)-1],[[1 size(movieDataTemp{i},1)]-ResultsOut{i}.Origin(1)-1]);
+
+							% Define output spatial referencing.
+							Rout = imref2d(size(movieDataTemp{i}),[[1 size(movieDataTemp{i},2)]-ResultsOut{i}.Origin(2)-1],[[1 size(movieDataTemp{i},1)]-ResultsOut{i}.Origin(1)-1]);
+
+							movieDataTemp{i} = single(imwarp(movieDataTemp{i},RI,tform,char(InterpListSelection),...
+								'OutputView',Rout,...
+								'FillValues',NaN));
+						end
 					case 'transfturboreg'
 						frameClass = class(movieDataTemp{i});
 						movieDataTemp{i} = ...
@@ -626,7 +684,6 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		% 	coords(4) = size(inputMovie,1)-options.pxToCrop;   %xmax
 		% 	coords(3) = size(inputMovie,2)-options.pxToCrop;   %ymax
 		% end
-
 
 		% rowLen = size(inputMovie,1);
 		% colLen = size(inputMovie,2);
