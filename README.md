@@ -210,6 +210,12 @@ parSet.Pool.AutoCreate = false;
 - CVX: http://cvxr.com/cvx/download/.
   - Download `All platforms` (_Redistributable: free solvers only_), e.g. http://web.cvxr.com/cvx/cvx-rd.zip.
 
+#### Neurodata Without Borders
+Neurodata Without Borders (NWB) file support requires the following GitHub repositories be present in the `_external_programs` folder. These are downloaded automatically when running `obj.setup`.
+- https://github.com/schnitzer-lab/nwb_schnitzer_lab.
+- https://github.com/ewiger/yamlmatlab.
+- https://github.com/NeurodataWithoutBorders/matnwb.
+
 ### Repository organization
 Below are a list of the top-level directories and what types of functions or files are within.
 
