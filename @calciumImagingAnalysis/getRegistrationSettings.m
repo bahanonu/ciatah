@@ -13,6 +13,8 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		% 2019.12.07 [17:46:03] - Change how settings are initialized, should make easier to maintain and add new settings.
 		% 2019.12.08 [22:34:38] - Added additional tooltips and checks to make sure user inputs correct data type/size.
 		% 2019.12.08 [22:49:48] - Allow users to input previous preprocessing settings.
+		% 2020.04.18 [19:27:24] - Make sure any modifications from default are propagated upon multiple calls to getRegistrationSettings.
+		% 2020.04.19 [15:20:48] - Fix how modified values stored so only store the modified value and not all the options at time of modification.
 	% TODO
 		% DONE: Allow user to input prior settings, indicate those changed from default by orange or similar color.
 
@@ -84,16 +86,16 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		tS.parallel.str = {{'parallel processing','NO parallel processing'}};
 		tS.parallel.tooltip =  {{'Use parallel processing during motion correction.'}};
 	tS.registrationFxn = [];
-		tS.registrationFxn.val = {{'transfturboreg','imtransform'}};
-		tS.registrationFxn.str = {{'transfturboreg','imtransform'}};
-		tS.registrationFxn.tooltip =  {{'Keep default unless have issues with transfturboreg (e.g. random frames look dim).'}};
+		tS.registrationFxn.val = {{'transfturboreg','imwarp','imtransform'}};
+		tS.registrationFxn.str = {{'transfturboreg','imwarp','imtransform'}};
+		tS.registrationFxn.tooltip =  {{'Keep default unless have issues with transfturboreg (e.g. random frames look dim) then use MATLAB registration functions (imwarp or imtransform).'}};
 	tS.turboregRotation = [];
 		tS.turboregRotation.val = {{0,1}};
 		tS.turboregRotation.str = {{'DO NOT turboreg rotation','DO turboreg rotation'}};
 		tS.turboregRotation.tooltip =  {{'Unless you have rotation in your movie, leave OFF. Produces better results.'}};
 	tS.RegisType = [];
-		tS.RegisType.val = {{1,3}};
-		tS.RegisType.str = {{'affine (parallelism maintained)','projective (parallelism not guaranteed)'}};
+		tS.RegisType.val = {{1,3,4,2}};
+		tS.RegisType.str = {{'affine (1, parallelism maintained, no skew or rotation)','projective (3, parallelism not guaranteed, rotation allowed)','affine (4, parallelism maintained, skew allowed)','affine (2, parallelism maintained, rotation allowed)'}};
 		tS.RegisType.tooltip =  {{'"affine" is good for most rigid cases, use "projective" if movie has complex motion'}};
 	tS.numTurboregIterations = [];
 		tS.numTurboregIterations.val = {{1,userSelectVal,2,3,4,5}};
@@ -288,6 +290,13 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 					nonDefaultProperties{end+1} = property;
 					tS.(property).val = {[options.inputSettings.(property).modified.val,tS.(property).val{1}]};
 					tS.(property).str = {[options.inputSettings.(property).modified.str,tS.(property).str{1}]};
+
+					% Ensure modification from default is passed onto future edits
+					tS.(property).modified = [];
+					% tS.(property).modified.val = tS.(property).val{1};
+					% tS.(property).modified.str = tS.(property).str{1};
+					tS.(property).modified.val = options.inputSettings.(property).modified.val;
+					tS.(property).modified.str = options.inputSettings.(property).modified.str;
 				end
 			end
 			options.inputSettings
@@ -378,6 +387,7 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 			% If property is non-default, set to orange to alert user.
 			if any(ismember(nonDefaultProperties,property))
 				set(uiListHandles{propertyNo},'Backgroundcolor',[254 216 177]/255);
+
 			end
 
 			propertyNoDisp = propertyNoDisp+1;
@@ -472,6 +482,7 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		preprocessingSettingsAll.(gProperty).modified = [];
 		preprocessingSettingsAll.(gProperty).modified.val = preprocessingSettingsAll.(gProperty).val{1}{gValue};
 		preprocessingSettingsAll.(gProperty).modified.str = gString{gValue};
-
+		% preprocessingSettingsAll.(gProperty).modified
+		% preprocessingSettingsAll.(gProperty)
 	end
 end
