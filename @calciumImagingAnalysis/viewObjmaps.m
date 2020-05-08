@@ -9,6 +9,7 @@ function obj = viewObjmaps(obj,varargin)
 
 	% changelog
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
+		% 2020.05.07 [14:54:27] - Fix to deal with empty valid folders.
 	% TODO
 		%
 
@@ -162,7 +163,11 @@ function obj = viewObjmaps(obj,varargin)
 			end
 			if sum(valid==1)==0
 				disp('Switching to random labels since no cells')
-				valid = rand(size(valid))>0.5;
+				if isempty(valid)
+					valid = rand([1 size(inputSignals,1)])>0.5;
+				else
+					valid = rand(size(valid))>0.5;
+				end
 				validType = 'random';
 			end
 			% size(signalPeakIdx)
