@@ -63,6 +63,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 		% 2019.11.09 [14:03:42] - Mouse is no longer invisible on the figure, callback to detect mouse click on cellmaps and trigger ability for user to select cells, and other improvements.
 		% 2019.11.09 [14:37:15] - Remove many commented out code. And added removal of unconnected components from main component when thresholding images.
 		% 2019.11.10 [20:21:03] - Made sorting will re-run in case of chooseSignals error, e.g. if GUI is overwritten.
+		% 2020.04.28 [16:34:33] - Fixed case where ROItraces would be overwritten when comparing to algorithm input traces. Also added to 'r' option.
 	% TODO
 		% DONE: New GUI interface to allow users to scroll through video and see cell activity at that point
 		% DONE: allow option to mark rest as bad signals
@@ -1704,18 +1705,18 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 				inputSignalMedianTmp = medfilt1(thisTrace,medianFilterLength);
 				sigTmp1 = inputSignalSignal{i} - inputSignalMedianTmp;
 				noiseTmp1 = inputSignalNoise{i} - inputSignalMedianTmp;
-				plotYn = 5;
+				plotYn = 6;
 				linkAx = [];
-				linkAx(end+1) = subplot(plotYn,1,1);
+				linkAx(end+1) = subplot(plotYn,1,2);
 					plot(thisTrace,'k');
 					hold on;
 					scatter(testpeaks, min(maxValTraces*0.97,thisTrace(testpeaks)*1.4), 60, '.', 'LineWidth',0.5,'MarkerFaceColor',[0 0 0], 'MarkerEdgeColor',[0 0 0])
 					title('Original','FontSize',options.fontSize)
 					box off;zoom on;
-				linkAx(end+1) = subplot(plotYn,1,2);
-					plot(inputSignalNoise{i},'Color',[0.5 0.5 0.5]);
+				linkAx(end+1) = subplot(plotYn,1,3);
+					plot(inputSignalNoise{i},'Color',[0.8 0.5 0.5]);
 					hold on
-					plot(inputSignalSignal{i},'r');
+					plot(inputSignalSignal{i},'Color',[0.5 0.1 0.1]);
 
 					ss1 = inputSignalNoise{i};
 					ss1(isnan(ss1)) = 0;
@@ -1725,10 +1726,10 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 					scatter(testpeaks, min(maxValTraces*0.97,ss1(testpeaks)*1.4), 60, '.', 'LineWidth',0.5,'MarkerFaceColor',[0 0 0], 'MarkerEdgeColor',[0 0 0]);
 					title('Displayed','FontSize',options.fontSize)
 					box off;zoom on;
-				linkAx(end+1) = subplot(plotYn,1,3);
-					plot(noiseTmp1,'k');
+				linkAx(end+1) = subplot(plotYn,1,4);
+					plot(noiseTmp1,'Color',[0.5 0.8 0.5]);
 					hold on
-					plot(sigTmp1,'r');
+					plot(sigTmp1,'Color',[0.1 0.5 0.1]);
 
 					ss1 = sigTmp1;
 					ss1(isnan(ss1)) = 0;
@@ -1739,13 +1740,13 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 
 					title('Median filtered','FontSize',options.fontSize)
 					box off;zoom on;
-				linkAx(end+1) = subplot(plotYn,1,4);
+				linkAx(end+1) = subplot(plotYn,1,5);
 					if ~isempty(options.inputMovie)&&~ischar(options.inputMovie)
-						[ROItraces] = applyImagesToMovie(inputImagesThres(:,:,i),options.inputMovie,'alreadyThreshold',1,'waitbarOn',1);
+						[roiTracesTmp] = applyImagesToMovie(inputImagesThres(:,:,i),options.inputMovie,'alreadyThreshold',1,'waitbarOn',1);
 						% linkAx(end+1) = subplot(plotYn,1,4);
-							plot(ROItraces,'k');
+							plot(roiTracesTmp,'Color',[0.2 0.2 0.8]);
 							hold on;
-							scatter(testpeaks, min(maxValTraces*0.97,ROItraces(testpeaks)*1.4), 60, '.', 'LineWidth',0.5,'MarkerFaceColor',[0 0 0], 'MarkerEdgeColor',[0 0 0]);
+							scatter(testpeaks, min(maxValTraces*0.97,roiTracesTmp(testpeaks)*1.4), 60, '.', 'LineWidth',0.5,'MarkerFaceColor',[0 0 0], 'MarkerEdgeColor',[0 0 0]);
 							title('ROI calculated trace','FontSize',options.fontSize)
 							box off;zoom on;
 
@@ -1765,10 +1766,10 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 					else
 						title('NO DATA, EXCLUDED: ROI calculated trace','FontSize',options.fontSize)
 					end
-				linkAx(end+1) = subplot(plotYn,1,5);
+				linkAx(end+1) = subplot(plotYn,1,6);
 					if ~isempty(options.inputSignalsSecond)
 						tmpSecondTrace = options.inputSignalsSecond(i,:);
-						plot(tmpSecondTrace,'k');
+						plot(tmpSecondTrace,'Color',[0.2 0.8 0.8]);
 						hold on;
 						scatter(testpeaks, min(maxValTraces*0.97,tmpSecondTrace(testpeaks)*1.4), 60, '.', 'LineWidth',0.5,'MarkerFaceColor',[0 0 0], 'MarkerEdgeColor',[0 0 0]);
 						title('Original trace (secondary)','FontSize',options.fontSize)
@@ -1776,6 +1777,34 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 					else
 						title('NO DATA, EXCLUDED: Original trace (secondary)','FontSize',options.fontSize)
 					end
+
+				linkAx(end+1) = subplot(plotYn,1,1);
+					% Original
+					plot(thisTrace,'k');
+					hold on;
+					% Displayed
+					plot(inputSignalNoise{i},'Color',[0.8 0.5 0.5]);
+					plot(inputSignalSignal{i},'Color',[0.5 0.1 0.1]);
+					% Median filtered
+					plot(noiseTmp1,'Color',[0.5 0.8 0.5]);
+					plot(sigTmp1,'Color',[0.1 0.5 0.1]);
+					% ROI calculated
+					if ~isempty(options.inputMovie)&&~ischar(options.inputMovie)
+						try
+							plot(roiTracesTmp,'Color',[0.2 0.2 0.8]);
+						catch
+						end
+					end
+					% Secondary trace
+					if ~isempty(options.inputSignalsSecond)
+						try
+							plot(tmpSecondTrace,'Color',[0.2 0.8 0.8]);
+						catch
+						end
+					end
+					box off; zoom on
+					title('All traces')
+					% legend()
 
 				suptitle('Press any key to exit | Zoom is enabled on traces, x axes are linked')
 				linkaxes(linkAx,'x');

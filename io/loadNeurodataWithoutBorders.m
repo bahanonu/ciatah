@@ -24,7 +24,7 @@ function [inputImages,inputTraces,infoStruct] = loadNeurodataWithoutBorders(inpu
 	% String: main name for fluorescence series
 	options.groupSignalSeries = '/processing/ophys/Fluorescence/RoiResponseSeries';
 	% Cell array of strings: alternative names for fluorescence series
-	options.groupSignalSeriesAlt = {'/processing/ophys/Fluorescence/Series'};
+	options.groupSignalSeriesAlt = {'/processing/ophys/Fluorescence/Series','/processing/ophys/Fluorescence/RoiResponseSeries'};
 	options.signalsName = 'data';
 	% Int: user specified series number if needed
 	options.signalSeriesNo = [];

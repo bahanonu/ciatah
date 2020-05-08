@@ -4,11 +4,13 @@
 
 <hr>
 
-Software package for analyzing one- and two-photon calcium imaging datasets.
+Software package for calcium imaging analysis of one- and two-photon imaging datasets.
 - Includes a GUI to allow users to do large-scale batch analysis, accessed via the repository's `calciumImagingAnalysis` class.
 - The underlying functions can also be used to create GUI-less, command line-ready analysis pipelines.
+- Includes major calcium imaging analysis steps: pre-processing (spatiotemporal downsampling, spatial filtering, relative fluorescence, etc.), multiple cell-extraction methods, cell classification (coming soon!), cross-session cell alignment, and more.
 - Includes code for determining animal position (e.g. in open-field assay).
-- Supports [Neurodata Without Borders](https://www.nwb.org/) data standard (see [calcium imaging tutorial](https://neurodatawithoutborders.github.io/matnwb/tutorials/html/ophys.html)) for cell-extraction (e.g. outputs of PCA-ICA, CNMF, etc.).
+- Supports [Neurodata Without Borders](https://www.nwb.org/) data standard (see [calcium imaging tutorial](https://neurodatawithoutborders.github.io/matnwb/tutorials/html/ophys.html)) for reading/writing cell-extraction (e.g. outputs of PCA-ICA, CELLMax, CNMF, CNMF-E, etc.). Supports reading NWB movie files (write support coming soon).
+- Requires `MATLAB`.
 <!-- <hr> -->
 
 Contact: __Biafra Ahanonu, PhD (bahanonu [at] alum [dot] mit [dot] edu)__.

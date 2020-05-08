@@ -6,6 +6,7 @@ function obj = modelAddNewFolders(obj,varargin)
 		% 2019.10.09 [18:28:12] - use inputdlgcol to allow re-sizing of window
 		% 2019.11.18 [15:15:47] - Add the ability for users to use GUI to add folders as alternative option.
 		% 2020.01.16 [12:28:29] - Choosing how to enter files and manual enter list of files now uses uicontrol and figure to reduce number of pop-ups and increase flexibility.
+		% 2020.05.07 [17:22:20] - Adding option to quickly add all the example downloaded folders.
 	%========================
 	% Cell array of folders to add, particularly for GUI-less operations
 	options.folderCellArray = {};
@@ -22,11 +23,14 @@ function obj = modelAddNewFolders(obj,varargin)
 		nExistingFolders = length(obj.inputFolders);
 		if isempty(options.folderCellArray)
 			sel = 0
-			usrIdxChoiceStr = {'manually enter folders to list','GUI select folders'};
+			usrIdxChoiceStr = {...
+				'manually enter folders to list',...
+				'GUI select folders',...
+				'Add calciumImagingAnalysis example folders.'};
 			scnsize = get(0,'ScreenSize');
 			try
 				hFig = figure;
-				uicontrol('Style','Text','String',['How to add folders to calciumImagingAnalysis?'],'Units','normalized','Position',[5 89 90 10]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold');				
+				uicontrol('Style','Text','String',['How to add folders to calciumImagingAnalysis?'],'Units','normalized','Position',[5 89 90 10]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold');
 				hListbox = uicontrol(hFig, 'style','listbox','Units', 'normalized','position',[5,5,90,80]/100, 'string',usrIdxChoiceStr,'Value',1);
 				set(hListbox,'Max',2,'Min',0);
 				set(hListbox,'KeyPressFcn',@(src,evnt)onKeyPressRelease(evnt,'press',hFig))
@@ -44,6 +48,26 @@ function obj = modelAddNewFolders(obj,varargin)
 			inputMethod = usrIdxChoiceStr{sel};
 
 			switch inputMethod
+				case 'Add calciumImagingAnalysis example folders.'
+					disp('Adding example folders to path...')
+					newFolderList = {...
+						['data' filesep '2014_04_01_p203_m19_check01'],...
+						['data' filesep 'batch' filesep '2014_08_05_p104_m19_PAV08'],...
+						['data' filesep 'batch' filesep '2014_08_06_p104_m19_PAV09'],...
+						['data' filesep 'batch' filesep '2014_08_07_p104_m19_PAV10']...
+					}
+					nNewFolders = length(newFolderList);
+					fileIdxArray = (nExistingFolders+1):(nExistingFolders+nNewFolders);
+					nFolders = length(fileIdxArray);
+					newFolderListCell = {};
+					for thisFileNumIdx = 1:nFolders
+						% strtrim(newFolderList(thisFileNumIdx,:))
+						% class(strtrim(newFolderList(thisFileNumIdx,:)))
+						pathToAdd = [obj.defaultObjDir filesep newFolderList{thisFileNumIdx}];
+						newFolderListCell{thisFileNumIdx} = strtrim(pathToAdd);
+					end
+					nFolders
+					newFolderListCell
 				case 'manually enter folders to list'
 					newFolderList = '';
 					try
@@ -51,7 +75,7 @@ function obj = modelAddNewFolders(obj,varargin)
 						hFig = figure;
 						figure(hFig)
 
-						
+
 						uicontrol('Style','Text','String',['Adding folders to calciumImagingAnalysis object.'],'Units','normalized','Position',[5 95 90 3]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold');
 						uicontrol('Style','Text','String',['One new line per folder path. Enter folder path WITHOUT any single/double quotation marks around the path.'],'Units','normalized','Position',[5 90 90 6]/100,'BackgroundColor','white','HorizontalAlignment','Left');
 						exitHandle = uicontrol('style','pushbutton','Units', 'normalized','position',[5 85 50 3]/100,'FontSize',9,'string','Click here to finish','callback',@subfxnCloseFig,'HorizontalAlignment','Left');

@@ -47,15 +47,16 @@ function obj = modelVarsFromFiles(obj)
 
 		% usrInput = inputdlg([...
 		usrInput = inputdlgcol([...
-			optFieldnames; {'numStdsForThresh'}; {'loadVarsToRam'}; {'reportMidpoint'}],...
+			optFieldnames; {'numStdsForThresh'}; {'loadVarsToRam'}; {'reportMidpoint'}; {'NWB file regular expression (override default)'}],...
 			'Automatic classification parameters',[1 35],...
-			[cellfun(@num2str,struct2cell(obj.filterImageOptions),'UniformOutput',false); {'2.5'}; {num2str(obj.loadVarsToRam)}; {'0'}],AddOpts,2);
+			[cellfun(@num2str,struct2cell(obj.filterImageOptions),'UniformOutput',false); {'2.5'}; {num2str(obj.loadVarsToRam)}; {'0'}; {obj.nwbFileRegexp}],AddOpts,2);
 		for fieldnameNo = 1:length(optFieldnames)
 			obj.filterImageOptions.(optFieldnames{fieldnameNo}) = str2num(usrInput{fieldnameNo});
 		end
 		numStdsForThresh = str2num(usrInput{fieldnameNo+1});
 		obj.loadVarsToRam = str2num(usrInput{fieldnameNo+2});
 		reportMidpoint = str2num(usrInput{fieldnameNo+3});
+		obj.nwbFileRegexp = usrInput{fieldnameNo+3};
 	else
 		% only update the threshold
 		% numStdsForThresh = 3;

@@ -8,7 +8,7 @@ function [success] = changeFont(FontSize,varargin)
 		%
 
 	% changelog
-		%
+		% 2020.04.28 [19:17:49] - Added ability to change all the font colors at the same time, useful for making presentations on non-white backgrounds.
 	% TODO
 		% Add support for changing other font aspects, e.g. figure Font family, command window font, etc.
 
@@ -16,6 +16,8 @@ function [success] = changeFont(FontSize,varargin)
 	% DESCRIPTION
 	% Int: size of font to use
 	options.FontSize = [];
+	% Float: [r g b] vector between 0 to 1.
+	options.fontColor = [];
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -36,6 +38,15 @@ function [success] = changeFont(FontSize,varargin)
 			userInput = options.FontSize;
 		end
 		set(findall(gcf,'-property','FontSize'),'FontSize',userInput);
+		if ~isempty(options.fontColor)
+			try
+				set(findall(gcf,'-property','FontSize'),'Color',options.fontColor);
+				set(findall(gcf,'-property','YColor'),'YColor',options.fontColor);
+				set(findall(gcf,'-property','XColor'),'XColor',options.fontColor);
+			catch
+
+			end
+		end
 		success = 1;
 	catch err
 		disp(repmat('@',1,7))

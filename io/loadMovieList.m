@@ -223,6 +223,25 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 					dims.z(iMovie) = nFrames;
 				end
 			case 'hdf5'
+
+				% Check if NWB file and alter input dataset name to default NWB if inputDatasetName does not point to a valid NWB dataset.
+				[~,~,extTmp] = fileparts(thisMoviePath);
+				if strcmp(extTmp,'.nwb')
+					try
+						h5info(thisMoviePath,options.inputDatasetName);
+					catch
+						for zCheck = 1:length(options.defaultNwbDatasetName)
+							try
+								options.inputDatasetName = options.defaultNwbDatasetName{zCheck};
+								h5info(thisMoviePath,options.inputDatasetName);
+							catch
+								fprintf('Incorrect NWB dataset name: %s\n',options.inputDatasetName)
+							end
+						end
+					end
+				end
+				clear extTmp zCheck;
+
 				if options.useH5info==1
 					hinfo = h5info(thisMoviePath);
 				else

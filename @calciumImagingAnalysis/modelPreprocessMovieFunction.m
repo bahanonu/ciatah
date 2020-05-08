@@ -170,6 +170,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	analysisOptionListStr = analysisOptionList;
 	analysisOptionListStr(strcmp(analysisOptionListStr,'crop')) = {'crop (add NaN border after motion correction)'};
 	defaultChoiceList = {'turboreg','crop','dfof','fixDropFrames','downsampleTime'};
+
+
 	%defaultChoiceIdx = find(cellfun(@(x) sum(strcmp(x,defaultChoiceList)),analysisOptionList));
 	defaultChoiceIdx = find(ismember(analysisOptionList,defaultChoiceList));
 	try

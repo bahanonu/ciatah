@@ -17,6 +17,7 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 		% 2019.07.17 [00:29:16] - Added support for sparse input images (mainly ndSparse format).
 		% 2019.09.10 [20:46:03] - Switched back to NOT converting to cell array, incurred unnecessary overhead and not needed since images/signals sliced properly. Also fix to reduce inputMovie being transferred to all workers in some cases.
 		% 2019.10.29 [13:51:04] - Added support for parallel.pool.Constant when PCT auto-start parallel pool disabled.
+		% 2020.05.06 [16:24:00] - Fix for hdf5FileWorkerConstant when gcp empty.
 	% TODO
 		% Take 2 frames after peak and average to improve SNR
 
@@ -97,7 +98,8 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 
 			fcnOpenHdf5Worker = @() H5F.open(inputMovie);
 			if isempty(gcp)
-				hdf5FileWorkerConstant = fcnOpenHdf5Worker;
+				tmpVV = fcnOpenHdf5Worker;
+				hdf5FileWorkerConstant.Value = H5F.open(inputMovie);
 			else
 				if options.keepFileOpen==1
 					% fcnCloseHdf5Worker = @() H5F.close(inputMovie);

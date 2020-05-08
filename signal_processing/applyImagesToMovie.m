@@ -1,4 +1,4 @@
-function [outputSignal] = applyImagesToMovie(inputImages,inputMovie, varargin)
+function [outputSignal, inputImages] = applyImagesToMovie(inputImages,inputMovie, varargin)
 	% Applies images to a 3D movie matrix in order to get a signal based on a thresholded version of the image.
 	% Biafra Ahanonu
 	% started: 2013.10.11
@@ -11,7 +11,8 @@ function [outputSignal] = applyImagesToMovie(inputImages,inputMovie, varargin)
 	% changelog
 		% 2014.02.17 [11:37:35] updated to have single inputs, bring notation in line with other programs
 		% 2014.08.11 - obtain traces using linear indexing and reshaping, much faster than using bsxfun since don't have to make a large intermediate matrix.
-		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
+		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals].
+		% 2020.04.28 [17:10:37] - Output modified inputImages.
 	% TODO
 		% change so that it accepts a movie and images, current implementation is too specific
 		% add ability to use the values of the filter (multiple by indices)

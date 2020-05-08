@@ -969,13 +969,19 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		movieList = getFileList(obj.inputFolders{obj.fileNum}, fileFilterRegexp);
 		[inputMovie thisMovieSize Npixels Ntime] = loadMovieList(movieList,'convertToDouble',0,'inputDatasetName',obj.inputDatasetName,'treatMoviesAsContinuous',1);
 		obj.signalExtractionMethod = options.ROI.signalExtractionMethod;
+
+		% Make sure only run modelVarsFromFiles for the current movie and not all movies.
+		tmpAnalysisList = obj.foldersToAnalyze;
+		obj.foldersToAnalyze = obj.fileNum;
 		obj.guiEnabled = 0;
 		obj.modelVarsFromFiles();
 		obj.guiEnabled = 0;
+		obj.foldersToAnalyze = tmpAnalysisList;
+
 		[inputSignals inputImages signalPeaks signalPeaksArray] = modelGetSignalsImages(obj,'returnType','raw');
 		obj.signalExtractionMethod = 'ROI';
 		options.ROI.threshold
-		[ROItraces] = applyImagesToMovie(inputImages,inputMovie,'threshold',options.ROI.threshold);
+		[ROItraces,inputImages] = applyImagesToMovie(inputImages,inputMovie,'threshold',options.ROI.threshold);
 		[figHandle figNo] = openFigure(1, '');
 			ROItracesTmp = ROItraces;
 			ROItracesTmp(ROItracesTmp<0.1) = 0;
