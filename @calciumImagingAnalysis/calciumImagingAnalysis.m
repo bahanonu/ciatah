@@ -36,7 +36,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		fontSizeGui = 10;
 
 		defaultObjDir = pwd;
-		classVersion = 'v3.10.0-20200507';
+		classVersion = 'v3.11.0-20200508';
 		serverPath = '';
 		privateSettingsPath = ['private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
 		% place where functions can temporarily story user settings
