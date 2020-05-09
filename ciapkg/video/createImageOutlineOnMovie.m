@@ -24,6 +24,8 @@ function [inputMovie] = createImageOutlineOnMovie(inputMovie,inputImages,varargi
 	options.waitbarOn = 1;
 	% Float: Any value to use for the outlines, e.g. 1 or NaN. NaN recommended, if lease empty, uses maximum movie value.
 	options.movieVal = [];
+	%
+	options.dilateOutlinesFactor = 1;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -44,6 +46,13 @@ function [inputMovie] = createImageOutlineOnMovie(inputMovie,inputImages,varargi
 
 		% Get the outlines from the thresholded images.
 		[thresholdedImages boundaryIndices] = thresholdImages(inputImages,'binary',1,'getBoundaryIndex',1,'threshold',options.thresholdOutline,'imageFilter','median','imageFilterBinary','median','medianFilterNeighborhoodSize',3);
+
+		if options.dilateOutlinesFactor==1
+			nullImage = zeros([size(inputImages(:,:,1))]);
+			nullImage([boundaryIndices{:}]) = 1;
+			nullImage = imdilate(nullImage,strel('disk',options.dilateOutlinesFactor));
+			boundaryIndices = {find(nullImage)};
+		end
 
 		% Go through each frame and substitute values at the outline indices.
 		nFrames = size(inputMovie,3);

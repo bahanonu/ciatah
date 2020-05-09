@@ -29,6 +29,11 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	options.saveNwbOutput = 0;
 	% Str: save to this sub-folder of analyzed folder, leave blank to save in root folder.
 	options.nwbSaveFolder = obj.nwbFileFolder;
+	% Str: Folder where settings files are stored
+	options.settingsFolder = ['ciapkg' filesep 'settings'];
+	% Str: folder where private settings are stored
+	options.settingsPrivateSaveFolder = [obj.settingsSavePath filesep 'signal_extraction'];
+	% options.settingsPrivateSaveFolder = ['private' filesep 'settings' filesep 'cellExtraction'];
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -41,6 +46,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 
 	% Make sure private settings folder is created
 	if ~exist(obj.settingsSavePath,'dir');mkdir(obj.settingsSavePath);fprintf('Creating directory: %s\n',obj.settingsSavePath);end
+	if ~exist(options.settingsPrivateSaveFolder,'dir');mkdir(options.settingsPrivateSaveFolder);end
 
 	scnsize = get(0,'ScreenSize');
 	signalExtractionMethodStr = {'CELLMax','PCAICA','CNMF','CNMFE','EXTRACT','ROI','EM','PCAICA_old'};
@@ -903,7 +909,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 					if options.CNMFE.openEditor==1||options.CNMFE.openEditor==2
 						if options.CNMFE.openEditor==1
 							% Use default settings
-							originalSettings = ['settings' filesep 'cnmfeSettings.m'];
+							originalSettings = [options.settingsFolder filesep 'cnmfeSettings.m'];
 						else
 							% Ask user to input their own custom settings
 							display('Dialog box: Select CNMF-E settings file to load.')
@@ -927,7 +933,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 						% newFile = strrep(newFile,'-','_');
                         newFile = matlab.lang.makeValidName(newFile);
 
-						newSettings = ['private' filesep 'settings' filesep newFile '.m'];
+						newSettings = [options.settingsPrivateSaveFolder filesep newFile '.m'];
 
 						fprintf('Copying "%s" to\n"%s"\n\n',originalSettings,newSettings);
 						copyfile(originalSettings,newSettings);
