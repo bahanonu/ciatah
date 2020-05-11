@@ -17,7 +17,7 @@ function loadBatchFxns(varargin)
 		% 2019.10.15 [12:30:53] - Fixed checking for Fiji path in Unix systems.
 		% 2019.10.15 [21:57:45] - Improved checking for directories that should not be loaded, remove need for verLessThan('matlab','9.0') check.
 		% 2019.11.13 [18:06:02] - Updated to make contains not include less than 9.1.
-		% 2020.05.09 [16:40:13] - Updates to remove additional specific repositories that should not be loaded by default.
+		% 2020.05.09 [16:40:13] - Updates to remove additional specific repositories that should not be loaded by default. Add support for overriding this feature.
 	% TODO
 		%
 

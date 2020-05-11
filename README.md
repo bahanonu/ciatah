@@ -6,10 +6,10 @@
 
 Software package for calcium imaging analysis of one- and two-photon imaging datasets.
 
-<img src="https://user-images.githubusercontent.com/5241605/81523736-a0ca0300-9303-11ea-817c-f0cfe6276822.png" width="50%" align="right" alt="calciumImagingAnalysis_logo">
+<img src="https://user-images.githubusercontent.com/5241605/81605697-b9c7c800-9386-11ea-9e9f-569c743b24b9.png" width="42%" align="right" alt="calciumImagingAnalysis_logo">
 
 - Includes a GUI to allow users to do large-scale batch analysis, accessed via the repository's `calciumImagingAnalysis` class.
-- The underlying functions (in `ciapkg` and `+ciapkg` folders) can also be used to create GUI-less, command line-ready analysis pipelines.
+- The underlying functions can also be used to create GUI-less, command line-ready analysis pipelines. Functions located in `ciapkg` and `+ciapkg` sub-folders.
 - Includes all major calcium imaging analysis steps: pre-processing (motion correction, spatiotemporal downsampling, spatial filtering, relative fluorescence calculation, etc.), support for multiple cell-extraction methods, automated cell classification (coming soon!), cross-session cell alignment, and more.
 - Has several example calcium imaging datasets that it will automatically download to help users test out the package.
 - Includes code for determining animal position (e.g. in open-field assay).
