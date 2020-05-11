@@ -4,6 +4,8 @@
 
 <hr>
 
+<img src="https://user-images.githubusercontent.com/5241605/81523736-a0ca0300-9303-11ea-817c-f0cfe6276822.png" width="50%" align="right" alt="calciumImagingAnalysis_logo">
+
 Software package for calcium imaging analysis of one- and two-photon imaging datasets.
 - Includes a GUI to allow users to do large-scale batch analysis, accessed via the repository's `calciumImagingAnalysis` class.
 - The underlying functions can also be used to create GUI-less, command line-ready analysis pipelines.
@@ -47,8 +49,11 @@ Made in USA.<br>
 Below are steps needed to quickly get started using the `calciumImagingAnalysis` software package in MATLAB.
 - Clone the `calciumImagingAnalysis` repository (using [GitHub desktop](https://desktop.github.com/) or command line) or download the repository zip and unzip.
 - Point the MATLAB path to the `calciumImagingAnalysis` root folder (*NOT* `@calciumImagingAnalysis` sub-folder in the repository).
+  - Alternatively, download the toolbox from File Exchange using the Add-On explorer in MATLAB.
+ [![View calciumImagingAnalysis on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis)
 - Run the below MATLAB commands.
 - After, likely want to run `modelAddNewFolders` first in order to add folders containing imaging data to the current class object.
+- To force load all directories, including most external software packages (in `_external_programs` folder), type `ciapkg.loadAllDirs;` into MATLAB command line.
 - [Optional] Users on Windows systems should download `Everything` (https://www.voidtools.com/). It is a very useful and fast search engine that can allow users to quickly get lists of folders then need to analyze in `calciumImagingAnalysis`.
 
 ```MATLAB

@@ -1,4 +1,4 @@
-function loadBatchFxns()
+function loadBatchFxns(varargin)
 	% Loads the necessary directories to have the batch functions present.
 	% Biafra Ahanonu
 	% started: 2013.12.24 [08:46:11]
@@ -17,6 +17,7 @@ function loadBatchFxns()
 		% 2019.10.15 [12:30:53] - Fixed checking for Fiji path in Unix systems.
 		% 2019.10.15 [21:57:45] - Improved checking for directories that should not be loaded, remove need for verLessThan('matlab','9.0') check.
 		% 2019.11.13 [18:06:02] - Updated to make contains not include less than 9.1.
+		% 2020.05.09 [16:40:13] - Updates to remove additional specific repositories that should not be loaded by default.
 	% TODO
 		%
 
@@ -52,6 +53,9 @@ function loadBatchFxns()
 	matchIdx = cellfun(@isempty,regexp(pathListArray,[sepChar '(cnmfe|cnmf_original|cnmf_current|cvx_rd|Fiji\.app|fiji-.*-20151222)']));
 	pathListArray = pathListArray(matchIdx);
 
+	% pathListArray = subfxnRemoveDirs(0,pathListArray);
+	pathListArrayOriginal = pathListArray;
+
 	% =================================================
 	% Remove paths that are already in MATLAB path to save time
 	pathFilter = cellfun(@isempty,pathListArray);
@@ -64,6 +68,11 @@ function loadBatchFxns()
 		fprintf('Adding all non-private folders under: %s\n',functionDir);
 		pathList = strjoin(pathListArray,pathsep);
 		addpath(pathList);
+	end
+
+	if strcmp(varargin,'loadEverything')
+	else
+		pathListArray = subfxnRemoveDirs(1,pathListArrayOriginal);
 	end
 
 	% =================================================
@@ -153,6 +162,64 @@ function loadBatchFxns()
 		end
 	end
 	% cnmfVersionDirLoad('none');
+	function [pathListArray] = subfxnRemoveDirs(rmPathFlag,pathListArray)
+
+		% Alternative to only keep certain external program directories
+		% extDirKeep = {'matnwb','nwb_schnitzer_lab','yamlmatlab'};
+		% externalProgramsDir
+		% =================================================
+		% List of functions in root of external program directories that should not be included by default.
+		try
+			fxnRootFolder = {'CELLMax_Wrapper.m','extractor.m','normcorre.m'};
+			pathToRmCell = {};
+			for iNo = 1:length(fxnRootFolder)
+				thisFxn = fxnRootFolder{iNo};
+				if rmPathFlag==1
+					[pathToRm,~,~] = fileparts(which(thisFxn));
+				else
+					extDir = dir([functionDir filesep externalProgramsDir]);
+					extDir = extDir([extDir.isdir]);
+					if length(extDir)<3
+						disp('No external programs!')
+						return;
+					end
+					extDir = extDir(3:end);
+
+					foundFiles = dir(fullfile([functionDir filesep externalProgramsDir], ['**\' thisFxn '']));
+					pathToRm = foundFiles.folder;
+				end
+				if ~isempty(pathToRm)
+					if strcmp(thisFxn,'CELLMax_Wrapper.m')
+						thisFxnStr = thisFxn;
+						% pathToRm = [pathToRm filesep 'calciumImagingAnalysis'];
+						% thisFxnStr  = [thisFxn ' | ' 'calciumImagingAnalysis'];
+					else
+						thisFxnStr = thisFxn;
+					end
+					matchIdx = contains(pathListArray,pathToRm);
+					if rmPathFlag==1&any(matchIdx)>0
+						fprintf('Removing unneeded directory from path: %s.\n',thisFxnStr);
+						pathToRmCell{end+1} = pathToRm;
+						% rmpath(pathToRm);
+					elseif rmPathFlag==0
+						fprintf('Removing unneeded directory from "to add" path list: %s.\n',thisFxnStr);
+						pathListArray = pathListArray(~matchIdx);
+					end
+					% pathToRm
+					% fprintf('Removing unneeded directory: %s.\n',pathListArray{matchIdx});
+					% matchIdx
+					% Remove from array so that it is not added to path later.
+				end
+			end
+
+			%
+			rmpath(strjoin(pathToRmCell,pathsep));
+		catch err
+			disp(repmat('@',1,7))
+			disp(getReport(err,'extended','hyperlinks','on'));
+			disp(repmat('@',1,7))
+		end
+	end
 end
 function openMijiCheck()
 	try

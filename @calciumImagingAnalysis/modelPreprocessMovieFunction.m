@@ -25,6 +25,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% 2019.12.08 [23:20:25] - Allow users to load prior settings.
 		% 2019.12.19 [20:00:12] - Make sure that the list to choose saving outputs matches any re-ordering done in the pre-processing selection list. Also make sure if downsampleSpace comes before turboreg that it doesn't throw an error looking for turboRegCoords.
 		% 2020.04.02 [17:57:03] - Adding dropped frames explicit user-facing step (fixDropFrames) instead of implicitly done in the background to make more clear to user.
+		% 2020.05.10 [02:29:47] - Updated analysis steps to make save names shorter and provide more descriptive options.
 	% TODO
 		% Insert NaNs or mean of the movie into dropped frame location, see line 260
 		% Allow easy switching between analyzing all files in a folder together and each file in a folder individually
@@ -165,30 +166,96 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			':::::::::::::::::::::::::::::::::::::::::::::' 10 ...
 			'=============================================' 10];
 
+	% List of analysis options
+	analysisOptionList = {...
+		'medianFilter',...
+		'spatialFilter',...
+		'stripeRemoval',...
+		'turboreg',...
+		'fft_highpass',...
+		'crop',...
+		'dfof',...
+		'dfstd',...
+		'medianFilter',...
+		'fixDropFrames',...
+		'downsampleTime',...
+		'downsampleSpace',...
+		'fft_lowpass'...
+		};
 
-	analysisOptionList = {'medianFilter','spatialFilter','stripeRemoval','turboreg','fft_highpass','crop','dfof','dfstd','medianFilter','fixDropFrames','downsampleTime','downsampleSpace','fft_lowpass'};
-	analysisOptionListStr = analysisOptionList;
-	analysisOptionListStr(strcmp(analysisOptionListStr,'crop')) = {'crop (add NaN border after motion correction)'};
+	analysisOptsInfo = struct(...
+		'medianFilter',struct('save','medFlt',...
+			'str','Median filter (reduce high value noise or dead pixels).'),...
+		'spatialFilter',struct('save','spFlt',...
+			'str','Spatial filter (ignore if motion correcting).'),...
+		'stripeRemoval',struct('save','strpRm',...
+			'str','Remove vertical or horizontal stripes (e.g. camera artifacts).'),...
+		'turboreg',struct('save','treg',...
+			'str','TurboReg (motion correction with option to spatially filter)'),...
+		'fft_highpass',struct('save','fftHp',...
+			'str','High-pass FFT (ignore most cases).'),...
+		'crop',struct('save','crop',...
+			'str','Border (add NaN border to movie after motion correction)'),...
+		'dfof',struct('save','dfof',...
+			'str','Covert to dF/F0.'),...
+		'dfstd',struct('save','dfstd',...
+			'str','Convert to dF/std.'),...
+		'fixDropFrames',struct('save','fxFrms',...
+			'str','Fixed dropped frames (for Inscopix movies).'),...
+		'downsampleTime',struct('save','dsTime',...
+			'str','Downsample in time.'),...
+		'downsampleSpace',struct('save','dsSpace',...
+			'str','Downsample in space'),...
+		'fft_lowpass',struct('save','fftLp',...
+			'str','Low-pass FFT and save (ignore most cases, check for neuropil).')...
+	);
+
+	% List of default analysis options to select
 	defaultChoiceList = {'turboreg','crop','dfof','fixDropFrames','downsampleTime'};
 
+	analysisOptionListStr = analysisOptionList;
+	for optNoS = 1:length(analysisOptionListStr)
+		analysisOptionListStr{optNoS} = analysisOptsInfo.(analysisOptionListStr{optNoS}).str;
+	end
+		% analysisOptionListStr(strcmp(analysisOptionListStr,'crop')) = {'crop (add NaN border after motion correction)'};
+		% analysisOptionListStr(strcmp(analysisOptionListStr,'turboreg')) = {'turboreg (motion correction, can include spatial filtering)'};
 
 	%defaultChoiceIdx = find(cellfun(@(x) sum(strcmp(x,defaultChoiceList)),analysisOptionList));
 	defaultChoiceIdx = find(ismember(analysisOptionList,defaultChoiceList));
 	try
 		ok = 1;
 		[figHandle figNo] = openFigure(1776, '');clf;
-		[hListbox jListbox jScrollPane jDND] = reorderableListbox('String',analysisOptionListStr,'Units','normalized','Position',[0.5 0 0.5 0.95],'Max',Inf,'Min',0,'Value',defaultChoiceIdx);
-		uicontrol('Style','Text','String',['Analysis step selection and ordering' 10 '=======' 10 'We can know only that we know nothing.' 10 'And that is the highest degree of human wisdom.' 10 10 '1: Click items to select.' 10 '2: Drag to re-order analysis.' 10 '3: Click command window and press ENTER to continue.'],'Units','normalized','Position',[0 0.4 0.5 0.60],'BackgroundColor','white','HorizontalAlignment','Left');
-		uicontrol('Style','Text','String',USAflagStr,'Units','normalized','Position',[0 0 0.5 0.3],'BackgroundColor','white','HorizontalAlignment','Left','FontName','FixedWidth','FontSize',8,'HorizontalAlignment','left');
+		instructTextPos = [0.01 0.65 0.7 0.34];
+		listTextPos = [0.01 0.01 0.98 0.6];
+
+		[hListbox jListbox jScrollPane jDND] = reorderableListbox('String',analysisOptionListStr,'Units','normalized','Position',listTextPos,'Max',Inf,'Min',0,'Value',defaultChoiceIdx);
+		uicontrol('Style','Text','String',['Analysis step selection and ordering' 10 '=======' 10 'We can know only that we know nothing.' 10 'And that is the highest degree of human wisdom.' 10 10 '1: Click items to select.' 10 '2: Drag to re-order analysis.' 10 '3: Click command window and press ENTER to continue.'],'Units','normalized','Position',instructTextPos,'BackgroundColor','white','HorizontalAlignment','Left');
+		usaFlagPic = @(x) uicontrol('Style','Text','String',x,'Units','normalized','Position',[0.7 0.7 0.28 0.29],'BackgroundColor','white','HorizontalAlignment','Right','FontName','FixedWidth','FontSize',5);
+
+		usaFlagPic(USAflagStr);
 		% exitHandle = uicontrol('style','pushbutton','Units', 'normalized','position',[5 85 50 3]/100,'FontSize',9,'string','Click here to finish','callback',@subfxnCloseFig,'HorizontalAlignment','Left');
+
+		% Wait for user input
 		pause
 		% hListbox.String(hListbox.Value)
 		analysisOptionsIdx = hListbox.Value;
 		analysisOptionList = hListbox.String;
-		analysisOptionList(strcmp(analysisOptionList,'crop (add NaN border after motion correction)')) = {'crop'};
+
+		% Correct back to original names before proceeding
+		fnTmp = fieldnames(analysisOptsInfo);
+		for optNoS = 1:length(analysisOptionList)
+			for fnNo = 1:length(fnTmp)
+				if strcmp(analysisOptionList{optNoS},analysisOptsInfo.(fnTmp{fnNo}).str)==1
+					analysisOptionList{optNoS} = fnTmp{fnNo};
+				end
+			end
+		end
 
 		analysisOptionListStr = analysisOptionList;
-		analysisOptionListStr(strcmp(analysisOptionListStr,'crop')) = {'crop (add NaN border after motion correction)'};
+		for optNoS = 1:length(analysisOptionListStr)
+			analysisOptionListStr{optNoS} = analysisOptsInfo.(analysisOptionListStr{optNoS}).str;
+		end
+
 	catch err
 		display(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));
@@ -204,15 +271,15 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	if ok~=1
 		return
 	end
-	% defaultSaveList = {'downsampleTime'};
+
 	defaultSaveList = analysisOptionList{analysisOptionsIdx(end)};
 	defaultSaveIdx = find(ismember(analysisOptionList,defaultSaveList));
 
 	try
 		[figHandle figNo] = openFigure(1776, '');clf;
-		[hListbox jListbox jScrollPane jDND] = reorderableListbox('String',analysisOptionListStr,'Units','normalized','Position',[0.5 0 0.5 0.95],'Max',Inf,'Min',0,'Value',defaultSaveIdx);
-		uicontrol('Style','Text','String',['Analysis steps to save' 10 '=======' 10 'Gentlemen, you can not fight in here! This is the War Room.' 10 10 '1: Click analysis steps to save output' 10 '2: Click command window and press ENTER to continue'],'Units','normalized','Position',[0 0.4 0.5 0.60],'BackgroundColor','white','HorizontalAlignment','Left');
-		uicontrol('Style','Text','String',USAflagStr,'Units','normalized','Position',[0 0 0.5 0.3],'BackgroundColor','white','HorizontalAlignment','Left','FontName','FixedWidth','FontSize',8,'HorizontalAlignment','left');
+		[hListbox jListbox jScrollPane jDND] = reorderableListbox('String',analysisOptionListStr,'Units','normalized','Position',listTextPos,'Max',Inf,'Min',0,'Value',defaultSaveIdx);
+		uicontrol('Style','Text','String',['Analysis steps to save' 10 '=======' 10 'Gentlemen, you can not fight in here! This is the War Room.' 10 10 '1: Click analysis steps to save output' 10 '2: Click command window and press ENTER to continue'],'Units','normalized','Position',instructTextPos,'BackgroundColor','white','HorizontalAlignment','Left');
+		usaFlagPic(USAflagStr);
 		pause
 		saveIdx = hListbox.Value;
 		% close(1776);
@@ -522,10 +589,17 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				for optionIdx = analysisOptionsIdx
 					thisMovie = single(thisMovie);
 					optionName = analysisOptionList{optionIdx};
+
+					% Update the save string based on the analysis about to be run.
 					if strcmp(optionName,'turboreg')&~isempty(options.turboreg.filterBeforeRegister)
-						saveStr = [saveStr '_' 'spatialFiltBfReg'];
+						saveStr = [saveStr '_' 'spFltBfReg'];
 					end
-					saveStr = [saveStr '_' optionName];
+					try
+						saveStr = [saveStr '_' analysisOptsInfo.(optionName).save];
+					catch
+						saveStr = [saveStr '_' optionName];
+					end
+
 					display(repmat('*',1,7));
 					display([optionName ' movie...']);
 
@@ -677,8 +751,6 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 						break;
 					end
 
-					% some make single again
-					% thisMovie = single(thisMovie);
 					% save movie if user selected that option
 					% optionIdx
 					% saveIdx

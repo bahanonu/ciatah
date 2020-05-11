@@ -9,7 +9,7 @@ function [inputMovie] = createImageOutlineOnMovie(inputMovie,inputImages,varargi
 		% inputMovie - input movie with cell outline added
 
 	% changelog
-		%
+		% 2020.05.08 [20:56:35] - Added dilation support
 	% TODO
 		%
 
@@ -25,7 +25,7 @@ function [inputMovie] = createImageOutlineOnMovie(inputMovie,inputImages,varargi
 	% Float: Any value to use for the outlines, e.g. 1 or NaN. NaN recommended, if lease empty, uses maximum movie value.
 	options.movieVal = [];
 	%
-	options.dilateOutlinesFactor = 1;
+	options.dilateOutlinesFactor = 0;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -47,7 +47,7 @@ function [inputMovie] = createImageOutlineOnMovie(inputMovie,inputImages,varargi
 		% Get the outlines from the thresholded images.
 		[thresholdedImages boundaryIndices] = thresholdImages(inputImages,'binary',1,'getBoundaryIndex',1,'threshold',options.thresholdOutline,'imageFilter','median','imageFilterBinary','median','medianFilterNeighborhoodSize',3);
 
-		if options.dilateOutlinesFactor==1
+		if options.dilateOutlinesFactor==0
 			nullImage = zeros([size(inputImages(:,:,1))]);
 			nullImage([boundaryIndices{:}]) = 1;
 			nullImage = imdilate(nullImage,strel('disk',options.dilateOutlinesFactor));
