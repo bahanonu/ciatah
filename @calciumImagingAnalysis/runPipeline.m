@@ -8,7 +8,7 @@ function obj = runPipeline(obj,varargin)
 		%
 
 	% changelog
-		%
+		% 2020.05.09 [18:36:01] - Added a check to make sure certain directories are unloaded after running a module if they are not needed.
 	% TODO
 		%
 
@@ -77,12 +77,15 @@ function obj = runPipeline(obj,varargin)
 	currentIdx = intersect(currentIdx,duplicateIdx);
 	% [idNumIdxArray, ok] = listdlg('ListString',fxnsToRun,'InitialValue',currentIdx(1),'ListSize',dlgSize,'Name','Sir! I have a plan! Select a calcium imaging analysis method or procedure to run:');
 
-	[idNumIdxArray, fileIdxArray, ok] = obj.calciumImagingAnalysisMainGui(fxnsToRun,['calciumImagingAnalysis: "Sir! I have a plan!" Hover over methods for tooltip descriptions.'],currentIdx);
+	[idNumIdxArray, fileIdxArray, ok] = obj.calciumImagingAnalysisMainGui(fxnsToRun,['"Sir! I have a plan!" Hover over methods for tooltip descriptions.'],currentIdx);
 	obj.foldersToAnalyze = fileIdxArray;
 	bypassUI = 1;
 
 	% [idNumIdxArray, ok] = obj.pipelineListBox(fxnsToRun,['"Sir! I have a plan!" Select a calciumImagingAnalysis method or procedure to run. Hover over items for tooltip descriptions.'],currentIdx);
-	if ok==0; return; end
+	if ok==0;
+		subfxnCheckDirs();
+		return;
+	end
 
 	% excludeList = {'showVars','showFolders','setMainSettings','modelAddNewFolders','loadDependencies','saveObj','setStimulusSettings','modelDownsampleRawMovies'};
 	% excludeListVer2 = {'modelEditStimTable','behaviorProtocolLoad','modelPreprocessMovie','modelModifyMovies','removeConcurrentAnalysisFiles'};
@@ -221,7 +224,16 @@ function obj = runPipeline(obj,varargin)
 		cd(obj.defaultObjDir);
 	end
 
+	subfxnCheckDirs();
+
 	disp([10 10 ...
 	'Run processing pipeline by typing below (or clicking link) into command window (no semi-colon!):' 10 ...
 	'<a href="matlab: obj">obj</a>'])
+end
+function subfxnCheckDirs()
+	% Re-run load folders if certain functions are still present in the path
+	fxnCheckList = {'CELLMax_Wrapper.m','extractor.m','normcorre.m'};
+	if any(cellfun(@(x) ~isempty(which(x)),fxnCheckList))==1
+		loadBatchFxns;
+	end
 end

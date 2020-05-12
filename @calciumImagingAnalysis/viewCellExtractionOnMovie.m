@@ -482,8 +482,11 @@ function obj = viewCellExtractionOnMovie(obj,varargin)
 		displayStrMovie = [num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) '[' num2str(movieNo) '/' num2str(nMovies) ']' ': ' obj.folderBaseDisplayStr{obj.fileNum}];
 		switch options.videoPlayer
 			case 'matlab'
-				msgbox('Change contrast by pressing "j"');
+				msgHandle = msgbox('Change contrast by pressing "j"');
 				[exitSignal movieStruct] = playMovie(primaryMovie,'extraTitleText',displayStrMovie);
+
+				% Remove msg box
+				delete(msgHandle);
 				% fileIDNameArray
 				% movieDecision = questdlg('Is the movie good?', ...
 				% 	'Movie decision', ...

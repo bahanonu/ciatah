@@ -19,6 +19,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		% 2019.08.20 [12:29:31] - Contrast added to cell size/width decision-making.
 		% 2019.10.29 [17:21:23] - Added a check to make sure that filenames produced are valid MATLAB ones for settings, e.g. for CNMF-e.
 		% 2019.11.10 [20:34:42] - Add a warning with some common tips for users if error during cell extraction. Skip modelVarsFromFiles and viewObjmaps loading to reduce user confusion for any folders that had issues during cell extraction.
+		% 2020.05.08 [20:01:52] - Make creation of settings an explicit option that the user can change.
 	% TODO
 		%
 
@@ -447,6 +448,27 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		end
 	end
 	function getAlgorithmRootPath(algorithmFile,algorithmName,obj)
+		% First try to automatically add the folder
+		try
+			foundFiles = dir(fullfile([obj.defaultObjDir filesep obj.externalProgramsDir], ['**\' algorithmFile '']));
+			pathToAdd = foundFiles.folder;
+			try
+				pathList = strjoin(pathToAdd,pathsep);
+			catch
+				pathList = pathToAdd;
+			end
+			fprintf('Adding folders: %s\n',pathList)
+			addpath(pathToAdd);
+			if exist(algorithmFile,'file')==2
+				fprintf('Found: %s\n',algorithmFile)
+				return;
+			end
+		catch err
+			disp(repmat('@',1,7))
+			disp(getReport(err,'extended','hyperlinks','on'));
+			disp(repmat('@',1,7))
+		end
+
 		if exist(algorithmFile,'file')~=2
 			pathToAlgorithm = uigetdir('\.',sprintf('Enter path to %s root folder (e.g. from github)',algorithmName));
 			if ischar(pathToAlgorithm)

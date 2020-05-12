@@ -5,9 +5,13 @@
 <hr>
 
 Software package for calcium imaging analysis of one- and two-photon imaging datasets.
+
+<img src="https://user-images.githubusercontent.com/5241605/81605697-b9c7c800-9386-11ea-9e9f-569c743b24b9.png" width="42%" align="right" alt="calciumImagingAnalysis_logo">
+
 - Includes a GUI to allow users to do large-scale batch analysis, accessed via the repository's `calciumImagingAnalysis` class.
-- The underlying functions can also be used to create GUI-less, command line-ready analysis pipelines.
-- Includes major calcium imaging analysis steps: pre-processing (spatiotemporal downsampling, spatial filtering, relative fluorescence, etc.), multiple cell-extraction methods, cell classification (coming soon!), cross-session cell alignment, and more.
+- The underlying functions can also be used to create GUI-less, command line-ready analysis pipelines. Functions located in `ciapkg` and `+ciapkg` sub-folders.
+- Includes all major calcium imaging analysis steps: pre-processing (motion correction, spatiotemporal downsampling, spatial filtering, relative fluorescence calculation, etc.), support for multiple cell-extraction methods, automated cell classification (coming soon!), cross-session cell alignment, and more.
+- Has several example calcium imaging datasets that it will automatically download to help users test out the package.
 - Includes code for determining animal position (e.g. in open-field assay).
 - Supports [Neurodata Without Borders](https://www.nwb.org/) data standard (see [calcium imaging tutorial](https://neurodatawithoutborders.github.io/matnwb/tutorials/html/ophys.html)) for reading/writing cell-extraction (e.g. outputs of PCA-ICA, CELLMax, CNMF, CNMF-E, etc.). Supports reading NWB movie files (write support coming soon).
 - Requires `MATLAB`.
@@ -21,6 +25,11 @@ Made in USA.<br>
 ***
 ## Contents
 - [Quick start guide](#quick-start-guide)
+- [Acknowledgments](#acknowledgments)
+- [References](#references)
+- [Questions](#questions)
+
+__Detailed README__
 - [Repository notes](#repository-notes)
 - [Installation](#installation)
 - [Data](#data)
@@ -35,9 +44,6 @@ Made in USA.<br>
 	- [Removing cells not within brain region with  `modelModifyRegionAnalysis`](#removing-cells-not-within-brain-region-with-modelmodifyregionanalysis)
 	- [Cross-session cell alignment with  `computeMatchObjBtwnTrials`](#cross-session-cell-alignment-with-computematchobjbtwntrials)
 - [ImageJ+MATLAB based mouse location tracking](#imagejmatlab-based-mouse-location-tracking)
-- [Acknowledgments](#acknowledgments)
-- [References](#references)
-- [Questions](#questions)
 - [License](#license)
 
 ***
@@ -47,9 +53,11 @@ Made in USA.<br>
 Below are steps needed to quickly get started using the `calciumImagingAnalysis` software package in MATLAB.
 - Clone the `calciumImagingAnalysis` repository (using [GitHub desktop](https://desktop.github.com/) or command line) or download the repository zip and unzip.
 - Point the MATLAB path to the `calciumImagingAnalysis` root folder (*NOT* `@calciumImagingAnalysis` sub-folder in the repository).
+  - Alternatively, download the package from `File Exchange` using the Add-Ons explorer in MATLAB. See `calciumImagingAnalysis` entry at:
+ [![View calciumImagingAnalysis on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis) or https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis.
 - Run the below MATLAB commands.
-- After, likely want to run `modelAddNewFolders` first in order to add folders containing imaging data to the current class object.
-- [Optional] Users on Windows systems should download `Everything` (https://www.voidtools.com/). It is a very useful and fast search engine that can allow users to quickly get lists of folders then need to analyze in `calciumImagingAnalysis`.
+- Afterwards, likely want to run `modelAddNewFolders` module first in order to add folders containing imaging data to the current class object.
+- [Optional] Users on Windows systems should download `Everything` (https://www.voidtools.com/). It is a very useful and extremely fast search engine for files and folders on a computer that can allow users to quickly get lists of folders then need to analyze in `calciumImagingAnalysis`.
 
 ```MATLAB
 % Run these commands in MATLAB to get started.
@@ -85,6 +93,7 @@ __Certain sections become available when user selects the appropriate method (e.
 ### Additional quick start notes
 
 - See additional details in [Processing calcium imaging data](#processing-calcium-imaging-data) for running the full processing pipeline.
+- To force load all directories, including most external software packages (in `_external_programs` folder), type `ciapkg.loadAllDirs;` into MATLAB command line. This is most relevant when you need to access specific functions in an outside repository that are normally hidden until needed.
 - When issues are encountered, first check the `*Common issues and fixes` Wiki page to see if a solution is there. Else, submit a new issue or email Biafra (bahanonu [at] alum.mit.edu).
 - Notes:
   - There are two sets of test data that are downloaded:
@@ -123,6 +132,50 @@ obj.runPipeline; % then hit enter!
 ```
 
 ***
+
+## Acknowledgments
+
+Thanks to Jones G. Parker, PhD (<https://parker-laboratory.com/>) for providing extensive user feedback during development of the `calciumImagingAnalysis` software package.
+
+Additional thanks to Drs. Jesse Marshall, Jérôme Lecoq, Tony H. Kim, Hakan Inan, Lacey Kitch, Maggie Larkin, Elizabeth Otto Hamel, and Laurie Burns for providing feedback, specific functions, or helping develop aspects of the code used in the `calciumImagingAnalysis` software package.
+
+## References
+
+Please cite [Corder*, Ahanonu*, et al. 2019](http://science.sciencemag.org/content/363/6424/276.full) _Science_ publication or the [Ahanonu, 2018](https://doi.org/10.5281/zenodo.2222294) _Zenodo_ release if you used the software package or code from this repository to advance/help your research:
+
+```Latex
+@article{corderahanonu2019amygdalar,
+  title={An amygdalar neural ensemble that encodes the unpleasantness of pain},
+  author={Corder, Gregory and Ahanonu, Biafra and Grewe, Benjamin F and Wang, Dong and Schnitzer, Mark J and Scherrer, Gr{\'e}gory},
+  journal={Science},
+  volume={363},
+  number={6424},
+  pages={276--281},
+  year={2019},
+  publisher={American Association for the Advancement of Science}
+}
+```
+
+```Latex
+@misc{biafra_ahanonu_2018_2222295,
+  author       = {Biafra Ahanonu},
+  title        = {{calciumImagingAnalysis: a software package for
+                   analyzing one- and two-photon calcium imaging
+                   datasets.}},
+  month        = December,
+  year         = 2018,
+  doi          = {10.5281/zenodo.2222295},
+  url          = {https://doi.org/10.5281/zenodo.2222295}
+}
+```
+
+## Questions?
+Please email any additional questions not covered in the repository to `bahanonu [at] alum.mit.edu` or open an issue.
+
+***
+
+# Detailed README
+All the remaining sections encompass a more detailed README that provide a step-by-step instructions for running the entire analysis pipeline along with notes, tips, data organization, and other information.
 
 ## Repository notes
 - Covers preprocessing of calcium imaging videos, cell and activity trace extraction (supports the following methods: PCA-ICA, CELLMax, EXTRACT, CNMF, CNMF-E, and ROI), manual and automated sorting of cell extraction outputs, cross-session alignment of cells, and more.
@@ -628,45 +681,6 @@ playMovie(inputTrackingVideo);
 Using `createTrackingOverlayVideo` to verify tracking matches animal position on a per frame basis.
 <!-- ![image](https://user-images.githubusercontent.com/5241605/34800536-19eefcf2-f619-11e7-954f-dba59f4fd427.png) -->
 <img src="https://user-images.githubusercontent.com/5241605/34800536-19eefcf2-f619-11e7-954f-dba59f4fd427.png" alt="image" width="400" height="auto"/>
-
-## Acknowledgments
-
-Thanks to Jones G. Parker, PhD (<https://parker-laboratory.com/>) for providing extensive user feedback during development of the `calciumImagingAnalysis` software package.
-
-Additional thanks to Jesse Marshall, Jérôme Lecoq, Tony H. Kim, Hakan Inan, Lacey Kitch, Maggie Larkin, Elizabeth Otto Hamel, and Laurie Burns for providing certain functions or helping develop aspects of the code used in the software package.
-
-## References
-
-Please cite [Corder*, Ahanonu*, et al. 2019](http://science.sciencemag.org/content/363/6424/276.full) _Science_ publication or the [Ahanonu, 2018](https://doi.org/10.5281/zenodo.2222294) _Zenodo_ release if you used the software package or code from this repository to advance/help your research:
-
-```Latex
-@article{corderahanonu2019amygdalar,
-  title={An amygdalar neural ensemble that encodes the unpleasantness of pain},
-  author={Corder, Gregory and Ahanonu, Biafra and Grewe, Benjamin F and Wang, Dong and Schnitzer, Mark J and Scherrer, Gr{\'e}gory},
-  journal={Science},
-  volume={363},
-  number={6424},
-  pages={276--281},
-  year={2019},
-  publisher={American Association for the Advancement of Science}
-}
-```
-
-```Latex
-@misc{biafra_ahanonu_2018_2222295,
-  author       = {Biafra Ahanonu},
-  title        = {{calciumImagingAnalysis: a software package for
-                   analyzing one- and two-photon calcium imaging
-                   datasets.}},
-  month        = December,
-  year         = 2018,
-  doi          = {10.5281/zenodo.2222295},
-  url          = {https://doi.org/10.5281/zenodo.2222295}
-}
-```
-
-## Questions?
-Please email any additional questions not covered in the repository to `bahanonu [at] alum.mit.edu` or open an issue.
 
 ## License
 

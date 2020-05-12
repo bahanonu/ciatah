@@ -44,9 +44,9 @@ function [idNumIdxArray, validFoldersIdx, ok] = calciumImagingAnalysisMainGui(ob
 
 		hFig = figure;
 		hListboxS = struct;
-		mt = -10;
 		set(hFig,'Name','calciumImagingAnalysis: start-up GUI','NumberTitle','off')
-		uicontrol('Style','text','String',[inputTxt 10 'Press TAB to select next section, ENTER to continue, and ESC to exit.'],'Units','normalized','Position',[1 95 90 5]/100,'BackgroundColor','white','HorizontalAlignment','Left');
+		uicontrol('Style','text','String',[10 inputTxt 10 'Press TAB to select next section, ENTER to continue, and ESC to exit.'],'Units','normalized','Position',[1 92 90 8]/100,'BackgroundColor','white','HorizontalAlignment','Left','ForegroundColor','black');
+		uicontrol('Style','text','String',['calciumImagingAnalysis'],'Units','normalized','Position',[1 97.5 20 2.5]/100,'BackgroundColor','white','HorizontalAlignment','Left','ForegroundColor','black','FontWeight','bold','FontAngle','italic');
 
 		% set(hFig,'Color',[0,0,0]);
 		% currentIdx = find(strcmp(fxnsToRun,obj.currentMethod));
@@ -90,13 +90,14 @@ function [idNumIdxArray, validFoldersIdx, ok] = calciumImagingAnalysisMainGui(ob
 		selBoxInfo.folders.title = 'Loaded folders:';
 		selBoxInfo.guiEnabled.title = 'GUI (for methods that ask for options):';
 
-		selBoxInfo.methods.loc = [0,8,38,85];
-		selBoxInfo.cellExtract.loc = [50+mt,79,24-mt/2,14];
-		selBoxInfo.cellExtractFiletype.loc = [50+mt,70,24-mt/2,7];
-		selBoxInfo.folderFilt.loc = [75+mt-mt/2,70,25-mt/2,22];
-		selBoxInfo.subject.loc = [50+mt,49,24-mt/2,18];
-		selBoxInfo.assay.loc = [75+mt-mt/2,49,25-mt/2,18];
-		selBoxInfo.folders.loc = [50+mt,0,50-mt,46];
+		mt = -10;
+		selBoxInfo.methods.loc = [0,8,38,83];
+		selBoxInfo.cellExtract.loc = [50+mt,77,24-mt/2,14];
+		selBoxInfo.cellExtractFiletype.loc = [50+mt,68,24-mt/2,7];
+		selBoxInfo.folderFilt.loc = [75+mt-mt/2,68,25-mt/2,22];
+		selBoxInfo.subject.loc = [50+mt,47,24-mt/2,18];
+		selBoxInfo.assay.loc = [75+mt-mt/2,47,25-mt/2,18];
+		selBoxInfo.folders.loc = [50+mt,0,50-mt,44];
 		selBoxInfo.guiEnabled.loc = [0,0,38,5];
 
 		tmpList2 = fieldnames(selBoxInfo);
@@ -111,7 +112,7 @@ function [idNumIdxArray, validFoldersIdx, ok] = calciumImagingAnalysisMainGui(ob
 				selBoxInfo.(tmpList2{ff}).titleLoc(2) = selBoxInfo.(tmpList2{ff}).loc(2)+selBoxInfo.(tmpList2{ff}).loc(4);
 				selBoxInfo.(tmpList2{ff}).titleLoc(4) = 2;
 
-				uicontrol('Style','Text','String',selBoxInfo.(tmpList2{ff}).title,'Units','normalized','Position',selBoxInfo.(tmpList2{ff}).titleLoc/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','Bold');
+				hListboxT.(tmpList2{ff}) = uicontrol('Style','Text','String',selBoxInfo.(tmpList2{ff}).title,'Units','normalized','Position',selBoxInfo.(tmpList2{ff}).titleLoc/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','Bold');
 				set(hListboxS.(tmpList2{ff}),'Max',2,'Min',0);
 			catch
 			end
