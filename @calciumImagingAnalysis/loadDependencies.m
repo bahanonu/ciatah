@@ -8,14 +8,18 @@ function obj = loadDependencies(obj)
 		%
 
 	% changelog
-		%
+		% 2020.05.12 [17:40:37] - Updated to enable GUI-less loading of dependencies. In particular for easier unit testing.
 	% TODO
-		%
+		% Verify all dependencies download and if not ask user to download again.
 
 	scnsize = get(0,'ScreenSize');
 	dependencyStr = {'downloadMiji','downloadCnmfGithubRepositories','example_downloadTestData','loadMiji','downloadNeuroDataWithoutBorders'};
 	dispStr = {'Download Fiji (to run Miji)','Download CNMF, CNMF-E, and CVX code.','Download test one-photon data.','Load Fiji/Miji into MATLAB path.','Download NWB (NeuroDataWithoutBorders)'};
-	[fileIdxArray, ~] = listdlg('ListString',dispStr,'ListSize',[scnsize(3)*0.3 scnsize(4)*0.3],'Name','Which dependencies to load? (Can select multiple)','InitialValue',[1 2 3 5]);
+	if obj.guiEnabled==1
+		[fileIdxArray, ~] = listdlg('ListString',dispStr,'ListSize',[scnsize(3)*0.3 scnsize(4)*0.3],'Name','Which dependencies to load? (Can select multiple)','InitialValue',[1 2 3 5]);
+	else
+		fileIdxArray = [1 2 3 5];
+	end
 	analysisTypeD = dependencyStr(fileIdxArray);
 	dispStr = dispStr(fileIdxArray);
 	for depNo = 1:length(fileIdxArray)
@@ -26,7 +30,11 @@ function obj = loadDependencies(obj)
 				[success] = downloadCnmfGithubRepositories();
 			case 'downloadMiji'
 				depStr = {'Save Fiji to default directory','Save Fiji to custom directory'};
-				[fileIdxArray, ~] = listdlg('ListString',depStr,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','Where to save Fiji?');
+				if obj.guiEnabled==1
+					[fileIdxArray, ~] = listdlg('ListString',depStr,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','Where to save Fiji?');
+				else
+					fileIdxArray = 1;
+				end
 				depStr = depStr{fileIdxArray};
 				if fileIdxArray==1
 					downloadMiji();

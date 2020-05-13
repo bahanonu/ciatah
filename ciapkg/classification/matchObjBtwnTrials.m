@@ -28,7 +28,8 @@ function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
 	% notes
 		% the cell array of traces allows us to have arbitrary numbers of trials to align automatically,
 	% TODO
-		% detect if the input images are not all of the same size, if that is the case, ask the user to specify a crop area equal to the dimensions of the smallest input image.
+		% Detect if the input images are not all of the same size, if that is the case, ask the user to specify a crop area equal to the dimensions of the smallest input image. - DONE
+		% Try to crop input images in a way that makes sure all cells are in the resulting crop area for all the sessions, else use the traditional cropping.
 
 	%========================
 	% 'pairwise' or 'clustering'

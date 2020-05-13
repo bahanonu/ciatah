@@ -56,7 +56,7 @@ function obj = modelVarsFromFiles(obj)
 		numStdsForThresh = str2num(usrInput{fieldnameNo+1});
 		obj.loadVarsToRam = str2num(usrInput{fieldnameNo+2});
 		reportMidpoint = str2num(usrInput{fieldnameNo+3});
-		obj.nwbFileRegexp = usrInput{fieldnameNo+3};
+		obj.nwbFileRegexp = usrInput{fieldnameNo+4};
 	else
 		% only update the threshold
 		% numStdsForThresh = 3;

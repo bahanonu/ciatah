@@ -158,7 +158,7 @@ function obj = initializeObj(obj)
 	% Check java heap size
 	try
 		javaHeapSpaceSizeGb = java.lang.Runtime.getRuntime.maxMemory*1e-9;
-		javaHeapPrefGb = 3;
+		javaHeapPrefGb = 2;
 		javaHelpUrl = "https://www.mathworks.com/help/matlab/matlab_external/java-heap-memory-preferences.html";
 		javaTmpStr = sprintf('\n\nSee how to change Java heap memory online at:<a href="%s">Java Heap Memory Preferences</a> (<a href="%s">%s</a>).',javaHelpUrl,javaHelpUrl,javaHelpUrl);
 		if javaHeapSpaceSizeGb<javaHeapPrefGb

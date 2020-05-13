@@ -7,6 +7,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 		% getOptions.m, createObjMap.m, removeSmallICs.m, identifySpikes.m, etc., see repository
 	% inputs
 		% inputImages - [x y N] matrix where N = number of images, x/y are dimensions. Use permute(inputImages,[2 3 1]) if you use [N x y] for matrix indexing.
+			% Alternatively, make inputImages = give path to NWB file and inputSignals = [] for signalSorter to automatically load NWB files.
 		% inputSignals - [N time] matrix where N = number of signals (traces) and time = frames.
 		% inputID - obsolete, kept for compatibility, just input empty []
 		% nSignals - obsolete, kept for compatibility
@@ -64,6 +65,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 		% 2019.11.09 [14:37:15] - Remove many commented out code. And added removal of unconnected components from main component when thresholding images.
 		% 2019.11.10 [20:21:03] - Made sorting will re-run in case of chooseSignals error, e.g. if GUI is overwritten.
 		% 2020.04.28 [16:34:33] - Fixed case where ROItraces would be overwritten when comparing to algorithm input traces. Also added to 'r' option.
+		% 2020.05.13 [09:34:45] - Added support for NWB.
 	% TODO
 		% DONE: New GUI interface to allow users to scroll through video and see cell activity at that point
 		% DONE: allow option to mark rest as bad signals
@@ -224,6 +226,12 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 		eval([fn{i} '=options.' fn{i} ';']);
 	end
 	display(options)
+
+	% If inputs NWB format
+	if ischar(inputImages)
+		[inputImages,inputSignals,infoStruct] = loadNeurodataWithoutBorders(inputImages);
+		options.nSignals = size(inputImages,3);
+	end
 
 	% Check the input dimensions and warn user if they are incorrect
 	disp(['inputImages size: ' num2str(size(inputImages))])

@@ -11,6 +11,7 @@ function obj = viewMovieRegistrationTest(obj)
 		% 2019.07.26 [14:00:00] - Additional AVI support.
 		% 2019.08.30 [12:58:37] - Fallback to playMovie in cases of Miji errors and addition of selection for MATLAB player support.
 		% 2019.12.08 [23:33:25] - Save out settings structure to allow users to load it in again later for actual pre-processing.
+		% 2020.05.13 [07:57:06] - Added a warning and check that the reference frame requested is outside bounds of input movie.
 	% TODO
 		%
 
@@ -340,6 +341,11 @@ function [inputMovie] = subfxnRunTurboreg(regSettings,movieList,inputDatasetName
 	% get movie, normalize, and display
 	[inputMovie] = loadMovieList(movieList,'convertToDouble',0,'frameList',frameListTmp(:),'inputDatasetName',inputDatasetName,'treatMoviesAsContinuous',1);
 	inputMovie = single(inputMovie);
+	if regSettings.refCropFrame>size(inputMovie,3)
+		regSettings.refCropFrame = size(inputMovie,3);
+		warning(['Reference frame requested greater than length of the movie, changing reference frame to frame #' num2str(size(inputMovie,3)) '.']);
+	else
+	end
 	inputMovieRefFrame = squeeze(inputMovie(:,:,regSettings.refCropFrame));
 
 	ioptions.turboregRotation = regSettings.turboregRotation;
