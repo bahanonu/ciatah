@@ -15,7 +15,7 @@ function [inputMovie] = removeStripsFromMovie(inputMovie,varargin)
 		%
 
 	%========================
-	% Str: vertical or horizontal lines removal
+	% Str: orientation of stripes to remove, 'vertical', 'horizontal', or 'both'.
 	options.stripOrientation = 'vertical';
 	% Int: Number of pixels to use for mean filter for filter mask
 	options.meanFilterSize = 7;
@@ -181,8 +181,13 @@ function [inputMovie] = removeStripsFromMovie(inputMovie,varargin)
 			nFrames = nFramesToNormalize;
 		end
 		%========================
+		if nFramesToNormalize==1|options.showImages==1
+			nWorkers = 0;
+		else
+			nWorkers = Inf;
+		end
 
-		parfor frame = 1:nFramesToNormalize
+		parfor(frame = 1:nFramesToNormalize,nWorkers)
 			% thisFrame = squeeze(inputMovie{frame});
 			thisFrame = squeeze(inputMovie(:,:,frame));
 			if isempty(secondaryNormalizationType)

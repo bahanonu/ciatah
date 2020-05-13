@@ -58,6 +58,7 @@ Below are steps needed to quickly get started using the `calciumImagingAnalysis`
 - Run the below MATLAB commands.
 - Afterwards, likely want to run `modelAddNewFolders` module first in order to add folders containing imaging data to the current class object.
 - [Optional] Users on Windows systems should download `Everything` (https://www.voidtools.com/). It is a very useful and extremely fast search engine for files and folders on a computer that can allow users to quickly get lists of folders then need to analyze in `calciumImagingAnalysis`.
+- [Optional] Users who want to run analysis via the command line can run `edit ciapkg.demo.cmdLinePipeline` and run each segment of code there to see what commands are needed to perform each step. It assumes you have already run `example_downloadTestData`.
 
 ```MATLAB
 % Run these commands in MATLAB to get started.

@@ -36,7 +36,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		fontSizeGui = 10;
 
 		defaultObjDir = pwd;
-		classVersion = 'v3.11.0-20200508';
+		classVersion = 'v3.11.1-20200512';
 		serverPath = '';
 		privateSettingsPath = ['private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
 		% place where functions can temporarily story user settings
@@ -468,20 +468,20 @@ classdef calciumImagingAnalysis < dynamicprops
 		'viewMovie',
 		'viewObjmaps',
 		'viewCreateObjmaps',
-		'viewSubjectMovieFrames'
 		'viewMovieCreateSideBySide',
-		'',
-		'------- TRACKING -------',
-		'modelTrackingData',
-		'viewOverlayTrackingToVideo',
 		'',
 		'------- ACROSS SESSION ANALYSIS: COMPUTE/VIEW -------',
 		'viewSubjectMovieFrames',
 		'computeMatchObjBtwnTrials',
+		'',
 		'viewMatchObjBtwnSessions',
 		'modelSaveMatchObjBtwnTrials',
 		'computeCellDistances',
-		'computeCrossDayDistancesAlignment'
+		'computeCrossDayDistancesAlignment',
+		'',
+		'------- TRACKING -------',
+		'modelTrackingData',
+		'viewOverlayTrackingToVideo'
 		};
 
 		% Tooltips for calciumImagingAnalysis methods

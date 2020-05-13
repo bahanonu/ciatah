@@ -16,7 +16,7 @@ function [inputImagesTranslated, outputStruct] = computeManualMotionCorrection(i
 		% 2020.04.07 [19:39:24] - Updated to allow just using the register aspect of the function. Also made registering callback based.
 		% 2020.04.08 [10:35:49] - Added support for rotation.
 	% TODO
-		%
+		% Add ability to crop
 		% inputRegisterImage - [x y nCells] - Image to register to.
 
 	%========================

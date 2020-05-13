@@ -10,6 +10,7 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 	% changelog
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
 		% 2020.04.16 [19:59:43] - Small fix to NWB file checking.
+		% 2020.05.12 [18:02:04] - Update to make sure inputSignals2 with NWB.
 	% TODO
 		% Give a user a warning() output if there are no or empty cell-extraction outputs
 
@@ -245,7 +246,7 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 					% If user request second signal series, load it from data.
 					nwbOpts.signalSeriesNo = 2;
 					nwbOpts.loadImages = 0;
-					[~,inputSignals,~] = loadNeurodataWithoutBorders(filesToLoad{1},'options',nwbOpts);
+					[~,inputSignals2,~] = loadNeurodataWithoutBorders(filesToLoad{1},'options',nwbOpts);
 				end
 				loadCiaFiles = 0;
 			end

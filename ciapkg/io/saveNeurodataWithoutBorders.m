@@ -77,7 +77,7 @@ function [success] = saveNeurodataWithoutBorders(image_masks,roi_response_data,a
 
 		fprintf('Saving to: %s.\n',outputFilePath)
 		nwbExport(nwb, outputFilePath);
-
+		disp('Done saving to NWB!');
 		success = 1;
 	catch err
 		success = 0;

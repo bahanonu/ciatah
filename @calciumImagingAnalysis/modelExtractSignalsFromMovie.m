@@ -1073,7 +1073,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			end
 		else
 			display('running PCA-ICA, new version...')
-			[PcaOutputSpatial PcaOutputTemporal PcaOutputSingularValues PcaInfo] = run_pca(movieList, nPCs, 'movie_dataset_name',obj.inputDatasetName);
+			[PcaOutputSpatial, PcaOutputTemporal, PcaOutputSingularValues, PcaInfo] = run_pca(movieList, nPCs, 'movie_dataset_name',obj.inputDatasetName);
 
 			if isempty(PcaOutputTemporal)
 				display('PCs are empty, skipping...')
