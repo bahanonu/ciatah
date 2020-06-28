@@ -102,7 +102,7 @@ function [inputMovie] = removeStripsFromMovie(inputMovie,varargin)
 				idxMid = round(size(stripCutoffFilter,1)/2);
 				stripCutoffFilter(idxMid-1:idxMid+1,:) = 0;
 			otherwise
-				display('Please enter valid filter orientation.')
+				disp('Please enter valid filter orientation.')
 				return;
 		end
 		stripCutoffFilter = filter2(meanFilt,stripCutoffFilter,'same');
@@ -111,7 +111,7 @@ function [inputMovie] = removeStripsFromMovie(inputMovie,varargin)
 		stripCutoffFilter(stripCutoffFilter>0.99999999) = NaN;
 
 		% ========================
-		display('Running Matlab FFT')
+		disp('Running stripe removal using Matlab FFT')
 		inputMovie(isnan(inputMovie)) = 0;
 		bandpassMatrix = zeros(size(inputMovie));
 		% get options

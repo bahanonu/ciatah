@@ -6,8 +6,8 @@ function [inputImagesTranslated, outputStruct] = computeManualMotionCorrection(i
 		% inputImages - [x y z] where z = individual frames with image to register. By default the first frame is used as the "reference" image in green.
 	% outputs
 		% outputStruct.registeredMarkerImage
-		% outputStruct.translationVector
-		% outputStruct.rotationVector
+		% outputStruct.translationVector = {1 z} cell array containing inputs for imtranslate so users can manually correct if needed.
+		% outputStruct.rotationVector = {1 z} cell array containing inputs for imrotate so users can manually correct if needed.
 		% outputStruct.gammaCorrection
 		% outputStruct.inputImagesCorrected
 		% outputStruct.inputImagesOriginal
@@ -16,7 +16,7 @@ function [inputImagesTranslated, outputStruct] = computeManualMotionCorrection(i
 		% 2020.04.07 [19:39:24] - Updated to allow just using the register aspect of the function. Also made registering callback based.
 		% 2020.04.08 [10:35:49] - Added support for rotation.
 	% TODO
-		% Add ability to crop
+		% Add ability to auto-crop if inputs are not of the right size them convert back to correct size after manual correction
 		% inputRegisterImage - [x y nCells] - Image to register to.
 
 	%========================
@@ -51,9 +51,16 @@ function [inputImagesTranslated, outputStruct] = computeManualMotionCorrection(i
 		if iscell(inputImages)
 			disp('Converting input cells into max-projection matrix')
 			disp(['inputImages: ' num2str(size(inputImages))])
+			% If user has not input alternative images but input cell array of images
+			if isempty(options.altInputImages)
+				switchInputImagesBack = 1;
+				options.altInputImages = inputImages;
+			end
 			inputImages = cellfun(@(x) nanmax(x,[],3),inputImages,'UniformOutput',false);
 			inputImages = cat(3,inputImages{:});
 			disp(['inputImages: ' num2str(size(inputImages))])
+		else
+			switchInputImagesBack = 0;
 		end
 
 		% Get register frame
@@ -72,9 +79,9 @@ function [inputImagesTranslated, outputStruct] = computeManualMotionCorrection(i
 				[outputStruct] = subfxnRegisterImage(inputImages(:,:,frameNo),inputRegisterImage,options,outputStruct,frameNo,size(inputImages,3));
 
 				outputStruct.altInputImages{frameNo} = NaN(size(options.altInputImages{frameNo}));
-				disp('Translating alt input images...\n')
+				fprintf('Translating alt input images...\n')
 				inputImagesTranslated(:,:,frameNo) = imtranslate(inputImages(:,:,frameNo),outputStruct.translationVector{frameNo});
-				inputImagesTranslated(:,:,frameNo) = imrotate(inputImages(:,:,frameNo),outputStruct.rotationVector{frameNo});
+				inputImagesTranslated(:,:,frameNo) = imrotate(inputImages(:,:,frameNo),outputStruct.rotationVector{frameNo},'nearest','crop');
 				outputStruct.translationVector{frameNo}
 				for imgNo = 1:size(outputStruct.altInputImages{frameNo},3)
 					% figure;
@@ -84,7 +91,7 @@ function [inputImagesTranslated, outputStruct] = computeManualMotionCorrection(i
 					% 		imagesc(imtranslate(options.altInputImages{frameNo}(:,:,imgNo),outputStruct.translationVector{frameNo})); axis equal tight
 					% 	pause
 					outputStruct.altInputImages{frameNo}(:,:,imgNo) = imtranslate(options.altInputImages{frameNo}(:,:,imgNo),outputStruct.translationVector{frameNo});
-					outputStruct.altInputImages{frameNo}(:,:,imgNo) = imrotate(outputStruct.altInputImages{frameNo}(:,:,imgNo),outputStruct.rotationVector{frameNo});
+					outputStruct.altInputImages{frameNo}(:,:,imgNo) = imrotate(outputStruct.altInputImages{frameNo}(:,:,imgNo),outputStruct.rotationVector{frameNo},'nearest','crop');
 				end
 				% figure;imagesc(max(outputStruct.altInputImages{frameNo},[],3))
 			end
@@ -94,8 +101,12 @@ function [inputImagesTranslated, outputStruct] = computeManualMotionCorrection(i
 			inputImagesTranslated = NaN(size(inputImages));
 			for frameNo = 1:size(inputImages,3)
 				inputImagesTranslated(:,:,frameNo) = imtranslate(inputImages(:,:,frameNo),outputStruct.translationVector{frameNo});
-				inputImagesTranslated(:,:,frameNo) = imrotate(inputImages(:,:,frameNo),outputStruct.rotationVector{frameNo});
+				inputImagesTranslated(:,:,frameNo) = imrotate(inputImages(:,:,frameNo),outputStruct.rotationVector{frameNo},'nearest','crop');
 			end
+		end
+
+		if switchInputImagesBack==1
+			inputImagesTranslated = outputStruct.altInputImages;
 		end
 
 		if options.onlyRegister==1

@@ -15,6 +15,7 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		% 2019.12.08 [22:49:48] - Allow users to input previous preprocessing settings.
 		% 2020.04.18 [19:27:24] - Make sure any modifications from default are propagated upon multiple calls to getRegistrationSettings.
 		% 2020.04.19 [15:20:48] - Fix how modified values stored so only store the modified value and not all the options at time of modification.
+		% 2020.05.28 [21:07:27] - Added support for nargin=1
 	% TODO
 		% DONE: Allow user to input prior settings, indicate those changed from default by orange or similar color.
 
@@ -30,6 +31,11 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 	% 	eval([fn{i} '=options.' fn{i} ';']);
 	% end
 	%========================
+	
+	if nargin==1
+		disp('No title string given, using blank');
+		inputTitleStr = '';
+	end
 
 	% Initialize constants
 	nWorkersDefault = java.lang.Runtime.getRuntime().availableProcessors-1;

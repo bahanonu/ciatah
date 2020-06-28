@@ -12,7 +12,7 @@ function setFigureDefaults()
 	% TODO
 		%
 
-	display('Setting graphics defaults...')
+	disp('Setting graphics defaults...')
 
 	% scnsize = get(0,'ScreenSize');
 	% pos1 = [scnsize(3)/2, 10, scnsize(3)/2-20, scnsize(4)-100];
@@ -26,7 +26,7 @@ function setFigureDefaults()
 	defaultUIFontStr = 'Consolas';
 
 	% Change the command window and editor fonts
-	FontSize = 10;
+	FontSize = 9;
 	% java.awt.Font.BOLD
 	if ismac
 		cmdWinEditorFont = 'Menlo-Regular';

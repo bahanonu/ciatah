@@ -12,6 +12,7 @@ function obj = viewMovieRegistrationTest(obj)
 		% 2019.08.30 [12:58:37] - Fallback to playMovie in cases of Miji errors and addition of selection for MATLAB player support.
 		% 2019.12.08 [23:33:25] - Save out settings structure to allow users to load it in again later for actual pre-processing.
 		% 2020.05.13 [07:57:06] - Added a warning and check that the reference frame requested is outside bounds of input movie.
+		% 2020.06.18 [12:38:34] - Add support for stripe removal same as modelPreprocessMovie
 	% TODO
 		%
 
@@ -337,6 +338,38 @@ function [inputMovie] = subfxnSpatialFilterInputMovie(regSettings,movieList,inpu
 	end
 	% inputMovie = normalizeMovie(inputMovie,'normalizationType','medianFilter');
 end
+% function stripeRemovalInputMovie(regSettings,movieList,inputDatasetName,cropCoords,frameListTmp)
+% 	% number of frames to subset
+% 	subsetSize = options.turboregNumFramesSubset;
+% 	movieLength = size(thisMovie,3);
+% 	numSubsets = ceil(movieLength/subsetSize)+1;
+% 	subsetList = round(linspace(1,movieLength,numSubsets));
+% 	display(['Stripe removal sublists: ' num2str(subsetList)]);
+% 	% convert movie to single for turboreg
+% 	j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
+% 	% get reference frame before subsetting, so won't change
+% 	nSubsets = (length(subsetList)-1);
+% 	for thisSet = 1:nSubsets
+% 		subsetStartTime = tic;
+% 		subsetStartIdx = subsetList(thisSet);
+% 		subsetEndIdx = subsetList(thisSet+1);
+% 		display(repmat('$',1,7))
+% 		if thisSet==nSubsets
+% 			movieSubset = subsetStartIdx:subsetEndIdx;
+% 			display([num2str(subsetStartIdx) '-' num2str(subsetEndIdx) ' ' num2str(thisSet) '/' num2str(nSubsets)])
+% 		else
+% 			movieSubset = subsetStartIdx:(subsetEndIdx-1);
+% 			display([num2str(subsetStartIdx) '-' num2str(subsetEndIdx-1) ' ' num2str(thisSet) '/' num2str(nSubsets)])
+% 		end
+% 		display(repmat('$',1,7))
+% 		j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
+
+% 		thisMovie(:,:,movieSubset) = removeStripsFromMovie(single(thisMovie(:,:,movieSubset)),'stripOrientation',options.turboreg.stripOrientationRemove,'meanFilterSize',options.turboreg.stripSize,'freqLowExclude',options.turboreg.stripfreqLowExclude,'bandpassType',options.turboreg.stripfreqBandpassType,'freqHighExclude',options.turboreg.stripfreqHighExclude,'waitbarOn',1);
+
+% 		toc(subsetStartTime)
+% 	end
+% 	% thisMovie = normalizeMovie(thisMovie,'normalizationType','medianFilter');
+% end
 function [inputMovie] = subfxnRunTurboreg(regSettings,movieList,inputDatasetName,cropCoords,frameListTmp)
 	% get movie, normalize, and display
 	[inputMovie] = loadMovieList(movieList,'convertToDouble',0,'frameList',frameListTmp(:),'inputDatasetName',inputDatasetName,'treatMoviesAsContinuous',1);
@@ -375,6 +408,11 @@ function [inputMovie] = subfxnRunTurboreg(regSettings,movieList,inputDatasetName
 	ioptions.refFrameMatrix = inputMovieRefFrame;
 
 	j = whos('inputMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
+
+	if ~strcmp(regSettings.stripOrientationRemove,'none')
+		inputMovie = removeStripsFromMovie(single(inputMovie),'stripOrientation',regSettings.stripOrientationRemove,'meanFilterSize',regSettings.stripSize,'freqLowExclude',regSettings.stripfreqLowExclude,'bandpassType',regSettings.stripfreqBandpassType,'freqHighExclude',regSettings.stripfreqHighExclude,'waitbarOn',1);
+	end
+
 	[inputMovie] = turboregMovie(inputMovie,'options',ioptions);
 end
 function [regCoords] = subfxnCropSelection(options,folderList)

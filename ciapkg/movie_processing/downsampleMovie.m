@@ -41,6 +41,13 @@ function [inputMovie] = downsampleMovie(inputMovie, varargin)
 	%     eval([fn{i} '=options.' fn{i} ';']);
 	% end
 	%========================
+	%if nargin==1
+		%downsampleDimension = options.downsampleDimension;
+		%downsampleFactor = options.downsampleFactor;
+	%else
+	%	options.downsampleDimension = downsampleDimension;
+	%	options.downsampleFactor = downsampleFactor;
+	%end
 	% load the movie within downsample function
 	if strcmp(class(inputMovie),'char')|strcmp(class(inputMovie),'cell')
 		inputMovie = loadMovieList(inputMovie,'convertToDouble',options.convertToDouble,'frameList',options.frameList,'inputDatasetName',options.inputDatasetName);
