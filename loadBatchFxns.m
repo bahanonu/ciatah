@@ -18,6 +18,7 @@ function loadBatchFxns(varargin)
 		% 2019.10.15 [21:57:45] - Improved checking for directories that should not be loaded, remove need for verLessThan('matlab','9.0') check.
 		% 2019.11.13 [18:06:02] - Updated to make contains not include less than 9.1.
 		% 2020.05.09 [16:40:13] - Updates to remove additional specific repositories that should not be loaded by default. Add support for overriding this feature.
+		% 2020.06.05 [23:35:43] - If user doesn't have Parallel Toolbox, still works
 	% TODO
 		%
 
@@ -71,6 +72,10 @@ function loadBatchFxns(varargin)
 	end
 
 	if strcmp(varargin,'loadEverything')
+	elseif strcmp(varargin,'excludeExternalPrograms')
+		disp(['Excluding ' externalProgramsDir ' from PATH adding.'])
+		matchIdx2 = contains(pathListArray,externalProgramsDir);
+		pathListArray = pathListArray(~matchIdx2);
 	else
 		pathListArray = subfxnRemoveDirs(1,pathListArrayOriginal);
 	end
@@ -106,7 +111,15 @@ function loadBatchFxns(varargin)
 	% =================================================
 	% Load Miji
 	% Only call Miji functions if NOT on a parallel worker
-	if ~isempty(getCurrentTask())
+	try
+		workerCheck = ~isempty(getCurrentTask());
+	catch err
+		workerCheck = 0;
+		display(repmat('@',1,7))
+		disp(getReport(err,'extended','hyperlinks','on'));
+		display(repmat('@',1,7))
+	end
+	if workerCheck==1
 		disp('Inside MATLAB worker, do not load Miji.')
 	elseif ~isempty(java.lang.System.getProperty('plugins.dir'))
 		disp('Miji JAR files already loaded, skipping. If Miji issue, use "resetMiji".')

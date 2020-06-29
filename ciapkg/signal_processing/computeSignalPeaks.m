@@ -236,7 +236,8 @@ function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(sign
 		if options.makePlots==1
 			for signalNum=1:nSignals
 				if options.convertSignalsToCell==1
-					thisSignal = signalMatrix{signalNum};
+					% thisSignal = signalMatrix{signalNum};
+					thisSignal = signalMatrix(signalNum,:);
 				else
 					thisSignal = signalMatrix(signalNum,:);
 				end

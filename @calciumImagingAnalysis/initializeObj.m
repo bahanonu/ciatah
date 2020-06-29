@@ -8,7 +8,7 @@ function obj = initializeObj(obj)
 		%
 
 	% changelog
-		%
+		% 2020.06.05 [11:29:24] - Improved toolbox check.
 	% TODO
 		%
 
@@ -32,46 +32,7 @@ function obj = initializeObj(obj)
 
 	% Check required toolboxes are available, warn if not
 	disp(repmat('*',1,42))
-	toolboxList = {...
-	'distrib_computing_toolbox',...
-	'image_toolbox',...
-	'signal_toolbox',...
-	'statistics_toolbox',...
-	};
-	secondaryToolboxList = {...
-		'video_and_image_blockset',...
-		'bioinformatics_toolbox',...
-		'financial_toolbox',...
-		'neural_network_toolbox',...
-	};
-	allTollboxList = {toolboxList,secondaryToolboxList};
-	nLists = length(allTollboxList);
-	for listNo = 1:nLists
-		toolboxListHere = allTollboxList{listNo};
-		nToolboxes = length(toolboxListHere);
-		if listNo==1
-		else
-			disp('2nd tier toolbox check (not required for main pre-processing pipeline).')
-		end
-		for toolboxNo = 1:nToolboxes
-			toolboxName = toolboxListHere{toolboxNo};
-			if license('test',toolboxName)==1
-				fprintf('Toolbox available! %s\n',toolboxName)
-			else
-				if listNo==1
-					warning('Please install %s toolbox before running calciumImagingAnalysis. This toolbox is likely required.',toolboxName);
-				else
-					warning('Please install %s toolbox before running calciumImagingAnalysis. Some features (e.g. for cell extraction) may not work otherwise.',toolboxName);
-				end
-				% if ~verLessThan('matlab', '9.5')
-				%	  warning('Please install Neural Network toolbox before running classifySignals');
-				% else
-				%	  warning('Please install Deep Learning Toolbox before running classifySignals');
-				% end
-				% return;
-			end
-		end
-	end
+	ciapkg.io.dependencyCheck();
 	disp(repmat('*',1,42))
 
 	% Ensure date paths are up to date

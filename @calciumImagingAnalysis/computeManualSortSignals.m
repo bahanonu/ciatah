@@ -353,6 +353,10 @@ function obj = computeManualSortSignals(obj)
 						validCellMax = valid;
 						methodStr = obj.sortedEMStructSaveStr;
 						saveVariable = {'validCellMax'};
+					case 'CELLMax'
+						validCellMax = valid;
+						methodStr = obj.extractionMethodSortedSaveStr.(obj.signalExtractionMethod);
+						saveVariable = {obj.extractionMethodValidVarname.(obj.signalExtractionMethod)};
 					case 'EXTRACT'
 						validEXTRACT = valid;
 						methodStr = obj.sortedEXTRACTStructSaveStr;

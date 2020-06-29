@@ -11,5 +11,9 @@ The following are likely to be found here:
 	- `CNMF-E`
 	- `CVX`
 	- `EXTRACT`
+- NWB
+    - `nwb_schnitzer_lab`
+    - `yamlmatlab`
+    - `matnwb`
 - Motion correction
 	- `NoRMCorre`

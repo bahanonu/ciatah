@@ -38,7 +38,9 @@ function out = load_tif_movie(filename,downsample_xy,varargin)
 	if isempty(options.tmpImage)
 		%First load a single frame of the movie to get generic information
 		TifLink = Tiff(filename, 'r'); %Create the Tiff object
+		warning off
 		TmpImage = TifLink.read();%Read in one picture to get the image size and data type
+		warning on
 		TifLink.close(); clear TifLink
 	else
 		TmpImage = options.tmpImage;
@@ -145,6 +147,8 @@ function out = load_tif_movie(filename,downsample_xy,varargin)
 
 		reverseStr = '';
 
+		warning off
+		
 		tiffID = Tiff(filename,'r');
 
 		% tiffID.setDirectory(1);
@@ -153,6 +157,7 @@ function out = load_tif_movie(filename,downsample_xy,varargin)
 			% out.Movie(:,:,frameNo) = fread(fileID, [fileInfo.Width fileInfo.Height], fileType, 0, byteorder)';
 			% out.Movie(:,:,frameNo) = fread(fileID, [imgWidth(1) imgHeight(1)], fileType, 0, byteorder)';
 			% fseek(fileID, StripOffsets(frameNo), 'bof');
+			
 			tiffID.setDirectory(framesToGrab2(frameNo));
 			% rgbTiff = size(read(tiffID),3);
 			%if rgbTiff==1
@@ -168,6 +173,7 @@ function out = load_tif_movie(filename,downsample_xy,varargin)
 			%end
 			reverseStr = cmdWaitbar(frameNo,nFrames,reverseStr,'inputStr','loading ImageJ tif','waitbarOn',1,'displayEvery',50);
 		end
+		warning on
 		% playMovie(out.Movie)
 
 		% close handle to file

@@ -9,6 +9,7 @@ function obj = loadDependencies(obj)
 
 	% changelog
 		% 2020.05.12 [17:40:37] - Updated to enable GUI-less loading of dependencies. In particular for easier unit testing.
+		% 2020.06.28 [14:25:04] - Added ability for users to force update
 	% TODO
 		% Verify all dependencies download and if not ask user to download again.
 
@@ -17,8 +18,13 @@ function obj = loadDependencies(obj)
 	dispStr = {'Download Fiji (to run Miji)','Download CNMF, CNMF-E, and CVX code.','Download test one-photon data.','Load Fiji/Miji into MATLAB path.','Download NWB (NeuroDataWithoutBorders)'};
 	if obj.guiEnabled==1
 		[fileIdxArray, ~] = listdlg('ListString',dispStr,'ListSize',[scnsize(3)*0.3 scnsize(4)*0.3],'Name','Which dependencies to load? (Can select multiple)','InitialValue',[1 2 3 5]);
+
+		forceDownloadVec = [0 1];
+		[forceUpdate, ~] = listdlg('ListString',{'No - skip installing dependency if already available.','Yes - force update to most recent version of dependency.'},'ListSize',[scnsize(3)*0.3 scnsize(4)*0.3],'Name','Force download/update? (e.g. "Yes" to update dependencies)','InitialValue',[1]);
+		forceUpdate = forceDownloadVec(forceUpdate);
 	else
 		fileIdxArray = [1 2 3 5];
+		forceUpdate = 0;
 	end
 	analysisTypeD = dependencyStr(fileIdxArray);
 	dispStr = dispStr(fileIdxArray);
@@ -27,7 +33,7 @@ function obj = loadDependencies(obj)
 		disp(dispStr{depNo})
 		switch analysisTypeD{depNo}
 			case 'downloadCnmfGithubRepositories'
-				[success] = downloadCnmfGithubRepositories();
+				[success] = downloadCnmfGithubRepositories('forceUpdate',forceUpdate);
 			case 'downloadMiji'
 				depStr = {'Save Fiji to default directory','Save Fiji to custom directory'};
 				if obj.guiEnabled==1
@@ -48,14 +54,16 @@ function obj = loadDependencies(obj)
 			case 'example_downloadTestData'
 				example_downloadTestData();
 			case 'downloadCellExtraction'
+				optionsH.forceUpdate = forceUpdate;
 				optionsH.signalExtractionDir = obj.externalProgramsDir;
-				optionsH.gitNameDisp = {'nwb_schnitzer_lab','yamlmatlab','matnwb'};
-				optionsH.gitRepos = {'https://github.com/schnitzer-lab/nwb_schnitzer_lab','https://github.com/ewiger/yamlmatlab','https://github.com/NeurodataWithoutBorders/matnwb'};
+				optionsH.gitNameDisp = {'cellmax_clean','extract'};
+				optionsH.gitRepos = {'https://github.com/schnitzer-lab/CELLMax_CLEAN','https://github.com/schnitzer-lab/EXTRACT'};
 				optionsH.gitRepos = cellfun(@(x) [x '/archive/master.zip'],optionsH.gitRepos,'UniformOutput',false);
 				optionsH.outputDir = optionsH.gitNameDisp;
 				optionsH.gitName = cellfun(@(x) [x '-master'],optionsH.gitNameDisp,'UniformOutput',false);
 				[success] = downloadGithubRepositories('options',optionsH);
 			case 'downloadNeuroDataWithoutBorders'
+				optionsH.forceUpdate = forceUpdate;
 				optionsH.signalExtractionDir = obj.externalProgramsDir;
 				optionsH.gitNameDisp = {'nwb_schnitzer_lab','yamlmatlab','matnwb'};
 				optionsH.gitRepos = {'https://github.com/schnitzer-lab/nwb_schnitzer_lab','https://github.com/ewiger/yamlmatlab','https://github.com/NeurodataWithoutBorders/matnwb'};

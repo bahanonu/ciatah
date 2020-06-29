@@ -19,6 +19,7 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 		% 2014.03.21 [00:43:22] can now label
 		% 2019.05.21 [22:23:42] Major changes to display of images and line plots by updating underlying graphics handle data instead of calling imagesc, plot, etc. Several other plotting changes to make faster and avoid non-responsive keyboard inputs. Changed how line plot is made so loops signal without skips in the plot.
 		% 2019.08.30 [13:44:09] - Updated contrast adjustment selection to also allow use of imcontrast and improved display of two movies contrast.
+		% 2020.06.14 [13:59:50] - Check if inputMovie is sparse and adjust display accordingly.
 
 	% ========================
 	% options
@@ -83,6 +84,12 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 
 	if ~isempty(options.extraMovie)|~isempty(options.extraLinePlot)
 		% options.fpsMax = 30;
+	end
+
+	if issparse(inputMovie)==1
+		sparseInputMovie = 1;
+	else
+		sparseInputMovie = 0;
 	end
 
 	% ==========================================
@@ -192,7 +199,13 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 		% axHandle = fig1;
 	end
 
-	imagesc(squeeze(inputMovie(:,:,1)))
+	tmpFrame = squeeze(inputMovie(:,:,1));
+	if sparseInputMovie==1
+		tmpFrame = full(tmpFrame);
+	else
+	end
+
+	imagesc(tmpFrame)
 	axHandle = gca;
 
 	% axHandle.Toolbar.Visible = 'off';
@@ -218,7 +231,7 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 	else
 		sliderStepF = [1/(nFrames*0.1) 0.05];
 	end
-	
+
 	frameSlider = uicontrol('style','slider','Units', 'normalized','position',[15 1 80 3]/100,...
 		'min',1,'max',nFrames,'Value',1,'SliderStep',sliderStepF,'callback',@frameCallback,'Enable','inactive','ButtonDownFcn',@pauseLoopCallback);
 	% addlistener(frameSlider,'Value','PostSet',@pauseLoopCallback);
@@ -306,12 +319,22 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 		minMovie(2) = double(options.movieMinMax(1));
 		maxMovie(2) = double(options.movieMinMax(2));
 	else
-		maxMovie(1) = double(nanmax(inputMovie(:)));
-		minMovie(1) = double(nanmin(inputMovie(:)));
-		if ~isempty(options.extraMovie)
-			maxMovie(2) = double(nanmax(options.extraMovie(:)));
-			minMovie(2) = double(nanmin(options.extraMovie(:)));
+		if sparseInputMovie
+			maxMovie(1) = double(nanmax(inputMovie(find(inputMovie))));
+			minMovie(1) = double(nanmin(inputMovie(find(inputMovie))));
+			if ~isempty(options.extraMovie)
+				maxMovie(2) = double(nanmax(inputMovie(find(options.extraMovie))));
+				minMovie(2) = double(nanmin(inputMovie(find(options.extraMovie))));
+			end
+		else
+			maxMovie(1) = double(nanmax(inputMovie(:)));
+			minMovie(1) = double(nanmin(inputMovie(:)));
+			if ~isempty(options.extraMovie)
+				maxMovie(2) = double(nanmax(options.extraMovie(:)));
+				minMovie(2) = double(nanmin(options.extraMovie(:)));
+			end
 		end
+		options.movieMinMax = [maxMovie(1) minMovie(1)];
 	end
 
 	colorbarSwitch = 1;
@@ -343,6 +366,9 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 			end
 			% display an image from the movie
 			thisFrame = squeeze(inputMovie(:,:,frame));
+			if sparseInputMovie==1
+				thisFrame = full(thisFrame);
+			end
 		 %    if frame==1
 		 %    	set(gca, 'xlimmode','manual',...
 		 %               'ylimmode','manual',...
