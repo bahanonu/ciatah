@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Data formats - calciumImagingAnalysis (ciapkg)</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
+  <link href="../css/extra.css" rel="stylesheet" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Data formats";
+    var mkdocs_page_input_path = "data.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> calciumImagingAnalysis (ciapkg)</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../alldocs/">Full README</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Setup</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../install/">Quick Start</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../install2/">Install</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../testdata/">Test data</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../dependencies/">Dependencies</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Repository</span></p>
+                <ul class="current">
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Data formats</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#input-and-output-files">Input and output files</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#nwb-support">NWB Support</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#preferred-folder-naming-format">Preferred folder naming format</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#videos">Videos</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#cell-images">Cell images</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#cell-traces">Cell traces</a>
+    </li>
+    </ul>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../notes/">Notes</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../organization/">Organization</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Processing data</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_overview/">Overview</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed/">Step-by-step</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_animal_tracking/">Animal tracking</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Help</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_example_pipeline/">Custom pipelines</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_issues/">Issues and fixes</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_analysis_methods/">Analysis methods</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_inscopix/">Inscopix</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_cross_session_alignment/">Cross-session alignemnt</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_manual_cell_sorting/">Manual cell sorting</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_snr/">Improving signal-to-noise</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_motion_correction.m">Motion correction</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_spatial_filtering/">Spatial filtering</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_stripe_removal/">Stripe removal</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_temporal_downsampling/">Temporal downsampling</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_animal_tracking/">Animal tracking</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Misc</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../acknowledgments/">Acknowledgments</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../references/">Cite</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../questions/">Questions</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../license/">License</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">calciumImagingAnalysis (ciapkg)</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Repository &raquo;</li>
+        
+      
+    
+    <li>Data formats</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="data">Data</h1>
+<p>The class generally operates on the principal that a single imaging session is contained within a single folder or directory. Thus, even if a single imaging session contains multiple trials (e.g. the imaging data is split across multiple movies) this is fine as the class will concatenate them during the preprocessing step.</p>
+<p>The naming convention in general is below. Both TIF and AVI raw files are converted to HDF5 after processing since that format offers more flexibility during cell extraction and other steps.</p>
+<h3 id="input-and-output-files">Input and output files</h3>
+<ul>
+<li>Default raw imaging data filename: <code>concat_.*.(h5|tif)</code>.</li>
+<li>Default raw processed data filename: <code>folderName_(processing steps).h5</code>, where <code>folderName</code> is the directory name where the calcium imaging movies are located.</li>
+<li>Main files output by <code>calciumImagingAnalysis</code>. Below, <code>.*</code> normally indicates the folder name prefixed to the filename.<ul>
+<li><code>.*_pcaicaAnalysis.mat</code>: Where PCA-ICA outputs are stored.</li>
+<li><code>.*_ICdecisions_.*.mat</code>: Where decisions for cell (=1) and not cell (=0) are stored in a <code>valid</code> variable.</li>
+<li><code>.*_regionModSelectUser.mat</code>: A mask of the region (=1) to include in further analyses.</li>
+<li><code>.*_turboreg_crop_dfof_1.h5</code>: Processed movie, in this case motion corrected, cropped, and Δ_F/F_.</li>
+<li><code>processing_info</code>: a folder containing preprocessing information.</li>
+</ul>
+</li>
+</ul>
+<h3 id="nwb-support">NWB Support</h3>
+<p>calciumImagingAnalysis supports NWB format and by default will output cell-extraction analysis as calciumImagingAnalysis format unless user specifies otherwise. NWB files are by default stored in the <code>nwbFiles</code> sub-folder. This can be changed by setting the <code>obj.nwbFileFolder</code> property to a different folder name.
+- Default image mask HDF5 dataset name: '/processing/ophys/ImageSegmentation/PlaneSegmentation'.
+- Default fluorescence activity HDF5 dataset name: '/processing/ophys/Fluorescence/RoiResponseSeries'.</p>
+<h3 id="preferred-folder-naming-format">Preferred folder naming format</h3>
+<p>Folders should following the format <code>YYYY_MM_DD_pXXX_mXXX_assayXX_trialXX</code> where:
+-   <code>YYYY_MM_DD</code> = normal year/month/day scheme.
+-   <code>pXXX</code> = protocol number, e.g. p162, for the set of experiments performed for the same set of animals.
+-   <code>mXXX</code> = subject ID/number, e.g. m805 or animal ID.
+-   <code>assayXX</code> = assay ID and session number, e.g. vonfrey01 is the 1st von Frey assay session.
+-   <code>trialXX</code> = the trial number of the current assay session, only applicable if multiple trials in the same assay session.</p>
+<h3 id="videos">Videos</h3>
+<ul>
+<li>HDF5:<ul>
+<li>Saved as a <code>[x y t]</code> 3D matrix where <code>x</code> and <code>y</code> are the height and width of video while <code>t</code> is number of frames.</li>
+<li><code>/1</code> as the name for directory containing movie data.</li>
+<li>HDF can be read in using Fiji, see http://lmb.informatik.uni-freiburg.de/resources/opensource/imagej_plugins/hdf5.html.</li>
+<li>Each HDF5 file should contain imaging data in a dataset name, e.g. <code>/1</code> is the default datasetname for <code>[x y frames]</code> 2D calcium imaging movies in this repository.</li>
+<li>Most functions have a <code>inputDatasetName</code> option to specify the dataset name if different from <code>/1</code>.</li>
+</ul>
+</li>
+<li>TIF<ul>
+<li>Normal <code>[x y frames]</code> tif.</li>
+</ul>
+</li>
+<li>AVI<ul>
+<li>Raw uncompressed grayscale <code>[x y frames]</code> avi.</li>
+</ul>
+</li>
+</ul>
+<h3 id="cell-images">Cell images</h3>
+<ul>
+<li>IC filters from PCA-ICA and images from CNMF(-E).<ul>
+<li><code>[x y n]</code> matrix</li>
+<li><code>x</code> and <code>y</code> being height/width of video and <code>n</code> is number of ICs output.</li>
+</ul>
+</li>
+</ul>
+<h3 id="cell-traces">Cell traces</h3>
+<ul>
+<li>IC traces from PCA-ICA and images from CNMF(-E).<ul>
+<li><code>[n f]</code> matrix.</li>
+<li><code>n</code> is number of ICs output and <code>f</code> is number of movie frames.</li>
+</ul>
+</li>
+</ul>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../notes/" class="btn btn-neutral float-right" title="Notes">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../dependencies/" class="btn btn-neutral" title="Dependencies"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../dependencies/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../notes/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

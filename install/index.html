@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Quick Start - calciumImagingAnalysis (ciapkg)</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
+  <link href="../css/extra.css" rel="stylesheet" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Quick Start";
+    var mkdocs_page_input_path = "install.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> calciumImagingAnalysis (ciapkg)</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../alldocs/">Full README</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Setup</span></p>
+                <ul class="current">
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Quick Start</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#calciumimaginganalysis-main-gui-notes">calciumImagingAnalysis main GUI notes</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#additional-quick-start-notes">Additional quick start notes</a>
+    </li>
+    </ul>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../install2/">Install</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../testdata/">Test data</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../dependencies/">Dependencies</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Repository</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../data/">Data formats</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../notes/">Notes</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../organization/">Organization</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Processing data</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_overview/">Overview</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed/">Step-by-step</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_animal_tracking/">Animal tracking</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Help</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_example_pipeline/">Custom pipelines</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_issues/">Issues and fixes</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_analysis_methods/">Analysis methods</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_inscopix/">Inscopix</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_cross_session_alignment/">Cross-session alignemnt</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_manual_cell_sorting/">Manual cell sorting</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_snr/">Improving signal-to-noise</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_motion_correction.m">Motion correction</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_spatial_filtering/">Spatial filtering</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_stripe_removal/">Stripe removal</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_temporal_downsampling/">Temporal downsampling</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_animal_tracking/">Animal tracking</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Misc</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../acknowledgments/">Acknowledgments</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../references/">Cite</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../questions/">Questions</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../license/">License</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">calciumImagingAnalysis (ciapkg)</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Setup &raquo;</li>
+        
+      
+    
+    <li>Quick Start</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h2 id="quick-start-guide">Quick start guide</h2>
+<p>Below are steps needed to quickly get started using the <code>calciumImagingAnalysis</code> software package in MATLAB.</p>
+<ul>
+<li>Clone the <code>calciumImagingAnalysis</code> repository (using <a href="https://desktop.github.com/">GitHub desktop</a> or command line) or download the repository zip and unzip.</li>
+<li>Point the MATLAB path to the <code>calciumImagingAnalysis</code> root folder (<em>NOT</em> <code>@calciumImagingAnalysis</code> sub-folder in the repository).</li>
+<li>Alternatively, download the package from <code>File Exchange</code> using the Add-Ons explorer in MATLAB. See <code>calciumImagingAnalysis</code> entry at:
+ <a href="https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis"><img alt="View calciumImagingAnalysis on File Exchange" src="https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg" /></a> or https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis.</li>
+<li>Run the below MATLAB commands.</li>
+<li>Afterwards, likely want to run <code>modelAddNewFolders</code> module first in order to add folders containing imaging data to the current class object.</li>
+<li>[Optional] Users on Windows systems should download <code>Everything</code> (https://www.voidtools.com/). It is a very useful and extremely fast search engine for files and folders on a computer that can allow users to quickly get lists of folders then need to analyze in <code>calciumImagingAnalysis</code>.</li>
+<li>[Optional] Users who want to run analysis via the command line can run <code>edit ciapkg.demo.cmdLinePipeline</code> and run each segment of code there to see what commands are needed to perform each step. It assumes you have already run <code>example_downloadTestData</code>.</li>
+</ul>
+<pre><code class="MATLAB">% Run these commands in MATLAB to get started.
+
+% Loads the class into an object for use in this session
+obj = calciumImagingAnalysis;
+
+% Runs routines to check dependencies and help user get setup.
+obj.setup;
+
+% Open the class menu (always type `obj` then enter load the class/modules menu)
+obj % then hit enter, no semicolon!
+
+</code></pre>
+
+<h3 id="calciumimaginganalysis-main-gui-notes"><code>calciumImagingAnalysis</code> main GUI notes</h3>
+<ul>
+<li>All main decisions for choosing a method/procedure to run, cell-extraction algorithm, and which folders to analyze are in a single window.</li>
+<li>The GUI will real-time update the selected folders based on the selections in the subject, assay, and folder filter areas.</li>
+<li>Sections not relevant for a specific method are grayed out.</li>
+<li>Tab to cycle through selection areas. Green background is the currently selected area, dark gray background is area that had previously been selected but is not the active area, and white background is for areas that have not been selected yet.</li>
+<li>Hover mouse over method names for tooltip that gives additional information.</li>
+</ul>
+<p><strong>For example, selecting middle two assays automatically changes selection in <code>Loaded folders</code> section.</strong></p>
+<p><a href="https://user-images.githubusercontent.com/5241605/79494880-96ed0280-7fd8-11ea-85e1-05a13dc26e90.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/79494880-96ed0280-7fd8-11ea-85e1-05a13dc26e90.png" alt="image" width="45%" height="auto"/></a>
+<a href="https://user-images.githubusercontent.com/5241605/79494959-b97f1b80-7fd8-11ea-8197-7be457d24638.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/79494959-b97f1b80-7fd8-11ea-8197-7be457d24638.png" alt="image" width="45%" height="auto"/></a></p>
+<p><strong>Certain sections become available when user selects the appropriate method (e.g. cell-extraction method available when selecting <code>modelExtractSignalsFromMovie</code>).</strong></p>
+<p><a href="https://user-images.githubusercontent.com/5241605/79495026-d4ea2680-7fd8-11ea-8d4d-02164e1af1d6.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/79495026-d4ea2680-7fd8-11ea-8d4d-02164e1af1d6.png" alt="image" width="50%" height="auto"/></a></p>
+<h3 id="additional-quick-start-notes">Additional quick start notes</h3>
+<ul>
+<li>See additional details in <a href="#processing-calcium-imaging-data">Processing calcium imaging data</a> for running the full processing pipeline.</li>
+<li>Settings used to pre-process imaging movies (<code>modelPreprocessMovie</code> module) are stored inside the HDF5 file to allow <code>calciumImagingAnalysis</code> to load them again later.</li>
+<li>To force load all directories, including most external software packages (in <code>_external_programs</code> folder), type <code>ciapkg.loadAllDirs;</code> into MATLAB command line. This is most relevant when you need to access specific functions in an outside repository that are normally hidden until needed.</li>
+<li>When issues are encountered, first check the <code>*Common issues and fixes</code> Wiki page to see if a solution is there. Else, submit a new issue or email Biafra (bahanonu [at] alum.mit.edu).</li>
+<li>Notes:</li>
+<li>There are two sets of test data that are downloaded:<ul>
+<li><strong>Single session analysis</strong>: <code>data\2014_04_01_p203_m19_check01_raw</code> can be used to test the pipeline until the cross-session alignment step.</li>
+<li><strong>Batch analysis</strong>: <code>data\batch</code> contains three imaging sessions that should be processed and can then be used for the cross-session alignment step. Users should try these sessions to get used to batched analysis.</li>
+</ul>
+</li>
+<li>For Fiji dependency, when path to <code>Miji.m</code> (e.g. <code>\Fiji.app\scripts</code> folder) is requested, likely in <code>calciumImagingAnalysis\_external_programs\FIJI_FOLDER\Fiji.app\scripts</code> where <code>FIJI_FOLDER</code> varies depending on OS, unless the user requested a custom path or on OSX (in which case, find Fiji the install directory).<ul>
+<li>If you run into Java heap space memory errors when Miji tries to load Fiji in MATLAB, make sure "java.opts" file is in MATLAB start-up folder or that <code>calciumImagingAnalysis</code> folder is the MATLAB start-up folder (<a href="https://www.mathworks.com/help/matlab/matlab_env/matlab-startup-folder.html">instructions on changing</a>).</li>
+</ul>
+</li>
+<li><code>calciumImagingAnalysis</code> often uses <a href="https://www.cheatography.com/davechild/cheat-sheets/regular-expressions/">regular expressions</a> to find relevant movie and other files in folders to analyze.<ul>
+<li>For example, by default it looks for any movie files in a folder containing <code>concat</code>, e.g. <code>concat_recording_20140401_180333.h5</code> (test data). If you have a file called <code>rawData_2019_01_01_myInterestingExperiment.avi</code> and all your raw data files start with <code>rawData_</code> then change the regular expression to <code>rawData_</code> when requested by the repository. See <code>setMovieInfo</code> module to change after adding new folders.</li>
+</ul>
+</li>
+<li><code>calciumImagingAnalysis</code> generally assumes users have imaging data associated with <em>one</em> imaging session and animal in a given folder. Follow folder naming conventions in <a href="#data">Data</a> for best experience.</li>
+<li>External software packages are downloaded into <code>_external_programs</code> folder and should be placed there if done manually.</li>
+</ul>
+<p>Users can alternatively run setup as below.</p>
+<pre><code class="MATLAB">% Run these commands in MATLAB to get started.
+
+% Loads all directories
+loadBatchFxns;
+
+% Loads the class into an object for use in this session
+obj = calciumImagingAnalysis;
+
+% Download and load dependent software packages into &quot;_external_programs&quot; folder.
+% Also download test data into &quot;data&quot; folder.
+% Normally only need to one once after first downloading calciumImagingAnalysis package.
+obj.loadDependencies;
+
+% Add folders containing imaging data.
+obj.modelAddNewFolders;
+
+% [optional] Set the names calciumImagingAnalysis will look for in each folder
+obj.setMovieInfo;
+
+% Open class menu to pick module to run.
+obj.runPipeline; % then hit enter!
+</code></pre>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../install2/" class="btn btn-neutral float-right" title="Install">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../alldocs/" class="btn btn-neutral" title="Full README"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../alldocs/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../install2/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

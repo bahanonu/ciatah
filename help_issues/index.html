@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Issues and fixes - calciumImagingAnalysis (ciapkg)</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
+  <link href="../css/extra.css" rel="stylesheet" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Issues and fixes";
+    var mkdocs_page_input_path = "help_issues.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> calciumImagingAnalysis (ciapkg)</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../alldocs/">Full README</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Setup</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../install/">Quick Start</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../install2/">Install</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../testdata/">Test data</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../dependencies/">Dependencies</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Repository</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../data/">Data formats</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../notes/">Notes</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../organization/">Organization</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Processing data</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_overview/">Overview</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed/">Step-by-step</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_animal_tracking/">Animal tracking</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Help</span></p>
+                <ul class="current">
+                    <li class="toctree-l1"><a class="reference internal" href="../help_example_pipeline/">Custom pipelines</a>
+                    </li>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Issues and fixes</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#contents">Contents</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#pca-ica-cnmf-e-or-other-cell-extraction-algorithms-dont-produce-sensible-output">PCA-ICA, CNMF-E, or other cell extraction algorithm's don't produce sensible output.</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#out-of-memory-using-miji">Out of memory using Miji</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#selecting-scripts-folder-in-fijiapp-on-mac-os-x">Selecting scripts folder in Fiji.app on Mac OS X</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#fiji-wont-start-using-miji-or-mijstart">Fiji won't start using Miji or MIJ.start</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#downloadcnmfgithubrepositoriesm-not-downloading-correctly">downloadCnmfGithubRepositories.m not downloading correctly</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#modelpreprocessmovie-analysis-options-list-not-showing">modelPreprocessMovie analysis options list not showing</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#miji-not-loading-correctly">Miji not loading correctly</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#viewmovie-or-other-functions-where-movies-need-to-be-loaded-end-without-executing">viewMovie or other functions where movies need to be loaded end without executing</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#contrast-is-low-on-cell-transient-ff-movies-using-computemanualsortsignals">Contrast is low on cell transient ΔF/F movies using computeManualSortSignals</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#traces-in-computemanualsortsignals-gui-are-flat">Traces in computeManualSortSignals GUI are flat.</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#cant-see-transients">Can't see transients.</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#change-the-minmax">Change the min/max.</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#can-now-see-transients">Can now see transients.</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#blank-frames-or-entire-frames-have-baseline-shifted-after-motion-correction-in-modelpreprocessmovie">Blank frames or entire frames have baseline shifted after motion correction in modelPreprocessMovie</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#file-or-folder-dialog-box-with-no-instructions">File or folder dialog box with no instructions</a>
+    </li>
+    </ul>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_analysis_methods/">Analysis methods</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_inscopix/">Inscopix</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_cross_session_alignment/">Cross-session alignemnt</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_manual_cell_sorting/">Manual cell sorting</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_snr/">Improving signal-to-noise</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_motion_correction.m">Motion correction</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_spatial_filtering/">Spatial filtering</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_stripe_removal/">Stripe removal</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_temporal_downsampling/">Temporal downsampling</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_animal_tracking/">Animal tracking</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Misc</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../acknowledgments/">Acknowledgments</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../references/">Cite</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../questions/">Questions</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../license/">License</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">calciumImagingAnalysis (ciapkg)</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Help &raquo;</li>
+        
+      
+    
+    <li>Issues and fixes</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="common-issues-and-fixes">Common issues and fixes</h1>
+<p>Page outlines some common issues and fixes to them that may be encountered while using <code>calciumImagingAnalysis</code>. These are mostly due to quirks specific to MATLAB, Fiji, or the computing environment <code>calciumImagingAnalysis</code> is used on.</p>
+<hr />
+<h2 id="contents">Contents</h2>
+<ul>
+<li><a href="#pca-ica-cnmf-e-or-other-cell-extraction-algorithms-dont-produce-sensible-output">PCA-ICA, CNMF-E, or other cell extraction algorithm's don't produce sensible output.</a></li>
+<li><a href="#out-of-memory-using-miji">Out of memory using Miji</a></li>
+<li><a href="#selecting-scripts-folder-in-fijiapp-on-mac-os-x">Selecting scripts folder in Fiji.app on Mac OS X</a></li>
+<li><a href="#fiji-wont-start-using-miji-or-mijstart">Fiji won't start using Miji or MIJ.start</a></li>
+<li><a href="#downloadcnmfgithubrepositoriesm-not-downloading-correctly">downloadCnmfGithubRepositories.m not downloading correctly</a></li>
+<li><a href="#modelpreprocessmovie-analysis-options-list-not-showing">modelPreprocessMovie analysis options list not showing</a></li>
+<li><a href="#miji-not-loading-correctly">Miji not loading correctly</a></li>
+<li><a href="#viewmovie-or-other-functions-where-movies-need-to-be-loaded-end-without-executing">viewMovie or other functions where movies need to be loaded end without executing</a></li>
+<li><a href="#contrast-is-low-on-cell-transient-Δff-movies-using-computemanualsortsignals">Contrast is low on cell transient ΔF/F movies using computeManualSortSignals</a></li>
+<li><a href="#traces-in-computemanualsortsignals-gui-are-flat">Traces in computeManualSortSignals GUI are flat.</a></li>
+<li><a href="#cant-see-transients">Can't see transients.</a></li>
+<li><a href="#change-the-minmax">Change the min/max.</a></li>
+<li><a href="#can-now-see-transients">Can now see transients.</a></li>
+<li><a href="#blank-frames-or-entire-frames-have-baseline-shifted-after-motion-correction-in-modelpreprocessmovie">Blank frames or entire frames have baseline shifted after motion correction in modelPreprocessMovie</a></li>
+<li><a href="#file-or-folder-dialog-box-with-no-instructions">File or folder dialog box with no instructions</a></li>
+</ul>
+<hr />
+<h2 id="pca-ica-cnmf-e-or-other-cell-extraction-algorithms-dont-produce-sensible-output">PCA-ICA, CNMF-E, or other cell extraction algorithm's don't produce sensible output.</h2>
+<ul>
+<li>When running <code>modelPreprocessMovie</code> a dialog box appears showing the available analysis steps. Certain combinations of these steps make sense while others should be avoided.</li>
+<li>For example, normally users want <code>turboreg-&gt;crop-&gt;dfof-&gt;downsampleTime</code>.</li>
+<li>An invalid input would be <code>turboreg-&gt;crop-&gt;dfof-&gt;dfstd-&gt;downsampleTime</code>. Since calculating the dF/F then dF/std is problematic.</li>
+<li>For two photon data, it is sometimes desired to have <code>medianFilter-&gt;turboreg-&gt;crop-&gt;dfstd (or dfof)-&gt;downsampleTime</code>.</li>
+<li>In general, <code>fft_highpass</code> and <code>fft_lowpass</code> should be avoided since they are meant to be run on stand-alone movies for specific purposes rather than included in the general pipeline.</li>
+</ul>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/51938177-54cea580-23c1-11e9-9d5d-2e7cf6170c5b.png" /></p>
+<ul>
+<li>Remember at the options screen (see below) to select a spatial filtering there under the option <code>filterBeforeRegister</code> instead of selecting the <code>spatialFilter</code> option before the <code>turboreg</code> option in the analysis steps screen.</li>
+</ul>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/51938312-9fe8b880-23c1-11e9-9592-54d29160f8e6.png" /></p>
+<h2 id="out-of-memory-using-miji">Out of memory using <code>Miji</code></h2>
+<ul>
+<li>If you get a <code>java.lang.OutOfMemoryError: GC overhead limit exceeded</code> style error (see below code) when trying to open a movie with <code>Miji</code>, make sure that you initialize MATLAB in the <code>calciumImagingAnalysis</code> path or place the <code>java.opts</code> file in your MATLAB start-up folder.</li>
+</ul>
+<pre><code class="Matlab">java.lang.OutOfMemoryError: GC overhead limit exceeded
+    at java.lang.AbstractStringBuilder.&lt;init&gt;(Unknown Source)
+    at java.lang.StringBuilder.&lt;init&gt;(Unknown Source)
+</code></pre>
+
+<ul>
+<li>
+<p>On Windows, you can change the start-up folder as below or in general see https://www.mathworks.com/help/matlab/matlab_env/matlab-startup-folder.html.
+<img alt="image" src="https://user-images.githubusercontent.com/5241605/64047075-94f63200-cb22-11e9-890b-6b43db669412.png" /></p>
+</li>
+<li>
+<p><code>java.opts</code> increases the amount of memory allocated so that Java doesn't run out when using Miji to load movies. To change the amount of memory allocated (calciumImagingAnalysis sets to 7 Gb by default), change the below to a higher or lower number, e.g. 9 Gb would be <code>-Xmx9000m</code>.</p>
+</li>
+</ul>
+<pre><code class="Java">-Xmx7000m
+</code></pre>
+
+<h2 id="selecting-scripts-folder-in-fijiapp-on-mac-os-x">Selecting <code>scripts</code> folder in <code>Fiji.app</code> on Mac OS X</h2>
+<p>Navigate to the applications folder and select <code>Fiji.app</code> and <code>Show Package Contents</code>.
+<img alt="screen shot 2019-02-12 at 6 46 45 pm" src="https://user-images.githubusercontent.com/5241605/52684369-e2021600-2efa-11e9-90ec-83d861841182.png" /></p>
+<p>Then navigate to <code>/Fiji.app/scripts</code> and select <code>Miji.m</code> then <code>Get Info</code>. Select and copy the path as below.
+<img alt="screen shot 2019-02-12 at 6 49 11 pm" src="https://user-images.githubusercontent.com/5241605/52684378-e4fd0680-2efa-11e9-9240-825f5d7824af.png" /></p>
+<p>When Matlab ask for the Fiji path, press <code>command + shift + G</code> in the dialog box to enter the full path manually, press enter, then select open.
+<img alt="screen shot 2019-02-12 at 6 52 42 pm" src="https://user-images.githubusercontent.com/5241605/52684381-ea5a5100-2efa-11e9-9652-30f7b220117c.png" /></p>
+<h2 id="fiji-wont-start-using-miji-or-mijstart">Fiji won't start using <code>Miji</code> or <code>MIJ.start</code></h2>
+<ul>
+<li>If calling <code>Miji</code> or <code>MIJ.start</code> does not lead to a Fiji GUI appearing (e.g. the below output is seen in the command window), this is likely because the last Fiji/ImageJ instance was closed improperly (e.g. by closing ImageJ with <code>File-&gt;Quit</code> or pressing the close button instead of <code>MIJ.exit</code> in the Matlab command window), leading to a headless Fiji that cannot be properly closed by Miji/Matlab.</li>
+</ul>
+<pre><code class="Matlab">--------------------------------------------------------------
+Status&gt; ImageJ is already started.
+--------------------------------------------------------------
+</code></pre>
+
+<p>If this occurs, run the following commands one at a time:</p>
+<pre><code class="Matlab">resetMiji
+% An instance of Miji should appear.
+currP=pwd;Miji;cd(currP);
+MIJ.exit
+</code></pre>
+
+<h2 id="downloadcnmfgithubrepositoriesm-not-downloading-correctly"><code>downloadCnmfGithubRepositories.m</code> not downloading correctly</h2>
+<ul>
+<li>If when trying to download using <code>downloadCnmfGithubRepositories.m</code> the below error is encountered, try to run <code>downloadCnmfGithubRepositories</code> several more times as <code>websave</code> (MATLAB built-in function) sometimes momentarily does not obtain the correct write permissions and fails.</li>
+</ul>
+<pre><code class="Matlab">@@@@@@@
+Error using websave (line 104)
+Unable to open output file: 'signal_extraction\cnmfe.zip' for writing. Common reasons include that the file exists and does not have write permission or the folder does not have write permissions.
+</code></pre>
+
+<h2 id="modelpreprocessmovie-analysis-options-list-not-showing"><code>modelPreprocessMovie</code> analysis options list not showing</h2>
+<ul>
+<li>MATLAB changed <code>uitables</code> internal implementation, hence <code>findjobj</code> (File Exchange function) broke causing <code>reorderableListbox</code> (File Exchange function) to also break. An updated <code>findjobj</code> has been added to the <code>calciumImagingAnalysis</code> repository and this error (see below) should no longer occur.</li>
+</ul>
+<pre><code class="Matlab">Error in reorderableListbox (line 127)
+jScrollPane = jScrollPane(1);
+</code></pre>
+
+<h2 id="miji-not-loading-correctly"><code>Miji</code> not loading correctly</h2>
+<ul>
+<li>The below error occurs when the wrong version of <code>Fiji</code> is downloaded. Please <strong>2015 December 22</strong> version download from https://imagej.net/Fiji/Downloads as that implementation of <code>Miji.m</code> appears to work correctly with MATLAB.</li>
+</ul>
+<pre><code class="Matlab">@@@@@@@
+Error using javaObject
+No class MIJ can be located on the Java class path
+</code></pre>
+
+<h2 id="viewmovie-or-other-functions-where-movies-need-to-be-loaded-end-without-executing"><code>viewMovie</code> or other functions where movies need to be loaded end without executing</h2>
+<ul>
+<li>It is likely that the regular expression given to <code>calciumImagingAnalysis</code> does not match any of the files in the folder being analyzed.</li>
+<li>For example, in <code>viewMovie</code>, the below <code>Image movie regexp</code> setting should be changed to <code>concat</code> correspond to the demo raw imaging data's name.</li>
+</ul>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/51725501-63ab0600-2017-11e9-94e3-182fcd55fa22.png" /></p>
+<h2 id="contrast-is-low-on-cell-transient-ff-movies-using-computemanualsortsignals">Contrast is low on cell transient ΔF/F movies using <code>computeManualSortSignals</code></h2>
+<ul>
+<li>The contrast (e.g. min/max) are estimated automatically from movie data, but will not always be the optimal display for manual human sorting of data. To improve the contrast, press <code>q</code> while in the interface and adjust the min/max values until you are in a satisfactory range. See below.</li>
+</ul>
+<p>Default contrast:</p>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/51729221-9e1c9f00-2027-11e9-9b78-1a49420b717a.png" /></p>
+<p>Contrast after user editing:</p>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/51729256-c0162180-2027-11e9-9966-605d114591d0.png" /></p>
+<h2 id="traces-in-computemanualsortsignals-gui-are-flat">Traces in <code>computeManualSortSignals</code> GUI are flat.</h2>
+<ul>
+<li>Likely this is due to one of the traces having values that are very high, throwing off the estimate used set the y-axis in the GUI (which is constant across all candidate cells). This can be changed by pressing <code>w</code>, see below.</li>
+</ul>
+<h3 id="cant-see-transients">Can't see transients.</h3>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/51950315-d84dbe00-23e4-11e9-9a5d-5d34e7c6ed39.png" /></p>
+<h3 id="change-the-minmax">Change the min/max.</h3>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/51950356-07fcc600-23e5-11e9-9166-71282d774cea.png" /></p>
+<h3 id="can-now-see-transients">Can now see transients.</h3>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/51950282-bb18ef80-23e4-11e9-8c52-5649175fb0fb.png" /></p>
+<h2 id="blank-frames-or-entire-frames-have-baseline-shifted-after-motion-correction-in-modelpreprocessmovie">Blank frames or entire frames have baseline shifted after motion correction in <code>modelPreprocessMovie</code></h2>
+<ul>
+<li>This normally occurs when <code>transfturboreg</code> is selected as the <code>registrationFxn</code>, in some Windows editions and OSX versions this leads to random baseline shifts. If this occurs change <code>registrationFxn</code> to <code>imtransform</code>. See below (green selected option).</li>
+</ul>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/51861116-3f3d7b00-22f0-11e9-8998-3a3224152214.png" /></p>
+<h2 id="file-or-folder-dialog-box-with-no-instructions">File or folder dialog box with no instructions</h2>
+<ul>
+<li>This is mainly on <code>OS X</code>, where in some versions the dialog boxes are not styled with title bars (see below). This is outside of MATLAB's control. If this occurs, check the command window as the instructions should also be provided there (e.g. with <code>Dialog box: [TITLE]</code> style text).</li>
+</ul>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/51950743-8d34aa80-23e6-11e9-892a-1138ace4f655.png" /></p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../help_analysis_methods/" class="btn btn-neutral float-right" title="Analysis methods">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../help_example_pipeline/" class="btn btn-neutral" title="Custom pipelines"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../help_example_pipeline/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../help_analysis_methods/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

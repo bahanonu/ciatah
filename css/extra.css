@@ -1,0 +1,32 @@
+/*h1 {
+  color: red;
+}*/
+.caption-text{
+	/*font-weight: bold;*/
+	color: yellow;
+}
+/*::-webkit-scrollbar {
+  width: 10px;
+}*/
+.wy-side-scroll{
+	background-color: black;
+	overflow-y: initial;
+	overflow-x: initial;
+}
+.wy-menu{
+	padding-bottom: 3em;
+}
+/*.wy-menu-vertical*/
+.wy-nav-side{
+	overflow-y: scroll;
+	padding-bottom: 3em;
+	background-color: black;
+	/*min-height: 90%;*/
+	/*max-height: 90%;*/
+}
+.wy-grid-for-nav{
+	background-color: black;
+}
+html{
+	background-color: black;
+}

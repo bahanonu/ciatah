@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Animal tracking - calciumImagingAnalysis (ciapkg)</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
+  <link href="../css/extra.css" rel="stylesheet" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Animal tracking";
+    var mkdocs_page_input_path = "pipeline_animal_tracking.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> calciumImagingAnalysis (ciapkg)</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../alldocs/">Full README</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Setup</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../install/">Quick Start</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../install2/">Install</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../testdata/">Test data</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../dependencies/">Dependencies</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Repository</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../data/">Data formats</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../notes/">Notes</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../organization/">Organization</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Processing data</span></p>
+                <ul class="current">
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_overview/">Overview</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed/">Step-by-step</a>
+                    </li>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Animal tracking</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#instructions-for-imagej-and-matlab">Instructions for ImageJ and Matlab</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#example-output-from-2017_09_11_p540_m381_openfield01_091112017">Example output from 2017_09_11_p540_m381_openfield01_091112017</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Help</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_example_pipeline/">Custom pipelines</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_issues/">Issues and fixes</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_analysis_methods/">Analysis methods</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_inscopix/">Inscopix</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_cross_session_alignment/">Cross-session alignemnt</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_manual_cell_sorting/">Manual cell sorting</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_snr/">Improving signal-to-noise</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_motion_correction.m">Motion correction</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_spatial_filtering/">Spatial filtering</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_stripe_removal/">Stripe removal</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_temporal_downsampling/">Temporal downsampling</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_animal_tracking/">Animal tracking</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Misc</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../acknowledgments/">Acknowledgments</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../references/">Cite</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../questions/">Questions</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../license/">License</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">calciumImagingAnalysis (ciapkg)</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Processing data &raquo;</li>
+        
+      
+    
+    <li>Animal tracking</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="imagejmatlab-based-mouse-location-tracking">ImageJ+MATLAB based mouse location tracking</h1>
+<p>Functions needed (have entire <code>calciumImagingAnalysis</code> loaded anyways):
+- <code>mm_tracking.ijm</code> is the tracking function for use in ImageJ, place in
+<code>plugins</code> folder. If already had <code>calciumImagingAnalysis</code> download Fiji, place in the <code>_external_programs/[Fiji directory]/Fiji.app/plugins</code> folder.
+- <code>removeIncorrectObjs.m</code> is a function to clean-up the ImageJ output.
+- <code>createTrackingOverlayVideo</code> is a way to check the output from the
+tracking by overlaying mouse tracker onto the video.</p>
+<h2 id="instructions-for-imagej-and-matlab">Instructions for ImageJ and Matlab</h2>
+<p>Example screen after running <code>mm_tracking</code> within ImageJ, click to expand.</p>
+<p><a href="https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png" alt="image" width="600" height="auto"/></a></p>
+<!-- <a href="https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png" target="_blank">![image](https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png)</a> -->
+
+<p>After the above screen, there will be multiple other screens culminating in one where a threshold is chosen that is used to remove non-animal pixels from analysis. The threshold matters quite a bit and the script ignores anything that isn't red (i.e. larger than threshold) OR not within the range specified by the parameters below.</p>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/71494852-8c2f1780-2807-11ea-93b7-8c51e21116b3.png" /></p>
+<p>The script opens the AVI as a virtual stack and asks for the threshold is so that I can quickly scan through the entire movie to make sure the set threshold works even with slight/major changes in illumination, e.g. the below threshold will work across many frames</p>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/71494077-7f0f2a00-2801-11ea-9144-f1fc6b04c27a.png" /></p>
+<p>If the threshold is set to low, certain frames will not have the animal detected, e.g. if the lighting changes.
+<img alt="image" src="https://user-images.githubusercontent.com/5241605/71494720-7e2cc700-2806-11ea-976e-3e9b70b00861.png" /></p>
+<p>Once ImageJ is finished, within Matlab run the following code (cleans up the ImageJ tracking by removing small objects and adding NaNs for missing frames along with making a movie to check output). Modify to point toward paths specific for your data.</p>
+<pre><code class="Matlab">% CSV file from imageJ and AVI movie path used in ImageJ
+moviePath = 'PATH_TO_AVI_USED_IN_IMAEJ';
+csvPath = 'PATH_TO_CSV_OUTPUT_BY_IMAGEJ';
+% clean up tracking
+[trackingTableFilteredCell] = removeIncorrectObjs(csvPath,'inputMovie',{moviePath});
+% make tracking video
+% frames to use as example check
+nFrames=1500:2500;
+inputMovie = loadMovieList(moviePath,'frameList',nFrames);
+[inputTrackingVideo] = createTrackingOverlayVideo(inputMovie,movmean(trackingTableFilteredCell.XM(nFrames),5),movmean(trackingTableFilteredCell.YM(nFrames),5));
+playMovie(inputTrackingVideo);
+</code></pre>
+
+<h3 id="example-output-from-2017_09_11_p540_m381_openfield01_091112017">Example output from 2017_09_11_p540_m381_openfield01_091112017</h3>
+<p><!-- <img alt="image" src="https://user-images.githubusercontent.com/5241605/34800547-2a10a3b0-f619-11e7-9c88-88750c9875cd.png" /> -->
+<img src="https://user-images.githubusercontent.com/5241605/34800547-2a10a3b0-f619-11e7-9c88-88750c9875cd.png" alt="image" width="400" height="auto"/></p>
+<p>Using <code>createTrackingOverlayVideo</code> to verify tracking matches animal position on a per frame basis.
+<!-- <img alt="image" src="https://user-images.githubusercontent.com/5241605/34800536-19eefcf2-f619-11e7-954f-dba59f4fd427.png" /> -->
+<img src="https://user-images.githubusercontent.com/5241605/34800536-19eefcf2-f619-11e7-954f-dba59f4fd427.png" alt="image" width="400" height="auto"/></p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../help_example_pipeline/" class="btn btn-neutral float-right" title="Custom pipelines">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../pipeline_detailed/" class="btn btn-neutral" title="Step-by-step"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../pipeline_detailed/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../help_example_pipeline/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
