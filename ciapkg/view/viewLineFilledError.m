@@ -10,6 +10,7 @@ function [success] = viewLineFilledError(inputMean,inputStd,varargin)
 
 	% Changelog
 		% 2019.11.04 [21:55:39] - Check and remove NaNs so fill does not run into errors.
+		% 2020.07.03 [01:00:56] - Added ability to do line alpha.
 	% TODO
 		%
 
@@ -22,6 +23,7 @@ function [success] = viewLineFilledError(inputMean,inputStd,varargin)
 	options.errorColor = repmat(0.85,[1 3]);
 	options.linewidth = 5;
 	options.errorAlpha = 0.5;
+	options.lineAlpha = 1;
 	% number of std dev. to plot
 	options.sigmaNum = 1.96;
 	% std, sem
@@ -61,8 +63,8 @@ function [success] = viewLineFilledError(inputMean,inputStd,varargin)
 		y = y(~nanIdx);
 		dy = dy(~nanIdx);
 		h = fill([x(:);flipud(x(:))],[y(:)-dy(:);flipud(y(:)+dy(:))],colorMatrixError(randColor,:),'linestyle','none');
-		% set(h,'facealpha',options.errorAlpha)
-		lh = line(x,y,'Color',colorMatrix(randColor,:)/1.5,'LineWidth',options.linewidth);
+		set(h,'facealpha',options.errorAlpha)
+		lh = line(x,y,'Color',[colorMatrix(randColor,:) options.lineAlpha]/1.5,'LineWidth',options.linewidth);
 		% lh.Color
 		success = 1;
 	catch err

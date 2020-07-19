@@ -15,6 +15,7 @@ function [inputImagesTranslated, outputStruct] = computeManualMotionCorrection(i
 	% changelog
 		% 2020.04.07 [19:39:24] - Updated to allow just using the register aspect of the function. Also made registering callback based.
 		% 2020.04.08 [10:35:49] - Added support for rotation.
+		% 2020.05.28 [08:48:57] - Slight update
 	% TODO
 		% Add ability to auto-crop if inputs are not of the right size them convert back to correct size after manual correction
 		% inputRegisterImage - [x y nCells] - Image to register to.
@@ -55,6 +56,8 @@ function [inputImagesTranslated, outputStruct] = computeManualMotionCorrection(i
 			if isempty(options.altInputImages)
 				switchInputImagesBack = 1;
 				options.altInputImages = inputImages;
+			else
+				switchInputImagesBack = 0;
 			end
 			inputImages = cellfun(@(x) nanmax(x,[],3),inputImages,'UniformOutput',false);
 			inputImages = cat(3,inputImages{:});

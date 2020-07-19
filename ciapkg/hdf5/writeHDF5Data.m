@@ -1,4 +1,4 @@
-function [success] = writeHDF5Data(inputData,saveDir,varargin)
+function [success] = writeHDF5Data(inputData,fileSavePath,varargin)
 	% Saves input data to a HDF5 file, tries to preserve datatype.
 	% Biafra Ahanonu
 	% started: 2013.11.01
@@ -15,6 +15,7 @@ function [success] = writeHDF5Data(inputData,saveDir,varargin)
 		% 2014.10.06 - added chunking to save, decrease compatibility problems.
 		% 2015.06.19 - added automatic creation of file's directory if it doesn't already exist.
 		% 2019.03.19 [17:37:38] User option to customize chunking instead of using whole x-y, useful for very large FOV movies
+		% 2020.07.07 [00:08:45] - Update addInfo to use h5write.
 	% TODO
 		% Add option to overwrite existing HDF5 file ()
 
@@ -27,11 +28,12 @@ function [success] = writeHDF5Data(inputData,saveDir,varargin)
 	% 3D matrix, [0 0 0] start and [x y z] end.
 	options.hdfStart = [];
 	options.hdfCount = [];
-	options.addInfo = [];
 	% Int: Defines gzip compression level (0-9). 0 = no compression, 9 = most compression.
 	options.deflateLevel = 0;
-	% e.g. '/movie/processingSettings'
-	options.addInfoName = [];
+	% Struct: structure of information to add. Will create a HDF5 file
+	options.addInfo = [];
+	% Str: e.g. '/movie/processingSettings'
+	options.addInfoName = '';
 	% Int: chunk size in [x y z] of the dataset, leave empty for auto chunking
 	options.dataDimsChunkCopy = [];
 	% get options
@@ -44,18 +46,21 @@ function [success] = writeHDF5Data(inputData,saveDir,varargin)
 	%========================
 	try
 		if strcmp(options.writeMode,'new')
-			if exist(saveDir,'file')
-				delete(saveDir)
+			if exist(fileSavePath,'file')==2
+				fprintf('Deleting: %s.\n',fileSavePath)
+				delete(fileSavePath)
 			end
 		end
 		% ensure that the directory exists
-		[pathstr,name,ext] = fileparts(saveDir);
-		if (~exist(pathstr,'dir')) mkdir(pathstr); end;
+		[pathstr,name,ext] = fileparts(fileSavePath);
+		if ~isempty(pathstr)
+			if (~exist(pathstr,'dir')) mkdir(pathstr); end;
+		end
 		%get class name
 		inputClass = class(inputData);
 		display(['input class: ' inputClass])
 		% create a h5 file
-		display(['creating HDF5 file: ' saveDir])
+		display(['creating HDF5 file: ' fileSavePath])
 		if isempty(options.hdfStart)
 			dataDims = size(inputData);
 			% [dim1 dim2 dim3] = size(inputData);
@@ -71,25 +76,25 @@ function [success] = writeHDF5Data(inputData,saveDir,varargin)
 		end
 		if strcmp(options.writeMode,'new')
 			% create HDF dataspace
-			h5create(saveDir,options.datasetname,dataDims,'Datatype',inputClass,'ChunkSize',dataDimsChunkCopy,'Deflate',options.deflateLevel);
+			h5create(fileSavePath,options.datasetname,dataDims,'Datatype',inputClass,'ChunkSize',dataDimsChunkCopy,'Deflate',options.deflateLevel);
 		else
 			display(['New HDF5 not created, overwriting <' options.datasetname '> dataset'])
 		end
 		% write out the inputData
-		display(['writing HDF5 file: ' saveDir])
+		display(['writing HDF5 file: ' fileSavePath])
 		if isempty(options.hdfStart)
-			h5write(saveDir,options.datasetname, inputData);
+			h5write(fileSavePath,options.datasetname, inputData);
 		else
-			h5write(saveDir,options.datasetname, inputData, options.hdfStart, options.hdfCount);
+			h5write(fileSavePath,options.datasetname, inputData, options.hdfStart, options.hdfCount);
 		end
 
 		% add information about data to HDF5 file
 		if strcmp(options.writeMode,'new')
-			hdf5write(saveDir,'/movie/info/dimensions',dataDims,'WriteMode','append');
+			hdf5write(fileSavePath,'/movie/info/dimensions',dataDims,'WriteMode','append');
 			currentDateTimeStr = datestr(now,'yyyymmdd_HHMM','local');
-			hdf5write(saveDir,'/movie/info/date',currentDateTimeStr,'WriteMode','append');
-			hdf5write(saveDir,'/movie/info/savePath',saveDir,'WriteMode','append');
-			hdf5write(saveDir,'/movie/info/Deflate',options.deflateLevel,'WriteMode','append');
+			hdf5write(fileSavePath,'/movie/info/date',currentDateTimeStr,'WriteMode','append');
+			hdf5write(fileSavePath,'/movie/info/savePath',fileSavePath,'WriteMode','append');
+			hdf5write(fileSavePath,'/movie/info/Deflate',options.deflateLevel,'WriteMode','append');
 		end
 		if ~isempty(options.addInfo)
 			if ~iscell(options.addInfo)
@@ -103,7 +108,8 @@ function [success] = writeHDF5Data(inputData,saveDir,varargin)
 				nInfo = length(infoList);
 				for fieldNameNo = 1:nInfo
 					thisField = infoList{fieldNameNo};
-					hdf5write(saveDir,[options.addInfoName{addInfoStructNo} '/' thisField],thisAddInfo.(thisField),'WriteMode','append');
+					hdf5write(fileSavePath,[options.addInfoName{addInfoStructNo} '/' thisField],thisAddInfo.(thisField),'WriteMode','append');
+					% h5write(fileSavePath,[options.addInfoName{addInfoStructNo} '/' thisField],thisAddInfo.(thisField),'WriteMode','append');
 				end
 			end
 		end

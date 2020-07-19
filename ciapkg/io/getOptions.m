@@ -52,6 +52,7 @@ function [options] = getOptions(options,inputArgs,varargin)
 		% 2015.12.03 [13:52:15] - Added recursive aspect to mirrorRightStruct and added support for handling struct name-value inputs. mirrorRightStruct checks that struct options input by the user are struct in the input options. - Biafra
 		% 2016.xx.xx - warnings now show both calling function and it's parent function, improve debug for warnings. Slight refactoring of code to make easier to follow. - Biafra
 		% 2020.05.10 [18:00:23] - Updates to comments in getOptions and other minor changes. Make warnings output as actual warnings instead of just displaying as normal text on command line.
+		% 2020.06.29 [18:54:56] - Support case where calling getOptions from command line or where there is no stack.
 
 	% TODO
 		% Allow input of an option structure - DONE!
@@ -179,6 +180,10 @@ function localShowWarnings(stackLevel,displayType,toStructName,fromField,val,nPa
 
 		% Get the entire function-call stack.
 		[ST,~] = dbstack;
+		if isempty(ST)|length(ST)<stackLevel
+			subfxnShowWarningsError(stackLevel,displayType,toStructName,fromField,val,nParentStacks);
+			return;
+		end
 		callingFxn = ST(stackLevel).name;
 		callingFxnPath = which(ST(stackLevel).file);
 		callingFxnLine = num2str(ST(stackLevel).line);
@@ -214,19 +219,22 @@ function localShowWarnings(stackLevel,displayType,toStructName,fromField,val,nPa
 		end
 	catch err
 		localShowErrorReport(err);
-		callingFxn = 'UNKNOWN FUNCTION';
-		% Display different information based on what type of warning occurred.
-		switch displayType
-			case 'struct'
-				warning(['<strong>WARNING</strong>: <a href="">' toStructName '.' fromField '</a> is not a valid option for "' callingFxn '"'])
-			case 'notstruct'
-				warning('Unknown error.')
-			case 'name-value incorrect'
-				warning(['<strong>WARNING</strong>: enter the parameter name before its associated value in "' callingFxn '"'])
-			case 'name-value'
-				warning(['<strong>WARNING</strong>: <a href="">' val '</a> is not a valid option for "' callingFxn '"'])
-			otherwise
-				% do nothing
-		end
+		subfxnShowWarningsError(stackLevel,displayType,toStructName,fromField,val,nParentStacks);
+	end
+end
+function subfxnShowWarningsError(stackLevel,displayType,toStructName,fromField,val,nParentStacks)
+	callingFxn = 'UNKNOWN FUNCTION';
+	% Display different information based on what type of warning occurred.
+	switch displayType
+		case 'struct'
+			warning(['<strong>WARNING</strong>: <a href="">' toStructName '.' fromField '</a> is not a valid option for "' callingFxn '"'])
+		case 'notstruct'
+			warning('Unknown error.')
+		case 'name-value incorrect'
+			warning(['<strong>WARNING</strong>: enter the parameter name before its associated value in "' callingFxn '"'])
+		case 'name-value'
+			warning(['<strong>WARNING</strong>: <a href="">' val '</a> is not a valid option for "' callingFxn '"'])
+		otherwise
+			% do nothing
 	end
 end

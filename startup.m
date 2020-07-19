@@ -2,6 +2,10 @@
 % Biafra Ahanonu
 % started: 2013.12.07 [17:28:44]
 
+% If using startup, then restore default path before running
+restoredefaultpath
+
+% Load all needed ciapkg directories
 loadBatchFxns
 
 % set default figure properties

@@ -309,7 +309,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		% Pre-processing options
 		% Empty by default, if user opts to keep pre-process settings, this is saved as a struct.
 		preprocessSettings = [];
-		saveLoadPreprocessingSettings = 0;
+		saveLoadPreprocessingSettings = 1;
 		motionCorrectionRefFrame = 100;
 
 		% io folders
@@ -533,7 +533,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			'ACROSS_SESSION_ANALYSIS__COMPUTE_VIEW', 'Methods related to aligning cells across imaging sessions.',...
 			'computeMatchObjBtwnTrials', 'Main method to match cell-extraction outputs (e.g. cells) across imaging sessions.',...
 			'viewMatchObjBtwnSessions', 'Allows users to visualize cross session matches and outputs videos to help with assessment as well.',...
-			'modelSaveMatchObjBtwnTrials', 'IGNORE for now. Will allow users to save output of cross-session matching.',...
+			'modelSaveMatchObjBtwnTrials', 'Will allow users to save output of cross-session matching.',...
 			'computeCellDistances', 'Computes the cell-cell distance for all cells in each imaging session and outputs as a CSV table.<br>Should be used to assess the largest distance to still count cells as matching during cross-session matching.',...
 			'computeCrossDayDistancesAlignment', 'Computes the cell-cell distance of all cross-session matched cells.<br>e.g. ideally all will be below the cross-session cell distance cutoff.'...
 		);
@@ -601,6 +601,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		globalRegistrationCoords = {};
 		globalObjectMapTurboreg = [];
 		globalStimMetric = [];
+		globalIDStruct = {};
 	end
 	properties(GetAccess = 'private', SetAccess = 'private')
 		% private read and write access

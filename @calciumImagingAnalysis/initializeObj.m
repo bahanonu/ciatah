@@ -121,9 +121,9 @@ function obj = initializeObj(obj)
 		javaHeapSpaceSizeGb = java.lang.Runtime.getRuntime.maxMemory*1e-9;
 		javaHeapPrefGb = 2;
 		javaHelpUrl = "https://www.mathworks.com/help/matlab/matlab_external/java-heap-memory-preferences.html";
-		javaTmpStr = sprintf('\n\nSee how to change Java heap memory online at:<a href="%s">Java Heap Memory Preferences</a> (<a href="%s">%s</a>).',javaHelpUrl,javaHelpUrl,javaHelpUrl);
+		javaTmpStr = sprintf('\n\nGo to Preferences->General->"Java Heap Memory" and increase to >%d MB. See more on how to change Java heap memory online at:<a href="%s">Java Heap Memory Preferences</a> (<a href="%s">%s</a>).',javaHeapPrefGb*1024,javaHelpUrl,javaHelpUrl,javaHelpUrl);
 		if javaHeapSpaceSizeGb<javaHeapPrefGb
-			javaErrorStr = @(x) sprintf('Java max heap memory is %0.3f Gb. This might cause Miji errors when loading videos due to insufficient memory.%s\n\nOtherwise put "java.opts" (located in "ciapkg" sub-folder) file in the MATLAB start-up path or change MATALB start-up folder to the calciumImagingAnalysis root folder then restart MATLB before continuing.\n',javaHeapSpaceSizeGb,x);
+			javaErrorStr = @(x) sprintf('Java max heap memory is %0.3f GB. This might cause Miji errors when loading videos due to insufficient memory.%s\n\nOtherwise put "java.opts" (located in "ciapkg" sub-folder) file in the MATLAB start-up path or change MATALB start-up folder to the calciumImagingAnalysis root folder then restart MATLB before continuing.\n',javaHeapSpaceSizeGb,x);
 			warning(javaErrorStr(javaTmpStr));
 			msgbox(javaErrorStr(sprintf('\n\nSee command line for URL to change Java heap memory.')),'Note to user','modal')
 		else

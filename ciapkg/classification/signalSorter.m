@@ -2464,11 +2464,11 @@ function [valid, directionOfNextChoice, saveData, i, lastSortedSignal] = respond
 		lastSortedSignal = i;
 	elseif isequal(reply, 28)
 		% go back, left
-		directionOfNextChoice=-1;
+		directionOfNextChoice = -1;
 		lastSortedSignal = i;
 	elseif isequal(reply, 29)
 		% go forward, right
-		directionOfNextChoice=1;
+		directionOfNextChoice = 1;
 		lastSortedSignal = i;
 	elseif isequal(reply, 102)
 		% user clicked 'F' for finished, exit loop
@@ -2476,7 +2476,7 @@ function [valid, directionOfNextChoice, saveData, i, lastSortedSignal] = respond
 			'Finish sorting', ...
 			'yes','no','yes');
 		if strcmp(movieDecision,'yes')
-			saveData=1;
+			saveData = 1;
 		end
 		% i=nFilters+1;
 	elseif isequal(reply, 103)
@@ -2505,7 +2505,7 @@ function [valid, directionOfNextChoice, saveData, i, lastSortedSignal] = respond
 			% 's' if user wants to get ride of the rest of the ICs
 			disp(['classifying the following signals as bad: ' num2str(i) ':' num2str(nFilters)])
 			valid(i:nFilters) = 0;
-			saveData=1;
+			saveData = 1;
 		end
 	elseif isequal(reply, 121)||isequal(reply, 1)||isequal(reply, 30)
 		% y key or left click

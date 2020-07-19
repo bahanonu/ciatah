@@ -21,6 +21,7 @@ function obj = viewObjmaps(obj,varargin)
 	% which table to read in
 	options.onlyShowMapTraceGraph = 0;
 	options.mapTraceGraphNo = 43;
+	options.figList = [2000 5000 4000 45];
 
 	% specify cut point
 	options.signalCutIdx = [];
@@ -127,7 +128,7 @@ function obj = viewObjmaps(obj,varargin)
 	end
 
 	disp(options)
-	for figNo1 = [2000 5000 4000 45]
+	for figNo1 = options.figList
 		for thisFileNumIdx = 1:nFilesToAnalyze
 			[~,~] = openFigure(figNo1+thisFileNumIdx, '');
 		end
@@ -149,14 +150,14 @@ function obj = viewObjmaps(obj,varargin)
 			%
 			nameArray = obj.stimulusNameArray;
 			idArray = obj.stimulusIdArray;
-			[~,~] = openFigure(45+thisFileNumIdx, '');
+			[~,~] = openFigure(options.figList(4)+thisFileNumIdx, '');
 			%
 			% [inputSignals inputImages signalPeaks signalPeakIdx] = modelGetSignalsImages(obj,'returnType','raw');
 			[inputSignals, inputImages, signalPeaks, signalPeakIdx, valid, validType] = modelGetSignalsImages(obj,'returnType','raw');
 			if isempty(inputSignals)
 				disp('no input signals');
 				try
-					suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType])
+					suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType ' | ' obj.signalExtractionMethod,])
 				catch
 				end
 				continue;
@@ -268,7 +269,7 @@ function obj = viewObjmaps(obj,varargin)
 
 			% suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType])
 
-			titleStr = sprintf('%d/%d: %s | %s | %s\n %d cells, %d total | Zoom enabled',thisFileNumIdx,nFilesToAnalyze,obj.folderBaseDisplayStr{obj.fileNum},strrep(foldername,'_','\_'),validType,sum(valid==1),length(valid));
+			titleStr = sprintf('%d/%d: %s | %s | %s\n %s | %d cells, %d total | Zoom enabled',thisFileNumIdx,nFilesToAnalyze,obj.folderBaseDisplayStr{obj.fileNum},strrep(foldername,'_','\_'),validType,obj.signalExtractionMethod,sum(valid==1),length(valid));
 			suptitle(titleStr)
 
 				% s2Pos = get(gca,'position');
@@ -282,14 +283,14 @@ function obj = viewObjmaps(obj,varargin)
 			linkaxes(linkAx);
 
 			% =======
-			plotSets = [2000 5000];
+			plotSets = [options.figList(1) options.figList(2)];
 			% Plot cellmaps with all cells individually numbered
 			for plotSetNo = plotSets
 				[~,~] = openFigure(plotSetNo+thisFileNumIdx, '');
 					clf
 					% createObjMap(groupImagesByColor(inputImages,rand([size(inputImages,3) 1])+nanmax(inputImages(:)),'thresholdImages',0))
 					cellCoords = obj.objLocations{obj.fileNum}.(obj.signalExtractionMethod);
-					if plotSetNo==2000
+					if plotSetNo==options.figList(1)
 						cellCoords = cellCoords(valid,:);
 						inputImagesTmp = inputImages(:,:,logical(valid));
 					else
@@ -331,13 +332,13 @@ function obj = viewObjmaps(obj,varargin)
 
 					suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType 10  'Zoom enabled.'])
 
-					titleStr = sprintf('%d/%d: %s | %s | %s\n %d cells, %d total | Zoom enabled',thisFileNumIdx,nFilesToAnalyze,obj.folderBaseDisplayStr{obj.fileNum},strrep(foldername,'_','\_'),validType,sum(valid==1),length(valid));
+					titleStr = sprintf('%d/%d: %s | %s | %s\n %s | %d cells, %d total | Zoom enabled',thisFileNumIdx,nFilesToAnalyze,obj.folderBaseDisplayStr{obj.fileNum},strrep(foldername,'_','\_'),validType,obj.signalExtractionMethod,sum(valid==1),length(valid));
 					suptitle(titleStr)
 			end
 
 			% =======
 			% Plot cellmaps in a binary fashion to look at overlapping cells
-			[~,~] = openFigure(4000+thisFileNumIdx, '');
+			[~,~] = openFigure(options.figList(3)+thisFileNumIdx, '');
 				[thresholdedImages,~] = thresholdImages(inputImages,'binary',1,'getBoundaryIndex',0,'threshold',userThreshold,'imageFilter','none');
 				thisCellmap = sum(thresholdedImages,3);
 				imagesc(thisCellmap)
@@ -346,7 +347,7 @@ function obj = viewObjmaps(obj,varargin)
 				colormap([0 0 0;customColormap([])])
 				cbh = colorbar;
 				ylabel(cbh,'# cells at that pixel location','FontSize',10);
-				titleStr = sprintf('Cell overlap | %d/%d: %s | %s | %s\n %d cells, %d total | Zoom enabled',thisFileNumIdx,nFilesToAnalyze,obj.folderBaseDisplayStr{obj.fileNum},strrep(foldername,'_','\_'),validType,sum(valid==1),length(valid));
+				titleStr = sprintf('Cell overlap | %d/%d: %s | %s | %s\n %s | %d cells, %d total | Zoom enabled',thisFileNumIdx,nFilesToAnalyze,obj.folderBaseDisplayStr{obj.fileNum},strrep(foldername,'_','\_'),validType,obj.signalExtractionMethod,sum(valid==1),length(valid));
 				suptitle(titleStr)
 
 		catch err
@@ -354,7 +355,7 @@ function obj = viewObjmaps(obj,varargin)
 			disp(getReport(err,'extended','hyperlinks','on'));
 			disp(repmat('@',1,7))
 			try
-				[~,~] = openFigure(45+thisFileNumIdx, '');
+				[~,~] = openFigure(options.figList(4)+thisFileNumIdx, '');
 				subfxnDisplayMovie()
 			catch err
 				disp(repmat('@',1,7))
@@ -362,9 +363,9 @@ function obj = viewObjmaps(obj,varargin)
 				disp(repmat('@',1,7))
 			end
 			try
-				for iii = [45 2000]
+				for iii = [options.figList(4) options.figList(1)]
 					[~,~] = openFigure(iii+thisFileNumIdx, '');
-					suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType])
+					suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType ' | ' obj.signalExtractionMethod,])
 				end
 			catch err
 				disp(repmat('@',1,7))
