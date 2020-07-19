@@ -1,0 +1,38 @@
+site_name: calciumImagingAnalysis (ciapkg)
+theme: readthedocs
+extra_css:
+    - css/extra.css
+nav:
+  - Home: index.md
+  - Full README: alldocs.md
+  - Setup:
+    - Quick Start: install.md
+    - Install: install2.md
+    - Test data: testdata.md
+    - Dependencies: dependencies.md
+  - Repository:
+    - Data formats: data.md
+    - Notes: notes.md
+    - Organization: organization.md
+  - Processing data:
+      - Overview: pipeline_overview.md
+      - Step-by-step: pipeline_detailed.md
+      - Animal tracking: pipeline_animal_tracking.md
+  - Help:
+    - Custom pipelines: help_example_pipeline.md
+    - Issues and fixes: help_issues.md
+    - Analysis methods: help_analysis_methods.md
+    - Inscopix: help_inscopix.md
+    - Cross-session alignemnt: help_cross_session_alignment.md
+    - Manual cell sorting: help_manual_cell_sorting.md
+    - Improving signal-to-noise: help_snr.md
+    - Motion correction: help_motion_correction.m
+    - Spatial filtering: help_spatial_filtering.md
+    - Stripe removal: help_stripe_removal.md
+    - Temporal downsampling: help_temporal_downsampling.md
+    - Animal tracking: help_animal_tracking.md
+  - Misc:
+    - Acknowledgments: acknowledgments.md
+    - Cite: references.md
+    - Questions: questions.md
+    - License: license.md

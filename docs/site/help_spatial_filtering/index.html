@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Spatial filtering - calciumImagingAnalysis (ciapkg)</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
+  <link href="../css/extra.css" rel="stylesheet" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Spatial filtering";
+    var mkdocs_page_input_path = "help_spatial_filtering.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> calciumImagingAnalysis (ciapkg)</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../alldocs/">Full README</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Setup</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../install/">Quick Start</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../install2/">Install</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../testdata/">Test data</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../dependencies/">Dependencies</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Repository</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../data/">Data formats</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../notes/">Notes</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../organization/">Organization</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Processing data</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_overview/">Overview</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed/">Step-by-step</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_animal_tracking/">Animal tracking</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Help</span></p>
+                <ul class="current">
+                    <li class="toctree-l1"><a class="reference internal" href="../help_example_pipeline/">Custom pipelines</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_issues/">Issues and fixes</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_analysis_methods/">Analysis methods</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_inscopix/">Inscopix</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_cross_session_alignment/">Cross-session alignemnt</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_manual_cell_sorting/">Manual cell sorting</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_snr/">Improving signal-to-noise</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_motion_correction.m">Motion correction</a>
+                    </li>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Spatial filtering</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#_1"></a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#images-from-unit-test">Images from unit test</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#main-filtering-functions">Main filtering functions.</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#test-function-filtering">Test function filtering</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#matlab-test-function">Matlab test function</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#matlab-test-function-movie-output">Matlab test function movie output</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#imagej-test-function">ImageJ test function</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#common-issues">Common Issues</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#dark-halos-around-cells">Dark halos around cells</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_stripe_removal/">Stripe removal</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_temporal_downsampling/">Temporal downsampling</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_animal_tracking/">Animal tracking</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Misc</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../acknowledgments/">Acknowledgments</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../references/">Cite</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../questions/">Questions</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../license/">License</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">calciumImagingAnalysis (ciapkg)</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Help &raquo;</li>
+        
+      
+    
+    <li>Spatial filtering</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="movie-filtering">Movie Filtering</h1>
+<p>This page documents different functions in the repository variable for filtering (spatial high/low/bandpass) movies to remove neuropil, cells, or other features.</p>
+<h3 id="_1"></h3>
+<pre><code class="Matlab">options.freqLow = 1;
+options.freqHigh = 4;
+inputMovie = normalizeMovie(single(inputMovie),'normalizationType','lowpassFFTDivisive','freqLow',options.freqLow,'freqHigh',options.freqHigh,'waitbarOn',1,'bandpassMask','gaussian');
+</code></pre>
+
+<h2 id="images-from-unit-test">Images from unit test</h2>
+<h3 id="main-filtering-functions">Main filtering functions.</h3>
+<p>Below is a screen grab from a random frame using all the filtering functions. A nice way to quickly see the many differences between each functions filtering.
+<img alt="image" src="https://user-images.githubusercontent.com/5241605/32477562-18b7d9d4-c334-11e7-988f-accdf99a22f2.png" /></p>
+<h3 id="test-function-filtering">Test function filtering</h3>
+<p>This is currently only for the Matlab fft, but I'll see about expanding to others.
+<img alt="image" src="https://user-images.githubusercontent.com/5241605/32477571-26620546-c334-11e7-8ce0-aa5269fcb5f3.png" /></p>
+<pre><code class="Matlab">unitNormalizeMovie;
+</code></pre>
+
+<h3 id="matlab-test-function">Matlab test function</h3>
+<ul>
+<li>I've also added the ability to test the parameter space of the Matlab fft, use the below command.</li>
+</ul>
+<pre><code class="Matlab">testMovieFFT = normalizeMovie(testMovie,'normalizationType','matlabFFT_test','secondaryNormalizationType','lowpassFFTDivisive','bandpassMask','gaussian','bandpassType','lowpass');
+</code></pre>
+
+<ul>
+<li>Should get a movie output similar to the below, where there is the original movie, the FFT movie, the original/FFT movie, and the dfof of original/FFT movie.
+<img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/11490967/559152e2-9792-11e5-839b-a93811df70ce.png" /></li>
+</ul>
+<h3 id="matlab-test-function-movie-output">Matlab test function movie output</h3>
+<p>Similar to above, showing results when using <code>lowpassFFTDivisive</code> normalization (<code>matlab divide by lowpass before registering</code> in <code>modelPreprocessMovie</code> and <code>viewMovieRegistrationTest</code> functions) with <code>freqLow = 0</code> and <code>freqHigh</code> set to <code>1</code>, <code>4</code>, and <code>20</code>. This corresponds to removing increasingly smaller features from the movie.</p>
+<p><img alt="2014_04_01_p203_m19_check01_fft_example-3" src="https://user-images.githubusercontent.com/5241605/71422606-aec30400-2640-11ea-8ffb-41cdeea771c1.gif" /></p>
+<h3 id="imagej-test-function">ImageJ test function</h3>
+<p>To test the ImageJ FFT and determine the best parameters for a given set of movies, run the following function on a test movie matrix:</p>
+<pre><code class="Matlab">inputMovieTest = normalizeMovie(inputMovie,'normalizationType','imagejFFT_test');
+</code></pre>
+
+<p>The output should look like the below:
+<img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/11154743/14dd385a-89f6-11e5-8d56-c349e8c4f3f8.png" /></p>
+<h2 id="common-issues">Common Issues</h2>
+<p>A list of some common issues.</p>
+<h3 id="dark-halos-around-cells">Dark halos around cells</h3>
+<p>If the spatial filter is not properly configured then dark halos will appear around high SNR cells, potentially obscuring nearby, low SNR cells.
+<img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/11329062/1232a886-914b-11e5-9cca-85ec6162319b.png" /></p>
+<p>https://github.com/schnitzer-lab/miniscope_analysis/pull/30
+* FYI, for 4x downsampled movies, <code>highFreq</code> parameter of 4 (which corresponds to a <code>fspecial</code> gaussian with std of 4) produces the closest results to ImageJ <code>Process-&gt;FFT-&gt;Bandpass Filter...</code> with inputs of <code>filter_large=10000 filter_small=80 suppress=None tolerance=5</code> (the current default in <code>normalizeMovie</code>).</p>
+<ul>
+<li>
+<p>Example frame from ImageJ and Matlab FFTs.
+<img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/11519196/fbcd561e-984c-11e5-95b9-3a23085c2e44.png" /></p>
+</li>
+<li>
+<p>Distribution of pixel differences between ImageJ and Matlab FFT movies.
+<img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/11519037/8bcae88c-984b-11e5-84dd-097c61ccd756.png" /></p>
+</li>
+<li>
+<p>This matches the filter that ImageJ says it uses, which is fairly close to the Matlab filter.
+<img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/11519329/22b3af8e-984e-11e5-9379-5b5d4092cee0.png" /></p>
+</li>
+</ul>
+<p><strong>Example video: 2015_11_25_p384_m610_openfield01</strong>
+* Below is an example comparison using the following Matlab commands to produce the filtered inputs:</p>
+<pre><code class="Matlab">testMovieFFT = normalizeMovie(testMovie,'normalizationType','lowpassFFTDivisive','freqHigh',7);
+testMovieFFTImageJ = normalizeMovie(testMovie,'normalizationType','imagejFFT');
+diffMovie = testMovieFFT-testMovieFFTImageJ ;
+</code></pre>
+
+<ul>
+<li>With some tweaking of the <code>freqHigh</code> and other parameters, should hopefully be able to get closer to macheps and say that the two are identical for our purposes.</li>
+</ul>
+<p><img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/11490643/618983b0-978f-11e5-944c-14c049d9d17e.png" /></p>
+<ul>
+<li>This is the histogram of the difference movie (Matlab - ImageJ). Notice most of the values are centered around zero with stdev ~0.2% df/f.
+<img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/11490647/68fbc8a6-978f-11e5-985d-1f07101840de.png" /></li>
+</ul>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../help_stripe_removal/" class="btn btn-neutral float-right" title="Stripe removal">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../help_motion_correction.m" class="btn btn-neutral" title="Motion correction"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../help_motion_correction.m" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../help_stripe_removal/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
