@@ -55,7 +55,7 @@
                     </li>
                 </ul>
                 <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="../alldocs/">Full README</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../alldocs/">One-page readme</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Setup</span></p>
@@ -64,7 +64,7 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../install2/">Install</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../testdata/">Test data</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../example_data/">Example data</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../dependencies/">Dependencies</a>
                     </li>
@@ -169,21 +169,21 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="stripe-removal-from-movies">Stripe removal from movies</h1>
+                <h1 id="stripe-removal-from-movies">Stripe removal from movies<a class="headerlink" href="#stripe-removal-from-movies" title="Permanent link">&para;</a></h1>
 <p>Some cameras will produce vertical and/or horizontal stripes in the movies that users will want to remove. Below is an example of process to remove strip from movies. The underlying function is <code>removeStripsFromMovie</code> and users can remove using <code>modelPreprocessMovie</code> module in the <code>calciumImagingAnalysis</code> class.</p>
 <p>Vertical and horizontal stripes can be removed with the vertical and horizontal aspect of the the Fourier spectrum. In my default implementation for users I attenuate at lower frequencies since those usually do not contain the camera-induced stripes. If users have experimental induced stripes, they should lower the frequency threshold to include low frequency (spatially large) stripes.</p>
-<h2 id="example-implementation">Example implementation</h2>
+<h2 id="example-implementation">Example implementation<a class="headerlink" href="#example-implementation" title="Permanent link">&para;</a></h2>
 <p>Below is an example removal of stripes showing both the Fourier domain analysis in the top row and the real domain processing in the bottom row. Bottom right shows the difference between the original and filtered movie, indicating where the stripes have been removed.</p>
 <p><a href="https://user-images.githubusercontent.com/5241605/51817825-4e391480-2281-11e9-9a17-cc972c26230a.png" target="_blank"><img alt="picture1" src="https://user-images.githubusercontent.com/5241605/51817825-4e391480-2281-11e9-9a17-cc972c26230a.png" /></a></p>
 <!-- ![picture1](https://user-images.githubusercontent.com/5241605/51817825-4e391480-2281-11e9-9a17-cc972c26230a.png) -->
 
-<h2 id="removestripsfrommovie">removeStripsFromMovie</h2>
+<h2 id="removestripsfrommovie">removeStripsFromMovie<a class="headerlink" href="#removestripsfrommovie" title="Permanent link">&para;</a></h2>
 <p>To run this on any <code>inputMovie</code> movie matrix already loaded in MATLAB, do the following.</p>
 <pre><code class="MATLAB">% This will produce a result similar to above.
 removeStripsFromMovie(inputMovie,'stripOrientation',both,'meanFilterSize',7,'freqLowExclude',10,'bandpassType','highpass')
 </code></pre>
 
-<h2 id="calciumimaginganalysis">calciumImagingAnalysis</h2>
+<h2 id="calciumimaginganalysis">calciumImagingAnalysis<a class="headerlink" href="#calciumimaginganalysis" title="Permanent link">&para;</a></h2>
 <p>To use within the <code>calciumImagingAnalysis</code> class, select <code>modelPreprocessMovie</code> module and have <code>stripeRemoval</code> selected then on the options page, choose whether to remove vertical, horizontal, or both stripes.
 <img alt="image" src="https://user-images.githubusercontent.com/5241605/71019922-1bbe2300-20b0-11ea-9c5f-232326884db4.png" />
 <img alt="image" src="https://user-images.githubusercontent.com/5241605/71020018-5922b080-20b0-11ea-9637-abead3c26110.png" /></p>

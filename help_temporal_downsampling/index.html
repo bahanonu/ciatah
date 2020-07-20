@@ -55,7 +55,7 @@
                     </li>
                 </ul>
                 <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="../alldocs/">Full README</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../alldocs/">One-page readme</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Setup</span></p>
@@ -64,7 +64,7 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../install2/">Install</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../testdata/">Test data</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../example_data/">Example data</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../dependencies/">Dependencies</a>
                     </li>
@@ -163,18 +163,20 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="preprocessing-temporal-downsampling">Preprocessing: Temporal downsampling</h1>
+                <h1 id="preprocessing-temporal-downsampling">Preprocessing: Temporal downsampling<a class="headerlink" href="#preprocessing-temporal-downsampling" title="Permanent link">&para;</a></h1>
 <p>Example code to run the downsample test function with the following commands:</p>
 <pre><code class="Matlab">loadRepoFunctions;
 testMovie = loadMovieList('pathToMovieFile');
 unitTestDownsampleMovie(testMovie,'interp1Method','linear','cropSize',5);
 </code></pre>
 
-<p>Below is an example pixel from a cell in a BLA animal. Note...
-- ImageJ <code>Scale...</code>+bilinear+averaging (blue) and Matlab <code>imresize</code>+bilinear (red) both produce pretty much identical results.
-- <code>imresize</code> using bilinear and bicubic produce similar results with bicubic having slower runtimes (e.g. on my machine 3.46 vs. 4.31 sec if set <code>cropSize</code> to 100).
-- The number next to each name is the vector's variance.
-<img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/13099409/b85b119c-d4e6-11e5-91d4-f6f7c74fed18.png" /></p>
+<p>Below is an example pixel from a cell in a BLA animal. Note:</p>
+<ul>
+<li>ImageJ <code>Scale...</code>+bilinear+averaging (blue) and Matlab <code>imresize</code>+bilinear (red) both produce pretty much identical results.</li>
+<li><code>imresize</code> using bilinear and bicubic produce similar results with bicubic having slower runtimes (e.g. on my machine 3.46 vs. 4.31 sec if set <code>cropSize</code> to 100).</li>
+<li>The number next to each name is the vector's variance.
+<img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/13099409/b85b119c-d4e6-11e5-91d4-f6f7c74fed18.png" /></li>
+</ul>
               
             </div>
           </div>

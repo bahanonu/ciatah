@@ -55,7 +55,7 @@
                     </li>
                 </ul>
                 <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="../alldocs/">Full README</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../alldocs/">One-page readme</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Setup</span></p>
@@ -64,7 +64,7 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../install2/">Install</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../testdata/">Test data</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../example_data/">Example data</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../dependencies/">Dependencies</a>
                     </li>
@@ -197,10 +197,10 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="common-issues-and-fixes">Common issues and fixes</h1>
+                <h1 id="common-issues-and-fixes">Common issues and fixes<a class="headerlink" href="#common-issues-and-fixes" title="Permanent link">&para;</a></h1>
 <p>Page outlines some common issues and fixes to them that may be encountered while using <code>calciumImagingAnalysis</code>. These are mostly due to quirks specific to MATLAB, Fiji, or the computing environment <code>calciumImagingAnalysis</code> is used on.</p>
 <hr />
-<h2 id="contents">Contents</h2>
+<h2 id="contents">Contents<a class="headerlink" href="#contents" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="#pca-ica-cnmf-e-or-other-cell-extraction-algorithms-dont-produce-sensible-output">PCA-ICA, CNMF-E, or other cell extraction algorithm's don't produce sensible output.</a></li>
 <li><a href="#out-of-memory-using-miji">Out of memory using Miji</a></li>
@@ -211,15 +211,17 @@
 <li><a href="#miji-not-loading-correctly">Miji not loading correctly</a></li>
 <li><a href="#viewmovie-or-other-functions-where-movies-need-to-be-loaded-end-without-executing">viewMovie or other functions where movies need to be loaded end without executing</a></li>
 <li><a href="#contrast-is-low-on-cell-transient-Δff-movies-using-computemanualsortsignals">Contrast is low on cell transient ΔF/F movies using computeManualSortSignals</a></li>
-<li><a href="#traces-in-computemanualsortsignals-gui-are-flat">Traces in computeManualSortSignals GUI are flat.</a></li>
+<li><a href="#traces-in-computemanualsortsignals-gui-are-flat">Traces in computeManualSortSignals GUI are flat.</a><ul>
 <li><a href="#cant-see-transients">Can't see transients.</a></li>
 <li><a href="#change-the-minmax">Change the min/max.</a></li>
 <li><a href="#can-now-see-transients">Can now see transients.</a></li>
+</ul>
+</li>
 <li><a href="#blank-frames-or-entire-frames-have-baseline-shifted-after-motion-correction-in-modelpreprocessmovie">Blank frames or entire frames have baseline shifted after motion correction in modelPreprocessMovie</a></li>
 <li><a href="#file-or-folder-dialog-box-with-no-instructions">File or folder dialog box with no instructions</a></li>
 </ul>
 <hr />
-<h2 id="pca-ica-cnmf-e-or-other-cell-extraction-algorithms-dont-produce-sensible-output">PCA-ICA, CNMF-E, or other cell extraction algorithm's don't produce sensible output.</h2>
+<h2 id="pca-ica-cnmf-e-or-other-cell-extraction-algorithms-dont-produce-sensible-output">PCA-ICA, CNMF-E, or other cell extraction algorithm's don't produce sensible output.<a class="headerlink" href="#pca-ica-cnmf-e-or-other-cell-extraction-algorithms-dont-produce-sensible-output" title="Permanent link">&para;</a></h2>
 <ul>
 <li>When running <code>modelPreprocessMovie</code> a dialog box appears showing the available analysis steps. Certain combinations of these steps make sense while others should be avoided.</li>
 <li>For example, normally users want <code>turboreg-&gt;crop-&gt;dfof-&gt;downsampleTime</code>.</li>
@@ -232,7 +234,7 @@
 <li>Remember at the options screen (see below) to select a spatial filtering there under the option <code>filterBeforeRegister</code> instead of selecting the <code>spatialFilter</code> option before the <code>turboreg</code> option in the analysis steps screen.</li>
 </ul>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/51938312-9fe8b880-23c1-11e9-9592-54d29160f8e6.png" /></p>
-<h2 id="out-of-memory-using-miji">Out of memory using <code>Miji</code></h2>
+<h2 id="out-of-memory-using-miji">Out of memory using <code>Miji</code><a class="headerlink" href="#out-of-memory-using-miji" title="Permanent link">&para;</a></h2>
 <ul>
 <li>If you get a <code>java.lang.OutOfMemoryError: GC overhead limit exceeded</code> style error (see below code) when trying to open a movie with <code>Miji</code>, make sure that you initialize MATLAB in the <code>calciumImagingAnalysis</code> path or place the <code>java.opts</code> file in your MATLAB start-up folder.</li>
 </ul>
@@ -242,25 +244,23 @@
 </code></pre>
 
 <ul>
-<li>
-<p>On Windows, you can change the start-up folder as below or in general see https://www.mathworks.com/help/matlab/matlab_env/matlab-startup-folder.html.
-<img alt="image" src="https://user-images.githubusercontent.com/5241605/64047075-94f63200-cb22-11e9-890b-6b43db669412.png" /></p>
-</li>
-<li>
-<p><code>java.opts</code> increases the amount of memory allocated so that Java doesn't run out when using Miji to load movies. To change the amount of memory allocated (calciumImagingAnalysis sets to 7 Gb by default), change the below to a higher or lower number, e.g. 9 Gb would be <code>-Xmx9000m</code>.</p>
-</li>
+<li>On Windows, you can change the start-up folder as below or in general see <a href="https://www.mathworks.com/help/matlab/matlab_env/matlab-startup-folder.html">https://www.mathworks.com/help/matlab/matlab_env/matlab-startup-folder.html</a>.
+<img alt="image" src="https://user-images.githubusercontent.com/5241605/64047075-94f63200-cb22-11e9-890b-6b43db669412.png" /></li>
+</ul>
+<ul>
+<li><code>java.opts</code> increases the amount of memory allocated so that Java doesn't run out when using Miji to load movies. To change the amount of memory allocated (calciumImagingAnalysis sets to 7 Gb by default), change the below to a higher or lower number, e.g. 9 Gb would be <code>-Xmx9000m</code>.</li>
 </ul>
 <pre><code class="Java">-Xmx7000m
 </code></pre>
 
-<h2 id="selecting-scripts-folder-in-fijiapp-on-mac-os-x">Selecting <code>scripts</code> folder in <code>Fiji.app</code> on Mac OS X</h2>
+<h2 id="selecting-scripts-folder-in-fijiapp-on-mac-os-x">Selecting <code>scripts</code> folder in <code>Fiji.app</code> on Mac OS X<a class="headerlink" href="#selecting-scripts-folder-in-fijiapp-on-mac-os-x" title="Permanent link">&para;</a></h2>
 <p>Navigate to the applications folder and select <code>Fiji.app</code> and <code>Show Package Contents</code>.
 <img alt="screen shot 2019-02-12 at 6 46 45 pm" src="https://user-images.githubusercontent.com/5241605/52684369-e2021600-2efa-11e9-90ec-83d861841182.png" /></p>
 <p>Then navigate to <code>/Fiji.app/scripts</code> and select <code>Miji.m</code> then <code>Get Info</code>. Select and copy the path as below.
 <img alt="screen shot 2019-02-12 at 6 49 11 pm" src="https://user-images.githubusercontent.com/5241605/52684378-e4fd0680-2efa-11e9-9240-825f5d7824af.png" /></p>
 <p>When Matlab ask for the Fiji path, press <code>command + shift + G</code> in the dialog box to enter the full path manually, press enter, then select open.
 <img alt="screen shot 2019-02-12 at 6 52 42 pm" src="https://user-images.githubusercontent.com/5241605/52684381-ea5a5100-2efa-11e9-9652-30f7b220117c.png" /></p>
-<h2 id="fiji-wont-start-using-miji-or-mijstart">Fiji won't start using <code>Miji</code> or <code>MIJ.start</code></h2>
+<h2 id="fiji-wont-start-using-miji-or-mijstart">Fiji won't start using <code>Miji</code> or <code>MIJ.start</code><a class="headerlink" href="#fiji-wont-start-using-miji-or-mijstart" title="Permanent link">&para;</a></h2>
 <ul>
 <li>If calling <code>Miji</code> or <code>MIJ.start</code> does not lead to a Fiji GUI appearing (e.g. the below output is seen in the command window), this is likely because the last Fiji/ImageJ instance was closed improperly (e.g. by closing ImageJ with <code>File-&gt;Quit</code> or pressing the close button instead of <code>MIJ.exit</code> in the Matlab command window), leading to a headless Fiji that cannot be properly closed by Miji/Matlab.</li>
 </ul>
@@ -276,7 +276,7 @@ currP=pwd;Miji;cd(currP);
 MIJ.exit
 </code></pre>
 
-<h2 id="downloadcnmfgithubrepositoriesm-not-downloading-correctly"><code>downloadCnmfGithubRepositories.m</code> not downloading correctly</h2>
+<h2 id="downloadcnmfgithubrepositoriesm-not-downloading-correctly"><code>downloadCnmfGithubRepositories.m</code> not downloading correctly<a class="headerlink" href="#downloadcnmfgithubrepositoriesm-not-downloading-correctly" title="Permanent link">&para;</a></h2>
 <ul>
 <li>If when trying to download using <code>downloadCnmfGithubRepositories.m</code> the below error is encountered, try to run <code>downloadCnmfGithubRepositories</code> several more times as <code>websave</code> (MATLAB built-in function) sometimes momentarily does not obtain the correct write permissions and fails.</li>
 </ul>
@@ -285,7 +285,7 @@ Error using websave (line 104)
 Unable to open output file: 'signal_extraction\cnmfe.zip' for writing. Common reasons include that the file exists and does not have write permission or the folder does not have write permissions.
 </code></pre>
 
-<h2 id="modelpreprocessmovie-analysis-options-list-not-showing"><code>modelPreprocessMovie</code> analysis options list not showing</h2>
+<h2 id="modelpreprocessmovie-analysis-options-list-not-showing"><code>modelPreprocessMovie</code> analysis options list not showing<a class="headerlink" href="#modelpreprocessmovie-analysis-options-list-not-showing" title="Permanent link">&para;</a></h2>
 <ul>
 <li>MATLAB changed <code>uitables</code> internal implementation, hence <code>findjobj</code> (File Exchange function) broke causing <code>reorderableListbox</code> (File Exchange function) to also break. An updated <code>findjobj</code> has been added to the <code>calciumImagingAnalysis</code> repository and this error (see below) should no longer occur.</li>
 </ul>
@@ -293,22 +293,22 @@ Unable to open output file: 'signal_extraction\cnmfe.zip' for writing. Common re
 jScrollPane = jScrollPane(1);
 </code></pre>
 
-<h2 id="miji-not-loading-correctly"><code>Miji</code> not loading correctly</h2>
+<h2 id="miji-not-loading-correctly"><code>Miji</code> not loading correctly<a class="headerlink" href="#miji-not-loading-correctly" title="Permanent link">&para;</a></h2>
 <ul>
-<li>The below error occurs when the wrong version of <code>Fiji</code> is downloaded. Please <strong>2015 December 22</strong> version download from https://imagej.net/Fiji/Downloads as that implementation of <code>Miji.m</code> appears to work correctly with MATLAB.</li>
+<li>The below error occurs when the wrong version of <code>Fiji</code> is downloaded. Please <strong>2015 December 22</strong> version download from <a href="https://imagej.net/Fiji/Downloads">https://imagej.net/Fiji/Downloads</a> as that implementation of <code>Miji.m</code> appears to work correctly with MATLAB.</li>
 </ul>
 <pre><code class="Matlab">@@@@@@@
 Error using javaObject
 No class MIJ can be located on the Java class path
 </code></pre>
 
-<h2 id="viewmovie-or-other-functions-where-movies-need-to-be-loaded-end-without-executing"><code>viewMovie</code> or other functions where movies need to be loaded end without executing</h2>
+<h2 id="viewmovie-or-other-functions-where-movies-need-to-be-loaded-end-without-executing"><code>viewMovie</code> or other functions where movies need to be loaded end without executing<a class="headerlink" href="#viewmovie-or-other-functions-where-movies-need-to-be-loaded-end-without-executing" title="Permanent link">&para;</a></h2>
 <ul>
 <li>It is likely that the regular expression given to <code>calciumImagingAnalysis</code> does not match any of the files in the folder being analyzed.</li>
 <li>For example, in <code>viewMovie</code>, the below <code>Image movie regexp</code> setting should be changed to <code>concat</code> correspond to the demo raw imaging data's name.</li>
 </ul>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/51725501-63ab0600-2017-11e9-94e3-182fcd55fa22.png" /></p>
-<h2 id="contrast-is-low-on-cell-transient-ff-movies-using-computemanualsortsignals">Contrast is low on cell transient ΔF/F movies using <code>computeManualSortSignals</code></h2>
+<h2 id="contrast-is-low-on-cell-transient-ff-movies-using-computemanualsortsignals">Contrast is low on cell transient ΔF/F movies using <code>computeManualSortSignals</code><a class="headerlink" href="#contrast-is-low-on-cell-transient-ff-movies-using-computemanualsortsignals" title="Permanent link">&para;</a></h2>
 <ul>
 <li>The contrast (e.g. min/max) are estimated automatically from movie data, but will not always be the optimal display for manual human sorting of data. To improve the contrast, press <code>q</code> while in the interface and adjust the min/max values until you are in a satisfactory range. See below.</li>
 </ul>
@@ -316,22 +316,22 @@ No class MIJ can be located on the Java class path
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/51729221-9e1c9f00-2027-11e9-9b78-1a49420b717a.png" /></p>
 <p>Contrast after user editing:</p>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/51729256-c0162180-2027-11e9-9966-605d114591d0.png" /></p>
-<h2 id="traces-in-computemanualsortsignals-gui-are-flat">Traces in <code>computeManualSortSignals</code> GUI are flat.</h2>
+<h2 id="traces-in-computemanualsortsignals-gui-are-flat">Traces in <code>computeManualSortSignals</code> GUI are flat.<a class="headerlink" href="#traces-in-computemanualsortsignals-gui-are-flat" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Likely this is due to one of the traces having values that are very high, throwing off the estimate used set the y-axis in the GUI (which is constant across all candidate cells). This can be changed by pressing <code>w</code>, see below.</li>
 </ul>
-<h3 id="cant-see-transients">Can't see transients.</h3>
+<h3 id="cant-see-transients">Can't see transients.<a class="headerlink" href="#cant-see-transients" title="Permanent link">&para;</a></h3>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/51950315-d84dbe00-23e4-11e9-9a5d-5d34e7c6ed39.png" /></p>
-<h3 id="change-the-minmax">Change the min/max.</h3>
+<h3 id="change-the-minmax">Change the min/max.<a class="headerlink" href="#change-the-minmax" title="Permanent link">&para;</a></h3>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/51950356-07fcc600-23e5-11e9-9166-71282d774cea.png" /></p>
-<h3 id="can-now-see-transients">Can now see transients.</h3>
+<h3 id="can-now-see-transients">Can now see transients.<a class="headerlink" href="#can-now-see-transients" title="Permanent link">&para;</a></h3>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/51950282-bb18ef80-23e4-11e9-8c52-5649175fb0fb.png" /></p>
-<h2 id="blank-frames-or-entire-frames-have-baseline-shifted-after-motion-correction-in-modelpreprocessmovie">Blank frames or entire frames have baseline shifted after motion correction in <code>modelPreprocessMovie</code></h2>
+<h2 id="blank-frames-or-entire-frames-have-baseline-shifted-after-motion-correction-in-modelpreprocessmovie">Blank frames or entire frames have baseline shifted after motion correction in <code>modelPreprocessMovie</code><a class="headerlink" href="#blank-frames-or-entire-frames-have-baseline-shifted-after-motion-correction-in-modelpreprocessmovie" title="Permanent link">&para;</a></h2>
 <ul>
 <li>This normally occurs when <code>transfturboreg</code> is selected as the <code>registrationFxn</code>, in some Windows editions and OSX versions this leads to random baseline shifts. If this occurs change <code>registrationFxn</code> to <code>imtransform</code>. See below (green selected option).</li>
 </ul>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/51861116-3f3d7b00-22f0-11e9-8998-3a3224152214.png" /></p>
-<h2 id="file-or-folder-dialog-box-with-no-instructions">File or folder dialog box with no instructions</h2>
+<h2 id="file-or-folder-dialog-box-with-no-instructions">File or folder dialog box with no instructions<a class="headerlink" href="#file-or-folder-dialog-box-with-no-instructions" title="Permanent link">&para;</a></h2>
 <ul>
 <li>This is mainly on <code>OS X</code>, where in some versions the dialog boxes are not styled with title bars (see below). This is outside of MATLAB's control. If this occurs, check the command window as the instructions should also be provided there (e.g. with <code>Dialog box: [TITLE]</code> style text).</li>
 </ul>

@@ -55,7 +55,7 @@
                     </li>
                 </ul>
                 <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="../alldocs/">Full README</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../alldocs/">One-page readme</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Setup</span></p>
@@ -64,7 +64,7 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../install2/">Install</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../testdata/">Test data</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../example_data/">Example data</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../dependencies/">Dependencies</a>
                     </li>
@@ -169,14 +169,16 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="imagejmatlab-based-mouse-location-tracking">ImageJ+MATLAB based mouse location tracking</h1>
-<p>Functions needed (have entire <code>calciumImagingAnalysis</code> loaded anyways):
-- <code>mm_tracking.ijm</code> is the tracking function for use in ImageJ, place in
-<code>plugins</code> folder. If already had <code>calciumImagingAnalysis</code> download Fiji, place in the <code>_external_programs/[Fiji directory]/Fiji.app/plugins</code> folder.
-- <code>removeIncorrectObjs.m</code> is a function to clean-up the ImageJ output.
-- <code>createTrackingOverlayVideo</code> is a way to check the output from the
-tracking by overlaying mouse tracker onto the video.</p>
-<h2 id="instructions-for-imagej-and-matlab">Instructions for ImageJ and Matlab</h2>
+                <h1 id="imagejmatlab-based-mouse-location-tracking">ImageJ+MATLAB based mouse location tracking<a class="headerlink" href="#imagejmatlab-based-mouse-location-tracking" title="Permanent link">&para;</a></h1>
+<p>Functions needed (have entire <code>calciumImagingAnalysis</code> loaded anyways):</p>
+<ul>
+<li><code>mm_tracking.ijm</code> is the tracking function for use in ImageJ, place in
+<code>plugins</code> folder. If already had <code>calciumImagingAnalysis</code> download Fiji, place in the <code>_external_programs/[Fiji directory]/Fiji.app/plugins</code> folder.</li>
+<li><code>removeIncorrectObjs.m</code> is a function to clean-up the ImageJ output.</li>
+<li><code>createTrackingOverlayVideo</code> is a way to check the output from the
+tracking by overlaying mouse tracker onto the video.</li>
+</ul>
+<h2 id="instructions-for-imagej-and-matlab">Instructions for ImageJ and Matlab<a class="headerlink" href="#instructions-for-imagej-and-matlab" title="Permanent link">&para;</a></h2>
 <p>Example screen after running <code>mm_tracking</code> within ImageJ, click to expand.</p>
 <p><a href="https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png" alt="image" width="600" height="auto"/></a></p>
 <!-- <a href="https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png" target="_blank">![image](https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png)</a> -->
@@ -201,7 +203,7 @@ inputMovie = loadMovieList(moviePath,'frameList',nFrames);
 playMovie(inputTrackingVideo);
 </code></pre>
 
-<h3 id="example-output-from-2017_09_11_p540_m381_openfield01_091112017">Example output from 2017_09_11_p540_m381_openfield01_091112017</h3>
+<h3 id="example-output-from-2017_09_11_p540_m381_openfield01_091112017">Example output from 2017_09_11_p540_m381_openfield01_091112017<a class="headerlink" href="#example-output-from-2017_09_11_p540_m381_openfield01_091112017" title="Permanent link">&para;</a></h3>
 <p><!-- <img alt="image" src="https://user-images.githubusercontent.com/5241605/34800547-2a10a3b0-f619-11e7-9c88-88750c9875cd.png" /> -->
 <img src="https://user-images.githubusercontent.com/5241605/34800547-2a10a3b0-f619-11e7-9c88-88750c9875cd.png" alt="image" width="400" height="auto"/></p>
 <p>Using <code>createTrackingOverlayVideo</code> to verify tracking matches animal position on a per frame basis.

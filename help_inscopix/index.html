@@ -55,7 +55,7 @@
                     </li>
                 </ul>
                 <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="../alldocs/">Full README</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../alldocs/">One-page readme</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Setup</span></p>
@@ -64,7 +64,7 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../install2/">Install</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../testdata/">Test data</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../example_data/">Example data</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../dependencies/">Dependencies</a>
                     </li>
@@ -165,9 +165,9 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="inscopix">Inscopix</h1>
+                <h1 id="inscopix">Inscopix<a class="headerlink" href="#inscopix" title="Permanent link">&para;</a></h1>
 <p>Documentation related to Inscopix-specific functions on the repository.</p>
-<h2 id="converting-isxd-files-to-hdf5">Converting ISXD files to HDF5</h2>
+<h2 id="converting-isxd-files-to-hdf5">Converting ISXD files to HDF5<a class="headerlink" href="#converting-isxd-files-to-hdf5" title="Permanent link">&para;</a></h2>
 <p>To convert ISXD files to HDF5, see <code>convertInscopixIsxdToHdf5</code> function in the <code>inscopix</code> folder or <code>modelDownsampleRawMovies</code> module in calciumImagingAnalysis.</p>
 <p><strong>Note</strong>: By default the Inscopix API gives out a frame full of 0s for dropped frames. So those 0s frames are maintained after converting/downsampling to HDF5 or you will also get a frame with 0s if you use <code>loadMovieList</code> to read frames that were dropped from isxd files. Adjust analysis accordingly.</p>
 <p>To use this function call it as below:</p>

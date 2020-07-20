@@ -55,7 +55,7 @@
                     </li>
                 </ul>
                 <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="../alldocs/">Full README</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../alldocs/">One-page readme</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Setup</span></p>
@@ -64,7 +64,7 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../install2/">Install</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../testdata/">Test data</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../example_data/">Example data</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../dependencies/">Dependencies</a>
                     </li>
@@ -164,19 +164,17 @@
             <div class="section">
               
                 <p>Scripts to register movies to remove motion.</p>
-<h2 id="calculating-final-transformation-after-multiple-registration-iterations">Calculating final transformation after multiple registration iterations.</h2>
+<h2 id="calculating-final-transformation-after-multiple-registration-iterations">Calculating final transformation after multiple registration iterations.<a class="headerlink" href="#calculating-final-transformation-after-multiple-registration-iterations" title="Permanent link">&para;</a></h2>
 <p>It is possible to use the output from motion correction (often done with <code>turboregMovie</code> or <code>modelPreprocessMovieFunction</code>) to transform the movie at later times if needed. There are two ways to do this:</p>
 <ul>
 <li>iteratively perform each motion correction step (e.g. same order as in <code>modelPreprocessMovieFunction</code>) or</li>
-<li>create the translation/skew/rotation matrices for each step using <code>ResultsOutOriginal</code> and combine for all iterations as <code>totalTranformMatrix = (R2'*S2'*T2'*R1'*S1'*T1')'</code>. Note the order matters.<ul>
-<li>Where <code>1, 2, ...</code> indicate matrix for iterations <code>1,2,...</code> and <code>R, S, T</code> are rotation, skew (shear + scale) and translation matrices, respectively.</li>
-<li>For 3 iterations would be <code>(R3'*S3'*T3'*R2'*S2'*T2'*R1'*S1'*T1')'</code>  or alternatively <code>T1*S1*R1*T3*S3*R2*T3*S3*R3</code>.</li>
-<li>For translation/rotation matrices, use definitions in https://www.mathworks.com/help/images/matrix-representation-of-geometric-transformations.html to construct them.</li>
+<li>create the translation/skew/rotation matrices for each step using <code>ResultsOutOriginal</code> and combine for all iterations as <code>totalTranformMatrix = (R2'*S2'*T2'*R1'*S1'*T1')'</code>. Note the order matters.
+    - Where <code>1, 2, ...</code> indicate matrix for iterations <code>1,2,...</code> and <code>R, S, T</code> are rotation, skew (shear + scale) and translation matrices, respectively.
+    - For 3 iterations would be <code>(R3'*S3'*T3'*R2'*S2'*T2'*R1'*S1'*T1')'</code>  or alternatively <code>T1*S1*R1*T3*S3*R2*T3*S3*R3</code>.
+    - For translation/rotation matrices, use definitions in <a href="https://www.mathworks.com/help/images/matrix-representation-of-geometric-transformations.html">https://www.mathworks.com/help/images/matrix-representation-of-geometric-transformations.html</a> to construct them.</li>
 </ul>
-</li>
-</ul>
-<h2 id="turboreg">Turboreg</h2>
-<h3 id="compiling-turboreg-and-transfturboreg-mex-file">Compiling <code>turboreg</code> and <code>transfturboreg</code> mex file</h3>
+<h2 id="turboreg">Turboreg<a class="headerlink" href="#turboreg" title="Permanent link">&para;</a></h2>
+<h3 id="compiling-turboreg-and-transfturboreg-mex-file">Compiling <code>turboreg</code> and <code>transfturboreg</code> mex file<a class="headerlink" href="#compiling-turboreg-and-transfturboreg-mex-file" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Can compile on your system using the following command</li>
 </ul>
@@ -186,7 +184,7 @@ mex('-v', '-largeArrayDims','-I.', 'transfturboreg.c','.\BsplnTrf.c','.\BsplnWgt
 </code></pre>
 
 <ul>
-<li>For Linux users: http://www.walkingrandomly.com/?p=2694</li>
+<li>For Linux users: <a href="http://www.walkingrandomly.com/?p=2694">http://www.walkingrandomly.com/?p=2694</a></li>
 </ul>
 <pre><code class="Matlab">mex('-v', 'GCC=&quot;/usr/bin/gcc-4.9&quot;', '-largeArrayDims','CFLAGS=&quot;\$CFLAGS -std=c99&quot;','-I.', 'turboreg.c','./BsplnTrf.c','./BsplnWgt.c','./convolve.c','./getPut.c','./main.c','./phil.c','./pyrFilt.c','./pyrGetSz.c','./quant.c','./reg0.c','./reg1.c','./reg2.c','./reg3.c','./regFlt3d.c','./svdcmp.c')
 
@@ -197,7 +195,7 @@ mex('-v', 'GCC=&quot;/usr/bin/gcc-4.9&quot;', '-largeArrayDims','CFLAGS=&quot;\$
 <li>Below is an example usage of <code>turboregMovie</code>.</li>
 <li>To use imageJ in Matlab, download Fiji (<a href="http://fiji.sc">http://fiji.sc</a>) and add Miji.m to your filepath, see <a href="http://fiji.sc/Miji">http://fiji.sc/Miji</a>.</li>
 </ul>
-<h3 id="running-turboreg">Running turboreg</h3>
+<h3 id="running-turboreg">Running turboreg<a class="headerlink" href="#running-turboreg" title="Permanent link">&para;</a></h3>
 <p><strong>Note this input was from 2017.04.19 update</strong></p>
 <pre><code class="Matlab">% set turboreg options
 ioptions.inputDatasetName = '/1';
@@ -224,7 +222,7 @@ regMovie = turboregMovie(inputMovieMatrix,'options',ioptions);
 regMovie = turboregMovie('pathToDir\filename.h5','options',ioptions);
 </code></pre>
 
-<h3 id="old-input">Old input</h3>
+<h3 id="old-input">Old input<a class="headerlink" href="#old-input" title="Permanent link">&para;</a></h3>
 <pre><code class="Matlab">ioptions.inputDatasetName = '/1';
 ioptions.turboregRotation = 1;
 ioptions.RegisType = 1;

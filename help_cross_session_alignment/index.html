@@ -55,7 +55,7 @@
                     </li>
                 </ul>
                 <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="../alldocs/">Full README</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../alldocs/">One-page readme</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Setup</span></p>
@@ -64,7 +64,7 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../install2/">Install</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../testdata/">Test data</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../example_data/">Example data</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../dependencies/">Dependencies</a>
                     </li>
@@ -177,17 +177,17 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="cross-day-or-session-cell-alignment-alignment">Cross-day or -session cell alignment alignment</h1>
-<p>Find the main function at https://github.com/bahanonu/calciumImagingAnalysis/blob/master/classification/matchObjBtwnTrials.m</p>
-<h2 id="algorithm-overview">Algorithm overview</h2>
-<p>For details, see <strong>Cross-day analysis of BLA neuronal activity</strong> methods section in the associated <em>Science</em> paper: http://science.sciencemag.org/content/sci/suppl/2019/01/16/363.6424.276.DC1/aap8586_Corder_SM.pdf#page=10.</p>
+                <h1 id="cross-day-or-session-cell-alignment-alignment">Cross-day or -session cell alignment alignment<a class="headerlink" href="#cross-day-or-session-cell-alignment-alignment" title="Permanent link">&para;</a></h1>
+<p>Find the main function at <a href="https://github.com/bahanonu/calciumImagingAnalysis/blob/master/classification/matchObjBtwnTrials.m">https://github.com/bahanonu/calciumImagingAnalysis/blob/master/classification/matchObjBtwnTrials.m</a></p>
+<h2 id="algorithm-overview">Algorithm overview<a class="headerlink" href="#algorithm-overview" title="Permanent link">&para;</a></h2>
+<p>For details, see <strong>Cross-day analysis of BLA neuronal activity</strong> methods section in the associated <em>Science</em> paper: <a href="http://science.sciencemag.org/content/sci/suppl/2019/01/16/363.6424.276.DC1/aap8586_Corder_SM.pdf#page=10">http://science.sciencemag.org/content/sci/suppl/2019/01/16/363.6424.276.DC1/aap8586_Corder_SM.pdf#page=10</a>.</p>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/51709763-21b09e80-1fdc-11e9-9332-1d52c9ed6bd5.png" /></p>
 <ul>
 <li>Example output on several mPFC animals across multiple sessions. Color is used to indicate a global ID cell (e.g. the same cell matched across multiple days).
 <img src="https://user-images.githubusercontent.com/5241605/51710281-7a346b80-1fdd-11e9-8cad-3b3657038375.gif" width=600/>
 <!-- <img alt="2016_08_22_mpfcfear_allanimals_crossdayalignment" src="https://user-images.githubusercontent.com/5241605/51710281-7a346b80-1fdd-11e9-8cad-3b3657038375.gif" /> --></li>
 </ul>
-<h2 id="usage">Usage</h2>
+<h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
 <p>The below commands in MATLAB can be used to align sessions across days.</p>
 <pre><code class="Matlab">% Create input images, cell array of [x y nCells] matrices
 inputImages = {day1Images,day2Images,day3Images};
@@ -231,26 +231,28 @@ for iterationNo = 1:length(globalRegCoords)
 end
 </code></pre>
 
-<h2 id="algorithm-results">Algorithm results</h2>
-<h3 id="cross-session-metrics-and-results-on-cross-session-amygdala-response-to-pain">Cross-session metrics and results on cross-session amygdala response to pain</h3>
+<h2 id="algorithm-results">Algorithm results<a class="headerlink" href="#algorithm-results" title="Permanent link">&para;</a></h2>
+<h3 id="cross-session-metrics-and-results-on-cross-session-amygdala-response-to-pain">Cross-session metrics and results on cross-session amygdala response to pain<a class="headerlink" href="#cross-session-metrics-and-results-on-cross-session-amygdala-response-to-pain" title="Permanent link">&para;</a></h3>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/51709887-794f0a00-1fdc-11e9-921a-926fdcb48e4b.png" /></p>
-<h3 id="pfc-cross-session-alignment">PFC cross-session alignment.</h3>
+<h3 id="pfc-cross-session-alignment">PFC cross-session alignment.<a class="headerlink" href="#pfc-cross-session-alignment" title="Permanent link">&para;</a></h3>
 <p><img src="https://user-images.githubusercontent.com/5241605/51710282-7a346b80-1fdd-11e9-9848-8ef84c0cfc2a.gif" width=600/></p>
 <!--![2015_10_27_mpfc_aligned_acrossday_colored-1](https://user-images.githubusercontent.com/5241605/51710282-7a346b80-1fdd-11e9-9848-8ef84c0cfc2a.gif)-->
 
-<h3 id="dorsal-striatum-cross-session-algorithm-comparison">Dorsal striatum cross-session algorithm comparison</h3>
+<h3 id="dorsal-striatum-cross-session-algorithm-comparison">Dorsal striatum cross-session algorithm comparison<a class="headerlink" href="#dorsal-striatum-cross-session-algorithm-comparison" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Original dorsal striatum cell maps from ICA with no motion correction applied.</li>
 </ul>
 <p><img alt="2017_05_02_p545_m121_p215_raw" src="https://cloud.githubusercontent.com/assets/5241605/25643108/9bcfccda-2f52-11e7-8514-31968752bd95.gif" /></p>
 <ul>
-<li><code>calciumImagingAnalysis</code> (Biafra's) registration algorithm</li>
+<li><code>calciumImagingAnalysis</code> (Biafra's) registration algorithm<ul>
 <li>Color is used to indicate a global ID cell (e.g. the same cell matched across multiple days). Thus, same color cell = same cell across sessions under the quick iteration parameters used in the below run.</li>
+</ul>
+</li>
 </ul>
 <p><img alt="2017_05_02_p545_m121_p215_corrected_biafraalgorithm2" src="https://cloud.githubusercontent.com/assets/5241605/25643473/dd7b11ce-2f54-11e7-8d84-eb98c5ef801c.gif" /></p>
 <ul>
 <li><code>CellReg</code> registration algorithm
-Using older code at https://github.com/zivlab/CellReg.</li>
+Using older code at <a href="https://github.com/zivlab/CellReg">https://github.com/zivlab/CellReg</a>.</li>
 </ul>
 <p><img alt="2017_05_02_p545_m121_p215_corrected" src="https://cloud.githubusercontent.com/assets/5241605/25643113/a4445584-2f52-11e7-9ce8-5c5554ec9a5f.gif" /></p>
               

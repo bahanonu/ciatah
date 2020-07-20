@@ -55,7 +55,7 @@
                     </li>
                 </ul>
                 <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="../alldocs/">Full README</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../alldocs/">One-page readme</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Setup</span></p>
@@ -64,7 +64,7 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../install2/">Install</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../testdata/">Test data</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../example_data/">Example data</a>
                     </li>
                     <li class="toctree-l1 current"><a class="reference internal current" href="./">Dependencies</a>
     <ul class="current">
@@ -175,22 +175,26 @@
           <div role="main">
             <div class="section">
               
-                <h3 id="dependencies">Dependencies</h3>
+                <h3 id="dependencies">Dependencies<a class="headerlink" href="#dependencies" title="Permanent link">&para;</a></h3>
 <p>By default external MATLAB-based software packages are stored in <code>_external_programs</code>.</p>
-<h4 id="matlab-toolbox-dependencies">MATLAB Toolbox dependencies</h4>
+<h4 id="matlab-toolbox-dependencies">MATLAB Toolbox dependencies<a class="headerlink" href="#matlab-toolbox-dependencies" title="Permanent link">&para;</a></h4>
 <ul>
-<li>Primary toolboxes</li>
+<li>Primary toolboxes<ul>
 <li>distrib_computing_toolbox</li>
 <li>image_toolbox</li>
 <li>signal_toolbox</li>
 <li>statistics_toolbox</li>
-<li>Secondary toolboxes (not required for main pre-processing pipeline)</li>
+</ul>
+</li>
+<li>Secondary toolboxes (not required for main pre-processing pipeline)<ul>
 <li>video_and_image_blockset</li>
 <li>bioinformatics_toolbox</li>
 <li>financial_toolbox</li>
 <li>neural_network_toolbox</li>
 </ul>
-<h4 id="parallel-computing-toolbox-pct">Parallel Computing Toolbox (PCT)</h4>
+</li>
+</ul>
+<h4 id="parallel-computing-toolbox-pct">Parallel Computing Toolbox (PCT)<a class="headerlink" href="#parallel-computing-toolbox-pct" title="Permanent link">&para;</a></h4>
 <p>By default both <code>calciumImagingAnalysis</code> and PCT auto-start a parallel pool for functions that use parallelization (e.g. or calls to <code>parfor</code>). For some users this may not be desired, in that case go to MATLAB preferences and uncheck the below.</p>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/67807212-99bb6180-fa51-11e9-81e1-9ab0fac8847a.png" /></p>
 <p>Or enter the following commands into the MATLAB command window:</p>
@@ -198,32 +202,36 @@
 parSet.Pool.AutoCreate = false;
 </code></pre>
 
-<h4 id="imagej">ImageJ</h4>
+<h4 id="imagej">ImageJ<a class="headerlink" href="#imagej" title="Permanent link">&para;</a></h4>
 <ul>
 <li>Run <code>downloadMiji</code> from <code>downloads\downloadMiji.m</code> or <code>obj.loadDependencies</code> (when class initialized) to download Fiji version appropriate to your platform.</li>
-<li>Else download Fiji (preferably <strong>2015 December 22</strong> version): https://imagej.net/Fiji/Downloads.</li>
-<li>Make sure have Miji in Fiji installation: http://bigwww.epfl.ch/sage/soft/mij/.</li>
+<li>Else download Fiji (preferably <strong>2015 December 22</strong> version): <a href="https://imagej.net/Fiji/Downloads">https://imagej.net/Fiji/Downloads</a>.</li>
+<li>Make sure have Miji in Fiji installation: <a href="http://bigwww.epfl.ch/sage/soft/mij/">http://bigwww.epfl.ch/sage/soft/mij/</a>.</li>
 <li>This is used as an alternative to the <code>calciumImagingAnalysis</code> <code>playMovie.m</code> function for viewing movies and is needed for some movie modification steps.</li>
 </ul>
-<h4 id="saleae">Saleae</h4>
+<h4 id="saleae">Saleae<a class="headerlink" href="#saleae" title="Permanent link">&para;</a></h4>
 <ul>
 <li><em>Only download</em> if doing behavior and imaging experiments that use this DAQ device to collect data.</li>
-<li>Download 1.2.26: https://support.saleae.com/logic-software/legacy-software/older-software-releases#1-2-26-download.</li>
+<li>Download 1.2.26: <a href="https://support.saleae.com/logic-software/legacy-software/older-software-releases#1-2-26-download">https://support.saleae.com/logic-software/legacy-software/older-software-releases#1-2-26-download</a>.</li>
 </ul>
-<h4 id="cnmf-and-cnmf-e">CNMF and CNMF-E</h4>
+<h4 id="cnmf-and-cnmf-e">CNMF and CNMF-E<a class="headerlink" href="#cnmf-and-cnmf-e" title="Permanent link">&para;</a></h4>
 <ul>
 <li>Download repositories by running <code>downloadCnmfGithubRepositories.m</code> or <code>obj.loadDependencies</code> (when class is initialized).</li>
-<li>CNMF: https://github.com/flatironinstitute/CaImAn-MATLAB.</li>
-<li>CNMF-E: https://github.com/bahanonu/CNMF_E</li>
-<li>forked from https://github.com/zhoupc/CNMF_E to fix HDF5, movies with NaNs, and other related compatibility issues.</li>
-<li>CVX: http://cvxr.com/cvx/download/.</li>
-<li>Download <code>All platforms</code> (<em>Redistributable: free solvers only</em>), e.g. http://web.cvxr.com/cvx/cvx-rd.zip.</li>
+<li>CNMF: <a href="https://github.com/flatironinstitute/CaImAn-MATLAB">https://github.com/flatironinstitute/CaImAn-MATLAB</a>.</li>
+<li>CNMF-E: <a href="https://github.com/bahanonu/CNMF_E">https://github.com/bahanonu/CNMF_E</a><ul>
+<li>forked from <a href="https://github.com/zhoupc/CNMF_E">https://github.com/zhoupc/CNMF_E</a> to fix HDF5, movies with NaNs, and other related compatibility issues.</li>
 </ul>
-<h4 id="neurodata-without-borders">Neurodata Without Borders</h4>
+</li>
+<li>CVX: <a href="http://cvxr.com/cvx/download/">http://cvxr.com/cvx/download/</a>.<ul>
+<li>Download <code>All platforms</code> (<em>Redistributable: free solvers only</em>), e.g. <a href="http://web.cvxr.com/cvx/cvx-rd.zip">http://web.cvxr.com/cvx/cvx-rd.zip</a>.</li>
+</ul>
+</li>
+</ul>
+<h4 id="neurodata-without-borders">Neurodata Without Borders<a class="headerlink" href="#neurodata-without-borders" title="Permanent link">&para;</a></h4>
 <p>Neurodata Without Borders (NWB) file support requires the following GitHub repositories be present in the <code>_external_programs</code> folder. These are downloaded automatically when running <code>obj.setup</code>.
-- https://github.com/schnitzer-lab/nwb_schnitzer_lab.
-- https://github.com/ewiger/yamlmatlab.
-- https://github.com/NeurodataWithoutBorders/matnwb.</p>
+- <a href="https://github.com/schnitzer-lab/nwb_schnitzer_lab">https://github.com/schnitzer-lab/nwb_schnitzer_lab</a>.
+- <a href="https://github.com/ewiger/yamlmatlab">https://github.com/ewiger/yamlmatlab</a>.
+- <a href="https://github.com/NeurodataWithoutBorders/matnwb">https://github.com/NeurodataWithoutBorders/matnwb</a>.</p>
               
             </div>
           </div>
@@ -234,7 +242,7 @@ parSet.Pool.AutoCreate = false;
         <a href="../data/" class="btn btn-neutral float-right" title="Data formats">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
-        <a href="../testdata/" class="btn btn-neutral" title="Test data"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../example_data/" class="btn btn-neutral" title="Example data"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -260,7 +268,7 @@ parSet.Pool.AutoCreate = false;
     <span class="rst-current-version" data-toggle="rst-current-version">
       
       
-        <span><a href="../testdata/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+        <span><a href="../example_data/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
       
         <span style="margin-left: 15px"><a href="../data/" style="color: #fcfcfc">Next &raquo;</a></span>

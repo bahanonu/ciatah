@@ -55,7 +55,7 @@
                     </li>
                 </ul>
                 <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="../alldocs/">Full README</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../alldocs/">One-page readme</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Setup</span></p>
@@ -64,7 +64,7 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../install2/">Install</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../testdata/">Test data</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../example_data/">Example data</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../dependencies/">Dependencies</a>
                     </li>
@@ -175,10 +175,10 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="data">Data</h1>
+                <h1 id="data">Data<a class="headerlink" href="#data" title="Permanent link">&para;</a></h1>
 <p>The class generally operates on the principal that a single imaging session is contained within a single folder or directory. Thus, even if a single imaging session contains multiple trials (e.g. the imaging data is split across multiple movies) this is fine as the class will concatenate them during the preprocessing step.</p>
 <p>The naming convention in general is below. Both TIF and AVI raw files are converted to HDF5 after processing since that format offers more flexibility during cell extraction and other steps.</p>
-<h3 id="input-and-output-files">Input and output files</h3>
+<h3 id="input-and-output-files">Input and output files<a class="headerlink" href="#input-and-output-files" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Default raw imaging data filename: <code>concat_.*.(h5|tif)</code>.</li>
 <li>Default raw processed data filename: <code>folderName_(processing steps).h5</code>, where <code>folderName</code> is the directory name where the calcium imaging movies are located.</li>
@@ -191,23 +191,25 @@
 </ul>
 </li>
 </ul>
-<h3 id="nwb-support">NWB Support</h3>
+<h3 id="nwb-support">NWB Support<a class="headerlink" href="#nwb-support" title="Permanent link">&para;</a></h3>
 <p>calciumImagingAnalysis supports NWB format and by default will output cell-extraction analysis as calciumImagingAnalysis format unless user specifies otherwise. NWB files are by default stored in the <code>nwbFiles</code> sub-folder. This can be changed by setting the <code>obj.nwbFileFolder</code> property to a different folder name.
 - Default image mask HDF5 dataset name: '/processing/ophys/ImageSegmentation/PlaneSegmentation'.
 - Default fluorescence activity HDF5 dataset name: '/processing/ophys/Fluorescence/RoiResponseSeries'.</p>
-<h3 id="preferred-folder-naming-format">Preferred folder naming format</h3>
-<p>Folders should following the format <code>YYYY_MM_DD_pXXX_mXXX_assayXX_trialXX</code> where:
--   <code>YYYY_MM_DD</code> = normal year/month/day scheme.
--   <code>pXXX</code> = protocol number, e.g. p162, for the set of experiments performed for the same set of animals.
--   <code>mXXX</code> = subject ID/number, e.g. m805 or animal ID.
--   <code>assayXX</code> = assay ID and session number, e.g. vonfrey01 is the 1st von Frey assay session.
--   <code>trialXX</code> = the trial number of the current assay session, only applicable if multiple trials in the same assay session.</p>
-<h3 id="videos">Videos</h3>
+<h3 id="preferred-folder-naming-format">Preferred folder naming format<a class="headerlink" href="#preferred-folder-naming-format" title="Permanent link">&para;</a></h3>
+<p>Folders should following the format <code>YYYY_MM_DD_pXXX_mXXX_assayXX_trialXX</code> where:</p>
+<ul>
+<li><code>YYYY_MM_DD</code> = normal year/month/day scheme.</li>
+<li><code>pXXX</code> = protocol number, e.g. p162, for the set of experiments performed for the same set of animals.</li>
+<li><code>mXXX</code> = subject ID/number, e.g. m805 or animal ID.</li>
+<li><code>assayXX</code> = assay ID and session number, e.g. vonfrey01 is the 1st von Frey assay session.</li>
+<li><code>trialXX</code> = the trial number of the current assay session, only applicable if multiple trials in the same assay session.</li>
+</ul>
+<h3 id="videos">Videos<a class="headerlink" href="#videos" title="Permanent link">&para;</a></h3>
 <ul>
 <li>HDF5:<ul>
 <li>Saved as a <code>[x y t]</code> 3D matrix where <code>x</code> and <code>y</code> are the height and width of video while <code>t</code> is number of frames.</li>
 <li><code>/1</code> as the name for directory containing movie data.</li>
-<li>HDF can be read in using Fiji, see http://lmb.informatik.uni-freiburg.de/resources/opensource/imagej_plugins/hdf5.html.</li>
+<li>HDF can be read in using Fiji, see <a href="http://lmb.informatik.uni-freiburg.de/resources/opensource/imagej_plugins/hdf5.html">http://lmb.informatik.uni-freiburg.de/resources/opensource/imagej_plugins/hdf5.html</a>.</li>
 <li>Each HDF5 file should contain imaging data in a dataset name, e.g. <code>/1</code> is the default datasetname for <code>[x y frames]</code> 2D calcium imaging movies in this repository.</li>
 <li>Most functions have a <code>inputDatasetName</code> option to specify the dataset name if different from <code>/1</code>.</li>
 </ul>
@@ -221,7 +223,7 @@
 </ul>
 </li>
 </ul>
-<h3 id="cell-images">Cell images</h3>
+<h3 id="cell-images">Cell images<a class="headerlink" href="#cell-images" title="Permanent link">&para;</a></h3>
 <ul>
 <li>IC filters from PCA-ICA and images from CNMF(-E).<ul>
 <li><code>[x y n]</code> matrix</li>
@@ -229,7 +231,7 @@
 </ul>
 </li>
 </ul>
-<h3 id="cell-traces">Cell traces</h3>
+<h3 id="cell-traces">Cell traces<a class="headerlink" href="#cell-traces" title="Permanent link">&para;</a></h3>
 <ul>
 <li>IC traces from PCA-ICA and images from CNMF(-E).<ul>
 <li><code>[n f]</code> matrix.</li>

@@ -27,6 +27,11 @@
 .wy-grid-for-nav{
 	background-color: black;
 }
+img{
+	/*max-height: 400px;*/
+}
 html{
+	overflow-wrap: break-word;
+	  word-wrap: break-word;
 	background-color: black;
 }

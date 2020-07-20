@@ -55,7 +55,7 @@
                     </li>
                 </ul>
                 <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="../alldocs/">Full README</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../alldocs/">One-page readme</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Setup</span></p>
@@ -64,7 +64,7 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../install2/">Install</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../testdata/">Test data</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../example_data/">Example data</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../dependencies/">Dependencies</a>
                     </li>
@@ -177,146 +177,158 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="imaging-analysis-methods-and-code">Imaging analysis methods and code</h1>
+                <h1 id="imaging-analysis-methods-and-code">Imaging analysis methods and code<a class="headerlink" href="#imaging-analysis-methods-and-code" title="Permanent link">&para;</a></h1>
 <p>Outline of outside code, software packages, or techniques relevant to calcium imaging analysis. Also includes links to papers or GitHub code repositories.</p>
-<p>Find an overview of calcium imaging analysis methods at https://bahanonu.com/brain/#c20181209. Or see below.
+<p>Find an overview of calcium imaging analysis methods at <a href="https://bahanonu.com/brain/#c20181209">https://bahanonu.com/brain/#c20181209</a>. Or see below.
 <img alt="image" src="https://user-images.githubusercontent.com/5241605/51403860-954b3b00-1b06-11e9-8b36-78c7d5420c1d.png" /></p>
-<h2 id="image-registration">Image Registration</h2>
+<h2 id="image-registration">Image Registration<a class="headerlink" href="#image-registration" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Turboreg</li>
-<li>
-<p>http://bigwww.epfl.ch/thevenaz/turboreg/</p>
-</li>
-<li>
-<p>NoRMCorre</p>
-</li>
-<li>
-<p>https://github.com/simonsfoundation/NoRMCorre</p>
-</li>
-<li>
-<p>moco</p>
-</li>
-<li>https://github.com/NTCColumbia/moco</li>
+<li>Turboreg<ul>
+<li><a href="http://bigwww.epfl.ch/thevenaz/turboreg/">http://bigwww.epfl.ch/thevenaz/turboreg/</a></li>
 </ul>
-<h2 id="cross-day-alignment">Cross-day alignment</h2>
-<ul>
-<li>CellReg (Ziv lab)</li>
-<li>https://github.com/zivlab/CellReg/issues/1</li>
+</li>
 </ul>
-<h2 id="cell-segmentation-static-image">Cell segmentation (static image)</h2>
 <ul>
-<li>NeuroSeg: automated cell detection and segmentation for in vivo two-photon Ca2+ imaging data</li>
-<li>https://link.springer.com/article/10.1007/s00429-017-1545-5</li>
-<li>https://github.com/baidatong/NeuroSeg</li>
+<li>NoRMCorre<ul>
+<li><a href="https://github.com/simonsfoundation/NoRMCorre">https://github.com/simonsfoundation/NoRMCorre</a></li>
 </ul>
-<h2 id="cell-extraction-dynamic-movie">Cell extraction (dynamic movie)</h2>
+</li>
+</ul>
 <ul>
-<li>PCA-ICA (Schnitzer)</li>
-<li>https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3282191/</li>
-<li>
-<p>https://github.com/schnitzer-lab/miniscope_analysis/tree/master/signal_extraction/pca_ica</p>
+<li>moco<ul>
+<li><a href="https://github.com/NTCColumbia/moco">https://github.com/NTCColumbia/moco</a></li>
+</ul>
 </li>
-<li>
-<p>CELLMax (Schnitzer)</p>
+</ul>
+<h2 id="cross-day-alignment">Cross-day alignment<a class="headerlink" href="#cross-day-alignment" title="Permanent link">&para;</a></h2>
+<ul>
+<li>CellReg (Ziv lab)<ul>
+<li><a href="https://github.com/zivlab/CellReg/issues/1">https://github.com/zivlab/CellReg/issues/1</a></li>
+</ul>
 </li>
-<li>
-<p>https://github.com/schnitzer-lab/CELLMax</p>
+</ul>
+<h2 id="cell-segmentation-static-image">Cell segmentation (static image)<a class="headerlink" href="#cell-segmentation-static-image" title="Permanent link">&para;</a></h2>
+<ul>
+<li>NeuroSeg: automated cell detection and segmentation for in vivo two-photon Ca2+ imaging data<ul>
+<li><a href="https://link.springer.com/article/10.1007/s00429-017-1545-5">https://link.springer.com/article/10.1007/s00429-017-1545-5</a></li>
+<li><a href="https://github.com/baidatong/NeuroSeg">https://github.com/baidatong/NeuroSeg</a></li>
+</ul>
 </li>
-<li>
-<p>CNMF (Paninski)</p>
+</ul>
+<h2 id="cell-extraction-dynamic-movie">Cell extraction (dynamic movie)<a class="headerlink" href="#cell-extraction-dynamic-movie" title="Permanent link">&para;</a></h2>
+<ul>
+<li>PCA-ICA (Schnitzer)<ul>
+<li><a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3282191/">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3282191/</a></li>
+<li><a href="https://github.com/schnitzer-lab/miniscope_analysis/tree/master/signal_extraction/pca_ica">https://github.com/schnitzer-lab/miniscope_analysis/tree/master/signal_extraction/pca_ica</a></li>
+</ul>
 </li>
-<li>https://github.com/epnev/ca_source_extraction</li>
-<li>
-<p>https://github.com/flatironinstitute/CaImAn-MATLAB</p>
+</ul>
+<ul>
+<li>CELLMax (Schnitzer)<ul>
+<li><a href="https://github.com/schnitzer-lab/CELLMax">https://github.com/schnitzer-lab/CELLMax</a></li>
+</ul>
 </li>
-<li>
-<p>CNMF-E (Paninski) - for miniscope data</p>
+</ul>
+<ul>
+<li>CNMF (Paninski)<ul>
+<li><a href="https://github.com/epnev/ca_source_extraction">https://github.com/epnev/ca_source_extraction</a></li>
+<li><a href="https://github.com/flatironinstitute/CaImAn-MATLAB">https://github.com/flatironinstitute/CaImAn-MATLAB</a></li>
+</ul>
 </li>
-<li>
-<p>https://github.com/zhoupc/CNMF_E</p>
+</ul>
+<ul>
+<li>CNMF-E (Paninski) - for miniscope data<ul>
+<li><a href="https://github.com/zhoupc/CNMF_E">https://github.com/zhoupc/CNMF_E</a></li>
+</ul>
 </li>
-<li>
-<p>CNMF-E+ (Fukai)</p>
-</li>
+</ul>
+<ul>
+<li>CNMF-E+ (Fukai)<ul>
 <li>Automatic sorting system for large calcium imaging data</li>
-<li>
-<p>https://www.biorxiv.org/content/early/2017/11/09/215145</p>
-</li>
-<li>
-<p>Automatic Neuron Detection in Calcium Imaging Data Using Convolutional Networks</p>
-</li>
-<li>
-<p>http://papers.nips.cc/paper/6137-automatic-neuron-detection-in-calcium-imaging-data-using-convolutional-networks</p>
-</li>
-<li>
-<p>SCALPEL: Extracting Neurons from Calcium Imaging Data</p>
-</li>
-<li>
-<p>https://arxiv.org/abs/1703.06946</p>
-</li>
-<li>
-<p>HNCcorr: A Novel Combinatorial Approach for Cell Identification in Calcium-Imaging Movies</p>
-</li>
-<li>
-<p>https://arxiv.org/abs/1703.01999</p>
-</li>
-<li>
-<p>Seeds Cleansing CNMF for Spatiotemporal Neural Signals Extraction of Miniscope Imaging Data (Simon email this one out recently)</p>
-</li>
-<li>
-<p>https://arxiv.org/abs/1704.00793</p>
-</li>
-<li>
-<p>ABLE: An Activity-Based Level Set Segmentation Algorithm for Two-Photon Calcium Imaging Data</p>
-</li>
-<li>http://www.eneuro.org/content/4/5/ENEURO.0012-17.2017</li>
-<li>
-<p>https://github.com/StephanieRey/ABLE.</p>
-</li>
-<li>
-<p>STNeuroNet: Fast and robust active neuron segmentation in two-photon calcium imaging using spatiotemporal deep learning</p>
-</li>
-<li>https://www.pnas.org/content/116/17/8554.short</li>
+<li><a href="https://www.biorxiv.org/content/early/2017/11/09/215145">https://www.biorxiv.org/content/early/2017/11/09/215145</a></li>
 </ul>
-<h2 id="cell-extraction-correction">Cell-extraction correction</h2>
-<ul>
-<li>NAOMi (Neural Anatomy and Optical Microscopy)</li>
-<li>https://www.biorxiv.org/content/10.1101/726174v1.full</li>
+</li>
 </ul>
-<h2 id="full-packages">Full packages</h2>
 <ul>
-<li>Suite2P</li>
-<li>
-<p>https://github.com/cortex-lab/Suite2P</p>
-</li>
-<li>
-<p>OnACID — OnACID: Online Analysis of Calcium Imaging Data in Real Time</p>
-</li>
-<li>
-<p>https://www.biorxiv.org/content/early/2017/10/02/193383</p>
-</li>
-<li>
-<p>CaImAn (Computational toolbox for large scale Calcium Imaging Analysis)</p>
-</li>
-<li>
-<p>https://github.com/simonsfoundation/CaImAn</p>
-</li>
-<li>
-<p>CALIMA: The Semi-automated open-source Calcium imaging analyzer</p>
-</li>
-<li>https://doi.org/10.1016/j.cmpb.2019.104991</li>
-<li>
-<p>https://aethelraed.nl/calciumimaginganalyser/index.html</p>
-</li>
-<li>
-<p>NETCAL: An interactive platform for large-scale, NETwork and population dynamics analysis of CALcium imaging recordings</p>
-</li>
-<li>https://zenodo.org/record/1119026#.XT9GdxSYVds</li>
-<li>http://www.itsnetcal.com/</li>
+<li>Automatic Neuron Detection in Calcium Imaging Data Using Convolutional Networks<ul>
+<li><a href="http://papers.nips.cc/paper/6137-automatic-neuron-detection-in-calcium-imaging-data-using-convolutional-networks">http://papers.nips.cc/paper/6137-automatic-neuron-detection-in-calcium-imaging-data-using-convolutional-networks</a></li>
 </ul>
-<h2 id="standards">Standards</h2>
+</li>
+</ul>
 <ul>
-<li>https://github.com/NeurodataWithoutBorders/api-matlab</li>
+<li>SCALPEL: Extracting Neurons from Calcium Imaging Data<ul>
+<li><a href="https://arxiv.org/abs/1703.06946">https://arxiv.org/abs/1703.06946</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>HNCcorr: A Novel Combinatorial Approach for Cell Identification in Calcium-Imaging Movies<ul>
+<li><a href="https://arxiv.org/abs/1703.01999">https://arxiv.org/abs/1703.01999</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>Seeds Cleansing CNMF for Spatiotemporal Neural Signals Extraction of Miniscope Imaging Data (Simon email this one out recently)<ul>
+<li><a href="https://arxiv.org/abs/1704.00793">https://arxiv.org/abs/1704.00793</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>ABLE: An Activity-Based Level Set Segmentation Algorithm for Two-Photon Calcium Imaging Data<ul>
+<li><a href="http://www.eneuro.org/content/4/5/ENEURO.0012-17.2017">http://www.eneuro.org/content/4/5/ENEURO.0012-17.2017</a></li>
+<li><a href="https://github.com/StephanieRey/ABLE">https://github.com/StephanieRey/ABLE</a>.</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>STNeuroNet: Fast and robust active neuron segmentation in two-photon calcium imaging using spatiotemporal deep learning<ul>
+<li><a href="https://www.pnas.org/content/116/17/8554.short">https://www.pnas.org/content/116/17/8554.short</a></li>
+</ul>
+</li>
+</ul>
+<h2 id="cell-extraction-correction">Cell-extraction correction<a class="headerlink" href="#cell-extraction-correction" title="Permanent link">&para;</a></h2>
+<ul>
+<li>NAOMi (Neural Anatomy and Optical Microscopy)<ul>
+<li><a href="https://www.biorxiv.org/content/10.1101/726174v1.full">https://www.biorxiv.org/content/10.1101/726174v1.full</a></li>
+</ul>
+</li>
+</ul>
+<h2 id="full-packages">Full packages<a class="headerlink" href="#full-packages" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Suite2P<ul>
+<li><a href="https://github.com/cortex-lab/Suite2P">https://github.com/cortex-lab/Suite2P</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>OnACID — OnACID: Online Analysis of Calcium Imaging Data in Real Time<ul>
+<li><a href="https://www.biorxiv.org/content/early/2017/10/02/193383">https://www.biorxiv.org/content/early/2017/10/02/193383</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>CaImAn (Computational toolbox for large scale Calcium Imaging Analysis)<ul>
+<li><a href="https://github.com/simonsfoundation/CaImAn">https://github.com/simonsfoundation/CaImAn</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>CALIMA: The Semi-automated open-source Calcium imaging analyzer<ul>
+<li><a href="https://doi.org/10.1016/j.cmpb.2019.104991">https://doi.org/10.1016/j.cmpb.2019.104991</a></li>
+<li><a href="https://aethelraed.nl/calciumimaginganalyser/index.html">https://aethelraed.nl/calciumimaginganalyser/index.html</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>NETCAL: An interactive platform for large-scale, NETwork and population dynamics analysis of CALcium imaging recordings<ul>
+<li><a href="https://zenodo.org/record/1119026#.XT9GdxSYVds">https://zenodo.org/record/1119026#.XT9GdxSYVds</a></li>
+<li><a href="http://www.itsnetcal.com/">http://www.itsnetcal.com/</a></li>
+</ul>
+</li>
+</ul>
+<h2 id="standards">Standards<a class="headerlink" href="#standards" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="https://github.com/NeurodataWithoutBorders/api-matlab">https://github.com/NeurodataWithoutBorders/api-matlab</a></li>
 </ul>
               
             </div>

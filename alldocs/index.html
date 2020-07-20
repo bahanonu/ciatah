@@ -9,7 +9,7 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>Full README - calciumImagingAnalysis (ciapkg)</title>
+  <title>One-page readme - calciumImagingAnalysis (ciapkg)</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
   <link rel="stylesheet" href="../css/theme.css" />
@@ -19,7 +19,7 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "Full README";
+    var mkdocs_page_name = "One-page readme";
     var mkdocs_page_input_path = "alldocs.md";
     var mkdocs_page_url = null;
   </script>
@@ -55,7 +55,7 @@
                     </li>
                 </ul>
                 <ul class="current">
-                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Full README</a>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">One-page readme</a>
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#contents">Contents</a>
     </li>
@@ -82,7 +82,7 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../install2/">Install</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../testdata/">Test data</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../example_data/">Example data</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../dependencies/">Dependencies</a>
                     </li>
@@ -164,7 +164,7 @@
     
       
     
-    <li>Full README</li>
+    <li>One-page readme</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -175,7 +175,8 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="calciumimaginganalysis">calciumImagingAnalysis</h1>
+                <h1 id="calciumimaginganalysis">calciumImagingAnalysis<a class="headerlink" href="#calciumimaginganalysis" title="Permanent link">&para;</a></h1>
+<p><em>Note: in general use the individual pages in the navigation pane on the left, as those will be most up-to-date.</em></p>
 <p><img src="https://user-images.githubusercontent.com/5241605/51068051-78c27680-15cd-11e9-9434-9d181b00ef8e.png" align="center"></p>
 <hr>
 
@@ -193,42 +194,50 @@
 </ul>
 <p>Contact: <strong>Biafra Ahanonu, PhD (bahanonu [at] alum [dot] mit [dot] edu)</strong>.</p>
 <p>Made in USA.<br>
-<img src="https://user-images.githubusercontent.com/5241605/71493809-322a5400-27ff-11ea-9b2d-52ff20b5f332.png" align="center" title="USA" alt="USA" width="auto" height="50"></p>
+<img src="https://user-images.githubusercontent.com/5241605/71493809-322a5400-27ff-11ea-9b2d-52ff20b5f332.png" align="center" title="USA" alt="USA" width="100px"></p>
 <hr />
-<h2 id="contents">Contents</h2>
+<h2 id="contents">Contents<a class="headerlink" href="#contents" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="#quick-start-guide">Quick start guide</a></li>
 <li><a href="#acknowledgments">Acknowledgments</a></li>
 <li><a href="#references">References</a></li>
 <li><a href="#questions">Questions</a></li>
 </ul>
-<p><strong>Detailed README</strong>
-- <a href="#repository-notes">Repository notes</a>
-- <a href="#installation">Installation</a>
-- <a href="#data">Data</a>
-- <a href="#processing-calcium-imaging-data">Processing calcium imaging data</a>
-    - <a href="#check-movie-registration-before-pre-processing-with-viewmovieregistrationtest">Check movie registration before pre-processing with <code>viewMovieRegistrationTest</code></a>
-    - <a href="#preprocessing-calcium-imaging-movies-with-modelpreprocessmovie">Preprocessing calcium imaging movies with  <code>modelPreprocessMovie</code></a>
-    - <a href="#manual-movie-cropping-with-modelmodifymovies">Manual movie cropping with  <code>modelModifyMovies</code></a>
-    - <a href="#extracting-cells-with-modelextractsignalsfrommovie">Extracting cells with  <code>modelExtractSignalsFromMovie</code></a>
-    - <a href="#loading-cell-extraction-output-data-with-modelvarsfromfiles">Loading cell-extraction output data with <code>modelVarsFromFiles</code></a>
-    - <a href="#validating-cell-extraction-with--viewcellextractiononmovie">Validating cell extraction with  <code>viewCellExtractionOnMovie</code></a>
-    - <a href="#sorting-cell-extraction-outputs-with-computemanualsortsignals">Sorting cell extraction outputs with <code>computeManualSortSignals</code></a>
-    - <a href="#removing-cells-not-within-brain-region-with-modelmodifyregionanalysis">Removing cells not within brain region with  <code>modelModifyRegionAnalysis</code></a>
-    - <a href="#cross-session-cell-alignment-with-computematchobjbtwntrials">Cross-session cell alignment with  <code>computeMatchObjBtwnTrials</code></a>
-- <a href="#imagejmatlab-based-mouse-location-tracking">ImageJ+MATLAB based mouse location tracking</a>
-- <a href="#license">License</a></p>
+<p><strong>Detailed README</strong></p>
+<ul>
+<li><a href="#repository-notes">Repository notes</a></li>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#data">Data</a></li>
+<li><a href="#processing-calcium-imaging-data">Processing calcium imaging data</a><ul>
+<li><a href="#check-movie-registration-before-pre-processing-with-viewmovieregistrationtest">Check movie registration before pre-processing with <code>viewMovieRegistrationTest</code></a></li>
+<li><a href="#preprocessing-calcium-imaging-movies-with-modelpreprocessmovie">Preprocessing calcium imaging movies with  <code>modelPreprocessMovie</code></a></li>
+<li><a href="#manual-movie-cropping-with-modelmodifymovies">Manual movie cropping with  <code>modelModifyMovies</code></a></li>
+<li><a href="#extracting-cells-with-modelextractsignalsfrommovie">Extracting cells with  <code>modelExtractSignalsFromMovie</code></a></li>
+<li><a href="#loading-cell-extraction-output-data-with-modelvarsfromfiles">Loading cell-extraction output data with <code>modelVarsFromFiles</code></a></li>
+<li><a href="#validating-cell-extraction-with--viewcellextractiononmovie">Validating cell extraction with  <code>viewCellExtractionOnMovie</code></a></li>
+<li><a href="#sorting-cell-extraction-outputs-with-computemanualsortsignals">Sorting cell extraction outputs with <code>computeManualSortSignals</code></a></li>
+<li><a href="#removing-cells-not-within-brain-region-with-modelmodifyregionanalysis">Removing cells not within brain region with  <code>modelModifyRegionAnalysis</code></a></li>
+<li><a href="#cross-session-cell-alignment-with-computematchobjbtwntrials">Cross-session cell alignment with  <code>computeMatchObjBtwnTrials</code></a></li>
+</ul>
+</li>
+<li><a href="#imagejmatlab-based-mouse-location-tracking">ImageJ+MATLAB based mouse location tracking</a></li>
+<li><a href="#license">License</a></li>
+</ul>
 <hr />
-<h2 id="quick-start-guide">Quick start guide</h2>
-<p>Below are steps needed to quickly get started using the <code>calciumImagingAnalysis</code> software package in MATLAB.
-- Clone the <code>calciumImagingAnalysis</code> repository (using <a href="https://desktop.github.com/">GitHub desktop</a> or command line) or download the repository zip and unzip.
-- Point the MATLAB path to the <code>calciumImagingAnalysis</code> root folder (<em>NOT</em> <code>@calciumImagingAnalysis</code> sub-folder in the repository).
-  - Alternatively, download the package from <code>File Exchange</code> using the Add-Ons explorer in MATLAB. See <code>calciumImagingAnalysis</code> entry at:
- <a href="https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis"><img alt="View calciumImagingAnalysis on File Exchange" src="https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg" /></a> or https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis.
-- Run the below MATLAB commands.
-- Afterwards, likely want to run <code>modelAddNewFolders</code> module first in order to add folders containing imaging data to the current class object.
-- [Optional] Users on Windows systems should download <code>Everything</code> (https://www.voidtools.com/). It is a very useful and extremely fast search engine for files and folders on a computer that can allow users to quickly get lists of folders then need to analyze in <code>calciumImagingAnalysis</code>.
-- [Optional] Users who want to run analysis via the command line can run <code>edit ciapkg.demo.cmdLinePipeline</code> and run each segment of code there to see what commands are needed to perform each step. It assumes you have already run <code>example_downloadTestData</code>.</p>
+<h2 id="quick-start-guide">Quick start guide<a class="headerlink" href="#quick-start-guide" title="Permanent link">&para;</a></h2>
+<p>Below are steps needed to quickly get started using the <code>calciumImagingAnalysis</code> software package in MATLAB.</p>
+<ul>
+<li>Clone the <code>calciumImagingAnalysis</code> repository (using <a href="https://desktop.github.com/">GitHub desktop</a> or command line) or download the repository zip and unzip.</li>
+<li>Point the MATLAB path to the <code>calciumImagingAnalysis</code> root folder (<em>NOT</em> <code>@calciumImagingAnalysis</code> sub-folder in the repository).<ul>
+<li>Alternatively, download the package from <code>File Exchange</code> using the Add-Ons explorer in MATLAB. See <code>calciumImagingAnalysis</code> entry at:
+ <a href="https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis"><img alt="View calciumImagingAnalysis on File Exchange" src="https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg" /></a> or <a href="https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis">https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis</a>.</li>
+</ul>
+</li>
+<li>Run the below MATLAB commands.</li>
+<li>Afterwards, likely want to run <code>modelAddNewFolders</code> module first in order to add folders containing imaging data to the current class object.</li>
+<li>[Optional] Users on Windows systems should download <code>Everything</code> (<a href="https://www.voidtools.com/">https://www.voidtools.com/</a>). It is a very useful and extremely fast search engine for files and folders on a computer that can allow users to quickly get lists of folders then need to analyze in <code>calciumImagingAnalysis</code>.</li>
+<li>[Optional] Users who want to run analysis via the command line can run <code>edit ciapkg.demo.cmdLinePipeline</code> and run each segment of code there to see what commands are needed to perform each step. It assumes you have already run <code>example_downloadTestData</code>.</li>
+</ul>
 <pre><code class="MATLAB">% Run these commands in MATLAB to get started.
 
 % Loads the class into an object for use in this session
@@ -242,7 +251,7 @@ obj % then hit enter, no semicolon!
 
 </code></pre>
 
-<h3 id="calciumimaginganalysis-main-gui-notes"><code>calciumImagingAnalysis</code> main GUI notes</h3>
+<h3 id="calciumimaginganalysis-main-gui-notes"><code>calciumImagingAnalysis</code> main GUI notes<a class="headerlink" href="#calciumimaginganalysis-main-gui-notes" title="Permanent link">&para;</a></h3>
 <ul>
 <li>All main decisions for choosing a method/procedure to run, cell-extraction algorithm, and which folders to analyze are in a single window.</li>
 <li>The GUI will real-time update the selected folders based on the selections in the subject, assay, and folder filter areas.</li>
@@ -255,12 +264,12 @@ obj % then hit enter, no semicolon!
 <a href="https://user-images.githubusercontent.com/5241605/79494959-b97f1b80-7fd8-11ea-8197-7be457d24638.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/79494959-b97f1b80-7fd8-11ea-8197-7be457d24638.png" alt="image" width="45%" height="auto"/></a></p>
 <p><strong>Certain sections become available when user selects the appropriate method (e.g. cell-extraction method available when selecting <code>modelExtractSignalsFromMovie</code>).</strong></p>
 <p><a href="https://user-images.githubusercontent.com/5241605/79495026-d4ea2680-7fd8-11ea-8d4d-02164e1af1d6.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/79495026-d4ea2680-7fd8-11ea-8d4d-02164e1af1d6.png" alt="image" width="50%" height="auto"/></a></p>
-<h3 id="additional-quick-start-notes">Additional quick start notes</h3>
+<h3 id="additional-quick-start-notes">Additional quick start notes<a class="headerlink" href="#additional-quick-start-notes" title="Permanent link">&para;</a></h3>
 <ul>
 <li>See additional details in <a href="#processing-calcium-imaging-data">Processing calcium imaging data</a> for running the full processing pipeline.</li>
 <li>To force load all directories, including most external software packages (in <code>_external_programs</code> folder), type <code>ciapkg.loadAllDirs;</code> into MATLAB command line. This is most relevant when you need to access specific functions in an outside repository that are normally hidden until needed.</li>
 <li>When issues are encountered, first check the <code>*Common issues and fixes</code> Wiki page to see if a solution is there. Else, submit a new issue or email Biafra (bahanonu [at] alum.mit.edu).</li>
-<li>Notes:</li>
+<li>Notes:<ul>
 <li>There are two sets of test data that are downloaded:<ul>
 <li><strong>Single session analysis</strong>: <code>data\2014_04_01_p203_m19_check01_raw</code> can be used to test the pipeline until the cross-session alignment step.</li>
 <li><strong>Batch analysis</strong>: <code>data\batch</code> contains three imaging sessions that should be processed and can then be used for the cross-session alignment step. Users should try these sessions to get used to batched analysis.</li>
@@ -276,6 +285,8 @@ obj % then hit enter, no semicolon!
 </li>
 <li><code>calciumImagingAnalysis</code> generally assumes users have imaging data associated with <em>one</em> imaging session and animal in a given folder. Follow folder naming conventions in <a href="#data">Data</a> for best experience.</li>
 <li>External software packages are downloaded into <code>_external_programs</code> folder and should be placed there if done manually.</li>
+</ul>
+</li>
 </ul>
 <p>Users can alternatively run setup as below.</p>
 <pre><code class="MATLAB">% Run these commands in MATLAB to get started.
@@ -302,10 +313,10 @@ obj.runPipeline; % then hit enter!
 </code></pre>
 
 <hr />
-<h2 id="acknowledgments">Acknowledgments</h2>
+<h2 id="acknowledgments">Acknowledgments<a class="headerlink" href="#acknowledgments" title="Permanent link">&para;</a></h2>
 <p>Thanks to Jones G. Parker, PhD (<a href="https://parker-laboratory.com/">https://parker-laboratory.com/</a>) for providing extensive user feedback during development of the <code>calciumImagingAnalysis</code> software package.</p>
 <p>Additional thanks to Drs. Jesse Marshall, Jérôme Lecoq, Tony H. Kim, Hakan Inan, Lacey Kitch, Maggie Larkin, Elizabeth Otto Hamel, Laurie Burns, and Claudia Schmuckermair for providing feedback, specific functions, or helping develop aspects of the code used in the <code>calciumImagingAnalysis</code> software package.</p>
-<h2 id="references">References</h2>
+<h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
 <p>Please cite <a href="http://science.sciencemag.org/content/363/6424/276.full">Corder<em>, Ahanonu</em>, et al. 2019</a> <em>Science</em> publication or the <a href="https://doi.org/10.5281/zenodo.2222294">Ahanonu, 2018</a> <em>Zenodo</em> release if you used the software package or code from this repository to advance/help your research:</p>
 <pre><code class="Latex">@article{corderahanonu2019amygdalar,
   title={An amygdalar neural ensemble that encodes the unpleasantness of pain},
@@ -331,21 +342,23 @@ obj.runPipeline; % then hit enter!
 }
 </code></pre>
 
-<h2 id="questions">Questions?</h2>
+<h2 id="questions">Questions?<a class="headerlink" href="#questions" title="Permanent link">&para;</a></h2>
 <p>Please email any additional questions not covered in the repository to <code>bahanonu [at] alum.mit.edu</code> or open an issue.</p>
 <hr />
-<h1 id="detailed-readme">Detailed README</h1>
+<h1 id="detailed-readme">Detailed README<a class="headerlink" href="#detailed-readme" title="Permanent link">&para;</a></h1>
 <p>All the remaining sections encompass a more detailed README that provide a step-by-step instructions for running the entire analysis pipeline along with notes, tips, data organization, and other information.</p>
-<h2 id="repository-notes">Repository notes</h2>
+<h2 id="repository-notes">Repository notes<a class="headerlink" href="#repository-notes" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Covers preprocessing of calcium imaging videos, cell and activity trace extraction (supports the following methods: PCA-ICA, CELLMax, EXTRACT, CNMF, CNMF-E, and ROI), manual and automated sorting of cell extraction outputs, cross-session alignment of cells, and more.</li>
 <li>Supports <code>PCA-ICA</code>, <code>CNMF</code>, <code>CNMF-E</code>, and <code>ROI</code> cell extraction methods publicly along with <code>CELLMax</code> and <code>EXTRACT</code> for Schnitzer Lab collaborators. Additional methods can be integrated upon request.</li>
 <li>Most extensively tested on Windows MATLAB <code>2018b</code> and <code>2019a</code>. Moderate testing on Windows MATLAB <code>2015b</code>, <code>2017a</code>, <code>2017b</code>, and <code>2018b</code> along with OSX (10.10.5) <code>2017b</code> and <code>2018b</code>. Individual functions and <code>calciumImagingAnalysis</code> class should work on other MATLAB versions after <code>2015b</code>, but submit an issue if errors occur. Newer MATLAB version preferred.</li>
-<li>This repository consists of code used in and released with</li>
-<li>G. Corder<em>, __B. Ahanonu</em>__, B. F. Grewe, D. Wang, M. J. Schnitzer, and G. Scherrer (2019). An amygdalar neural ensemble encoding the unpleasantness of painful experiences. <em>Science</em>, 363, 276-281. http://science.sciencemag.org/content/363/6424/276.</li>
+<li>This repository consists of code used in and released with<ul>
+<li>G. Corder<em>, __B. Ahanonu</em>__, B. F. Grewe, D. Wang, M. J. Schnitzer, and G. Scherrer (2019). An amygdalar neural ensemble encoding the unpleasantness of painful experiences. <em>Science</em>, 363, 276-281. <a href="http://science.sciencemag.org/content/363/6424/276">http://science.sciencemag.org/content/363/6424/276</a>.</li>
 <li>and similar code helped process imaging or behavioral data in:<ul>
-<li>J.G. Parker<em>, J.D. Marshall</em>, <strong>B. Ahanonu</strong>, Y.W. Wu, T.H. Kim, B.F. Grewe, Y. Zhang, J.Z. Li, J.B. Ding, M.D. Ehlers, and M.J. Schnitzer (2018). Diametric neural ensemble dynamics in parkinsonian and dyskinetic states. <em>Nature</em>, 557, 177–182. https://doi.org/10.1038/s41586-018-0090-6.</li>
-<li>Y. Li, A. Mathis, B.F. Grewe, J.A. Osterhout, B. Ahanonu, M.J. Schnitzer, V.N. Murthy, and C. Dulac (2017). Neuronal representation of social information in the medial amygdala of awake behaving mice. Cell, 171(5), 1176-1190. https://doi.org/10.1016/j.cell.2017.10.015.</li>
+<li>J.G. Parker<em>, J.D. Marshall</em>, <strong>B. Ahanonu</strong>, Y.W. Wu, T.H. Kim, B.F. Grewe, Y. Zhang, J.Z. Li, J.B. Ding, M.D. Ehlers, and M.J. Schnitzer (2018). Diametric neural ensemble dynamics in parkinsonian and dyskinetic states. <em>Nature</em>, 557, 177–182. <a href="https://doi.org/10.1038/s41586-018-0090-6">https://doi.org/10.1038/s41586-018-0090-6</a>.</li>
+<li>Y. Li, A. Mathis, B.F. Grewe, J.A. Osterhout, B. Ahanonu, M.J. Schnitzer, V.N. Murthy, and C. Dulac (2017). Neuronal representation of social information in the medial amygdala of awake behaving mice. Cell, 171(5), 1176-1190. <a href="https://doi.org/10.1016/j.cell.2017.10.015">https://doi.org/10.1016/j.cell.2017.10.015</a>.</li>
+</ul>
+</li>
 </ul>
 </li>
 <li>Code mostly developed while in <a href="http://pyramidal.stanford.edu/">Prof. Mark Schnitzer's lab</a> at Stanford University. Credit to those who helped in <a href="#acknowledgments">Acknowledgments</a>.</li>
@@ -353,38 +366,46 @@ obj.runPipeline; % then hit enter!
 <li>When issues are encountered, first check the <code>Common issues and fixes</code> Wiki page to see if a solution is there. Else, submit a new issue.</li>
 </ul>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/61981834-ab532000-afaf-11e9-97c2-4b1d7d759a30.png" /></p>
-<h2 id="installation">Installation</h2>
-<p>Clone the <code>calciumImagingAnalysis</code> repository or download the repository zip and unzip.
-- Point the MATLAB path to the <code>calciumImagingAnalysis</code> folder.
-- Run <code>loadBatchFxns.m</code> before using functions in the directory. This adds all needed directories and sub-directories to the MATLAB path.
-- Type <code>obj = calciumImagingAnalysis;</code> into MATLAB command window and follow instructions that appear after to add data and run analysis.
-- Run the <code>calciumImagingAnalysis</code> class method <code>loadDependencies</code> or type <code>obj.loadDependencies</code> after initializing a <code>calciumImagingAnalysis</code> object into the command window to download and add Fiji to path, download CNMF/CNMF-E repositories, download/setup CVX (for CNMF/CNMF-E), and download example data.</p>
-<p>Note
-- Place <code>calciumImagingAnalysis</code> in a folder where MATLAB will have write permissions, as it also creates a <code>private</code> subdirectory to store some user information along with downloading required external software packages.
-- <code>file_exchange</code> folder contains File Exchange functions used by <code>calciumImagingAnalysis</code>.
-- In general, it is best to set the MATLAB startup directory to the <code>calciumImagingAnalysis</code> folder. This allows <code>java.opts</code> and <code>startup.m</code> to set the correct Java memory requirements and load the correct folders into the MATLAB path.
-- If <code>calciumImagingAnalysis</code> IS NOT the startup folder, place <code>java.opts</code> wherever the MATLAB startup folder is so the correct Java memory requirements are set (important for using ImageJ/Miji in MATLAB).
-- If it appears an old <code>calciumImagingAnalysis</code> repository is loaded after pulling a new version, run <code>restoredefaultpath</code> and check that old <code>calciumImagingAnalysis</code> folders are not in the MATLAB path.
-<!-- - This version of <code>calciumImagingAnalysis</code> has been tested on Windows MATLAB <code>2015b</code>, <code>2017a</code>, and <code>2018b</code>. Moderate testing on Windows and OSX (10.10.5) <code>2017b</code> and <code>2018b</code>. --></p>
-<h3 id="test-data">Test data</h3>
+<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
+<p>Clone the <code>calciumImagingAnalysis</code> repository or download the repository zip and unzip.</p>
+<ul>
+<li>Point the MATLAB path to the <code>calciumImagingAnalysis</code> folder.</li>
+<li>Run <code>loadBatchFxns.m</code> before using functions in the directory. This adds all needed directories and sub-directories to the MATLAB path.</li>
+<li>Type <code>obj = calciumImagingAnalysis;</code> into MATLAB command window and follow instructions that appear after to add data and run analysis.</li>
+<li>Run the <code>calciumImagingAnalysis</code> class method <code>loadDependencies</code> or type <code>obj.loadDependencies</code> after initializing a <code>calciumImagingAnalysis</code> object into the command window to download and add Fiji to path, download CNMF/CNMF-E repositories, download/setup CVX (for CNMF/CNMF-E), and download example data.</li>
+</ul>
+<p>Note</p>
+<ul>
+<li>Place <code>calciumImagingAnalysis</code> in a folder where MATLAB will have write permissions, as it also creates a <code>private</code> subdirectory to store some user information along with downloading required external software packages.</li>
+<li><code>file_exchange</code> folder contains File Exchange functions used by <code>calciumImagingAnalysis</code>.</li>
+<li>In general, it is best to set the MATLAB startup directory to the <code>calciumImagingAnalysis</code> folder. This allows <code>java.opts</code> and <code>startup.m</code> to set the correct Java memory requirements and load the correct folders into the MATLAB path.</li>
+<li>If <code>calciumImagingAnalysis</code> IS NOT the startup folder, place <code>java.opts</code> wherever the MATLAB startup folder is so the correct Java memory requirements are set (important for using ImageJ/Miji in MATLAB).</li>
+<li>If it appears an old <code>calciumImagingAnalysis</code> repository is loaded after pulling a new version, run <code>restoredefaultpath</code> and check that old <code>calciumImagingAnalysis</code> folders are not in the MATLAB path.
+<!-- - This version of <code>calciumImagingAnalysis</code> has been tested on Windows MATLAB <code>2015b</code>, <code>2017a</code>, and <code>2018b</code>. Moderate testing on Windows and OSX (10.10.5) <code>2017b</code> and <code>2018b</code>. --></li>
+</ul>
+<h3 id="test-data">Test data<a class="headerlink" href="#test-data" title="Permanent link">&para;</a></h3>
 <p>To download test data, run <code>loadDependencies</code> module (e.g. <code>obj.loadDependencies</code>) and select <code>Download test one-photon data.</code> option to download example one-photon miniature microscope test data to use for testing <code>calciumImagingAnalysis</code> preprocessing, cell extraction, and cell classification code. The data will be located in the <code>data</code> folder within the repository root directory.</p>
 <p>Else run <code>example_downloadTestData.m</code> if haven't started an instance of calciumImagingAnalysis.</p>
-<h3 id="dependencies">Dependencies</h3>
+<h3 id="dependencies">Dependencies<a class="headerlink" href="#dependencies" title="Permanent link">&para;</a></h3>
 <p>By default external MATLAB-based software packages are stored in <code>_external_programs</code>.</p>
-<h4 id="matlab-toolbox-dependencies">MATLAB Toolbox dependencies</h4>
+<h4 id="matlab-toolbox-dependencies">MATLAB Toolbox dependencies<a class="headerlink" href="#matlab-toolbox-dependencies" title="Permanent link">&para;</a></h4>
 <ul>
-<li>Primary toolboxes</li>
+<li>Primary toolboxes<ul>
 <li>distrib_computing_toolbox</li>
 <li>image_toolbox</li>
 <li>signal_toolbox</li>
 <li>statistics_toolbox</li>
-<li>Secondary toolboxes (not required for main pre-processing pipeline)</li>
+</ul>
+</li>
+<li>Secondary toolboxes (not required for main pre-processing pipeline)<ul>
 <li>video_and_image_blockset</li>
 <li>bioinformatics_toolbox</li>
 <li>financial_toolbox</li>
 <li>neural_network_toolbox</li>
 </ul>
-<h4 id="parallel-computing-toolbox-pct">Parallel Computing Toolbox (PCT)</h4>
+</li>
+</ul>
+<h4 id="parallel-computing-toolbox-pct">Parallel Computing Toolbox (PCT)<a class="headerlink" href="#parallel-computing-toolbox-pct" title="Permanent link">&para;</a></h4>
 <p>By default both <code>calciumImagingAnalysis</code> and PCT auto-start a parallel pool for functions that use parallelization (e.g. or calls to <code>parfor</code>). For some users this may not be desired, in that case go to MATLAB preferences and uncheck the below.</p>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/67807212-99bb6180-fa51-11e9-81e1-9ab0fac8847a.png" /></p>
 <p>Or enter the following commands into the MATLAB command window:</p>
@@ -392,64 +413,72 @@ obj.runPipeline; % then hit enter!
 parSet.Pool.AutoCreate = false;
 </code></pre>
 
-<h4 id="imagej">ImageJ</h4>
+<h4 id="imagej">ImageJ<a class="headerlink" href="#imagej" title="Permanent link">&para;</a></h4>
 <ul>
 <li>Run <code>downloadMiji</code> from <code>downloads\downloadMiji.m</code> or <code>obj.loadDependencies</code> (when class initialized) to download Fiji version appropriate to your platform.</li>
-<li>Else download Fiji (preferably <strong>2015 December 22</strong> version): https://imagej.net/Fiji/Downloads.</li>
-<li>Make sure have Miji in Fiji installation: http://bigwww.epfl.ch/sage/soft/mij/.</li>
+<li>Else download Fiji (preferably <strong>2015 December 22</strong> version): <a href="https://imagej.net/Fiji/Downloads">https://imagej.net/Fiji/Downloads</a>.</li>
+<li>Make sure have Miji in Fiji installation: <a href="http://bigwww.epfl.ch/sage/soft/mij/">http://bigwww.epfl.ch/sage/soft/mij/</a>.</li>
 <li>This is used as an alternative to the <code>calciumImagingAnalysis</code> <code>playMovie.m</code> function for viewing movies and is needed for some movie modification steps.</li>
 </ul>
-<h4 id="saleae">Saleae</h4>
+<h4 id="saleae">Saleae<a class="headerlink" href="#saleae" title="Permanent link">&para;</a></h4>
 <ul>
 <li><em>Only download</em> if doing behavior and imaging experiments that use this DAQ device to collect data.</li>
-<li>Download 1.2.26: https://support.saleae.com/logic-software/legacy-software/older-software-releases#1-2-26-download.</li>
+<li>Download 1.2.26: <a href="https://support.saleae.com/logic-software/legacy-software/older-software-releases#1-2-26-download">https://support.saleae.com/logic-software/legacy-software/older-software-releases#1-2-26-download</a>.</li>
 </ul>
-<h4 id="cnmf-and-cnmf-e">CNMF and CNMF-E</h4>
+<h4 id="cnmf-and-cnmf-e">CNMF and CNMF-E<a class="headerlink" href="#cnmf-and-cnmf-e" title="Permanent link">&para;</a></h4>
 <ul>
 <li>Download repositories by running <code>downloadCnmfGithubRepositories.m</code> or <code>obj.loadDependencies</code> (when class is initialized).</li>
-<li>CNMF: https://github.com/flatironinstitute/CaImAn-MATLAB.</li>
-<li>CNMF-E: https://github.com/bahanonu/CNMF_E</li>
-<li>forked from https://github.com/zhoupc/CNMF_E to fix HDF5, movies with NaNs, and other related compatibility issues.</li>
-<li>CVX: http://cvxr.com/cvx/download/.</li>
-<li>Download <code>All platforms</code> (<em>Redistributable: free solvers only</em>), e.g. http://web.cvxr.com/cvx/cvx-rd.zip.</li>
+<li>CNMF: <a href="https://github.com/flatironinstitute/CaImAn-MATLAB">https://github.com/flatironinstitute/CaImAn-MATLAB</a>.</li>
+<li>CNMF-E: <a href="https://github.com/bahanonu/CNMF_E">https://github.com/bahanonu/CNMF_E</a><ul>
+<li>forked from <a href="https://github.com/zhoupc/CNMF_E">https://github.com/zhoupc/CNMF_E</a> to fix HDF5, movies with NaNs, and other related compatibility issues.</li>
 </ul>
-<h4 id="neurodata-without-borders">Neurodata Without Borders</h4>
-<p>Neurodata Without Borders (NWB) file support requires the following GitHub repositories be present in the <code>_external_programs</code> folder. These are downloaded automatically when running <code>obj.setup</code>.
-- https://github.com/schnitzer-lab/nwb_schnitzer_lab.
-- https://github.com/ewiger/yamlmatlab.
-- https://github.com/NeurodataWithoutBorders/matnwb.</p>
-<h3 id="repository-organization">Repository organization</h3>
-<p>Below are a list of the top-level directories and what types of functions or files are within.
-- <strong>@calciumImagingAnalysis</strong> - Contains <code>calciumImagingAnalysis</code> class and associated methods for calcium imaging analysis.
-- <strong><em>external</em>programs</strong>_ - External software packages (e.g. CNMF, CELLMax, and others) are stored here.
-- <strong><em>overloaded</em></strong> - Functions that overload core MATLAB functions to add functionality or fix display issues.
-- <strong>behavior</strong> - Processing of behavior files (e.g. accelerometer data, Saleae files, etc.).
-- <strong>classification</strong> - Classification of cells, e.g. manual classification of cell extraction outputs or cross-session grouping of cells.
-- <strong>data</strong> - Location of test data.
-- <strong>download</strong> - Functions that help download external code packages or data.
-- <strong>file_exchange</strong> - Contains any outside code from MATLAB's File Exchange that are dependencies in repository functions.
-- <strong>hdf5</strong> - Functions concerned with HDF5 input/output.
-- <strong>image</strong> - Functions concerned with processing images (or [x y] matrices).
-- <strong>inscopix</strong> - Functions concerned with Inscopix-specific data processing (e.g. using the ISX MATLAB API).
-- <strong>io</strong> - Contains functions concerned with file or function input-output.
-- <strong>motion_correction</strong> - Functions concerned with motion correction.
-- <strong>movie_processing</strong> - Functions concerned with preprocessing calcium imaging videos, e.g. spatial filtering, downsampling, etc.
-- <strong>neighbor</strong> - Detection and display of neighboring cell information.
-- <strong><em>private</em></strong> - This directory contains various user settings, output pictures/data/logs from <code>calciumImagingAnalysis</code> modules, and more. This directory is NOT included in the MATLAB path, hence is good for storing related scripts without interfering with <code>calciumImagingAnalysis</code>.
-- <strong>python</strong> - Python code, e.g. for processing Saleae data.
-- <strong>serial</strong> - Code for saving and processing serial port data, e.g. Arduino streaming data.
-- <strong>settings</strong> - Functions concerned with settings for other functions.
-- <strong>signal_extraction</strong> - Functions related to cell extraction, e.g. running PCA-ICA.
-- <strong>signal_processing</strong> - Functions to process cell activity traces.
-- <strong>tracking</strong> - ImageJ and MATLAB functions to track animal location in behavior movies.
-- <strong>unit_tests</strong> [optional] - Functions to validate specific repository functions.
-- <strong>video</strong> - Functions to manipulate or process videos, e.g. making movie montages or adding dropped frames.
-- <strong>view</strong> - Functions concerned with displaying data or information to the user, normally do not process data.</p>
+</li>
+<li>CVX: <a href="http://cvxr.com/cvx/download/">http://cvxr.com/cvx/download/</a>.<ul>
+<li>Download <code>All platforms</code> (<em>Redistributable: free solvers only</em>), e.g. <a href="http://web.cvxr.com/cvx/cvx-rd.zip">http://web.cvxr.com/cvx/cvx-rd.zip</a>.</li>
+</ul>
+</li>
+</ul>
+<h4 id="neurodata-without-borders">Neurodata Without Borders<a class="headerlink" href="#neurodata-without-borders" title="Permanent link">&para;</a></h4>
+<p>Neurodata Without Borders (NWB) file support requires the following GitHub repositories be present in the <code>_external_programs</code> folder. These are downloaded automatically when running <code>obj.setup</code>.</p>
+<ul>
+<li><a href="https://github.com/schnitzer-lab/nwb_schnitzer_lab">https://github.com/schnitzer-lab/nwb_schnitzer_lab</a>.</li>
+<li><a href="https://github.com/ewiger/yamlmatlab">https://github.com/ewiger/yamlmatlab</a>.</li>
+<li><a href="https://github.com/NeurodataWithoutBorders/matnwb">https://github.com/NeurodataWithoutBorders/matnwb</a>.</li>
+</ul>
+<h3 id="repository-organization">Repository organization<a class="headerlink" href="#repository-organization" title="Permanent link">&para;</a></h3>
+<p>Below are a list of the top-level directories and what types of functions or files are within.</p>
+<ul>
+<li><strong>@calciumImagingAnalysis</strong> - Contains <code>calciumImagingAnalysis</code> class and associated methods for calcium imaging analysis.</li>
+<li><strong><em>external</em>programs</strong>_ - External software packages (e.g. CNMF, CELLMax, and others) are stored here.</li>
+<li><strong><em>overloaded</em></strong> - Functions that overload core MATLAB functions to add functionality or fix display issues.</li>
+<li><strong>behavior</strong> - Processing of behavior files (e.g. accelerometer data, Saleae files, etc.).</li>
+<li><strong>classification</strong> - Classification of cells, e.g. manual classification of cell extraction outputs or cross-session grouping of cells.</li>
+<li><strong>data</strong> - Location of test data.</li>
+<li><strong>download</strong> - Functions that help download external code packages or data.</li>
+<li><strong>file_exchange</strong> - Contains any outside code from MATLAB's File Exchange that are dependencies in repository functions.</li>
+<li><strong>hdf5</strong> - Functions concerned with HDF5 input/output.</li>
+<li><strong>image</strong> - Functions concerned with processing images (or [x y] matrices).</li>
+<li><strong>inscopix</strong> - Functions concerned with Inscopix-specific data processing (e.g. using the ISX MATLAB API).</li>
+<li><strong>io</strong> - Contains functions concerned with file or function input-output.</li>
+<li><strong>motion_correction</strong> - Functions concerned with motion correction.</li>
+<li><strong>movie_processing</strong> - Functions concerned with preprocessing calcium imaging videos, e.g. spatial filtering, downsampling, etc.</li>
+<li><strong>neighbor</strong> - Detection and display of neighboring cell information.</li>
+<li><strong><em>private</em></strong> - This directory contains various user settings, output pictures/data/logs from <code>calciumImagingAnalysis</code> modules, and more. This directory is NOT included in the MATLAB path, hence is good for storing related scripts without interfering with <code>calciumImagingAnalysis</code>.</li>
+<li><strong>python</strong> - Python code, e.g. for processing Saleae data.</li>
+<li><strong>serial</strong> - Code for saving and processing serial port data, e.g. Arduino streaming data.</li>
+<li><strong>settings</strong> - Functions concerned with settings for other functions.</li>
+<li><strong>signal_extraction</strong> - Functions related to cell extraction, e.g. running PCA-ICA.</li>
+<li><strong>signal_processing</strong> - Functions to process cell activity traces.</li>
+<li><strong>tracking</strong> - ImageJ and MATLAB functions to track animal location in behavior movies.</li>
+<li><strong>unit_tests</strong> [optional] - Functions to validate specific repository functions.</li>
+<li><strong>video</strong> - Functions to manipulate or process videos, e.g. making movie montages or adding dropped frames.</li>
+<li><strong>view</strong> - Functions concerned with displaying data or information to the user, normally do not process data.</li>
+</ul>
 <hr />
-<h2 id="data">Data</h2>
+<h2 id="data">Data<a class="headerlink" href="#data" title="Permanent link">&para;</a></h2>
 <p>The class generally operates on the principal that a single imaging session is contained within a single folder or directory. Thus, even if a single imaging session contains multiple trials (e.g. the imaging data is split across multiple movies) this is fine as the class will concatenate them during the preprocessing step.</p>
 <p>The naming convention in general is below. Both TIF and AVI raw files are converted to HDF5 after processing since that format offers more flexibility during cell extraction and other steps.</p>
-<h3 id="input-and-output-files">Input and output files</h3>
+<h3 id="input-and-output-files">Input and output files<a class="headerlink" href="#input-and-output-files" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Default raw imaging data filename: <code>concat_.*.(h5|tif)</code>.</li>
 <li>Default raw processed data filename: <code>folderName_(processing steps).h5</code>, where <code>folderName</code> is the directory name where the calcium imaging movies are located.</li>
@@ -462,23 +491,27 @@ parSet.Pool.AutoCreate = false;
 </ul>
 </li>
 </ul>
-<h3 id="nwb-support">NWB Support</h3>
-<p>calciumImagingAnalysis supports NWB format and by default will output cell-extraction analysis as calciumImagingAnalysis format unless user specifies otherwise. NWB files are by default stored in the <code>nwbFiles</code> sub-folder. This can be changed by setting the <code>obj.nwbFileFolder</code> property to a different folder name.
-- Default image mask HDF5 dataset name: '/processing/ophys/ImageSegmentation/PlaneSegmentation'.
-- Default fluorescence activity HDF5 dataset name: '/processing/ophys/Fluorescence/RoiResponseSeries'.</p>
-<h3 id="preferred-folder-naming-format">Preferred folder naming format</h3>
-<p>Folders should following the format <code>YYYY_MM_DD_pXXX_mXXX_assayXX_trialXX</code> where:
--   <code>YYYY_MM_DD</code> = normal year/month/day scheme.
--   <code>pXXX</code> = protocol number, e.g. p162, for the set of experiments performed for the same set of animals.
--   <code>mXXX</code> = subject ID/number, e.g. m805 or animal ID.
--   <code>assayXX</code> = assay ID and session number, e.g. vonfrey01 is the 1st von Frey assay session.
--   <code>trialXX</code> = the trial number of the current assay session, only applicable if multiple trials in the same assay session.</p>
-<h3 id="videos">Videos</h3>
+<h3 id="nwb-support">NWB Support<a class="headerlink" href="#nwb-support" title="Permanent link">&para;</a></h3>
+<p>calciumImagingAnalysis supports NWB format and by default will output cell-extraction analysis as calciumImagingAnalysis format unless user specifies otherwise. NWB files are by default stored in the <code>nwbFiles</code> sub-folder. This can be changed by setting the <code>obj.nwbFileFolder</code> property to a different folder name.</p>
+<ul>
+<li>Default image mask HDF5 dataset name: '/processing/ophys/ImageSegmentation/PlaneSegmentation'.</li>
+<li>Default fluorescence activity HDF5 dataset name: '/processing/ophys/Fluorescence/RoiResponseSeries'.</li>
+</ul>
+<h3 id="preferred-folder-naming-format">Preferred folder naming format<a class="headerlink" href="#preferred-folder-naming-format" title="Permanent link">&para;</a></h3>
+<p>Folders should following the format <code>YYYY_MM_DD_pXXX_mXXX_assayXX_trialXX</code> where:</p>
+<ul>
+<li><code>YYYY_MM_DD</code> = normal year/month/day scheme.</li>
+<li><code>pXXX</code> = protocol number, e.g. p162, for the set of experiments performed for the same set of animals.</li>
+<li><code>mXXX</code> = subject ID/number, e.g. m805 or animal ID.</li>
+<li><code>assayXX</code> = assay ID and session number, e.g. vonfrey01 is the 1st von Frey assay session.</li>
+<li><code>trialXX</code> = the trial number of the current assay session, only applicable if multiple trials in the same assay session.</li>
+</ul>
+<h3 id="videos">Videos<a class="headerlink" href="#videos" title="Permanent link">&para;</a></h3>
 <ul>
 <li>HDF5:<ul>
 <li>Saved as a <code>[x y t]</code> 3D matrix where <code>x</code> and <code>y</code> are the height and width of video while <code>t</code> is number of frames.</li>
 <li><code>/1</code> as the name for directory containing movie data.</li>
-<li>HDF can be read in using Fiji, see http://lmb.informatik.uni-freiburg.de/resources/opensource/imagej_plugins/hdf5.html.</li>
+<li>HDF can be read in using Fiji, see <a href="http://lmb.informatik.uni-freiburg.de/resources/opensource/imagej_plugins/hdf5.html">http://lmb.informatik.uni-freiburg.de/resources/opensource/imagej_plugins/hdf5.html</a>.</li>
 <li>Each HDF5 file should contain imaging data in a dataset name, e.g. <code>/1</code> is the default datasetname for <code>[x y frames]</code> 2D calcium imaging movies in this repository.</li>
 <li>Most functions have a <code>inputDatasetName</code> option to specify the dataset name if different from <code>/1</code>.</li>
 </ul>
@@ -492,7 +525,7 @@ parSet.Pool.AutoCreate = false;
 </ul>
 </li>
 </ul>
-<h3 id="cell-images">Cell images</h3>
+<h3 id="cell-images">Cell images<a class="headerlink" href="#cell-images" title="Permanent link">&para;</a></h3>
 <ul>
 <li>IC filters from PCA-ICA and images from CNMF(-E).<ul>
 <li><code>[x y n]</code> matrix</li>
@@ -500,7 +533,7 @@ parSet.Pool.AutoCreate = false;
 </ul>
 </li>
 </ul>
-<h3 id="cell-traces">Cell traces</h3>
+<h3 id="cell-traces">Cell traces<a class="headerlink" href="#cell-traces" title="Permanent link">&para;</a></h3>
 <ul>
 <li>IC traces from PCA-ICA and images from CNMF(-E).<ul>
 <li><code>[n f]</code> matrix.</li>
@@ -509,9 +542,11 @@ parSet.Pool.AutoCreate = false;
 </li>
 </ul>
 <hr />
-<h2 id="processing-calcium-imaging-data">Processing calcium imaging data</h2>
+<h2 id="processing-calcium-imaging-data">Processing calcium imaging data<a class="headerlink" href="#processing-calcium-imaging-data" title="Permanent link">&para;</a></h2>
 <p>The general pipeline for processing calcium imaging data is below. This repository includes code to do nearly every step.</p>
-<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/61981834-ab532000-afaf-11e9-97c2-4b1d7d759a30.png" /></p>
+<!-- ![image](https://user-images.githubusercontent.com/5241605/61981834-ab532000-afaf-11e9-97c2-4b1d7d759a30.png) -->
+
+<p><img alt="ciapkg_pipeline.png" src="../img/ciapkg_pipeline.png" /></p>
 <p>To start using the <code>calciumImagingAnalysis</code> software package, enter the following into the MATLAB command window.</p>
 <pre><code class="Matlab">% Loads all directories
 loadBatchFxns;
@@ -586,22 +621,24 @@ obj.runPipeline; % then hit enter!
 </li>
 </ul>
 <hr />
-<h2 id="spatially-downsample-raw-movies-or-convert-to-hdf5-with-modeldownsamplerawmovies">Spatially downsample raw movies or convert to HDF5 with <code>modelDownsampleRawMovies</code></h2>
+<h2 id="spatially-downsample-raw-movies-or-convert-to-hdf5-with-modeldownsamplerawmovies">Spatially downsample raw movies or convert to HDF5 with <code>modelDownsampleRawMovies</code><a class="headerlink" href="#spatially-downsample-raw-movies-or-convert-to-hdf5-with-modeldownsamplerawmovies" title="Permanent link">&para;</a></h2>
 <p>Users have the ability to spatially downsample raw movies, often necessary to denoise the data, save storage space, and improve runtimes of later processing steps. For most data, users can downsample 2 or 4 times in each spatial dimension while still retaining sufficient pixels per cell to facilitate cell-extraction.</p>
 <p>To run, either select <code>modelDownsampleRawMovies</code> in the GUI menu or type the below command after initializing a calciumImagingAnalysis obj.</p>
 <pre><code class="Matlab">obj.modelDownsampleRawMovies;
 </code></pre>
 
-<p>This will pop-up the following screen. Users can
-- input several folders where ISXD files are by separating each folder path with a comma (<code>Folder(s) where raw HDF5s are located</code>),
-- specify a common root folder to save files to (<code>Folder to save downsampled HDF5s to:</code>),
-- and input a root directory that contains the sub-folders with the raw data (<code>Decompression source root folder(s)</code>).
-The function will automatically put each file in its corresponding folder, <strong>make sure folder names are unique</strong> (this should be done anyways for data analysis reasons).</p>
+<p>This will pop-up the following screen. Users can</p>
+<ul>
+<li>input several folders where ISXD files are by separating each folder path with a comma (<code>Folder(s) where raw HDF5s are located</code>),</li>
+<li>specify a common root folder to save files to (<code>Folder to save downsampled HDF5s to:</code>),</li>
+<li>and input a root directory that contains the sub-folders with the raw data (<code>Decompression source root folder(s)</code>).
+The function will automatically put each file in its corresponding folder, <strong>make sure folder names are unique</strong> (this should be done anyways for data analysis reasons).</li>
+</ul>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/67715130-71b2fc00-f986-11e9-970e-9d1252c25db8.png" /></p>
-<h3 id="converting-inscopix-isxd-files-to-hdf5">Converting Inscopix ISXD files to HDF5</h3>
+<h3 id="converting-inscopix-isxd-files-to-hdf5">Converting Inscopix ISXD files to HDF5<a class="headerlink" href="#converting-inscopix-isxd-files-to-hdf5" title="Permanent link">&para;</a></h3>
 <p>To convert from Inscopix ISXD file format (output by nVista v3+ and nVoke) to HDF5 run <code>modelDownsampleRawMovies</code> without changing the regular expression or make sure it looks for <code>.*.isxd</code> or similar. Users will need the latest version of the <a href="https://www.inscopix.com/nVista#Data_Analysis">Inscopix Data Processing Software</a> as these functions take advantage of their API. If calciumImagingAnalysis cannot automatically find the API, it will ask the user to direct it to the <em>root</em> location of the Inscopix Data Processing Software (see below).</p>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/67715327-df5f2800-f986-11e9-9f91-eeabe7688fed.png" /></p>
-<h2 id="check-movie-registration-before-pre-processing-with-viewmovieregistrationtest">Check movie registration before pre-processing with <code>viewMovieRegistrationTest</code></h2>
+<h2 id="check-movie-registration-before-pre-processing-with-viewmovieregistrationtest">Check movie registration before pre-processing with <code>viewMovieRegistrationTest</code><a class="headerlink" href="#check-movie-registration-before-pre-processing-with-viewmovieregistrationtest" title="Permanent link">&para;</a></h2>
 <p>Users should spatially filter one-photon or other data with background noise (e.g. neuropil). To get a feel for how the different spatial filtering affects SNR/movie data before running the full processing pipeline, run <code>viewMovieRegistrationTest</code> module. Then select either <code>matlab divide by lowpass before registering</code> or <code>matlab bandpass before registering</code> then change <code>filterBeforeRegFreqLow</code> and <code>filterBeforeRegFreqHigh</code> settings, see below.</p>
 <p>Within each folder will be a sub-folder called <code>preprocRunTest</code> inside of which is a series of sub-folders called <code>preprocRun##</code> that will contain a file called <code>settings.mat</code> that can be loaded into <code>modelPreprocessMovie</code> so the same settings that worked during the test can be used during the actual pre-processing run.</p>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/52497447-f3f65880-2b8a-11e9-8875-c6b408e5c011.png" /></p>
@@ -614,7 +651,7 @@ The function will automatically put each file in its corresponding folder, <stro
 </li>
 </ul>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/59561146-695ab580-8fd1-11e9-892b-ce1f5fc7800e.png" /></p>
-<h2 id="preprocessing-calcium-imaging-movies-with-modelpreprocessmovie">Preprocessing calcium imaging movies with <code>modelPreprocessMovie</code></h2>
+<h2 id="preprocessing-calcium-imaging-movies-with-modelpreprocessmovie">Preprocessing calcium imaging movies with <code>modelPreprocessMovie</code><a class="headerlink" href="#preprocessing-calcium-imaging-movies-with-modelpreprocessmovie" title="Permanent link">&para;</a></h2>
 <p>After users instantiate an object of the <code>calciumImagingAnalysis</code> class and enter a folder, they can start preprocessing of their calcium imaging data with <code>modelPreprocessMovie</code>.</p>
 <ul>
 <li>See below for a series of windows to get started, the options for motion correction, cropping unneeded regions, Δ_F/F_, and temporal downsampling were selected for use in the study associated with this repository.</li>
@@ -632,7 +669,7 @@ The function will automatically put each file in its corresponding folder, <stro
 <li>Then the user is asked to select a region to use for motion correction. In general, it is best to select areas with high contrast and static markers such as blood vessels. Stay away from the edge of the movie or areas outside the brain (e.g. the edge of microendoscope GRIN lens in one-photon miniature microscope movies).</li>
 </ul>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/49828665-4ceb7100-fd41-11e8-9da6-9f5a510f1c13.png" /></p>
-<h3 id="saveload-preprocessing-settings">Save/load preprocessing settings</h3>
+<h3 id="saveload-preprocessing-settings">Save/load preprocessing settings<a class="headerlink" href="#saveload-preprocessing-settings" title="Permanent link">&para;</a></h3>
 <p>Users can also enable saving and loading of previously selected pre-processing settings by changing the red option below.</p>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/70419318-10b52400-1a1a-11ea-9b43-782ac6624042.png" /></p>
 <p>Settings loaded from previous run (e.g. of <code>modelPreprocessMovie</code>) or file (e.g. from <code>viewMovieRegistrationTest</code> runs) are highlighted in orange. Settings that user has just changed are still highlighted in green.</p>
@@ -640,11 +677,11 @@ The function will automatically put each file in its corresponding folder, <stro
 <p>The algorithm will then run all the requested preprocessing steps and presented the user with the option of viewing a slice of the processed file. Users have now completed pre-processing.</p>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/49829599-b53b5200-fd43-11e8-82eb-1e94fd7950e7.png" /></p>
 <hr />
-<h2 id="manual-movie-cropping-with-modelmodifymovies">Manual movie cropping with <code>modelModifyMovies</code></h2>
+<h2 id="manual-movie-cropping-with-modelmodifymovies">Manual movie cropping with <code>modelModifyMovies</code><a class="headerlink" href="#manual-movie-cropping-with-modelmodifymovies" title="Permanent link">&para;</a></h2>
 <p>If users need to eliminate specific regions of their movie before running cell extraction, that option is provided. Users select a region using an ImageJ interface and select <code>done</code> when they want to move onto the next movie or start the cropping. Movies have <code>NaNs</code> or <code>0s</code> added in the cropped region rather than changing the dimensions of the movie.</p>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/49829899-8f627d00-fd44-11e8-96fb-2e909b4f0d78.png" /></p>
 <hr />
-<h2 id="extracting-cells-with-modelextractsignalsfrommovie">Extracting cells with <code>modelExtractSignalsFromMovie</code></h2>
+<h2 id="extracting-cells-with-modelextractsignalsfrommovie">Extracting cells with <code>modelExtractSignalsFromMovie</code><a class="headerlink" href="#extracting-cells-with-modelextractsignalsfrommovie" title="Permanent link">&para;</a></h2>
 <p>Users can run PCA-ICA, CNMF, CNMF-E, and ROI cell extraction by following the below set of option screens. Details on running the new Schnitzer lab cell-extraction methods will be added here after they are released.</p>
 <p>We normally estimate the number of PCs and ICs on the high end, manually sort to get an estimate of the number of cells, then run PCA-ICA again with IC 1.5-3x the number of cells and PCs 1-1.5x number of ICs.</p>
 <p>To run CNMF or CNMF-E, run <code>loadDependencies</code> module (e.g. <code>obj.loadDependencies</code>) after calciumImagingAnalysis class is loaded. CVX (a CNMF dependency) will also be downloaded and <code>cvx_setup</code> run to automatically set it up.</p>
@@ -654,26 +691,26 @@ The function will automatically put each file in its corresponding folder, <stro
 <!-- ![image](https://user-images.githubusercontent.com/5241605/51728907-c2c44700-2026-11e9-9614-1a57c3a60f5f.png) -->
 
 <hr />
-<h2 id="loading-cell-extraction-output-data-with-modelvarsfromfiles">Loading cell-extraction output data with <code>modelVarsFromFiles</code></h2>
+<h2 id="loading-cell-extraction-output-data-with-modelvarsfromfiles">Loading cell-extraction output data with <code>modelVarsFromFiles</code><a class="headerlink" href="#loading-cell-extraction-output-data-with-modelvarsfromfiles" title="Permanent link">&para;</a></h2>
 <p>In general, after running cell-extraction (<code>modelExtractSignalsFromMovie</code>) on a dataset, run the <code>modelVarsFromFiles</code> module. This allows <code>calciumImagingAnalysis</code> to load/pre-load information about that cell-extraction run.</p>
 <p>If you had to restart MATLAB or are just loading calciumImagingAnalysis fresh but have previously run cell extraction, run this method before doing anything else with that cell-extraction data.</p>
 <p>A menu will pop-up like below when <code>modelVarsFromFiles</code> is loaded, you can normally just leave the defaults as is.</p>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/67052600-7f00f880-f0f3-11e9-9555-96fe32b4de6d.png" /></p>
 <hr />
-<h2 id="validating-cell-extraction-with-viewcellextractiononmovie">Validating cell extraction with <code>viewCellExtractionOnMovie</code></h2>
+<h2 id="validating-cell-extraction-with-viewcellextractiononmovie">Validating cell extraction with <code>viewCellExtractionOnMovie</code><a class="headerlink" href="#validating-cell-extraction-with-viewcellextractiononmovie" title="Permanent link">&para;</a></h2>
 <p>After users have run cell extraction, they should check that cells are not being missed during the process. Running the method <code>viewCellExtractionOnMovie</code> will create a movie with outlines of cell extraction outputs overlaid on the movie.</p>
 <p>Below is an example, with black outlines indicating location of cell extraction outputs. If users see active cells (red flashes) that are not outlined, that indicates either exclusion or other parameters should be altered in the previous <code>modelExtractSignalsFromMovie</code> cell extraction step.</p>
 <p><img alt="2014_04_01_p203_m19_check01_raw_viewCellExtractionOnMovie_ezgif-4-57913bcfdf3f_2" src="https://user-images.githubusercontent.com/5241605/59560798-50033a80-8fcc-11e9-8228-f9a3d83ca591.gif" /></p>
 <hr />
-<h2 id="sorting-cell-extraction-outputs-with-computemanualsortsignals">Sorting cell extraction outputs with <code>computeManualSortSignals</code></h2>
+<h2 id="sorting-cell-extraction-outputs-with-computemanualsortsignals">Sorting cell extraction outputs with <code>computeManualSortSignals</code><a class="headerlink" href="#sorting-cell-extraction-outputs-with-computemanualsortsignals" title="Permanent link">&para;</a></h2>
 <p>Outputs from PCA-ICA (and most other common cell extraction algorithms like CNMF, etc.) output signal sources that are not cells and thus must be manually removed from the output. The repository contains a GUI for sorting cells from not cells. Below users can see a list of options that are given before running the code, those highlighted in green</p>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/49845107-43322f80-fd7a-11e8-96b9-3f870d4b9009.png" /></p>
-<h3 id="gui-usage-on-large-imaging-datasets">GUI usage on large imaging datasets</h3>
+<h3 id="gui-usage-on-large-imaging-datasets">GUI usage on large imaging datasets<a class="headerlink" href="#gui-usage-on-large-imaging-datasets" title="Permanent link">&para;</a></h3>
 <ul>
 <li>To manually sort on large movies that will not fit into RAM, select the below options (highlighted in green). This will load only chunks of the movie asynchronously into the GUI as you sort cell extraction outputs.
 <img alt="image" src="https://user-images.githubusercontent.com/5241605/59215159-5d07d000-8b6d-11e9-8dd7-0d69d5fd38b6.png" /></li>
 </ul>
-<h3 id="usage">Usage</h3>
+<h3 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h3>
 <p>Below are two examples of the interface and code to run if not using the <code>calciumImagingAnalysis</code> GUI.</p>
 <p>Usage instructions below for <code>signalSorter.m</code>:</p>
 <p><strong>Main inputs</strong></p>
@@ -702,16 +739,16 @@ iopts.backgroundNeutral = repmat(230,[1 3])/255;
 [inputImagesSorted, inputSignalsSorted, choices] = signalSorter(inputImages, inputSignals, 'options',iopts);
 </code></pre>
 
-<h4 id="bla-one-photon-imaging-data-signal-sorting-gui">BLA one-photon imaging data signal sorting GUI</h4>
+<h4 id="bla-one-photon-imaging-data-signal-sorting-gui">BLA one-photon imaging data signal sorting GUI<a class="headerlink" href="#bla-one-photon-imaging-data-signal-sorting-gui" title="Permanent link">&para;</a></h4>
 <p><img alt="out-1" src="https://user-images.githubusercontent.com/5241605/34796712-3868cb3a-f60b-11e7-830e-8eec5b2c76d7.gif" /></p>
-<h4 id="mpfc-one-photon-imaging-data-signal-sorting-gui-from-example_downloadtestdatam">mPFC one-photon imaging data signal sorting GUI (from <code>example_downloadTestData.m</code>)</h4>
+<h4 id="mpfc-one-photon-imaging-data-signal-sorting-gui-from-example_downloadtestdatam">mPFC one-photon imaging data signal sorting GUI (from <code>example_downloadTestData.m</code>)<a class="headerlink" href="#mpfc-one-photon-imaging-data-signal-sorting-gui-from-example_downloadtestdatam" title="Permanent link">&para;</a></h4>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/46322488-04c00d80-c59e-11e8-9e8a-18b3b8e4567d.png" /></p>
 <hr />
-<h2 id="removing-cells-not-within-brain-region-with-modelmodifyregionanalysis">Removing cells not within brain region with <code>modelModifyRegionAnalysis</code></h2>
+<h2 id="removing-cells-not-within-brain-region-with-modelmodifyregionanalysis">Removing cells not within brain region with <code>modelModifyRegionAnalysis</code><a class="headerlink" href="#removing-cells-not-within-brain-region-with-modelmodifyregionanalysis" title="Permanent link">&para;</a></h2>
 <p>If the imaging field-of-view includes cells from other brain regions, they can be removed using <code>modelModifyRegionAnalysis</code></p>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/49834696-e9b60a80-fd51-11e8-90bb-9854b7ccaeb8.png" /></p>
 <hr />
-<h2 id="cross-session-cell-alignment-with-computematchobjbtwntrials">Cross-session cell alignment with <code>computeMatchObjBtwnTrials</code></h2>
+<h2 id="cross-session-cell-alignment-with-computematchobjbtwntrials">Cross-session cell alignment with <code>computeMatchObjBtwnTrials</code><a class="headerlink" href="#cross-session-cell-alignment-with-computematchobjbtwntrials" title="Permanent link">&para;</a></h2>
 <p>This step allows users to align cells across imaging sessions (e.g. those taken on different days). See the <code>Cross session cell alignment</code> wiki page for more details and notes on cross-session alignment.</p>
 <ul>
 <li>Users run <code>computeMatchObjBtwnTrials</code> to do cross-day alignment (first row in pictures below).</li>
@@ -726,20 +763,22 @@ globalIDs = alignmentStruct.globalIDs;
 
 </code></pre>
 
-<h3 id="view-cross-session-cell-alignment-with-viewmatchobjbtwnsessions">View cross-session cell alignment with <code>viewMatchObjBtwnSessions</code></h3>
+<h3 id="view-cross-session-cell-alignment-with-viewmatchobjbtwnsessions">View cross-session cell alignment with <code>viewMatchObjBtwnSessions</code><a class="headerlink" href="#view-cross-session-cell-alignment-with-viewmatchobjbtwnsessions" title="Permanent link">&para;</a></h3>
 <p>To evaluate how well cross-session alignment works, <code>computeMatchObjBtwnTrials</code> will automatically run <code>viewMatchObjBtwnSessions</code> at the end, but users can also run it separately after alignment. The left are raw dorsal striatum cell maps from a single animal. The right shows after cross-session alignment; color is used to indicate a global ID cell (e.g. the same cell matched across multiple days). Thus, same color cell = same cell across sessions.</p>
 <p><a href="https://cloud.githubusercontent.com/assets/5241605/25643108/9bcfccda-2f52-11e7-8514-31968752bd95.gif" target="_blank"><img src="https://cloud.githubusercontent.com/assets/5241605/25643108/9bcfccda-2f52-11e7-8514-31968752bd95.gif" alt="2017_05_02_p545_m121_p215_raw" width="auto" height="400"/></a>
 <a href="https://cloud.githubusercontent.com/assets/5241605/25643473/dd7b11ce-2f54-11e7-8d84-eb98c5ef801c.gif" target="_blank"><img src="https://cloud.githubusercontent.com/assets/5241605/25643473/dd7b11ce-2f54-11e7-8d84-eb98c5ef801c.gif" alt="2017_05_02_p545_m121_p215_corrected_biafraalgorithm2" width="auto" height="400"/></a></p>
-<h3 id="save-cross-session-cell-alignment-with-modelsavematchobjbtwntrials">Save cross-session cell alignment with <code>modelSaveMatchObjBtwnTrials</code></h3>
+<h3 id="save-cross-session-cell-alignment-with-modelsavematchobjbtwntrials">Save cross-session cell alignment with <code>modelSaveMatchObjBtwnTrials</code><a class="headerlink" href="#save-cross-session-cell-alignment-with-modelsavematchobjbtwntrials" title="Permanent link">&para;</a></h3>
 <p>Users can save out the alignment structure by running <code>modelSaveMatchObjBtwnTrials</code>. This will allow users to select a folder where <code>calciumImagingAnalysis</code> will save a MAT-file with the alignment structure information for each animal.</p>
-<h1 id="imagejmatlab-based-mouse-location-tracking">ImageJ+MATLAB based mouse location tracking</h1>
-<p>Functions needed (have entire <code>calciumImagingAnalysis</code> loaded anyways):
-- <code>mm_tracking.ijm</code> is the tracking function for use in ImageJ, place in
-<code>plugins</code> folder. If already had <code>calciumImagingAnalysis</code> download Fiji, place in the <code>_external_programs/[Fiji directory]/Fiji.app/plugins</code> folder.
-- <code>removeIncorrectObjs.m</code> is a function to clean-up the ImageJ output.
-- <code>createTrackingOverlayVideo</code> is a way to check the output from the
-tracking by overlaying mouse tracker onto the video.</p>
-<h2 id="instructions-for-imagej-and-matlab">Instructions for ImageJ and Matlab</h2>
+<h1 id="imagejmatlab-based-mouse-location-tracking">ImageJ+MATLAB based mouse location tracking<a class="headerlink" href="#imagejmatlab-based-mouse-location-tracking" title="Permanent link">&para;</a></h1>
+<p>Functions needed (have entire <code>calciumImagingAnalysis</code> loaded anyways):</p>
+<ul>
+<li><code>mm_tracking.ijm</code> is the tracking function for use in ImageJ, place in
+<code>plugins</code> folder. If already had <code>calciumImagingAnalysis</code> download Fiji, place in the <code>_external_programs/[Fiji directory]/Fiji.app/plugins</code> folder.</li>
+<li><code>removeIncorrectObjs.m</code> is a function to clean-up the ImageJ output.</li>
+<li><code>createTrackingOverlayVideo</code> is a way to check the output from the
+tracking by overlaying mouse tracker onto the video.</li>
+</ul>
+<h2 id="instructions-for-imagej-and-matlab">Instructions for ImageJ and Matlab<a class="headerlink" href="#instructions-for-imagej-and-matlab" title="Permanent link">&para;</a></h2>
 <p>Example screen after running <code>mm_tracking</code> within ImageJ, click to expand.</p>
 <p><a href="https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png" alt="image" width="600" height="auto"/></a></p>
 <!-- <a href="https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png" target="_blank">![image](https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png)</a> -->
@@ -764,13 +803,13 @@ inputMovie = loadMovieList(moviePath,'frameList',nFrames);
 playMovie(inputTrackingVideo);
 </code></pre>
 
-<h3 id="example-output-from-2017_09_11_p540_m381_openfield01_091112017">Example output from 2017_09_11_p540_m381_openfield01_091112017</h3>
+<h3 id="example-output-from-2017_09_11_p540_m381_openfield01_091112017">Example output from 2017_09_11_p540_m381_openfield01_091112017<a class="headerlink" href="#example-output-from-2017_09_11_p540_m381_openfield01_091112017" title="Permanent link">&para;</a></h3>
 <p><!-- <img alt="image" src="https://user-images.githubusercontent.com/5241605/34800547-2a10a3b0-f619-11e7-9c88-88750c9875cd.png" /> -->
 <img src="https://user-images.githubusercontent.com/5241605/34800547-2a10a3b0-f619-11e7-9c88-88750c9875cd.png" alt="image" width="400" height="auto"/></p>
 <p>Using <code>createTrackingOverlayVideo</code> to verify tracking matches animal position on a per frame basis.
 <!-- <img alt="image" src="https://user-images.githubusercontent.com/5241605/34800536-19eefcf2-f619-11e7-954f-dba59f4fd427.png" /> -->
 <img src="https://user-images.githubusercontent.com/5241605/34800536-19eefcf2-f619-11e7-954f-dba59f4fd427.png" alt="image" width="400" height="auto"/></p>
-<h2 id="license">License</h2>
+<h2 id="license">License<a class="headerlink" href="#license" title="Permanent link">&para;</a></h2>
 <p>Copyright (C) 2013-2020 Biafra Ahanonu</p>
 <p>This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.</p>
 <p>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of

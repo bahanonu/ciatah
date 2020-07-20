@@ -55,7 +55,7 @@
                     </li>
                 </ul>
                 <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="../alldocs/">Full README</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../alldocs/">One-page readme</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Setup</span></p>
@@ -64,7 +64,7 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../install2/">Install</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../testdata/">Test data</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../example_data/">Example data</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../dependencies/">Dependencies</a>
                     </li>
@@ -185,25 +185,25 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="movie-filtering">Movie Filtering</h1>
+                <h1 id="movie-filtering">Movie Filtering<a class="headerlink" href="#movie-filtering" title="Permanent link">&para;</a></h1>
 <p>This page documents different functions in the repository variable for filtering (spatial high/low/bandpass) movies to remove neuropil, cells, or other features.</p>
-<h3 id="_1"></h3>
+<h3 id="_1"><a class="headerlink" href="#_1" title="Permanent link">&para;</a></h3>
 <pre><code class="Matlab">options.freqLow = 1;
 options.freqHigh = 4;
 inputMovie = normalizeMovie(single(inputMovie),'normalizationType','lowpassFFTDivisive','freqLow',options.freqLow,'freqHigh',options.freqHigh,'waitbarOn',1,'bandpassMask','gaussian');
 </code></pre>
 
-<h2 id="images-from-unit-test">Images from unit test</h2>
-<h3 id="main-filtering-functions">Main filtering functions.</h3>
+<h2 id="images-from-unit-test">Images from unit test<a class="headerlink" href="#images-from-unit-test" title="Permanent link">&para;</a></h2>
+<h3 id="main-filtering-functions">Main filtering functions.<a class="headerlink" href="#main-filtering-functions" title="Permanent link">&para;</a></h3>
 <p>Below is a screen grab from a random frame using all the filtering functions. A nice way to quickly see the many differences between each functions filtering.
 <img alt="image" src="https://user-images.githubusercontent.com/5241605/32477562-18b7d9d4-c334-11e7-988f-accdf99a22f2.png" /></p>
-<h3 id="test-function-filtering">Test function filtering</h3>
+<h3 id="test-function-filtering">Test function filtering<a class="headerlink" href="#test-function-filtering" title="Permanent link">&para;</a></h3>
 <p>This is currently only for the Matlab fft, but I'll see about expanding to others.
 <img alt="image" src="https://user-images.githubusercontent.com/5241605/32477571-26620546-c334-11e7-8ce0-aa5269fcb5f3.png" /></p>
 <pre><code class="Matlab">unitNormalizeMovie;
 </code></pre>
 
-<h3 id="matlab-test-function">Matlab test function</h3>
+<h3 id="matlab-test-function">Matlab test function<a class="headerlink" href="#matlab-test-function" title="Permanent link">&para;</a></h3>
 <ul>
 <li>I've also added the ability to test the parameter space of the Matlab fft, use the below command.</li>
 </ul>
@@ -214,36 +214,34 @@ inputMovie = normalizeMovie(single(inputMovie),'normalizationType','lowpassFFTDi
 <li>Should get a movie output similar to the below, where there is the original movie, the FFT movie, the original/FFT movie, and the dfof of original/FFT movie.
 <img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/11490967/559152e2-9792-11e5-839b-a93811df70ce.png" /></li>
 </ul>
-<h3 id="matlab-test-function-movie-output">Matlab test function movie output</h3>
+<h3 id="matlab-test-function-movie-output">Matlab test function movie output<a class="headerlink" href="#matlab-test-function-movie-output" title="Permanent link">&para;</a></h3>
 <p>Similar to above, showing results when using <code>lowpassFFTDivisive</code> normalization (<code>matlab divide by lowpass before registering</code> in <code>modelPreprocessMovie</code> and <code>viewMovieRegistrationTest</code> functions) with <code>freqLow = 0</code> and <code>freqHigh</code> set to <code>1</code>, <code>4</code>, and <code>20</code>. This corresponds to removing increasingly smaller features from the movie.</p>
 <p><img alt="2014_04_01_p203_m19_check01_fft_example-3" src="https://user-images.githubusercontent.com/5241605/71422606-aec30400-2640-11ea-8ffb-41cdeea771c1.gif" /></p>
-<h3 id="imagej-test-function">ImageJ test function</h3>
+<h3 id="imagej-test-function">ImageJ test function<a class="headerlink" href="#imagej-test-function" title="Permanent link">&para;</a></h3>
 <p>To test the ImageJ FFT and determine the best parameters for a given set of movies, run the following function on a test movie matrix:</p>
 <pre><code class="Matlab">inputMovieTest = normalizeMovie(inputMovie,'normalizationType','imagejFFT_test');
 </code></pre>
 
 <p>The output should look like the below:
 <img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/11154743/14dd385a-89f6-11e5-8d56-c349e8c4f3f8.png" /></p>
-<h2 id="common-issues">Common Issues</h2>
+<h2 id="common-issues">Common Issues<a class="headerlink" href="#common-issues" title="Permanent link">&para;</a></h2>
 <p>A list of some common issues.</p>
-<h3 id="dark-halos-around-cells">Dark halos around cells</h3>
+<h3 id="dark-halos-around-cells">Dark halos around cells<a class="headerlink" href="#dark-halos-around-cells" title="Permanent link">&para;</a></h3>
 <p>If the spatial filter is not properly configured then dark halos will appear around high SNR cells, potentially obscuring nearby, low SNR cells.
 <img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/11329062/1232a886-914b-11e5-9cca-85ec6162319b.png" /></p>
-<p>https://github.com/schnitzer-lab/miniscope_analysis/pull/30
+<p><a href="https://github.com/schnitzer-lab/miniscope_analysis/pull/30">https://github.com/schnitzer-lab/miniscope_analysis/pull/30</a>
 * FYI, for 4x downsampled movies, <code>highFreq</code> parameter of 4 (which corresponds to a <code>fspecial</code> gaussian with std of 4) produces the closest results to ImageJ <code>Process-&gt;FFT-&gt;Bandpass Filter...</code> with inputs of <code>filter_large=10000 filter_small=80 suppress=None tolerance=5</code> (the current default in <code>normalizeMovie</code>).</p>
 <ul>
-<li>
-<p>Example frame from ImageJ and Matlab FFTs.
-<img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/11519196/fbcd561e-984c-11e5-95b9-3a23085c2e44.png" /></p>
-</li>
-<li>
-<p>Distribution of pixel differences between ImageJ and Matlab FFT movies.
-<img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/11519037/8bcae88c-984b-11e5-84dd-097c61ccd756.png" /></p>
-</li>
-<li>
-<p>This matches the filter that ImageJ says it uses, which is fairly close to the Matlab filter.
-<img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/11519329/22b3af8e-984e-11e5-9379-5b5d4092cee0.png" /></p>
-</li>
+<li>Example frame from ImageJ and Matlab FFTs.
+<img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/11519196/fbcd561e-984c-11e5-95b9-3a23085c2e44.png" /></li>
+</ul>
+<ul>
+<li>Distribution of pixel differences between ImageJ and Matlab FFT movies.
+<img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/11519037/8bcae88c-984b-11e5-84dd-097c61ccd756.png" /></li>
+</ul>
+<ul>
+<li>This matches the filter that ImageJ says it uses, which is fairly close to the Matlab filter.
+<img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/11519329/22b3af8e-984e-11e5-9379-5b5d4092cee0.png" /></li>
 </ul>
 <p><strong>Example video: 2015_11_25_p384_m610_openfield01</strong>
 * Below is an example comparison using the following Matlab commands to produce the filtered inputs:</p>
