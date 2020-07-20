@@ -27,6 +27,8 @@
   <script src="../js/jquery-2.1.1.min.js" defer></script>
   <script src="../js/modernizr-2.8.3.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/matlab.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/python.min.js"></script>
   <script>hljs.initHighlightingOnLoad();</script> 
   
 </head>
@@ -107,7 +109,7 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_snr/">Improving signal-to-noise</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../help_motion_correction.m">Motion correction</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_motion_correction/">Motion correction</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_spatial_filtering/">Spatial filtering</a>
                     </li>
@@ -173,9 +175,6 @@
 <li>Alternatively, download the package from <code>File Exchange</code> using the Add-Ons explorer in MATLAB. See <code>calciumImagingAnalysis</code> entry at:
  <a href="https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis"><img alt="View calciumImagingAnalysis on File Exchange" src="https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg" /></a> or https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis.</li>
 <li>Run the below MATLAB commands.</li>
-<li>Afterwards, likely want to run <code>modelAddNewFolders</code> module first in order to add folders containing imaging data to the current class object.</li>
-<li>[Optional] Users on Windows systems should download <code>Everything</code> (https://www.voidtools.com/). It is a very useful and extremely fast search engine for files and folders on a computer that can allow users to quickly get lists of folders then need to analyze in <code>calciumImagingAnalysis</code>.</li>
-<li>[Optional] Users who want to run analysis via the command line can run <code>edit ciapkg.demo.cmdLinePipeline</code> and run each segment of code there to see what commands are needed to perform each step. It assumes you have already run <code>example_downloadTestData</code>.</li>
 </ul>
 <pre><code class="MATLAB">% Run these commands in MATLAB to get started.
 
@@ -187,9 +186,13 @@ obj.setup;
 
 % Open the class menu (always type `obj` then enter load the class/modules menu)
 obj % then hit enter, no semicolon!
-
 </code></pre>
 
+<ul>
+<li>Afterwards, likely want to run <code>modelAddNewFolders</code> module first in order to add folders containing imaging data to the current class object.</li>
+<li>[Optional] Users on Windows systems should download <code>Everything</code> (https://www.voidtools.com/). It is a very useful and extremely fast search engine for files and folders on a computer that can allow users to quickly get lists of folders then need to analyze in <code>calciumImagingAnalysis</code>.</li>
+<li>[Optional] Users who want to run analysis via the command line can run <code>edit ciapkg.demo.cmdLinePipeline</code> and run each segment of code there to see what commands are needed to perform each step. It assumes you have already run <code>example_downloadTestData</code>.</li>
+</ul>
 <h3 id="calciumimaginganalysis-main-gui-notes"><code>calciumImagingAnalysis</code> main GUI notes</h3>
 <ul>
 <li>All main decisions for choosing a method/procedure to run, cell-extraction algorithm, and which folders to analyze are in a single window.</li>

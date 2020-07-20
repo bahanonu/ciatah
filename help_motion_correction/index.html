@@ -9,7 +9,7 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>Dependencies - calciumImagingAnalysis (ciapkg)</title>
+  <title>Motion correction - calciumImagingAnalysis (ciapkg)</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
   <link rel="stylesheet" href="../css/theme.css" />
@@ -19,8 +19,8 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "Dependencies";
-    var mkdocs_page_input_path = "dependencies.md";
+    var mkdocs_page_name = "Motion correction";
+    var mkdocs_page_input_path = "help_motion_correction.md";
     var mkdocs_page_url = null;
   </script>
   
@@ -59,28 +59,14 @@
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Setup</span></p>
-                <ul class="current">
+                <ul>
                     <li class="toctree-l1"><a class="reference internal" href="../install/">Quick Start</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../install2/">Install</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../testdata/">Test data</a>
                     </li>
-                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Dependencies</a>
-    <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#matlab-toolbox-dependencies">MATLAB Toolbox dependencies</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#parallel-computing-toolbox-pct">Parallel Computing Toolbox (PCT)</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#imagej">ImageJ</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#saleae">Saleae</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#cnmf-and-cnmf-e">CNMF and CNMF-E</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#neurodata-without-borders">Neurodata Without Borders</a>
-    </li>
-    </ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../dependencies/">Dependencies</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Repository</span></p>
@@ -102,7 +88,7 @@
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Help</span></p>
-                <ul>
+                <ul class="current">
                     <li class="toctree-l1"><a class="reference internal" href="../help_example_pipeline/">Custom pipelines</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_issues/">Issues and fixes</a>
@@ -117,7 +103,9 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_snr/">Improving signal-to-noise</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../help_motion_correction/">Motion correction</a>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Motion correction</a>
+    <ul class="current">
+    </ul>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_spatial_filtering/">Spatial filtering</a>
                     </li>
@@ -160,11 +148,11 @@
     
       
         
-          <li>Setup &raquo;</li>
+          <li>Help &raquo;</li>
         
       
     
-    <li>Dependencies</li>
+    <li>Motion correction</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -175,55 +163,87 @@
           <div role="main">
             <div class="section">
               
-                <h3 id="dependencies">Dependencies</h3>
-<p>By default external MATLAB-based software packages are stored in <code>_external_programs</code>.</p>
-<h4 id="matlab-toolbox-dependencies">MATLAB Toolbox dependencies</h4>
+                <p>Scripts to register movies to remove motion.</p>
+<h2 id="calculating-final-transformation-after-multiple-registration-iterations">Calculating final transformation after multiple registration iterations.</h2>
+<p>It is possible to use the output from motion correction (often done with <code>turboregMovie</code> or <code>modelPreprocessMovieFunction</code>) to transform the movie at later times if needed. There are two ways to do this:</p>
 <ul>
-<li>Primary toolboxes</li>
-<li>distrib_computing_toolbox</li>
-<li>image_toolbox</li>
-<li>signal_toolbox</li>
-<li>statistics_toolbox</li>
-<li>Secondary toolboxes (not required for main pre-processing pipeline)</li>
-<li>video_and_image_blockset</li>
-<li>bioinformatics_toolbox</li>
-<li>financial_toolbox</li>
-<li>neural_network_toolbox</li>
+<li>iteratively perform each motion correction step (e.g. same order as in <code>modelPreprocessMovieFunction</code>) or</li>
+<li>create the translation/skew/rotation matrices for each step using <code>ResultsOutOriginal</code> and combine for all iterations as <code>totalTranformMatrix = (R2'*S2'*T2'*R1'*S1'*T1')'</code>. Note the order matters.<ul>
+<li>Where <code>1, 2, ...</code> indicate matrix for iterations <code>1,2,...</code> and <code>R, S, T</code> are rotation, skew (shear + scale) and translation matrices, respectively.</li>
+<li>For 3 iterations would be <code>(R3'*S3'*T3'*R2'*S2'*T2'*R1'*S1'*T1')'</code>  or alternatively <code>T1*S1*R1*T3*S3*R2*T3*S3*R3</code>.</li>
+<li>For translation/rotation matrices, use definitions in https://www.mathworks.com/help/images/matrix-representation-of-geometric-transformations.html to construct them.</li>
 </ul>
-<h4 id="parallel-computing-toolbox-pct">Parallel Computing Toolbox (PCT)</h4>
-<p>By default both <code>calciumImagingAnalysis</code> and PCT auto-start a parallel pool for functions that use parallelization (e.g. or calls to <code>parfor</code>). For some users this may not be desired, in that case go to MATLAB preferences and uncheck the below.</p>
-<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/67807212-99bb6180-fa51-11e9-81e1-9ab0fac8847a.png" /></p>
-<p>Or enter the following commands into the MATLAB command window:</p>
-<pre><code class="Matlab">parSet = parallel.Settings;
-parSet.Pool.AutoCreate = false;
+</li>
+</ul>
+<h2 id="turboreg">Turboreg</h2>
+<h3 id="compiling-turboreg-and-transfturboreg-mex-file">Compiling <code>turboreg</code> and <code>transfturboreg</code> mex file</h3>
+<ul>
+<li>Can compile on your system using the following command</li>
+</ul>
+<pre><code class="Matlab">mex('-v', '-largeArrayDims','-I.', 'turboreg.c','.\BsplnTrf.c','.\BsplnWgt.c','.\convolve.c','.\getPut.c','.\main.c','.\phil.c','.\pyrFilt.c','.\pyrGetSz.c','.\quant.c','.\reg0.c','.\reg1.c','.\reg2.c','.\reg3.c','.\regFlt3d.c','.\svdcmp.c')
+
+mex('-v', '-largeArrayDims','-I.', 'transfturboreg.c','.\BsplnTrf.c','.\BsplnWgt.c','.\convolve.c','.\getPut.c','.\main.c','.\phil.c','.\pyrFilt.c','.\pyrGetSz.c','.\quant.c','.\reg0.c','.\reg1.c','.\reg2.c','.\reg3.c','.\regFlt3d.c','.\svdcmp.c')
 </code></pre>
 
-<h4 id="imagej">ImageJ</h4>
 <ul>
-<li>Run <code>downloadMiji</code> from <code>downloads\downloadMiji.m</code> or <code>obj.loadDependencies</code> (when class initialized) to download Fiji version appropriate to your platform.</li>
-<li>Else download Fiji (preferably <strong>2015 December 22</strong> version): https://imagej.net/Fiji/Downloads.</li>
-<li>Make sure have Miji in Fiji installation: http://bigwww.epfl.ch/sage/soft/mij/.</li>
-<li>This is used as an alternative to the <code>calciumImagingAnalysis</code> <code>playMovie.m</code> function for viewing movies and is needed for some movie modification steps.</li>
+<li>For Linux users: http://www.walkingrandomly.com/?p=2694</li>
 </ul>
-<h4 id="saleae">Saleae</h4>
+<pre><code class="Matlab">mex('-v', 'GCC=&quot;/usr/bin/gcc-4.9&quot;', '-largeArrayDims','CFLAGS=&quot;\$CFLAGS -std=c99&quot;','-I.', 'turboreg.c','./BsplnTrf.c','./BsplnWgt.c','./convolve.c','./getPut.c','./main.c','./phil.c','./pyrFilt.c','./pyrGetSz.c','./quant.c','./reg0.c','./reg1.c','./reg2.c','./reg3.c','./regFlt3d.c','./svdcmp.c')
+
+mex('-v', 'GCC=&quot;/usr/bin/gcc-4.9&quot;', '-largeArrayDims','CFLAGS=&quot;\$CFLAGS -std=c99&quot;','-I.', 'transfturboreg.c','./BsplnTrf.c','./BsplnWgt.c','./convolve.c','./getPut.c','./main.c','./phil.c','./pyrFilt.c','./pyrGetSz.c','./quant.c','./reg0.c','./reg1.c','./reg2.c','./reg3.c','./regFlt3d.c','./svdcmp.c')
+</code></pre>
+
 <ul>
-<li><em>Only download</em> if doing behavior and imaging experiments that use this DAQ device to collect data.</li>
-<li>Download 1.2.26: https://support.saleae.com/logic-software/legacy-software/older-software-releases#1-2-26-download.</li>
+<li>Below is an example usage of <code>turboregMovie</code>.</li>
+<li>To use imageJ in Matlab, download Fiji (<a href="http://fiji.sc">http://fiji.sc</a>) and add Miji.m to your filepath, see <a href="http://fiji.sc/Miji">http://fiji.sc/Miji</a>.</li>
 </ul>
-<h4 id="cnmf-and-cnmf-e">CNMF and CNMF-E</h4>
-<ul>
-<li>Download repositories by running <code>downloadCnmfGithubRepositories.m</code> or <code>obj.loadDependencies</code> (when class is initialized).</li>
-<li>CNMF: https://github.com/flatironinstitute/CaImAn-MATLAB.</li>
-<li>CNMF-E: https://github.com/bahanonu/CNMF_E</li>
-<li>forked from https://github.com/zhoupc/CNMF_E to fix HDF5, movies with NaNs, and other related compatibility issues.</li>
-<li>CVX: http://cvxr.com/cvx/download/.</li>
-<li>Download <code>All platforms</code> (<em>Redistributable: free solvers only</em>), e.g. http://web.cvxr.com/cvx/cvx-rd.zip.</li>
-</ul>
-<h4 id="neurodata-without-borders">Neurodata Without Borders</h4>
-<p>Neurodata Without Borders (NWB) file support requires the following GitHub repositories be present in the <code>_external_programs</code> folder. These are downloaded automatically when running <code>obj.setup</code>.
-- https://github.com/schnitzer-lab/nwb_schnitzer_lab.
-- https://github.com/ewiger/yamlmatlab.
-- https://github.com/NeurodataWithoutBorders/matnwb.</p>
+<h3 id="running-turboreg">Running turboreg</h3>
+<p><strong>Note this input was from 2017.04.19 update</strong></p>
+<pre><code class="Matlab">% set turboreg options
+ioptions.inputDatasetName = '/1';
+ioptions.turboregRotation = 0;
+ioptions.RegisType = 1;
+ioptions.parallel = 1;
+ioptions.meanSubtract = 1;
+ioptions.normalizeType = 'bandpass'; % matlabDisk is alternative input. Done on input to turboreg but NOT on final movie.
+ioptions.registrationFxn = 'transfturboreg';
+ioptions.normalizeBeforeRegister = 'divideByLowpass'; % set to blank if don't want any filtering on output movie
+ioptions.imagejFFTLarge = 10000;
+ioptions.imagejFFTSmall = 80;
+ioptions.saveNormalizeBeforeRegister = [];
+ioptions.cropCoords = [];
+ioptions.closeMatlabPool = 0;
+ioptions.refFrame = 1;
+ioptions.refFrameMatrix = [];
+
+% load the movie and run turboreg
+inputMovieMatrix = loadMovieList('data\2014_04_01_p203_m19_check01\concat_recording_20140401_180333.h5');
+regMovie = turboregMovie(inputMovieMatrix,'options',ioptions);
+
+% or run turboreg function by loading movie directly within function
+regMovie = turboregMovie('pathToDir\filename.h5','options',ioptions);
+</code></pre>
+
+<h3 id="old-input">Old input</h3>
+<pre><code class="Matlab">ioptions.inputDatasetName = '/1';
+ioptions.turboregRotation = 1;
+ioptions.RegisType = 1;
+ioptions.parallel = 1;
+ioptions.meanSubtract = 1;
+ioptions.normalizeType = 'divideByLowpass';
+ioptions.registrationFxn = 'transfturboreg';
+ioptions.normalizeBeforeRegister = 'imagejFFT';
+ioptions.imagejFFTLarge = 10000;
+ioptions.imagejFFTSmall = 80;
+ioptions.saveNormalizeBeforeRegister = [];
+ioptions.cropCoords = [];
+ioptions.closeMatlabPool = 0;
+ioptions.refFrame = 1;
+ioptions.refFrameMatrix = [];
+regMovie = turboregMovie('pathToDir\filename.h5','options',ioptions);
+% OR
+regMovie = turboregMovie(inputMovieMatrix,'options',ioptions);
+</code></pre>
               
             </div>
           </div>
@@ -231,10 +251,10 @@ parSet.Pool.AutoCreate = false;
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../data/" class="btn btn-neutral float-right" title="Data formats">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../help_spatial_filtering/" class="btn btn-neutral float-right" title="Spatial filtering">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
-        <a href="../testdata/" class="btn btn-neutral" title="Test data"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../help_snr/" class="btn btn-neutral" title="Improving signal-to-noise"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -260,10 +280,10 @@ parSet.Pool.AutoCreate = false;
     <span class="rst-current-version" data-toggle="rst-current-version">
       
       
-        <span><a href="../testdata/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+        <span><a href="../help_snr/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
       
-        <span style="margin-left: 15px"><a href="../data/" style="color: #fcfcfc">Next &raquo;</a></span>
+        <span style="margin-left: 15px"><a href="../help_spatial_filtering/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>
