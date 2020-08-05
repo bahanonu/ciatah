@@ -9,7 +9,7 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>Test data - calciumImagingAnalysis (ciapkg)</title>
+  <title>ciapkg - calciumImagingAnalysis (ciapkg)</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
   <link rel="stylesheet" href="../css/theme.css" />
@@ -19,8 +19,8 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "Test data";
-    var mkdocs_page_input_path = "testdata.md";
+    var mkdocs_page_name = "ciapkg";
+    var mkdocs_page_input_path = "api_ciapkg.md";
     var mkdocs_page_url = null;
   </script>
   
@@ -55,18 +55,16 @@
                     </li>
                 </ul>
                 <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="../alldocs/">Full README</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../alldocs/">One-page readme</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Setup</span></p>
-                <ul class="current">
+                <ul>
                     <li class="toctree-l1"><a class="reference internal" href="../install/">Quick Start</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../install2/">Install</a>
                     </li>
-                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Test data</a>
-    <ul class="current">
-    </ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../example_data/">Example data</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../dependencies/">Dependencies</a>
                     </li>
@@ -89,10 +87,17 @@
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_animal_tracking/">Animal tracking</a>
                     </li>
                 </ul>
+                <p class="caption"><span class="caption-text">API</span></p>
+                <ul class="current">
+                    <li class="toctree-l1"><a class="reference internal" href="../api_example_pipeline/">Custom pipelines</a>
+                    </li>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">ciapkg</a>
+    <ul class="current">
+    </ul>
+                    </li>
+                </ul>
                 <p class="caption"><span class="caption-text">Help</span></p>
                 <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="../help_example_pipeline/">Custom pipelines</a>
-                    </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_issues/">Issues and fixes</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_analysis_methods/">Analysis methods</a>
@@ -148,11 +153,11 @@
     
       
         
-          <li>Setup &raquo;</li>
+          <li>API &raquo;</li>
         
       
     
-    <li>Test data</li>
+    <li>ciapkg</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -163,9 +168,109 @@
           <div role="main">
             <div class="section">
               
-                <h3 id="test-data">Test data</h3>
-<p>To download test data, run <code>loadDependencies</code> module (e.g. <code>obj.loadDependencies</code>) and select <code>Download test one-photon data.</code> option to download example one-photon miniature microscope test data to use for testing <code>calciumImagingAnalysis</code> preprocessing, cell extraction, and cell classification code. The data will be located in the <code>data</code> folder within the repository root directory.</p>
-<p>Else run <code>example_downloadTestData.m</code> if haven't started an instance of calciumImagingAnalysis.</p>
+                <h1 id="example-calciumimaginganalysis-pipeline-via-the-command-line">Example <code>calciumImagingAnalysis</code> pipeline via the command line.<a class="headerlink" href="#example-calciumimaginganalysis-pipeline-via-the-command-line" title="Permanent link">&para;</a></h1>
+<p>Below is an example <code>cacliumImagingAnalysis</code> pipeline using the command line for those that do not want to use the class or want to create their own custom batch analyses. It assumes you have already run <code>example_downloadTestData</code> to download the example test data.</p>
+<p>Can also access by typing <code>edit ciapkg.demo.cmdLinePipeline</code> into the command line.</p>
+<pre><code class="MATLAB">% Running calciumImagingAnalysis command line
+
+%% Load movie to analyze
+inputMovie = loadMovieList('data\2014_04_01_p203_m19_check01\concat_recording_20140401_180333.h5');
+</code></pre>
+
+<pre><code class="MATLAB">%% Visualize slice of the movie
+playMovie(inputMoevie(:,:,1:500));
+</code></pre>
+
+<pre><code class="MATLAB">%% Downsample input movie if need to
+inputMovieD = downsampleMovie(inputMovie,'downsampleDimension','space','downsampleFactor',4);
+playMovie(inputMovie,'extraMovie',inputMovieD);
+</code></pre>
+
+<pre><code class="MATLAB">%% Remove stripes from movie if needed
+% Show full filter sequence for one frame
+sopts.stripOrientation = 'both';
+sopts.meanFilterSize = 1;
+sopts.freqLowExclude = 10;
+sopts.bandpassType = 'highpass';
+removeStripsFromMovie(inputMovie(:,:,1),'options',sopts,'showImages',1);
+% Run on the entire movie
+removeStripsFromMovie(inputMovie,'options',sopts);
+</code></pre>
+
+<pre><code class="MATLAB">%% Get coordinates to crop
+[cropCoords] = getCropCoords(squeeze(inputMovie(:,:,1)));
+toptions.cropCoords = cropCoords;
+</code></pre>
+
+<pre><code class="MATLAB">%% Motion correction
+% Or have turboreg run manual correction
+toptions.cropCoords = 'manual';
+toptions.turboregRotation = 0;
+toptions.removeEdges = 1;
+toptions.pxToCrop = 10;
+% Pre-motion correction
+    toptions.complementMatrix = 1;
+    toptions.meanSubtract = 1;
+    toptions.meanSubtractNormalize = 1;
+    toptions.normalizeType = 'matlabDisk';
+% Spatial filter
+    toptions.normalizeBeforeRegister = 'divideByLowpass';
+    toptions.freqLow = 0;
+    toptions.freqHigh = 7;
+[inputMovie2, ~] = turboregMovie(inputMovie,'options',toptions);
+</code></pre>
+
+<pre><code class="MATLAB">%% Compare raw and motion corrected movies
+playMovie(inputMovie,'extraMovie',inputMovie2);
+</code></pre>
+
+<pre><code class="MATLAB">%% Run dF/F
+inputMovie3 = dfofMovie(single(inputMovie2),'dfofType','dfof');
+</code></pre>
+
+<pre><code class="MATLAB">%% Run temporal downsampling
+inputMovie3 = downsampleMovie(inputMovie3,'downsampleDimension','time','downsampleFactor',4);
+</code></pre>
+
+<pre><code class="MATLAB">%% Final check of movie before cell extraction
+playMovie(inputMovie3);
+</code></pre>
+
+<pre><code class="MATLAB">%% Run PCA-ICA cell extraction
+nPCs = 300; nICs = 225;
+[PcaOutputSpatial, PcaOutputTemporal, PcaOutputSingularValues, PcaInfo] = run_pca(inputMovie3, nPCs, 'movie_dataset_name','/1');
+[IcaFilters, IcaTraces, IcaInfo] = run_ica(PcaOutputSpatial, PcaOutputTemporal, PcaOutputSingularValues, size(inputMovie3,1), size(inputMovie3,2), nICs, 'output_units','fl','mu',0.1,'term_tol',5e-6,'max_iter',1e3);
+IcaTraces = permute(IcaTraces,[2 1]);
+</code></pre>
+
+<pre><code class="MATLAB">%% Save outputs to NWB format
+saveNeurodataWithoutBorders(IcaFilters,{IcaTraces},'pcaica','pcaica.nwb');
+</code></pre>
+
+<pre><code class="MATLAB">%% Run cell extraction using matrix
+[outImages, outSignals, choices] = signalSorter(IcaFilters,IcaTraces,'inputMovie',inputMovie3);
+</code></pre>
+
+<pre><code class="MATLAB">%% Run signal sorting using NWB
+[outImages, outSignals, choices] = signalSorter('pcaica.nwb',[],'inputMovie',inputMovie3);
+</code></pre>
+
+<pre><code class="MATLAB">%% Plot results of sorting
+figure;
+subplot(1,2,1);imagesc(max(IcaFilters,[],3));axis equal tight; title('Raw filters')
+subplot(1,2,2);imagesc(max(outImages,[],3));axis equal tight; title('Sorted filters')
+</code></pre>
+
+<pre><code class="MATLAB">%% Create an overlay of extraction outputs on the movie and signal-based movie
+[inputMovieO] = createImageOutlineOnMovie(inputMovie3,IcaFilters,'dilateOutlinesFactor',0);
+[signalMovie] = createSignalBasedMovie(IcaTraces,IcaFilters,'signalType','peak');
+</code></pre>
+
+<pre><code class="MATLAB">%% Play all three movies
+% Normalize all the movies
+movieM = cellfun(@(x) normalizeVector(x,'normRange','zeroToOne'),{inputMovie3,inputMovieO,signalMovie},'UniformOutput',false);
+playMovie(cat(2,movieM{:}));
+</code></pre>
               
             </div>
           </div>
@@ -173,10 +278,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../dependencies/" class="btn btn-neutral float-right" title="Dependencies">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../help_issues/" class="btn btn-neutral float-right" title="Issues and fixes">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
-        <a href="../install2/" class="btn btn-neutral" title="Install"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../api_example_pipeline/" class="btn btn-neutral" title="Custom pipelines"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -202,10 +307,10 @@
     <span class="rst-current-version" data-toggle="rst-current-version">
       
       
-        <span><a href="../install2/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+        <span><a href="../api_example_pipeline/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
       
-        <span style="margin-left: 15px"><a href="../dependencies/" style="color: #fcfcfc">Next &raquo;</a></span>
+        <span style="margin-left: 15px"><a href="../help_issues/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>

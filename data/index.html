@@ -101,10 +101,15 @@
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_animal_tracking/">Animal tracking</a>
                     </li>
                 </ul>
+                <p class="caption"><span class="caption-text">API</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../api_example_pipeline/">Custom pipelines</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../api_ciapkg/">ciapkg</a>
+                    </li>
+                </ul>
                 <p class="caption"><span class="caption-text">Help</span></p>
                 <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="../help_example_pipeline/">Custom pipelines</a>
-                    </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_issues/">Issues and fixes</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_analysis_methods/">Analysis methods</a>
@@ -176,8 +181,8 @@
             <div class="section">
               
                 <h1 id="data">Data<a class="headerlink" href="#data" title="Permanent link">&para;</a></h1>
-<p>The class generally operates on the principal that a single imaging session is contained within a single folder or directory. Thus, even if a single imaging session contains multiple trials (e.g. the imaging data is split across multiple movies) this is fine as the class will concatenate them during the preprocessing step.</p>
-<p>The naming convention in general is below. Both TIF and AVI raw files are converted to HDF5 after processing since that format offers more flexibility during cell extraction and other steps.</p>
+<p>The class generally operates on the principal that a single imaging session is contained within a single folder or directory. Thus, even if a single imaging session contains multiple trials (e.g. the imaging data is split across multiple movies) this is fine as the class will concatenate them during the preprocessing step should the user request that.</p>
+<p>The naming convention in general is below. Both TIF and AVI raw files are supported and are converted to HDF5 after processing since that format offers more flexibility during cell extraction and other analysis steps.</p>
 <h3 id="input-and-output-files">Input and output files<a class="headerlink" href="#input-and-output-files" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Default raw imaging data filename: <code>concat_.*.(h5|tif)</code>.</li>
@@ -192,9 +197,11 @@
 </li>
 </ul>
 <h3 id="nwb-support">NWB Support<a class="headerlink" href="#nwb-support" title="Permanent link">&para;</a></h3>
-<p>calciumImagingAnalysis supports NWB format and by default will output cell-extraction analysis as calciumImagingAnalysis format unless user specifies otherwise. NWB files are by default stored in the <code>nwbFiles</code> sub-folder. This can be changed by setting the <code>obj.nwbFileFolder</code> property to a different folder name.
-- Default image mask HDF5 dataset name: '/processing/ophys/ImageSegmentation/PlaneSegmentation'.
-- Default fluorescence activity HDF5 dataset name: '/processing/ophys/Fluorescence/RoiResponseSeries'.</p>
+<p>calciumImagingAnalysis supports NWB format and by default will output cell-extraction analysis as calciumImagingAnalysis format unless user specifies otherwise. NWB files are by default stored in the <code>nwbFiles</code> sub-folder. This can be changed by setting the <code>obj.nwbFileFolder</code> property to a different folder name.</p>
+<ul>
+<li>Default image mask HDF5 dataset name: <code>/processing/ophys/ImageSegmentation/PlaneSegmentation</code>.</li>
+<li>Default fluorescence activity HDF5 dataset name: <code>/processing/ophys/Fluorescence/RoiResponseSeries</code>.</li>
+</ul>
 <h3 id="preferred-folder-naming-format">Preferred folder naming format<a class="headerlink" href="#preferred-folder-naming-format" title="Permanent link">&para;</a></h3>
 <p>Folders should following the format <code>YYYY_MM_DD_pXXX_mXXX_assayXX_trialXX</code> where:</p>
 <ul>
