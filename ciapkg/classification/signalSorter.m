@@ -66,6 +66,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 		% 2019.11.10 [20:21:03] - Made sorting will re-run in case of chooseSignals error, e.g. if GUI is overwritten.
 		% 2020.04.28 [16:34:33] - Fixed case where ROItraces would be overwritten when comparing to algorithm input traces. Also added to 'r' option.
 		% 2020.05.13 [09:34:45] - Added support for NWB.
+		% 2020.07.27 [12:52:40] - Added ability to choose multiple outputs for a given input.
 	% TODO
 		% DONE: New GUI interface to allow users to scroll through video and see cell activity at that point
 		% DONE: allow option to mark rest as bad signals
@@ -186,6 +187,16 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 	options.backgroundBad = [244,166,166]/255;
 	options.backgroundNeutral = repmat(230,[1 3])/255;
 	options.backgroundNegative = [166,166,244]/255;
+
+	options.bkgdColor.('s0') = [244,166,166]/255;
+	options.bkgdColor.('s1') = [208,229,180]/255; % [190 30 45]/255
+	options.bkgdColor.('s2') = [0 114 189]/255;
+	options.bkgdColor.('s3') = [0 114 189]/255;
+	options.bkgdColor.('s4') = [255 140 0]/255;
+	options.bkgdColor.('s5') = [0 148 68]/255;
+	options.bkgdColor.('s6') = [255 140 0]/255;
+	options.bkgdColor.('s7') = [240 0 240]/255;
+
 	% type of colormap to use
 	options.colormap = customColormap([],'nPoints',256);
 	% colormap indx

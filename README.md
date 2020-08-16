@@ -1,14 +1,20 @@
-# calciumImagingAnalysis
+# calciumImagingAnalysis (ciapkg)
+
+![GitHub top language](https://img.shields.io/github/languages/top/bahanonu/calciumImagingAnalysis?style=flat-square&logo=appveyor)
+![GitHub license](https://img.shields.io/github/license/bahanonu/calciumImagingAnalysis?style=flat-square&logo=appveyor)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/bahanonu/calciumImagingAnalysis?style=flat-square&logo=appveyor)](https://github.com/bahanonu/calciumImagingAnalysis/releases/latest?style=flat-square&logo=appveyor)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/bahanonu/calciumImagingAnalysis?style=flat-square&logo=appveyor)
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg?style=flat-square)](https://github.com/bahanonu/calciumImagingAnalysis/graphs/commit-activity?style=flat-square&logo=appveyor)
 
 <img src="https://user-images.githubusercontent.com/5241605/51068051-78c27680-15cd-11e9-9434-9d181b00ef8e.png" align="center">
 
+## Full documentation at __[https://bahanonu.github.io/calciumImagingAnalysis/](https://bahanonu.github.io/calciumImagingAnalysis/)__.
 <hr>
 
-Software package for calcium imaging analysis of one- and two-photon imaging datasets.
+`calciumImagingAnalysis` is a software package for calcium imaging analysis of one- and two-photon imaging datasets.
 
 <img src="https://user-images.githubusercontent.com/5241605/81605697-b9c7c800-9386-11ea-9e9f-569c743b24b9.png" width="42%" align="right" alt="calciumImagingAnalysis_logo">
 
-Full documentation at __[https://bahanonu.github.io/calciumImagingAnalysis/](https://bahanonu.github.io/calciumImagingAnalysis/)__.
 
 Features:
 - Includes a GUI to allow users to do large-scale batch analysis, accessed via the repository's `calciumImagingAnalysis` class.
@@ -32,22 +38,6 @@ Made in USA.<br>
 - [Acknowledgments](#acknowledgments)
 - [References](#references)
 - [Questions](#questions)
-
-__Detailed README__
-- [Repository notes](#repository-notes)
-- [Installation](#installation)
-- [Data](#data)
-- [Processing calcium imaging data](#processing-calcium-imaging-data)
-	- [Check movie registration before pre-processing with `viewMovieRegistrationTest`](#check-movie-registration-before-pre-processing-with-viewmovieregistrationtest)
-	- [Preprocessing calcium imaging movies with  `modelPreprocessMovie`](#preprocessing-calcium-imaging-movies-with-modelpreprocessmovie)
-	- [Manual movie cropping with  `modelModifyMovies`](#manual-movie-cropping-with-modelmodifymovies)
-	- [Extracting cells with  `modelExtractSignalsFromMovie`](#extracting-cells-with-modelextractsignalsfrommovie)
-	- [Loading cell-extraction output data with `modelVarsFromFiles`](#loading-cell-extraction-output-data-with-modelvarsfromfiles)
-	- [Validating cell extraction with  `viewCellExtractionOnMovie`](#validating-cell-extraction-with--viewcellextractiononmovie)
-	- [Sorting cell extraction outputs with `computeManualSortSignals`](#sorting-cell-extraction-outputs-with-computemanualsortsignals)
-	- [Removing cells not within brain region with  `modelModifyRegionAnalysis`](#removing-cells-not-within-brain-region-with-modelmodifyregionanalysis)
-	- [Cross-session cell alignment with  `computeMatchObjBtwnTrials`](#cross-session-cell-alignment-with-computematchobjbtwntrials)
-- [ImageJ+MATLAB based mouse location tracking](#imagejmatlab-based-mouse-location-tracking)
 - [License](#license)
 
 ***
@@ -55,18 +45,22 @@ __Detailed README__
 ## Quick start guide
 
 Below are steps needed to quickly get started using the `calciumImagingAnalysis` software package in MATLAB.
-- Clone the `calciumImagingAnalysis` repository (using [GitHub desktop](https://desktop.github.com/) or command line) or download the repository zip and unzip.
-- Point the MATLAB path to the `calciumImagingAnalysis` root folder (*NOT* `@calciumImagingAnalysis` sub-folder in the repository).
+
+- __Install__ Clone the `calciumImagingAnalysis` repository (using [GitHub desktop](https://desktop.github.com/) or command line) or download the repository zip and unzip (e.g. run below MATLAB command).
+  - Point the MATLAB path to the `calciumImagingAnalysis` root folder (*NOT* `@calciumImagingAnalysis` sub-folder in the repository).
   - Alternatively, download the package from `File Exchange` using the Add-Ons explorer in MATLAB. See `calciumImagingAnalysis` entry at:
  [![View calciumImagingAnalysis on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis) or https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis.
-- Run the below MATLAB commands.
-- Afterwards, likely want to run `modelAddNewFolders` module first in order to add folders containing imaging data to the current class object.
-- [Optional] Users on Windows systems should download `Everything` (https://www.voidtools.com/). It is a very useful and extremely fast search engine for files and folders on a computer that can allow users to quickly get lists of folders then need to analyze in `calciumImagingAnalysis`.
-- [Optional] Users who want to run analysis via the command line can run `edit ciapkg.demo.cmdLinePipeline` and run each segment of code there to see what commands are needed to perform each step. It assumes you have already run `example_downloadTestData`.
+
+ ```Matlab
+ % Download and unzip current repository
+ unzip('https://github.com/bahanonu/calciumImagingAnalysis/archive/master.zip');
+ % Make calciumImagingAnalysis the working folder
+ cd('calciumImagingAnalysis-master')
+ ```
+
+- Run `calciumImagingAnalysis` using the below MATLAB commands. Call `obj;` each time you want to go back to the main GUI.
 
 ```MATLAB
-% Run these commands in MATLAB to get started.
-
 % Loads the class into an object for use in this session
 obj = calciumImagingAnalysis;
 
@@ -75,41 +69,44 @@ obj.setup;
 
 % Open the class menu (always type `obj` then enter load the class/modules menu)
 obj % then hit enter, no semicolon!
-
 ```
 
+- Afterwards, likely want to run `modelAddNewFolders` module first in order to add folders containing imaging data to the current class object.
+- [Optional] Users on Windows systems should download `Everything` (https://www.voidtools.com/). It is a very useful and extremely fast search engine for files and folders on a computer that can allow users to quickly get full paths for lists of folders that need to be analyzed in `calciumImagingAnalysis`.
+- [Optional] Users who want to analyze data via the command line can run `edit ciapkg.demo.cmdLinePipeline` and run each segment of code there to see what commands are needed to perform each step. It assumes you have already run `example_downloadTestData`.
+
 ### `calciumImagingAnalysis` main GUI notes
-- All main decisions for choosing a method/procedure to run, cell-extraction algorithm, and which folders to analyze are in a single window.
+- Run `obj;` in the command window to see the main GUI.
+- All main decisions for choosing a module to run, a cell-extraction algorithm, and which folders to analyze are in a single window.
 - The GUI will real-time update the selected folders based on the selections in the subject, assay, and folder filter areas.
-- Sections not relevant for a specific method are grayed out.
+- Sections not relevant for a specific module are grayed out.
 - Tab to cycle through selection areas. Green background is the currently selected area, dark gray background is area that had previously been selected but is not the active area, and white background is for areas that have not been selected yet.
-- Hover mouse over method names for tooltip that gives additional information.
+- Hover mouse over module names for tooltip that gives additional information.
 
 __For example, selecting middle two assays automatically changes selection in `Loaded folders` section.__
 
 <a href="https://user-images.githubusercontent.com/5241605/79494880-96ed0280-7fd8-11ea-85e1-05a13dc26e90.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/79494880-96ed0280-7fd8-11ea-85e1-05a13dc26e90.png" alt="image" width="45%" height="auto"/></a>
 <a href="https://user-images.githubusercontent.com/5241605/79494959-b97f1b80-7fd8-11ea-8197-7be457d24638.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/79494959-b97f1b80-7fd8-11ea-8197-7be457d24638.png" alt="image" width="45%" height="auto"/></a>
 
-__Certain sections become available when user selects the appropriate method (e.g. cell-extraction method available when selecting `modelExtractSignalsFromMovie`).__
+__Certain sections become available when user selects the appropriate module (e.g. cell-extraction module available when selecting `modelExtractSignalsFromMovie`).__
 
 <a href="https://user-images.githubusercontent.com/5241605/79495026-d4ea2680-7fd8-11ea-8d4d-02164e1af1d6.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/79495026-d4ea2680-7fd8-11ea-8d4d-02164e1af1d6.png" alt="image" width="50%" height="auto"/></a>
 
 ### Additional quick start notes
 
-- See additional details in [Processing calcium imaging data](#processing-calcium-imaging-data) for running the full processing pipeline.
-- Settings used to pre-process imaging movies (`modelPreprocessMovie` module) are stored inside the HDF5 file to allow `calciumImagingAnalysis` to load them again later.
+- See additional details on the [Processing calcium imaging data](https://bahanonu.github.io/calciumImagingAnalysis/pipeline_overview/) page for running the full processing pipeline.
+- Settings used to pre-process imaging movies (`modelPreprocessMovie` module) are stored inside the processed HDF5 movie to allow `calciumImagingAnalysis` to load them again later.
 - To force load all directories, including most external software packages (in `_external_programs` folder), type `ciapkg.loadAllDirs;` into MATLAB command line. This is most relevant when you need to access specific functions in an outside repository that are normally hidden until needed.
-- When issues are encountered, first check the `*Common issues and fixes` Wiki page to see if a solution is there. Else, submit a new issue or email Biafra (bahanonu [at] alum.mit.edu).
-- Notes:
-  - There are two sets of test data that are downloaded:
-    - __Single session analysis__: `data\2014_04_01_p203_m19_check01_raw` can be used to test the pipeline until the cross-session alignment step.
-    - __Batch analysis__: `data\batch` contains three imaging sessions that should be processed and can then be used for the cross-session alignment step. Users should try these sessions to get used to batched analysis.
-  - For Fiji dependency, when path to `Miji.m` (e.g. `\Fiji.app\scripts` folder) is requested, likely in `calciumImagingAnalysis\_external_programs\FIJI_FOLDER\Fiji.app\scripts` where `FIJI_FOLDER` varies depending on OS, unless the user requested a custom path or on OSX (in which case, find Fiji the install directory).
-    - If you run into Java heap space memory errors when Miji tries to load Fiji in MATLAB, make sure "java.opts" file is in MATLAB start-up folder or that `calciumImagingAnalysis` folder is the MATLAB start-up folder ([instructions on changing](https://www.mathworks.com/help/matlab/matlab_env/matlab-startup-folder.html)).
-  - `calciumImagingAnalysis` often uses [regular expressions](https://www.cheatography.com/davechild/cheat-sheets/regular-expressions/) to find relevant movie and other files in folders to analyze.
-    - For example, by default it looks for any movie files in a folder containing `concat`, e.g. `concat_recording_20140401_180333.h5` (test data). If you have a file called `rawData_2019_01_01_myInterestingExperiment.avi` and all your raw data files start with `rawData_` then change the regular expression to `rawData_` when requested by the repository. See `setMovieInfo` module to change after adding new folders.
-  - `calciumImagingAnalysis` generally assumes users have imaging data associated with *one* imaging session and animal in a given folder. Follow folder naming conventions in [Data](#data) for best experience.
-  - External software packages are downloaded into `_external_programs` folder and should be placed there if done manually.
+- When issues are encountered, first check the [Common issues and fixes](https://bahanonu.github.io/calciumImagingAnalysis/help_issues/) page to see if a solution is there. Else, submit a new issue or email Biafra (bahanonu [at] alum [dot] mit [dot] edu).
+- There are two sets of test data that are downloaded:
+  - __Single session analysis__: `data\2014_04_01_p203_m19_check01_raw` can be used to test the pipeline until the cross-session alignment step.
+  - __Batch analysis__: `data\batch` contains three imaging sessions that should be processed and can then be used for the cross-session alignment step. Users should try these sessions to get used to batched analysis.
+- For Fiji dependency, when path to `Miji.m` (e.g. `\Fiji.app\scripts` folder) is requested, likely in `calciumImagingAnalysis\_external_programs\FIJI_FOLDER\Fiji.app\scripts` where `FIJI_FOLDER` varies depending on OS, unless the user requested a custom path or on OSX (in which case, find Fiji the install directory).
+  - If you run into Java heap space memory errors when Miji tries to load Fiji in MATLAB, make sure "java.opts" file is in MATLAB start-up folder or that `calciumImagingAnalysis` folder is the MATLAB start-up folder ([instructions on changing](https://www.mathworks.com/help/matlab/matlab_env/matlab-startup-folder.html)).
+- `calciumImagingAnalysis` often uses [regular expressions](https://www.cheatography.com/davechild/cheat-sheets/regular-expressions/) to find relevant movie and other files in folders to analyze.
+  - For example, by default it looks for any movie files in a folder containing `concat`, e.g. `concat_recording_20140401_180333.h5` (test data). If you have a file called `rawData_2019_01_01_myInterestingExperiment.avi` and all your raw data files start with `rawData_` then change the regular expression to `rawData_` when requested by the repository. See `setMovieInfo` module to change after adding new folders.
+- `calciumImagingAnalysis` generally assumes users have imaging data associated with *one* imaging session and animal in a given folder. Follow folder naming conventions in [Data formats](https://bahanonu.github.io/calciumImagingAnalysis/data/#preferred-folder-naming-format) for the best experience.
+- External software packages are downloaded into `_external_programs` folder and should be placed there if done manually.
 
 Users can alternatively run setup as below.
 ```MATLAB
@@ -175,7 +172,7 @@ Please cite [Corder*, Ahanonu*, et al. 2019](http://science.sciencemag.org/conte
 ```
 
 ## Questions?
-Please email any additional questions not covered in the repository to `bahanonu [at] alum.mit.edu` or open an issue.
+Please email any additional questions not covered in the repository to `bahanonu [at] alum [dot] mit [dot] edu` or open an issue.
 
 ***
 
@@ -189,3 +186,5 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+[![HitCount](http://hits.dwyl.com/bahanonu/calciumImagingAnalysis.svg)](http://hits.dwyl.com/bahanonu/calciumImagingAnalysis) (Starting 2020-08-16).

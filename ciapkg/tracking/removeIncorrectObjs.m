@@ -208,6 +208,7 @@ function [trackingTableFilteredCell] = removeIncorrectObjs(tablePath,varargin)
 				box off
             subplot(2,3,[4 5 6])
                 nrows = size(trackingTableFiltered,1);
+				tableNames = fieldnames(trackingTableFiltered);
                 timeVector = (1:nrows)/options.framesPerSecond/60;
 				yyaxis left
                 if options.groupFilesInFolder==1

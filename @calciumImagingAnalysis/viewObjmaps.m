@@ -153,7 +153,8 @@ function obj = viewObjmaps(obj,varargin)
 			[~,~] = openFigure(options.figList(4)+thisFileNumIdx, '');
 			%
 			% [inputSignals inputImages signalPeaks signalPeakIdx] = modelGetSignalsImages(obj,'returnType','raw');
-			[inputSignals, inputImages, signalPeaks, signalPeakIdx, valid, validType] = modelGetSignalsImages(obj,'returnType','raw');
+			[inputSignals, inputImages, signalPeaks, signalPeakIdx, valid, validType, inputSignals2] = modelGetSignalsImages(obj,'returnType','raw');
+			inputSignals = inputSignals2;
 			if isempty(inputSignals)
 				disp('no input signals');
 				try
