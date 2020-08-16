@@ -7,7 +7,8 @@ testMovie = loadMovieList('pathToMovieFile');
 unitTestDownsampleMovie(testMovie,'interp1Method','linear','cropSize',5);
 ```
 
-Below is an example pixel from a cell in a BLA animal. Note...
+Below is an example pixel from a cell in a BLA animal. Note:
+
 - ImageJ `Scale...`+bilinear+averaging (blue) and Matlab `imresize`+bilinear (red) both produce pretty much identical results.
 - `imresize` using bilinear and bicubic produce similar results with bicubic having slower runtimes (e.g. on my machine 3.46 vs. 4.31 sec if set `cropSize` to 100).
 - The number next to each name is the vector's variance.

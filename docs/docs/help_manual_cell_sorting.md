@@ -9,11 +9,13 @@ As a general note, it is a bad idea to bias users by using heuristics or computa
 Usage instructions below for `signalSorter.m`:
 
 __Main inputs__
+
 - `inputImages` - [x y N] matrix where N = number of images, x/y are dimensions.
 - `inputSignals` - [N frames] _double_ matrix where N = number of signals (traces).
 - `inputMovie` - [x y frames] matrix
 
 __Main outputs__
+
 - `choices` - [N 1] vector of 1 = cell, 0 = not a cell
 - `inputImagesSorted` - [x y N] filtered by `choices'
 - `inputSignalsSorted` - [N frames] filtered by `choice`

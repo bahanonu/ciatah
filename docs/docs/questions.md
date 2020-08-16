@@ -1,2 +1,2 @@
 ## Questions?
-Please email any additional questions not covered in the repository to `bahanonu [at] alum.mit.edu` or open an issue.
+Please [open an issue on GitHub](https://github.com/bahanonu/calciumImagingAnalysis/issues) or email any additional questions not covered in the repository to `bahanonu [at] alum.mit.edu`.

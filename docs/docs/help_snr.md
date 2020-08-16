@@ -10,6 +10,7 @@ This relates to methods within the `calciumImagingAnalysis` class for checking Î
 ## Spatial filtering during `modelPreprocessMovie` preprocessing
 - The other is that in the `modelPreprocessMovie` preprocessing module, when you are on the 1st page of the options, in the `filterBeforeRegister` setting select `matlab divide by lowpass before registering` or `matlab bandpass before registering`.
 - See also the spatial filtering wiki page: https://github.com/bahanonu/calciumImagingAnalysis/wiki/Preprocessing:-Spatial-filtering#dark-halos-around-cells.
+
 ![image](https://user-images.githubusercontent.com/5241605/52152666-06710f00-262c-11e9-89fe-6f517632f384.png)
 
 ## viewMovieRegistrationTest

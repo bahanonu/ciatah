@@ -34,9 +34,9 @@ Within each folder will be a sub-folder called `preprocRunTest` inside of which 
 ![image](https://user-images.githubusercontent.com/5241605/52497447-f3f65880-2b8a-11e9-8875-c6b408e5c011.png)
 
 - You'll get an output like the below:
-	- __A__: The top left is without any filtering while the other 3 are with different bandpass filtering options.
-	- __B__: Cell ΔF/F intensity profile from the raw movie. Obtain by selecting `Analyze->Plot profile` from Fiji menu after selecting a square segment running through a cell.
-	- __C__: Same cell ΔF/F intensity profile from the bottom/left movie (note the y-axis is the same as above). Obtained in same manner as __B__.
+  - __A__: The top left is without any filtering while the other 3 are with different bandpass filtering options.
+  - __B__: Cell ΔF/F intensity profile from the raw movie. Obtain by selecting `Analyze->Plot profile` from Fiji menu after selecting a square segment running through a cell.
+  - __C__: Same cell ΔF/F intensity profile from the bottom/left movie (note the y-axis is the same as above). Obtained in same manner as __B__.
 
 ![image](https://user-images.githubusercontent.com/5241605/59561146-695ab580-8fd1-11e9-892b-ce1f5fc7800e.png)
 

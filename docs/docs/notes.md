@@ -11,4 +11,5 @@
 - Please check the 'Wiki' for further instructions on specific processing/analysis steps and additional information of software used by this package.
 - When issues are encountered, first check the `Common issues and fixes` Wiki page to see if a solution is there. Else, submit a new issue.
 
-![image](https://user-images.githubusercontent.com/5241605/61981834-ab532000-afaf-11e9-97c2-4b1d7d759a30.png)
+![ciapkg_pipeline.png](img/ciapkg_pipeline.png)
+<!-- ![image](https://user-images.githubusercontent.com/5241605/61981834-ab532000-afaf-11e9-97c2-4b1d7d759a30.png) -->

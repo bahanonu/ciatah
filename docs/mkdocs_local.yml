@@ -1,6 +1,6 @@
 site_name: calciumImagingAnalysis (ciapkg)
-# For online, to end in /data instead of /data.html
-use_directory_urls: true
+# For local builds
+use_directory_urls: false
 theme:
   name: readthedocs
   nav_style: dark
@@ -42,10 +42,8 @@ nav:
       - Overview: pipeline_overview.md
       - Step-by-step: pipeline_detailed.md
       - Animal tracking: pipeline_animal_tracking.md
-  - API:
-    - Custom pipelines: api_example_pipeline.md
-    - ciapkg: api_ciapkg.md
   - Help:
+    - Custom pipelines: help_example_pipeline.md
     - Issues and fixes: help_issues.md
     - Analysis methods: help_analysis_methods.md
     - Inscopix: help_inscopix.md

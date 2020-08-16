@@ -1,5 +1,7 @@
 # calciumImagingAnalysis
 
+_Note: in general use the individual pages in the navigation pane on the left, as those will be most up-to-date._
+
 <img src="https://user-images.githubusercontent.com/5241605/51068051-78c27680-15cd-11e9-9434-9d181b00ef8e.png" align="center">
 
 <hr>
@@ -20,7 +22,7 @@ Software package for calcium imaging analysis of one- and two-photon imaging dat
 Contact: __Biafra Ahanonu, PhD (bahanonu [at] alum [dot] mit [dot] edu)__.
 
 Made in USA.<br>
-<img src="https://user-images.githubusercontent.com/5241605/71493809-322a5400-27ff-11ea-9b2d-52ff20b5f332.png" align="center" title="USA" alt="USA" width="auto" height="50">
+<img src="https://user-images.githubusercontent.com/5241605/71493809-322a5400-27ff-11ea-9b2d-52ff20b5f332.png" align="center" title="USA" alt="USA" width="100px">
 
 ***
 ## Contents
@@ -30,19 +32,20 @@ Made in USA.<br>
 - [Questions](#questions)
 
 __Detailed README__
+
 - [Repository notes](#repository-notes)
 - [Installation](#installation)
 - [Data](#data)
 - [Processing calcium imaging data](#processing-calcium-imaging-data)
-	- [Check movie registration before pre-processing with `viewMovieRegistrationTest`](#check-movie-registration-before-pre-processing-with-viewmovieregistrationtest)
-	- [Preprocessing calcium imaging movies with  `modelPreprocessMovie`](#preprocessing-calcium-imaging-movies-with-modelpreprocessmovie)
-	- [Manual movie cropping with  `modelModifyMovies`](#manual-movie-cropping-with-modelmodifymovies)
-	- [Extracting cells with  `modelExtractSignalsFromMovie`](#extracting-cells-with-modelextractsignalsfrommovie)
-	- [Loading cell-extraction output data with `modelVarsFromFiles`](#loading-cell-extraction-output-data-with-modelvarsfromfiles)
-	- [Validating cell extraction with  `viewCellExtractionOnMovie`](#validating-cell-extraction-with--viewcellextractiononmovie)
-	- [Sorting cell extraction outputs with `computeManualSortSignals`](#sorting-cell-extraction-outputs-with-computemanualsortsignals)
-	- [Removing cells not within brain region with  `modelModifyRegionAnalysis`](#removing-cells-not-within-brain-region-with-modelmodifyregionanalysis)
-	- [Cross-session cell alignment with  `computeMatchObjBtwnTrials`](#cross-session-cell-alignment-with-computematchobjbtwntrials)
+  - [Check movie registration before pre-processing with `viewMovieRegistrationTest`](#check-movie-registration-before-pre-processing-with-viewmovieregistrationtest)
+  - [Preprocessing calcium imaging movies with  `modelPreprocessMovie`](#preprocessing-calcium-imaging-movies-with-modelpreprocessmovie)
+  - [Manual movie cropping with  `modelModifyMovies`](#manual-movie-cropping-with-modelmodifymovies)
+  - [Extracting cells with  `modelExtractSignalsFromMovie`](#extracting-cells-with-modelextractsignalsfrommovie)
+  - [Loading cell-extraction output data with `modelVarsFromFiles`](#loading-cell-extraction-output-data-with-modelvarsfromfiles)
+  - [Validating cell extraction with  `viewCellExtractionOnMovie`](#validating-cell-extraction-with--viewcellextractiononmovie)
+  - [Sorting cell extraction outputs with `computeManualSortSignals`](#sorting-cell-extraction-outputs-with-computemanualsortsignals)
+  - [Removing cells not within brain region with  `modelModifyRegionAnalysis`](#removing-cells-not-within-brain-region-with-modelmodifyregionanalysis)
+  - [Cross-session cell alignment with  `computeMatchObjBtwnTrials`](#cross-session-cell-alignment-with-computematchobjbtwntrials)
 - [ImageJ+MATLAB based mouse location tracking](#imagejmatlab-based-mouse-location-tracking)
 - [License](#license)
 
@@ -51,6 +54,7 @@ __Detailed README__
 ## Quick start guide
 
 Below are steps needed to quickly get started using the `calciumImagingAnalysis` software package in MATLAB.
+
 - Clone the `calciumImagingAnalysis` repository (using [GitHub desktop](https://desktop.github.com/) or command line) or download the repository zip and unzip.
 - Point the MATLAB path to the `calciumImagingAnalysis` root folder (*NOT* `@calciumImagingAnalysis` sub-folder in the repository).
   - Alternatively, download the package from `File Exchange` using the Add-Ons explorer in MATLAB. See `calciumImagingAnalysis` entry at:
@@ -196,12 +200,14 @@ All the remaining sections encompass a more detailed README that provide a step-
 ## Installation
 
 Clone the `calciumImagingAnalysis` repository or download the repository zip and unzip.
+
 - Point the MATLAB path to the `calciumImagingAnalysis` folder.
 - Run `loadBatchFxns.m` before using functions in the directory. This adds all needed directories and sub-directories to the MATLAB path.
 - Type `obj = calciumImagingAnalysis;` into MATLAB command window and follow instructions that appear after to add data and run analysis.
 - Run the `calciumImagingAnalysis` class method `loadDependencies` or type `obj.loadDependencies` after initializing a `calciumImagingAnalysis` object into the command window to download and add Fiji to path, download CNMF/CNMF-E repositories, download/setup CVX (for CNMF/CNMF-E), and download example data.
 
 Note
+
 - Place `calciumImagingAnalysis` in a folder where MATLAB will have write permissions, as it also creates a `private` subdirectory to store some user information along with downloading required external software packages.
 - `file_exchange` folder contains File Exchange functions used by `calciumImagingAnalysis`.
 - In general, it is best to set the MATLAB startup directory to the `calciumImagingAnalysis` folder. This allows `java.opts` and `startup.m` to set the correct Java memory requirements and load the correct folders into the MATLAB path.
@@ -268,12 +274,14 @@ parSet.Pool.AutoCreate = false;
 
 #### Neurodata Without Borders
 Neurodata Without Borders (NWB) file support requires the following GitHub repositories be present in the `_external_programs` folder. These are downloaded automatically when running `obj.setup`.
+
 - https://github.com/schnitzer-lab/nwb_schnitzer_lab.
 - https://github.com/ewiger/yamlmatlab.
 - https://github.com/NeurodataWithoutBorders/matnwb.
 
 ### Repository organization
 Below are a list of the top-level directories and what types of functions or files are within.
+
 - __@calciumImagingAnalysis__ - Contains `calciumImagingAnalysis` class and associated methods for calcium imaging analysis.
 - ___external_programs___ - External software packages (e.g. CNMF, CELLMax, and others) are stored here.
 - ___overloaded___ - Functions that overload core MATLAB functions to add functionality or fix display issues.
@@ -312,20 +320,22 @@ The naming convention in general is below. Both TIF and AVI raw files are conver
 - Default raw imaging data filename: `concat_.*.(h5|tif)`.
 - Default raw processed data filename: `folderName_(processing steps).h5`, where `folderName` is the directory name where the calcium imaging movies are located.
 - Main files output by `calciumImagingAnalysis`. Below, `.*` normally indicates the folder name prefixed to the filename.
-	- `.*_pcaicaAnalysis.mat`: Where PCA-ICA outputs are stored.
-	- `.*_ICdecisions_.*.mat`: Where decisions for cell (=1) and not cell (=0) are stored in a `valid` variable.
-	- `.*_regionModSelectUser.mat`: A mask of the region (=1) to include in further analyses.
-	- `.*_turboreg_crop_dfof_1.h5`: Processed movie, in this case motion corrected, cropped, and Δ_F/F_.
-	- `processing_info`: a folder containing preprocessing information.
+  - `.*_pcaicaAnalysis.mat`: Where PCA-ICA outputs are stored.
+  - `.*_ICdecisions_.*.mat`: Where decisions for cell (=1) and not cell (=0) are stored in a `valid` variable.
+  - `.*_regionModSelectUser.mat`: A mask of the region (=1) to include in further analyses.
+  - `.*_turboreg_crop_dfof_1.h5`: Processed movie, in this case motion corrected, cropped, and Δ_F/F_.
+  - `processing_info`: a folder containing preprocessing information.
 
 ### NWB Support
 calciumImagingAnalysis supports NWB format and by default will output cell-extraction analysis as calciumImagingAnalysis format unless user specifies otherwise. NWB files are by default stored in the `nwbFiles` sub-folder. This can be changed by setting the `obj.nwbFileFolder` property to a different folder name.
+
 - Default image mask HDF5 dataset name: '/processing/ophys/ImageSegmentation/PlaneSegmentation'.
 - Default fluorescence activity HDF5 dataset name: '/processing/ophys/Fluorescence/RoiResponseSeries'.
 
 ### Preferred folder naming format
 
 Folders should following the format `YYYY_MM_DD_pXXX_mXXX_assayXX_trialXX` where:
+
 -   `YYYY_MM_DD` = normal year/month/day scheme.
 -   `pXXX` = protocol number, e.g. p162, for the set of experiments performed for the same set of animals.
 -   `mXXX` = subject ID/number, e.g. m805 or animal ID.
@@ -334,25 +344,25 @@ Folders should following the format `YYYY_MM_DD_pXXX_mXXX_assayXX_trialXX` where
 
 ### Videos
 - HDF5:
-	- Saved as a `[x y t]` 3D matrix where `x` and `y` are the height and width of video while `t` is number of frames.
-	- `/1` as the name for directory containing movie data.
-	- HDF can be read in using Fiji, see http://lmb.informatik.uni-freiburg.de/resources/opensource/imagej_plugins/hdf5.html.
-	- Each HDF5 file should contain imaging data in a dataset name, e.g. `/1` is the default datasetname for `[x y frames]` 2D calcium imaging movies in this repository.
-	- Most functions have a `inputDatasetName` option to specify the dataset name if different from `/1`.
+  - Saved as a `[x y t]` 3D matrix where `x` and `y` are the height and width of video while `t` is number of frames.
+  - `/1` as the name for directory containing movie data.
+  - HDF can be read in using Fiji, see http://lmb.informatik.uni-freiburg.de/resources/opensource/imagej_plugins/hdf5.html.
+  - Each HDF5 file should contain imaging data in a dataset name, e.g. `/1` is the default datasetname for `[x y frames]` 2D calcium imaging movies in this repository.
+  - Most functions have a `inputDatasetName` option to specify the dataset name if different from `/1`.
  - TIF
-	- Normal `[x y frames]` tif.
+  - Normal `[x y frames]` tif.
 - AVI
-	- Raw uncompressed grayscale `[x y frames]` avi.
+  - Raw uncompressed grayscale `[x y frames]` avi.
 
 ### Cell images
 - IC filters from PCA-ICA and images from CNMF(-E).
-	- `[x y n]` matrix
-	- `x` and `y` being height/width of video and `n` is number of ICs output.
+  - `[x y n]` matrix
+  - `x` and `y` being height/width of video and `n` is number of ICs output.
 
 ### Cell traces
 - IC traces from PCA-ICA and images from CNMF(-E).
-	- `[n f]` matrix.
-	- `n` is number of ICs output and `f` is number of movie frames.
+  - `[n f]` matrix.
+  - `n` is number of ICs output and `f` is number of movie frames.
 
 ******************************************
 
@@ -360,7 +370,8 @@ Folders should following the format `YYYY_MM_DD_pXXX_mXXX_assayXX_trialXX` where
 
 The general pipeline for processing calcium imaging data is below. This repository includes code to do nearly every step.
 
-![image](https://user-images.githubusercontent.com/5241605/61981834-ab532000-afaf-11e9-97c2-4b1d7d759a30.png)
+<!-- ![image](https://user-images.githubusercontent.com/5241605/61981834-ab532000-afaf-11e9-97c2-4b1d7d759a30.png) -->
+![ciapkg_pipeline.png](img/ciapkg_pipeline.png)
 
 To start using the `calciumImagingAnalysis` software package, enter the following into the MATLAB command window.
 
@@ -380,36 +391,36 @@ obj.runPipeline; % then hit enter!
 The general order of functions that users should run is ([optional] are those not critical for most datasets):
 
 - `loadDependencies`
-	- If user is running calciumImagingAnalysis for the first time, this module has several options to download and load CNMF/CNMF-E code for cell extraction, Fiji for viewing/modifying videos (using Miji), and test data from a miniature microscope experiment.
+  - If user is running calciumImagingAnalysis for the first time, this module has several options to download and load CNMF/CNMF-E code for cell extraction, Fiji for viewing/modifying videos (using Miji), and test data from a miniature microscope experiment.
 - `modelDownsampleRawMovies` [optional]
-	- If users have raw calcium imaging data that needs to be spatially downsampled, e.g. raw data from Inscopix nVista software.
+  - If users have raw calcium imaging data that needs to be spatially downsampled, e.g. raw data from Inscopix nVista software.
 - `modelAddNewFolders`
-	- Users should always use this method first, used to add folders to the current class object.
-	- For example, if users ran `example_downloadTestData.m`, then add the folder `[githubRepoPath]\data\2014_04_01_p203_m19_check01_raw` where `githubRepoPath` is the absolute path to the current `calciumImagingAnalysis` repository.
+  - Users should always use this method first, used to add folders to the current class object.
+  - For example, if users ran `example_downloadTestData.m`, then add the folder `[githubRepoPath]\data\2014_04_01_p203_m19_check01_raw` where `githubRepoPath` is the absolute path to the current `calciumImagingAnalysis` repository.
 - `viewMovie`
-	- Users should check that calciumImagingAnalysis loads their movies correctly and that Miji is working.
-	- Remember to check that `Imaging movie regexp:` (regular expression class uses to find user movies within given folders) setting matches name of movies currently in repository.
+  - Users should check that calciumImagingAnalysis loads their movies correctly and that Miji is working.
+  - Remember to check that `Imaging movie regexp:` (regular expression class uses to find user movies within given folders) setting matches name of movies currently in repository.
 - `viewMovieRegistrationTest` [optional]
-	- Users can check different spatial filtering and registration settings.
-	- `tregRunX` folders (where `X` is a number) contain details of each run setting. Delete from analysis folder if don't need outputs later.
-	- Remember to adjust contrast in resulting montage movies since different filtering will change the absolute pixel values.
+  - Users can check different spatial filtering and registration settings.
+  - `tregRunX` folders (where `X` is a number) contain details of each run setting. Delete from analysis folder if don't need outputs later.
+  - Remember to adjust contrast in resulting montage movies since different filtering will change the absolute pixel values.
 - `modelPreprocessMovie`
-	- Main processing method for calciumImagingAnalysis. Performs motion correction, spatial filtering, cropping, down-sampling, and relative fluorescence calculations. If using Inscopix nVista 1.0 or 2.0, also will correct for dropped frames.
+  - Main processing method for calciumImagingAnalysis. Performs motion correction, spatial filtering, cropping, down-sampling, and relative fluorescence calculations. If using Inscopix nVista 1.0 or 2.0, also will correct for dropped frames.
 - `modelModifyMovies`
-	- GUI that allows users to remove movie regions not relevant to cell extraction.
+  - GUI that allows users to remove movie regions not relevant to cell extraction.
 - `modelExtractSignalsFromMovie`
-	- Performs cell extraction, currently PCA-ICA with the ability to run more recent algorithms (e.g. CNMF) upon request.
+  - Performs cell extraction, currently PCA-ICA with the ability to run more recent algorithms (e.g. CNMF) upon request.
 - `modelVarsFromFiles`
-	- Run after `modelExtractSignalsFromMovie` to load cell image and trace information into the current class object.
+  - Run after `modelExtractSignalsFromMovie` to load cell image and trace information into the current class object.
 - `viewCellExtractionOnMovie` [optional]
-	- This function overlays the cell extraction outputs on snippets of the processed video, allowing users to check that cell extraction correctly identified all the cells.
+  - This function overlays the cell extraction outputs on snippets of the processed video, allowing users to check that cell extraction correctly identified all the cells.
 - `computeManualSortSignals`
-	- A GUI to allow users to classify cells and not cells in cell extraction outputs.
+  - A GUI to allow users to classify cells and not cells in cell extraction outputs.
 - `modelModifyRegionAnalysis` [optional]
-	- Users are able to select specific cells from cell extraction manual sorting to include in further analyses.
+  - Users are able to select specific cells from cell extraction manual sorting to include in further analyses.
 - `computeMatchObjBtwnTrials`
-	- Method to register cells across imaging sessions. Also includes visual check GUI in `viewMatchObjBtwnSessions` method.
-	- __Note: it is heavily advised that throughout a particular animal's imaging sessions, that you keep the acquisition frame dimensions identical.__ This makes cross-session registration easier. Else you will have to crop all sessions for that animal to the same size ensuring that the area of interest is present in each.
+  - Method to register cells across imaging sessions. Also includes visual check GUI in `viewMatchObjBtwnSessions` method.
+  - __Note: it is heavily advised that throughout a particular animal's imaging sessions, that you keep the acquisition frame dimensions identical.__ This makes cross-session registration easier. Else you will have to crop all sessions for that animal to the same size ensuring that the area of interest is present in each.
 
 ******************************************
 
@@ -424,6 +435,7 @@ obj.modelDownsampleRawMovies;
 ```
 
 This will pop-up the following screen. Users can
+
 - input several folders where ISXD files are by separating each folder path with a comma (`Folder(s) where raw HDF5s are located`),
 - specify a common root folder to save files to (`Folder to save downsampled HDF5s to:`),
 - and input a root directory that contains the sub-folders with the raw data (`Decompression source root folder(s)`).
@@ -447,9 +459,9 @@ Within each folder will be a sub-folder called `preprocRunTest` inside of which 
 ![image](https://user-images.githubusercontent.com/5241605/52497447-f3f65880-2b8a-11e9-8875-c6b408e5c011.png)
 
 - You'll get an output like the below:
-	- __A__: The top left is without any filtering while the other 3 are with different bandpass filtering options.
-	- __B__: Cell ΔF/F intensity profile from the raw movie. Obtain by selecting `Analyze->Plot profile` from Fiji menu after selecting a square segment running through a cell.
-	- __C__: Same cell ΔF/F intensity profile from the bottom/left movie (note the y-axis is the same as above). Obtained in same manner as __B__.
+  - __A__: The top left is without any filtering while the other 3 are with different bandpass filtering options.
+  - __B__: Cell ΔF/F intensity profile from the raw movie. Obtain by selecting `Analyze->Plot profile` from Fiji menu after selecting a square segment running through a cell.
+  - __C__: Same cell ΔF/F intensity profile from the bottom/left movie (note the y-axis is the same as above). Obtained in same manner as __B__.
 
 ![image](https://user-images.githubusercontent.com/5241605/59561146-695ab580-8fd1-11e9-892b-ce1f5fc7800e.png)
 
@@ -633,6 +645,7 @@ Users can save out the alignment structure by running `modelSaveMatchObjBtwnTria
 # ImageJ+MATLAB based mouse location tracking
 
 Functions needed (have entire `calciumImagingAnalysis` loaded anyways):
+
 - `mm_tracking.ijm` is the tracking function for use in ImageJ, place in
 `plugins` folder. If already had `calciumImagingAnalysis` download Fiji, place in the `_external_programs/[Fiji directory]/Fiji.app/plugins` folder.
 - `removeIncorrectObjs.m` is a function to clean-up the ImageJ output.

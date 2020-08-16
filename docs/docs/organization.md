@@ -1,5 +1,6 @@
 ### Repository organization
 Below are a list of the top-level directories and what types of functions or files are within.
+
 - __@calciumImagingAnalysis__ - Contains `calciumImagingAnalysis` class and associated methods for calcium imaging analysis.
 - ___external_programs___ - External software packages (e.g. CNMF, CELLMax, and others) are stored here.
 - ___overloaded___ - Functions that overload core MATLAB functions to add functionality or fix display issues.
