@@ -31,7 +31,7 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 	% 	eval([fn{i} '=options.' fn{i} ';']);
 	% end
 	%========================
-	
+
 	if nargin==1
 		disp('No title string given, using blank');
 		inputTitleStr = '';

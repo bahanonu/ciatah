@@ -12,7 +12,7 @@ function [success] = saveNeurodataWithoutBorders(image_masks,roi_response_data,a
 		%
 
 	% changelog
-		%
+		% 2020.07.01 [09:40:20] - Convert roi_response_data to cell if user inputs only a matrix.
 	% TODO
 		%
 
@@ -53,6 +53,12 @@ function [success] = saveNeurodataWithoutBorders(image_masks,roi_response_data,a
 	    	data_type = algorithm;
 		end
 
+		% Automatically convert to cell if matrix
+		if iscell(roi_response_data)==0 & ismatrix(roi_response_data)==1
+			disp('Converting roi_response_data to cell from matrix');
+			roi_response_data = {roi_response_data};
+		end
+		
 		tmpData = roi_response_data;
 		roi_response_data = struct;
 		for i=1:length(tmpData)

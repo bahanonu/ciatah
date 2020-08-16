@@ -311,12 +311,13 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				% Check that the regular expression will find a movie, if not skip folder and notify user
 				movieList = getFileList(obj.inputFolders{obj.fileNum}, fileFilterRegexp);
 				if isempty(movieList)
-					errorStr = sprintf('No movie found matching %s in %s.\n',fileFilterRegexp,obj.inputFolders{obj.fileNum});
+					errorStr = sprintf('No movie found matching %s in:\n%s.\n Make sure the regular expression to find movies is correct. \n',fileFilterRegexp,obj.inputFolders{obj.fileNum});
 					warning(errorStr)
 					% s.WindowStyle = 'non-modal';
 					s.Interpreter = 'tex';
 					s.WindowStyle = 'replace';
-					h = msgbox_custom(['\fontsize{10}' errorStr],'WARNING: cell-extraction',s);
+					% h = msgbox_custom(['\fontsize{10}' errorStr],'WARNING: cell-extraction',s);
+					h = msgbox_custom(['' errorStr],'WARNING: cell-extraction',s);
 					return;
 				end
 
@@ -382,14 +383,24 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	% ==========================================
 	if ~isempty(successList)
 		obj.foldersToAnalyze = successList;
+		nInputFolders = length(obj.inputFolders);
 		% add information about the extracted signals to the object for later processing
 		objGuiOld = obj.guiEnabled;
 		obj.guiEnabled = 0;
-		obj.modelVarsFromFiles();
-		obj.guiEnabled = 0;
-		% obj.viewCreateObjmaps();
-		if viewResultsAfter==1
-			obj.viewObjmaps();
+		for signalExtractNo = 1:nSignalExtractMethods
+			try
+				obj.signalExtractionMethod = signalExtractionMethod{signalExtractNo};
+				obj.modelVarsFromFiles();
+				obj.guiEnabled = 0;
+				% obj.viewCreateObjmaps();
+				if viewResultsAfter==1
+					obj.viewObjmaps('figList',[2000 5000 4000 45]+nInputFolders*signalExtractNo);
+				end
+			catch err
+				disp(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				disp(repmat('@',1,7))
+			end
 		end
 		obj.guiEnabled = objGuiOld;
 		try

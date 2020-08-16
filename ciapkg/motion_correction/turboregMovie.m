@@ -155,6 +155,8 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 
 	% Binary: 1 = return the movie after normalizing, mean subtract, etc.
 	options.returnNormalizedMovie = 0;
+	% Binary: 1 = run correlation before spatial filtering, 0 = do not run correlation.
+	options.computeCorr = 0;
 
 	% get options
 	options = getOptions(options,varargin);
@@ -300,6 +302,10 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	% [ResultsOut averagePictureEdge] = turboregMovieParallel(inputMovieCropped,turboRegOptions,options);
 	turboregMovieParallel();
 
+	if options.computeCorr==1
+
+	end
+
 	if ~isempty(options.saveTurboregCoords)
 		options.saveTurboregCoords
 		ResultsOut
@@ -396,6 +402,16 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	else
 		%
 	end
+
+	% function subfxnComputeMovieCorr()
+	% 	corrMetric
+	% 	corrMetric2
+	% 	for i =1:size(inputMovie,3);
+	% 		thisFrame_cc = inputMovie(cc(2):cc(4),cc(1):cc(3),i);
+	% 		corrMetric(i) = corr2(meanG_cc,thisFrame_cc);
+	% 		corrMetric2(i) = corr(meanG_cc(:),thisFrame_cc(:),'Type','Spearman');
+	% 	end
+	% end
 
 	function convertInputMovieToCell()
 		%Get dimension information about 3D movie matrix

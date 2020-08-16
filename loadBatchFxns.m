@@ -19,6 +19,7 @@ function loadBatchFxns(varargin)
 		% 2019.11.13 [18:06:02] - Updated to make contains not include less than 9.1.
 		% 2020.05.09 [16:40:13] - Updates to remove additional specific repositories that should not be loaded by default. Add support for overriding this feature.
 		% 2020.06.05 [23:35:43] - If user doesn't have Parallel Toolbox, still works
+		% 2020.07.21 [14:11:42] - Fix to make sure all sub-folders (not just the root) are also removed in the case of certain external_programs.
 	% TODO
 		%
 
@@ -212,7 +213,8 @@ function loadBatchFxns(varargin)
 					matchIdx = contains(pathListArray,pathToRm);
 					if rmPathFlag==1&any(matchIdx)>0
 						fprintf('Removing unneeded directory from path: %s.\n',thisFxnStr);
-						pathToRmCell{end+1} = pathToRm;
+						% pathToRmCell{end+1} = pathToRm;
+						pathToRmCell = [pathToRmCell{:} pathListArray(matchIdx)];
 						% rmpath(pathToRm);
 					elseif rmPathFlag==0
 						fprintf('Removing unneeded directory from "to add" path list: %s.\n',thisFxnStr);

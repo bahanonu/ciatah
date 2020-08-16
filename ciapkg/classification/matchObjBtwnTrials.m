@@ -37,7 +37,7 @@ function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
 	% which session to start alignment on, just make it
 	options.trialToAlign = 1;
 	% distance in pixels between centroids for them to be grouped
-	% options.maxDistance = 2.5126;%6um
+	% options.maxDistance = 2.5126; % 6um
 	options.maxDistance = 5;
 	% number of rounds to register image.
 	options.nCorrections = 1;

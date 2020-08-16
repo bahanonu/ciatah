@@ -1,0 +1,62 @@
+site_name: calciumImagingAnalysis (ciapkg)
+# For local builds
+use_directory_urls: false
+theme:
+  name: readthedocs
+  nav_style: dark
+  highlightjs: true
+  hljs_style: github
+  hljs_languages:
+      - matlab
+      - python
+  # navigation_depth: 3
+  shortcuts:
+      help: 191    # ?
+      next: 78     # n
+      previous: 80 # p
+      search: 83   # s
+markdown_extensions:
+  - toc:
+      permalink: true
+  - pymdownx.magiclink
+  - mdx_truly_sane_lists
+    # - markdown.extensions.toc:
+    #       slugify: !!python/name:pymdownx.slugs.uslugify
+    #       permalink: "\ue157"
+#     - codehilite
+extra_css:
+    - css/extra.css
+nav:
+  - Home: index.md
+  - One-page readme: alldocs.md
+  - Setup:
+    - Quick Start: install.md
+    - Install: install2.md
+    - Example data: example_data.md
+    - Dependencies: dependencies.md
+  - Repository:
+    - Data formats: data.md
+    - Notes: notes.md
+    - Organization: organization.md
+  - Processing data:
+      - Overview: pipeline_overview.md
+      - Step-by-step: pipeline_detailed.md
+      - Animal tracking: pipeline_animal_tracking.md
+  - Help:
+    - Custom pipelines: help_example_pipeline.md
+    - Issues and fixes: help_issues.md
+    - Analysis methods: help_analysis_methods.md
+    - Inscopix: help_inscopix.md
+    - Cross-session alignemnt: help_cross_session_alignment.md
+    - Manual cell sorting: help_manual_cell_sorting.md
+    - Improving signal-to-noise: help_snr.md
+    - Motion correction: help_motion_correction.md
+    - Spatial filtering: help_spatial_filtering.md
+    - Stripe removal: help_stripe_removal.md
+    - Temporal downsampling: help_temporal_downsampling.md
+    - Animal tracking: help_animal_tracking.md
+  - Misc:
+    - Acknowledgments: acknowledgments.md
+    - Cite: references.md
+    - Questions: questions.md
+    - License: license.md

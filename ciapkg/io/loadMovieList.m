@@ -94,6 +94,8 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 	options.onlyCheckFirstFileInfo = 0;
 	% Binary: 1 = h5info, 0 = hdf5info. DO NOT rely on this, will be deprecated/eliminated soon.
 	options.useH5info = 1;
+	% Int: [] = do nothing, 1-3 indicates R,G,B channels to take from multicolor RGB AVI
+	options.rgbChannel = [];
 	% get options
 	options = getOptions(options,varargin);
 	% unpack options into current workspace
@@ -612,8 +614,10 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 					readFrame = framesToGrab(iframe);
 					tmpAviFrame = read(xyloObj, readFrame);
 					% check if frame is RGB or grayscale, if RGB only take one channel (since they will be identical for RGB grayscale)
-					if size(tmpAviFrame,3)==3
+					if size(tmpAviFrame,3)==3&isempty(options.rgbChannel)
 						tmpAviFrame = squeeze(tmpAviFrame(:,:,1));
+					elseif ~isempty(options.rgbChannel)
+						tmpAviFrame = squeeze(tmpAviFrame(:,:,options.rgbChannel));
 					end
 					tmpMovie(:,:,iframe) = tmpAviFrame;
 					% reduce waitbar access

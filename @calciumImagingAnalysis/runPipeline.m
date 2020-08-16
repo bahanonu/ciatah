@@ -226,6 +226,9 @@ function obj = runPipeline(obj,varargin)
 
 	subfxnCheckDirs();
 
+	% Force back to command window.
+	commandwindow
+
 	disp([10 10 ...
 	'Run processing pipeline by typing below (or clicking link) into command window (no semi-colon!):' 10 ...
 	'<a href="matlab: obj">obj</a>'])

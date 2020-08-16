@@ -27,6 +27,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% 2020.04.02 [17:57:03] - Adding dropped frames explicit user-facing step (fixDropFrames) instead of implicitly done in the background to make more clear to user.
 		% 2020.05.10 [02:29:47] - Updated analysis steps to make save names shorter and provide more descriptive options.
 		% 2020.06.09 [11:57:59] - Upgrade to save settings out as a json file for easier human reading.
+		% 2020.07.07 [00:32:59] - Further upgraded adding json to HDF5 directly for later reading out to get settings.
 	% TODO
 		% Insert NaNs or mean of the movie into dropped frame location, see line 260
 		% Allow easy switching between analyzing all files in a folder together and each file in a folder individually
@@ -384,24 +385,26 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				end
 			else
 				% [settingsName,settingsFolderPath,~] = uigetfile('*.*','select text file that points to analysis folders','example.txt');
-				[settingsName,settingsFolderPath,~] = uigetfile('*.*','Select previous preprocessing settings file or movie containing pre-processing settings.','_modelPreprocessMovieFunction_settings.mat');
+				[settingsName,settingsFolderPath,~] = uigetfile('*.*','Select previous preprocessing settings file or HDF5 movie containing pre-processing settings.','_modelPreprocessMovieFunction_settings.mat');
 
+				settingsLoadPath = [settingsFolderPath settingsName];
 				[tmpPath,tmpName,tmpExt] = fileparts(settingsName);
 
 				% Load settings from HDF5 or NWB as needed, else load from MAT file.
 				switch tmpExt
-					case {'h5','hdf5'}
+					case {'.h5','.hdf5'}
+						disp('Loading settings from prior HDF5 file')
+						previousPreprocessSettings = ciapkg.io.jsonRead(settingsLoadPath);
+					case {'.nwb'}
 
-					case {'nwb'}
 
-
-					case {'json'}
+					case {'.json'}
 
 					case '.mat'
-						previousPreprocessSettings = load([settingsFolderPath settingsName],'preprocessingSettingsAll');
+						previousPreprocessSettings = load(settingsLoadPath,'preprocessingSettingsAll');
 						previousPreprocessSettings = previousPreprocessSettings.preprocessingSettingsAll;
 					otherwise
-						warning('Incorrect filetype chosen');
+						warning('Incorrect file type chosen to extract settings.');
 				end
 			end
 		catch err
@@ -415,8 +418,15 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	fn_structdisp(options.turboreg)
 
 	if obj.saveLoadPreprocessingSettings==1
-		save(settingsSaveStr,'preprocessingSettingsAll','-v7.3');
 		obj.preprocessSettings = preprocessingSettingsAll;
+		try
+			fprintf('Saving settings to: %s.\n',settingsSaveStr)
+			save(settingsSaveStr,'preprocessingSettingsAll','-v7.3');
+		catch err
+			disp(repmat('@',1,7))
+			disp(getReport(err,'extended','hyperlinks','on'));
+			disp(repmat('@',1,7))
+		end
 	end
 
 	options.datasetName = options.turboreg.inputDatasetName;
@@ -737,7 +747,23 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 										tmpCropMovie(bottomRowCrop:end,1:end,:) = NaN;
 									end
 
-									movieSaved2 = writeHDF5Data(tmpCropMovie,resaveCropFileName,'datasetname',options.outputDatasetName,'addInfo',{options.turboreg,analysisOptionStruct,optionsCopy},'addInfoName',{'/movie/processingSettings','/movie/analysisOperations','/movie/modelPreprocessMovieFunctionOptions'},'deflateLevel',options.deflateLevel)
+									jsonSettingStr = ciapkg.io.jsonWrite(preprocessingSettingsAll);
+									tmpStruct.preprocessingSettingsAll = jsonSettingStr;
+									movieSaved2 = writeHDF5Data(tmpCropMovie,resaveCropFileName,...
+										'datasetname',options.outputDatasetName,...
+										'addInfo',{...
+											options.turboreg,...
+											analysisOptionStruct,...
+											optionsCopy,...
+											tmpStruct},...
+										'addInfoName',{...
+											'/movie/processingSettings',...
+											'/movie/analysisOperations',...
+											'/movie/modelPreprocessMovieFunctionOptions',...
+											'/movie'},...
+											'deflateLevel',options.deflateLevel)
+
+									clear tmpStruct jsonSettingStr;
 									ostruct.savedFilePaths{end+1} = resaveCropFileName;
 									ostruct.fileNumList{end+1} = fileNum;
 									clear tmpCropMovie;
@@ -818,7 +844,24 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 						analysisOptionStruct = struct;for optNo=1:length(analysisOptionListTmp);analysisOptionStruct.([char(optNo+'A'-1) '_' analysisOptionListTmp{optNo}])=1;end
 						optionsCopy = options;
 						optionsCopy.turboreg = [];
-						movieSaved = writeHDF5Data(thisMovie,savePathStr,'datasetname',options.outputDatasetName,'addInfo',{options.turboreg,analysisOptionStruct,optionsCopy},'addInfoName',{'/movie/processingSettings','/movie/analysisOperations','/movie/modelPreprocessMovieFunctionOptions'},'deflateLevel',options.deflateLevel)
+
+						jsonSettingStr = ciapkg.io.jsonWrite(preprocessingSettingsAll);
+						tmpStruct.preprocessingSettingsAll = jsonSettingStr;
+
+						movieSaved = writeHDF5Data(thisMovie,savePathStr,...
+							'datasetname',options.outputDatasetName,...
+							'addInfo',{...
+								options.turboreg,...
+								analysisOptionStruct,...
+								optionsCopy,...
+								tmpStruct},...
+							'addInfoName',{...
+								'/movie/processingSettings',...
+								'/movie/analysisOperations',...
+								'/movie/modelPreprocessMovieFunctionOptions',...
+								'/movie'},...
+							'deflateLevel',options.deflateLevel)
+						clear tmpStruct jsonSettingStr;
 						% ostruct.savedFilePaths{fileNum} = savePathStr;
 						ostruct.savedFilePaths{end+1} = savePathStr;
 						ostruct.fileNumList{end+1} = fileNum;

@@ -40,6 +40,13 @@ function [outputVector] = normalizeVector(inputVector,varargin)
             minVec = prctile(inputVector(:),5);
             % outputVector = (inputVector-minVec)./(maxVec-minVec);
             outputVector = (1-0)/(maxVec-minVec).*(inputVector-maxVec)+1;
+        case 'standardize'
+            % vectorMean = nanmean(inputVector,2);
+            % vectorStd = nanstd(inputVector,[],2);
+            % outputVector = (inputVector-vectorMean)/vectorStd;
+            maxVec = prctile(inputVector(:),95);
+            minVec = prctile(inputVector(:),5);
+            outputVector = (1-0)/(maxVec-minVec).*(inputVector-maxVec)+1;
         case 'zeroCentered'
             vectorMean = nanmean(inputVector,2);
             outputVector = bsxfun(@rdivide,inputVector,vectorMean)-1;
