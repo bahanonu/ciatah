@@ -8,13 +8,13 @@
 
 <img src="https://user-images.githubusercontent.com/5241605/51068051-78c27680-15cd-11e9-9434-9d181b00ef8e.png" align="center">
 
-## Full documentation at __[https://bahanonu.github.io/calciumImagingAnalysis/](https://bahanonu.github.io/calciumImagingAnalysis/)__.
+## Full documentation at https://bahanonu.github.io/calciumImagingAnalysis/
+
 <hr>
 
 `calciumImagingAnalysis` is a software package for calcium imaging analysis of one- and two-photon imaging datasets.
 
 <img src="https://user-images.githubusercontent.com/5241605/81605697-b9c7c800-9386-11ea-9e9f-569c743b24b9.png" width="42%" align="right" alt="calciumImagingAnalysis_logo">
-
 
 Features:
 - Includes a GUI to allow users to do large-scale batch analysis, accessed via the repository's `calciumImagingAnalysis` class.
@@ -57,7 +57,7 @@ Below are steps needed to quickly get started using the `calciumImagingAnalysis`
 
  % Download and unzip current repository
  unzip('https://github.com/bahanonu/calciumImagingAnalysis/archive/master.zip');
- 
+
  % Make calciumImagingAnalysis the working folder
  cd('calciumImagingAnalysis-master')
  ```
@@ -173,8 +173,8 @@ Please cite [Corder*, Ahanonu*, et al. 2019](http://science.sciencemag.org/conte
   doi          = {10.5281/zenodo.2222295},
   url          = {https://doi.org/10.5281/zenodo.2222295}
 }
-``
-`
+```
+
 ## Questions?
 Please email any additional questions not covered in the repository to `bahanonu [at] alum [dot] mit [dot] edu` or open an issue.
 
@@ -191,4 +191,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
 
 You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-[![HitCount](http://hits.dwyl.com/bahanonu/calciumImagingAnalysis.svg)](http://hits.dwyl.com/bahanonu/calciumImagingAnalysis) (Starting 2020-08-16).
+
+- [![HitCount](http://hits.dwyl.com/bahanonu/calciumImagingAnalysis.svg)](http://hits.dwyl.com/bahanonu/calciumImagingAnalysis)
+  - Starting 2020-08-16, frozen til `dwyl` migrates to new server.
+- ![Hits](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https%3A%2F%2Fgithub.com%2Fbahanonu%2FcalciumImagingAnalysis)
+  - Starting 2020.09.16.

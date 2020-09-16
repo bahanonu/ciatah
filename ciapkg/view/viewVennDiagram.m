@@ -13,6 +13,7 @@ function viewVennDiagram(circleAreas,overlapAreas,totalArea,varargin)
 
 	% changelog
 		% 2017.08.14 [11:09:32] - modified to use circles created by viscircles, which are better for editing in Adobe Illustrator.
+		% 2020.09.15 [12:19:06] - Added support for colors on the overlap area text and adjustment of the location.
 	% TODO
 		%
 
@@ -41,6 +42,7 @@ function viewVennDiagram(circleAreas,overlapAreas,totalArea,varargin)
 	options.yPlot = [];
 	options.circleAreasOriginal = [];
 	options.overlapAreasOriginal = [];
+	% Int: amount to adjust the multiple of the overlap X coordinate to put back into the same direction.
     options.overlapZoneTextAdj = 4;
 	% get options
 	options = getOptions(options,varargin);
@@ -205,7 +207,7 @@ function viewVennDiagram(circleAreas,overlapAreas,totalArea,varargin)
 			str1 = sprintf(strD,round(circleAreas(1),rdDgts),round(circleAreas(1)-(i12-i123)-(i13-i123)-i123,rdDgts));
 			str2 = sprintf(strD,round(circleAreas(2),rdDgts),round(circleAreas(2)-(i12-i123)-(i23-i123)-i123,rdDgts));
 			str3 = sprintf(strD,round(circleAreas(3),rdDgts),round(circleAreas(3)-(i23-i123)-(i13-i123)-i123,rdDgts));
-        
+
 			text(-sqSizes*.80, -sqSizes*.66, str1,'Color',options.fixedColors{1});
 			text(sqSizes*.66, -sqSizes*.66, str2,'Color',options.fixedColors{2});
 			text(0, sqSizes*.95, str3,'Color',options.fixedColors{3});
