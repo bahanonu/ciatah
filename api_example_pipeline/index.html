@@ -170,15 +170,17 @@
               
                 <h1 id="example-calciumimaginganalysis-pipeline-via-the-command-line">Example <code>calciumImagingAnalysis</code> pipeline via the command line.<a class="headerlink" href="#example-calciumimaginganalysis-pipeline-via-the-command-line" title="Permanent link">&para;</a></h1>
 <p>Below is an example <code>cacliumImagingAnalysis</code> pipeline using the command line for those that do not want to use the class or want to create their own custom batch analyses. It assumes you have already run <code>example_downloadTestData</code> to download the example test data.</p>
-<p>Can also access the pipeline by typing <code>edit ciapkg.demo.cmdLinePipeline</code> into the command line.</p>
+<p>Can also access the pipeline by typing <code>edit ciapkg.demo.cmdLinePipeline</code> into the command line or run by typing in <code>ciapkg.demo.cmdLinePipeline;</code>;</p>
 <pre><code class="MATLAB">% Running calciumImagingAnalysis command line
 
 %% Load movie to analyze
-inputMovie = loadMovieList('data\2014_04_01_p203_m19_check01\concat_recording_20140401_180333.h5');
+inputMovie = loadMovieList([ciapkg.getDir() filesep 'data' filesep '2014_04_01_p203_m19_check01' filesep 'concat_recording_20140401_180333.h5']);
 </code></pre>
 
 <pre><code class="MATLAB">%% Visualize slice of the movie
-playMovie(inputMoevie(:,:,1:500));
+playMovie(inputMovie(:,:,1:500));
+% Alternatively, visualize by entering the file path
+playMovie(inputMoviePath);
 </code></pre>
 
 <pre><code class="MATLAB">%% Downsample input movie if need to
