@@ -44,6 +44,8 @@ function [cnmfAnalysisOutput] = computeCnmfSignalExtractionClass(inputMovie,numE
 	options.nonCNMF.cvxPath = [];
 	% Binary: 1 = classify components,
 	options.nonCNMF.classifyComponents = 1;
+	% Binary: use CNN to classify components;
+	options.nonCNMF.classifyComponentsCNN = 0;
 	% Binary: 1 = plot contours and make components GUI at the end
 	options.nonCNMF.plot_contours_components = 1;
 	% Binary: 1 = plot merged components
@@ -293,7 +295,12 @@ function [cnmfAnalysisOutput] = computeCnmfSignalExtractionClass(inputMovie,numE
 
 	if options.nonCNMF.classifyComponents==1
 		CNM.evaluateComponents();   % evaluate spatial components based on their correlation with the data
-		CNM.CNNClassifier('')       % evaluate spatial components with the CNN classifier
+		if options.nonCNMF.classifyComponentsCNN==1
+			CNM.CNNClassifier('');       % evaluate spatial components with the CNN classifier
+		else
+			CNM.keep_cnn = true(size(CNM.A,2),1);
+            CNM.val_cnn = ones(size(CNM.A,2),1);
+		end
 		CNM.eventExceptionality();  % evaluate traces
 		CNM.keepComponents();       % keep the components that are above certain thresholds
 	else

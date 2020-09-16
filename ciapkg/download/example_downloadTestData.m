@@ -9,6 +9,7 @@ function [success] = example_downloadTestData(varargin)
 
 	% changelog
 		% 2019.09.16 [13:03:33] - Added three new imaging sessions to use for cross-day alignment and made downloading more generalized.
+		% 2020.09.14 [13:17:57] - Added example two-photon dataset.
 	% TODO
 		%
 
@@ -66,6 +67,10 @@ function [success] = example_downloadTestData(varargin)
 			downloadList{end+1}.folderName = ['batch' filesep '2014_08_07_p104_m19_PAV10'];
 			downloadList{end}.fileName = 'concat_recording_20140807_102507.h5';
 			downloadList{end}.fileUrl = 'https://stanford.box.com/shared/static/xmhgqx3atceq8f0zwqdctegiqo2d71su.h5';
+
+			downloadList{end+1}.folderName = ['twoPhoton' filesep '2017_04_16_p485_m487_runningWheel02'];
+			downloadList{end}.fileName = 'concat_recording_20140807_102507.h5';
+			downloadList{end}.fileUrl = 'https://ucsf.box.com/shared/static/y71zhjejy7k90ov2o8wnbupi20o4q0nq.h5';
 		end
 		nFiles = length(downloadList);
 

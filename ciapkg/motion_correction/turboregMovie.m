@@ -1,5 +1,8 @@
 function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
-	% Motion corrects (using turboreg) a movie. Both turboreg (to get 2D translation coordinates) and registering images (transfturboreg, imwarp, imtransform) have been parallelized. Can also turboreg to one set of images and apply the registration to another set (e.g. for cross-day alignment). Spatial filtering is applied after obtaining registration coordinates but before transformation, this reduced chance that 0s or NaNs at edge after transformation mess with proper spatial filtering.
+	% Motion corrects (using turboreg) a movie. 
+		% - Both turboreg (to get 2D translation coordinates) and registering images (transfturboreg, imwarp, imtransform) have been parallelized. 
+		% - Can also turboreg to one set of images and apply the registration to another set (e.g. for cross-day alignment). 
+		% - Spatial filtering is applied after obtaining registration coordinates but before transformation, this reduced chance that 0s or NaNs at edge after transformation mess with proper spatial filtering.
 	% Biafra Ahanonu
 	% started 2013.11.09 [11:04:18]
 	% modified from code created by Jerome Lecoq in 2011 and parallel code update by biafra ahanonu
@@ -7,7 +10,7 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	% changelog
 		% 2013.03.29 - parallelizing turboreg v1
 		% 2013.11.09 - completed implementation, appears to work for basic case of a normal MxNxP movie. Need to test on full movie that has a lot of movement to verify and check that it is similar to imageJ. Fixed various naming issues and parfor can now show the percentage
-		% 2013.11.10 - refactored so that it can now mroe elegantly handle larger movies during parallelization by chunking
+		% 2013.11.10 - refactored so that it can now more elegantly handle larger movies during parallelization by chunking
 		% 2013.11.30 - late update, but had also changed actual turbo-reg calling to be chunked
 		% 2014.01.07 [01:29:02] - now modify 'local' matlabpool config to suit correct number of cores
 		% 2014.01.18 [22:36:54] - now (correctly) surrounds the edges with black pixels to avoid screen flickering. NEEDS TO BE IMPROVED.
@@ -19,6 +22,7 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		% 2016.09.xx - parallel switch now forces parfor to not open up a parallel pool of workers if switch = 0
 		% 2019.01.15 [15:59:21] - Remove NaNs from inputMovie when using precomputedRegistrationCooords.
 		% 2020.04.18 [19:04:13] - Update creation of xform to by default include rotation along with translation and skew.
+		% 2020.08.18 [12:56:10] - Remove references to parfor_progress.
 	% TO-DO
 		% Add support for "imregtform" based registration.
 
@@ -33,7 +37,7 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		% See https://github.com/bahanonu/calciumImagingAnalysis/wiki/Preprocessing:-Motion-Correction#compiling-turboreg-and-transfturboreg-mex-file.
 	% ========================
 
-	% check that input is not empty
+	% Check that input is not empty
 	disp('Starting motion correction (turboreg)...');
 	if isempty(inputMovie)
 		disp('Empty movie matrix, exiting motion correction...')
@@ -465,7 +469,6 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		% Get data class, can be removed...
 		movieClass = class(inputMovieCropped);
 		% you need this FileExchange function for progress in a parfor loop
-		% parfor_progress(options.maxFrame);
 		disp('turboreg-ing...');
 		disp('');
 		% parallel for loop, since each turboreg operation is independent, can send each frame to separate workspaces
@@ -473,11 +476,7 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		%
 		nFramesToTurboreg = options.maxFrame;
 		if options.parallel==1; nWorkers=Inf;else;nWorkers=0;end
-		% options.maxFrame
-		% try [percent, progress] = parfor_progress(nFramesToTurboreg);catch;end; dispStepSize = round(nFramesToTurboreg/20); dispstat('','init');
 		parfor (frameNo=1:nFramesToTurboreg,nWorkers)
-			% [percent, progress] = parfor_progress;
-			% if mod(progress,dispStepSize) == 0;dispstat(sprintf('progress %0.1f %',percent));else;end
 			% get current frames
 			thisFrame = inputMovieCropped{frameNo};
 			thisFrameToAlign=single(thisFrame);
@@ -541,15 +540,12 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 			end
 			movieDataTemp(movieSubset) = inputMovie(movieSubset);
 			% loop over and register each frame
-			% parfor_progress(length(movieSubset));
 			if options.parallel==1; nWorkers=Inf;else;nWorkers=0;end
 
 			turboregRotationOption = options.turboregRotation;
 			registrationFxnOption = options.registrationFxn;
-			% size(ResultsOut)
 			nMovieSubsets = length(movieSubset);
-			try [percent, progress] = parfor_progress(nMovieSubsets);catch;end; dispStepSize = round(nMovieSubsets/20); dispstat('','init');
-
+			
 			% Create anonymous transform function to save CPU cycles in loop
 			switch TransformationType
 				case 'affine'
@@ -564,8 +560,6 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 			end
 
 			parfor (i = movieSubset,nWorkers)
-				[percent, progress] = parfor_progress;
-				% if mod(progress,dispStepSize) == 0;dispstat(sprintf('progress %0.1f %',percent));else;end
 				% thisFrame = movieDataTemp{i};
 				% get rotation and translation profile for image
 				% if turboregRotationOption==1
@@ -641,16 +635,11 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 					otherwise
 						% do nothing
 				end
-				% if mod(movieSubset(2),20)==0
-				% 	percent = parfor_progress;
-				% 	display(num2str(percent));
-				% end
 			end
 			dispstat('Finished.','keepprev');
 
 			inputMovie(movieSubset)=movieDataTemp(movieSubset);
 			clear movieDataTemp;
-			% parfor_progress(0);
 		end
 	end
 	function removeInputMovieEdges()
@@ -930,10 +919,8 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 					% nImages = size(inputMovieCropped,3);
 					nImages = length(inputMovieCropped);
 
-					% try [percent, progress] = parfor_progress(nImages);catch;end; dispStepSize = round(nImages/20); dispstat('','init');
 					if options.parallel==1; nWorkers=Inf;else;nWorkers=0;end
 					parfor (imageNo = 1:nImages,nWorkers)
-						% [percent progress] = parfor_progress;if mod(progress,dispStepSize) == 0;dispstat(sprintf('progress %0.1f %',percent));else;end
 						imageNow = squeeze(inputMovieCropped{imageNo});
 						inputMovieCropped{imageNo} = transform(imageNow);
 						% if (mod(imageNo,20)==0|imageNo==nImages)

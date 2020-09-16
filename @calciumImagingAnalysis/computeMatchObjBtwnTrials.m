@@ -178,6 +178,7 @@ function obj = computeMatchObjBtwnTrials(obj,varargin)
 			% alignmentStruct = matchObjBtwnTrials(rawImages,'inputSignals',rawSignals,'trialToAlign',trialToAlign,'additionalAlignmentImages',[],'nCorrections',nCorrections,'maxDistance',maxDistance,'threshold',imageThreshold,'RegisTypeFinal',RegisTypeFinal);
 			alignmentStruct = matchObjBtwnTrials(rawImages,'options',mOpts);
 
+			obj.globalIDStruct.(thisSubjectStr) = alignmentStruct;
 			obj.globalIDs.(thisSubjectStr) = alignmentStruct.globalIDs;
 			obj.globalIDs.alignmentStruct.(thisSubjectStr) = alignmentStruct;
 			obj.globalIDCoords.(thisSubjectStr).localCoords = alignmentStruct.coords;

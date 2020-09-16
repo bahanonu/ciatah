@@ -1,7 +1,8 @@
-function [exitSignal ostruct] = playMovie(inputMovie, varargin)
+function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 	% Plays a 3D matrix as a movie, additional inputs to view multiple movies or sync'd signal data; can also save the resulting figure as a movie.
 	% Biafra Ahanonu
 	% started 2013.11.09 [10:39:50]
+	%
 	% inputs
 		% inputMovie - [X Y Z] matrix of X,Y height/width and Z frames
 	% options
@@ -11,7 +12,7 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 		% windowLength - length of the window over which to show the line-plot
 		% recordMovie - whether to record the current movie or not
 		% nFrames - number of frames to analyze
-
+	%
 	% changelog
 		% 2013.11.13 [21:30:53] can now pre-maturely exit the movie, 21st century stuff
 		% 2014.01.18 [19:09:14] several improvements to how extraLinePlot is displayed, now loops correctly
@@ -20,6 +21,7 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 		% 2019.05.21 [22:23:42] Major changes to display of images and line plots by updating underlying graphics handle data instead of calling imagesc, plot, etc. Several other plotting changes to make faster and avoid non-responsive keyboard inputs. Changed how line plot is made so loops signal without skips in the plot.
 		% 2019.08.30 [13:44:09] - Updated contrast adjustment selection to also allow use of imcontrast and improved display of two movies contrast.
 		% 2020.06.14 [13:59:50] - Check if inputMovie is sparse and adjust display accordingly.
+		% 2020.09.01 [13:48:13] - Add support for read from disk for major filetypes, e.g. hdf5, tiff, avi, and isxd. User just needs to input filename. Added frameList to support only looping over specific sequences in the movie.
 
 	% ========================
 	% options
@@ -60,18 +62,24 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 	options.secondaryPoint = [];
 	% [xpos ypos angle(degrees) magnitude] matrix with rows = frames, magnitude is optional
 	options.primaryTrackingPoint = [];
-	%
+	% Str: color of primary pointer tracker
 	options.primaryTrackingPointColor = 'r';
 	% [xpos ypos angle(degrees) magnitude] matrix with rows = frames, magnitude is optional
 	options.secondaryTrackingPoint = [];
-	%
+	% Str: color of secondary pointer tracker
 	options.secondaryTrackingPointColor = 'k';
-	%
+	% Int: what factor to downsample movie
 	options.downsampleFactor = 4;
 	% pre-set the min/max for movie display
 	options.movieMinMax = [];
 	% Binary: 1 = directly run imagej
 	options.runImageJ = 0;
+	% Str: hierarchy name in hdf5 where movie data is located
+	options.inputDatasetName = '/1';
+	% Int: [] = do nothing, 1-3 indicates R,G,B channels to take from multicolor RGB AVI
+	options.rgbChannel = [];
+	% Int vector: list of specific frames to load.
+	options.frameList = [];
 	% get options
 	options = getOptions(options,varargin);
 	% options
@@ -82,8 +90,51 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 	% end
 	% ========================
 
-	if ~isempty(options.extraMovie)|~isempty(options.extraLinePlot)
+	% if ~isempty(options.extraMovie)|~isempty(options.extraLinePlot)
 		% options.fpsMax = 30;
+	% end
+
+	if ischar(inputMovie)==1
+		% inputMovieName = inputMovie;
+		inputMovieDims = loadMovieList(inputMovie,'inputDatasetName',options.inputDatasetName,'displayInfo',1,'getMovieDims',1,'displayWarnings',0);
+		inputMovieDims = [inputMovieDims.one inputMovieDims.two inputMovieDims.three];
+		options.nFrames = inputMovieDims(3);
+		nFramesOriginal = options.nFrames;
+
+		readMovieChunks = 1;
+
+		[movieType, supported] = ciapkg.io.getMovieFileType(inputMovie);
+		if supported==0
+			disp('Unsupported movie type provided.')
+			return;
+		end
+
+		switch movieType
+			case 'hdf5'
+				%
+			case 'tiff'
+				warning off;
+				try
+					tiffID = Tiff(inputMovie,'r');
+				catch
+				end
+				warning on;
+			case 'avi'
+				xyloObj = VideoReader(inputMovie);
+			case 'isxd'
+				try
+					inputMovieIsx = isx.Movie.read(inputMovie);
+				catch
+					ciapkg.inscopix.loadIDPS();
+					inputMovieIsx = isx.Movie.read(inputMovie);
+				end
+			otherwise
+				%
+		end
+	else
+		inputMovieDims = size(inputMovie);
+		nFramesOriginal = inputMovieDims(3);
+		readMovieChunks = 0;
 	end
 
 	if issparse(inputMovie)==1
@@ -133,6 +184,10 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 		nFrames = size(inputMovie,3);
 	else
 		nFrames = options.nFrames;
+	end
+
+	if ~isempty(options.frameList)
+		nFrames = length(options.frameList);
 	end
 
 	% setup subplots
@@ -199,7 +254,12 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 		% axHandle = fig1;
 	end
 
-	tmpFrame = squeeze(inputMovie(:,:,1));
+	if ischar(inputMovie)==1
+		tmpFrame = subfxnReadMovieDisk(inputMovie,1,movieType);
+		% tmpFrame = loadMovieList(inputMovie,'inputDatasetName',options.inputDatasetName,'displayInfo',0,'displayDiagnosticInfo',0,'displayWarnings',0,'frameList',1);
+	else
+		tmpFrame = squeeze(inputMovie(:,:,1));
+	end
 	if sparseInputMovie==1
 		tmpFrame = full(tmpFrame);
 	else
@@ -218,7 +278,7 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 		axis equal tight
 	end
 
-	xAxisHandle = xlabel(['frame: 1/' num2str(nFrames) '    fps: ' num2str(options.fps)])
+	xAxisHandle = xlabel(['frame: 1/' num2str(nFrames) '    fps: ' num2str(options.fps)]);
 
 	if colorbarsOn==1
 		set(gcf,'SizeChangedFcn',@(hObject,event) resizeui(hObject,event,axHandle,colorbarsOn));
@@ -249,11 +309,11 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 		options.extraTitleText = [10,options.extraTitleText];
 	end
 	% supTitleStr = [10,10,10,10,'e:exit    q:exit all    g:goto frame    p:pause/play    r:rewind',10,'f:forward    j:contrast    l:label    i:imagej	c:crop',10,'    d:\DeltaF/F    a:downsample    n:normalize    m:\Deltacolormap    ',10,'+:speed    -:slow    ]:+1 frame    [:-1 frame    movie dims: ' num2str(size(inputMovie)),'    ',strrep(options.extraTitleText,'\','/'),10,repmat(' ',1,7),10,10];
-	supTitleStr = [10,'E:exit    Q:exit all    G:goto frame    P:pause/play    R:rewind',10,'F:forward    J:adjust contrast    L:label    I:imagej    C:crop',10,'    D:\DeltaF/F    A:downsample    N:normalize    M:change colormap    ',10,'+:speed    -:slow    ]:+1 frame    [:-1 frame    movie dims: ' num2str(size(inputMovie)),'    ',strrep(options.extraTitleText,'\','/')];
+	supTitleStr = [10,'E:exit    Q:exit all    G:goto frame    P:pause/play    R:rewind',10,'F:forward    J:adjust contrast    L:label    I:imagej    C:crop',10,'    D:\DeltaF/F    A:downsample    N:normalize    M:change colormap    ',10,'+:speed    -:slow    ]:+1 frame    [:-1 frame    movie dims: ' num2str(inputMovieDims),'    ',strrep(options.extraTitleText,'\','/')];
 	if isempty(options.extraTitleText)
-		supTitleStr = [supTitleStr 10]
+		supTitleStr = [supTitleStr 10];
 	end
-	display(strrep(supTitleStr,'    ', 10 ))
+	disp(strrep(supTitleStr,'    ', 10))
 	% supTitleStr
 	% suptitleHandle = suptitle(strrep(strrep('/','\',supTitleStr),'_','\_'));
 
@@ -327,11 +387,18 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 				minMovie(2) = double(nanmin(inputMovie(find(options.extraMovie))));
 			end
 		else
-			maxMovie(1) = double(nanmax(inputMovie(:)));
-			minMovie(1) = double(nanmin(inputMovie(:)));
-			if ~isempty(options.extraMovie)
-				maxMovie(2) = double(nanmax(options.extraMovie(:)));
-				minMovie(2) = double(nanmin(options.extraMovie(:)));
+			if ischar(inputMovie)==1
+				% tmpFrame = loadMovieList(inputMovie,'inputDatasetName',options.inputDatasetName,'displayInfo',0,'displayDiagnosticInfo',0,'displayWarnings',0,'frameList',1:100);
+				tmpFrame = subfxnReadMovieDisk(inputMovie,1,movieType);
+				maxMovie(1) = double(nanmax(tmpFrame(:)));
+				minMovie(1) = double(nanmin(tmpFrame(:)));
+			else
+				maxMovie(1) = double(nanmax(inputMovie(:)));
+				minMovie(1) = double(nanmin(inputMovie(:)));
+				if ~isempty(options.extraMovie)
+					maxMovie(2) = double(nanmax(options.extraMovie(:)));
+					minMovie(2) = double(nanmin(options.extraMovie(:)));
+				end
 			end
 		end
 		options.movieMinMax = [maxMovie(1) minMovie(1)];
@@ -349,7 +416,7 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 			set(frameText,'string',['Frame ' num2str(frame) '/' num2str(nFrames)])
 
 			% =====================
-			if options.runImageJ==1;
+			if options.runImageJ==1&~ischar(inputMovie)
 				subfxn_imageJ(inputMovie);
 				% Run once else loops without exit
 				options.runImageJ = 0;
@@ -364,18 +431,24 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 				% set(gca, 'Position', get(gca, 'OuterPosition') - ...
 					% get(gca, 'TightInset') * [-1 0 1 0; 0 -1 0 1; 0 0 1 0; 0 0 0 1]);
 			end
-			% display an image from the movie
-			thisFrame = squeeze(inputMovie(:,:,frame));
+
+			% Display an image from the movie
+			if readMovieChunks==1
+				%
+				thisFrame = subfxnReadMovieDisk(inputMovie,frame,movieType);
+			else
+				thisFrame = squeeze(inputMovie(:,:,frame));
+			end
 			if sparseInputMovie==1
 				thisFrame = full(thisFrame);
 			end
-		 %    if frame==1
-		 %    	set(gca, 'xlimmode','manual',...
-		 %               'ylimmode','manual',...
-		 %               'zlimmode','manual',...
-		 %               'climmode','manual',...
-		 %               'alimmode','manual');
-			% end
+			if frame==1
+				% set(gca, 'xlimmode','manual',...
+				% 	   'ylimmode','manual',...
+				% 	   'zlimmode','manual',...
+				% 	   'climmode','manual',...
+				% 	   'alimmode','manual');
+			end
 			% thisFrame = imadjust(I,[0 1],[0 1]);
 			% keep contrast stable across frames.
 			thisFrame(1,1) = maxMovie(1)*maxAdjFactor;
@@ -427,7 +500,13 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 			% xlabel(['skip: ' num2str(options.fps), ' frames    frame: ' num2str(frame) '/' num2str(size(inputMovie,3)) '    fps: ' num2str(options.fps)])
 			% xlabel(['frame: ' num2str(frame) '/' nFramesStr '    fps: ' num2str(options.fps)])
 			try
-				set(xAxisHandle,'String',['frame: ' num2str(frame) '/' nFramesStr '    fps: ' num2str(options.fps)]);
+				if isempty(options.frameList)
+					tmpStrH = sprintf('frame: %d/%d fps: %d',frame,nFrames,options.fps);
+					set(xAxisHandle,'String',tmpStrH);
+				else
+					tmpStrH = sprintf('frame: %d/%d (%d/%d) fps: %d',frame,nFrames,options.frameList(frame),nFramesOriginal,options.fps);
+					set(xAxisHandle,'String',tmpStrH);
+				end
 			catch
 			end
 			% title(['skip: ' num2str(options.fps*dirChange), ' frames    frame: ' num2str(frame) '/' num2str(size(inputMovie,3)) '    fps: ' num2str(options.fps*dirChange)]);
@@ -442,10 +521,10 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 					offSet = 5;
 					% horizontal
 					line([1 xpt1-offSet],[ypt1 ypt1],'Color','k','LineWidth',1)
-					line([xpt1+offSet size(inputMovie,2)],[ypt1 ypt1],'Color','k','LineWidth',1)
+					line([xpt1+offSet inputMovieDims(2)],[ypt1 ypt1],'Color','k','LineWidth',1)
 					% vertical
 					line([xpt1 xpt1],[1 ypt1-offSet],'Color','k','LineWidth',1)
-					line([xpt1 xpt1],[ypt1+offSet size(inputMovie,1)],'Color','k','LineWidth',1)
+					line([xpt1 xpt1],[ypt1+offSet inputMovieDims(1)],'Color','k','LineWidth',1)
 
 					% plot(options.primaryPoint(:,1), options.primaryPoint(:,2), 'k+', 'Markersize', 10)
 				else
@@ -929,8 +1008,8 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 					sp = coords;
 					switch movieChoice
 						case 1
-							rowLen = size(inputMovie,1);
-							colLen = size(inputMovie,2);
+							rowLen = inputMovieDims(1);
+							colLen = inputMovieDims(2);
 						case 2
 							rowLen = size(options.extraMovie,1);
 							colLen = size(options.extraMovie,2);
@@ -1049,9 +1128,9 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 		end
 		% drawnow
 	catch err
-		display(repmat('@',1,7))
+		disp(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));
-		display(repmat('@',1,7))
+		disp(repmat('@',1,7))
 	end
 	function detectKeyPress(H,E)
 		keyIn = get(H,'CurrentCharacter');
@@ -1087,6 +1166,37 @@ function [exitSignal ostruct] = playMovie(inputMovie, varargin)
 		% Update the frame line indicator
 		% set(mainFig,'CurrentAxes',signalAxes)
 			% frameLineHandle.XData = [frameNo frameNo];
+	end
+	function thisFrame = subfxnReadMovieDisk(inputMoviePath,frameNo,movieTypeT)
+		% Fast reading of frame from disk, bypass loadMovieList if possible due to overhead.
+
+		if ~isempty(options.frameList)
+			frameNo = options.frameList(frameNo);
+		end
+
+		switch movieTypeT
+			case 'hdf5'
+				thisFrame = h5read(inputMoviePath,options.inputDatasetName,[1 1 frameNo],[inputMovieDims(1) inputMovieDims(2) 1]);
+			case 'tiff'
+				warning off;
+				try
+					tiffID.setDirectory(frameNo);
+					thisFrame = read(tiffID);
+				catch
+				end
+				warning on;
+			case 'avi'
+				thisFrame = read(xyloObj, frameNo);
+				if size(thisFrame,3)==3&isempty(options.rgbChannel)
+					thisFrame = squeeze(thisFrame(:,:,1));
+				elseif ~isempty(options.rgbChannel)
+					thisFrame = squeeze(thisFrame(:,:,options.rgbChannel));
+				end
+			case 'isxd'
+				thisFrame = inputMovieIsx.get_frame_data(frameNo-1);
+			otherwise
+				thisFrame = loadMovieList(inputMoviePath,'inputDatasetName',options.inputDatasetName,'displayInfo',0,'displayDiagnosticInfo',0,'displayWarnings',0,'frameList',frameNo);
+		end
 	end
 end
 function [coords] = getCropCoords(thisFrame)

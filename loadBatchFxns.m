@@ -72,7 +72,11 @@ function loadBatchFxns(varargin)
 		addpath(pathList);
 	end
 
+	loadMijiCheck = 1;
 	if strcmp(varargin,'loadEverything')
+
+	elseif strcmp(varargin,'skipLoadMiji')
+		loadMijiCheck = 0;
 	elseif strcmp(varargin,'excludeExternalPrograms')
 		disp(['Excluding ' externalProgramsDir ' from PATH adding.'])
 		matchIdx2 = contains(pathListArray,externalProgramsDir);
@@ -120,7 +124,10 @@ function loadBatchFxns(varargin)
 		disp(getReport(err,'extended','hyperlinks','on'));
 		display(repmat('@',1,7))
 	end
-	if workerCheck==1
+
+	if loadMijiCheck==0
+		disp('Skipping loading of Miji.')
+	elseif workerCheck==1
 		disp('Inside MATLAB worker, do not load Miji.')
 	elseif ~isempty(java.lang.System.getProperty('plugins.dir'))
 		disp('Miji JAR files already loaded, skipping. If Miji issue, use "resetMiji".')
@@ -184,7 +191,7 @@ function loadBatchFxns(varargin)
 		% =================================================
 		% List of functions in root of external program directories that should not be included by default.
 		try
-			fxnRootFolder = {'CELLMax_Wrapper.m','extractor.m','normcorre.m'};
+			fxnRootFolder = {'CELLMax_Wrapper.m','cellmax.runCELLMax','extractor.m','normcorre.m'};
 			pathToRmCell = {};
 			for iNo = 1:length(fxnRootFolder)
 				thisFxn = fxnRootFolder{iNo};
@@ -203,7 +210,7 @@ function loadBatchFxns(varargin)
 					pathToRm = foundFiles.folder;
 				end
 				if ~isempty(pathToRm)
-					if strcmp(thisFxn,'CELLMax_Wrapper.m')
+					if strcmp(thisFxn,'CELLMax_Wrapper.m')|strcmp(thisFxn,'cellmax.runCELLMax')
 						thisFxnStr = thisFxn;
 						% pathToRm = [pathToRm filesep 'calciumImagingAnalysis'];
 						% thisFxnStr  = [thisFxn ' | ' 'calciumImagingAnalysis'];

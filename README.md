@@ -52,8 +52,12 @@ Below are steps needed to quickly get started using the `calciumImagingAnalysis`
  [![View calciumImagingAnalysis on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis) or https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis.
 
  ```Matlab
+ % Optional: this will set MATLAB working folder to the default user path. Make sure you have read/write permissions.
+ cd(userpath);
+
  % Download and unzip current repository
  unzip('https://github.com/bahanonu/calciumImagingAnalysis/archive/master.zip');
+ 
  % Make calciumImagingAnalysis the working folder
  cd('calciumImagingAnalysis-master')
  ```
@@ -169,8 +173,8 @@ Please cite [Corder*, Ahanonu*, et al. 2019](http://science.sciencemag.org/conte
   doi          = {10.5281/zenodo.2222295},
   url          = {https://doi.org/10.5281/zenodo.2222295}
 }
-```
-
+``
+`
 ## Questions?
 Please email any additional questions not covered in the repository to `bahanonu [at] alum [dot] mit [dot] edu` or open an issue.
 

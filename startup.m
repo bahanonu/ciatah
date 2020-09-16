@@ -6,7 +6,7 @@
 restoredefaultpath
 
 % Load all needed ciapkg directories
-loadBatchFxns
+loadBatchFxns('skipLoadMiji');
 
 % set default figure properties
 setFigureDefaults();

@@ -12,7 +12,7 @@ function [output1,output2] = exampleFxn(input1,input2,varargin)
 	% TODO
 		%
 
-	%========================
+	% ========================
 	% DESCRIPTION
 	options.exampleOption = '';
 	% get options
@@ -23,7 +23,7 @@ function [output1,output2] = exampleFxn(input1,input2,varargin)
 	% for i=1:length(fn)
 	% 	eval([fn{i} '=options.' fn{i} ';']);
 	% end
-	%========================
+	% ========================
 
 	try
 		% Code
@@ -50,7 +50,7 @@ function obj = functionName(obj,varargin)
 		%
 
 
-	%========================
+	% ========================
 	% DESCRIPTION
 	options.baseOption = '';
 	% get options
@@ -61,7 +61,7 @@ function obj = functionName(obj,varargin)
 	% for i=1:length(fn)
 	% 	eval([fn{i} '=options.' fn{i} ';']);
 	% end
-	%========================
+	% ========================
 
 	try
 		% Code

@@ -1280,6 +1280,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			openFigure(1865);
 			% ax1 = [];
 			% ax1(end+1) = subplot(1,2,1)
+			subplot(1,2,1)
 				if strcmp(motionState,'start')
 					plot(corrMetric,'Color',colorList(fileNum,:))
 				else
@@ -1292,11 +1293,13 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				% box off;xlabel('Frames');ylabel('Correlation')
 				% title('corr2')
 			% ax1(end+1) = subplot(1,2,2)
-				suptitle('Correlation of all frames to movie mean')
+				% suptitle("Pearson correlation of all frames to movie mean")
+				title("Pearson correlation of all frames to movie mean")
 				legendStr = cellfun(@(x) {strcat('===',x,sprintf('===\nPre-motion correction corr2')),'Post-motion correction corr2'},obj.folderBaseDisplayStr,'UniformOutput',false);
 				legend([legendStr{:}])
 
-			openFigure(1866);
+			subplot(1,2,2)
+			% openFigure(1866);
 				if strcmp(motionState,'start')
 					plot(corrMetric2,'-','Color',colorList(fileNum,:)/2)
 				else
@@ -1308,9 +1311,10 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				% legend({'Original','Motion corrected'}
 				legendStr = cellfun(@(x) {strcat('===',x,sprintf('===\nPre-motion correction Spearman')),'Post-motion correction Spearman'},obj.folderBaseDisplayStr,'UniformOutput',false);
 				legend([legendStr{:}])
+				title("Spearman's correlation of all frames to movie mean.")
 
 			% set(ax1,'Nextplot','add')
-			suptitle('Correlation of all frames to movie mean')
+			% suptitle('Correlation of all frames to movie mean')
 
 			% legendStr = cellfun(@(x) {strcat('===',x,sprintf('===\nPre-motion correction corr2')),'Pre-motion correction Spearman','Post-motion correction corr2','Post-motion correction Spearman'},obj.folderBaseDisplayStr,'UniformOutput',false);
 			% legend([legendStr{:}])
