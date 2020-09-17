@@ -13,6 +13,7 @@ function viewVennDiagram(circleAreas,overlapAreas,totalArea,varargin)
 
 	% changelog
 		% 2017.08.14 [11:09:32] - modified to use circles created by viscircles, which are better for editing in Adobe Illustrator.
+		% 2020.09.15 [12:19:06] - Added support for colors on the overlap area text and adjustment of the location.
 	% TODO
 		%
 
@@ -21,8 +22,13 @@ function viewVennDiagram(circleAreas,overlapAreas,totalArea,varargin)
 	options.displayText = 1;
 	% Binary: 1 = round text display numbers.
 	options.roundSwitch = 1;
+    % Int: number of digits to round
+    options.roundDigits = 2;
 	% Cell array of strings or vectors: cell array where each cell contains a str or vector specifying the color for that venn diagram.
 	options.fixedColors = {[0 148 68]/255, [190 30 45]/255, [0 114 189]/255}; % {'r','g','b','cyan','yellow'}; {[1 0 0],[0 1 0],[0 0 1],'cyan','yellow'};
+	% Cell array of strings or vectors: cell array where each cell contains a str or vector specifying the color for that venn diagram.
+    fc1 = @(x,y) (options.fixedColors{x}+options.fixedColors{y})/2;
+	options.overlapColors = {fc1(1,2), fc1(1,3), fc1(2,3)}; % {'r','g','b','cyan','yellow'}; {[1 0 0],[0 1 0],[0 0 1],'cyan','yellow'};
 	% Vector of integers or floats: indicate the SEM for each circle's area, not used if empty (default).
 	options.circleAreasSem = [];
 	% Cell array of strings: Name to place next to each Venn diagram.
@@ -36,6 +42,8 @@ function viewVennDiagram(circleAreas,overlapAreas,totalArea,varargin)
 	options.yPlot = [];
 	options.circleAreasOriginal = [];
 	options.overlapAreasOriginal = [];
+	% Int: amount to adjust the multiple of the overlap X coordinate to put back into the same direction.
+    options.overlapZoneTextAdj = 4;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -56,15 +64,15 @@ function viewVennDiagram(circleAreas,overlapAreas,totalArea,varargin)
 
 	% Plot the circles using venn, mainly to get calculations and locations
 	try
-		[H S] = venn(circleAreas,overlapAreas,'ErrMinMode','TotalError');
+		[H, S] = venn(circleAreas,overlapAreas,'ErrMinMode','None');
 	catch
 		tmpInput = overlapAreas;
 		tmpInput = tmpInput-1;
 		tmpInput(tmpInput<1) = 1;
 		try
-			[H S] = venn(circleAreas,tmpInput,'ErrMinMode','TotalError');
+			[H, S] = venn(circleAreas,tmpInput,'ErrMinMode','TotalError');
 		catch
-			[H S] = venn(circleAreas+1,tmpInput,'ErrMinMode','TotalError');
+			[H, S] = venn(circleAreas+1,tmpInput,'ErrMinMode','TotalError');
 		end
 	end
 
@@ -127,10 +135,13 @@ function viewVennDiagram(circleAreas,overlapAreas,totalArea,varargin)
 					str1 = [options.circleNames{circNo} ' | ' str1];
 				end
 				if ~isempty(options.circleAreasSem)
-					str1 = sprintf(['%s ' char(177) ' %d'],str1,round(options.circleAreasSem(circNo)));
+					str1 = sprintf(['%s ' char(177) ' %d'],str1,round(options.circleAreasSem(circNo),rdDgts));
 				end
 			else
-				str1 = sprintf('%0.1f',circleAreas(circNo));
+				str1 = sprintf('%0.2f',circleAreas(circNo));
+                if ~isempty(options.circleNames)
+					str1 = [options.circleNames{circNo} ' | ' str1];
+				end
 				if ~isempty(options.circleAreasSem)
 					str1 = sprintf(['%s ' char(177) ' %0.1f'],str1,options.circleAreasSem(circNo));
 				end
@@ -185,27 +196,30 @@ function viewVennDiagram(circleAreas,overlapAreas,totalArea,varargin)
 		% i123 = overlapAreasOriginal(4);
 
 		% Plot additional details if there is a third circle in the diagram
+        rdDgts = options.roundDigits;
 		if length(circleAreas)==3
 			i12 = overlapAreas(1);
 			i13 = overlapAreas(2);
 			i23 = overlapAreas(3);
 			i123 = overlapAreas(4);
+            strD = ['%0.' num2str(rdDgts) 'f | %0.' num2str(rdDgts) 'f'];
+            strD
+			str1 = sprintf(strD,round(circleAreas(1),rdDgts),round(circleAreas(1)-(i12-i123)-(i13-i123)-i123,rdDgts));
+			str2 = sprintf(strD,round(circleAreas(2),rdDgts),round(circleAreas(2)-(i12-i123)-(i23-i123)-i123,rdDgts));
+			str3 = sprintf(strD,round(circleAreas(3),rdDgts),round(circleAreas(3)-(i23-i123)-(i13-i123)-i123,rdDgts));
 
-			str1 = sprintf('%d | %d',round(circleAreas(1)),round(circleAreas(1)-(i12-i123)-(i13-i123)-i123));
-			str2 = sprintf('%d | %d',round(circleAreas(2)),round(circleAreas(2)-(i12-i123)-(i23-i123)-i123));
-			str3 = sprintf('%d | %d',round(circleAreas(3)),round(circleAreas(3)-(i23-i123)-(i13-i123)-i123));
+			text(-sqSizes*.80, -sqSizes*.66, str1,'Color',options.fixedColors{1});
+			text(sqSizes*.66, -sqSizes*.66, str2,'Color',options.fixedColors{2});
+			text(0, sqSizes*.95, str3,'Color',options.fixedColors{3});
 
-			text(-sqSizes*.80, -sqSizes*.66, str1);
-			text(sqSizes*.66, -sqSizes*.66, str2);
-			text(0, sqSizes*.95, str3);
-
-			text(S.ZoneCentroid(4,1), S.ZoneCentroid(4,2), [num2str(i12) ' | ' num2str(round(i12-i123))]);
-			text(S.ZoneCentroid(5,1), S.ZoneCentroid(5,2), [num2str(i13) ' | ' num2str(round(i13-i123))]);
-			text(S.ZoneCentroid(6,1), S.ZoneCentroid(6,2), [num2str(i23) ' | ' num2str(round(i23-i123))]);
-			text(S.ZoneCentroid(7,1), S.ZoneCentroid(7,2), [num2str(i123) ' | ' num2str(round(i123))]);
+            S.ZoneCentroid
+			text(S.ZoneCentroid(4,1)/options.overlapZoneTextAdj, S.ZoneCentroid(4,2), [num2str(i12) ' | ' num2str(round(i12-i123,rdDgts))],'Color',options.overlapColors{1});
+			text(S.ZoneCentroid(5,1)/options.overlapZoneTextAdj, S.ZoneCentroid(5,2), [num2str(i13) ' | ' num2str(round(i13-i123,rdDgts))],'Color',options.overlapColors{2});
+			text(S.ZoneCentroid(6,1)/options.overlapZoneTextAdj, S.ZoneCentroid(6,2), [num2str(i23) ' | ' num2str(round(i23-i123,rdDgts))],'Color',options.overlapColors{3});
+			text(S.ZoneCentroid(7,1)/options.overlapZoneTextAdj, S.ZoneCentroid(7,2), [num2str(i123) ' | ' num2str(round(i123,rdDgts))]);
 		else
 			i12 = overlapAreas(1);
-			text(S.ZoneCentroid(3,1), S.ZoneCentroid(3,2), [num2str(i12) ' | ' num2str(round(i12))]);
+			text(S.ZoneCentroid(3,1), S.ZoneCentroid(3,2), [num2str(i12) ' | ' num2str(round(i12,rdDgts))]);
 		end
 	end
 	% adjust to make sure all are in range

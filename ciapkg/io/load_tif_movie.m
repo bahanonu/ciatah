@@ -13,6 +13,7 @@ function out = load_tif_movie(filename,downsample_xy,varargin)
 		% 2014.01.07 [10:14:49] - removed low-level reading, seems to have problems with some versions of tifflib, will fix later.
 		% 2015.11.12 Added reading of TIFFs from ImageJ bigger than 4GB.
 		% 2019.03.10 [20:17:09] Allow user to pre-input TIF temporary file to speed-up load times, esp. with individual files, see options.tmpImage and options.fileInfo
+		% 2020.09.01 [14:27:12] - Suppress warning at user request and remove unecessary file handle call.
 	% TODO
 		%
 
@@ -37,7 +38,10 @@ function out = load_tif_movie(filename,downsample_xy,varargin)
 
 	if isempty(options.tmpImage)
 		%First load a single frame of the movie to get generic information
-		TifLink = Tiff(filename, 'r'); %Create the Tiff object
+        if options.displayInfo==0
+            warning off
+        end
+		TifLink = Tiff(filename, 'r'); % Create the Tiff object
 		warning off
 		TmpImage = TifLink.read();%Read in one picture to get the image size and data type
 		warning on
@@ -121,7 +125,7 @@ function out = load_tif_movie(filename,downsample_xy,varargin)
 		end
 		nFramesDim = length(framesToGrab2);
 		% open file handle, read file using low level I/O functions
-		fileID = fopen(filename , 'rb');
+		% fileID = fopen(filename , 'rb');
 		% The StripOffsets field provides the offset to the first strip. Based on
 		% the INFO for this file, each image assumed to consist of 1 strip.
 		StripOffsets = [fileInfo.StripOffsets];
@@ -177,7 +181,7 @@ function out = load_tif_movie(filename,downsample_xy,varargin)
 		% playMovie(out.Movie)
 
 		% close handle to file
-		fclose(fileID);
+		% fclose(fileID);
 	end
 	function nonstandardTIFF()
 		% imfinfo(filename)

@@ -154,7 +154,7 @@ function obj = viewObjmaps(obj,varargin)
 			%
 			% [inputSignals inputImages signalPeaks signalPeakIdx] = modelGetSignalsImages(obj,'returnType','raw');
 			[inputSignals, inputImages, signalPeaks, signalPeakIdx, valid, validType, inputSignals2] = modelGetSignalsImages(obj,'returnType','raw');
-			inputSignals = inputSignals2;
+			% inputSignals = inputSignals2;
 			if isempty(inputSignals)
 				disp('no input signals');
 				try

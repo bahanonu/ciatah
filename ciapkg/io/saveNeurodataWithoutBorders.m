@@ -13,6 +13,7 @@ function [success] = saveNeurodataWithoutBorders(image_masks,roi_response_data,a
 
 	% changelog
 		% 2020.07.01 [09:40:20] - Convert roi_response_data to cell if user inputs only a matrix.
+		% 2020.09.15 [20:30:32] - Automatically creates directory where file is to be stored if it is not present.
 	% TODO
 		%
 
@@ -33,6 +34,15 @@ function [success] = saveNeurodataWithoutBorders(image_masks,roi_response_data,a
 		success = 0;
 		metadata = yaml.ReadYaml(options.fpathYML);
 		data_path = outputFilePath;
+
+		if ~ischar(data_path)
+			disp('Save path given not a character string, try again!')
+			return;
+		end
+
+		% Make sure folder exists, else create it.
+		[folderName,~,~] = fileparts(data_path);
+		ciapkg.io.mkdir(folderName);
 
 		% Get datatype name
 		if contains(data_path,'extract')
@@ -58,7 +68,7 @@ function [success] = saveNeurodataWithoutBorders(image_masks,roi_response_data,a
 			disp('Converting roi_response_data to cell from matrix');
 			roi_response_data = {roi_response_data};
 		end
-		
+
 		tmpData = roi_response_data;
 		roi_response_data = struct;
 		for i=1:length(tmpData)

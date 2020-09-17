@@ -18,7 +18,7 @@ function obj = loadDependencies(obj,varargin)
 	options.guiEnabled = 1;
 	options.dependencyStr = {'downloadMiji','downloadCnmfGithubRepositories','example_downloadTestData','loadMiji','downloadNeuroDataWithoutBorders'};
 
-	options.dispStr = {'Download Fiji (to run Miji)','Download CNMF, CNMF-E, and CVX code.','Download test one-photon data.','Load Fiji/Miji into MATLAB path.','Download NWB (NeuroDataWithoutBorders)'};
+	options.dispStr = {'Download Fiji (to run Miji)','Download CNMF, CNMF-E, and CVX code.','Download test one- and two photon datasets.','Load Fiji/Miji into MATLAB path.','Download NWB (NeuroDataWithoutBorders)'};
 	% Int vector: index of options.dependencyStr to run by default with no GUI
 	options.depIdxArray = [1 2 3 5];
 	% get options
