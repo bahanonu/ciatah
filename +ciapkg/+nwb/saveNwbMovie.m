@@ -16,7 +16,7 @@ function [output1,output2] = saveNwbMovie(inputData,fileSavePath,varargin)
 	% old way of saving, only temporary until full switch
 	options.datasetname = '/1';
 	% HDF5: 'append' (don't blank HDF5 file) or 'new' (blank HDF5 file)
-	options.writeMode = '';
+	options.writeMode = 'new';
 	% save only a portion of the dataset, useful for large datasets
 	% 3D matrix, [0 0 0] start and [x y z] end.
 	options.hdfStart = [];
@@ -42,12 +42,12 @@ function [output1,output2] = saveNwbMovie(inputData,fileSavePath,varargin)
 	%========================
 
 	try
-		% if strcmp(options.writeMode,'new')
+		if strcmp(options.writeMode,'new')
 			if exist(fileSavePath,'file')==2
 				fprintf('Deleting: %s.\n',fileSavePath)
 				delete(fileSavePath)
 			end
-		% end
+		end
 
 		options.descriptionImagingPlane
 		nwb = NwbFile( ...
@@ -116,22 +116,22 @@ function [output1,output2] = saveNwbMovie(inputData,fileSavePath,varargin)
 
 		nwbExport(nwb, fileSavePath);
 
-		% add information about data to HDF5 file
-		if strcmp(options.writeMode,'new')
-			if isempty(options.hdfStart)
-				dataDims = size(inputData);
-				% [dim1 dim2 dim3] = size(inputData);
-			else
-				dataDims = options.hdfCount - options.hdfStart;
-			end
+		% % add information about data to HDF5 file
+		% if strcmp(options.writeMode,'new')
+		% 	if isempty(options.hdfStart)
+		% 		dataDims = size(inputData);
+		% 		% [dim1 dim2 dim3] = size(inputData);
+		% 	else
+		% 		dataDims = options.hdfCount - options.hdfStart;
+		% 	end
 
-			disp('Blanking HDF5!')
-			hdf5write(fileSavePath,'/movie/info/dimensions',dataDims,'WriteMode','append');
-			currentDateTimeStr = datestr(now,'yyyymmdd_HHMM','local');
-			hdf5write(fileSavePath,'/movie/info/date',currentDateTimeStr,'WriteMode','append');
-			hdf5write(fileSavePath,'/movie/info/savePath',fileSavePath,'WriteMode','append');
-			hdf5write(fileSavePath,'/movie/info/Deflate',options.deflateLevel,'WriteMode','append');
-		end
+		% 	disp('Blanking HDF5!')
+		% 	hdf5write(fileSavePath,'/movie/info/dimensions',dataDims,'WriteMode','append');
+		% 	currentDateTimeStr = datestr(now,'yyyymmdd_HHMM','local');
+		% 	hdf5write(fileSavePath,'/movie/info/date',currentDateTimeStr,'WriteMode','append');
+		% 	hdf5write(fileSavePath,'/movie/info/savePath',fileSavePath,'WriteMode','append');
+		% 	hdf5write(fileSavePath,'/movie/info/Deflate',options.deflateLevel,'WriteMode','append');
+		% end
 
 		if ~isempty(options.addInfo)
 			if ~iscell(options.addInfo)

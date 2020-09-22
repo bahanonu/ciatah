@@ -89,8 +89,8 @@ function [success] = saveMatrixToFile(inputMatrix,savePath,varargin)
 				[output] = writeHDF5Data(inputMatrix,savePath,'datasetname',options.inputDatasetName,'addInfo',options.addInfo,'addInfoName',options.addInfoName,'writeMode',options.writeMode,'deflateLevel',options.deflateLevel);
 			case 'nwb'
 				fprintf('Saving to: %s\n',savePath);
-				options.writeMode = '';
-				ciapkg.nwb.saveNwbMovie(inputMatrix,savePath,'datasetname',options.inputDatasetName,'addInfo',options.addInfo,'addInfoName',options.addInfoName,'deflateLevel',options.deflateLevel,'descriptionImagingPlane',options.descriptionImagingPlane);
+				% options.writeMode = '';
+				ciapkg.nwb.saveNwbMovie(inputMatrix,savePath,'datasetname',options.inputDatasetName,'addInfo',options.addInfo,'addInfoName',options.addInfoName,'deflateLevel',options.deflateLevel,'descriptionImagingPlane',options.descriptionImagingPlane,'writeMode',options.writeMode);
 			otherwise
 				%
 		end
