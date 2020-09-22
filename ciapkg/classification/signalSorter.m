@@ -67,6 +67,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 		% 2020.04.28 [16:34:33] - Fixed case where ROItraces would be overwritten when comparing to algorithm input traces. Also added to 'r' option.
 		% 2020.05.13 [09:34:45] - Added support for NWB.
 		% 2020.07.27 [12:52:40] - Added ability to choose multiple outputs for a given input.
+		% 2020.09.22 [03:09:59] - Ensure NWB files are read correctly.
 	% TODO
 		% DONE: New GUI interface to allow users to scroll through video and see cell activity at that point
 		% DONE: allow option to mark rest as bad signals
@@ -242,6 +243,14 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 	if ischar(inputImages)
 		[inputImages,inputSignals,infoStruct] = loadNeurodataWithoutBorders(inputImages);
 		options.nSignals = size(inputImages,3);
+	end
+
+	% Modify dataset name if given NWB file
+	if ~isempty(options.inputMovie)&ischar(options.inputMovie)
+		[~,~,extT] = fileparts(options.inputMovie);
+		if strcmp(extT,'.nwb')
+			options.inputDatasetName = '/acquisition/TwoPhotonSeries/data';
+		end
 	end
 
 	% Check the input dimensions and warn user if they are incorrect
@@ -2026,12 +2035,12 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 				frameListHere(frameListHere>nFrames) = nFrames;
 				frameListHere(frameListHere<1) = 1;
 				if ischar(options.inputMovie)||iscell(options.inputMovie)
-					objCutMovie = getObjCutMovie(options.inputMovie,thisCellImg,'createMontage',0,'extendedCrosshairs',0,'outlines',0,'waitbarOn',0,'cropSize',options.cropSize,'crossHairsOn',0,'addPadding',0,'frameList',frameListHere);
+					objCutMovie = getObjCutMovie(options.inputMovie,thisCellImg,'createMontage',0,'extendedCrosshairs',0,'outlines',0,'waitbarOn',0,'cropSize',options.cropSize,'crossHairsOn',0,'addPadding',0,'frameList',frameListHere,'inputDatasetName',options.inputDatasetName);
 				else
 					tmpMovieHere = options.inputMovie(:,:,frameListHere);
-					objCutMovie = getObjCutMovie(tmpMovieHere,thisCellImg,'createMontage',0,'extendedCrosshairs',0,'outlines',0,'waitbarOn',0,'cropSize',options.cropSize,'crossHairsOn',0,'addPadding',0,'frameList',frameListHere);
+					objCutMovie = getObjCutMovie(tmpMovieHere,thisCellImg,'createMontage',0,'extendedCrosshairs',0,'outlines',0,'waitbarOn',0,'cropSize',options.cropSize,'crossHairsOn',0,'addPadding',0,'frameList',frameListHere,'inputDatasetName',options.inputDatasetName);
 				end
-				objCutImg = getObjCutMovie(thisCellImg,thisCellImg,'createMontage',0,'extendedCrosshairs',0,'outlines',0,'waitbarOn',0,'cropSize',options.cropSize,'crossHairsOn',0,'addPadding',0);
+				objCutImg = getObjCutMovie(thisCellImg,thisCellImg,'createMontage',0,'extendedCrosshairs',0,'outlines',0,'waitbarOn',0,'cropSize',options.cropSize,'crossHairsOn',0,'addPadding',0,'inputDatasetName',options.inputDatasetName);
 				objCutImg = objCutImg{1};
 				objCutMovie = objCutMovie{1};
 				thresholdOutline = options.thresholdOutline;
