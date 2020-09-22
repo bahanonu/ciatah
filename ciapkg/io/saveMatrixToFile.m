@@ -32,6 +32,8 @@ function [success] = saveMatrixToFile(inputMatrix,savePath,varargin)
 	options.writeMode = 'new';
 	% Int: Defines gzip compression level (0-9). 0 = no compression, 9 = most compression.
 	options.deflateLevel = 1;
+	% Str: description of imaging plane
+	options.descriptionImagingPlane = 'NA';
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -68,7 +70,8 @@ function [success] = saveMatrixToFile(inputMatrix,savePath,varargin)
 					otherwise
 						% do nothing
 				end
-				% same each frame to AVI file
+
+				% Same each frame to AVI file
 				reverseStr = '';
 				for frameNo = 1:nFrames
 					thisFrame = inputMatrix(:,:,frameNo);
@@ -84,6 +87,10 @@ function [success] = saveMatrixToFile(inputMatrix,savePath,varargin)
 			case 'hdf5'
 				fprintf('Saving to: %s\n',savePath);
 				[output] = writeHDF5Data(inputMatrix,savePath,'datasetname',options.inputDatasetName,'addInfo',options.addInfo,'addInfoName',options.addInfoName,'writeMode',options.writeMode,'deflateLevel',options.deflateLevel);
+			case 'nwb'
+				fprintf('Saving to: %s\n',savePath);
+				% options.writeMode = '';
+				ciapkg.nwb.saveNwbMovie(inputMatrix,savePath,'datasetname',options.inputDatasetName,'addInfo',options.addInfo,'addInfoName',options.addInfoName,'deflateLevel',options.deflateLevel,'descriptionImagingPlane',options.descriptionImagingPlane,'writeMode',options.writeMode);
 			otherwise
 				%
 		end
@@ -109,6 +116,8 @@ function [movieType supported] = getMovieFileType(thisMoviePath)
 	% files are assumed to be named correctly (lying does no one any good)
 	if strcmp(ext,'.h5')|strcmp(ext,'.hdf5')
 		movieType = 'hdf5';
+	elseif strcmp(ext,'.nwb')
+		movieType = 'nwb';
 	elseif strcmp(ext,'.tif')|strcmp(ext,'.tiff')
 		movieType = 'tiff';
 	elseif strcmp(ext,'.avi')

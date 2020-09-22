@@ -258,7 +258,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		structCNMRVarname = 'cnmfAnalysisOutput';
 
 		% NWB-related properties
-		% Whether to load NWB files, e.g. from modelExtractSignalsFromMovie
+		% Whether to write or load NWB files, e.g. from modelExtractSignalsFromMovie
 		nwbLoadFiles = 0;
 		% Str: sub-folder where NWB files are stored. Leave blank to load from current folder.
 		nwbFileFolder = 'nwbFiles';

@@ -39,6 +39,8 @@ function [inputMovies] = createMontageMovie(inputMovies,varargin)
 	options.padSize = [3 3];
 	% Binary: 1 = display info
 	options.displayInfo = 1;
+    % Binary: 1 = increase to largest movie instead of downsampling to the smallest movie.
+	options.increaseToLargestMovie = 0;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -123,11 +125,11 @@ function [inputMovies] = createMontageMovie(inputMovies,varargin)
 		for xNo = 1:xPlot
 			for yNo = 1:yPlot
 				if inputMovieNo>length(inputMovies)
-					[behaviorMovie{xNo}] = createSideBySide(behaviorMovie{xNo},NaN(size(inputMovies{1})),'pxToCrop',[],'makeTimeEqualUsingNans',1,'normalizeMovies',0,'displayInfo',options.displayInfo);
+					[behaviorMovie{xNo}] = createSideBySide(behaviorMovie{xNo},NaN(size(inputMovies{1})),'pxToCrop',[],'makeTimeEqualUsingNans',1,'normalizeMovies',0,'displayInfo',options.displayInfo,'increaseToLargestMovie',options.increaseToLargestMovie);
 				elseif yNo==1
 					[behaviorMovie{xNo}] = inputMovies{inputMovieNo};
 				else
-					[behaviorMovie{xNo}] = createSideBySide(behaviorMovie{xNo},inputMovies{inputMovieNo},'pxToCrop',[],'makeTimeEqualUsingNans',1,'normalizeMovies',0,'displayInfo',options.displayInfo);
+					[behaviorMovie{xNo}] = createSideBySide(behaviorMovie{xNo},inputMovies{inputMovieNo},'pxToCrop',[],'makeTimeEqualUsingNans',1,'normalizeMovies',0,'displayInfo',options.displayInfo,'increaseToLargestMovie',options.increaseToLargestMovie);
 				end
 				% size(behaviorMovie{xNo})
 				inputMovieNo = inputMovieNo+1;
@@ -138,7 +140,7 @@ function [inputMovies] = createMontageMovie(inputMovies,varargin)
 		subfxnDisp(['size behavior: ' num2str(size(behaviorMovie{1}))])
 		subfxnDisp(repmat('-',1,7))
 		for concatNo = 2:length(behaviorMovie)
-			[behaviorMovie{1}] = createSideBySide(behaviorMovie{1},permute(behaviorMovie{concatNo},[2 1 3]),'pxToCrop',[],'makeTimeEqualUsingNans',1,'normalizeMovies',0,'displayInfo',options.displayInfo);
+			[behaviorMovie{1}] = createSideBySide(behaviorMovie{1},permute(behaviorMovie{concatNo},[2 1 3]),'pxToCrop',[],'makeTimeEqualUsingNans',1,'normalizeMovies',0,'displayInfo',options.displayInfo,'increaseToLargestMovie',options.increaseToLargestMovie);
 			behaviorMovie{concatNo} = {};
 			size(behaviorMovie{1});
 		end
