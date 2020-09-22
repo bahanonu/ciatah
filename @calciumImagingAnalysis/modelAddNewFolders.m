@@ -56,7 +56,8 @@ function obj = modelAddNewFolders(obj,varargin)
 						['data' filesep 'batch' filesep '2014_08_06_p104_m19_PAV09'],...
 						['data' filesep 'batch' filesep '2014_08_07_p104_m19_PAV10'],...
 						['data' filesep 'twoPhoton' filesep '2017_04_16_p485_m487_runningWheel02']...
-					}
+					};
+                    disp(newFolderList)
 					nNewFolders = length(newFolderList);
 					fileIdxArray = (nExistingFolders+1):(nExistingFolders+nNewFolders);
 					nFolders = length(fileIdxArray);
@@ -64,11 +65,13 @@ function obj = modelAddNewFolders(obj,varargin)
 					for thisFileNumIdx = 1:nFolders
 						% strtrim(newFolderList(thisFileNumIdx,:))
 						% class(strtrim(newFolderList(thisFileNumIdx,:)))
-						pathToAdd = [obj.defaultObjDir filesep newFolderList{thisFileNumIdx}];
+						% ciapkg.getDir() filesep
+						% pathToAdd = [obj.defaultObjDir filesep newFolderList{thisFileNumIdx}];
+						pathToAdd = [newFolderList{thisFileNumIdx}];
 						newFolderListCell{thisFileNumIdx} = strtrim(pathToAdd);
 					end
-					nFolders
-					newFolderListCell
+					disp(nFolders)
+					disp(newFolderListCell)
 				case 'manually enter folders to list'
 					newFolderList = '';
 					try

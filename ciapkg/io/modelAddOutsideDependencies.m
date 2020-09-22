@@ -33,7 +33,7 @@ function [success] = modelAddOutsideDependencies(dependencyName,varargin)
 				if exist('Miji.m','file')==2
 					display(['Miji located in: ' which('Miji.m')]);
 					% Miji is loaded, continue
-				elseif ~isempty(java.lang.System.getProperty('plugins.dir'))
+				elseif ~isempty(java.lang.System.getProperty('plugins.dir'))&options.recursionExit==0
 					disp('Miji JAR files already loaded, skipping. If Miji issue, use "resetMiji".')
 				else
 					% pathToMiji = inputdlg('Enter path to Miji.m in Fiji (e.g. \Fiji.app\scripts):',...

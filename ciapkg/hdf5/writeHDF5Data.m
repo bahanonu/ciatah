@@ -4,7 +4,8 @@ function [success] = writeHDF5Data(inputData,fileSavePath,varargin)
 	% started: 2013.11.01
 	%
 	% inputs
-		% movieList = full path names for movies to concatenate
+		% inputData: matrix, [x y frames] preferred.
+		% fileSavePath: str, path where HDF5 file should be saved.
 	% outputs
 		% success = 1 if successful save, 0 if error.
 	% options

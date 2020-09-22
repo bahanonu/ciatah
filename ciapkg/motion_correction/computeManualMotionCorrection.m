@@ -100,11 +100,16 @@ function [inputImagesTranslated, outputStruct] = computeManualMotionCorrection(i
 			end
 		else
 			% First register the inputImages by moving relative to inputRegisterImage
-			[outputStruct] = subfxnRegisterImage(inputImages(:,:,1),inputRegisterImage,options,outputStruct,1,size(inputImages,3));
-			inputImagesTranslated = NaN(size(inputImages));
 			for frameNo = 1:size(inputImages,3)
+                [outputStruct] = subfxnRegisterImage(inputImages(:,:,frameNo),inputRegisterImage,options,outputStruct,frameNo,size(inputImages,3));
+                inputImagesTranslated = NaN(size(inputImages));
 				inputImagesTranslated(:,:,frameNo) = imtranslate(inputImages(:,:,frameNo),outputStruct.translationVector{frameNo});
-				inputImagesTranslated(:,:,frameNo) = imrotate(inputImages(:,:,frameNo),outputStruct.rotationVector{frameNo},'nearest','crop');
+                if outputStruct.rotationVector{frameNo}==0
+                else
+                    inputImagesTranslated(:,:,frameNo) = imrotate(inputImagesTranslated(:,:,frameNo),outputStruct.rotationVector{frameNo},'nearest','crop');
+                end
+                outputStruct.inputImagesCorrected{frameNo} = inputImagesTranslated(:,:,frameNo);
+                outputStruct.inputImagesOriginal{frameNo} = inputImages(:,:,frameNo);
 			end
 		end
 
@@ -132,7 +137,8 @@ function [outputStruct] = subfxnRegisterImage(inputImages,inputRegisterImage,opt
 		inputRegisterImageOutlines([boundaryIndices{:}]) = 1;
 	else
 		inputRegisterImageOutlines = normalizeVector(single(inputRegisterImage(:,:,1)),'normRange','zeroToOne');
-	end
+    end
+    inputRegisterImageOutlinesOriginal = inputRegisterImageOutlines;
 
 	[figHandle figNo] = openFigure(options.translationFigNo, '');
 	clf
@@ -140,7 +146,9 @@ function [outputStruct] = subfxnRegisterImage(inputImages,inputRegisterImage,opt
 	inputImages = normalizeVector(single(inputImages),'normRange','zeroToOne');
 	inputImagesOriginal = inputImages;
 	gammaCorrection = 1;
+    gammaCorrectionRef = 1;
 	inputImages = imadjust(inputImages,[],[],gammaCorrection);
+	inputRegisterImage = imadjust(inputRegisterImage,[],[],gammaCorrectionRef);
 	continueRegistering = 1;
 	translationVector = [0 0];
 	rotationVector = [0];
@@ -149,8 +157,9 @@ function [outputStruct] = subfxnRegisterImage(inputImages,inputRegisterImage,opt
 	set(figHandle, 'KeyPressFcn', @(source,eventdata) subfxnRespondUser(source,eventdata));
 	figure(figHandle)
 	rgbImage = subfxncreateRgbImg();
-	imgTitleFxn = @(imgNo,imgN,gammaCorrection,translationVector,rotationVector) sprintf('Image %d/%d\nup/down/left/right arrows for translation | "A" = rotate left, "S" = rotate right | f to finish\n1/2 keys for image gamma down/up | gamma = %0.3f | translation %d %d | rotation %d\npurple = reference image, green = image to manually translate',imgNo,imgN,gammaCorrection,translationVector,rotationVector);
-	imgTitle = imgTitleFxn(imgNo,imgN,gammaCorrection,translationVector,rotationVector);
+	imgTitleFxn = @(imgNo,imgN,gammaCorrection,gammaCorrectionRef,translationVector,rotationVector) sprintf('Image %d/%d\nup/down/left/right arrows for translation | "A" = rotate left, "S" = rotate right | f to finish\n1/2 keys for image gamma down/up | gamma = %0.3f |  gamma_r = %0.3f | translation %d %d | rotation %d\npurple = reference image, green = image to manually translate',imgNo,imgN,gammaCorrection,gammaCorrectionRef,translationVector,rotationVector);
+	
+    imgTitle = imgTitleFxn(imgNo,imgN,gammaCorrection,gammaCorrectionRef,translationVector,rotationVector);
 	imgHandle = imagesc(rgbImage);
 	axis equal tight
 	box off;
@@ -177,39 +186,54 @@ function [outputStruct] = subfxnRegisterImage(inputImages,inputRegisterImage,opt
 
 	function subfxnRespondUser(src,event)
 		figure(figHandle)
-		% disp('d')
-		rgbImage = subfxncreateRgbImg();
-		% imagesc(rgbImage);box off;
-		set(imgHandle,'Cdata',rgbImage);
-		imgTitle = imgTitleFxn(imgNo,imgN,gammaCorrection,translationVector,rotationVector);
-		set(imgTitleHandle,'String',imgTitle);
-		% title(imgTitle)
-		% imagesc(inputImages)
-		drawnow
+		subfxnDrawImg()
+		
 		% pause
-		[tDelta continueRegistering gDelta rDelta] = subfxnRespondToUserInputTranslation();
+		[tDelta, continueRegistering, gDelta, rDelta, gDeltaRef] = subfxnRespondToUserInputTranslation();
+        set(gcf,'CurrentCharacter','0');
 		translationVector = translationVector+tDelta;
 		rotationVector = rotationVector+rDelta;
-		if gammaCorrection<=1
-			gDelta = gDelta/10;
-		else
-			gammaCorrection = round(gammaCorrection);
-		end
-		gammaCorrection = gammaCorrection+gDelta;
-		if gammaCorrection<0
-			gammaCorrection = 0;
-		end
+        
+        gammaCorrection = subfxnGammaUpdate(gammaCorrection,gDelta);
+        gammaCorrectionRef = subfxnGammaUpdate(gammaCorrectionRef,gDeltaRef);
+		
 		inputImages = imtranslate(inputImagesOriginal,translationVector);
 		inputImages = imrotate(inputImages,rotationVector,'nearest','crop');
 		% if rDelta~=0
 		% end
 		inputImages = imadjust(inputImages,[],[],gammaCorrection);
+        inputRegisterImageOutlines = inputRegisterImageOutlinesOriginal;
+		inputRegisterImageOutlines = imadjust(inputRegisterImageOutlines,[],[],gammaCorrectionRef);
+        
+        subfxnDrawImg()
+        
 		if continueRegistering==0
 			close(figHandle)
 		end
-	end
+    end
+    function subfxnDrawImg()
+        rgbImage = subfxncreateRgbImg();
+		% imagesc(rgbImage);box off;
+		set(imgHandle,'Cdata',rgbImage);
+		imgTitle = imgTitleFxn(imgNo,imgN,gammaCorrection,gammaCorrectionRef,translationVector,rotationVector);
+		set(imgTitleHandle,'String',imgTitle);
+		% title(imgTitle)
+		% imagesc(inputImages)
+		drawnow
+    end
 end
-function [tDelta continueLoop gDelta rDelta] = subfxnRespondToUserInputTranslation()
+function gammaCorrection = subfxnGammaUpdate(gammaCorrection,gDelta)
+    if gammaCorrection<=1
+        gDelta = gDelta/10;
+    else
+        gammaCorrection = round(gammaCorrection);
+    end
+    gammaCorrection = gammaCorrection+gDelta;
+    if gammaCorrection<0
+        gammaCorrection = 0;
+    end
+end
+function [tDelta, continueLoop, gDelta, rDelta, gDeltaRef] = subfxnRespondToUserInputTranslation()
 	continueLoop = 1;
 	% translationDirection []
 	% set(gcf,'currentch','3');
@@ -225,6 +249,7 @@ function [tDelta continueLoop gDelta rDelta] = subfxnRespondToUserInputTranslati
     reply = get(gcf,'CurrentCharacter');
     tDelta = [0 0];
     gDelta = 0;
+    gDeltaRef = 0;
     rDelta = 0;
     reply = double(reply);
 
@@ -249,14 +274,20 @@ function [tDelta continueLoop gDelta rDelta] = subfxnRespondToUserInputTranslati
         % 1 - gamma down
         gDelta = -1;
     elseif isequal(reply, 50)
-        % 1 - gamma up
-        gDelta = 1;;
+        % 2 - gamma up
+        gDelta = 1;
+    elseif isequal(reply, 51)
+        % 3 - gamma down, reference image
+        gDeltaRef = -1;
+    elseif isequal(reply, 52)
+        % 4 - gamma up
+        gDeltaRef = 1;
     elseif isequal(reply, 115)
         % s - rotate right
         rDelta = -1;
     elseif isequal(reply, 97)
         % a - rotate left
-        rDelta = 1;;
+        rDelta = 1;
     elseif isequal(reply, 102)
         % user clicked 'f' for finished, exit loop
         continueLoop = 0;

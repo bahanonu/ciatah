@@ -36,7 +36,7 @@ function [outputMovie] = createSideBySide(primaryMovie,secondaryMovie,varargin)
 	options.rotateSecondMovie = 0;
 	% rotate xy dims of primary movie
 	options.rotatePrimaryMovie = 0;
-	%
+	% Binary: 1 = increase to largest movie instead of downsampling to the smallest movie.
 	options.increaseToLargestMovie = 0;
 	% Binary: 1 = display info
 	options.displayInfo = 1;
@@ -236,7 +236,7 @@ function [outputMovie] = createSideBySide(primaryMovie,secondaryMovie,varargin)
 		disp(getReport(err,'extended','hyperlinks','on'));
 		display(repmat('@',1,7))
 	end
-	%% subfxnDisp: function description
+	% subfxnDisp: function description
 	function subfxnDisp(txt)
 		if options.displayInfo==1
 			display(txt)

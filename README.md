@@ -48,7 +48,7 @@ Below are steps needed to quickly get started using the `calciumImagingAnalysis`
 
 - __Install__ Clone the `calciumImagingAnalysis` repository (using [GitHub desktop](https://desktop.github.com/) or command line) or download the repository zip and unzip (e.g. run below MATLAB command).
   - Point the MATLAB path to the `calciumImagingAnalysis` root folder (*NOT* `@calciumImagingAnalysis` sub-folder in the repository).
-  - Alternatively, download the package from `File Exchange` using the Add-Ons explorer in MATLAB. See `calciumImagingAnalysis` entry at:
+  - Alternatively (not recommended since lags GitHub repository), download the package from `File Exchange` using the Add-Ons explorer in MATLAB. See `calciumImagingAnalysis` entry at:
  [![View calciumImagingAnalysis on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis) or https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis.
 
  ```Matlab
@@ -192,7 +192,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
 You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-- [![HitCount](http://hits.dwyl.com/bahanonu/calciumImagingAnalysis.svg)](http://hits.dwyl.com/bahanonu/calciumImagingAnalysis)
-  - Starting 2020-08-16, frozen til `dwyl` migrates to new server.
 - ![Hits](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https%3A%2F%2Fgithub.com%2Fbahanonu%2FcalciumImagingAnalysis)
   - Starting 2020.09.16.
+- [![HitCount](http://hits.dwyl.com/bahanonu/calciumImagingAnalysis.svg)](http://hits.dwyl.com/bahanonu/calciumImagingAnalysis)
+  - Starting 2020-08-16, frozen til `dwyl` migrates to new server.
