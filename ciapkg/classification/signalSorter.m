@@ -67,6 +67,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 		% 2020.04.28 [16:34:33] - Fixed case where ROItraces would be overwritten when comparing to algorithm input traces. Also added to 'r' option.
 		% 2020.05.13 [09:34:45] - Added support for NWB.
 		% 2020.07.27 [12:52:40] - Added ability to choose multiple outputs for a given input.
+		% 2020.09.22 [03:09:59] - Ensure NWB files are read correctly.
 	% TODO
 		% DONE: New GUI interface to allow users to scroll through video and see cell activity at that point
 		% DONE: allow option to mark rest as bad signals
