@@ -25,13 +25,13 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 
 	%========================
 	% Root path for external signal-extraction algorithm folders.
-	options.signalExtractionRootPath = [fileparts(which('ciapkgRoot')) filesep '_external_programs'];
+	options.signalExtractionRootPath = [ciapkg.getDir() filesep '_external_programs'];
 	% 1 = save NWB output, 2 = do not save NWB output.
 	options.saveNwbOutput = 0;
 	% Str: save to this sub-folder of analyzed folder, leave blank to save in root folder.
 	options.nwbSaveFolder = obj.nwbFileFolder;
 	% Str: Folder where settings files are stored
-	options.settingsFolder = [fileparts(which('ciapkgRoot')) filesep 'ciapkg' filesep 'settings'];
+	options.settingsFolder = [ciapkg.getDir() filesep 'ciapkg' filesep 'settings'];
 	% Str: folder where private settings are stored
 	options.settingsPrivateSaveFolder = [obj.settingsSavePath filesep 'signal_extraction'];
 	% options.settingsPrivateSaveFolder = ['private' filesep 'settings' filesep 'cellExtraction'];

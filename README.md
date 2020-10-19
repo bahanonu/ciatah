@@ -1,5 +1,4 @@
 # calciumImagingAnalysis (ciapkg)
-
 ![GitHub top language](https://img.shields.io/github/languages/top/bahanonu/calciumImagingAnalysis?style=flat-square&logo=appveyor)
 ![GitHub license](https://img.shields.io/github/license/bahanonu/calciumImagingAnalysis?style=flat-square&logo=appveyor)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/bahanonu/calciumImagingAnalysis?style=flat-square&logo=appveyor)](https://github.com/bahanonu/calciumImagingAnalysis/releases/latest?style=flat-square&logo=appveyor)
@@ -12,7 +11,7 @@
 
 <hr>
 
-`calciumImagingAnalysis` is a software package for calcium imaging analysis of one- and two-photon imaging datasets.
+`calciumImagingAnalysis` is a software package for analysis of one- and two-photon calcium imaging datasets.
 
 <img src="https://user-images.githubusercontent.com/5241605/81605697-b9c7c800-9386-11ea-9e9f-569c743b24b9.png" width="42%" align="right" alt="calciumImagingAnalysis_logo">
 
@@ -30,6 +29,11 @@ Contact: __Biafra Ahanonu, PhD (bahanonu [at] alum [dot] mit [dot] edu)__.
 
 Made in USA.<br>
 <img src="https://user-images.githubusercontent.com/5241605/71493809-322a5400-27ff-11ea-9b2d-52ff20b5f332.png" align="center" title="USA" alt="USA" width="auto" height="50">
+<p align="center">
+  <a href="https://user-images.githubusercontent.com/5241605/94530890-9c3db280-01f0-11eb-99f0-e977f5edb304.gif">
+    <img src="https://user-images.githubusercontent.com/5241605/94530890-9c3db280-01f0-11eb-99f0-e977f5edb304.gif" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="50%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
+  </a>
+</p>
 
 ***
 ## Contents
@@ -81,7 +85,7 @@ obj % then hit enter, no semicolon!
 
 ### `calciumImagingAnalysis` main GUI notes
 - Run `obj;` in the command window to see the main GUI.
-- All main decisions for choosing a module to run, a cell-extraction algorithm, and which folders to analyze are in a single window.
+- All main decisions for choosing a module to run, deciding on a cell-extraction algorithm, and which folders to analyze are in a single window.
 - The GUI will real-time update the selected folders based on the selections in the subject, assay, and folder filter areas.
 - Sections not relevant for a specific module are grayed out.
 - Tab to cycle through selection areas. Green background is the currently selected area, dark gray background is area that had previously been selected but is not the active area, and white background is for areas that have not been selected yet.

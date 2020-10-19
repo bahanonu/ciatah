@@ -9,14 +9,20 @@ function [IcaOutputSpatial, IcaOutputTemporal, IcaOutputInfo] = run_ica(spatial,
         % movie_height = scalar, height of movie PCA was run on.
         % movie_width = scalar, width of movie PCA was run on.
         % num_ICs: scalar value with initial guess as to number of ICs, e.g. 100.
+    % outputs
+        % 
+    % Usage:
+      % run_ica('_data/pca_n500.mat', 200, 0.1); % pca_source, num_ICs, mu
     %options:
         % output_units: string of either fluorescence ('fl') or standard deviation ('std').
         % mu: parameter (between 0 and 1) specifying weight of temporal information in spatio-temporal ICA
         % term_tol: Termination tolerance, e.g. 1e-5.
         % max_iter: Max iterations of FastICA, e.g. 750.
-    % outputs
-    % Usage:
-    %   run_ica('_data/pca_n500.mat', 200, 0.1); % pca_source, num_ICs, mu
+
+    % changelog
+        % ‎15 ‎December, ‎2017, ‏‎11:36:50
+        % 
+
     %========================
     options.output_units = 'std';
     options.mu = 0.1;

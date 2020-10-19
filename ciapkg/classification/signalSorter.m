@@ -68,6 +68,8 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 		% 2020.05.13 [09:34:45] - Added support for NWB.
 		% 2020.07.27 [12:52:40] - Added ability to choose multiple outputs for a given input.
 		% 2020.09.22 [03:09:59] - Ensure NWB files are read correctly.
+		% 2020.10.13 [01:22:47] - Display context menu for keyboard shortcuts, easier than separate figure. User can select with right-click or via a menu in the GUI.
+		% 2020.10.13 [22:31:23] - Users can now scroll through cells using mouse scroll wheel.
 	% TODO
 		% DONE: New GUI interface to allow users to scroll through video and see cell activity at that point
 		% DONE: allow option to mark rest as bad signals
@@ -227,7 +229,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 	% Int: minimum number of events a signal needs to have else will add pseudo peaks
 	options.minEventsAddPeaks = 4;
 	% Int: font size of GUI elements
-	options.fontSize = 10;
+	options.fontSize = 8;
 	% get options
 	options = getOptions(options,varargin);
 	% unpack options into current workspace
@@ -257,10 +259,10 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 	disp(['inputImages size: ' num2str(size(inputImages))])
 	disp(['inputSignals size: ' num2str(size(inputSignals))])
 	if size(inputImages,3)~=size(inputSignals,1)
-		disp(sprintf('Number of signals or cells in input images (%d) and activity traces (%d) DO NOT match. Please make sure input images are [x y cellNo] and input signals are [cellNo frames] format. Exiting function...',size(inputImages,3),size(inputSignals,1)))
+		fprintf('Number of signals or cells in input images (%d) and activity traces (%d) DO NOT match. Please make sure input images are [x y cellNo] and input signals are [cellNo frames] format. Exiting function...\n',size(inputImages,3),size(inputSignals,1))
 		return;
 	else
-		disp(sprintf('Number of signals or cells in input images (%d) and activity traces (%d) DO match. Continuing...',size(inputImages,3),size(inputSignals,1)))
+		fprintf('Number of signals or cells in input images (%d) and activity traces (%d) DO match. Continuing...\n',size(inputImages,3),size(inputSignals,1))
 	end
 
 	% ==========================================
@@ -741,6 +743,13 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 
 	figure(mainFig);
 
+	set(gcf, 'WindowScrollWheelFcn', @mouseWheelChange);
+
+	objMapZoomPlotLocHandle = subplotCustom(subplotY,subplotX,objMapZoomPlotLoc);
+
+	% Create shortcut menu
+	[conMenu] = subfxn_createShortcutInfo();
+
 	% plot the cell map to provide context
 	subplotCustom(subplotY,subplotX,objMapPlotLoc);
 	imagesc(objMap); axis off;
@@ -1207,7 +1216,8 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 				if options.axisEqual==1
 					axis equal tight;
 				end
-				title(['signal ' cellIDStr ' (' num2str(sum(valid==1)) ' good)' 10 'Legend: green(good), red(bad), blue(current)' 10 'Press L for keyboard shortcut legend.' 10 'Mouse click or press V to select cell on cellmap.'],'FontSize',options.fontSize,'Interpreter','tex')
+				% title(['signal ' cellIDStr ' (' num2str(sum(valid==1)) ' good)' 10 'Legend: green(good), red(bad), blue(current)' 10 'Press L for keyboard shortcut legend.' 10 'Mouse click or press V to select cell on cellmap.'],'FontSize',options.fontSize,'Interpreter','tex')
+				title(['signal ' cellIDStr ' (' num2str(sum(valid==1)) ' good)' 10 'Legend: green(good), red(bad), blue(current)' 10 'Mouse click or press V to select cell on cellmap.'],'FontSize',options.fontSize,'Interpreter','tex')
 
 				box off;
 				axisH = gca;
@@ -1609,7 +1619,14 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 	warning('on','all')
 	warning('query','all')
 	safeExit = 1;
-	function subfxnUserInputGui()
+	function subfxnUserInputGui(replyTmp)
+		if nargin>0
+			% Change keyIn to force while loop to exit, need for certain commands.
+		    keyIn = 0;
+		    reply = replyTmp;
+		    set(gcf,'currentch','3');
+		end
+
 		% 'M' make a montage of peak frames
 		if isequal(reply, 109)&&~isempty(options.inputMovie)
 			try
@@ -1650,6 +1667,7 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 			pause;
 		% 'Y' go to the last displayed cell
 		elseif isequal(reply, 121)
+			fprintf('Going to signal #%d.\n',lastSortedSignal);
 			i = lastSortedSignal;
 		% 'V' Allow user to select and go to cell on cellmap
 		elseif isequal(reply, 118)
@@ -1689,9 +1707,11 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 		% 'A' change global font
 		elseif isequal(reply, 97)
 			userInput = inputdlg('New font');
-			userInput = str2num(userInput{1});
-			options.fontSize = userInput;
-			set(findall(gcf,'-property','FontSize'),'FontSize',options.fontSize);
+			if ~isempty(userInput{1})
+				userInput = str2num(userInput{1});
+				options.fontSize = userInput;
+				set(findall(gcf,'-property','FontSize'),'FontSize',options.fontSize);
+			end
 		% 'L' re-display legend
 		elseif isequal(reply, 108)
 			subfxnCreateLegend();
@@ -1916,6 +1936,7 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 			signalPeakArray = {signalPeakArray(peakIdx)};
 			try
 				compareSignalToMovie(options.inputMovie, thisImage, thisTrace,'waitbarOn',0,'timeSeq',-10:10,'signalPeakArray',signalPeakArray,'cropSize',options.cropSizeLength,'movieMinMax',[minHere maxHere],'inputDatasetName',options.inputDatasetName,'inputMovieDims',options.inputMovieDims,'colormap',options.colormap);
+				close(42)
 			catch err
 				disp(repmat('@',1,7))
 				disp(getReport(err,'extended','hyperlinks','on'));
@@ -1928,6 +1949,7 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 				[objCutMovie] = createObjCutMovieSignalSorter(options,testpeaks,thisTrace,inputImages,i,options.cropSizeLength,maxValMovie);
 				% objCutMovie(:,:,1) = nanmax(objCutMovie(:));
 				playMovie(objCutMovie,'fps',15,'movieMinMax',[minHere maxHere],'colormapColor',options.colormap);
+				close(42)
 			catch err
 				disp(repmat('@',1,7))
 				disp(getReport(err,'extended','hyperlinks','on'));
@@ -1936,6 +1958,94 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 		else
 			[valid, directionOfNextChoice, saveData, i, lastSortedSignal] = respondToUserInput(reply,i,valid,directionOfNextChoice,saveData,nImages,lastSortedSignal);
 		end
+	end
+	function subfxn_displayShortcuts(src,event,conMenu)
+		conMenu.Visible = 1;
+		originalUnits = get(gcf,'Units');
+		set(gcf,'Units','pixels')
+		pos1 = get(gcf,'Position');
+		set(gcf,'Units',originalUnits)
+		conMenu.Position = [0 pos1(4)*0.97];
+	end
+	function mouseWheelChange(hObject, callbackdata, handles)
+		% Change keyIn to force while loop to exit, need for certain commands.
+	    keyIn = 0;
+
+	    if callbackdata.VerticalScrollCount > 0
+	        directionOfNextChoice = 1;
+	    elseif callbackdata.VerticalScrollCount < 0
+	        directionOfNextChoice = -1;
+	    end
+	end
+	function [conMenu] = subfxn_createShortcutInfo()
+		
+		sepMenuLins = {'','',''};
+		% {'Drag edges to resize legend window.','',''},...
+		menuListInfo = {...
+		{'signalSorter by Biafra Ahanonu','',''},...
+		{'Keyboard shortcuts and legend','',''},...
+		sepMenuLins,...
+		{'===Keyboard/Mouse shortcuts===','',''},...
+		{'Mouse click cellmap to select and go to cell','',''},...
+		{'Mouse scroll wheel forward/back cells.','',''},...
+		{'KEY        |','', 'COMMAND'},...
+		{'up/down    |','', 'mark current as good/bad'},...
+		{'left/right |','', 'move to next/previous signal'},...
+		{'v          |','v', 'select cell on cellmap'},...
+		{'y          |','y', 'go to last sorted cell'},...
+		{'f          |','f', 'finish and save selections'},...
+		{'q          |','q', 'change movie CONTRAST (min/max)'},...
+		{'g          |','g', 'goto signal #...'},...
+		{'c          |','c', 'movie during transients'},...
+		{'t          |','t', 'GUI for comparing neighboring signals'},...
+		{'r          |','r', 'show traces in full figure'},...
+		{'m          |','m', 'movie snapshot during transients'},...
+		{'i          |','i', 'full FOV for current cell extraction image'},...
+		{'x          |','x', 'montage transients in movie'},...
+		{'s          |','s', 'set remaining signals as bad'},...
+		{'w          |','w', 'change trace min/max'},...
+		{'e          |','e', 'change fps of transient movies'},...
+		{'d          |','d', 'change colormap'},...
+		{'l          |','l', 'create new legend'},...
+		{'p          |','p', 'pause GUI, goto command window'},...
+		{'z          |','z', 'toggle zoom'},...
+		{'a          |','a', 'change GUI font'},...
+		{'b          |','b', 'Toggle movie frame select'},...
+		sepMenuLins,...
+		{'===Cell map legend===','',''},...
+		{'green = good','',''},...
+		{'red = bad','',''},...
+		{'gray = undecided','',''},...
+		{'blue = current','',''},...
+		sepMenuLins,...
+		{'===Auto classify parameters===','',''},...
+		{'Eccentricity>0.4','',''},...
+		{'imageSizes>10,<100','',''},...
+		{'Perimeter<50,>5','',''},...
+		{'EquivDiameter>3,<30','',''},...
+		{'signalSnr>1.45','',''},...
+		{'slopeRatio>0.02','',''},...
+		};
+
+		conMenu = uicontextmenu;
+		mitemAll = {};
+		for mNo = 1:length(menuListInfo)
+			if isempty([menuListInfo{mNo}{1}])
+		    	labelStr = [''];
+			else
+		    	labelStr = ['<HTML><PRE>' menuListInfo{mNo}{1} ' ' menuListInfo{mNo}{3} '</PRE>'];		
+			end
+			mitemAll{mNo} = uimenu(conMenu,'label',labelStr,'MenuSelectedFcn',@(src,evnt) subfxnUserInputGui(double(menuListInfo{mNo}{2})));
+		end
+		uimenu(conMenu,'label',' ','MenuSelectedFcn',@subfxn_displayShortcuts,'Accelerator','T');
+
+		s2Pos = plotboxpos(objMapZoomPlotLocHandle);
+		% [s3Pos(1) 0.98 s3Pos(3) 0.02]
+		positionH = [s2Pos(1) 0.97 s2Pos(3) 0.03];
+
+		shortcutMenuHandle = uicontrol('style','pushbutton','Units','normalized','position',positionH,'FontSize',8,'string','Shortcuts menu (or right-click GUI)','callback',@(src,event) subfxn_displayShortcuts(src,event,conMenu));
+
+		set(gcf,'uicontextmenu',conMenu);
 	end
 	function subfxnSelectCellOnCellmap(source,eventdata)
 		[xUser,yUser,~] = ginputCustom(1);
@@ -2065,9 +2175,18 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 	end
 end
 function [axValid axValidAll] = subfxnSignalSorterProgressBars(i,valid,inputMoviePlotLocHandle,inputMoviePlotLoc2Handle,options,mainFig,axValid,axValidAll,cellIDStr)
-	validData = cat(3,double(valid(:)'==0|valid(:)'>1),double(valid(:)'==1|valid(:)'>1),double(valid(:)'>1))/2;
+	validData = cat(3,...
+		double(valid(:)'==0|valid(:)'>1),...% Red
+		double(valid(:)'==1|valid(:)'>1),...% Green
+		double(valid(:)'>1))/2; % Blue
 	validData(:,valid==0,1) = 1;
 	validData(:,valid==1,2) = 1;
+
+	% Show the current cell
+	validData(:,i,1) = 0;
+	validData(:,i,2) = 0;
+	validData(:,i,3) = 1;
+
 	if i==1
 		if ~isempty(axValid)
 			delete(findobj(mainFig,'Tag','colorProgressBar1'));
@@ -2083,6 +2202,11 @@ function [axValid axValidAll] = subfxnSignalSorterProgressBars(i,valid,inputMovi
 		validImgHandle = imagesc(axValid,validData);
 		set(axValid,'XTick',[],'YTick',[],'Tag','colorProgressBar1')
 		xlabel(['Cell (green), non-cell (red), unknown (gray) | ' 'signal ' cellIDStr ' (' num2str(sum(valid==1)) ' good)'],'FontSize',options.fontSize-2)
+
+		box off
+		axValid.XRuler.Axle.LineStyle = 'none';
+		axValid.YColor = [1,1,1,0];
+		% axValid.YRuler.Axle.LineStyle = 'none';
 	else
 		thisHandle = findobj(axValid,'Type','image');
 		set(thisHandle,'CData',validData);
@@ -2103,11 +2227,19 @@ function [axValid axValidAll] = subfxnSignalSorterProgressBars(i,valid,inputMovi
 		axValidAll = axes('Position',[s3Pos(1) 0.98 s3Pos(3) 0.02],'XTick',[],'YTick',[]);
 		validImgHandle = imagesc(axValidAll,validData);
 		set(axValidAll,'XTick',[],'YTick',[],'Tag','colorProgressBar2')
-		xlabel(['Percent: cell (green), non-cell (red), unknown (gray).'],'FontSize',options.fontSize-2)
+		% xlabel(['Percent: cell (green), non-cell (red), unknown (gray).'],'FontSize',options.fontSize-2)
+		xlabel(['<---see.'],'FontSize',options.fontSize-2)
+
+		box off
+		axValidAll.XRuler.Axle.LineStyle = 'none';
+		axValidAll.YColor = [1,1,1,0];
+		% axValidAll.YRuler.Axle.LineStyle = 'none';
 	else
 		thisHandle = findobj(axValidAll,'Type','image');
 		set(thisHandle,'CData',validData);
 	end
+	set(axValid,'linewidth',0.000001);
+	set(axValidAll,'linewidth',0.000001);
 end
 function subfxnLostFocusMainFig(jAxis, jEventData, hFig)
    figure(hFig);

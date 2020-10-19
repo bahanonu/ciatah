@@ -17,14 +17,15 @@ function [options] = getOptions(options,inputArgs,varargin)
 		% This is in contrast to using name-value pairs, both will produce the same result.
 		% getMutations(mutationList,'Stargazer',1,'SHH',0);
 		%
+		% The 'passArgs' name-value pair will pass through the parent functions varargin to child functions.
 	% USAGE
 		% function [input1,input2] = exampleFxn(input1,input2,varargin)
 		% 	%========================
 		% 	% DESCRIPTION
 		% 	options.Stargazer = '';
-		%	% DESCRIPTION
+		% 	% DESCRIPTION
 		% 	options.SHH = '';
-		%	% DESCRIPTION
+		% 	% DESCRIPTION
 		% 	options.Option3 = '';
 		% 	% get options
 		% 	options = getOptions(options,varargin); % ***HERE IS WHERE getOptions IS USED***
@@ -37,6 +38,8 @@ function [options] = getOptions(options,inputArgs,varargin)
 		% 	%========================
 		% 	try
 		% 		% Do something.
+		% 		% How to use the passArgs feature.
+		% 		childFunction(arg1,arg2,'passArgs',varargin);
 		% 	catch err
 		% 		disp(repmat('@',1,7))
 		% 		disp(getReport(err,'extended','hyperlinks','on'));
@@ -53,6 +56,7 @@ function [options] = getOptions(options,inputArgs,varargin)
 		% 2016.xx.xx - warnings now show both calling function and it's parent function, improve debug for warnings. Slight refactoring of code to make easier to follow. - Biafra
 		% 2020.05.10 [18:00:23] - Updates to comments in getOptions and other minor changes. Make warnings output as actual warnings instead of just displaying as normal text on command line.
 		% 2020.06.29 [18:54:56] - Support case where calling getOptions from command line or where there is no stack.
+		% 2020.09.29 [13:21:09] - Added passArgs option, this mimics the ... construct in R, so users can pass along arguments without having to define them in the calling function (e.g. in the case of wrapper functions).
 
 	% TODO
 		% Allow input of an option structure - DONE!
@@ -116,6 +120,10 @@ function [options] = getOptions(options,inputArgs,varargin)
 				% Special options struct, only add field names defined by the user. Keep all original field names that are not input by the user.
 				inputOptions = inputArgs{i+1};
 				options = mirrorRightStruct(inputOptions,options,goptions,val);
+			elseif strcmp('passArgs',val)
+				% Special argument to pass all these arguments directly through parent function to child function.
+				inputOptions = inputArgs{i+1};
+				options = getOptions(options,inputOptions);
 			elseif sum(strcmp(val,validOptions))>0&isstruct(options.(val))&goptions.recursiveStructs==1
 				% If struct name-value, add users field name changes only, keep all original field names in the struct intact, struct-recursion ON
 				inputOptions = inputArgs{i+1};

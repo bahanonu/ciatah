@@ -1,33 +1,35 @@
 function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, varargin)
 	% Load movies, automatically detects type (avi, tif, or hdf5) and concatenates if multiple movies in a list.
+		% NOTE:
+			% The function assumes input is 2D time series movies with [x y frames] as dimensions
+			% If movies are different sizes, use largest dimensions and align all movies to top-left corner.
 	% Biafra Ahanonu
 	% started: 2013.11.01
 	% inputs
-	% 	movieList = either a char string containing a path name or a cell array containing char strings, e.g. 'pathToFile' or {'path1','path2'}
+		% movieList = either a char string containing a path name or a cell array containing char strings, e.g. 'pathToFile' or {'path1','path2'}
 	% outputs
-	% 	outputMovie
-	% 	movieDims
-	% 	nPixels
-	% 	nFrames
+		% outputMovie - [x y frame] matrix.
+		% movieDims - structure containing x,y,z information for the movie.
+		% nPixels - total number of pixels in the movie across all frames.
+		% nFrames - total number of frames in the movie depending on user requests in option.frameList.
 	% options
-	% options.supportedTypes = {'.h5','.nwb','.hdf5','.tif','.tiff','.avi'};
-	% % movie type
-	% options.movieType = 'tiff';
-	% % hierarchy name in hdf5 where movie is
-	% options.inputDatasetName = '/1';
-	% % convert file movie to double?
-	% options.convertToDouble = 0;
-	% % 'single','double'
-	% options.loadSpecificImgClass = [];
-	% % list of specific frames to load
-	% options.frameList = [];
-	% % should the waitbar be shown?
-	% options.waitbarOn=1;
-	% % just return the movie dimensions
-	% options.getMovieDims = 0;
-	% % treat movies in list as continuous with regards to frame
-	% options.treatMoviesAsContinuous = 0;
-	% NOTE: assume 3D movies with [x y frames] as dimensions, if movies are different sizes, use largest dimensions and align all movies to top-left corner
+		% options.supportedTypes = {'.h5','.nwb','.hdf5','.tif','.tiff','.avi'};
+		% % movie type
+		% options.movieType = 'tiff';
+		% % hierarchy name in hdf5 where movie is
+		% options.inputDatasetName = '/1';
+		% % convert file movie to double?
+		% options.convertToDouble = 0;
+		% % 'single','double'
+		% options.loadSpecificImgClass = [];
+		% % list of specific frames to load
+		% options.frameList = [];
+		% % should the waitbar be shown?
+		% options.waitbarOn=1;
+		% % just return the movie dimensions
+		% options.getMovieDims = 0;
+		% % treat movies in list as continuous with regards to frame
+		% options.treatMoviesAsContinuous = 0;
 
 	% changelog
 		% 2014.02.14 [14:14:39] now can load non-monotonic lists for avi and hdf5 files.
@@ -46,49 +48,51 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 		% 2020.04.05 [16:27:11] - Added check to support reading NWB as HDF5 file.
 		% 2020.08.30 [10:16:08] - Change warning message output for HDF5 file of certain type.
 		% 2020.08.31 [15:47:49] - Add option to suppress warnings.
+		% 2020.10.19 [12:11:14] - Improved comments and options descriptions.
 	% TODO
 		% OPEN
-			% MAKE tiff loading recognize frameList input
-			% verify movies are of supported load types, remove from list if not and alert user, should be an option (e.g. return instead) - DONE
-			% allow user to input frames that are global across several files, e.g. [1:500 1:200 1:300] are the lengths of each movie, so if input [650:670] in frameList, should grab 150:170 from movie 2 - DONE, see treatMoviesAsContinuous option
+			% Determine file type by properties of file instead of extension (don't trust input...)
+			% Remove all use of tmpMovie....
+			% Add ability to degrade gracefully with HDF5 dataset names, so try several backup datasetnames if one doesn't work.
+			% Allow fallbacks for HDF5 dataset name, e.g. if can't find /1, look for /images. Might never add this as it opens up dangers of loading the incorrect dataset if a user makes a mistake, better to give out a warning.
 		% DONE
-			% Allow fallbacks for HDF5 dataset name, e.g. if can't find /1, look for /images
-			% add preallocation by pre-reading each movie's dimensions - DONE
-			% determine file type by properties of file instead of extension (don't trust input...)
-			% remove need to use tmpMovie....
-			% add ability to degrade gracefully with HDF5 dataset names, so try several backup datasetnames if one doesn't work
+			% allow user to input frames that are global across several files, e.g. [1:500 1:200 1:300] are the lengths of each movie, so if input [650:670] in frameList, should grab 150:170 from movie 2 - DONE, see treatMoviesAsContinuous option.
+			% verify movies are of supported load types, remove from list if not and alert user, should be an option (e.g. return instead) - DONE
+			% MAKE tiff loading recognize frameList input. - DONE
+			% Add preallocation by pre-reading each movie's dimensions - DONE
 
 	% ========================
+	% Cell array of str: list of supported file types, in general DO NOT change.
 	options.supportedTypes = {'.h5','.hdf5','.nwb','.tif','.tiff','.avi','.isxd'};
-	% movie type
+	% Str: movie type.
 	options.movieType = 'tiff';
 	% Str: hierarchy name in hdf5 where movie data is located
 	options.inputDatasetName = '/1';
 	% Str: default NWB hierarchy names in HDF5 file where movie data is located, will look in the order indicates
 	options.defaultNwbDatasetName = {'/acquisition/TwoPhotonSeries/data'};
-	% fallback hierarchy name, e.g. '/images'
+	% Str: fallback hierarchy name, e.g. '/images'
 	options.inputDatasetNameBackup = [];
-	% convert file movie to double?
+	% Binary: 1 = convert file movie to double, 0 = keep original format.
 	options.convertToDouble = 0;
-	% 'single','double'
+	% Str: 'single','double'
 	options.loadSpecificImgClass = [];
 	% Int vector: list of specific frames to load.
 	options.frameList = [];
 	% Binary: 1 = read frame by frame to save memory, 0 = read continuous chunk.
 	options.forcePerFrameRead = 0;
-	% should the waitbar be shown?
+	% Binary: 1 = waitbar/progress bar is shown, 0 = no progress shown.
 	options.waitbarOn = 1;
-	% just return the movie dimensions
+	% Binary: 1 = just return the movie dimensions, do not load the movie.
 	options.getMovieDims = 0;
-	% treat movies in list as continuous with regards to frame
+	% Binary: 1 = treat movies in list as continuous with regards to frames to extract.
 	options.treatMoviesAsContinuous = 0;
-	% whether to display info
+	% Binary: 1 = whether to display info on command line.
 	options.displayInfo = 1;
-	% whether to display diagnostic information
+	% Binary: Whether to display diagnostic information
 	options.displayDiagnosticInfo = 0;
-	% whether to display diagnostic information
+	% Binary: 1 = display diagnostic information, 0 = do not display diagnostic information.
 	options.displayWarnings = 1;
-	% pre-specify the size, if need to get around memory re-allocation issues
+	% Matrix: Pre-specify the size, if need to get around memory re-allocation issues
 	options.presetMovieSize = [];
 	% Binary: 1 = avoid pre-allocating if single large matrix, saves memory
 	options.largeMovieLoad = 0;
