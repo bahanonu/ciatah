@@ -101,7 +101,7 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		% Str: type of interpolation to use.
 		options.Interp = 'bilinear'; %'bicubic'
 	% =======NORMAL OPTIONS=======
-	% 1 = take turboreg rotation, 0 = no rotation
+	% DEPRECATED, see options.RegisType. 1 = take turboreg rotation, 0 = no rotation
 	options.turboregRotation = 1;
 	% max number of frames in the input matrix
 	options.maxFrame = [];

@@ -11,19 +11,23 @@ function [outputData] = computeSaleaeOutput(matfile,varargin)
 		% 2018.05.14 [15:31:03] - fixed digital channel cumsum issue so frames where slightly mis-aligned
 		% 2018.06.04 [14:50:06] - updated to filter the sync digital channel to filter out voltage spikes there as well
 		% 2018.07.06 [16:26:16] - Addition to deal with sync TTLs that occur way after trial has ended
+		% 2020.09.30 [23:42:16] - Updated to make more easily usable with other miniscope sync signals. Remove eval call.
 	% TODO
 		%
 
 	%========================
+	% Str: 'digitial' or 'analog'
 	options.analysisType = 'digital';
 	% Str: table or struct
 	options.outputType = 'table';
+	% Int: channel to use for clock times
+	options.clockChannel = 0;
 	% Vector: list of channels to analyze, empty is all
 	options.digitalChannelList = [];
 	% Float: seconds below which to filter voltage spikes in digital data, empty to not use
 	options.filterVoltageSpikes = 1e-6;
 	% Float: For digital channel 0 (or sync) seconds below which to filter voltage spikes in digital data, empty to not use
-	options.filterVoltageSpikesSyncCh = 24.5/1000; %this is dynamically determined now
+	options.filterVoltageSpikesSyncCh = 24.5/1000; % This is dynamically determined now
 	options.filterVoltageSpikesSyncChHigh = 1000/1000;
 	% get options
 	options = getOptions(options,varargin);
@@ -38,18 +42,19 @@ function [outputData] = computeSaleaeOutput(matfile,varargin)
 	try
 		display(repmat('-',1,7))
 		fprintf('Loading: %s\n',matfile)
-		load(matfile);
+		inputData = load(matfile);
 
 		if strcmp(options.analysisType,'digital')
+			digital_channel_0 = inputData.(['digital_channel_' num2str(options.clockChannel)]);
 			digital_channel_0 = digital_channel_0(1:end-1);
-			clockTimes = digital_channel_0/digital_sample_rate_hz;
+			clockTimes = digital_channel_0/inputData.digital_sample_rate_hz;
 			clockTimesOriginal = clockTimes;
 			clockTimes = cumsum(clockTimes);
 
 			% Remove spikes, not actual data
 			[clockTimes] = subfxn_filterSyncSpikes(clockTimes,clockTimesOriginal,options.filterVoltageSpikesSyncCh,options.filterVoltageSpikesSyncChHigh);
 
-			initialClockState = digital_channel_initial_bitstates(1);
+			initialClockState = inputData.digital_channel_initial_bitstates(1);
 			if initialClockState==0
 				clockFrameTimes = clockTimes(1:2:end);
 				% clockFrameDurations = clockTimes(2:2:end);
@@ -71,8 +76,10 @@ function [outputData] = computeSaleaeOutput(matfile,varargin)
 			for digitalChannelNo = 1:nChannels
 				dChan = digitalChannelList(digitalChannelNo);
 				% dc1FrameState = zeros([nFrames 1]);
-				eval(sprintf('digital_channel = digital_channel_%d(1:end-1);',dChan));
-				digital_channel = digital_channel/digital_sample_rate_hz;
+				% eval(sprintf('digital_channel = digital_channel_%d(1:end-1);',dChan));
+				digital_channel = inputData.(['digital_channel_' num2str(dChan)]);
+				digital_channel = digital_channel(1:end-1);
+				digital_channel = digital_channel/inputData.digital_sample_rate_hz;
 				digital_channelCumsum = cumsum(digital_channel);
 				dcA{1}{1} = digital_channelCumsum(1:2:end);
 				dcA{1}{2} = digital_channel(2:2:end);
@@ -104,8 +111,9 @@ function [outputData] = computeSaleaeOutput(matfile,varargin)
 			end
 		end
 		if strcmp(options.analysisType,'analog')
+			digital_channel_0 = inputData.(['digital_channel_' num2str(options.clockChannel)]);
 			digital_channel_0 = digital_channel_0(1:end-1);
-			clockTimes = digital_channel_0/digital_sample_rate_hz;
+			clockTimes = digital_channel_0/inputData.digital_sample_rate_hz;
 			clockTimesOriginal = clockTimes;
 			clockTimes = cumsum(clockTimes);
 
@@ -120,12 +128,18 @@ function [outputData] = computeSaleaeOutput(matfile,varargin)
 
 			% figure;plot(diff(clockTimes));zoom on
 
-			initialClockState = digital_channel_initial_bitstates(1);
+			initialClockState = inputData.digital_channel_initial_bitstates(1);
 			if initialClockState==0
 				clockFrameTimes = clockTimes(1:2:end);
 				% clockFrameDurations = clockTimes(2:2:end);
 				clockFrameCount = 1:length(clockFrameTimes);
 			end
+
+			% Get the analog channels, this is assuming accelerometer input
+			analog_channel_0 = inputData.analog_channel_0;
+			analog_channel_1 = inputData.analog_channel_1;
+			analog_channel_2 = inputData.analog_channel_2;
+
 			nSamples = length(analog_channel_0);
 			xcalc = @(x,y,z) nanmean(z([x>=y(1)&x<y(2)]));
 			timeInterval = 1/analog_sample_rate_hz;
@@ -182,6 +196,7 @@ function [outputData] = computeSaleaeOutput(matfile,varargin)
 			ac2FrState = NaN([nFrames 1]);
 			ac3FrState = NaN([nFrames 1]);
 
+			% Downsample analog to TTL clock channel rate.
 			parfor frameNo = 1:nFrames
 				if frameNo==nFrames
 					frameTime = [clockFrameTimes(frameNo) Inf];

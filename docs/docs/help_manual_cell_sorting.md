@@ -75,6 +75,10 @@ iopts.backgroundNeutral = repmat(230,[1 3])/255;
 ## Interface
 <a href="https://user-images.githubusercontent.com/5241605/47396409-68da7b00-d6df-11e8-8c91-e85c3af356b5.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/47396409-68da7b00-d6df-11e8-8c91-e85c3af356b5.png" alt="drawing" width="900" height="auto" /></a>
 
+GUI also contains a shortcut menu that users can access by right-clicking or selecting the top-left menu.
+
+<a href="https://user-images.githubusercontent.com/5241605/95838435-9ec30080-0cf6-11eb-981d-fc8b5d46de7b.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/95838435-9ec30080-0cf6-11eb-981d-fc8b5d46de7b.png" alt="drawing" width="900" height="auto" /></a>
+
 __Example good cell extraction output__
 
 <a href="https://user-images.githubusercontent.com/5241605/58501425-3db67f00-8139-11e9-9c16-c7efc8a74144.gif" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/58501425-3db67f00-8139-11e9-9c16-c7efc8a74144.gif" alt="drawing" width="600" height="auto"/></a>

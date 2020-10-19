@@ -1,5 +1,4 @@
 # calciumImagingAnalysis (ciapkg)
-
 ![GitHub top language](https://img.shields.io/github/languages/top/bahanonu/calciumImagingAnalysis?style=flat-square&logo=appveyor)
 ![GitHub license](https://img.shields.io/github/license/bahanonu/calciumImagingAnalysis?style=flat-square&logo=appveyor)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/bahanonu/calciumImagingAnalysis?style=flat-square&logo=appveyor)](https://github.com/bahanonu/calciumImagingAnalysis/releases/latest?style=flat-square&logo=appveyor)
@@ -12,7 +11,7 @@
 
 <hr>
 
-`calciumImagingAnalysis` is a software package for calcium imaging analysis of one- and two-photon imaging datasets.
+`calciumImagingAnalysis` (`CIAPKG`) is a software package for analysis of one- and two-photon calcium imaging datasets.
 
 <img src="https://user-images.githubusercontent.com/5241605/81605697-b9c7c800-9386-11ea-9e9f-569c743b24b9.png" width="42%" align="right" alt="calciumImagingAnalysis_logo">
 
@@ -30,11 +29,17 @@ Contact: __Biafra Ahanonu, PhD (bahanonu [at] alum [dot] mit [dot] edu)__.
 
 Made in USA.<br>
 <img src="https://user-images.githubusercontent.com/5241605/71493809-322a5400-27ff-11ea-9b2d-52ff20b5f332.png" align="center" title="USA" alt="USA" width="auto" height="50">
+<p align="center">
+  <a href="https://user-images.githubusercontent.com/5241605/94530890-9c3db280-01f0-11eb-99f0-e977f5edb304.gif">
+    <img src="https://user-images.githubusercontent.com/5241605/94530890-9c3db280-01f0-11eb-99f0-e977f5edb304.gif" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="50%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
+  </a>
+</p>
 
 ***
 ## Contents
 
 - [Quick start guide](#quick-start-guide)
+- [Quick start (command-line)](#quick-start-command-line)
 - [Acknowledgments](#acknowledgments)
 - [References](#references)
 - [Questions](#questions)
@@ -79,9 +84,16 @@ obj % then hit enter, no semicolon!
 - [Optional] Users on Windows systems should download `Everything` (https://www.voidtools.com/). It is a very useful and extremely fast search engine for files and folders on a computer that can allow users to quickly get full paths for lists of folders that need to be analyzed in `calciumImagingAnalysis`.
 - [Optional] Users who want to analyze data via the command line can run `edit ciapkg.demo.cmdLinePipeline` and run each segment of code there to see what commands are needed to perform each step. It assumes you have already run `example_downloadTestData`.
 
+## Quick start (command line)
+
+After downloading `calciumImagingAnalysis` and running the setup as above, users interested in command-line processing can open up the example M-file by running the below command. By running individual code-block cells, users are guided from pre-processing through cell-extraction to cross-session analysis.
+```MATLAB
+edit ciapkg.demo.cmdLinePipeline
+```
+
 ### `calciumImagingAnalysis` main GUI notes
 - Run `obj;` in the command window to see the main GUI.
-- All main decisions for choosing a module to run, a cell-extraction algorithm, and which folders to analyze are in a single window.
+- All main decisions for choosing a module to run, deciding on a cell-extraction algorithm, and which folders to analyze are in a single window.
 - The GUI will real-time update the selected folders based on the selections in the subject, assay, and folder filter areas.
 - Sections not relevant for a specific module are grayed out.
 - Tab to cycle through selection areas. Green background is the currently selected area, dark gray background is area that had previously been selected but is not the active area, and white background is for areas that have not been selected yet.
@@ -191,7 +203,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
 
 You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
+## Repository stats
 - ![Hits](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https%3A%2F%2Fgithub.com%2Fbahanonu%2FcalciumImagingAnalysis) (starting 2020.09.16)
 - ![visitors](https://visitor-badge.glitch.me/badge?page_id=bahanonu.calciumImagingAnalysis) (starting 2020.09.22)
 <!-- - [![HitCount](http://hits.dwyl.com/bahanonu/calciumImagingAnalysis.svg)](http://hits.dwyl.com/bahanonu/calciumImagingAnalysis) (starting 2020.08.16), frozen til `dwyl` migrates to new server. -->

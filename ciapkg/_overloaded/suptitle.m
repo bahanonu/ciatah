@@ -26,6 +26,8 @@ function hout=suptitle(str,varargin)
     options.fontSize = [];
     % Str or rgb vector: color of suptitle
     options.Color = 'k';
+	% Str: interpreter, latex or tex
+	options.Interpreter = 'latex';
     % get options
     options = getOptions(options,varargin);
     % display(options)
@@ -118,7 +120,9 @@ function hout=suptitle(str,varargin)
     warning off
     axes('pos',[0 1 1 1],'visible','off','Tag','suptitle','SortMethod','depth');
     warning on
-    ht=text(.5,titleypos-1,str);set(ht,'horizontalalignment','center','fontsize',fs,'Color',options.Color);
+    ht = text('position',[.5 titleypos-1],'Interpreter',options.Interpreter,'String',str);
+	set(ht,'horizontalalignment','center','fontsize',fs,'Color',options.Color);
+	set(ht,'FontName',get(0,'DefaultAxesFontName'));
     set(gcf,'nextplot',np);
     % focus stealing occurs here, turn off
     set(gcf, 'CurrentAxes', haold)

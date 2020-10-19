@@ -20,12 +20,13 @@ function [PcaFilters PcaTraces] = runPCA(inputMatrix, inputID, numberPCs, fileRe
         % 2014.01.24 - now removes NaNs from the input matrix
         % 2014.06.08 [13:06:33]
         % 2015.03.20 [13:28:20] - moved calculatePCA function to make a nested, saves memory and allows processing of larger matrices. also moved cov() into the function as well to save memory. now REQUIRES that inputMatrix is a path to a file, will change this behavior in the future.
+        % 2020.10.17 [19:00:49] - Compatibility fixes for matrix inputs.
     % TODO
         %
 
     %========================
-    options.numberPCs = 1000;
-    options.npcs = 1000;
+    options.numberPCs = numberPCs;
+    options.npcs = numberPCs;
     options.usenoisefloor = 0;
     options.frameList = [];
     options.inputDatasetName = '/1';
@@ -48,7 +49,8 @@ function [PcaFilters PcaTraces] = runPCA(inputMatrix, inputID, numberPCs, fileRe
         inputMatrix = loadInputMatrix(inputMatrixPath,options);
         options.inputIsPath = 1;
     else
-
+        inputMatrixPath = '';
+        inputMatrix = fixInputMatrix(inputMatrix,options);
     end
 
     % get movie information
@@ -154,6 +156,10 @@ function [PcaFilters PcaTraces] = runPCA(inputMatrix, inputID, numberPCs, fileRe
         display('loading matrix inside PCA function.')
         inputMatrix = loadMovieList(inputMatrix,'convertToDouble',0,'frameList',options.frameList,'inputDatasetName',options.inputDatasetName);
 
+        inputMatrix = fixInputMatrix(inputMatrix,options);
+    end
+
+    function inputMatrix = fixInputMatrix(inputMatrix,options)
         % replace any NaNs with zero
         display('removing NaNs...');drawnow
         inputMatrix(isnan(inputMatrix)) = 0;
@@ -180,7 +186,7 @@ function [PcaFilters PcaTraces] = runPCA(inputMatrix, inputID, numberPCs, fileRe
         Npixels = inputMovieSize(1)*inputMovieSize(2);
         Ntime = inputMovieSize(3);
 
-        %Create covariance matrix in the time domain as it is computationally more advantageous than in space and mathematically equivalent.
+        % Create covariance matrix in the time domain as it is computationally more advantageous than in space and mathematically equivalent.
         display('creating covariance matrix...');drawnow
         inputMatrix = reshape(inputMatrix, Npixels, Ntime);
     end
@@ -204,7 +210,7 @@ function [PcaFilters PcaTraces] = runPCA(inputMatrix, inputID, numberPCs, fileRe
         [m,n] = size(inputMatrix);
         covmat = bsxfun(@minus,inputMatrix,sum(inputMatrix,1)/m);  % Remove mean
         % j = whos('inputMatrix');j.bytes=j.bytes*9.53674e-7;j
-        clear inputMatrix;
+        % clear inputMatrix;
         covmat = (covmat' * covmat) / m;
 
         % covmat = cov(inputMatrix);
@@ -242,7 +248,7 @@ function [PcaFilters PcaTraces] = runPCA(inputMatrix, inputID, numberPCs, fileRe
         % sort based on values
         display('sorting PCs...');drawnow
         [CovEvals, indices]=sort(CovEvals, 'descend');
-        PcaTraces=PcaTraces(:,indices);
+        PcaTraces = PcaTraces(:,indices);
 
         %Ensure that PcaFilters has variance 1
         display('setting variance to 1...');drawnow
@@ -261,10 +267,12 @@ function [PcaFilters PcaTraces] = runPCA(inputMatrix, inputID, numberPCs, fileRe
         clear covmat CovEvals;
         covmat = [];
         CovEvals = [];
-        inputMatrix = loadInputMatrix(inputMatrixPath,options);
-        inputMatrix = modifyInputMatrix(inputMatrix);
+        if ~isempty(inputMatrixPath)
+            inputMatrix = loadInputMatrix(inputMatrixPath,options);
+            inputMatrix = modifyInputMatrix(inputMatrix);
+        end
 
-        %Calculate the corresponding space filters
+        % Calculate the corresponding space filters
         PcaFilters = double(inputMatrix*PcaTraces*Sinv);
 
         %Now because the Filters are not an EXACT calculation, their variance can be slightly off 1. We make sure it is 1, as this can slightly affect the spatio-temporal ICA that expect normalize eigenvectors.

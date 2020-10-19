@@ -127,7 +127,9 @@ Below is an example, with black outlines indicating location of cell extraction 
 ******************************************
 
 ## Sorting cell extraction outputs with `computeManualSortSignals`
-Outputs from PCA-ICA (and most other common cell extraction algorithms like CNMF, etc.) output signal sources that are not cells and thus must be manually removed from the output. The repository contains a GUI for sorting cells from not cells. Below users can see a list of options that are given before running the code, those highlighted in green
+Outputs from PCA-ICA (and most other common cell extraction algorithms like CNMF, etc.) output signal sources that are not cells and thus must be manually removed from the output. The repository contains a GUI for sorting cells from not cells. GUI also contains a shortcut menu that users can access by right-clicking or selecting the top-left menu.
+
+Below users can see a list of options that are given before running the code, those highlighted in green
 
 ![image](https://user-images.githubusercontent.com/5241605/49845107-43322f80-fd7a-11e8-96b9-3f870d4b9009.png)
 
@@ -176,6 +178,10 @@ iopts.backgroundNeutral = repmat(230,[1 3])/255;
 #### mPFC one-photon imaging data signal sorting GUI (from `example_downloadTestData.m`)
 
 ![image](https://user-images.githubusercontent.com/5241605/46322488-04c00d80-c59e-11e8-9e8a-18b3b8e4567d.png)
+
+#### Context menu
+
+<a href="https://user-images.githubusercontent.com/5241605/95838435-9ec30080-0cf6-11eb-981d-fc8b5d46de7b.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/95838435-9ec30080-0cf6-11eb-981d-fc8b5d46de7b.png" alt="drawing" width="900" height="auto" /></a>
 
 ******************************************
 

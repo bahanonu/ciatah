@@ -14,6 +14,8 @@ function [PcaOutputSpatial PcaOutputTemporal PcaOutputSingularValues PcaInfo] = 
         % PcaInfo - structure with information about this PCA run.
     % changelog
     	% 2019.11.10 [18:35:33] - Make sure M and mean_M are of the same class. - Biafra
+        % 2020.10.17 [19:13:10] - 
+
     %========================
     options.frameList = [];
     options.convert_to_double = 0;
@@ -32,7 +34,6 @@ function [PcaOutputSpatial PcaOutputTemporal PcaOutputSingularValues PcaInfo] = 
     if strcmp(class(inputMatrix),'char')|strcmp(class(inputMatrix),'cell')
         display('loading matrix inside PCA function.')
         M = loadMovieList(inputMatrix,'convertToDouble',options.convert_to_double,'frameList',options.frameList,'inputDatasetName',options.movie_dataset_name);
-
     else
         M = inputMatrix;
         clear inputMatrix;

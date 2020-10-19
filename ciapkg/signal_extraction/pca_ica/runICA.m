@@ -1,4 +1,4 @@
-function [IcaFilters IcaTraces] = runICA(PcaFilters, PcaTraces, inputID, nICs, PCAsuffix, varargin)
+function [IcaFilters, IcaTraces, IcaOutputInfo] = runICA(PcaFilters, PcaTraces, inputID, nICs, PCAsuffix, varargin)
     % Runs ICA on input PCA filters/traces.
     % Biafra Ahanonu
     % started: 2013.10.08
@@ -32,13 +32,14 @@ function [IcaFilters IcaTraces] = runICA(PcaFilters, PcaTraces, inputID, nICs, P
             % fxn now outputs traces that you can then save in a controller function, much better abstraction and easier to maintain going forward. Also, now accepts PcaFilters and PcaTraces as inputs instead of loading them, again, easier to maintain.
             % removed all references to days and dayInd, they were compatibility headaches. That can be abstracted to a controller function.
         % 2014.01.20 [11:28:02] standardized i/o options to be like other functions, replaced waitbar with cmdWaitbar.
+        % 2020.10.17 [19:18:10] - added IcaOutputInfo output.
 
     %========================
     options.Mu = 0.1;
-    options.TermTolICs=1e-4;
-    options.MaxRoundsICs=750;
+    options.TermTolICs = 1e-4;
+    options.MaxRoundsICs = 750;
     options.threshold = 0.5;
-    options.minNumPixels=25;
+    options.minNumPixels = 25;
     options.IC_iterations = 1;
     options.maxDist = 1.5;
     % get options
@@ -54,6 +55,13 @@ function [IcaFilters IcaTraces] = runICA(PcaFilters, PcaTraces, inputID, nICs, P
     display(['convergence error: ' num2str(TermTolICs)]);
     display(['max rounds ICA: ' num2str(MaxRoundsICs)]);
     display(['ICA iterations: ' num2str(IC_iterations)]);
+
+    IcaOutputInfo.type = 'ica';
+    % IcaOutputInfo.pca_source = pca_source;
+    IcaOutputInfo.num_pairs = nICs;
+    IcaOutputInfo.mu = options.Mu; %#ok<*STRNU>
+    IcaOutputInfo.term_tol = options.TermTolICs;
+    IcaOutputInfo.max_iter = options.MaxRoundsICs;
 
     % pre-processing steps
     display('pre-processing PCs for ICA...');
@@ -178,7 +186,7 @@ function [IcaFilters IcaTraces] = runICA(PcaFilters, PcaTraces, inputID, nICs, P
 
     %Match across runs of ICA, re-factored this portion to a separate function
     % IC_filters = model_matchICsAcrossDays();
-
+end
 function obsoleteThresholdCrop()
     % removed, unneeded
 
@@ -197,3 +205,4 @@ function obsoleteThresholdCrop()
     %     ic_count = ic_count+1;
     % end
     % clear ic_count thisFilt maxVal imagesum
+end
