@@ -12,7 +12,7 @@ function [IcaOutputSpatial, IcaOutputTemporal, IcaOutputInfo] = run_ica(spatial,
     % outputs
         % 
     % Usage:
-      % run_ica('_data/pca_n500.mat', 200, 0.1); % pca_source, num_ICs, mu
+      % IGNORE: run_ica([x y frame], 200, 0.1); % pca_source, num_ICs, mu
     %options:
         % output_units: string of either fluorescence ('fl') or standard deviation ('std').
         % mu: parameter (between 0 and 1) specifying weight of temporal information in spatio-temporal ICA
