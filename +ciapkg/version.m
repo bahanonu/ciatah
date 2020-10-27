@@ -26,7 +26,7 @@ function [versionStr] = version(varargin)
 	%========================
 
 	try
-		versionStr = 'v3.20.20201019131038';
+		versionStr = 'v3.21.20201027125718';
 	catch err
 		disp(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));

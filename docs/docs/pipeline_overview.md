@@ -31,6 +31,7 @@ The general order of functions that users should run is ([optional] are those no
   - For example, if users ran `example_downloadTestData.m`, then add the folder `[githubRepoPath]\data\2014_04_01_p203_m19_check01_raw` where `githubRepoPath` is the absolute path to the current `calciumImagingAnalysis` repository.
 - `viewMovie`
   - Users should check that calciumImagingAnalysis loads their movies correctly and that Miji is working.
+  - Users can view movies from disk, which allows checking of very large movies quickly.
   - Remember to check that `Imaging movie regexp:` (regular expression class uses to find user movies within given folders) setting matches name of movies currently in repository.
 - `viewMovieRegistrationTest` [optional]
   - Users can check different spatial filtering and registration settings.

@@ -15,7 +15,9 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		% 2019.12.08 [22:49:48] - Allow users to input previous preprocessing settings.
 		% 2020.04.18 [19:27:24] - Make sure any modifications from default are propagated upon multiple calls to getRegistrationSettings.
 		% 2020.04.19 [15:20:48] - Fix how modified values stored so only store the modified value and not all the options at time of modification.
-		% 2020.05.28 [21:07:27] - Added support for nargin=1
+		% 2020.05.28 [21:07:27] - Added support for nargin=1.
+		% 2020.10.21 [16:52:06] - Add support for user canceling the input.
+		% 2020.10.24 [18:30:56] - Added support for calculating dropped frames if entire frame of a movie is a set value.
 	% TODO
 		% DONE: Allow user to input prior settings, indicate those changed from default by orange or similar color.
 
@@ -62,7 +64,8 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 	'filterBeforeRegImagejFFTLarge',...
 	'filterBeforeRegImagejFFTSmall',...
 	'loadMovieInEqualParts',...
-	'nParallelWorkers'...
+	'nParallelWorkers',...
+	'calcDroppedFramesFromMovie'...
 	};
 
 	% Create structure with options.
@@ -83,6 +86,10 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		tS.analyzeFromDisk.val = {{0,1}};
 		tS.analyzeFromDisk.str = {{'Load entire movie into RAM','Use disk, load part of movie into RAM'}};
 		tS.analyzeFromDisk.tooltip =  {{defaultTooltips}};
+	tS.calcDroppedFramesFromMovie = [];
+		tS.calcDroppedFramesFromMovie.val = {{[],0,1,NaN}};
+		tS.calcDroppedFramesFromMovie.str = {{'Calculate dropped frames from metadata.','All 0 frame is a dropped frame.','All 1 frame is a dropped frame.','All NaN frame is a dropped frame.'}};
+		tS.calcDroppedFramesFromMovie.tooltip =  {{'If metadata does not contain dropped frame information, set this if specific frames are set to a single value to indicate dropped frames.'}};
 	tS.REGISTRATION______________ = [];
 		tS.REGISTRATION______________.val = {{'====================='}};
 		tS.REGISTRATION______________.str = {{'====================='}};
@@ -464,10 +471,15 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 						}...
 					);
 
-					% Check users has input correct, else ask again.
-					inputCheck = movieSettings{1};
-					if isnan(str2double(inputCheck))==1|length(str2num(inputCheck))~=1
-						uiwait(msgbox('Please input a SINGLE numeric value (no strings or vectors).'));
+					if isempty(movieSettings)
+						inputCheck = [];
+						uiwait(msgbox('Re-enter a value, do not CANCEL the input dialog.'));
+					else
+						inputCheck = movieSettings{1};
+						% Check users has input correct, else ask again.
+						if isnan(str2double(inputCheck))==1|length(str2num(inputCheck))~=1
+							uiwait(msgbox('Please input a SINGLE numeric value (no strings or vectors).'));
+						end
 					end
 				end
 				gStringNew = [movieSettings{1};gString];

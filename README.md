@@ -11,7 +11,7 @@
 
 <hr>
 
-`calciumImagingAnalysis` (`CIAPKG`) is a software package for analysis of one- and two-photon calcium imaging datasets.
+`calciumImagingAnalysis` (`CIAPKG`) or CIAtah (pronounced cheetah) is a software package for analysis of one- and two-photon calcium imaging datasets.
 
 <img src="https://user-images.githubusercontent.com/5241605/81605697-b9c7c800-9386-11ea-9e9f-569c743b24b9.png" width="42%" align="right" alt="calciumImagingAnalysis_logo">
 
