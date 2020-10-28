@@ -29,6 +29,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% 2020.06.09 [11:57:59] - Upgrade to save settings out as a json file for easier human reading.
 		% 2020.07.07 [00:32:59] - Further upgraded adding json to HDF5 directly for later reading out to get settings.
 		% 2020.09.22 [00:11:03] - Updated to add NWB support.
+		% 2020.10.24 [18:30:56] - Added support for calculating dropped frames if entire frame of a movie is a set value. Changed order so that dropped frames calculated before dF/F.
 	% TODO
 		% Insert NaNs or mean of the movie into dropped frame location, see line 260
 		% Allow easy switching between analyzing all files in a folder together and each file in a folder individually
@@ -86,6 +87,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	options.deflateLevel = 1;
 	% Char array: list of file types supported.
 	options.supportedTypes = {'.h5','.hdf5','.tif','.tiff','.avi','.isxd'};
+	% Float: single value, likely 0, 1, or NaN, indicating when a frame should be considered dropped. Leave empty to ignore.
+	options.calcDroppedFramesFromMovie = [];
 	% ====
 	% OLD OPTIONS
 	% should the movie be saved?
@@ -182,10 +185,10 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		'turboreg',...
 		'fft_highpass',...
 		'crop',...
+		'fixDropFrames',...
 		'dfof',...
 		'dfstd',...
 		'medianFilter',...
-		'fixDropFrames',...
 		'downsampleTime',...
 		'downsampleSpace',...
 		'fft_lowpass'...
@@ -231,7 +234,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	);
 
 	% List of default analysis options to select
-	defaultChoiceList = {'turboreg','crop','dfof','fixDropFrames','downsampleTime'};
+	defaultChoiceList = {'turboreg','crop','fixDropFrames','dfof','downsampleTime'};
 
 	analysisOptionListStr = analysisOptionList;
 	for optNoS = 1:length(analysisOptionListStr)
@@ -267,6 +270,9 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% exitHandle = uicontrol('style','pushbutton','Units', 'normalized','position',[5 85 50 3]/100,'FontSize',9,'string','Click here to finish','callback',@subfxnCloseFig,'HorizontalAlignment','Left');
 
 		% Wait for user input
+		% set(gcf, 'WindowScrollWheelFcn', @mouseWheelChange);
+		% set(gcf,'KeyPressFcn', @(src,event) set(gcf,'Tag','next'));
+		% waitfor(gcf,'Tag');
 		pause
 		% hListbox.String(hListbox.Value)
 		analysisOptionsIdx = hListbox.Value;
@@ -446,6 +452,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	options.refCropFrame = options.turboreg.refCropFrame;
 	options.pxToCrop = options.turboreg.pxToCrop;
 	options.checkConcurrentAnalysis = options.turboreg.checkConcurrentAnalysis;
+	options.calcDroppedFramesFromMovie = options.turboreg.calcDroppedFramesFromMovie;
 	% end
 	% ========================
 	% get the frame to use
@@ -984,76 +991,105 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	disp(['Changing calciumImagingAnalysis input HDF5 dataset name "' obj.inputDatasetName '"->"' obj.outputDatasetName '"'])
 	obj.inputDatasetName = obj.outputDatasetName;
 
+	function mouseWheelChange(hObject, callbackdata, handles)
+		% Change keyIn to force while loop to exit, need for certain commands.
+	    keyIn = 0;
+
+	    if callbackdata.VerticalScrollCount > 0
+	        set(gcf,'Tag','next')
+	    elseif callbackdata.VerticalScrollCount < 0
+	       	set(gcf,'Tag','next')
+	    end
+	end
 	function subfxnAddDroppedFrames()
 		% TODO: to make this proper, need to verify that the log file names match those of movie files
 		display(repmat('-',1,7));
 
-		if ~isempty(options.frameList)
+		if ~isempty(options.calcDroppedFramesFromMovie)==1
+			% Do not need full movie if calculating dropped frames from the movie, continue.
+		elseif ~isempty(options.frameList)
 			display('Full movie needs to be loaded to add dropped frames')
 			return;
+		else
+
 		end
 
 		display('adding in dropped frames if any')
 		listLogFiles = getFileList(thisDir,options.logFileRegexp);
 
-		if isempty(listLogFiles)
+		if isempty(listLogFiles) & isempty(options.calcDroppedFramesFromMovie)
 			display('Add log files to folder in order to add back dropped frames')
 			return;
-		end
+		elseif ~isempty(listLogFiles)
+			% get information about number of frames and dropped frames from recording files
+			cellfun(@display,listLogFiles);
+			folderLogInfoList = cellfun(@(x) {getLogInfo(x)},listLogFiles,'UniformOutput',false);
+			folderFrameNumList = {};
+			droppedCountList = {};
+			dropType = 'add';
+			for cellNo = 1:length(folderLogInfoList)
+				logInfo = folderLogInfoList{cellNo}{1};
+				fileType = logInfo.fileType;
+				switch fileType
+					case 'inscopix'
+						movieFrames = logInfo.FRAMES;
+						droppedCount = logInfo.DROPPED;
+					case 'inscopixXML'
+						movieFrames = logInfo.frames;
+						droppedCount = logInfo.dropped;
+					case 'inscopixMAT'
+						movieFrames = logInfo.num_samples;
+						droppedCount = logInfo.dropped;
+						dropType = 'replace';
+					otherwise
+						% do nothing
+				end
+				% ensure that it is a string so numbers don't get added incorrectly
+				if ischar(droppedCount)
+					display(['converting droppedCount str2num: ' logInfo.filename])
+					droppedCount = str2num(droppedCount);
+				end
+				if ischar(movieFrames)
+					display(['converting movieFrames str2num: ' logInfo.filename])
+					movieFrames = str2num(movieFrames);
+				end
+				folderFrameNumList{cellNo} = movieFrames;
+				droppedCountList{cellNo} = droppedCount;
+			end
 
-		% get information about number of frames and dropped frames from recording files
-		cellfun(@display,listLogFiles);
-		folderLogInfoList = cellfun(@(x) {getLogInfo(x)},listLogFiles,'UniformOutput',false);
-		folderFrameNumList = {};
-		droppedCountList = {};
-		dropType = 'add';
-		for cellNo = 1:length(folderLogInfoList)
-			logInfo = folderLogInfoList{cellNo}{1};
-			fileType = logInfo.fileType;
-			switch fileType
-				case 'inscopix'
-					movieFrames = logInfo.FRAMES;
-					droppedCount = logInfo.DROPPED;
-				case 'inscopixXML'
-					movieFrames = logInfo.frames;
-					droppedCount = logInfo.dropped;
-				case 'inscopixMAT'
-					movieFrames = logInfo.num_samples;
-					droppedCount = logInfo.dropped;
-					dropType = 'replace';
-				otherwise
-					% do nothing
+			% Add back in dropped frames as the mean of the movie, NaN would be *correct* but causes issues with some of the downstream downsampling algorithms
+			if options.processMoviesSeparately==1
+				droppedFrames = droppedCountList{movieNo};
+				originalNumMovieFrames = folderFrameNumList{movieNo};
+			else
+				% make the dropped frames and original num movie frames based on global across all movies, so dropped frames should match the CORRECTED global/concatenated movie's frame values
+				originalNumMovieFrames = sum([folderFrameNumList{:}]);
+				nMoviesDropped = length(movieList);
+				for movieDroppedNo = 1:nMoviesDropped
+					folderFrameNumList{movieDroppedNo} = folderFrameNumList{movieDroppedNo}+ length(droppedCountList{movieDroppedNo});
+				end
+				droppedFramesTotal = droppedCountList{1};
+				for movieDroppedNo = 2:nMoviesDropped
+					droppedFramesTmp = droppedCountList{movieDroppedNo} + sum([folderFrameNumList{1:(movieDroppedNo-1)}]);
+					droppedFramesTotal = [droppedFramesTotal(:); droppedFramesTmp(:)];
+				end
+				droppedFrames = droppedFramesTotal;
 			end
-			% ensure that it is a string so numbers don't get added incorrectly
-			if ischar(droppedCount)
-				display(['converting droppedCount str2num: ' logInfo.filename])
-				droppedCount = str2num(droppedCount);
-			end
-			if ischar(movieFrames)
-				display(['converting movieFrames str2num: ' logInfo.filename])
-				movieFrames = str2num(movieFrames);
-			end
-			folderFrameNumList{cellNo} = movieFrames;
-			droppedCountList{cellNo} = droppedCount;
-		end
-
-		% Add back in dropped frames as the mean of the movie, NaN would be *correct* but causes issues with some of the downstream downsampling algorithms
-		if options.processMoviesSeparately==1
-			droppedFrames = droppedCountList{movieNo};
-			originalNumMovieFrames = folderFrameNumList{movieNo};
 		else
-			% make the dropped frames and original num movie frames based on global across all movies, so dropped frames should match the CORRECTED global/concatenated movie's frame values
-			originalNumMovieFrames = sum([folderFrameNumList{:}]);
-			nMoviesDropped = length(movieList);
-			for movieDroppedNo = 1:nMoviesDropped
-				folderFrameNumList{movieDroppedNo} = folderFrameNumList{movieDroppedNo}+ length(droppedCountList{movieDroppedNo});
+			droppedFrames = [];
+		end
+
+		% In the case of Inscopix v3 and similar movies, users can force a final check
+		if isempty(droppedFrames) & ~isempty(options.calcDroppedFramesFromMovie)
+			perFrameCheck = squeeze(nanmean(thisMovie,[1 2]));
+			figure;plot(perFrameCheck)
+			if isnan(options.calcDroppedFramesFromMovie)
+				perFrameCheck = isnan(perFrameCheck);
+			else
+				perFrameCheck = perFrameCheck==options.calcDroppedFramesFromMovie;
 			end
-			droppedFramesTotal = droppedCountList{1};
-			for movieDroppedNo = 2:nMoviesDropped
-				droppedFramesTmp = droppedCountList{movieDroppedNo} + sum([folderFrameNumList{1:(movieDroppedNo-1)}]);
-				droppedFramesTotal = [droppedFramesTotal(:); droppedFramesTmp(:)];
-			end
-			droppedFrames = droppedFramesTotal;
+			droppedFrames = find(perFrameCheck);
+			dropType = 'replace';
 		end
 
 		if isempty(droppedFrames)
@@ -1089,12 +1125,12 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		end
 		% movieMean = nanmean(inputMovieTmp(:));
 		display([num2str(length(droppedFrames)) ' dropped frames: ' num2str(droppedFrames(:)')])
-		display(['pre-corrected movie size: ' num2str(size(thisMovie))])
-		thisMovie(:,:,(end+1):(end+length(droppedFrames))) = 0;
-		display(['post-corrected movie size: ' num2str(size(thisMovie))])
 
 		switch dropType
 			case 'add'
+				display(['pre-corrected movie size: ' num2str(size(thisMovie))])
+				thisMovie(:,:,(end+1):(end+length(droppedFrames))) = 0;
+				display(['post-corrected movie size: ' num2str(size(thisMovie))])
 				% vectorized way: get the setdiff(dropped,totalFrames), use this corrected frame indexes and map onto the actual frames in raw movie, shift all frames in original matrix to new position then add in mean to dropped frame indexes
 				display('adding in dropped frames to matrix...')
 				correctFrameIdx = setdiff(1:size(thisMovie,3),droppedFrames);

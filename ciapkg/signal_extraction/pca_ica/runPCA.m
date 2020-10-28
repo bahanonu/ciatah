@@ -154,7 +154,7 @@ function [PcaFilters PcaTraces] = runPCA(inputMatrix, inputID, numberPCs, fileRe
 
     function inputMatrix = loadInputMatrix(inputMatrix,options)
         display('loading matrix inside PCA function.')
-        inputMatrix = loadMovieList(inputMatrix,'convertToDouble',0,'frameList',options.frameList,'inputDatasetName',options.inputDatasetName);
+        inputMatrix = loadMovieList(inputMatrix,'convertToDouble',0,'frameList',options.frameList,'inputDatasetName',options.inputDatasetName,'largeMovieLoad',1);
 
         inputMatrix = fixInputMatrix(inputMatrix,options);
     end
@@ -162,7 +162,11 @@ function [PcaFilters PcaTraces] = runPCA(inputMatrix, inputID, numberPCs, fileRe
     function inputMatrix = fixInputMatrix(inputMatrix,options)
         % replace any NaNs with zero
         display('removing NaNs...');drawnow
-        inputMatrix(isnan(inputMatrix)) = 0;
+        if sum(isnan(inputMatrix),[1 2 3])>0
+            inputMatrix(isnan(inputMatrix)) = 0;
+        else
+            disp('Movie has no NaNs')
+        end
 
         %Perform mean subtraction for optimal PCA performance
         display('performing mean subtraction...');drawnow

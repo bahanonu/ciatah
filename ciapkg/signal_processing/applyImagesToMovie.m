@@ -3,7 +3,7 @@ function [outputSignal, inputImages] = applyImagesToMovie(inputImages,inputMovie
 	% Biafra Ahanonu
 	% started: 2013.10.11
 	% inputs
-		% inputImages - [x y signalNo]
+		% inputImages - [x y signalNo] of images, signals will be calculated for each image from the movie.
 		% inputMovie - [x y frame] or char string path to the movie.
 	% outputs
 		% outputSignal - [signalNo frame] matrix of each signal's activity trace extracted directly from the movie.
@@ -15,16 +15,18 @@ function [outputSignal, inputImages] = applyImagesToMovie(inputImages,inputMovie
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals].
 		% 2020.04.28 [17:10:37] - Output modified inputImages.
 		% 2020.10.19 [11:27:33] - Supports inputMovie as a character path to the movie.
+		% 2020.10.26 [17:08:16] - Finished updating to allow read from disk and binning.
+		% 2020.10.27 [12:57:53] - Added support for weighted computation of signals based on pixel values in each image.
 	% TODO
-		% change so that it accepts a movie and images, current implementation is too specific
-		% add ability to use the values of the filter (multiple by indices)
+		% DONE: Change so that it accepts a movie and images, current implementation is too specific.
+		% DONE: Add ability to use the values of the filter (multiple by indices).
 
 	%========================
-	% inputDir, inputID, fileRegExp, PCAsuffix
-	% load the images/movies
-	options.manualLoadSave = 0;
+	% Binary: 1 = input images already thresholded, 0 = not thresholded, applyImagesToMovie will threshold.
 	options.alreadyThreshold = 0;
+	% Binary: 1 = show the wait bar.
 	options.waitbarOn = 1;
+	% Float: value between 0 to 1, all values below this fraction of max value for each input image will be set to zero and not used for calculating output signal.
 	options.threshold = 0.5;
 	% Str: hierarchy name in hdf5 where movie data is located
 	options.inputDatasetName = '/1';
@@ -32,6 +34,15 @@ function [outputSignal, inputImages] = applyImagesToMovie(inputImages,inputMovie
 	options.frameList = [];
 	% Binary: 1 = read movie from HDD, 0 = load into RAM
 	options.readMovieChunks = 0;
+	% Int: Number of frames
+	options.nFramesPerChunk = 5e3;
+	% Binary: 1 = weight the output trace by the value of the individual pixels, 0 = all image pixels above threshold are weighted evenly when calculating activity trace.
+	options.weightSignalByImage = 0;
+
+	% OBSOLETE Binary: 1 = load the images/movies
+	% inputDir, inputID, fileRegExp, PCAsuffix
+	options.manualLoadSave = 0;
+
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -50,11 +61,15 @@ function [outputSignal, inputImages] = applyImagesToMovie(inputImages,inputMovie
 
 	if ischar(inputMovie)==1
 		% options.readMovieChunks = 1;
-		[movieInfo] = ciapkg.io.getMovieInfo(inputMovie,'frameList',options.frameList,'inputDatasetName',options.inputDatasetName);
-		inputMovie = loadMovieList(inputMovie,'frameList',options.frameList,'inputDatasetName',options.inputDatasetName);
+		inputMoviePath = inputMovie;
+		[movieInfo] = ciapkg.io.getMovieInfo(inputMoviePath,'frameList',options.frameList,'inputDatasetName',options.inputDatasetName);
+
+		if options.readMovieChunks==0
+			inputMovie = loadMovieList(inputMovie,'frameList',options.frameList,'inputDatasetName',options.inputDatasetName);
+		end
 		% if options.readMovieChunks==0
 		% else
-			
+
 		% end
 	else
 		options.readMovieChunks = 0;
@@ -63,8 +78,6 @@ function [outputSignal, inputImages] = applyImagesToMovie(inputImages,inputMovie
 	% get number of ICs and frames
 	nImages = size(inputImages,3);
 	nFrames = size(inputMovie,3);
-	% pre-allocate traces
-	outputSignal = zeros(nImages,nFrames);
 	%
 	nPts = nFrames;
 	movieDims = size(inputMovie);
@@ -86,42 +99,81 @@ function [outputSignal, inputImages] = applyImagesToMovie(inputImages,inputMovie
 		options_waitbarOn = options.waitbarOn;
 	end
 
-	parfor imageNo = 1:nImages
-		iImage = squeeze(inputImages(:,:,imageNo));
-
-		% =======
-		% get the linear indices, much faster that way
-		% tmpThres = squeeze(inputImagesThres(:,:,i));
-		tmpThres = iImage;
-		nPts = size(inputMovie,3);
-		movieDims = size(inputMovie);
-		[x, y] = find(tmpThres~=0);
-		nValid = length(x);
-		xrepmat = repmat(x,[1 nPts])';
-		yrepmat = repmat(y,[1 nPts])';
-		framerepmat = repmat(1:nPts,[1 length(x)]);
-		linearInd = sub2ind(movieDims, xrepmat(:),yrepmat(:), framerepmat(:));
-		if isempty(linearInd)
-			disp('empty linearInd!!!')
+	if options.readMovieChunks==1
+		frameBins = 1:options.nFramesPerChunk:movieInfo.three;
+		frameBins(end+1) = movieInfo.three;
+		nBins = (length(frameBins)-1);
+		outputSignalCell = cell([nBins 1]);
+		% Pre-threshold the PCA-ICA filters to save time.
+		inputImagesThres = thresholdImages(inputImages,'waitbarOn',1,'threshold',options.threshold);
+		tmpOpts = options;
+		for binNo = 1:nBins
+			disp('+++++++++++++++++++++++++++++++++++++++++++++++++++++')
+			if binNo==nBins
+				framesToProcess = frameBins(binNo):frameBins(binNo+1);
+			else
+				framesToProcess = frameBins(binNo):(frameBins(binNo+1)-1);
+			end
+			fprintf('ROI signal extract %d to %d frames.\n',framesToProcess(1),framesToProcess(end));
+			tmpOpts.frameList = framesToProcess;
+			tmpOpts.weightSignalByImage = options.weightSignalByImage;
+			tmpOpts.alreadyThreshold = 1;
+			tmpOpts.readMovieChunks = 0; % Prevent recusion loop.
+			[outputSignalCell{binNo}, ~] = applyImagesToMovie(inputImagesThres,inputMoviePath,'options',tmpOpts);
 		end
-		tmpTrace = inputMovie(linearInd);
-		% tmpTrace
-		tmpTrace = reshape(tmpTrace,[nPts nValid]);
-		% imagesc(tmpTrace); colorbar;pause
-		% size(tmpTrace)
-		tmpTrace = squeeze(nanmean(tmpTrace,2));
-		% size(tmpTrace)
-		% display(num2str([nanmin(tmpTrace(:)) nanmax(tmpTrace(:))]))
-		% =======
-		% use bsxfun to matrix multiple 2D image to 3D movie
-		% tmpTrace = nansum(nansum(bsxfun(@times,iImage,inputMovie),1),2);
-		% normalize trace
-		% tmpTrace = tmpTrace/mean(tmpTrace)-1;
-		% =======
-		outputSignal(imageNo,:) = tmpTrace(:);
-		if ~verLessThan('matlab', '9.2'); send(D_updateParforProgress, imageNo); end % Update progress bar
 
-		% reverseStr = cmdWaitbar(imageNo,nImages,reverseStr,'inputStr','applying images to movie','displayEvery',5,'waitbarOn',options.waitbarOn);
+		% Combine all the frame chunks into a single [signalNo frames] size matrix
+		outputSignal = cat(2,outputSignalCell{:});
+
+	else
+		outputSignal = subfxn_runSignalExtraction();
+	end
+	function outputSignal = subfxn_runSignalExtraction()
+		% pre-allocate traces
+		outputSignal = zeros(nImages,nFrames);
+		opts_weightSignalByImage = options.weightSignalByImage;
+		parfor imageNo = 1:nImages
+			iImage = squeeze(inputImages(:,:,imageNo));
+
+			% =======
+			% get the linear indices, much faster that way
+			% tmpThres = squeeze(inputImagesThres(:,:,i));
+			tmpThres = iImage;
+			nPts = size(inputMovie,3);
+			movieDims = size(inputMovie);
+			[x, y] = find(tmpThres~=0);
+			nValid = length(x);
+			xrepmat = repmat(x,[1 nPts])';
+			yrepmat = repmat(y,[1 nPts])';
+			framerepmat = repmat(1:nPts,[1 length(x)]);
+			linearInd = sub2ind(movieDims, xrepmat(:),yrepmat(:), framerepmat(:));
+			if isempty(linearInd)
+				disp('empty linearInd!!!')
+			end
+			tmpTrace = inputMovie(linearInd);
+			% tmpTrace
+			tmpTrace = reshape(tmpTrace,[nPts nValid]);
+			if opts_weightSignalByImage==1
+                    tmpWeights = tmpThres(tmpThres~=0);
+                    tmpWeights = tmpWeights/nanmax(tmpWeights(:));
+                    tmpTrace = tmpTrace.*tmpWeights(:)';
+			end
+			% imagesc(tmpTrace); colorbar;pause
+			% size(tmpTrace)
+			tmpTrace = squeeze(nanmean(tmpTrace,2));
+			% size(tmpTrace)
+			% display(num2str([nanmin(tmpTrace(:)) nanmax(tmpTrace(:))]))
+			% =======
+			% use bsxfun to matrix multiple 2D image to 3D movie
+			% tmpTrace = nansum(nansum(bsxfun(@times,iImage,inputMovie),1),2);
+			% normalize trace
+			% tmpTrace = tmpTrace/mean(tmpTrace)-1;
+			% =======
+			outputSignal(imageNo,:) = tmpTrace(:);
+			if ~verLessThan('matlab', '9.2'); send(D_updateParforProgress, imageNo); end % Update progress bar
+
+			% reverseStr = cmdWaitbar(imageNo,nImages,reverseStr,'inputStr','applying images to movie','displayEvery',5,'waitbarOn',options.waitbarOn);
+		end
 	end
 	function nUpdateParforProgress(~)
 		if ~verLessThan('matlab', '9.2')

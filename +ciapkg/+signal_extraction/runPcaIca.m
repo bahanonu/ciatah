@@ -55,11 +55,11 @@ function [pcaicaAnalysisOutput] = runPcaIca(inputMovie,nPCs,nICs,varargin)
 
 	try
 		if options.version==1
-			display('running PCA-ICA, old version...')
+			disp('running PCA-ICA, old version...')
 			startTime = tic;
 			[PcaFilters, PcaTraces] = runPCA(inputMovie, '', nPCs, options.fileFilterRegexp,'inputDatasetName',options.inputDatasetName,'frameList',options.frameList);
 			if isempty(PcaFilters)
-				display('PCs are empty, skipping...')
+				disp('PCs are empty, skipping...')
 				return;
 			end
 			[IcaFilters, IcaTraces, IcaInfo] = runICA(PcaFilters, PcaTraces, '', nICs, '');
@@ -74,16 +74,16 @@ function [pcaicaAnalysisOutput] = runPcaIca(inputMovie,nPCs,nICs,varargin)
 				imageSaveDimOrder = 'zxy';
 			end
 		elseif options.version==2
-			display('running PCA-ICA, new version...')
+			disp('running PCA-ICA, new version...')
 			startTime = tic;
-			[PcaOutputSpatial PcaOutputTemporal PcaOutputSingularValues PcaInfo] = run_pca(inputMovie, nPCs, 'movie_dataset_name',options.inputDatasetName,'frameList',options.frameList);
+			[PcaOutputSpatial, PcaOutputTemporal, PcaOutputSingularValues, PcaInfo] = run_pca(inputMovie, nPCs, 'movie_dataset_name',options.inputDatasetName,'frameList',options.frameList);
 
 			if isempty(PcaOutputTemporal)
-				display('PCs are empty, skipping...')
+				disp('PCs are empty, skipping...')
 				return;
 			end
 
-			display('+++')
+			disp('+++')
 			if ischar(inputMovie)==1
 				movieDims = loadMovieList(inputMovie,'convertToDouble',0,'frameList',[],'inputDatasetName',options.inputDatasetName,'treatMoviesAsContinuous',1,'getMovieDims',1,'frameList',options.frameList);
 			else
@@ -118,6 +118,7 @@ function [pcaicaAnalysisOutput] = runPcaIca(inputMovie,nPCs,nICs,varargin)
 				imageSaveDimOrder = 'zxy';
 			end
 			pcaicaAnalysisOutput.IcaInfo = IcaInfo;
+			pcaicaAnalysisOutput.PcaInfo = PcaInfo;
 		else
 			disp('Incorrect version requested.')
 			pcaicaAnalysisOutput.status = 0;

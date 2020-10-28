@@ -32,8 +32,8 @@ function [PcaOutputSpatial PcaOutputTemporal PcaOutputSingularValues PcaInfo] = 
 
     % get the movie if a string input
     if strcmp(class(inputMatrix),'char')|strcmp(class(inputMatrix),'cell')
-        display('loading matrix inside PCA function.')
-        M = loadMovieList(inputMatrix,'convertToDouble',options.convert_to_double,'frameList',options.frameList,'inputDatasetName',options.movie_dataset_name);
+        disp('loading matrix inside PCA function.')
+        M = loadMovieList(inputMatrix,'convertToDouble',options.convert_to_double,'frameList',options.frameList,'inputDatasetName',options.movie_dataset_name,'largeMovieLoad',1);
     else
         M = inputMatrix;
         clear inputMatrix;
@@ -41,11 +41,15 @@ function [PcaOutputSpatial PcaOutputTemporal PcaOutputSingularValues PcaInfo] = 
     end
 
     % replace any NaNs with zero
-    display('removing NaNs...');drawnow
-    M(isnan(M)) = 0;
+    if sum(isnan(M),[1 2 3])>0
+        disp('Removing NaNs...');drawnow
+        M(isnan(M)) = 0;
+    else
+        disp('Movie has no NaNs!')
+    end
 
     %Perform mean subtraction for optimal PCA performance
-    display('performing mean subtraction...');drawnow
+    disp('performing mean subtraction...');drawnow
     inputMean = nanmean(M(:));
     inputMean = cast(inputMean,class(M));
     M = bsxfun(@minus,M,inputMean);
