@@ -93,6 +93,16 @@
                     </li>
                     <li class="toctree-l1 current"><a class="reference internal current" href="./">ciapkg</a>
     <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#visualizing-movies">Visualizing movies</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#get-movie-information">Get movie information</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#sorting-cells">Sorting cells</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#pre-processing">Pre-processing</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#cross-session-alignment">Cross-session alignment</a>
+    </li>
     </ul>
                     </li>
                 </ul>
@@ -103,6 +113,8 @@
                     <li class="toctree-l1"><a class="reference internal" href="../help_analysis_methods/">Analysis methods</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_inscopix/">Inscopix</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_large_movie_analysis/">Large movie analysis</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_cross_session_alignment/">Cross-session alignemnt</a>
                     </li>
@@ -168,109 +180,30 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="example-calciumimaginganalysis-pipeline-via-the-command-line">Example <code>calciumImagingAnalysis</code> pipeline via the command line.<a class="headerlink" href="#example-calciumimaginganalysis-pipeline-via-the-command-line" title="Permanent link">&para;</a></h1>
-<p>Below is an example <code>cacliumImagingAnalysis</code> pipeline using the command line for those that do not want to use the class or want to create their own custom batch analyses. It assumes you have already run <code>example_downloadTestData</code> to download the example test data.</p>
-<p>Can also access by typing <code>edit ciapkg.demo.cmdLinePipeline</code> into the command line.</p>
-<pre><code class="MATLAB">% Running calciumImagingAnalysis command line
-
-%% Load movie to analyze
-inputMovie = loadMovieList('data\2014_04_01_p203_m19_check01\concat_recording_20140401_180333.h5');
-</code></pre>
-
-<pre><code class="MATLAB">%% Visualize slice of the movie
-playMovie(inputMoevie(:,:,1:500));
-</code></pre>
-
-<pre><code class="MATLAB">%% Downsample input movie if need to
-inputMovieD = downsampleMovie(inputMovie,'downsampleDimension','space','downsampleFactor',4);
-playMovie(inputMovie,'extraMovie',inputMovieD);
-</code></pre>
-
-<pre><code class="MATLAB">%% Remove stripes from movie if needed
-% Show full filter sequence for one frame
-sopts.stripOrientation = 'both';
-sopts.meanFilterSize = 1;
-sopts.freqLowExclude = 10;
-sopts.bandpassType = 'highpass';
-removeStripsFromMovie(inputMovie(:,:,1),'options',sopts,'showImages',1);
-% Run on the entire movie
-removeStripsFromMovie(inputMovie,'options',sopts);
-</code></pre>
-
-<pre><code class="MATLAB">%% Get coordinates to crop
-[cropCoords] = getCropCoords(squeeze(inputMovie(:,:,1)));
-toptions.cropCoords = cropCoords;
-</code></pre>
-
-<pre><code class="MATLAB">%% Motion correction
-% Or have turboreg run manual correction
-toptions.cropCoords = 'manual';
-toptions.turboregRotation = 0;
-toptions.removeEdges = 1;
-toptions.pxToCrop = 10;
-% Pre-motion correction
-    toptions.complementMatrix = 1;
-    toptions.meanSubtract = 1;
-    toptions.meanSubtractNormalize = 1;
-    toptions.normalizeType = 'matlabDisk';
-% Spatial filter
-    toptions.normalizeBeforeRegister = 'divideByLowpass';
-    toptions.freqLow = 0;
-    toptions.freqHigh = 7;
-[inputMovie2, ~] = turboregMovie(inputMovie,'options',toptions);
-</code></pre>
-
-<pre><code class="MATLAB">%% Compare raw and motion corrected movies
-playMovie(inputMovie,'extraMovie',inputMovie2);
-</code></pre>
-
-<pre><code class="MATLAB">%% Run dF/F
-inputMovie3 = dfofMovie(single(inputMovie2),'dfofType','dfof');
-</code></pre>
-
-<pre><code class="MATLAB">%% Run temporal downsampling
-inputMovie3 = downsampleMovie(inputMovie3,'downsampleDimension','time','downsampleFactor',4);
-</code></pre>
-
-<pre><code class="MATLAB">%% Final check of movie before cell extraction
-playMovie(inputMovie3);
-</code></pre>
-
-<pre><code class="MATLAB">%% Run PCA-ICA cell extraction
-nPCs = 300; nICs = 225;
-[PcaOutputSpatial, PcaOutputTemporal, PcaOutputSingularValues, PcaInfo] = run_pca(inputMovie3, nPCs, 'movie_dataset_name','/1');
-[IcaFilters, IcaTraces, IcaInfo] = run_ica(PcaOutputSpatial, PcaOutputTemporal, PcaOutputSingularValues, size(inputMovie3,1), size(inputMovie3,2), nICs, 'output_units','fl','mu',0.1,'term_tol',5e-6,'max_iter',1e3);
-IcaTraces = permute(IcaTraces,[2 1]);
-</code></pre>
-
-<pre><code class="MATLAB">%% Save outputs to NWB format
-saveNeurodataWithoutBorders(IcaFilters,{IcaTraces},'pcaica','pcaica.nwb');
-</code></pre>
-
-<pre><code class="MATLAB">%% Run cell extraction using matrix
-[outImages, outSignals, choices] = signalSorter(IcaFilters,IcaTraces,'inputMovie',inputMovie3);
-</code></pre>
-
-<pre><code class="MATLAB">%% Run signal sorting using NWB
-[outImages, outSignals, choices] = signalSorter('pcaica.nwb',[],'inputMovie',inputMovie3);
-</code></pre>
-
-<pre><code class="MATLAB">%% Plot results of sorting
-figure;
-subplot(1,2,1);imagesc(max(IcaFilters,[],3));axis equal tight; title('Raw filters')
-subplot(1,2,2);imagesc(max(outImages,[],3));axis equal tight; title('Sorted filters')
-</code></pre>
-
-<pre><code class="MATLAB">%% Create an overlay of extraction outputs on the movie and signal-based movie
-[inputMovieO] = createImageOutlineOnMovie(inputMovie3,IcaFilters,'dilateOutlinesFactor',0);
-[signalMovie] = createSignalBasedMovie(IcaTraces,IcaFilters,'signalType','peak');
-</code></pre>
-
-<pre><code class="MATLAB">%% Play all three movies
-% Normalize all the movies
-movieM = cellfun(@(x) normalizeVector(x,'normRange','zeroToOne'),{inputMovie3,inputMovieO,signalMovie},'UniformOutput',false);
-playMovie(cat(2,movieM{:}));
-</code></pre>
+                <h1 id="ciapkg-useful-functions"><code>CIAPKG</code> useful functions.<a class="headerlink" href="#ciapkg-useful-functions" title="Permanent link">&para;</a></h1>
+<p><code>CIAPKG</code> contains many useful functions for imaging analysis. Several are detailed below. For each users can visualize options with <code>help FUN</code> or <code>edit FUN</code>. If attempting to load a non-package function (e.g. it does not start with <code>ciapkg</code>), then append <code>ciapkg.all.</code>, e.g. <code>playMovie</code> would become <code>ciapkg.all.playMovie</code>. Alternatively, load all the functions into the workspace with <code>import ciapkg.all.*</code>.</p>
+<h2 id="visualizing-movies">Visualizing movies<a class="headerlink" href="#visualizing-movies" title="Permanent link">&para;</a></h2>
+<p><code>playMovie</code></p>
+<p><code>ciapkg.io.loadMovie</code> or <code>loadMovieList</code></p>
+<p><code>createImageOutlineOnMovie</code></p>
+<p><code>createSignalBasedMovie</code></p>
+<p><code>ciapkg.io.readFrame</code></p>
+<h2 id="get-movie-information">Get movie information<a class="headerlink" href="#get-movie-information" title="Permanent link">&para;</a></h2>
+<p><code>ciapkg.io.getMovieInfo</code></p>
+<h2 id="sorting-cells">Sorting cells<a class="headerlink" href="#sorting-cells" title="Permanent link">&para;</a></h2>
+<p><code>signalSorter</code></p>
+<h2 id="pre-processing">Pre-processing<a class="headerlink" href="#pre-processing" title="Permanent link">&para;</a></h2>
+<p><code>ciapkg.demo.runPreprocessing</code></p>
+<p><code>downsampleHdf5Movie</code></p>
+<p><code>removeStripsFromMovie</code></p>
+<p><code>turboregMovie</code></p>
+<p><code>dfofMovie</code></p>
+<p><code>downsampleMovie</code></p>
+<p><code>normalizeMovie</code></p>
+<p><code>ciapkg.signal_extraction.runPcaIca</code></p>
+<h2 id="cross-session-alignment">Cross-session alignment<a class="headerlink" href="#cross-session-alignment" title="Permanent link">&para;</a></h2>
+<p><code>matchObjBtwnTrials</code></p>
+<p><code>createMatchObjBtwnTrialsMaps</code></p>
               
             </div>
           </div>
