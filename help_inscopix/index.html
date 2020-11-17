@@ -102,6 +102,8 @@
                     </li>
                     <li class="toctree-l1 current"><a class="reference internal current" href="./">Inscopix</a>
     <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#visualizing-isxd-files">Visualizing ISXD files</a>
+    </li>
     <li class="toctree-l2"><a class="reference internal" href="#converting-isxd-files-to-hdf5">Converting ISXD files to HDF5</a>
     </li>
     </ul>
@@ -174,6 +176,11 @@
               
                 <h1 id="inscopix">Inscopix<a class="headerlink" href="#inscopix" title="Permanent link">&para;</a></h1>
 <p>Documentation related to Inscopix-specific functions on the repository.</p>
+<h2 id="visualizing-isxd-files">Visualizing ISXD files<a class="headerlink" href="#visualizing-isxd-files" title="Permanent link">&para;</a></h2>
+<p>ISXD files can be directly visualized from disk by running <code>playMovie</code> from MATLAB command line:</p>
+<pre><code class="Matlab">playMovie('path\to\youMovie.isxd');
+</code></pre>
+
 <h2 id="converting-isxd-files-to-hdf5">Converting ISXD files to HDF5<a class="headerlink" href="#converting-isxd-files-to-hdf5" title="Permanent link">&para;</a></h2>
 <p>To convert ISXD files to HDF5, see <code>convertInscopixIsxdToHdf5</code> function in the <code>inscopix</code> folder or <code>modelDownsampleRawMovies</code> module in calciumImagingAnalysis.</p>
 <p><strong>Note</strong>: By default the Inscopix API gives out a frame full of 0s for dropped frames. So those 0s frames are maintained after converting/downsampling to HDF5 or you will also get a frame with 0s if you use <code>loadMovieList</code> to read frames that were dropped from isxd files. Adjust analysis accordingly.</p>

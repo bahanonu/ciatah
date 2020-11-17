@@ -172,7 +172,7 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="calciumimaginganalysis-ciapkg-or-ciatah">calciumImagingAnalysis (<code>CIAPKG</code> or <code>CIAtah</code>)<a class="headerlink" href="#calciumimaginganalysis-ciapkg-or-ciatah" title="Permanent link">&para;</a></h1>
+                <h1 id="ciatah-calciumimaginganalysis-ciapkg">CIAtah (calciumImagingAnalysis [<code>CIAPKG</code>])<a class="headerlink" href="#ciatah-calciumimaginganalysis-ciapkg" title="Permanent link">&para;</a></h1>
 <p><img alt="GitHub top language" src="https://img.shields.io/github/languages/top/bahanonu/calciumImagingAnalysis?style=flat-square&amp;logo=appveyor" />
 <img alt="GitHub license" src="https://img.shields.io/github/license/bahanonu/calciumImagingAnalysis?style=flat-square&amp;logo=appveyor" />
 <a href="https://github.com/bahanonu/calciumImagingAnalysis/releases/latest?style=flat-square&amp;logo=appveyor"><img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/bahanonu/calciumImagingAnalysis?style=flat-square&amp;logo=appveyor" /></a>
@@ -182,16 +182,16 @@
 <hr>
 
 <p>Created by <strong>Biafra Ahanonu, PhD</strong>.</p>
-<p><code>calciumImagingAnalysis</code> (<code>CIAPKG</code>) or <code>CIAtah</code> (pronounced cheetah) is a software package for analysis of one- and two-photon calcium imaging datasets.</p>
+<p><code>CIAtah</code> (pronounced cheetah) or <code>calciumImagingAnalysis</code> (<code>CIAPKG</code>) is a software package for analysis of one- and two-photon calcium imaging datasets.</p>
 <p><strong>Download the software at <a href="https://github.com/bahanonu/calciumImagingAnalysis">https://github.com/bahanonu/calciumImagingAnalysis</a>.</strong></p>
 <p><img src="https://user-images.githubusercontent.com/5241605/81605697-b9c7c800-9386-11ea-9e9f-569c743b24b9.png" width="42%" align="center" alt="calciumImagingAnalysis_logo" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;"></p>
 <ul>
-<li>This user guide contains instructions to setup, run, and troubleshoot <code>CIAPKG</code>.</li>
-<li>Note: <code>CIAPKG</code> is a class (<code>calciumImagingAnalysis</code>) with various GUIs to allow processing of calcium imaging data. In addition, users can access the underlying <code>CIAPKG</code> functions to make custom workflows. See <a href="api_example_pipeline/">Custom command-line pipelines</a>.</li>
+<li>This user guide contains instructions to setup, run, and troubleshoot <code>CIAtah</code>.</li>
+<li>Note: <code>CIAtah</code> is a class (<code>ciatah</code> or <code>calciumImagingAnalysis</code> within MATLAB) with various GUIs to allow processing of calcium imaging data. In addition, users can access the underlying <code>CIAtah</code> functions to make custom workflows. See <a href="api_example_pipeline/">Custom command-line pipelines</a>.</li>
 <li>Read my overview of calcium imaging analysis methods at <a href="https://bahanonu.com/brain/#c20181209">Calcium imaging cell identification and fluorescence activity trace reconstruction, part 1</a>.</li>
 </ul>
 <p><img src="https://user-images.githubusercontent.com/5241605/94530890-9c3db280-01f0-11eb-99f0-e977f5edb304.gif" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="70%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;"></p>
-<p><code>CIAPKG</code> features:</p>
+<p><code>CIAtah</code> features:</p>
 <ul>
 <li>Includes a GUI to allow users to do large-scale batch analysis, accessed via the repository's <code>calciumImagingAnalysis</code> class.</li>
 <li>The underlying functions can also be used to create GUI-less, command line-ready analysis pipelines. Functions located in <code>ciapkg</code> and <code>+ciapkg</code> sub-folders.</li>
@@ -205,10 +205,10 @@
 <h2 id="navigation">Navigation<a class="headerlink" href="#navigation" title="Permanent link">&para;</a></h2>
 <p>The main sections of the site:</p>
 <ul>
-<li><code>Setup</code> - installation of <code>CIAPKG</code>.</li>
+<li><code>Setup</code> - installation of <code>CIAtah</code>.</li>
 <li><code>Repository</code> - notes about the software package and data formats.</li>
-<li><code>Processing data</code> - sections related to processing calcium imaging movies using the <code>CIAPKG</code> class.</li>
-<li><code>API</code> - details how to run <code>CIAPKG</code> from the command line. Will include more details on the many underlying functions in the future.</li>
+<li><code>Processing data</code> - sections related to processing calcium imaging movies using the <code>CIAtah</code> class.</li>
+<li><code>API</code> - details how to run <code>CIAtah</code> from the command line. Will include more details on the many underlying functions in the future.</li>
 <li><code>Help</code> - several section that provide hints and help for processing calcium imaging.</li>
 <li><code>Misc</code> - miscellaneous information about the repository.</li>
 </ul>
@@ -221,7 +221,7 @@
 <ul>
 <li><img alt="Hits" src="https://hitcounter.pythonanywhere.com/count/tag.svg?url=https%3A%2F%2Fgithub.com%2Fbahanonu%2FcalciumImagingAnalysis" /> (starting 2020.09.16)</li>
 <li><img alt="visitors" src="https://visitor-badge.glitch.me/badge?page_id=bahanonu.calciumImagingAnalysis" /> (starting 2020.09.22)
-<!-- - <a href="http://hits.dwyl.com/bahanonu/calciumImagingAnalysis">klzzwxh:0030</a> (starting 2020.08.16), frozen til <code>dwyl</code> migrates to new server. --></li>
+<!-- - <a href="http://hits.dwyl.com/bahanonu/calciumImagingAnalysis">klzzwxh:0029</a> (starting 2020.08.16), frozen til <code>dwyl</code> migrates to new server. --></li>
 </ul>
               
             </div>
@@ -276,5 +276,5 @@
 
 <!--
 MkDocs version : 1.1.2
-Build Date UTC : 2020-10-31 21:32:45.570513+00:00
+Build Date UTC : 2020-11-17 22:15:10.729077+00:00
 -->
