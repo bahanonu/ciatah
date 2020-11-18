@@ -44,9 +44,9 @@ function [idNumIdxArray, validFoldersIdx, ok] = calciumImagingAnalysisMainGui(ob
 
 		hFig = figure;
 		hListboxS = struct;
-		set(hFig,'Name','calciumImagingAnalysis: start-up GUI','NumberTitle','off')
-		uicontrol('Style','text','String',[10 inputTxt 10 'Press TAB to select next section, ENTER to continue, and ESC to exit.'],'Units','normalized','Position',[1 92 90 8]/100,'BackgroundColor','white','HorizontalAlignment','Left','ForegroundColor','black');
-		uicontrol('Style','text','String',['calciumImagingAnalysis'],'Units','normalized','Position',[1 97.5 20 2.5]/100,'BackgroundColor','white','HorizontalAlignment','Left','ForegroundColor','black','FontWeight','bold','FontAngle','italic');
+		set(hFig,'Name','CIAtah: start-up GUI','NumberTitle','off')
+		uicontrol('Style','text','String',['CIAtah'],'Units','normalized','Position',[1 97.5 20 2.5]/100,'BackgroundColor','white','HorizontalAlignment','Left','ForegroundColor','black','FontWeight','bold','FontAngle','italic');
+		uicontrol('Style','text','String',[inputTxt 10 'Press TAB to select next section, ENTER to continue, and ESC to exit.'],'Units','normalized','Position',[10 92 90 8]/100,'BackgroundColor','white','HorizontalAlignment','Left','ForegroundColor','black');
 
 		% set(hFig,'Color',[0,0,0]);
 		% currentIdx = find(strcmp(fxnsToRun,obj.currentMethod));
@@ -74,14 +74,14 @@ function [idNumIdxArray, validFoldersIdx, ok] = calciumImagingAnalysisMainGui(ob
 
 		selBoxInfo.methods.string = fxnsToRun;
 		selBoxInfo.cellExtract.string = usrIdxChoiceDisplay;
-		selBoxInfo.cellExtractFiletype.string = {'calciumImagingAnalysis format','NeuroDataWithoutBorders (NWB) format'};
+		selBoxInfo.cellExtractFiletype.string = {'CIAtah format','NeuroDataWithoutBorders (NWB) format'};
 		selBoxInfo.folderFilt.string = useAltValid;
 		selBoxInfo.subject.string = subjectStrUnique;
 		selBoxInfo.assay.string = assayStrUnique;
 		selBoxInfo.folders.string = selectList;
 		selBoxInfo.guiEnabled.string = {'GUI in methods enabled','GUI in methods disabled'};
 
-		selBoxInfo.methods.title = 'Select a calciumImagingAnalysis method:';
+		selBoxInfo.methods.title = 'Select a CIAtah method:';
 		selBoxInfo.cellExtract.title = 'Cell-extraction method:';
 		selBoxInfo.cellExtractFiletype.title = 'Cell-extraction file format:';
 		selBoxInfo.folderFilt.title = 'Folder select filters:';

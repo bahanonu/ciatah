@@ -619,7 +619,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			clc
 			% ' Calcium Imaging Analysis Class
 			disp([...
-			'calciumImagingAnalysis' 10 ...
+			'CIAtah (calciumImagingAnalysis)' 10 ...
 			'A software package for analyzing one- and two-photon calcium imaging datasets.' 10 10 ...
 			'Biafra Ahanonu <<a href="emailto:bahanonu@alum.mit.edu">bahanonu@alum.mit.edu</a>>' 10 ...
 			'Version ' obj.classVersion 10 10 ...
@@ -628,9 +628,9 @@ classdef calciumImagingAnalysis < dynamicprops
 			obj.usaflag;
 
 			disp(repmat('*',1,42))
-			disp('Constructing calciumImagingAnalysis imaging analysis object...')
+			disp('Constructing CIAtah imaging analysis object...')
 
-			% Ensure that default directory is the calciumImagingAnalysis repository root
+			% Ensure that default directory is the CIAtah repository root
 			functionLocation = dbstack('-completenames');
 			functionLocation = functionLocation(1).file;
 			[functionDir,~,~] = fileparts(functionLocation);
@@ -665,7 +665,7 @@ classdef calciumImagingAnalysis < dynamicprops
 			obj = initializeObj(obj);
 
 			disp(repmat('*',1,42))
-			disp('Done initializing calciumImagingAnalysis!')
+			disp('Done initializing CIAtah!')
 			disp(repmat('*',1,42))
 
 			disp([...
@@ -793,7 +793,7 @@ classdef calciumImagingAnalysis < dynamicprops
 		obj = setMainSettings(obj)
 
 		function obj = setup(obj)
-			uiwait(msgbox(['calciumImagingAnalysis setup will:' 10 '1 - check and download dependencies as needed,' 10 '2 - then ask for a list of folders to include for analysis,' 10 '3 - and finally name for movie files to look for.' 10 10 'Press OK to continue.'],'Note to user','modal'));
+			uiwait(msgbox(['CIAtah setup will:' 10 '1 - check and download dependencies as needed,' 10 '2 - then ask for a list of folders to include for analysis,' 10 '3 - and finally name for movie files to look for.' 10 10 'Press OK to continue.'],'Note to user','modal'));
 
 			% Download and load dependent software packages into "_external_programs" folder.
 			% Also download test data into "data" folder.
@@ -803,12 +803,12 @@ classdef calciumImagingAnalysis < dynamicprops
 			% Add folders containing imaging data.
 			obj.modelAddNewFolders;
 
-			% [optional] Set the names calciumImagingAnalysis will look for in each folder
+			% [optional] Set the names CIAtah will look for in each folder
 			obj.setMovieInfo;
 		end
 
 		function obj = update(obj)
-			uiwait(msgbox('The calciumImagingAnalysis GitHub website will open. Click "Clone or download" button to download most recent version of calciumImagingAnalysis.'))
+			uiwait(msgbox('The CIAtah GitHub website will open. Click "Clone or download" button to download most recent version of CIAtah.'))
 			web(obj.githubUrl);
 		end
 

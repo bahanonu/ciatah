@@ -2,6 +2,14 @@
 
 Documentation related to Inscopix-specific functions on the repository.
 
+## Visualizing ISXD files
+
+ISXD files can be directly visualized from disk by running `playMovie` from MATLAB command line:
+
+```Matlab
+playMovie('path\to\youMovie.isxd');
+```
+
 ## Converting ISXD files to HDF5
 
 To convert ISXD files to HDF5, see `convertInscopixIsxdToHdf5` function in the `inscopix` folder or `modelDownsampleRawMovies` module in calciumImagingAnalysis.
