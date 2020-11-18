@@ -1,4 +1,4 @@
-# calciumImagingAnalysis (ciapkg)
+# `CIAtah` (calciumImagingAnalysis [ciapkg])
 ![GitHub top language](https://img.shields.io/github/languages/top/bahanonu/calciumImagingAnalysis?style=flat-square&logo=appveyor)
 ![GitHub license](https://img.shields.io/github/license/bahanonu/calciumImagingAnalysis?style=flat-square&logo=appveyor)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/bahanonu/calciumImagingAnalysis?style=flat-square&logo=appveyor)](https://github.com/bahanonu/calciumImagingAnalysis/releases/latest?style=flat-square&logo=appveyor)
@@ -11,9 +11,13 @@
 
 <hr>
 
-`calciumImagingAnalysis` (`CIAPKG`) or CIAtah (pronounced cheetah) is a software package for analysis of one- and two-photon calcium imaging datasets.
+`CIAtah` (pronounced cheetah) or `calciumImagingAnalysis` (ciapkg) is a software package for analysis of one- and two-photon calcium imaging datasets.
 
-<img src="https://user-images.githubusercontent.com/5241605/81605697-b9c7c800-9386-11ea-9e9f-569c743b24b9.png" width="42%" align="right" alt="calciumImagingAnalysis_logo">
+<!-- <img src="https://user-images.githubusercontent.com/5241605/81605697-b9c7c800-9386-11ea-9e9f-569c743b24b9.png" width="42%" align="right" alt="calciumImagingAnalysis_logo"> -->
+<!-- https://user-images.githubusercontent.com/5241605/99430025-a2c9db80-28bd-11eb-8508-d1c63dea6fcf.png -->
+<!-- https://user-images.githubusercontent.com/5241605/99237853-e2a19d80-27ad-11eb-996f-3869db0c2238.png -->
+
+<img src="https://user-images.githubusercontent.com/5241605/99477838-332d0e00-2908-11eb-887b-9205a305cf5d.png" width="42%" align="right" alt="ciatah_logo">
 
 Features:
 - Includes a GUI to allow users to do large-scale batch analysis, accessed via the repository's `calciumImagingAnalysis` class.
@@ -49,12 +53,12 @@ Made in USA.<br>
 
 ## Quick start guide
 
-Below are steps needed to quickly get started using the `calciumImagingAnalysis` software package in MATLAB.
+Below are steps needed to quickly get started using the `CIAtah` software package in MATLAB.
 
-- __Install__ Clone the `calciumImagingAnalysis` repository (using [GitHub desktop](https://desktop.github.com/) or command line) or download the repository zip and unzip (e.g. run below MATLAB command).
-  - Point the MATLAB path to the `calciumImagingAnalysis` root folder (*NOT* `@calciumImagingAnalysis` sub-folder in the repository).
-  - Alternatively (not recommended since lags GitHub repository), download the package from `File Exchange` using the Add-Ons explorer in MATLAB. See `calciumImagingAnalysis` entry at:
- [![View calciumImagingAnalysis on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis) or https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis.
+- __Install__ Clone the `CIAtah` repository (using [GitHub desktop](https://desktop.github.com/) or command line) or download the repository zip and unzip (e.g. run below MATLAB command).
+  - Point the MATLAB path to the `CIAtah` root folder (*NOT* `@CIAtah` sub-folder in the repository).
+  - Alternatively (not recommended since lags GitHub repository), download the package from `File Exchange` using the Add-Ons explorer in MATLAB. See `CIAtah` entry at:
+ [![View CIAtah on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis) or https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis.
 
  ```Matlab
  % Optional: this will set MATLAB working folder to the default user path. Make sure you have read/write permissions.
@@ -63,11 +67,11 @@ Below are steps needed to quickly get started using the `calciumImagingAnalysis`
  % Download and unzip current repository
  unzip('https://github.com/bahanonu/calciumImagingAnalysis/archive/master.zip');
 
- % Make calciumImagingAnalysis the working folder
+ % Make CIAtah the working folder
  cd('calciumImagingAnalysis-master')
  ```
 
-- Run `calciumImagingAnalysis` using the below MATLAB commands. Call `obj;` each time you want to go back to the main GUI.
+- Run `CIAtah` using the below MATLAB commands. Call `obj;` each time you want to go back to the main GUI.
 
 ```MATLAB
 % Loads the class into an object for use in this session
@@ -81,17 +85,17 @@ obj % then hit enter, no semicolon!
 ```
 
 - Afterwards, likely want to run `modelAddNewFolders` module first in order to add folders containing imaging data to the current class object.
-- [Optional] Users on Windows systems should download `Everything` (https://www.voidtools.com/). It is a very useful and extremely fast search engine for files and folders on a computer that can allow users to quickly get full paths for lists of folders that need to be analyzed in `calciumImagingAnalysis`.
+- [Optional] Users on Windows systems should download `Everything` (https://www.voidtools.com/). It is a very useful and extremely fast search engine for files and folders on a computer that can allow users to quickly get full paths for lists of folders that need to be analyzed in `CIAtah`.
 - [Optional] Users who want to analyze data via the command line can run `edit ciapkg.demo.cmdLinePipeline` and run each segment of code there to see what commands are needed to perform each step. It assumes you have already run `example_downloadTestData`.
 
 ## Quick start (command line)
 
-After downloading `calciumImagingAnalysis` and running the setup as above, users interested in command-line processing can open up the example M-file by running the below command. By running individual code-block cells, users are guided from pre-processing through cell-extraction to cross-session analysis.
+After downloading `CIAtah` and running the setup as above, users interested in command-line processing can open up the example M-file by running the below command. By running individual code-block cells, users are guided from pre-processing through cell-extraction to cross-session analysis.
 ```MATLAB
 edit ciapkg.demo.cmdLinePipeline
 ```
 
-### `calciumImagingAnalysis` main GUI notes
+### `CIAtah` main GUI notes
 - Run `obj;` in the command window to see the main GUI.
 - All main decisions for choosing a module to run, deciding on a cell-extraction algorithm, and which folders to analyze are in a single window.
 - The GUI will real-time update the selected folders based on the selections in the subject, assay, and folder filter areas.
@@ -111,17 +115,17 @@ __Certain sections become available when user selects the appropriate module (e.
 ### Additional quick start notes
 
 - See additional details on the [Processing calcium imaging data](https://bahanonu.github.io/calciumImagingAnalysis/pipeline_overview/) page for running the full processing pipeline.
-- Settings used to pre-process imaging movies (`modelPreprocessMovie` module) are stored inside the processed HDF5 movie to allow `calciumImagingAnalysis` to load them again later.
+- Settings used to pre-process imaging movies (`modelPreprocessMovie` module) are stored inside the processed HDF5 movie to allow `CIAtah` to load them again later.
 - To force load all directories, including most external software packages (in `_external_programs` folder), type `ciapkg.loadAllDirs;` into MATLAB command line. This is most relevant when you need to access specific functions in an outside repository that are normally hidden until needed.
 - When issues are encountered, first check the [Common issues and fixes](https://bahanonu.github.io/calciumImagingAnalysis/help_issues/) page to see if a solution is there. Else, submit a new issue or email Biafra (bahanonu [at] alum [dot] mit [dot] edu).
 - There are two sets of test data that are downloaded:
   - __Single session analysis__: `data\2014_04_01_p203_m19_check01_raw` can be used to test the pipeline until the cross-session alignment step.
   - __Batch analysis__: `data\batch` contains three imaging sessions that should be processed and can then be used for the cross-session alignment step. Users should try these sessions to get used to batched analysis.
 - For Fiji dependency, when path to `Miji.m` (e.g. `\Fiji.app\scripts` folder) is requested, likely in `calciumImagingAnalysis\_external_programs\FIJI_FOLDER\Fiji.app\scripts` where `FIJI_FOLDER` varies depending on OS, unless the user requested a custom path or on OSX (in which case, find Fiji the install directory).
-  - If you run into Java heap space memory errors when Miji tries to load Fiji in MATLAB, make sure "java.opts" file is in MATLAB start-up folder or that `calciumImagingAnalysis` folder is the MATLAB start-up folder ([instructions on changing](https://www.mathworks.com/help/matlab/matlab_env/matlab-startup-folder.html)).
-- `calciumImagingAnalysis` often uses [regular expressions](https://www.cheatography.com/davechild/cheat-sheets/regular-expressions/) to find relevant movie and other files in folders to analyze.
+  - If you run into Java heap space memory errors when Miji tries to load Fiji in MATLAB, make sure "java.opts" file is in MATLAB start-up folder or that the `CIAtah` root folder is the MATLAB start-up folder ([instructions on changing](https://www.mathworks.com/help/matlab/matlab_env/matlab-startup-folder.html)).
+- `CIAtah` often uses [regular expressions](https://www.cheatography.com/davechild/cheat-sheets/regular-expressions/) to find relevant movie and other files in folders to analyze.
   - For example, by default it looks for any movie files in a folder containing `concat`, e.g. `concat_recording_20140401_180333.h5` (test data). If you have a file called `rawData_2019_01_01_myInterestingExperiment.avi` and all your raw data files start with `rawData_` then change the regular expression to `rawData_` when requested by the repository. See `setMovieInfo` module to change after adding new folders.
-- `calciumImagingAnalysis` generally assumes users have imaging data associated with *one* imaging session and animal in a given folder. Follow folder naming conventions in [Data formats](https://bahanonu.github.io/calciumImagingAnalysis/data/#preferred-folder-naming-format) for the best experience.
+- `CIAtah` generally assumes users have imaging data associated with *one* imaging session and animal in a given folder. Follow folder naming conventions in [Data formats](https://bahanonu.github.io/calciumImagingAnalysis/data/#preferred-folder-naming-format) for the best experience.
 - External software packages are downloaded into `_external_programs` folder and should be placed there if done manually.
 
 Users can alternatively run setup as below.

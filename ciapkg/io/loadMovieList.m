@@ -66,7 +66,7 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 	options.supportedTypes = {'.h5','.hdf5','.nwb','.tif','.tiff','.avi','.isxd'};
 	% Str: movie type.
 	options.movieType = 'tiff';
-	% Str: hierarchy name in hdf5 where movie data is located
+	% Str: hierarchy name in HDF5 file where movie data is located.
 	options.inputDatasetName = '/1';
 	% Str: default NWB hierarchy names in HDF5 file where movie data is located, will look in the order indicates
 	options.defaultNwbDatasetName = {'/acquisition/TwoPhotonSeries/data'};
