@@ -16,8 +16,10 @@
 <!-- <img src="https://user-images.githubusercontent.com/5241605/81605697-b9c7c800-9386-11ea-9e9f-569c743b24b9.png" width="42%" align="right" alt="calciumImagingAnalysis_logo"> -->
 <!-- https://user-images.githubusercontent.com/5241605/99430025-a2c9db80-28bd-11eb-8508-d1c63dea6fcf.png -->
 <!-- https://user-images.githubusercontent.com/5241605/99237853-e2a19d80-27ad-11eb-996f-3869db0c2238.png -->
-
-<img src="https://user-images.githubusercontent.com/5241605/99477838-332d0e00-2908-11eb-887b-9205a305cf5d.png" width="42%" align="right" alt="ciatah_logo">
+<!-- https://user-images.githubusercontent.com/5241605/99477838-332d0e00-2908-11eb-887b-9205a305cf5d.png -->
+<!-- <p align="center"> -->
+  <img src="https://user-images.githubusercontent.com/5241605/99499485-d6dce500-292d-11eb-8c68-b089fe1985c8.png" width="42%" align="right" alt="ciatah_logo">
+<!-- </p> -->
 
 Features:
 - Includes a GUI to allow users to do large-scale batch analysis, accessed via the repository's `calciumImagingAnalysis` class.
