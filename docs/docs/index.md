@@ -23,6 +23,15 @@ __Download the software at [https://github.com/bahanonu/calciumImagingAnalysis](
 
 <img src="https://user-images.githubusercontent.com/5241605/94530890-9c3db280-01f0-11eb-99f0-e977f5edb304.gif" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="70%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
 
+<p align="center">
+  <strong>CIAtah sell sorting GUI</strong>
+</p>
+<p align="center">
+  <a href="https://user-images.githubusercontent.com/5241605/100851700-64dec280-343a-11eb-974c-d6d29faf9eb2.gif">
+    <img src="https://user-images.githubusercontent.com/5241605/100851700-64dec280-343a-11eb-974c-d6d29faf9eb2.gif" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="50%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
+  </a>
+</p>
+
 `CIAtah` features:
 
 - Includes a GUI to allow users to do large-scale batch analysis, accessed via the repository's `calciumImagingAnalysis` class.

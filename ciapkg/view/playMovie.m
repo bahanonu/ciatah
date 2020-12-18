@@ -60,8 +60,10 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 	options.colormapIdx = 1;
 	% Cell array: cell array of strings with a list of different built-in colormaps to cycle through.
 	options.colormapColorList = {'gray','jet','hot','hsv','copper'};
-	% String: extra text, leave blank to ignore.
+	% String: extra text to put as a title above movie, leave blank to ignore.
 	options.extraTitleText = [];
+	% String: extra text to put as a title above extra movie, leave blank to ignore.
+	options.extraMovieTitleText = [];
 	% Vector: [xpos ypos] add a point to the main movie.
 	options.primaryPoint = [];
 	% Vector: [xpos ypos-] add a point to the secondary movie.
@@ -132,7 +134,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 			[~,movieFileIDExtra,inputMovieDimsExtra] = ciapkg.io.readFrame(options.extraMovie,1);
 		end
 	else
-		inputMovieIsChar = 1;
+		inputMovieIsChar = 0;
 		inputMovieDims = size(inputMovie);
 		nFramesOriginal = inputMovieDims(3);
 		readMovieChunks = 0;
@@ -198,6 +200,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 
 		subplot(subplotRows,subplotCols,subplotNum);
 		imagesc(extraMovieFrame);
+		extraTitleHandle = title(options.extraMovieTitleText);
 		axHandle2 = gca;
 
 		% axHandle2.Toolbar.Visible = 'off';

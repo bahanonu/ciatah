@@ -214,7 +214,7 @@ function obj = computeManualSortSignals(obj)
 						if ~isempty(previousDecisionList)
 							display(['loading previous decisions: ' previousDecisionList{1}])
 							load(previousDecisionList{1});
-							valid = validCNMF;
+							valid = validCNMFE;
 						end
 					end
 					% valid = obj.validAuto{obj.fileNum};
