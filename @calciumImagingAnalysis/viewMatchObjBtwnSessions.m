@@ -540,7 +540,7 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 							% title(strrep(strcat(obj.subjectStr(obj.fileNum),{' '},obj.assay(obj.fileNum)),'_',' '),'FontSize', 35)
 							% title(strrep(obj.folderBaseSaveStr(obj.fileNum),'_',' '))
 							% colormap([1 1 1; 0.9 0.9 0.9; hsv(nGlobalIDs)]);
-							setCmapHere(globalIdxMax*1.5);
+							setCmapHere(ceil(globalIdxMax*1.5));
 							set(sessionNo,'PaperUnits','inches','PaperPosition',[0 0 9 9])
 							obj.modelSaveImgToFile([],[folderSaveName{matchingNumbers} 'Session' filesep thisSubjectStr],sessionNo,strcat(thisFileID));
 						[~, ~] = openFigure(thisFigNo, '');
@@ -553,7 +553,7 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 							% title(strrep(obj.folderBaseSaveStr(obj.fileNum),'_',' '))
 							% colormap(customColormap([]))
 							% colormap([1 1 1; hsv(nGlobalIDs)]);
-							setCmapHere(globalIdxMax*1.5);
+							setCmapHere(ceil(globalIdxMax*1.5));
 							% colormap([1 1 1; 0.9 0.9 0.9; hsv(nGlobalIDs)]);
 							% drawnow;
 							obj.modelSaveImgToFile([],[folderSaveName{matchingNumbers} 'All'],thisFigNo,obj.subjectStr{obj.fileNum});
