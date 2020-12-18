@@ -17,6 +17,7 @@ function [outputSignal, inputImages] = applyImagesToMovie(inputImages,inputMovie
 		% 2020.10.19 [11:27:33] - Supports inputMovie as a character path to the movie.
 		% 2020.10.26 [17:08:16] - Finished updating to allow read from disk and binning.
 		% 2020.10.27 [12:57:53] - Added support for weighted computation of signals based on pixel values in each image.
+		% 2020.12.02 [00:21:28] - Remove parallelization across inputImages to reduce memory overhead and serialization memory issues (e.g. transferring a duplicate of the movie to all workers).
 	% TODO
 		% DONE: Change so that it accepts a movie and images, current implementation is too specific.
 		% DONE: Add ability to use the values of the filter (multiple by indices).
@@ -132,7 +133,8 @@ function [outputSignal, inputImages] = applyImagesToMovie(inputImages,inputMovie
 		% pre-allocate traces
 		outputSignal = zeros(nImages,nFrames);
 		opts_weightSignalByImage = options.weightSignalByImage;
-		parfor imageNo = 1:nImages
+		% parfor(imageNo = 1:nImages,2)
+		for imageNo = 1:nImages
 			iImage = squeeze(inputImages(:,:,imageNo));
 
 			% =======

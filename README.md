@@ -4,6 +4,8 @@
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/bahanonu/calciumImagingAnalysis?style=flat-square&logo=appveyor)](https://github.com/bahanonu/calciumImagingAnalysis/releases/latest?style=flat-square&logo=appveyor)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/bahanonu/calciumImagingAnalysis?style=flat-square&logo=appveyor)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg?style=flat-square)](https://github.com/bahanonu/calciumImagingAnalysis/graphs/commit-activity?style=flat-square&logo=appveyor)
+![visitors](https://visitor-badge.glitch.me/badge?page_id=bahanonu.calciumImagingAnalysis)
+![Hits](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https%3A%2F%2Fgithub.com%2Fbahanonu%2FcalciumImagingAnalysis)
 
 <img src="https://user-images.githubusercontent.com/5241605/51068051-78c27680-15cd-11e9-9434-9d181b00ef8e.png" align="center">
 
@@ -11,7 +13,7 @@
 
 <hr>
 
-`CIAtah` (pronounced cheetah) or `calciumImagingAnalysis` (ciapkg) is a software package for analysis of one- and two-photon calcium imaging datasets.
+`CIAtah` (pronounced cheetah; formerly `calciumImagingAnalysis` [ciapkg]) is a software package for analysis of one- and two-photon calcium imaging datasets.
 
 <!-- <img src="https://user-images.githubusercontent.com/5241605/81605697-b9c7c800-9386-11ea-9e9f-569c743b24b9.png" width="42%" align="right" alt="calciumImagingAnalysis_logo"> -->
 <!-- https://user-images.githubusercontent.com/5241605/99430025-a2c9db80-28bd-11eb-8508-d1c63dea6fcf.png -->
@@ -22,12 +24,12 @@
 <!-- </p> -->
 
 Features:
-- Includes a GUI to allow users to do large-scale batch analysis, accessed via the repository's `calciumImagingAnalysis` class.
-- The underlying functions can also be used to create GUI-less, command line-ready analysis pipelines. Functions located in `ciapkg` and `+ciapkg` sub-folders.
-- Includes all major calcium imaging analysis steps: pre-processing (motion correction, spatiotemporal downsampling, spatial filtering, relative fluorescence calculation, etc.), support for multiple cell-extraction methods, automated cell classification (coming soon!), cross-session cell alignment, and more.
-- Has several example calcium imaging datasets that it will automatically download to help users test out the package.
+- Includes a GUI with different modules to allow users to do large-scale batch analysis, accessed via the repository's `ciatah` class.
+- The underlying functions can be used to create GUI-less, command line-ready analysis pipelines. Functions located in `ciapkg` and `+ciapkg` sub-folders.
+- Includes all major calcium imaging analysis steps: pre-processing (motion correction, spatiotemporal downsampling, spatial filtering, relative fluorescence calculation, etc.), support for multiple cell-extraction methods (CELLMax, PCA-ICA, CNMF, CNMF-E, EXTRACT, etc.), manual classification via GUIs, automated cell classification (coming soon!), cross-session cell alignment, and more.
+- Has several example one- and two-photon calcium imaging datasets that it will automatically download to help users test out the package.
 - Includes code for determining animal position (e.g. in open-field assay).
-- Supports [Neurodata Without Borders](https://www.nwb.org/) data standard (see [calcium imaging tutorial](https://neurodatawithoutborders.github.io/matnwb/tutorials/html/ophys.html)) for reading/writing cell-extraction (e.g. outputs of PCA-ICA, CELLMax, CNMF, CNMF-E, etc.). Supports reading and writing NWB movie files with continued integration with NWB planned.
+- Supports [Neurodata Without Borders](https://www.nwb.org/) data standard (see [calcium imaging tutorial](https://neurodatawithoutborders.github.io/matnwb/tutorials/html/ophys.html)) for reading/writing cell-extraction (e.g. outputs of PCA-ICA, CELLMax, CNMF, CNMF-E, etc.). Supports reading and writing NWB movie files with continued integration planned.
 - Requires `MATLAB`.
 <!-- <hr> -->
 
@@ -35,9 +37,22 @@ Contact: __Biafra Ahanonu, PhD (bahanonu [at] alum [dot] mit [dot] edu)__.
 
 Made in USA.<br>
 <img src="https://user-images.githubusercontent.com/5241605/71493809-322a5400-27ff-11ea-9b2d-52ff20b5f332.png" align="center" title="USA" alt="USA" width="auto" height="50">
+
+<p align="center">
+  <strong>Movie processing, cell extraction, and analysis validation.</strong>
+</p>
 <p align="center">
   <a href="https://user-images.githubusercontent.com/5241605/94530890-9c3db280-01f0-11eb-99f0-e977f5edb304.gif">
     <img src="https://user-images.githubusercontent.com/5241605/94530890-9c3db280-01f0-11eb-99f0-e977f5edb304.gif" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="50%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
+  </a>
+</p>
+
+<p align="center">
+  <strong>CIAtah sell sorting GUI</strong>
+</p>
+<p align="center">
+  <a href="https://user-images.githubusercontent.com/5241605/100851700-64dec280-343a-11eb-974c-d6d29faf9eb2.gif">
+    <img src="https://user-images.githubusercontent.com/5241605/100851700-64dec280-343a-11eb-974c-d6d29faf9eb2.gif" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="50%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
   </a>
 </p>
 
@@ -46,6 +61,7 @@ Made in USA.<br>
 
 - [Quick start guide](#quick-start-guide)
 - [Quick start (command-line)](#quick-start-command-line)
+- [`CIAtah` main GUI notes](#ciatah-main-gui-notes)
 - [Acknowledgments](#acknowledgments)
 - [References](#references)
 - [Questions](#questions)
@@ -77,7 +93,7 @@ Below are steps needed to quickly get started using the `CIAtah` software packag
 
 ```MATLAB
 % Loads the class into an object for use in this session
-obj = calciumImagingAnalysis;
+obj = ciatah;
 
 % Runs routines to check dependencies and help user get setup.
 obj.setup;
@@ -97,7 +113,7 @@ After downloading `CIAtah` and running the setup as above, users interested in c
 edit ciapkg.demo.cmdLinePipeline
 ```
 
-### `CIAtah` main GUI notes
+## `CIAtah` main GUI notes
 - Run `obj;` in the command window to see the main GUI.
 - All main decisions for choosing a module to run, deciding on a cell-extraction algorithm, and which folders to analyze are in a single window.
 - The GUI will real-time update the selected folders based on the selections in the subject, assay, and folder filter areas.

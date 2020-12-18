@@ -11,6 +11,7 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
 		% 2020.04.16 [19:59:43] - Small fix to NWB file checking.
 		% 2020.05.12 [18:02:04] - Update to make sure inputSignals2 with NWB.
+		% 2020.12.08 [01:14:09] - Reorganized returnType to be outside raw signals flag, so common filtering mechanism regardless of variables loaded into RAM or not. This fixes if a user loads variables into RAM then uses cross-session alignment, the viewMatchObjBtwnSessions method may not display registered images (cross-session alignment is still fine and valid).
 	% TODO
 		% Give a user a warning() output if there are no or empty cell-extraction outputs
 
@@ -558,100 +559,10 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 					obj.nFrames{thisFileNum} = size(inputSignals,2);
 			end
 		end
-
-		% if exist('inputSignals','var')
-		if ~isempty(inputSignals)
-			if isempty(obj.signalPeaksArray{thisFileNum})
-				signalPeaks = [];
-				signalPeaksArray = [];
-			else
-				signalPeaksArray = obj.signalPeaksArray{thisFileNum};
-				signalPeaks = zeros([obj.nSignals{thisFileNum} obj.nFrames{thisFileNum}]);
-				display('creating signalPeaks...')
-				for signalNo = 1:length(signalPeaksArray)
-					signalPeaks(signalNo,obj.signalPeaksArray{thisFileNum}{signalNo}) = 1;
-				end
-				% signalPeaks = obj.signalPeaks{thisFileNum};
-			end
-			switch options.returnType
-				case 'raw'
-
-				case 'filtered'
-					inputSignals = inputSignals(valid,:);
-					if ~isempty(inputSignals2)
-						inputSignals2 = inputSignals2(valid,:);
-					end
-					signalPeaksArray = {obj.signalPeaksArray{thisFileNum}{valid}};
-					% signalPeaks = zeros([obj.nSignals{thisFileNum} obj.nFrames{thisFileNum}]);
-					signalPeaks = zeros([length(signalPeaksArray) obj.nFrames{thisFileNum}]);
-					for signalNo = 1:length(signalPeaksArray)
-						signalPeaks(signalNo,obj.signalPeaksArray{thisFileNum}{signalNo}) = 1;
-					end
-					% signalPeaks = signalPeaks(valid,:);
-				case 'filteredAndRegistered'
-					inputSignals = inputSignals(valid,:);
-					if ~isempty(inputSignals2)
-						inputSignals2 = inputSignals2(valid,:);
-					end
-					% inputImages = IcaFilters(valid,:,:);
-					signalPeaksArray = {obj.signalPeaksArray{thisFileNum}{valid}};
-
-					% signalPeaks = zeros([obj.nSignals{thisFileNum} obj.nFrames{thisFileNum}]);
-					signalPeaks = zeros([length(signalPeaksArray) obj.nFrames{thisFileNum}]);
-					for signalNo = 1:length(signalPeaksArray)
-						signalPeaks(signalNo,obj.signalPeaksArray{thisFileNum}{signalNo}) = 1;
-					end
-					% signalPeaks = signalPeaks(valid,:);
-				otherwise
-					% body
-			end
-			display(['signalPeaks: ' num2str(size(signalPeaks))])
-			% obj.nFrames{thisFileNum} = size(inputSignals,2);
-			% obj.nSignals{thisFileNum} = size(inputSignals,1);
-		end
-
-
-		% if exist('inputImages','var')
-		if ~isempty(inputImages)
-			switch options.returnType
-				case 'raw'
-
-				case 'filtered'
-					inputImages = inputImages(:,:,valid);
-				case 'filteredAndRegistered'
-					inputImages = inputImages(:,:,valid);
-					% register images based on manual registration if performed
-
-					% register images based on cross session alignment
-					globalRegCoords = obj.globalRegistrationCoords.(obj.subjectStr{thisFileNum});
-					if ~isempty(globalRegCoords)
-						display('registering images')
-						% get the global coordinate number based
-						% globalRegCoords = globalRegCoords{strcmp(obj.assay{thisFileNum},obj.globalIDFolders.(obj.subjectStr{thisFileNum}))};
-						% globalRegCoords = globalRegCoords{strcmp(obj.date{thisFileNum},obj.globalIDFolders.(obj.subjectStr{thisFileNum}))};
-						% globalRegCoords = globalRegCoords{strcmp(obj.folderBaseSaveStr{thisFileNum},obj.globalIDFolders.(obj.subjectStr{thisFileNum}))};
-						globalRegCoords = globalRegCoords{strcmp(obj.folderBaseSaveStrUnique{thisFileNum},obj.globalIDFolders.(obj.subjectStr{thisFileNum}))};
-
-						if ~isempty(globalRegCoords)
-							% inputImages = permute(inputImages,[2 3 1]);
-							for iterationNo = 1:length(globalRegCoords)
-								fn=fieldnames(globalRegCoords{iterationNo});
-								for i=1:length(fn)
-									localCoords = globalRegCoords{iterationNo}.(fn{i});
-									% playMovie(inputImages);
-									[inputImages, localCoords] = turboregMovie(inputImages,'precomputedRegistrationCooords',localCoords);
-								end
-							end
-							% inputImages = permute(inputImages,[3 1 2]);
-						end
-					end
-				otherwise
-					% body
-			end
-		end
 	else
 		display('Using variables in ram')
 		inputSignals = obj.rawSignals{thisFileNum}(:,:);
+		inputSignals2 = inputSignals;
 		inputImages = obj.rawImages{thisFileNum}(:,:,:);
 		signalPeaksArray = {obj.signalPeaksArray{thisFileNum}{:}};
 		% signalPeaks = obj.signalPeaks{thisFileNum}(valid,:);
@@ -660,19 +571,110 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 		for signalNo = 1:obj.nSignals{thisFileNum}
 			signalPeaks(signalNo,obj.signalPeaksArray{thisFileNum}{signalNo}) = 1;
 		end
+		% switch options.returnType
+		% 	case 'raw'
+
+		% 	case 'filtered'
+		% 		inputSignals = obj.rawSignals{thisFileNum}(valid,:);
+		% 		inputImages = obj.rawImages{thisFileNum}(:,:,valid);
+		% 		signalPeaksArray = {obj.signalPeaksArray{thisFileNum}{valid}};
+		% 		signalPeaks = signalPeaks(valid,:);
+		% 	otherwise
+		% 		% body
+		% end
+		obj.nFrames{thisFileNum} = size(inputSignals,2);
+		obj.nSignals{thisFileNum} = size(inputSignals,1);
+	end
+
+	% if exist('inputSignals','var')
+	if ~isempty(inputSignals)
+		if isempty(obj.signalPeaksArray{thisFileNum})
+			signalPeaks = [];
+			signalPeaksArray = [];
+		else
+			signalPeaksArray = obj.signalPeaksArray{thisFileNum};
+			signalPeaks = zeros([obj.nSignals{thisFileNum} obj.nFrames{thisFileNum}]);
+			display('creating signalPeaks...')
+			for signalNo = 1:length(signalPeaksArray)
+				signalPeaks(signalNo,obj.signalPeaksArray{thisFileNum}{signalNo}) = 1;
+			end
+			% signalPeaks = obj.signalPeaks{thisFileNum};
+		end
 		switch options.returnType
 			case 'raw'
 
 			case 'filtered'
-				inputSignals = obj.rawSignals{thisFileNum}(valid,:);
-				inputImages = obj.rawImages{thisFileNum}(:,:,valid);
+				inputSignals = inputSignals(valid,:);
+				if ~isempty(inputSignals2)
+					inputSignals2 = inputSignals2(valid,:);
+				end
 				signalPeaksArray = {obj.signalPeaksArray{thisFileNum}{valid}};
-				signalPeaks = signalPeaks(valid,:);
+				% signalPeaks = zeros([obj.nSignals{thisFileNum} obj.nFrames{thisFileNum}]);
+				signalPeaks = zeros([length(signalPeaksArray) obj.nFrames{thisFileNum}]);
+				for signalNo = 1:length(signalPeaksArray)
+					signalPeaks(signalNo,obj.signalPeaksArray{thisFileNum}{signalNo}) = 1;
+				end
+				% signalPeaks = signalPeaks(valid,:);
+			case 'filteredAndRegistered'
+				inputSignals = inputSignals(valid,:);
+				if ~isempty(inputSignals2)
+					inputSignals2 = inputSignals2(valid,:);
+				end
+				% inputImages = IcaFilters(valid,:,:);
+				signalPeaksArray = {obj.signalPeaksArray{thisFileNum}{valid}};
+
+				% signalPeaks = zeros([obj.nSignals{thisFileNum} obj.nFrames{thisFileNum}]);
+				signalPeaks = zeros([length(signalPeaksArray) obj.nFrames{thisFileNum}]);
+				for signalNo = 1:length(signalPeaksArray)
+					signalPeaks(signalNo,obj.signalPeaksArray{thisFileNum}{signalNo}) = 1;
+				end
+				% signalPeaks = signalPeaks(valid,:);
 			otherwise
 				% body
 		end
-		obj.nFrames{thisFileNum} = size(inputSignals,2);
-		obj.nSignals{thisFileNum} = size(inputSignals,1);
+		display(['signalPeaks: ' num2str(size(signalPeaks))])
+		% obj.nFrames{thisFileNum} = size(inputSignals,2);
+		% obj.nSignals{thisFileNum} = size(inputSignals,1);
+	end
+
+
+	% if exist('inputImages','var')
+	if ~isempty(inputImages)
+		switch options.returnType
+			case 'raw'
+
+			case 'filtered'
+				inputImages = inputImages(:,:,valid);
+			case 'filteredAndRegistered'
+				inputImages = inputImages(:,:,valid);
+				% register images based on manual registration if performed
+
+				% register images based on cross session alignment
+				globalRegCoords = obj.globalRegistrationCoords.(obj.subjectStr{thisFileNum});
+				if ~isempty(globalRegCoords)
+					display('registering images')
+					% get the global coordinate number based
+					% globalRegCoords = globalRegCoords{strcmp(obj.assay{thisFileNum},obj.globalIDFolders.(obj.subjectStr{thisFileNum}))};
+					% globalRegCoords = globalRegCoords{strcmp(obj.date{thisFileNum},obj.globalIDFolders.(obj.subjectStr{thisFileNum}))};
+					% globalRegCoords = globalRegCoords{strcmp(obj.folderBaseSaveStr{thisFileNum},obj.globalIDFolders.(obj.subjectStr{thisFileNum}))};
+					globalRegCoords = globalRegCoords{strcmp(obj.folderBaseSaveStrUnique{thisFileNum},obj.globalIDFolders.(obj.subjectStr{thisFileNum}))};
+
+					if ~isempty(globalRegCoords)
+						% inputImages = permute(inputImages,[2 3 1]);
+						for iterationNo = 1:length(globalRegCoords)
+							fn=fieldnames(globalRegCoords{iterationNo});
+							for i=1:length(fn)
+								localCoords = globalRegCoords{iterationNo}.(fn{i});
+								% playMovie(inputImages);
+								[inputImages, localCoords] = turboregMovie(inputImages,'precomputedRegistrationCooords',localCoords);
+							end
+						end
+						% inputImages = permute(inputImages,[3 1 2]);
+					end
+				end
+			otherwise
+				% body
+		end
 	end
 
 	if options.filterTraces==1

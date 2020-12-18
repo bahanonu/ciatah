@@ -11,6 +11,7 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
 		% 2019.04.23 [19:53:21] - a couple Windows specific path separators, switch to filesep
 		% 2019.07.03 [16:35:10] - Updated to allow GUI-less option so computeMatchObjBtwnTrials can run after cross-session alignment.
+		% 2020.12.08 [00:53:20] - Take out parfor in one loop that calls obj functions to eliminate serialization issues. Also change color mapping of cross session maps so that it covers the full range using the actual global IDs matched across sessions rather than diluting the range by including global IDs that don't meet the criteria. Makes the maps more colorful.
 	% TODO
 		%
 
@@ -32,6 +33,8 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 	options.alignmentSetNum = 1;
 	options.sortGlobalIDs = 0;
 	options.runGui = 1;
+	options.cellmapZoomPx = 10;
+	options.maxDistAccept = 10;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -46,18 +49,24 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 		movieSettings = inputdlg({...
 				'directory to save pictures: ',...
 				'subject alignment set # (e.g. if need multiple separate alignments): ',...
-				'Sort global IDs in GUI (1 = yes, 0 = no): '
+				'Sort global IDs in GUI (1 = yes, 0 = no): ',...
+				'Display mismatched pairs? (1 = yes, 0 = no): ',...
+				'Which percent overlap cross-session maps (1 = 100%, 2 = 70%, 3 = 50%)? (int vector): '
 			},...
 			'view movie settings',1,...
 			{...
 				obj.picsSavePath,...
 				'1',...
-				'0'
+				'0',...
+				'0',...
+				'[3]'
 			}...
 		);
 		obj.picsSavePath = movieSettings{1};
 		options.alignmentSetNum = str2num(movieSettings{2});
 		sortGlobalIDs = str2num(movieSettings{3});
+		dispMisMatchPairs = str2num(movieSettings{4});
+		pctSessionMatchChoices = str2num(movieSettings{5});
 
 		scnsize = get(0,'ScreenSize');
 		viewMatchSessionsStr = {'view cross session matches','make cross session color cellmaps'};
@@ -69,6 +78,8 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 		options.alignmentSetNum = options.alignmentSetNum;
 		sortGlobalIDs = options.sortGlobalIDs;
 		viewMatchSessionsStr = {'make cross session color cellmaps'};
+		dispMisMatchPairs = 1;
+		pctSessionMatchChoices = [1 2 3];
 	end
 
 
@@ -127,7 +138,8 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 			end
 
 			addNo = 1;
-			parfor idx = 1:length(validFoldersIdx)
+			% parfor idx = 1:length(validFoldersIdx)
+			for idx = 1:length(validFoldersIdx)
 				thisFileNum = validFoldersIdx(idx);
 				display(repmat('*',1,7))
 				display([num2str(idx) '/' num2str(length(validFoldersIdx)) ': ' obj.fileIDNameArray{thisFileNum}]);
@@ -224,8 +236,10 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 			for sessionNo = 1:nSessions
 				[~, ~] = openFigure(sessionNo, '');
 			end
+			drawnow
 
 			% globalIDsImageList = cell([sum(nMatchGlobalIDs(globalNo)>=2) 1]);
+			disp('making global image cell array')
 			globalIDsImageList = cell([nGlobalIDs 1]);
 			for sessionNo = 1:nSessions
 				try
@@ -265,9 +279,6 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 					display(repmat('@',1,7))
 				end
 			end
-
-			options.cellmapZoomPx = 10;
-			options.maxDistAccept = 10;
 			zzz = 1;
 			zzz2 = 1;
 			outputCutMovie = {};
@@ -277,6 +288,7 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 			[xPlot yPlot] = getSubplotDimensions(nGlobalIDsView);
 			allCentroids = [];
 			allDistances = [];
+			disp('Creating statistics plots for evaluating cross-session quality')
 			for globalNo = 1:nGlobalIDsView
 				try
 					tmpGlobalImg = globalIDsImageList{globalNo};
@@ -316,7 +328,7 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 					distMatrix(logical(eye(size(distMatrix)))) = NaN;
 					distMatrixPairs = distMatrix(:);
 					distMatrixPairs(~isnan(distMatrixPairs));
-					if sum(distMatrixPairs>options.maxDistAccept)>1
+					if sum(distMatrixPairs>options.maxDistAccept)>1&dispMisMatchPairs==1
 						[xPlot2 yPlot2] = getSubplotDimensions(size(tmpGlobalImg,3));
 						figure(10000+globalNo)
 							linkAx = [];
@@ -367,20 +379,20 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 						% xlim([0 options.cellmapZoomPx*2+1])
 						% axis equal
 						% if globalNo==1
-							xlabel('X (px)')
-							ylabel('Y (px)')
-							box off;
-							title('Individual points for all matched cells')
+							% xlabel('X (px)')
+							% ylabel('Y (px)')
+							% box off;
+							% title('Individual points for all matched cells')
 						% % end
-						axis equal tight
+						% axis equal tight
 
 					% openFigure(1113);
 						subplot(1,2,2)
 						hexscatter(allCentroids(:,1),allCentroids(:,2),'res',50);
-						colorbar
-						title('Heat plot')
+						% colorbar
+						% title('Heat plot')
 						% axis equal
-						axis equal tight
+						% axis equal tight
 						% ylim([0 options.cellmapZoomPx*2+1])
 						% xlim([0 options.cellmapZoomPx*2+1])
 
@@ -427,7 +439,7 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 							% axis off; axis equal tight;
 						zzz2 = zzz2 + 1;
 					end
-
+					% drawnow
 					% openFigure(1111);
 					% 	tmpVar = outputCutMovie{globalNo};
 					% 	plot(tmpVar(:));
@@ -443,6 +455,16 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 			drawnow
 			openFigure(1112);
 				suptitle('Errors in cell alignment to "global" match cell centroid')
+				subplot(1,2,1)
+					xlabel('X (px)')
+					ylabel('Y (px)')
+					box off;
+					title('Individual points for all matched cells')
+					axis equal tight
+				subplot(1,2,2)
+					colorbar
+					title('Heat plot')
+					axis equal tight
 			openFigure(1110);
 				suptitle('Overlap of matched cells detected across at least (nSessions-1) sessions')
 			openFigure(1114);
@@ -470,9 +492,14 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 			% figure(90)
 			% plot(nMatchGlobalIDs)
 			% round(nSessions*0.6)
-			for matchingNumbers = [1 2 3]
+			% for matchingNumbers = [1 2 3]
+			for matchingNumbers = pctSessionMatchChoices
 				folderSaveName = {'matchObjColorMapAllMatched','matchObjColorMap70percentMatched','matchObjColorMap50percentMatched'};
 				fractionShow = [1 0.7 0.5];
+				globalMatchFilter = nMatchGlobalIDs>=round(nSessions*fractionShow(matchingNumbers));
+				nGlobalIDsMatch = sum(globalMatchFilter);
+				% globalIdxMax = max(globalIDs(globalMatchFilter,:),[],'all');
+				globalIdxMax = max(find(globalMatchFilter));
 				for sessionNo = 1:nSessions
 					try
 						obj.fileNum = validFoldersIdx(sessionNo);
@@ -480,7 +507,7 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 						globalToSessionIDsTmp = globalToSessionIDs{sessionNo};
 						% get
 						% figure;plot(nMatchGlobalIDs==nSessions);
-						keepIDIdx = globalIDs(nMatchGlobalIDs>=round(nSessions*fractionShow(matchingNumbers)),sessionNo);
+						keepIDIdx = globalIDs(globalMatchFilter,sessionNo);
 						% if matchingNumbers==1
 						% 	keepIDIdx = globalIDs(nMatchGlobalIDs==nSessions,sessionNo);
 						% else
@@ -505,7 +532,7 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 						% size(globalToSessionIDs{sessionNo}(nMatchGlobalIDs==nSessions))
 						thisCellmap = createObjMap(groupedImagesRates);
 						thisCellmap(1,1) = 1;
-						thisCellmap(1,2) = nGlobalIDs;
+						thisCellmap(1,2) = globalIdxMax;
 						setCmapHere = @(nGlobalIDs) colormap([0 0 0; [1 1 1]*0.3; hsv(nGlobalIDs)]);
 						[~, ~] = openFigure(sessionNo, '');
 							clf
@@ -513,7 +540,7 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 							% title(strrep(strcat(obj.subjectStr(obj.fileNum),{' '},obj.assay(obj.fileNum)),'_',' '),'FontSize', 35)
 							% title(strrep(obj.folderBaseSaveStr(obj.fileNum),'_',' '))
 							% colormap([1 1 1; 0.9 0.9 0.9; hsv(nGlobalIDs)]);
-							setCmapHere(nGlobalIDs);
+							setCmapHere(globalIdxMax*1.5);
 							set(sessionNo,'PaperUnits','inches','PaperPosition',[0 0 9 9])
 							obj.modelSaveImgToFile([],[folderSaveName{matchingNumbers} 'Session' filesep thisSubjectStr],sessionNo,strcat(thisFileID));
 						[~, ~] = openFigure(thisFigNo, '');
@@ -526,10 +553,11 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 							% title(strrep(obj.folderBaseSaveStr(obj.fileNum),'_',' '))
 							% colormap(customColormap([]))
 							% colormap([1 1 1; hsv(nGlobalIDs)]);
-							setCmapHere(nGlobalIDs);
+							setCmapHere(globalIdxMax*1.5);
 							% colormap([1 1 1; 0.9 0.9 0.9; hsv(nGlobalIDs)]);
 							% drawnow;
 							obj.modelSaveImgToFile([],[folderSaveName{matchingNumbers} 'All'],thisFigNo,obj.subjectStr{obj.fileNum});
+						drawnow
 					catch err
 						display(repmat('@',1,7))
 						disp(getReport(err,'extended','hyperlinks','on'));
@@ -552,7 +580,7 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 
 					frame = getframe(sessionNo);
 					[frameImg,map] = frame2im(frame);
-					frameImg = imresize(frameImg,[1000 1000],'bilinear');
+					% frameImg = imresize(frameImg,[1000 1000],'bilinear');
 					writeVideo(writerObj,frameImg);
 				end
 				close(writerObj);
