@@ -13,7 +13,7 @@
 
 <hr>
 
-`CIAtah` (pronounced cheetah; formerly `calciumImagingAnalysis` [ciapkg]) is a software package for analysis of one- and two-photon calcium imaging datasets.
+`CIAtah` (pronounced cheetah; formerly `calciumImagingAnalysis` [ciapkg]) is a software package for analyzing one- and two-photon calcium imaging datasets.
 
 <!-- <img src="https://user-images.githubusercontent.com/5241605/81605697-b9c7c800-9386-11ea-9e9f-569c743b24b9.png" width="42%" align="right" alt="calciumImagingAnalysis_logo"> -->
 <!-- https://user-images.githubusercontent.com/5241605/99430025-a2c9db80-28bd-11eb-8508-d1c63dea6fcf.png -->
@@ -23,10 +23,10 @@
   <img src="https://user-images.githubusercontent.com/5241605/99499485-d6dce500-292d-11eb-8c68-b089fe1985c8.png" width="42%" align="right" alt="ciatah_logo">
 <!-- </p> -->
 
-Features:
-- Includes a GUI with different modules to allow users to do large-scale batch analysis, accessed via the repository's `ciatah` class.
+`CIAtah` features:
+- A GUI with different modules to allow users to do large-scale batch analysis, accessed via the repository's `ciatah` class.
 - The underlying functions can be used to create GUI-less, command line-ready analysis pipelines. Functions located in `ciapkg` and `+ciapkg` sub-folders.
-- Includes all major calcium imaging analysis steps: pre-processing (motion correction, spatiotemporal downsampling, spatial filtering, relative fluorescence calculation, etc.), support for multiple cell-extraction methods (CELLMax, PCA-ICA, CNMF, CNMF-E, EXTRACT, etc.), manual classification via GUIs, automated cell classification (coming soon!), cross-session cell alignment, and more.
+- Includes all major calcium imaging analysis steps: movie visualization (including reading from disk), pre-processing (motion correction, spatiotemporal downsampling, spatial filtering, relative fluorescence calculation, etc.), support for multiple cell-extraction methods (CELLMax, PCA-ICA, CNMF, CNMF-E, EXTRACT, etc.), manual classification via GUIs, automated cell classification (coming soon!), cross-session cell alignment, and more.
 - Has several example one- and two-photon calcium imaging datasets that it will automatically download to help users test out the package.
 - Includes code for determining animal position (e.g. in open-field assay).
 - Supports [Neurodata Without Borders](https://www.nwb.org/) data standard (see [calcium imaging tutorial](https://neurodatawithoutborders.github.io/matnwb/tutorials/html/ophys.html)) for reading/writing cell-extraction (e.g. outputs of PCA-ICA, CELLMax, CNMF, CNMF-E, etc.). Supports reading and writing NWB movie files with continued integration planned.
@@ -48,7 +48,7 @@ Made in USA.<br>
 </p>
 
 <p align="center">
-  <strong>CIAtah sell sorting GUI</strong>
+  <strong>CIAtah cell sorting GUI</strong>
 </p>
 <p align="center">
   <a href="https://user-images.githubusercontent.com/5241605/100851700-64dec280-343a-11eb-974c-d6d29faf9eb2.gif">
@@ -105,6 +105,15 @@ obj % then hit enter, no semicolon!
 - Afterwards, likely want to run `modelAddNewFolders` module first in order to add folders containing imaging data to the current class object.
 - [Optional] Users on Windows systems should download `Everything` (https://www.voidtools.com/). It is a very useful and extremely fast search engine for files and folders on a computer that can allow users to quickly get full paths for lists of folders that need to be analyzed in `CIAtah`.
 - [Optional] Users who want to analyze data via the command line can run `edit ciapkg.demo.cmdLinePipeline` and run each segment of code there to see what commands are needed to perform each step. It assumes you have already run `example_downloadTestData`.
+
+### Visualize any movie quickly using read from disk
+
+Users can quickly visualize movies in any of the supported formats (HDF5, AVI, TIFF, and ISXD) using the `playMovie` function. This will read directly from disk, allowing users to scroll through frames to visually check movies before or after processing. See below code:
+
+```MATLAB
+% Use the absolute path to the movie file or a valid relative path.
+playMovie('ABSOLUTE\PATH\TO\MOVIE');
+```
 
 ## Quick start (command line)
 
