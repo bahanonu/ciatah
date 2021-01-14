@@ -9,7 +9,7 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>Stripe removal - calciumImagingAnalysis (ciapkg)</title>
+  <title>Stripe removal - CIAtah (calciumImagingAnalysis [ciapkg])</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
   <link rel="stylesheet" href="../css/theme.css" />
@@ -41,7 +41,7 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
     <div class="wy-side-scroll">
       <div class="wy-side-nav-search">
-        <a href=".." class="icon icon-home"> calciumImagingAnalysis (ciapkg)</a>
+        <a href=".." class="icon icon-home"> CIAtah (calciumImagingAnalysis [ciapkg])</a>
         <div role="search">
   <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
@@ -104,6 +104,8 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_large_movie_analysis/">Large movie analysis</a>
                     </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_contrast/">Movie display and noise</a>
+                    </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_cross_session_alignment/">Cross-session alignemnt</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_manual_cell_sorting/">Manual cell sorting</a>
@@ -149,7 +151,7 @@
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
         <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="..">calciumImagingAnalysis (ciapkg)</a>
+        <a href="..">CIAtah (calciumImagingAnalysis [ciapkg])</a>
       </nav>
 
       
@@ -185,7 +187,7 @@
 <!-- ![picture1](https://user-images.githubusercontent.com/5241605/51817825-4e391480-2281-11e9-9a17-cc972c26230a.png) -->
 
 <h2 id="removestripsfrommovie">removeStripsFromMovie<a class="headerlink" href="#removestripsfrommovie" title="Permanent link">&para;</a></h2>
-<p>To run this on any <code>inputMovie</code> movie matrix already loaded in MATLAB, do the following.</p>
+<p>To run stripe removal on any <code>inputMovie</code> movie matrix already loaded in MATLAB, run the below code. Details on each option can be found within the <code>removeStripsFromMovie</code> function.</p>
 <pre><code class="MATLAB">% This will produce a result similar to above.
 removeStripsFromMovie(inputMovie,'stripOrientation',both,'meanFilterSize',7,'freqLowExclude',10,'bandpassType','highpass')
 </code></pre>
@@ -194,6 +196,9 @@ removeStripsFromMovie(inputMovie,'stripOrientation',both,'meanFilterSize',7,'fre
 <p>To use within the <code>calciumImagingAnalysis</code> class, select <code>modelPreprocessMovie</code> module and have <code>stripeRemoval</code> selected then on the options page, choose whether to remove vertical, horizontal, or both stripes.
 <img alt="image" src="https://user-images.githubusercontent.com/5241605/71019922-1bbe2300-20b0-11ea-9c5f-232326884db4.png" />
 <img alt="image" src="https://user-images.githubusercontent.com/5241605/71020018-5922b080-20b0-11ea-9637-abead3c26110.png" /></p>
+<p>A second example of how stripe removal can improve image quality using <code>removeStripsFromMovie</code>.
+<img alt="image" src="https://user-images.githubusercontent.com/5241605/100809655-75b41780-33eb-11eb-8b58-99bf79924528.png" />
+<img alt="image" src="https://user-images.githubusercontent.com/5241605/100809673-7f3d7f80-33eb-11eb-8b44-db510ff6a974.png" /></p>
               
             </div>
           </div>
