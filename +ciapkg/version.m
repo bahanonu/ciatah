@@ -1,5 +1,5 @@
 function [versionStr, dateTimeStr] = version(varargin)
-	% Get version for calciumImagingAnalysis
+	% Get version for CIAtah.
 	% Biafra Ahanonu
 	% started: 2020.06.06 [23:36:36]
 	% inputs
@@ -8,7 +8,7 @@ function [versionStr, dateTimeStr] = version(varargin)
 		%
 
 	% changelog
-		%
+		% 2021.01.18 [13:23:24] - Updated so reads CIAtah version directly from VERSION file instead of having the version information in two places (which increases probability of mismatch).
 	% TODO
 		%
 
@@ -26,8 +26,10 @@ function [versionStr, dateTimeStr] = version(varargin)
 	%========================
 
 	try
-		versionStr = 'v3.21.4';
-		dateTimeStr = '20201218011005';
+		verPath = [ciapkg.getDir filesep 'ciapkg' filesep 'VERSION'];
+		verStr = readcell(verPath,'FileType','text');
+		versionStr = verStr{1};
+		dateTimeStr = num2str(verStr{2});
 	catch err
 		disp(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));

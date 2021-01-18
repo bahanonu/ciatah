@@ -26,6 +26,8 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		% 2020.10.12 [22:16:37] - Check for NWB input file and change dataset name to accomodate. Create a shortcut menu for easier navigation.
 		% 2020.10.17 [20:12:18] - Add support for displaying in RGB when reading from AVI movies.
 		% 2020.10.19 [12:51:00] - Switch read from disk support to using ciapkg.io.readFrame so that playMovie uses the new standard interface for fast reading from disk.
+		% 2021.01.14 [20:12:10] - Update passing of HDF5 dataset name to ciapkg.io.readFrame.
+		% 2021.01.17 [19:21:12] - Integrated contrast sliders directly into the main GUI so users don't have to open up a separate GUI. Make GUI sliders thinner.
 
 	% ========================
 	% options
@@ -92,6 +94,10 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 	options.frameList = [];
 	% Binary: allow RGB display, e.g. for AVI
 	options.rgbDisplay = 0;
+	% Int: Multiplier to set contrast to a range usable by GUI elements.
+	options.contrastFixMultiplier = 1e2;
+	% Int: Multiplier to set contrast to a range usable by GUI elements.
+	options.contrastFixMultiplierGUI = 1e5;
 	% get options
 	options = getOptions(options,varargin);
 	% options
@@ -128,10 +134,10 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		end
 
 		% Setup connection to file to reduce I/O for file types that need it.
-		[~,movieFileID,inputMovieDims] = ciapkg.io.readFrame(inputMovie,1);
+		[~,movieFileID,inputMovieDims] = ciapkg.io.readFrame(inputMovie,1,'inputDatasetName',options.inputDatasetName);
 
 		if ~isempty(options.extraMovie)
-			[~,movieFileIDExtra,inputMovieDimsExtra] = ciapkg.io.readFrame(options.extraMovie,1);
+			[~,movieFileIDExtra,inputMovieDimsExtra] = ciapkg.io.readFrame(options.extraMovie,1,'inputDatasetName',options.inputDatasetName);
 		end
 	else
 		inputMovieIsChar = 0;
@@ -188,7 +194,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		subplotNum = 2;
 		if ischar(options.extraMovie)==1
 			% extraMovieFrame = subfxn_readMovieDisk(options.extraMovie,1,movieTypeExtra,1);
-			[extraMovieFrame] = ciapkg.io.readFrame(options.extraMovie,1,'movieFileID',movieFileIDExtra,'inputMovieDims',inputMovieDimsExtra);
+			[extraMovieFrame] = ciapkg.io.readFrame(options.extraMovie,1,'movieFileID',movieFileIDExtra,'inputMovieDims',inputMovieDimsExtra,'inputDatasetName',options.inputDatasetName);
 			% tmpFrame = loadMovieList(inputMovie,'inputDatasetName',options.inputDatasetName,'displayInfo',0,'displayDiagnosticInfo',0,'displayWarnings',0,'frameList',1);
 		else
 			extraMovieFrame = squeeze(options.extraMovie(:,:,1));
@@ -244,7 +250,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 
 	if ischar(inputMovie)==1
 		% tmpFrame = subfxn_readMovieDisk(inputMovie,1,movieType);
-		[tmpFrame] = ciapkg.io.readFrame(inputMovie,1,'movieFileID',movieFileID,'inputMovieDims',inputMovieDims);
+		[tmpFrame] = ciapkg.io.readFrame(inputMovie,1,'movieFileID',movieFileID,'inputMovieDims',inputMovieDims,'inputDatasetName',options.inputDatasetName);
 		% tmpFrame = loadMovieList(inputMovie,'inputDatasetName',options.inputDatasetName,'displayInfo',0,'displayDiagnosticInfo',0,'displayWarnings',0,'frameList',1);
 	else
 		tmpFrame = squeeze(inputMovie(:,:,1));
@@ -278,18 +284,18 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 	else
 		sliderStepF = [1/(nFrames*0.1) 0.2];
 	end
-	frameSlider = uicontrol('style','slider','Units', 'normalized','position',[15 1 80 3]/100,...
+	frameSlider = uicontrol('style','slider','Units', 'normalized','position',[15 1 80 2]/100,...
 		'min',1,'max',nFrames,'Value',1,'SliderStep',sliderStepF,'callback',@frameCallback,'Enable','inactive','ButtonDownFcn',@pauseLoopCallback);
 	% set(gcf,'WindowButtonDownFcn',@pauseLoopCallback);
 	% addlistener(frameSlider,'Value','PostSet',@pauseLoopCallback);
 	% waitfor(source,'Value')
 	% addlistener(frameSlider, 'Value', 'PostSet',@frameCallback);
-	frameText = uicontrol('style','edit','Units', 'normalized','position',[1 1 14 3]/100,'FontSize',9);
+	frameText = uicontrol('style','edit','Units', 'normalized','position',[1 1 14 2]/100,'FontSize',9);
 
 	% ==========================================
 	% TITLE AND COMMANDS
 	% close(fig1);fig1 = figure(42);
-	[supTitleStr, suptitleHandle, conMenu] = subfxn_createShortcutInfo()
+	[supTitleStr, suptitleHandle, conMenu] = subfxn_createShortcutInfo();
 
 	% ==========================================
 	% SETUP FIGURE STATES
@@ -366,9 +372,9 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 				% 	extraMovieFrame = subfxn_readMovieDisk(options.extraMovie,1,movieType,1);
 				% end
 
-				[inputMovieFrame] = ciapkg.io.readFrame(inputMovie,1,'movieFileID',movieFileID,'inputMovieDims',inputMovieDims);
+				[inputMovieFrame] = ciapkg.io.readFrame(inputMovie,1,'movieFileID',movieFileID,'inputMovieDims',inputMovieDims,'inputDatasetName',options.inputDatasetName);
 				if ~isempty(options.extraMovie)
-					extraMovieFrame = ciapkg.io.readFrame(options.extraMovie,1,'movieFileID',movieFileIDExtra,'inputMovieDims',inputMovieDimsExtra);
+					extraMovieFrame = ciapkg.io.readFrame(options.extraMovie,1,'movieFileID',movieFileIDExtra,'inputMovieDims',inputMovieDimsExtra,'inputDatasetName',options.inputDatasetName);
 				end
 			else
 				inputMovieFrame = inputMovie(:);
@@ -385,9 +391,33 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 			minMovie(2) = double(nanmin(extraMovieFrame(:)));
 		end
 		clear inputMovieFrame extraMovieFrame;
-		options.movieMinMax = [maxMovie(1) minMovie(1)];
+		options.movieMinMax = [minMovie(1) maxMovie(1)];
 	end
 
+	% =================================================
+	% CONTRAST GUI ELEMENTS
+	guiMinMax = options.movieMinMax*options.contrastFixMultiplier;
+	% Adjust for the fact that the sliders will not give negative values.
+	contrastAdjFactor = abs(guiMinMax(1));
+	guiMinMax = guiMinMax+contrastAdjFactor;
+	rangeDiff = abs(guiMinMax(2) - guiMinMax(1));
+	rangeDiff = rangeDiff*options.contrastFixMultiplier;
+	if rangeDiff<11
+		sliderStepC = [1/(rangeDiff) 0.05];
+	else
+		sliderStepC = [1/(rangeDiff*0.1) 0.2];
+	end
+	% sliderStepC = [1/(rangeDiff*0.1) 0.05];
+	% guiMinMax
+	% pause
+	contrastSliderLow = uicontrol('style','slider','Units', 'normalized','position',[21 3 37 2]/100,...
+		'min',guiMinMax(1),'max',guiMinMax(2),'Value',guiMinMax(1),'SliderStep',sliderStepC,'callback',@contrastCallback,'Enable','on','ButtonDownFcn',@contrastButtonActivateCallback);
+	contrastSliderHigh = uicontrol('style','slider','Units', 'normalized','position',[58 3 37 2]/100,...
+		'min',guiMinMax(1),'max',guiMinMax(2),'Value',guiMinMax(2),'SliderStep',sliderStepC,'callback',@contrastCallback,'Enable','on','ButtonDownFcn',@contrastButtonActivateCallback);
+	contrastFrameText = uicontrol('style','edit','Units', 'normalized','position',[1 3 20 2]/100,'FontSize',9,'string',sprintf('Contrast: %0.3f, %0.3f',options.movieMinMax(1), options.movieMinMax(2)));
+
+	% =================================================
+	% =================================================
 	colorbarSwitch = 1;
 	colorbarSwitchTwo = 1;
 	pauseLoop = 0;
@@ -416,7 +446,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 			if readMovieChunks==1
 				%
 				% thisFrame = subfxn_readMovieDisk(inputMovie,frame,movieType);
-				[thisFrame] = ciapkg.io.readFrame(inputMovie,frame,'movieFileID',movieFileID,'inputMovieDims',inputMovieDims);
+				[thisFrame] = ciapkg.io.readFrame(inputMovie,frame,'movieFileID',movieFileID,'inputMovieDims',inputMovieDims,'inputDatasetName',options.inputDatasetName);
 			else
 				thisFrame = squeeze(inputMovie(:,:,frame));
 			end
@@ -457,7 +487,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 				% Display an image from the movie
 				if readMovieChunks==1
 					% extraMovieFrame = subfxn_readMovieDisk(options.extraMovie,frame,movieTypeExtra,1);
-					extraMovieFrame = ciapkg.io.readFrame(options.extraMovie,frame,'movieFileID',movieFileIDExtra,'inputMovieDims',inputMovieDimsExtra);
+					extraMovieFrame = ciapkg.io.readFrame(options.extraMovie,frame,'movieFileID',movieFileIDExtra,'inputMovieDims',inputMovieDimsExtra,'inputDatasetName',options.inputDatasetName);
 				else
 					extraMovieFrame = squeeze(options.extraMovie(:,:,frame));
 				end
@@ -778,6 +808,58 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		%     pauseLoop = 1;
 		% end
 	end
+	function contrastButtonActivateCallback(source,eventdata)
+		% disp([num2str(frame) ' - pause loop'])
+        % keyIn = get(gcf,'CurrentCharacter');
+        % disp(keyIn)
+
+
+		set(contrastSliderLow,'Enable','on')
+		addlistener(contrastSliderLow,'Value','PostSet',@contrastCallbackChange);
+		set(contrastSliderHigh,'Enable','on')
+		addlistener(contrastSliderHigh,'Value','PostSet',@contrastCallbackChange);
+		% pauseLoop = 1;
+		% pauseLoop = 0;
+		% if pauseLoop==1
+		%     pauseLoop = 0;
+		% else
+		%     pauseLoop = 1;
+		% end
+	end
+	function contrastCallbackChange(source,eventdata)
+	end
+	function contrastCallback(source,eventdata)
+		cLow = round(get(contrastSliderLow,'value'));
+		cHigh = round(get(contrastSliderHigh,'value'));
+
+		set(contrastSliderLow,'Max',cHigh-0.1*cHigh);
+		set(contrastSliderHigh,'Min',cLow+0.2*cLow);
+
+		% [get(contrastSliderLow,'Min') get(contrastSliderLow,'Max') contrastAdjFactor; cLow cHigh 0]
+		% contrastSliderHigh
+		% disp(num2str(frame))
+		% signalNo = max(1,round(get(signalSlider,'value')));
+		% set(frameSlider,'value',frame);
+		% set(frameText,'visible','on','string',['Frame ' num2str(frame) '/' num2str(nFrames)])
+		% pauseLoop
+		% [cLow cHigh]
+		options.movieMinMax = ([cLow cHigh]-contrastAdjFactor)/options.contrastFixMultiplier;
+		% options.movieMinMax
+		minMovie(1) = options.movieMinMax(1);
+		maxMovie(1) = options.movieMinMax(2);
+		caxis(axHandle,[minMovie(1) maxMovie(1)]);
+
+		addlistener(contrastSliderLow,'Value','PostSet',@blankCallback);
+		addlistener(contrastSliderHigh,'Value','PostSet',@blankCallback);
+
+        % set(contrastSliderLow,'Enable','off')
+        % set(contrastSliderHigh,'Enable','off')
+        drawnow update;
+		% set(contrastSliderLow,'Enable','inactive')
+		% set(contrastSliderHigh,'Enable','inactive')
+
+		set(contrastFrameText,'string',sprintf('Contrast: %0.3f, %0.3f',options.movieMinMax(1), options.movieMinMax(2)))
+	end
 	function blankCallback(source,eventdata)
 	end
 	function frameCallbackChange(source,eventdata)
@@ -1015,7 +1097,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 				else
 					[sel, ok] = listdlg('ListString',{'Adjustable contrast GUI','Contrast input dialog'},'ListSize',[300 300]);
                     if ok==0; return; end
-					fixMultiplier = 1e5;
+					fixMultiplier = options.contrastFixMultiplierGUI;
 
 					if usrIdxChoice==1
 						thisFrameTmp = double(thisFrame);

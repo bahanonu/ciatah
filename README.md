@@ -13,7 +13,7 @@
 
 <hr>
 
-`CIAtah` (pronounced cheetah; formerly `calciumImagingAnalysis` [ciapkg]) is a software package for analyzing one- and two-photon calcium imaging datasets.
+`CIAtah` (pronounced cheetah; formerly <ins>c</ins>alcium<ins>I</ins>maging<ins>A</ins>nalysis [ciapkg]) is a software package for analyzing one- and two-photon calcium imaging datasets.
 
 <!-- <img src="https://user-images.githubusercontent.com/5241605/81605697-b9c7c800-9386-11ea-9e9f-569c743b24b9.png" width="42%" align="right" alt="calciumImagingAnalysis_logo"> -->
 <!-- https://user-images.githubusercontent.com/5241605/99430025-a2c9db80-28bd-11eb-8508-d1c63dea6fcf.png -->
@@ -43,7 +43,7 @@ Made in USA.<br>
 </p>
 <p align="center">
   <a href="https://user-images.githubusercontent.com/5241605/94530890-9c3db280-01f0-11eb-99f0-e977f5edb304.gif">
-    <img src="https://user-images.githubusercontent.com/5241605/94530890-9c3db280-01f0-11eb-99f0-e977f5edb304.gif" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="50%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
+    <img src="https://user-images.githubusercontent.com/5241605/94530890-9c3db280-01f0-11eb-99f0-e977f5edb304.gif" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="75%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
   </a>
 </p>
 
@@ -52,7 +52,7 @@ Made in USA.<br>
 </p>
 <p align="center">
   <a href="https://user-images.githubusercontent.com/5241605/100851700-64dec280-343a-11eb-974c-d6d29faf9eb2.gif">
-    <img src="https://user-images.githubusercontent.com/5241605/100851700-64dec280-343a-11eb-974c-d6d29faf9eb2.gif" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="50%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
+    <img src="https://user-images.githubusercontent.com/5241605/100851700-64dec280-343a-11eb-974c-d6d29faf9eb2.gif" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="75%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
   </a>
 </p>
 
@@ -163,17 +163,17 @@ Users can alternatively run setup as below.
 loadBatchFxns;
 
 % Loads the class into an object for use in this session
-obj = calciumImagingAnalysis;
+obj = ciatah;
 
 % Download and load dependent software packages into "_external_programs" folder.
 % Also download test data into "data" folder.
-% Normally only need to one once after first downloading calciumImagingAnalysis package.
+% Normally only need to one once after first downloading CIAtah package.
 obj.loadDependencies;
 
 % Add folders containing imaging data.
 obj.modelAddNewFolders;
 
-% [optional] Set the names calciumImagingAnalysis will look for in each folder
+% [optional] Set the names CIAtah will look for in each folder
 obj.setMovieInfo;
 
 % Open class menu to pick module to run.
@@ -184,9 +184,9 @@ obj.runPipeline; % then hit enter!
 
 ## Acknowledgments
 
-Thanks to Jones G. Parker, PhD (<https://parker-laboratory.com/>) for providing extensive user feedback during development of the `calciumImagingAnalysis` software package.
+Thanks to Jones G. Parker, PhD (<https://parker-laboratory.com/>) for providing extensive user feedback during development of the `CIAtah` software package.
 
-Additional thanks to Drs. Jesse Marshall, Jérôme Lecoq, Tony H. Kim, Hakan Inan, Lacey Kitch, Maggie Larkin, Elizabeth Otto Hamel, Laurie Burns, and Claudia Schmuckermair for providing feedback, specific functions, or helping develop aspects of the code used in the `calciumImagingAnalysis` software package.
+Additional thanks to Drs. Jesse Marshall, Jérôme Lecoq, Tony H. Kim, Hakan Inan, Lacey Kitch, Maggie Larkin, Elizabeth Otto Hamel, Laurie Burns, and Claudia Schmuckermair for providing feedback, specific functions, or helping develop aspects of the code used in the `CIAtah` software package.
 
 ## References
 

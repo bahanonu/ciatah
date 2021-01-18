@@ -21,14 +21,14 @@ __Download the software at [https://github.com/bahanonu/calciumImagingAnalysis](
 - Note: `CIAtah` is a class (`ciatah` or `calciumImagingAnalysis` within MATLAB) with various GUIs to allow processing of calcium imaging data. In addition, users can access the underlying `CIAtah` functions to make custom workflows. See [Custom command-line pipelines](api_example_pipeline.md).
 - Read my overview of calcium imaging analysis methods at [Calcium imaging cell identification and fluorescence activity trace reconstruction, part 1](https://bahanonu.com/brain/#c20181209).
 
-<img src="https://user-images.githubusercontent.com/5241605/94530890-9c3db280-01f0-11eb-99f0-e977f5edb304.gif" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="70%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
+<img src="https://user-images.githubusercontent.com/5241605/94530890-9c3db280-01f0-11eb-99f0-e977f5edb304.gif" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="75%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
 
 <p align="center">
   <strong>CIAtah sell sorting GUI</strong>
 </p>
 <p align="center">
   <a href="https://user-images.githubusercontent.com/5241605/100851700-64dec280-343a-11eb-974c-d6d29faf9eb2.gif">
-    <img src="https://user-images.githubusercontent.com/5241605/100851700-64dec280-343a-11eb-974c-d6d29faf9eb2.gif" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="50%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
+    <img src="https://user-images.githubusercontent.com/5241605/100851700-64dec280-343a-11eb-974c-d6d29faf9eb2.gif" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="75%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
   </a>
 </p>
 

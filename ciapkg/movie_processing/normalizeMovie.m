@@ -12,11 +12,12 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		% 2017.08.18 [09:02:42] changed medfilt2 to have symmetric padding from default zero padding.
 		% 2019.10.08 [09:14:33] - Add option for user to input crop coordinates in case they have a NaN or other border from motion correction, so that does not affect spatial filtering. User can also now input a char for inputMovie and have it load within the function to help reduce memory overhead
 		% 2019.10.29 [13:51:04] - Added support for parallel.pool.Constant when PCT auto-start parallel pool disabled.
+		% 2021.01.15 [21:09:55] - Moved detrend support into normalizeMovie
 	% TODO
 		%
 
 	%========================
-	% fft,bandpassDivisive,lowpassFFTDivisive,imfilterSmooth,imfilter,meanSubtraction,meanDivision,negativeRemoval
+	% fft,bandpassDivisive,lowpassFFTDivisive,imfilterSmooth,imfilter,meanSubtraction,meanDivision,negativeRemoval,detrend
 	options.normalizationType = 'meanDivision';
 	% for fft
 	options.secondaryNormalizationType = [];
@@ -66,6 +67,8 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 	options.waitbarOn = 1;
 	% Binary: 1 = yes, normalize Matlab FFT test movies
 	options.normalizeMatlabFftTestMovies = 0;
+	% Int: 1 = linear detrend, >1 = nth-degree polynomial detrend
+	option.detrendDegree = 1;
 	% ===
 	% Str: hierarchy name in hdf5 where movie data is located
 	options.inputDatasetName = '/1';
@@ -141,6 +144,8 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 			subfxnImfilterSmooth();
 		case 'imfilter'
 			subfxnImfilter();
+		case 'detrend'
+			subfxnDetrend();
 		case 'meanSubtraction'
 			disp('mean subtracting movie');
 			inputMean = nanmean(nanmean(inputMovie,1),2);
@@ -693,6 +698,44 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 			inputMovie = permute(cat(2,inputMovieDuplicate,inputImageTest,inputMovieDivide,inputMovieDfof),[2 1 3]);
 		else
 			inputMovie = permute(cat(2,inputMovieDuplicate,inputImageTest),[2 1 3]);
+		end
+	end
+	function subfxnDetrend()
+		% This will detrend (linear, polynomial, exponential decay, etc.) an input movie based on user input
+		manageParallelWorkers('parallel',options.parallel);
+		% ========================
+		%Get dimension information about 3D movie matrix
+		[inputMovieX, inputMovieY, inputMovieZ] = size(inputMovie);
+
+		frameMeanInputMovie = squeeze(mean(inputMovie,[1 2]));
+
+		trendVals = frameMeanInputMovie - detrend(frameMeanInputMovie,option.detrendDegree);
+
+		% meanInputMovie = detrend(frameMeanInputMovie,0);
+		meanInputMovie = mean(frameMeanInputMovie);
+
+		nFramesToNormalize = options.maxFrame;
+		nFrames = nFramesToNormalize;
+
+		% trendVals = [];
+
+		% if isempty(gcp)
+		% 	opts2.Value = ioptions;
+		% else
+		% 	opts2 = parallel.pool.Constant(ioptions);
+		% end
+
+		parfor frame = 1:nFramesToNormalize
+			thisFrame = inputMovie(:,:,frame);
+			thisFrame = squeeze(thisFrame);
+			thisFrame = thisFrame - trendVals(frame);
+			thisFrame = thisFrame + meanInputMovie;
+
+			inputMovie(:,:,frame) = thisFrame;
+
+			if ~verLessThan('matlab', '9.2')
+				send(D, frame); % Update
+			end
 		end
 	end
 	function subfxnMatlabDisk()

@@ -301,7 +301,7 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 				% if isequal(options.inputSettings.(property).val{1},tS.(property).val{1})
 				if isfield(options.inputSettings.(property),'modified')
 					nonDefaultProperties{end+1} = property;
-					tS.(property).val = {[options.inputSettings.(property).modified.val,tS.(property).val{1}]};
+					tS.(property).val = {[{options.inputSettings.(property).modified.val},tS.(property).val{1}]};
 					tS.(property).str = {[options.inputSettings.(property).modified.str,tS.(property).str{1}]};
 
 					% Ensure modification from default is passed onto future edits
