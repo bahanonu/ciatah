@@ -12,46 +12,56 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		% 2017.08.18 [09:02:42] changed medfilt2 to have symmetric padding from default zero padding.
 		% 2019.10.08 [09:14:33] - Add option for user to input crop coordinates in case they have a NaN or other border from motion correction, so that does not affect spatial filtering. User can also now input a char for inputMovie and have it load within the function to help reduce memory overhead
 		% 2019.10.29 [13:51:04] - Added support for parallel.pool.Constant when PCT auto-start parallel pool disabled.
-		% 2021.01.15 [21:09:55] - Moved detrend support into normalizeMovie
+		% 2021.01.15 [21:09:55] - Moved detrend support into normalizeMovie.
 	% TODO
 		%
 
 	%========================
-	% fft,bandpassDivisive,lowpassFFTDivisive,imfilterSmooth,imfilter,meanSubtraction,meanDivision,negativeRemoval,detrend
+	% Str: Use one of the below inputs depending on the normalization or filtering required.
+		% fft - Fast Fourier Transform on each frame, either high-, low-, or band-pass. See below options.
+		% bandpassDivisive - Divide each frame by a bandpass version of the movie.
+		% lowpassFFTDivisive - Divide each frame by a lowpass version of the movie.
+		% imfilterSmooth - Spatially smooth each frame using imfilter.
+		% imfilter - Divide each frame by a imfilter smoothed version.
+		% meanSubtraction - Subtract each frame by its own mean, e.g. detrend on a per frame basis.
+		% meanDivision - Divide each frame by its own mean.
+		% negativeRemoval - Flip all negative values to positive, e.g. abs() entire movie.
+		% detrend - Detrend the entire movie
 	options.normalizationType = 'meanDivision';
-	% for fft
+	% Str: for fft.
 	options.secondaryNormalizationType = [];
-	% maximum frame to normalize
+	% Int: maximum frame to normalize.
 	options.maxFrame = size(inputMovie,3);
-	% use parallel registration (using matlab pool)
+	% Binary: 1 = use parallel registration (using matlab pool).
 	options.parallel = 1;
 	% ===
 	% options for fft
-	% for bandpass, low freq to pass
+	% Int: for bandpass, low freq to pass
 	options.freqLow = 10;
-	% for bandpass, high freq to pass
+	% Int: for bandpass, high freq to pass
 	options.freqHigh = 50;
-	% imageJ normalization options
+	% Int: imageJ normalization options
 	options.imagejFFTLarge = 10000;
 	options.imagejFFTSmall = 80;
-	% highpass, lowpass, bandpass
+	% Str: highpass, lowpass, bandpass
 	options.bandpassType = 'highpass';
-	% binary or gaussian
+	% Str: binary or gaussian
 	options.bandpassMask = 'gaussian';
-	% show the frequency spectrum and images
-	% 0 = no, 1 = yes
+	% Binary: show the frequency spectrum and images? 0 = no, 1 = yes
 	options.showImages = 0;
 	% ===
-	% fspecial, 'disk' or 'gaussian' option
+	% IMFILTER options
+	% Str: fspecial, 'disk' or 'gaussian' option
 	option.imfilterType = 'disk';
-	% how to deal with boundaries, see http://www.mathworks.com/help/images/ref/imfilter.html
+	% Str: how to deal with boundaries, see http://www.mathworks.com/help/images/ref/imfilter.html
 	options.boundaryType = 'circular';
-	% 'disk' option: pixel radius to blur
+	% Int: 'disk' option: pixel radius to blur
 	options.blurRadius = 35;
-	% 'gaussian' option
+	% Int: 'gaussian' option
 	options.sizeBlur = 80;
 	options.sigmaBlur = 3;
-	% whether to show the divided and dfof in Matlab FFT testing
+	% ===
+	% Binary: 1 = whether to show the divided and dfof in Matlab FFT testing
 	options.testDuplicateDfof = 1;
 	% size of neighborhood to use for median filter
 	options.medianFilterNeighborhoodSize = 6;

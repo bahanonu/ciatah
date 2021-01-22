@@ -6,6 +6,7 @@ function [success] = downloadGithubRepositories(varargin)
 		% 2020.04.03 [11:15:32] - Allow inputs to use getOptions. Also allow force updating of git repository.
 		% 2020.04.03 [14:02:33] - Save downloaded compressed files (e.g. zips) to a sub-folder.
 		% 2020.06.28 [13:08:16] - Final implementation of force update, to bring to most current version of all git directories.
+		% 2021.01.22 [13:18:25] - Update to allow regexp backup to find name of downloaded Github repo folder after unzipping, e.g. in cases where a release or non-master branch is downloaded. - IGNORE
 
 	%========================
 	% 1 = force update of the git repository, 0 = skip if already downloaded

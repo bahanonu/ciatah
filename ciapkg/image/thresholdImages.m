@@ -122,6 +122,7 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
 
 	replaceVal = 0;
 	% startState = ticBytes(gcp);
+	% for imageNo=1:nImages
 	parfor(imageNo=1:nImages,nWorkers)
 		% thisFilt = squeeze(inputImages{imageNo});
 		thisFilt = inputImages(:,:,imageNo);

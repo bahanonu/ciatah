@@ -9,7 +9,8 @@ function obj = loadDependencies(obj,varargin)
 
 	% changelog
 		% 2020.05.12 [17:40:37] - Updated to enable GUI-less loading of dependencies. In particular for easier unit testing.
-		% 2020.06.28 [14:25:04] - Added ability for users to force update
+		% 2020.06.28 [14:25:04] - Added ability for users to force update.
+		% 2021.01.22 [13:42:36] - NWB from specific release to reduce compatibility errors.
 	% TODO
 		% Verify all dependencies download and if not ask user to download again.
 
@@ -84,31 +85,19 @@ function obj = loadDependencies(obj,varargin)
 				optionsH.forceUpdate = forceUpdate;
 				optionsH.signalExtractionDir = obj.externalProgramsDir;
 				optionsH.gitNameDisp = {'nwb_schnitzer_lab','yamlmatlab','matnwb'};
-				optionsH.gitRepos = {'https://github.com/schnitzer-lab/nwb_schnitzer_lab','https://github.com/ewiger/yamlmatlab','https://github.com/NeurodataWithoutBorders/matnwb'};
+				optionsH.gitRepos = {'https://github.com/schnitzer-lab/nwb_schnitzer_lab','https://github.com/ewiger/yamlmatlab'};
+
+				% 'https://github.com/NeurodataWithoutBorders/matnwb'
 				optionsH.gitRepos = cellfun(@(x) [x '/archive/master.zip'],optionsH.gitRepos,'UniformOutput',false);
+				optionsH.gitRepos = [optionsH.gitRepos 'https://github.com/NeurodataWithoutBorders/matnwb/archive/v2.2.5.3.zip'];
 				optionsH.outputDir = optionsH.gitNameDisp;
 				optionsH.gitName = cellfun(@(x) [x '-master'],optionsH.gitNameDisp,'UniformOutput',false);
+				optionsH.gitName{end} = 'matnwb-2.2.5.3';
 				[success] = downloadGithubRepositories('options',optionsH);
 
-				% Load NWB Schema as needed
-				if exist('types.core.Image')==0
-					try
-						disp('Generating matnwb types core files with "generateCore.m"')
-						origPath = pwd;
-						mat2nwbPath = [obj.defaultObjDir filesep obj.externalProgramsDir filesep 'matnwb'];
-						disp(['cd ' mat2nwbPath])
-						cd(mat2nwbPath);
-						generateCore;
-						disp(['cd ' origPath])
-						cd(origPath);
-					catch
-						cd(obj.defaultObjDir);
-					end
-				else
-					disp('NWB Schema types already loaded!')
-				end
 				% Add NWB folders to path.
-				obj.loadBatchFunctionFolders;
+				ciapkg.nwb.setupNwb;
+				% obj.loadBatchFunctionFolders;
 			otherwise
 				% nothing
 		end

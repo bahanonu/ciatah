@@ -63,8 +63,9 @@ function [success] = viewLineFilledError(inputMean,inputStd,varargin)
 		y = y(~nanIdx);
 		dy = dy(~nanIdx);
 		h = fill([x(:);flipud(x(:))],[y(:)-dy(:);flipud(y(:)+dy(:))],colorMatrixError(randColor,:),'linestyle','none');
-		set(h,'facealpha',options.errorAlpha)
-		lh = line(x,y,'Color',[colorMatrix(randColor,:) options.lineAlpha]/1.5,'LineWidth',options.linewidth);
+		set(h,'FaceAlpha',options.errorAlpha)
+		lh = line(x,y,'Color',[colorMatrix(randColor,:) options.lineAlpha],'LineWidth',options.linewidth);
+        uistack(h,'bottom');
 		% lh.Color
 		success = 1;
 	catch err
