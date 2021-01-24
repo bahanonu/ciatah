@@ -8,6 +8,7 @@
 	% 2020.09.15 [19:54:14] - Use ciapkg.getDir() to make sure demo always calls correct path regardless of where user is pointing. Also make playMovie calls have titles to make clearer to new users and allow a GUI-less option.
 	% 2020.09.23 [08:35:58] - Updated to add support for cross-session analysis and use ciapkg.demo.runPreprocessing() to process the other imaging sessions.
 	% 2020.10.17 [19:30:01] - Update to use ciapkg.signal_extraction.runPcaIca for PCA-ICA to make easier for users to run in the future.
+	% 2021.01.17 [21:38:55] - Updated to show detrend example
 
 %% Initialize
 guiEnabled = 1;
@@ -49,6 +50,9 @@ if guiEnabled==1
 	% Run on the entire movie
 	inputMovie = removeStripsFromMovie(inputMovie,'options',sopts);
 end
+
+%% Detrend movie if needed (default linear trend), e.g. to compensate for bleaching
+inputMovie = normalizeMovie(inputMovie,'normalizationType','detrend','detrendDegree',1);
 
 %% USER INTERFACE Get coordinates to crop from the user separately
 if guiEnabled==1

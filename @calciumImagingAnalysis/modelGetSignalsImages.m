@@ -103,7 +103,7 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 					fprintf('Search: %s\n',obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod))
 					options.regexPairs = {{obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod)}};
 			end
-	end
+    end
 
 	regexPairs = options.regexPairs;
 

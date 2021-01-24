@@ -1,5 +1,5 @@
 function [versionStr, dateTimeStr] = version(varargin)
-	% Get version for calciumImagingAnalysis
+	% Get version for CIAtah.
 	% Biafra Ahanonu
 	% started: 2020.06.06 [23:36:36]
 	% inputs
@@ -8,7 +8,9 @@ function [versionStr, dateTimeStr] = version(varargin)
 		%
 
 	% changelog
-		%
+		% 2021.01.18 [13:23:24] - Updated so reads CIAtah version directly from VERSION file instead of having the version information in two places (which increases probability of mismatch).
+		% 2021.01.21 [10:36:30] - Changed to use readtable instead of readcell to increase compatability across MATLAB versions.
+		% 2021.01.21 [17:03:54] - Added fscanf backup to readtable in case of Matlab compatibility issues, also specified more readtable defaults to avoid errors (Matlab 202a+ changed default behavior). Added last step backup of zero version.
 	% TODO
 		%
 
@@ -26,11 +28,30 @@ function [versionStr, dateTimeStr] = version(varargin)
 	%========================
 
 	try
-		versionStr = 'v3.21.4';
-		dateTimeStr = '20201218011005';
-	catch err
-		disp(repmat('@',1,7))
-		disp(getReport(err,'extended','hyperlinks','on'));
-		disp(repmat('@',1,7))
+		verPath = [ciapkg.getDir filesep 'ciapkg' filesep 'VERSION'];
+
+		% verStr = readcell(verPath,'FileType','text');
+		% versionStr = verStr{1};
+		% dateTimeStr = num2str(verStr{2});
+
+		verStr = readtable([ciapkg.getDir filesep 'ciapkg' filesep 'VERSION'],'ReadVariableNames',0,'FileType','text','Format','auto','TextType','string')
+		versionStr = verStr{1,1}{1};
+		dateTimeStr = num2str(verStr{2,1}{1});
+	catch
+		try
+			% disp('readtable issues, trying backup')
+			fileID = fopen(verPath,'r');
+			verStr = fscanf(fileID,'%c')
+			fclose(fileID);
+			verStr = strsplit(verStr,'\n');
+			versionStr = strrep(verStr{1},'\n','');
+			dateTimeStr = verStr{2};
+		catch err
+			versionStr = 'v0.00.0'
+			dateTimeStr = '00000000000000';
+			disp(repmat('@',1,7))
+			disp(getReport(err,'extended','hyperlinks','on'));
+			disp(repmat('@',1,7))
+		end
 	end
 end

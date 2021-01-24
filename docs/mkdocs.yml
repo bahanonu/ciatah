@@ -50,6 +50,7 @@ nav:
     - Analysis methods: help_analysis_methods.md
     - Inscopix: help_inscopix.md
     - Large movie analysis: help_large_movie_analysis.md
+    - Movie display and noise: help_contrast.md
     - Cross-session alignemnt: help_cross_session_alignment.md
     - Manual cell sorting: help_manual_cell_sorting.md
     - Improving signal-to-noise: help_snr.md

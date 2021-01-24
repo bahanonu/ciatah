@@ -1,4 +1,5 @@
-# `CIAtah` (calciumImagingAnalysis [ciapkg])
+# `CIAtah`
+<!-- # `CIAtah` (calciumImagingAnalysis [ciapkg]) -->
 ![GitHub top language](https://img.shields.io/github/languages/top/bahanonu/calciumImagingAnalysis?style=flat-square&logo=appveyor)
 ![GitHub license](https://img.shields.io/github/license/bahanonu/calciumImagingAnalysis?style=flat-square&logo=appveyor)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/bahanonu/calciumImagingAnalysis?style=flat-square&logo=appveyor)](https://github.com/bahanonu/calciumImagingAnalysis/releases/latest?style=flat-square&logo=appveyor)
@@ -13,7 +14,7 @@
 
 <hr>
 
-`CIAtah` (pronounced cheetah; formerly `calciumImagingAnalysis` [ciapkg]) is a software package for analyzing one- and two-photon calcium imaging datasets.
+`CIAtah` (pronounced cheetah; formerly <ins>c</ins>alcium<ins>I</ins>maging<ins>A</ins>nalysis [ciapkg]) is a software package for analyzing one- and two-photon calcium imaging datasets.
 
 <!-- <img src="https://user-images.githubusercontent.com/5241605/81605697-b9c7c800-9386-11ea-9e9f-569c743b24b9.png" width="42%" align="right" alt="calciumImagingAnalysis_logo"> -->
 <!-- https://user-images.githubusercontent.com/5241605/99430025-a2c9db80-28bd-11eb-8508-d1c63dea6fcf.png -->
@@ -25,9 +26,9 @@
 
 `CIAtah` features:
 - A GUI with different modules to allow users to do large-scale batch analysis, accessed via the repository's `ciatah` class.
-- The underlying functions can be used to create GUI-less, command line-ready analysis pipelines. Functions located in `ciapkg` and `+ciapkg` sub-folders.
+- The `ciatah` functions can be used to create GUI-less, command line-ready analysis pipelines. Functions are located in `ciapkg` and `+ciapkg` sub-folders.
 - Includes all major calcium imaging analysis steps: movie visualization (including reading from disk), pre-processing (motion correction, spatiotemporal downsampling, spatial filtering, relative fluorescence calculation, etc.), support for multiple cell-extraction methods (CELLMax, PCA-ICA, CNMF, CNMF-E, EXTRACT, etc.), manual classification via GUIs, automated cell classification (coming soon!), cross-session cell alignment, and more.
-- Has several example one- and two-photon calcium imaging datasets that it will automatically download to help users test out the package.
+- Has several example one- and two-photon calcium imaging datasets that `ciatah` can automatically download to help users test out the package.
 - Includes code for determining animal position (e.g. in open-field assay).
 - Supports [Neurodata Without Borders](https://www.nwb.org/) data standard (see [calcium imaging tutorial](https://neurodatawithoutborders.github.io/matnwb/tutorials/html/ophys.html)) for reading/writing cell-extraction (e.g. outputs of PCA-ICA, CELLMax, CNMF, CNMF-E, etc.). Supports reading and writing NWB movie files with continued integration planned.
 - Requires `MATLAB`.
@@ -38,27 +39,10 @@ Contact: __Biafra Ahanonu, PhD (bahanonu [at] alum [dot] mit [dot] edu)__.
 Made in USA.<br>
 <img src="https://user-images.githubusercontent.com/5241605/71493809-322a5400-27ff-11ea-9b2d-52ff20b5f332.png" align="center" title="USA" alt="USA" width="auto" height="50">
 
-<p align="center">
-  <strong>Movie processing, cell extraction, and analysis validation.</strong>
-</p>
-<p align="center">
-  <a href="https://user-images.githubusercontent.com/5241605/94530890-9c3db280-01f0-11eb-99f0-e977f5edb304.gif">
-    <img src="https://user-images.githubusercontent.com/5241605/94530890-9c3db280-01f0-11eb-99f0-e977f5edb304.gif" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="50%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
-  </a>
-</p>
-
-<p align="center">
-  <strong>CIAtah cell sorting GUI</strong>
-</p>
-<p align="center">
-  <a href="https://user-images.githubusercontent.com/5241605/100851700-64dec280-343a-11eb-974c-d6d29faf9eb2.gif">
-    <img src="https://user-images.githubusercontent.com/5241605/100851700-64dec280-343a-11eb-974c-d6d29faf9eb2.gif" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="50%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
-  </a>
-</p>
-
 ***
 ## Contents
 
+- [CIAtah example features](#ciatah-example-features)
 - [Quick start guide](#quick-start-guide)
 - [Quick start (command-line)](#quick-start-command-line)
 - [`CIAtah` main GUI notes](#ciatah-main-gui-notes)
@@ -66,6 +50,42 @@ Made in USA.<br>
 - [References](#references)
 - [Questions](#questions)
 - [License](#license)
+
+## CIAtah example features
+
+<p align="center">
+  <strong>Support for entire calcium imaging pipeline.</strong>
+</p>
+
+![ciapkg_pipeline](https://user-images.githubusercontent.com/5241605/105438231-6c8b3e00-5c17-11eb-8dd0-8510fa204fa2.png)
+
+<p align="center">
+  <strong>Movie processing, cell extraction, and analysis validation.</strong>
+</p>
+<p align="center">
+  <a href="https://user-images.githubusercontent.com/5241605/94530890-9c3db280-01f0-11eb-99f0-e977f5edb304.gif">
+    <img src="https://user-images.githubusercontent.com/5241605/94530890-9c3db280-01f0-11eb-99f0-e977f5edb304.gif" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="75%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
+  </a>
+</p>
+
+<p align="center">
+  <strong>Cell sorting GUI.</strong>
+</p>
+<p align="center">
+  <a href="https://user-images.githubusercontent.com/5241605/100851700-64dec280-343a-11eb-974c-d6d29faf9eb2.gif">
+    <img src="https://user-images.githubusercontent.com/5241605/100851700-64dec280-343a-11eb-974c-d6d29faf9eb2.gif" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="75%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
+  </a>
+</p>
+
+<p align="center">
+  <strong>Stable cell alignment across imaging sessions.</strong>
+</p>
+<p align="center">
+  <a href="https://user-images.githubusercontent.com/5241605/105437652-4ca74a80-5c16-11eb-893a-87ea6d53e964.gif">
+    <img src="https://user-images.githubusercontent.com/5241605/105437652-4ca74a80-5c16-11eb-893a-87ea6d53e964.gif" align="center" title="m121_matchedCells" alt="m121_matchedCells" width="30%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
+  </a>
+</p>
+
 
 ***
 
@@ -115,7 +135,13 @@ Users can quickly visualize movies in any of the supported formats (HDF5, AVI, T
 playMovie('ABSOLUTE\PATH\TO\MOVIE');
 ```
 
-## Quick start (command line)
+When using HDF5 files, check the dataset name containing movie with `h5disp` then input the full dataset name (e.g. below is for a standard NWB-formatted HDF5 file):
+```MATLAB
+playMovie('ABSOLUTE\PATH\TO\MOVIE','inputDatasetName','/acquisition/TwoPhotonSeries/data');
+```
+
+
+## Quick start (command line or GUI-less batch analysis)
 
 After downloading `CIAtah` and running the setup as above, users interested in command-line processing can open up the example M-file by running the below command. By running individual code-block cells, users are guided from pre-processing through cell-extraction to cross-session analysis.
 ```MATLAB
@@ -163,17 +189,17 @@ Users can alternatively run setup as below.
 loadBatchFxns;
 
 % Loads the class into an object for use in this session
-obj = calciumImagingAnalysis;
+obj = ciatah;
 
 % Download and load dependent software packages into "_external_programs" folder.
 % Also download test data into "data" folder.
-% Normally only need to one once after first downloading calciumImagingAnalysis package.
+% Normally only need to one once after first downloading CIAtah package.
 obj.loadDependencies;
 
 % Add folders containing imaging data.
 obj.modelAddNewFolders;
 
-% [optional] Set the names calciumImagingAnalysis will look for in each folder
+% [optional] Set the names CIAtah will look for in each folder
 obj.setMovieInfo;
 
 % Open class menu to pick module to run.
@@ -184,9 +210,9 @@ obj.runPipeline; % then hit enter!
 
 ## Acknowledgments
 
-Thanks to Jones G. Parker, PhD (<https://parker-laboratory.com/>) for providing extensive user feedback during development of the `calciumImagingAnalysis` software package.
+Thanks to Jones G. Parker, PhD (<https://parker-laboratory.com/>) for providing extensive user feedback during the development of the `CIAtah` software package.
 
-Additional thanks to Drs. Jesse Marshall, Jérôme Lecoq, Tony H. Kim, Hakan Inan, Lacey Kitch, Maggie Larkin, Elizabeth Otto Hamel, Laurie Burns, and Claudia Schmuckermair for providing feedback, specific functions, or helping develop aspects of the code used in the `calciumImagingAnalysis` software package.
+Additional thanks to Drs. Jesse Marshall, Jérôme Lecoq, Tony H. Kim, Hakan Inan, Lacey Kitch, Maggie Larkin, Elizabeth Otto Hamel, Laurie Burns, and Claudia Schmuckermair for providing feedback, specific functions, or helping develop aspects of the code used in `CIAtah`.
 
 ## References
 

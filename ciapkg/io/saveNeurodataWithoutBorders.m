@@ -19,7 +19,7 @@ function [success] = saveNeurodataWithoutBorders(image_masks,roi_response_data,a
 
 	%========================
 	% DESCRIPTION
-	options.fpathYML = ['_external_programs' filesep 'nwb_schnitzer_lab' filesep 'ExampleMetadata.yml'];
+	options.fpathYML = [ciapkg.getDir filesep '_external_programs' filesep 'nwb_schnitzer_lab' filesep 'ExampleMetadata.yml'];
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)

@@ -41,7 +41,6 @@ function [onlineVersion] = versionOnline(varargin)
 				return;
 			end
 		end
-		
 		success = 1;
 	catch err
 		onlineVersion = '';
