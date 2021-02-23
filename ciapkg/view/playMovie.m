@@ -1,5 +1,5 @@
 function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
-	% Plays a 3D matrix as a movie, additional inputs to view multiple movies or sync'd signal data; can also save the resulting figure as a movie.
+	% Plays a movie that is either a 3D xyt matrix or path to file. Additional inputs to view multiple movies or sync'd signal data and can also save the resulting figure as a movie.
 	% Biafra Ahanonu
 	% started 2013.11.09 [10:39:50]
 	%
@@ -28,6 +28,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		% 2020.10.19 [12:51:00] - Switch read from disk support to using ciapkg.io.readFrame so that playMovie uses the new standard interface for fast reading from disk.
 		% 2021.01.14 [20:12:10] - Update passing of HDF5 dataset name to ciapkg.io.readFrame.
 		% 2021.01.17 [19:21:12] - Integrated contrast sliders directly into the main GUI so users don't have to open up a separate GUI. Make GUI sliders thinner.
+		% 2021.02.05 [16:25:12] - Added feature to sub-sample movie to make display run faster for larger movies.
 
 	% ========================
 	% options
@@ -39,6 +40,8 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		% To get around issues with Matlab drawing too fast to detect key strokes, set to 60 or below.
 	options.fpsMax = 80;
 	options.fpsMin = 1/10;
+	% Int: By what amount to sub-sample the frames in spatial dimensions. 1 = no sub-sampling. >1 = sub-sampling enabled.
+	options.subSampleMovie = 1;
 	% Matrix: [X Y Z], additional movie to show. X,Y height/width and Z frames.
 	options.extraMovie = [];
 	% 2D matrix: [signals frames] signals related to inputMovie.
@@ -126,6 +129,11 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		[movieType, supported, movieTypeSpecific] = ciapkg.io.getMovieFileType(inputMovie);
 		if ~isempty(options.extraMovie)
 			[movieTypeExtra, supported, movieTypeSpecificExtra] = ciapkg.io.getMovieFileType(options.extraMovie);
+		end
+
+		% If NWB, change dataset name to NWB default
+		if strcmp(movieTypeSpecific,'nwb')
+			options.inputDatasetName = options.defaultNwbDatasetName{1};
 		end
 
 		if supported==0
@@ -271,7 +279,8 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		axis equal tight
 	end
 
-	xAxisHandle = xlabel(['frame: 1/' num2str(nFrames) '    fps: ' num2str(options.fps)]);
+	xAxisHandle = xlabel(sprintf('frame: 1/%d | fps: %d | sub-sample: %d.',nFrames,options.fps,options.subSampleMovie));
+
 
 	if colorbarsOn==1
 		set(gcf,'SizeChangedFcn',@(hObject,event) resizeui(hObject,event,axHandle,colorbarsOn));
@@ -510,7 +519,12 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 			end
 
 			montageHandle = findobj(axHandle,'Type','image');
-			set(montageHandle,'Cdata',thisFrame,'AlphaData',imAlpha);
+			if options.subSampleMovie>1
+				ssm = options.subSampleMovie;
+				set(montageHandle,'Cdata',thisFrame(1:ssm:end,1:ssm:end),'AlphaData',imAlpha(1:ssm:end,1:ssm:end));
+			else
+				set(montageHandle,'Cdata',thisFrame,'AlphaData',imAlpha);
+			end
 			if strcmp(options.colormapColor,'gray')
 				set(axHandle,'color',[1 0 0]);
 			else
@@ -545,11 +559,12 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 				if pauseLoop==1
 					pauseLoopStr = 'Paused! ';
 				end
+				% sprintf('frame: 1/%d | fps: %d | sub-sample: %d.',nFrames,options.fps,options.subSampleMovie);
 				if isempty(options.frameList)
-					tmpStrH = sprintf('%sframe: %d/%d fps: %d %s',pauseLoopStr,frame,nFrames,options.fps,movieDimStr);
+					tmpStrH = sprintf('%sframe: %d/%d | fps: %d | sub-sample: %d | %s',pauseLoopStr,frame,nFrames,options.fps,options.subSampleMovie,movieDimStr);
 					set(xAxisHandle,'String',tmpStrH);
 				else
-					tmpStrH = sprintf('%sframe: %d/%d (%d/%d) fps: %d %d',pauseLoopStr,frame,nFrames,options.frameList(frame),nFramesOriginal,options.fps,movieDimStr);
+					tmpStrH = sprintf('%sframe: %d/%d (%d/%d) | fps: %d %d | sub-sample: %d | %s',pauseLoopStr,frame,nFrames,options.frameList(frame),nFramesOriginal,options.fps,options.subSampleMovie,movieDimStr);
 					set(xAxisHandle,'String',tmpStrH);
 				end
 			catch
@@ -996,6 +1011,12 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		end
 
 		switch double(keyIn)
+			case 50 % increase sub-sample
+				options.subSampleMovie = options.subSampleMovie + 1;
+			case 49 % decrease sub-sample
+				if options.subSampleMovie>1
+					options.subSampleMovie = options.subSampleMovie-1;
+				end
 			case 105
 				subfxn_imageJ(inputMovie)
 			case 119 %'w' %set frame rate
@@ -1365,6 +1386,8 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		{'left arrow','','-1 frame'},...
 		sepMenuLins,...
 		{'Note','','Click below LETTER commands to run or use the keyboard shortcut in main UI.'},...
+		{'1','1','Decrease sub-sample'},...
+		{'2','2','Increase sub-sample'},...
 		{'E','e','exit'},...
 		{'Q','q','exit all'},...
 		{'G','g','goto frame'},...
@@ -1399,10 +1422,9 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		supTitleStr = ['\texttt{',sepVar,...
 			'\underline{Mouse scroll wheel}: Forward/back frame',titleSep,...
 			'\underline{Mouse middle-click}: pause/play movie',sepVar,...
-			'\underline{+}:speed',titleSep,...
-			'\underline{-}:slow',titleSep,...
-			'\underline{right arrow}:+1 frame',titleSep,...
-			'\underline{left arrow}:-1 frame',sepVar,...
+			'\underline{+/-}:Increase/decrease fps',titleSep,...
+			'\underline{Right/left arrows}:+1 or -1 frame',sepVar,...
+			'\underline{1/2}: Decrease/Increase movie sub-sample',titleSep,...
 			'\underline{E}: Exit}',...
 			options.extraTitleText,...
 			''];

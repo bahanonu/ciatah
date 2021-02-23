@@ -7,12 +7,13 @@ function [success] = downloadGithubRepositories(varargin)
 		% 2020.04.03 [14:02:33] - Save downloaded compressed files (e.g. zips) to a sub-folder.
 		% 2020.06.28 [13:08:16] - Final implementation of force update, to bring to most current version of all git directories.
 		% 2021.01.22 [13:18:25] - Update to allow regexp backup to find name of downloaded Github repo folder after unzipping, e.g. in cases where a release or non-master branch is downloaded. - IGNORE
+		% 2021.02.01 [‏‎15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
 
 	%========================
 	% 1 = force update of the git repository, 0 = skip if already downloaded
 	options.forceUpdate = 0;
 	% Str: directory of external download path.
-	options.signalExtractionDir = '_external_programs';
+	options.signalExtractionDir = ciapkg.getDirExternalPrograms();
 	options.gitNameDisp = {'NoRMCorre'};
 	options.gitRepos = {'https://github.com/flatironinstitute/NoRMCorre/archive/master.zip'};
 	options.outputDir = {'normcorre'};

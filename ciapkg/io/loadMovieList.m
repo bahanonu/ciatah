@@ -49,6 +49,8 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 		% 2020.08.30 [10:16:08] - Change warning message output for HDF5 file of certain type.
 		% 2020.08.31 [15:47:49] - Add option to suppress warnings.
 		% 2020.10.19 [12:11:14] - Improved comments and options descriptions.
+		% 2021.02.15 [11:55:36] - Fixed loading HDF5 datasetname that has only a single frame, loadMovieList would ask for 3rd dimension information that did not exist.
+
 	% TODO
 		% OPEN
 			% Determine file type by properties of file instead of extension (don't trust input...)
@@ -255,16 +257,30 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 				hReadInfo.Dims = datasetDims;
 				dims.x(iMovie) = hReadInfo.Dims(1);
 				dims.y(iMovie) = hReadInfo.Dims(2);
-				dims.z(iMovie) = hReadInfo.Dims(3);
 				dims.one(iMovie) = hReadInfo.Dims(1);
 				dims.two(iMovie) = hReadInfo.Dims(2);
-				dims.three(iMovie) = hReadInfo.Dims(3);
-
-				if ischar(options.inputDatasetName)
-					tmpFrame = readHDF5Subset(thisMoviePath,[0 0 1],[dims.x(iMovie) dims.y(iMovie) 1],'datasetName',options.inputDatasetName,'displayInfo',options.displayInfo);
+				% Check 3rd dimension exists
+				if length(hReadInfo.Dims)>=3
+					dims.z(iMovie) = hReadInfo.Dims(3);
+					dims.three(iMovie) = hReadInfo.Dims(3);
 				else
-					tmpFrame = readHDF5Subset(thisMoviePath,[0 0 1],[dims.x(iMovie) dims.y(iMovie) 1],'datasetName',thisDatasetName,'displayInfo',options.displayInfo);
+					dims.z(iMovie) = 0;
+					dims.three(iMovie) = 0;
 				end
+
+				if dims.z(iMovie)
+					offsetTmp = [0 0 1];
+					blockTmp = [dims.x(iMovie) dims.y(iMovie) 1];
+				else
+					offsetTmp = [0 0];
+					blockTmp = [dims.x(iMovie) dims.y(iMovie)];
+				end
+				if ischar(options.inputDatasetName)
+					tmpDataset = options.inputDatasetName;
+				else
+					tmpDataset = thisDatasetName;
+				end
+				tmpFrame = readHDF5Subset(thisMoviePath,offsetTmp,blockTmp,'datasetName',tmpDataset,'displayInfo',options.displayInfo);
 			case 'avi'
 				xyloObj = VideoReader(thisMoviePath);
 				dims.x(iMovie) = xyloObj.Height;
@@ -674,7 +690,11 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 		end
 		if exist('tmpMovie','var')
 			if iMovie==1
-				outputMovie(1:dims.x(iMovie),1:dims.y(iMovie),1:dims.z(iMovie)) = tmpMovie;
+				if dims.z(iMovie)==0
+					outputMovie(1:dims.x(iMovie),1:dims.y(iMovie),1) = tmpMovie;
+				else
+					outputMovie(1:dims.x(iMovie),1:dims.y(iMovie),1:dims.z(iMovie)) = tmpMovie;				
+				end
 				% outputMovie(:,:,:) = tmpMovie;
 			else
 				% assume 3D movies with [x y frames] as dimensions

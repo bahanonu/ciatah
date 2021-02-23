@@ -1,5 +1,5 @@
 function [outputData] = computeSaleaeOutput(matfile,varargin)
-	% Processes Saleae output files.
+	% Processes Saleae output files. This is for data collected with Saleae Logic 1.x software, NOT 2.x.
 	% Biafra Ahanonu
 	% started: 2014.01.03 [19:13:01]
 	% inputs

@@ -19,6 +19,7 @@ function [dataSubset fid] = readHDF5Subset(inputFilePath, offset, block, varargi
 		% 2019.02.13 [17:57:55] - Improved duplicate frame support, finds differences in frames, loads all unique as a single slab, then loads remaining and re-organizes to be in correct order.
 		% 2019.05.03 [15:42:08] - Additional 4D support in cases where a 3D offset/block request is made.
 		% 2019.10.10 [12:52:54] - Add correction for frame order. Select hyperslab in HDF5 makes blocks in sorted order, so after reading the explicit offset ordering is not the original unsorted order.
+		% 2021.02.15 [12:02:36] - Updated support for files with datasets that contain 2D matrices.
 	% TODO
 		% DONE: Make support for duplicate frames more robust so minimize the number of file reads.
 
@@ -81,7 +82,9 @@ function [dataSubset fid] = readHDF5Subset(inputFilePath, offset, block, varargi
 	dset_id = H5D.open(fid,options.datasetName);
 	dims = fliplr(block{1});%[xDim yDim 1]
 	tmpVar = sum(cat(1,block{:}),1);
-	if length(block{1})==3
+	if length(block{1})==2
+		% Do nothing.
+	elseif length(block{1})==3
 		dims(1) = tmpVar(3);
 	elseif length(block{1})==4
 		dims(1) = tmpVar(4);

@@ -20,7 +20,7 @@ function [success] = updatePkg(varargin)
 		'ciapkg',...
 		'docs',...
 		'file_exchange'};
-	% Char: GitHub API URL to VERSION file on CIAPKG repository.
+	% [IGNORE] Char: GitHub API URL to VERSION file on CIAPKG repository.
 	options.versionURL = 'https://api.github.com/repos/bahanonu/calciumImagingAnalysis/contents/ciapkg/VERSION';
 	% Binary: 1 = pop-up GUI enabled
 	options.showGui = 1;
@@ -50,9 +50,9 @@ function [success] = updatePkg(varargin)
 		if verCompare==1
 			verInfoStr = 'Running most up-to-date version!';
 		elseif verCompare<1
-			verInfoStr = 'Running behind! Initiating update.';
+			verInfoStr = 'Running behind! Initiating update [IGNORE for now].';
 		elseif verCompare>1
-			verInfoStr = 'I do not know how, but you are running ahead! [Dev build]';
+			verInfoStr = 'I do not know how, but you are running a version ahead! [Dev build]';
 		end
 
 		disp(verInfoStr)

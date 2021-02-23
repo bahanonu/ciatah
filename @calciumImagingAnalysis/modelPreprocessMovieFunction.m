@@ -30,6 +30,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% 2020.07.07 [00:32:59] - Further upgraded adding json to HDF5 directly for later reading out to get settings.
 		% 2020.09.22 [00:11:03] - Updated to add NWB support.
 		% 2020.10.24 [18:30:56] - Added support for calculating dropped frames if entire frame of a movie is a set value. Changed order so that dropped frames calculated before dF/F.
+		% 2021.02.15 [12:06:59] - _inputMovieF0 now saved to processing subfolder.
 	% TODO
 		% Insert NaNs or mean of the movie into dropped frame location, see line 260
 		% Allow easy switching between analyzing all files in a folder together and each file in a folder individually
@@ -545,7 +546,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			currentDateTimeStr = datestr(now,'yyyymmdd_HHMMSS','local');
 			mkdir([thisDir filesep 'processing_info'])
 			thisProcessingDir = [thisDir filesep 'processing_info'];
-			diarySaveStr = [thisDir filesep 'processing_info' filesep currentDateTimeStr '_preprocess.log'];
+			thisProcessingDirFileStr = [thisProcessingDir filesep currentDateTimeStr];
+			diarySaveStr = [thisProcessingDirFileStr '_preprocess.log'];
 			diary(diarySaveStr);
 
 			display([num2str(fileNum) '/' num2str(length(folderList)) ': ' thisDir]);
@@ -566,6 +568,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			% base string to save as
 			fileInfoSaveStr = [fileInfo.date '_' fileInfo.protocol '_' fileInfo.subject '_' fileInfo.assay];
 			thisDirSaveStr = [thisDir filesep fileInfoSaveStr];
+			thisProcessingDirFileInfoStr = [thisProcessingDir filesep currentDateTimeStr '_' fileInfoSaveStr];
 			saveStr = '';
 			% add the folder to the output structure
 			ostruct.folderList{fileNum} = thisDir;
@@ -1311,7 +1314,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		end
 
 		% Save out F0 in case need later
-		savePathStr = [thisDirSaveStr '_inputMovieF0' '.h5'];
+		% savePathStr = [thisDirSaveStr '_inputMovieF0' '.h5'];
+		savePathStr = [thisProcessingDirFileInfoStr '_inputMovieF0' '.h5'];
 		movieSaved = writeHDF5Data(inputMovieF0,savePathStr,'deflateLevel',options.deflateLevel,'datasetname',options.outputDatasetName);
 
 		thisMovieMean = nanmean(inputMovieF0(:));

@@ -9,12 +9,13 @@ function [success] = modelAddOutsideDependencies(dependencyName,varargin)
 
 	% changelog
 		% 2019.10.15 [12:29:30] - Added flag to prevent recursive loop between resetMiji and modelAddOutsideDependencies.
+		% 2021.02.01 [‏‎15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
 	% TODO
 		%
 
 	%========================
 	options.exampleOption = '';
-	options.defaultExternalProgramDir = ['_external_programs'];
+	options.defaultExternalProgramDir = ciapkg.getDirExternalPrograms();
 	options.recursionExit = 0;
 	% get options
 	options = getOptions(options,varargin);

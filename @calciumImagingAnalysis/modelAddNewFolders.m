@@ -7,9 +7,13 @@ function obj = modelAddNewFolders(obj,varargin)
 		% 2019.11.18 [15:15:47] - Add the ability for users to use GUI to add folders as alternative option.
 		% 2020.01.16 [12:28:29] - Choosing how to enter files and manual enter list of files now uses uicontrol and figure to reduce number of pop-ups and increase flexibility.
 		% 2020.05.07 [17:22:20] - Adding option to quickly add all the example downloaded folders.
+		% 2021.01.24 [14:03:44] - Added support for direct input of method type, useful for command-line or unit testing.
+		% 2021.02.02 [11:27:21] - 'Add CIAtah example folders.' now adds the absolute path to avoid path errors if user changes Matlab current directory.
 	%========================
 	% Cell array of folders to add, particularly for GUI-less operations
 	options.folderCellArray = {};
+	% Str:
+	options.inputMethod = '';
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -23,39 +27,44 @@ function obj = modelAddNewFolders(obj,varargin)
 		nExistingFolders = length(obj.inputFolders);
 		if isempty(options.folderCellArray)
 			sel = 0
-			usrIdxChoiceStr = {...
-				'manually enter folders to list',...
-				'GUI select folders',...
-				'Add calciumImagingAnalysis example folders.'};
-			scnsize = get(0,'ScreenSize');
-			try
-				hFig = figure;
-				uicontrol('Style','Text','String',['How to add folders to calciumImagingAnalysis?'],'Units','normalized','Position',[5 89 90 10]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold');
-				hListbox = uicontrol(hFig, 'style','listbox','Units', 'normalized','position',[5,5,90,80]/100, 'string',usrIdxChoiceStr,'Value',1);
-				set(hListbox,'Max',2,'Min',0);
-				set(hListbox,'KeyPressFcn',@(src,evnt)onKeyPressRelease(evnt,'press',hFig))
-				figure(hFig)
-				uicontrol(hListbox)
-				set(hFig, 'KeyPressFcn', @(source,eventdata) figure(hFig));
-				uiwait(hFig)
-			catch err
-				disp(repmat('@',1,7))
-				disp(getReport(err,'extended','hyperlinks','on'));
-				disp(repmat('@',1,7))
+			if isempty(options.inputMethod)
+				usrIdxChoiceStr = {...
+					'manually enter folders to list',...
+					'GUI select folders',...
+					'Add CIAtah example folders.'};
+				scnsize = get(0,'ScreenSize');
+				try
+					hFig = figure;
+					uicontrol('Style','Text','String',['How to add folders to CIAtah?'],'Units','normalized','Position',[5 89 90 10]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold');
+					hListbox = uicontrol(hFig, 'style','listbox','Units', 'normalized','position',[5,5,90,80]/100, 'string',usrIdxChoiceStr,'Value',1);
+					set(hListbox,'Max',2,'Min',0);
+					set(hListbox,'KeyPressFcn',@(src,evnt)onKeyPressRelease(evnt,'press',hFig))
+					figure(hFig)
+					uicontrol(hListbox)
+					set(hFig, 'KeyPressFcn', @(source,eventdata) figure(hFig));
+					uiwait(hFig)
+				catch err
+					disp(repmat('@',1,7))
+					disp(getReport(err,'extended','hyperlinks','on'));
+					disp(repmat('@',1,7))
 
-				[sel, ok] = listdlg('ListString',usrIdxChoiceStr,'ListSize',[scnsize(3)*0.3 scnsize(4)*0.3],'Name','How to add folders to calciumImagingAnalysis?');
+					[sel, ok] = listdlg('ListString',usrIdxChoiceStr,'ListSize',[scnsize(3)*0.3 scnsize(4)*0.3],'Name','How to add folders to CIAtah?');
+				end
+				inputMethod = usrIdxChoiceStr{sel};
+			else
+				inputMethod = options.inputMethod;
 			end
-			inputMethod = usrIdxChoiceStr{sel};
 
 			switch inputMethod
-				case 'Add calciumImagingAnalysis example folders.'
+				case 'Add CIAtah example folders.'
 					disp('Adding example folders to path...')
+					dataDir = ciapkg.getDirPkg('data');
 					newFolderList = {...
-						['data' filesep '2014_04_01_p203_m19_check01'],...
-						['data' filesep 'batch' filesep '2014_08_05_p104_m19_PAV08'],...
-						['data' filesep 'batch' filesep '2014_08_06_p104_m19_PAV09'],...
-						['data' filesep 'batch' filesep '2014_08_07_p104_m19_PAV10'],...
-						['data' filesep 'twoPhoton' filesep '2017_04_16_p485_m487_runningWheel02']...
+						[dataDir filesep '2014_04_01_p203_m19_check01'],...
+						[dataDir filesep 'batch' filesep '2014_08_05_p104_m19_PAV08'],...
+						[dataDir filesep 'batch' filesep '2014_08_06_p104_m19_PAV09'],...
+						[dataDir filesep 'batch' filesep '2014_08_07_p104_m19_PAV10'],...
+						[dataDir filesep 'twoPhoton' filesep '2017_04_16_p485_m487_runningWheel02']...
 					};
                     disp(newFolderList)
 					nNewFolders = length(newFolderList);
@@ -80,7 +89,7 @@ function obj = modelAddNewFolders(obj,varargin)
 						figure(hFig)
 
 
-						uicontrol('Style','Text','String',['Adding folders to calciumImagingAnalysis object.'],'Units','normalized','Position',[5 95 90 3]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold');
+						uicontrol('Style','Text','String',['Adding folders to CIAtah object.'],'Units','normalized','Position',[5 95 90 3]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold');
 						uicontrol('Style','Text','String',['One new line per folder path. Enter folder path WITHOUT any single/double quotation marks around the path.'],'Units','normalized','Position',[5 90 90 6]/100,'BackgroundColor','white','HorizontalAlignment','Left');
 						exitHandle = uicontrol('style','pushbutton','Units', 'normalized','position',[5 85 50 3]/100,'FontSize',9,'string','Click here to finish','callback',@subfxnCloseFig,'HorizontalAlignment','Left');
 
@@ -97,7 +106,7 @@ function obj = modelAddNewFolders(obj,varargin)
 						AddOpts.WindowStyle='normal';
 						AddOpts.Interpreter='tex';
 						% inputdlg
-						newFolderList = inputdlgcol('One new line per folder path. Enter folder path WITHOUT any single/double quotation marks around the path.','Adding folders to calciumImagingAnalysis object.',[21 150],{''},AddOpts);
+						newFolderList = inputdlgcol('One new line per folder path. Enter folder path WITHOUT any single/double quotation marks around the path.','Adding folders to CIAtah object.',[21 150],{''},AddOpts);
 						if isempty(newFolderList)
 							warning('No folders given. Please re-run modelAddNewFolders.')
 							return

@@ -26,15 +26,16 @@
 
 `CIAtah` features:
 - A GUI with different modules to allow users to do large-scale batch analysis, accessed via the repository's `ciatah` class.
-- The `ciatah` functions can be used to create GUI-less, command line-ready analysis pipelines. Functions are located in `ciapkg` and `+ciapkg` sub-folders.
+- The `ciatah` functions can be used to create GUI-less, command line-ready analysis pipelines. Functions are located in the `ciapkg` sub-folder and in the `+ciapkg` package.
 - Includes all major calcium imaging analysis steps: movie visualization (including reading from disk), pre-processing (motion correction, spatiotemporal downsampling, spatial filtering, relative fluorescence calculation, etc.), support for multiple cell-extraction methods (CELLMax, PCA-ICA, CNMF, CNMF-E, EXTRACT, etc.), manual classification via GUIs, automated cell classification (coming soon!), cross-session cell alignment, and more.
 - Has several example one- and two-photon calcium imaging datasets that `ciatah` can automatically download to help users test out the package.
 - Includes code for determining animal position (e.g. in open-field assay).
 - Supports [Neurodata Without Borders](https://www.nwb.org/) data standard (see [calcium imaging tutorial](https://neurodatawithoutborders.github.io/matnwb/tutorials/html/ophys.html)) for reading/writing cell-extraction (e.g. outputs of PCA-ICA, CELLMax, CNMF, CNMF-E, etc.). Supports reading and writing NWB movie files with continued integration planned.
+- Supports most major imaging movie file formats: HDF5, NWB, AVI, ISXD [Inscopix], and TIFF.
 - Requires `MATLAB`.
 <!-- <hr> -->
 
-Contact: __Biafra Ahanonu, PhD (bahanonu [at] alum [dot] mit [dot] edu)__.
+Contact: __Biafra Ahanonu, PhD (github [at] bahanonu [dot] com)__.
 
 Made in USA.<br>
 <img src="https://user-images.githubusercontent.com/5241605/71493809-322a5400-27ff-11ea-9b2d-52ff20b5f332.png" align="center" title="USA" alt="USA" width="auto" height="50">
@@ -109,7 +110,7 @@ Below are steps needed to quickly get started using the `CIAtah` software packag
  cd('calciumImagingAnalysis-master')
  ```
 
-- Run `CIAtah` using the below MATLAB commands. Call `obj;` each time you want to go back to the main GUI.
+- Run `CIAtah` using the below MATLAB commands. Call `obj;` in the MATLAB command window each time you want to go back to the main GUI.
 
 ```MATLAB
 % Loads the class into an object for use in this session
@@ -128,7 +129,7 @@ obj % then hit enter, no semicolon!
 
 ### Visualize any movie quickly using read from disk
 
-Users can quickly visualize movies in any of the supported formats (HDF5, AVI, TIFF, and ISXD) using the `playMovie` function. This will read directly from disk, allowing users to scroll through frames to visually check movies before or after processing. See below code:
+Users can quickly visualize movies in any of the supported formats (HDF5, NWB, AVI, TIFF, and ISXD) using the `playMovie` function. This will read directly from disk, allowing users to scroll through frames to visually check movies before or after processing. See below code:
 
 ```MATLAB
 % Use the absolute path to the movie file or a valid relative path.
@@ -139,7 +140,6 @@ When using HDF5 files, check the dataset name containing movie with `h5disp` the
 ```MATLAB
 playMovie('ABSOLUTE\PATH\TO\MOVIE','inputDatasetName','/acquisition/TwoPhotonSeries/data');
 ```
-
 
 ## Quick start (command line or GUI-less batch analysis)
 
@@ -170,11 +170,11 @@ __Certain sections become available when user selects the appropriate module (e.
 - See additional details on the [Processing calcium imaging data](https://bahanonu.github.io/calciumImagingAnalysis/pipeline_overview/) page for running the full processing pipeline.
 - Settings used to pre-process imaging movies (`modelPreprocessMovie` module) are stored inside the processed HDF5 movie to allow `CIAtah` to load them again later.
 - To force load all directories, including most external software packages (in `_external_programs` folder), type `ciapkg.loadAllDirs;` into MATLAB command line. This is most relevant when you need to access specific functions in an outside repository that are normally hidden until needed.
-- When issues are encountered, first check the [Common issues and fixes](https://bahanonu.github.io/calciumImagingAnalysis/help_issues/) page to see if a solution is there. Else, submit a new issue or email Biafra (bahanonu [at] alum [dot] mit [dot] edu).
+- When issues are encountered, first check the [Common issues and fixes](https://bahanonu.github.io/calciumImagingAnalysis/help_issues/) page to see if a solution is there. Else, submit a new issue or email Biafra.
 - There are two sets of test data that are downloaded:
   - __Single session analysis__: `data\2014_04_01_p203_m19_check01_raw` can be used to test the pipeline until the cross-session alignment step.
   - __Batch analysis__: `data\batch` contains three imaging sessions that should be processed and can then be used for the cross-session alignment step. Users should try these sessions to get used to batched analysis.
-- For Fiji dependency, when path to `Miji.m` (e.g. `\Fiji.app\scripts` folder) is requested, likely in `calciumImagingAnalysis\_external_programs\FIJI_FOLDER\Fiji.app\scripts` where `FIJI_FOLDER` varies depending on OS, unless the user requested a custom path or on OSX (in which case, find Fiji the install directory).
+- For Fiji dependency, when path to `Miji.m` (e.g. `\Fiji.app\scripts` folder) is requested, likely in `[CIAtah directory]\_external_programs\FIJI_FOLDER\Fiji.app\scripts` where `FIJI_FOLDER` varies depending on OS, unless the user requested a custom path or on OSX (in which case, find Fiji the install directory).
   - If you run into Java heap space memory errors when Miji tries to load Fiji in MATLAB, make sure "java.opts" file is in MATLAB start-up folder or that the `CIAtah` root folder is the MATLAB start-up folder ([instructions on changing](https://www.mathworks.com/help/matlab/matlab_env/matlab-startup-folder.html)).
 - `CIAtah` often uses [regular expressions](https://www.cheatography.com/davechild/cheat-sheets/regular-expressions/) to find relevant movie and other files in folders to analyze.
   - For example, by default it looks for any movie files in a folder containing `concat`, e.g. `concat_recording_20140401_180333.h5` (test data). If you have a file called `rawData_2019_01_01_myInterestingExperiment.avi` and all your raw data files start with `rawData_` then change the regular expression to `rawData_` when requested by the repository. See `setMovieInfo` module to change after adding new folders.
@@ -245,7 +245,7 @@ Please cite [Corder*, Ahanonu*, et al. 2019](http://science.sciencemag.org/conte
 ```
 
 ## Questions?
-Please email any additional questions not covered in the repository to `bahanonu [at] alum [dot] mit [dot] edu` or open an issue.
+Please email any additional questions not covered in the repository to `github [at] bahanonu [dot] com` or open an issue.
 
 ***
 

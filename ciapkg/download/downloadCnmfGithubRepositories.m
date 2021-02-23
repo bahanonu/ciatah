@@ -6,9 +6,10 @@ function [success] = downloadCnmfGithubRepositories(varargin)
 		% 2020.04.03 [14:02:33] - Save downloaded compressed files (e.g. zips) to a sub-folder.
 		% 2020.06.28 [13:08:16] - Final implementation of force update, to bring to most current version of all git directories.
 		% 2020.06.28 [14:01:17] - Switch to calling downloadGithubRepositories for downloads to prevent bugs introduced by similar code between two functions.
+		% 2021.02.01 [‏‎15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
 
 	%========================
-	options.defaultExternalProgramDir = ['_external_programs'];
+	options.defaultExternalProgramDir = ciapkg.getDirExternalPrograms();
 	% 1 = force update of the git repository, 0 = skip if already downloaded
 	options.forceUpdate = 0;
 	% options.downloadPreprocessed = 0;

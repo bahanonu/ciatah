@@ -34,7 +34,7 @@ function [versionStr, dateTimeStr] = version(varargin)
 		% versionStr = verStr{1};
 		% dateTimeStr = num2str(verStr{2});
 
-		verStr = readtable([ciapkg.getDir filesep 'ciapkg' filesep 'VERSION'],'ReadVariableNames',0,'FileType','text','Format','auto','TextType','string')
+		verStr = readtable([ciapkg.getDir filesep 'ciapkg' filesep 'VERSION'],'ReadVariableNames',0,'FileType','text','Format','auto','TextType','string');
 		versionStr = verStr{1,1}{1};
 		dateTimeStr = num2str(verStr{2,1}{1});
 	catch
