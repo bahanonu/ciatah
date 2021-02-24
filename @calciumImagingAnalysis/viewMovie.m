@@ -11,6 +11,7 @@ function obj = viewMovie(obj)
 		% 2019.08.30 [12:59:44] - Added fallback to playMovie in case of Miji error
 		% 2019.10.09 [17:58:22] - Make view movie multi-column
 		% 2020.10.25 [21:05:21] - Added support for viewing movies from disk.
+		% 2021.02.24 [09:04:24] - Fix treatMoviesAsContinuous=0 + playMovieFromDisk=1 issue.
 	% TODO
 		%
 	% =====================
@@ -216,6 +217,10 @@ function obj = viewMovie(obj)
 					[frameListTmp] = getProperFrameList('primary');
 					if treatMoviesAsContinuous==1
 						movieListTmp2 = movieList;
+						% if iscell(movieList)
+						% else
+						% 	movieListTmp2 = {movieList};						
+						% end
 					else
 						movieListTmp2 = movieList{movieMontageIdx(movieNo)};
 					end
@@ -286,7 +291,11 @@ function obj = viewMovie(obj)
 				% =================================================
 				[frameListTmp] = getProperFrameList('primary');
 				if treatMoviesAsContinuous==1
-					movieListTmp2 = movieList;
+					if iscell(movieList)
+						movieListTmp2 = movieList;
+					else
+						movieListTmp2 = {movieList};						
+					end
 				else
 					movieListTmp2 = movieList{movieMontageIdx(movieNo)};
 				end
@@ -294,6 +303,9 @@ function obj = viewMovie(obj)
 				if playMovieFromDisk==1
 					disp('dddd')
 					movieListTmp2
+					if ~iscell(movieListTmp2)
+						movieListTmp2 = {movieListTmp2};
+					end
 					try
 						[exitSignal, movieStruct] = playMovie(movieListTmp2{1},'extraTitleText','');
 					catch err
