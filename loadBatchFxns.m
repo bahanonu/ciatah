@@ -20,13 +20,14 @@ function loadBatchFxns(varargin)
 		% 2020.05.09 [16:40:13] - Updates to remove additional specific repositories that should not be loaded by default. Add support for overriding this feature.
 		% 2020.06.05 [23:35:43] - If user doesn't have Parallel Toolbox, still works
 		% 2020.07.21 [14:11:42] - Fix to make sure all sub-folders (not just the root) are also removed in the case of certain external_programs.
+		% 2021.02.01 [‏‎15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
 	% TODO
 		%
 
 	% Disable the handle graphics warning "The DrawMode property will be removed in a future release. Use the SortMethod property instead." from being displayed. Comment out this line for debugging purposes as needed.
 	warning('off','MATLAB:hg:WillBeRemovedReplaceWith')
 
-	externalProgramsDir = '_external_programs';
+	externalProgramsDir = ciapkg.getDirExternalPrograms();
 
 	% Add calciumImagingAnalysis directory and subdirectories to path, use dbstack to ensure only add in the root directory regardless of where user has current MATLAB folder.
 	functionLocation = dbstack('-completenames');
@@ -146,7 +147,7 @@ function loadBatchFxns(varargin)
 			else
 				pathtoMiji = [fijiList{1} filesep 'Fiji.app' filesep 'scripts'];
 			end
-			% pathtoMiji = ['_external_programs' filesep 'fiji-win64-20151222' filesep 'Fiji.app' filesep 'scripts'];
+			% pathtoMiji = [ciapkg.getDirExternalPrograms() filesep 'fiji-win64-20151222' filesep 'Fiji.app' filesep 'scripts'];
 
 			% else
 			% end

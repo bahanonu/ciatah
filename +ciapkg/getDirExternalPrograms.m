@@ -1,7 +1,7 @@
-function ciapkgRoot()
-	% Empty function, used to quickly find the root CIAtah folder
+function [externalProgramsDir] = getDirExternalPrograms(varargin)
+	% Returns the directory where external programs are stored. All functions should call this to find external program directory.
 	% Biafra Ahanonu
-	% started: INSERT_DATE
+	% started: 2021.02.02 [10:55:23]
 	% inputs
 		%
 	% outputs
@@ -14,9 +14,9 @@ function ciapkgRoot()
 
 	%========================
 	% DESCRIPTION
-	options.exampleOption = '';
+	% options.exampleOption = '';
 	% get options
-	options = getOptions(options,varargin);
+	% options = getOptions(options,varargin);
 	% display(options)
 	% unpack options into current workspace
 	% fn=fieldnames(options);
@@ -26,7 +26,7 @@ function ciapkgRoot()
 	%========================
 
 	try
-		% Code
+		externalProgramsDir = [ciapkg.getDir() filesep '_external_programs'];
 	catch err
 		disp(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));

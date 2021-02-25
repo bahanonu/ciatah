@@ -1,4 +1,4 @@
-function [onlineVersion] = versionOnline(varargin)
+function [onlineVersion, dateTimeStr] = versionOnline(varargin)
 	% Obtains the online repository version.
 	% Biafra Ahanonu
 	% started: 2020.08.18 [‏‎11:16:56]
@@ -8,7 +8,7 @@ function [onlineVersion] = versionOnline(varargin)
 		%
 
 	% changelog
-		%
+		% 2021.02.02 [13:42:19] - Updated to handle new VERSION file that includes datestamp on 2nd line.
 	% TODO
 		%
 
@@ -29,6 +29,8 @@ function [onlineVersion] = versionOnline(varargin)
 
 	try
 		success = 0;
+		onlineVersion = '';
+		dateTimeStr = '';
 
 		% Get version information online
 		% Get information about specific version file online using GitHub API
@@ -40,10 +42,17 @@ function [onlineVersion] = versionOnline(varargin)
 				disp('Could not dowload CIAPKG version information.')
 				return;
 			end
+			if ~isempty(regexp(onlineVersion,'\n'))
+				onlineVersionTmp = strsplit(onlineVersion,'\n');
+				onlineVersion = onlineVersionTmp{1};
+				dateTimeStr = onlineVersionTmp{2};
+			end
 		end
 		success = 1;
 	catch err
 		onlineVersion = '';
+		dateTimeStr = '';
+		success = 0;
 		disp(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));
 		disp(repmat('@',1,7))

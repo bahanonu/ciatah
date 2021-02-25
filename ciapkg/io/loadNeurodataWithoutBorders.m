@@ -1,4 +1,4 @@
-function [inputImages,inputTraces,infoStruct] = loadNeurodataWithoutBorders(inputFilePath,varargin)
+function [inputImages,inputTraces,infoStruct, algorithmStr] = loadNeurodataWithoutBorders(inputFilePath,varargin)
 	% DESCRIPTION.
 	% Biafra Ahanonu
 	% started: 2020.04.04 [15:02:22]
@@ -8,7 +8,7 @@ function [inputImages,inputTraces,infoStruct] = loadNeurodataWithoutBorders(inpu
 		%
 
 	% changelog
-		%
+		% 2021.02.05 [19:02:44] - Parse the algorithm associated with the NWB signal extraction data.
 	% TODO
 		%
 
@@ -44,6 +44,7 @@ function [inputImages,inputTraces,infoStruct] = loadNeurodataWithoutBorders(inpu
 		inputImages = [];
 		inputTraces = [];
 		infoStruct = struct;
+		algorithmStr = '';
 
 		if iscell(inputFilePath)
 			inputFilePath = inputFilePath{1};
@@ -101,6 +102,19 @@ function [inputImages,inputTraces,infoStruct] = loadNeurodataWithoutBorders(inpu
 		% Get description if later need cell-extraction information
 		tmp = h5readatt(inputFilePath,imagesGroupNameAttr,'description');
 		infoStruct.description = tmp;
+
+		% Check if extraction method in infoStruct then add
+		try
+			if isfield(infoStruct,'description')
+				tmpStr = regexp(infoStruct.description,'Extraction method: \w+','match');
+				tmpStr = strsplit(tmpStr{1}{1},': ');
+				algorithmStr = tmpStr{2};
+			end
+		catch err
+			disp(repmat('@',1,7))
+			disp(getReport(err,'extended','hyperlinks','on'));
+			disp(repmat('@',1,7))
+		end
 	catch err
 		disp(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));

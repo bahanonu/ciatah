@@ -18,6 +18,7 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction_batch(inputMovie,v
 
 	% changelog
 		% 2016.06.20 - updated to keep in line with recent changes to CNMF functions
+		% 2021.01.24 [14:29:06] - Added trace origin type to output structure.
 	% TODO
 		%
 
@@ -385,6 +386,8 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction_batch(inputMovie,v
 		cnmfeAnalysisOutput.extractedImages = reshape(full(results.A),[neuron.options.d1 neuron.options.d2 size(results.C,1)]);
 		cnmfeAnalysisOutput.extractedSignals = results.C;
 		cnmfeAnalysisOutput.extractedSignalsEst = results.C_raw;
+		cnmfAnalysisOutput.extractedSignalsType = 'model';
+		cnmfAnalysisOutput.extractedSignalsEstType = 'dfof';
 		cnmfeAnalysisOutput.extractedPeaks = results.S;
 		cnmfeAnalysisOutput.Cn = results.Cn;
 		cnmfeAnalysisOutput.P = results.P;

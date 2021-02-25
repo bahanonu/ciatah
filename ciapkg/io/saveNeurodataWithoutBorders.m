@@ -5,7 +5,7 @@ function [success] = saveNeurodataWithoutBorders(image_masks,roi_response_data,a
 	% Based on mat2nwb in https://github.com/schnitzer-lab/nwb_schnitzer_lab.
 	% inputs
 		% image_masks - [x y z] matrix
-		% roi_response_data - {1 N} cell with N = number of different signal traces for that algorithm.
+		% roi_response_data - {1 N} cell with N = number of different signal traces for that algorithm. Make sure each signal trace matrix is in form of [nSignals nFrames].
 		% algorithm - Name of the algorithm.
 		% outputFilePath - file path to save NWB file to.
 	% outputs
@@ -14,12 +14,15 @@ function [success] = saveNeurodataWithoutBorders(image_masks,roi_response_data,a
 	% changelog
 		% 2020.07.01 [09:40:20] - Convert roi_response_data to cell if user inputs only a matrix.
 		% 2020.09.15 [20:30:32] - Automatically creates directory where file is to be stored if it is not present.
+		% 2021.02.01 [â€?â€Ž15:14:40] - Function checks that yaml, matnwb, and nwb_schnitzer_lab loaded, else tries to load to make sure all dependencies are present and active.
+		% 2021.02.01 [15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
+		% 2021.02.03 [12:34:06] - Added a check for inputs with a single signal and function returns as it is not supported.
 	% TODO
 		%
 
 	%========================
 	% DESCRIPTION
-	options.fpathYML = [ciapkg.getDir filesep '_external_programs' filesep 'nwb_schnitzer_lab' filesep 'ExampleMetadata.yml'];
+	options.fpathYML = [ciapkg.getDirExternalPrograms() filesep 'nwb_schnitzer_lab' filesep 'ExampleMetadata.yml'];
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -30,8 +33,39 @@ function [success] = saveNeurodataWithoutBorders(image_masks,roi_response_data,a
 	% end
 	%========================
 
+	success = 0;
+
 	try
-		success = 0;
+		% Check that all necessary files are loaded
+		loadDependenciesFlag = 0;
+		if length(which('yaml.ReadYaml'))==0
+			disp('yaml not loaded, loading now...')
+			loadDependenciesFlag = 1;
+		end
+		if length(which('get_input_args'))==0
+			disp('matnwb not loaded, loading now...')
+			loadDependenciesFlag = 1;
+		end
+		if length(which('add_processed_ophys'))==0
+			disp('nwb_schnitzer_lab not loaded, loading now...')
+			loadDependenciesFlag = 1;
+		end
+		if loadDependenciesFlag==1
+			ciapkg.io.loadDependencies(...
+				'guiEnabled',0,...
+				'depIdxArray',5,...
+				'forceUpdate',0);
+				% 'dependencyStr','downloadNeuroDataWithoutBorders',...
+				% 'dispStr','Download NWB (NeuroDataWithoutBorders)',...
+			ciapkg.loadDirs;
+		end
+	catch err
+		disp(repmat('@',1,7))
+		disp(getReport(err,'extended','hyperlinks','on'));
+		disp(repmat('@',1,7))
+	end
+
+	try
 		metadata = yaml.ReadYaml(options.fpathYML);
 		data_path = outputFilePath;
 
@@ -72,6 +106,10 @@ function [success] = saveNeurodataWithoutBorders(image_masks,roi_response_data,a
 		tmpData = roi_response_data;
 		roi_response_data = struct;
 		for i=1:length(tmpData)
+			if size(1,tmpData{i})==1
+				disp('Only a single output, NWB will not support at the moment.')
+				return;
+			end
 		    roi_response_data.(['ROI_' num2str(i)]) = tmpData{i};
 		end
 

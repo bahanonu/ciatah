@@ -8,7 +8,7 @@ function [success] = setupNwb(varargin)
 		%
 
 	% changelog
-		%
+		% 2021.02.01 [‏‎15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
 	% TODO
 		%
 
@@ -16,7 +16,7 @@ function [success] = setupNwb(varargin)
 	% Str: default path for CIAtah
 	options.defaultObjDir = ciapkg.getDir;
 	% Str: default root path where all external programs are stored
-	options.externalProgramsDir = '_external_programs';
+	options.externalProgramsDir = ciapkg.getDirExternalPrograms();
 	% Str: default path for MatNWB Matlab code
 	options.matnwbDir = 'matnwb';
 	% get options

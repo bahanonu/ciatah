@@ -10,6 +10,7 @@ function createHdf5File(filename, datasetName, inputData, varargin)
 	% changelog
 		% 2019.03.25 [17:17:49] - Add support for custom user HDF5 chunking as opposed to previous automatic chunking
 		% 2019.08.20 [11:38:54] - Added additional support for more data types.
+        % 2021.02.02 [13:15:11] - Close space_id, dset_id, and fid with low-level HDF5 functions before appending data with hdf5write to avoid read/write issues.
 	% TODO
 		%
 	%========================
@@ -87,7 +88,13 @@ function createHdf5File(filename, datasetName, inputData, varargin)
 
 	% Write the initial data
 	H5D.write(dset_id, 'H5ML_DEFAULT', 'H5S_ALL', 'H5S_ALL', 'H5P_DEFAULT', inputData);
+    
+    % Close the opened identifiers
+	H5S.close(space_id);
+	H5D.close(dset_id);
+	H5F.close(fid);
 
+	% Append movie relevant information to HDF5 file
 	% if strcmp(options.writeMode,'new')
 		% hdf5write(filename,'/movie/info/dimensions',dataDims,'WriteMode','append');
 		currentDateTimeStr = datestr(now,'yyyymmdd_HHMM','local');
@@ -95,11 +102,6 @@ function createHdf5File(filename, datasetName, inputData, varargin)
 		hdf5write(filename,'/movie/info/savePath',filename,'WriteMode','append');
 		hdf5write(filename,'/movie/info/Deflate',options.deflateLevel,'WriteMode','append');
 	% end
-
-	% Close the open Identifiers
-	H5S.close(space_id);
-	H5D.close(dset_id);
-	H5F.close(fid);
 
 	% add information about data to HDF5 file
 	if ~isempty(options.addInfo)

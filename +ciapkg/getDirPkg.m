@@ -1,7 +1,7 @@
-function ciapkgRoot()
-	% Empty function, used to quickly find the root CIAtah folder
+function [ciapkgDir] = getDirPkg(dirType,varargin)
+	% Standardized location to obtain relevant CIAtah directories, e.g. location of default data folder.
 	% Biafra Ahanonu
-	% started: INSERT_DATE
+	% started: 2020.08.31 [12:46:57]
 	% inputs
 		%
 	% outputs
@@ -14,9 +14,9 @@ function ciapkgRoot()
 
 	%========================
 	% DESCRIPTION
-	options.exampleOption = '';
+	% options.exampleOption = '';
 	% get options
-	options = getOptions(options,varargin);
+	% options = getOptions(options,varargin);
 	% display(options)
 	% unpack options into current workspace
 	% fn=fieldnames(options);
@@ -26,7 +26,13 @@ function ciapkgRoot()
 	%========================
 
 	try
-		% Code
+		switch dirType
+			case 'data'
+				ciapkgDir = [ciapkg.getDir() filesep 'data'];
+			otherwise
+				ciapkgDir = '';
+				disp('Incorrect input, returning null.')
+		end
 	catch err
 		disp(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));

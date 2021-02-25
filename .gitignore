@@ -10,6 +10,10 @@ _external_programs/*/
 _external_programs/cnmf_current
 _external_programs/cnmfe
 _external_programs/cvx_rd
+_external_programs/matnwb
+_external_programs/nwb_schnitzer_lab
+_external_programs/yamlmatlab
+_external_programs/normcorre
 
 # Signal extraction dependency zips
 _external_programs/*.zip

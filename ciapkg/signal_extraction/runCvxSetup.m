@@ -8,13 +8,13 @@ function [success] = runCvxSetup(varargin)
 		%
 
 	% changelog
-		%
+		% 2021.02.01 [‏‎15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
 	% TODO
 		%
 
 	%========================
 	% Str: default location of external programs
-	options.defaultExternalProgramDir = ['_external_programs'];
+	options.defaultExternalProgramDir = ciapkg.getDirExternalPrograms();
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)

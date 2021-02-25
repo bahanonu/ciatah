@@ -1,4 +1,4 @@
-function plotSignalsGraph(IcaTraces,varargin)
+function [tmpTrace] = plotSignalsGraph(IcaTraces,varargin)
 	% Plots signals, offsetting by a fixed amount.
 	% Biafra Ahanonu
 	% started: 2013.11.02
@@ -9,6 +9,7 @@ function plotSignalsGraph(IcaTraces,varargin)
 	% changelog
 		% 2019.04.22 [19:14:47] - changed from plot to line so when exporting to illustrator don't need to merge lines.
 		% 2019.12.24 [11:20:14] - Allow
+		% 2021.01.24 [10:08:13] - Function outputs the modified traces for parent functions to use for additional plotting behavior.
 	% TODO
 		% add options for how much to offset
 
@@ -114,8 +115,8 @@ function plotSignalsGraph(IcaTraces,varargin)
 		% plot(tmpTrace','LineWidth',options.LineWidth);
 		plotXaxis = 1:nXaxisPoints;
 	else
-		display('================')
-		display('custom x-axis')
+		disp('================');
+		disp('custom x-axis');
 		% plot(options.inputXAxis,tmpTrace','LineWidth',options.LineWidth);
 		% line(options.inputXAxis,tmpTrace','LineWidth',options.LineWidth);
 		plotXaxis = options.inputXAxis;
@@ -133,6 +134,8 @@ function plotSignalsGraph(IcaTraces,varargin)
 	box off;
 
 	set(groot,'defaultAxesColorOrder',originalAxisColorOrder);
+	
+	tmpTrace = flipdim(tmpTrace,1);
 
 	% for i=1:size(normalTrace,1)
 	%     figure(42)

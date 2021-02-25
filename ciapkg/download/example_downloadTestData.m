@@ -1,5 +1,5 @@
 function [success] = example_downloadTestData(varargin)
-	% Downloads example test data from Stanford Box
+	% Downloads CIAtah example test data from online into data folder.
 	% Biafra Ahanonu
 	% started: September 2018
 	% inputs
@@ -10,6 +10,7 @@ function [success] = example_downloadTestData(varargin)
 	% changelog
 		% 2019.09.16 [13:03:33] - Added three new imaging sessions to use for cross-day alignment and made downloading more generalized.
 		% 2020.09.14 [13:17:57] - Added example two-photon dataset.
+		% 2021.02.02 [11:25:34] - Function now calls data directory via standardized ciapkg.getDirPkg('data') to avoid placing data in incorrect folder.
 	% TODO
 		%
 
@@ -17,6 +18,8 @@ function [success] = example_downloadTestData(varargin)
 	options.downloadPreprocessed = 0;
 	% Download extra files
 	options.downloadExtraFiles = 1;
+	% Directory where download folder goes
+	options.dataDir = ciapkg.getDirPkg('data');
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -76,7 +79,7 @@ function [success] = example_downloadTestData(varargin)
 
 		for fileNo = 1:nFiles
 			fileInfo = downloadList{fileNo};
-			rawSavePathDownload = ['data' filesep fileInfo.folderName];
+			rawSavePathDownload = [options.dataDir filesep fileInfo.folderName];
 			if ~exist(rawSavePathDownload,'dir');mkdir(rawSavePathDownload);fprintf('Made folder: %s\n',rawSavePathDownload);end
 
 			rawSavePathDownload = [rawSavePathDownload filesep fileInfo.fileName];
@@ -108,7 +111,7 @@ function [success] = example_downloadTestData(varargin)
 		% end
 
 		if options.downloadPreprocessed==1
-			rawSavePathDownload = ['data' filesep '2014_04_01_p203_m19_check01']
+			rawSavePathDownload = [options.dataDir filesep '2014_04_01_p203_m19_check01']
 			if ~exist(rawSavePathDownload,'dir');mkdir(rawSavePathDownload);fprintf('Made folder: %s',rawSavePathDownload);end
 
 			rawSavePathDownload = [rawSavePathDownload filesep '2014_04_01_p203_m19_check01_turboreg_crop_dfof_downsampleTime_1.h5'];
@@ -117,7 +120,7 @@ function [success] = example_downloadTestData(varargin)
 				websave(rawSavePathDownload,'https://stanford.box.com/shared/static/0zasceqd7b9ea6pa4rsgx1ag1mpjwmrf.h5');
 			end
 
-			rawSavePathDownload = ['data' filesep '2014_04_01_p203_m19_check01' filesep '2014_04_01_p203_m19_check01_turboreg_crop_dfof_1.h5'];
+			rawSavePathDownload = [options.dataDir filesep '2014_04_01_p203_m19_check01' filesep '2014_04_01_p203_m19_check01_turboreg_crop_dfof_1.h5'];
 			if exist(rawSavePathDownload,'file')~=2
 				fprintf('Downloading file to %s\n',rawSavePathDownload)
 				websave(rawSavePathDownload,'https://stanford.box.com/shared/static/azabf70oky7vriek48pb98jt2c5upj5i.h5');

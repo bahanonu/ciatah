@@ -103,7 +103,7 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 					fprintf('Search: %s\n',obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod))
 					options.regexPairs = {{obj.extractionMethodStructSaveStr.(obj.signalExtractionMethod)}};
 			end
-    end
+	end
 
 	regexPairs = options.regexPairs;
 
@@ -417,29 +417,29 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 					inputSignals = double(emAnalysisOutput.(emOutputType{emI}));
 					break;
 				end
-            end
+			end
 
-            if 0
-                if isfield(emAnalysisOutput,'scaledProbability')
-                    disp('Using scaledProbability...')
-                    inputSignals = double(emAnalysisOutput.scaledProbability);
-                elseif isfield(emAnalysisOutput,'dsScaledProbability')
-                    disp('Using dsScaledProbability...')
-                    inputSignals = double(emAnalysisOutput.dsScaledProbability);
-                elseif isfield(emAnalysisOutput,'cellTraces')
-                    disp('Using cellTraces...')
-                    inputSignals = double(emAnalysisOutput.cellTraces);
-                elseif isfield(emAnalysisOutput,'dsCellTraces')
-                    disp('Using dsCellTraces...')
-                    if length(emAnalysisOutput.dsCellTraces)==1
-                        inputSignals = emAnalysisOutput.cellTraces;
-                    else
-                        inputSignals = emAnalysisOutput.dsCellTraces;
-                    end
-                else
-                    inputSignals = emAnalysisOutput.cellTraces;
-                end
-            end
+			if 0
+				if isfield(emAnalysisOutput,'scaledProbability')
+					disp('Using scaledProbability...')
+					inputSignals = double(emAnalysisOutput.scaledProbability);
+				elseif isfield(emAnalysisOutput,'dsScaledProbability')
+					disp('Using dsScaledProbability...')
+					inputSignals = double(emAnalysisOutput.dsScaledProbability);
+				elseif isfield(emAnalysisOutput,'cellTraces')
+					disp('Using cellTraces...')
+					inputSignals = double(emAnalysisOutput.cellTraces);
+				elseif isfield(emAnalysisOutput,'dsCellTraces')
+					disp('Using dsCellTraces...')
+					if length(emAnalysisOutput.dsCellTraces)==1
+						inputSignals = emAnalysisOutput.cellTraces;
+					else
+						inputSignals = emAnalysisOutput.dsCellTraces;
+					end
+				else
+					inputSignals = emAnalysisOutput.cellTraces;
+				end
+			end
 
 			inputSignals2 = double(emAnalysisOutput.cellTraces);
 
