@@ -9,7 +9,7 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>Inscopix - CIAtah</title>
+  <title>Cell extraction - CIAtah</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
   <link rel="stylesheet" href="../css/theme.css" />
@@ -19,8 +19,8 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "Inscopix";
-    var mkdocs_page_input_path = "help_inscopix.md";
+    var mkdocs_page_name = "Cell extraction";
+    var mkdocs_page_input_path = "help_cell_extraction.md";
     var mkdocs_page_url = null;
   </script>
   
@@ -92,13 +92,7 @@
                     </li>
                     <li class="toctree-l1"><a class="" href="../black"><div class='subsection1'>Data</div></a>
                     </li>
-                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Inscopix</a>
-    <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#visualizing-isxd-files">Visualizing ISXD files</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#converting-isxd-files-to-hdf5">Converting ISXD files to HDF5</a>
-    </li>
-    </ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_inscopix/">Inscopix</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_nwb/">Neurodata Without Borders</a>
                     </li>
@@ -122,7 +116,9 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_motion_correction/">Motion correction</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../help_cell_extraction/">Cell extraction</a>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Cell extraction</a>
+    <ul class="current">
+    </ul>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_manual_cell_sorting/">Manual cell sorting</a>
                     </li>
@@ -167,7 +163,7 @@
         
       
     
-    <li>Inscopix</li>
+    <li>Cell extraction</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -178,32 +174,7 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="inscopix">Inscopix<a class="headerlink" href="#inscopix" title="Permanent link">&para;</a></h1>
-<p>Documentation related to Inscopix-specific functions on the repository.</p>
-<h2 id="visualizing-isxd-files">Visualizing ISXD files<a class="headerlink" href="#visualizing-isxd-files" title="Permanent link">&para;</a></h2>
-<p>ISXD files can be directly visualized from disk by running <code>playMovie</code> from MATLAB command line:</p>
-<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">playMovie</span><span class="p">(</span><span class="s">&#39;path\to\youMovie.isxd&#39;</span><span class="p">);</span>
-</code></pre></div>
-<h2 id="converting-isxd-files-to-hdf5">Converting ISXD files to HDF5<a class="headerlink" href="#converting-isxd-files-to-hdf5" title="Permanent link">&para;</a></h2>
-<p>To convert ISXD files to HDF5, see <code>convertInscopixIsxdToHdf5</code> function in the <code>inscopix</code> folder or <code>modelDownsampleRawMovies</code> module in calciumImagingAnalysis.</p>
-<p><strong>Note</strong>: By default the Inscopix API gives out a frame full of 0s for dropped frames. So those 0s frames are maintained after converting/downsampling to HDF5 or you will also get a frame with 0s if you use <code>loadMovieList</code> to read frames that were dropped from isxd files. Adjust analysis accordingly.</p>
-<p>To use this function call it as below:
-<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">moviePath</span> <span class="p">=</span> <span class="s">&#39;PATH_TO_ISXD&#39;</span><span class="p">;</span>
-<span class="lineno" data-linenos="2 "></span><span class="n">opts</span><span class="p">.</span><span class="n">maxChunkSize</span> <span class="p">=</span> <span class="mi">5000</span><span class="p">;</span> <span class="c">% Max chunk size in Mb to load into RAM.</span>
-<span class="lineno" data-linenos="3 "></span><span class="n">opts</span><span class="p">.</span><span class="n">downsampleFactor</span> <span class="p">=</span> <span class="mi">4</span><span class="p">;</span> <span class="c">% How much to downsample original movie, set to 1 for no downsampling.</span>
-<span class="lineno" data-linenos="4 "></span><span class="n">convertInscopixIsxdToHdf5</span><span class="p">(</span><span class="n">moviePath</span><span class="p">,</span><span class="s">&#39;options&#39;</span><span class="p">,</span><span class="n">opts</span><span class="p">);</span>
-</code></pre></div></p>
-<p>If you want to save to a custom folder, use <code>saveFolder</code> input.
-<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">moviePath</span> <span class="p">=</span> <span class="s">&#39;PATH_TO_ISXD&#39;</span><span class="p">;</span>
-<span class="lineno" data-linenos="2 "></span><span class="n">opts</span><span class="p">.</span><span class="n">maxChunkSize</span> <span class="p">=</span> <span class="mi">5000</span><span class="p">;</span> <span class="c">% Max chunk size in Mb to load into RAM.</span>
-<span class="lineno" data-linenos="3 "></span><span class="n">opts</span><span class="p">.</span><span class="n">downsampleFactor</span> <span class="p">=</span> <span class="mi">4</span><span class="p">;</span> <span class="c">% How much to downsample original movie, set to 1 for no downsampling.</span>
-<span class="lineno" data-linenos="4 "></span><span class="n">opts</span><span class="p">.</span><span class="n">saveFolder</span> <span class="p">=</span> <span class="s">&#39;ALT_FOLDER_PATH&#39;</span><span class="p">;</span> <span class="c">% Char: alternative file path</span>
-<span class="lineno" data-linenos="5 "></span><span class="n">convertInscopixIsxdToHdf5</span><span class="p">(</span><span class="n">moviePath</span><span class="p">,</span><span class="s">&#39;options&#39;</span><span class="p">,</span><span class="n">opts</span><span class="p">);</span>
-</code></pre></div></p>
-<p>The same functionality can be achieved by loading a <code>calciumImagingAnalysis</code> module using the below commands. By default <code>modelDownsampleRawMovies</code> module will see <code>.isxd</code> files and call <code>convertInscopixIsxdToHdf5</code>. This can be done on multiple folders by separating them with commas in the <code>modelDownsampleRawMovies</code> menu.</p>
-<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">obj</span> <span class="p">=</span> <span class="n">calciumImagingAnalysis</span><span class="p">;</span>
-<span class="lineno" data-linenos="2 "></span><span class="n">obj</span><span class="p">.</span><span class="n">modelDownsampleRawMovies</span><span class="p">;</span>
-</code></pre></div>
+                <h1 id="cell-extraction">Cell extraction<a class="headerlink" href="#cell-extraction" title="Permanent link">&para;</a></h1>
               
             </div>
           </div>
@@ -211,10 +182,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../help_nwb/" class="btn btn-neutral float-right" title="Neurodata Without Borders">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../help_manual_cell_sorting/" class="btn btn-neutral float-right" title="Manual cell sorting">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
-        <a href="../help_issues/" class="btn btn-neutral" title="Issues and fixes"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../help_motion_correction/" class="btn btn-neutral" title="Motion correction"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -240,10 +211,10 @@
     <span class="rst-current-version" data-toggle="rst-current-version">
       
       
-        <span><a href="../help_issues/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+        <span><a href="../help_motion_correction/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
       
-        <span style="margin-left: 15px"><a href="../help_nwb/" style="color: #fcfcfc">Next &raquo;</a></span>
+        <span style="margin-left: 15px"><a href="../help_manual_cell_sorting/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>

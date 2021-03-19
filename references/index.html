@@ -9,13 +9,13 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>Cite - CIAtah (calciumImagingAnalysis [ciapkg])</title>
+  <title>Cite - CIAtah</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
   <link rel="stylesheet" href="../css/theme.css" />
   <link rel="stylesheet" href="../css/theme_extra.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
   <link href="../css/extra.css" rel="stylesheet" />
+  <link href="../css/pygments.css" rel="stylesheet" />
   
   <script>
     // Current page data
@@ -25,11 +25,7 @@
   </script>
   
   <script src="../js/jquery-2.1.1.min.js" defer></script>
-  <script src="../js/modernizr-2.8.3.min.js" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/matlab.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/python.min.js"></script>
-  <script>hljs.initHighlightingOnLoad();</script> 
+  <script src="../js/modernizr-2.8.3.min.js" defer></script> 
   
 </head>
 
@@ -41,12 +37,8 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
     <div class="wy-side-scroll">
       <div class="wy-side-nav-search">
-        <a href=".." class="icon icon-home"> CIAtah (calciumImagingAnalysis [ciapkg])</a>
-        <div role="search">
-  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
-  </form>
-</div>
+        <a href=".." class="icon icon-home"> CIAtah</a>
+        
       </div>
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
@@ -98,27 +90,37 @@
                 <ul>
                     <li class="toctree-l1"><a class="reference internal" href="../help_issues/">Issues and fixes</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../help_analysis_methods/">Analysis methods</a>
+                    <li class="toctree-l1"><a class="" href="../black"><div class='subsection1'>Data</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_inscopix/">Inscopix</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../help_large_movie_analysis/">Large movie analysis</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_nwb/">Neurodata Without Borders</a>
+                    </li>
+                    <li class="toctree-l1"><a class="" href="../blank"><div class='subsection1'>Interface</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_contrast/">Movie display and noise</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../help_cross_session_alignment/">Cross-session alignemnt</a>
+                    <li class="toctree-l1"><a class="" href="../blank"><div class='subsection1'>Analysis</div></a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../help_manual_cell_sorting/">Manual cell sorting</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_analysis_methods/">Analysis methods</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../help_snr/">Improving signal-to-noise</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../help_motion_correction/">Motion correction</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../help_spatial_filtering/">Spatial filtering</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_large_movie_analysis/">Large movie analysis</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_stripe_removal/">Stripe removal</a>
                     </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_snr/">Improving signal-to-noise</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_spatial_filtering/">Spatial filtering</a>
+                    </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_temporal_downsampling/">Temporal downsampling</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_motion_correction/">Motion correction</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_cell_extraction/">Cell extraction</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_manual_cell_sorting/">Manual cell sorting</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_cross_session_alignment/">Cross-session alignemnt</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_animal_tracking/">Animal tracking</a>
                     </li>
@@ -145,7 +147,7 @@
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
         <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="..">CIAtah (calciumImagingAnalysis [ciapkg])</a>
+        <a href="..">CIAtah</a>
       </nav>
 
       
@@ -172,31 +174,22 @@
           <div role="main">
             <div class="section">
               
-                <h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
-<p>Please cite <a href="http://science.sciencemag.org/content/363/6424/276.full">Corder<em>, Ahanonu</em>, et al. 2019</a> <em>Science</em> publication or the <a href="https://doi.org/10.5281/zenodo.2222294">Ahanonu, 2018</a> <em>Zenodo</em> release if you used the software package or code from this repository to advance/help your research:</p>
-<pre><code class="Latex">@article{corderahanonu2019amygdalar,
-  title={An amygdalar neural ensemble that encodes the unpleasantness of pain},
-  author={Corder, Gregory and Ahanonu, Biafra and Grewe, Benjamin F and Wang, Dong and Schnitzer, Mark J and Scherrer, Gr{\'e}gory},
-  journal={Science},
-  volume={363},
-  number={6424},
-  pages={276--281},
-  year={2019},
-  publisher={American Association for the Advancement of Science}
-}
-</code></pre>
-
-<pre><code class="Latex">@misc{biafra_ahanonu_2018_2222295,
-  author       = {Biafra Ahanonu},
-  title        = {{calciumImagingAnalysis: a software package for
-                   analyzing one- and two-photon calcium imaging
-                   datasets.}},
-  month        = December,
-  year         = 2018,
-  doi          = {10.5281/zenodo.2222295},
-  url          = {https://doi.org/10.5281/zenodo.2222295}
-}
-</code></pre>
+                <h1 id="macro-rendering-error"><em>Macro Rendering Error</em><a class="headerlink" href="#macro-rendering-error" title="Permanent link">&para;</a></h1>
+<p><strong>TemplateSyntaxError</strong>: expected token 'end of print statement', got ':'</p>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span>Traceback (most recent call last):
+<span class="lineno" data-linenos=" 2 "></span>  File &quot;C:\software\anaconda3\lib\site-packages\mkdocs_macros\plugin.py&quot;, line 441, in render
+<span class="lineno" data-linenos=" 3 "></span>    md_template = self.env.from_string(markdown)
+<span class="lineno" data-linenos=" 4 "></span>  File &quot;C:\software\anaconda3\lib\site-packages\jinja2\environment.py&quot;, line 941, in from_string
+<span class="lineno" data-linenos=" 5 "></span>    return cls.from_code(self, self.compile(source), globals, None)
+<span class="lineno" data-linenos=" 6 "></span>  File &quot;C:\software\anaconda3\lib\site-packages\jinja2\environment.py&quot;, line 638, in compile
+<span class="lineno" data-linenos=" 7 "></span>    self.handle_exception(source=source_hint)
+<span class="lineno" data-linenos=" 8 "></span>  File &quot;C:\software\anaconda3\lib\site-packages\jinja2\environment.py&quot;, line 832, in handle_exception
+<span class="lineno" data-linenos=" 9 "></span>    reraise(*rewrite_traceback_stack(source=source))
+<span class="lineno" data-linenos="10 "></span>  File &quot;C:\software\anaconda3\lib\site-packages\jinja2\_compat.py&quot;, line 28, in reraise
+<span class="lineno" data-linenos="11 "></span>    raise value.with_traceback(tb)
+<span class="lineno" data-linenos="12 "></span>  File &quot;&lt;unknown&gt;&quot;, line 21, in template
+<span class="lineno" data-linenos="13 "></span>jinja2.exceptions.TemplateSyntaxError: expected token &#39;end of print statement&#39;, got &#39;:&#39;
+</code></pre></div>
               
             </div>
           </div>
@@ -242,7 +235,6 @@
 </div>
     <script>var base_url = '..';</script>
     <script src="../js/theme.js" defer></script>
-      <script src="../search/main.js" defer></script>
     <script defer>
         window.onload = function () {
             SphinxRtdTheme.Navigation.enable(true);

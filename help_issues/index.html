@@ -9,13 +9,13 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>Issues and fixes - CIAtah (calciumImagingAnalysis [ciapkg])</title>
+  <title>Issues and fixes - CIAtah</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
   <link rel="stylesheet" href="../css/theme.css" />
   <link rel="stylesheet" href="../css/theme_extra.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
   <link href="../css/extra.css" rel="stylesheet" />
+  <link href="../css/pygments.css" rel="stylesheet" />
   
   <script>
     // Current page data
@@ -25,11 +25,7 @@
   </script>
   
   <script src="../js/jquery-2.1.1.min.js" defer></script>
-  <script src="../js/modernizr-2.8.3.min.js" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/matlab.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/python.min.js"></script>
-  <script>hljs.initHighlightingOnLoad();</script> 
+  <script src="../js/modernizr-2.8.3.min.js" defer></script> 
   
 </head>
 
@@ -41,12 +37,8 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
     <div class="wy-side-scroll">
       <div class="wy-side-nav-search">
-        <a href=".." class="icon icon-home"> CIAtah (calciumImagingAnalysis [ciapkg])</a>
-        <div role="search">
-  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
-  </form>
-</div>
+        <a href=".." class="icon icon-home"> CIAtah</a>
+        
       </div>
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
@@ -134,27 +126,37 @@
     </li>
     </ul>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../help_analysis_methods/">Analysis methods</a>
+                    <li class="toctree-l1"><a class="" href="../black"><div class='subsection1'>Data</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_inscopix/">Inscopix</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../help_large_movie_analysis/">Large movie analysis</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_nwb/">Neurodata Without Borders</a>
+                    </li>
+                    <li class="toctree-l1"><a class="" href="../blank"><div class='subsection1'>Interface</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_contrast/">Movie display and noise</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../help_cross_session_alignment/">Cross-session alignemnt</a>
+                    <li class="toctree-l1"><a class="" href="../blank"><div class='subsection1'>Analysis</div></a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../help_manual_cell_sorting/">Manual cell sorting</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_analysis_methods/">Analysis methods</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../help_snr/">Improving signal-to-noise</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../help_motion_correction/">Motion correction</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../help_spatial_filtering/">Spatial filtering</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_large_movie_analysis/">Large movie analysis</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_stripe_removal/">Stripe removal</a>
                     </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_snr/">Improving signal-to-noise</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_spatial_filtering/">Spatial filtering</a>
+                    </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_temporal_downsampling/">Temporal downsampling</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_motion_correction/">Motion correction</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_cell_extraction/">Cell extraction</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_manual_cell_sorting/">Manual cell sorting</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_cross_session_alignment/">Cross-session alignemnt</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_animal_tracking/">Animal tracking</a>
                     </li>
@@ -179,7 +181,7 @@
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
         <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="..">CIAtah (calciumImagingAnalysis [ciapkg])</a>
+        <a href="..">CIAtah</a>
       </nav>
 
       
@@ -245,23 +247,21 @@
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/51938312-9fe8b880-23c1-11e9-9592-54d29160f8e6.png" /></p>
 <h2 id="out-of-memory-using-miji">Out of memory using <code>Miji</code><a class="headerlink" href="#out-of-memory-using-miji" title="Permanent link">&para;</a></h2>
 <ul>
-<li>If you get a <code>java.lang.OutOfMemoryError: GC overhead limit exceeded</code> style error (see below code) when trying to open a movie with <code>Miji</code>, make sure that you initialize MATLAB in the <code>calciumImagingAnalysis</code> path or place the <code>java.opts</code> file in your MATLAB start-up folder.</li>
+<li>If you get a <code>java.lang.OutOfMemoryError: GC overhead limit exceeded</code> style error (see below code) when trying to open a movie with <code>Miji</code>, make sure that you initialize MATLAB in the <code>calciumImagingAnalysis</code> path or place the <code>java.opts</code> file in your MATLAB start-up folder.
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">java</span><span class="p">.</span><span class="n">lang</span><span class="p">.</span><span class="n">OutOfMemoryError</span><span class="p">:</span> <span class="n">GC</span> <span class="n">overhead</span> <span class="n">limit</span> <span class="n">exceeded</span>
+<span class="lineno" data-linenos="2 "></span>    <span class="n">at</span> <span class="s">java.lang.AbstractStringBuilder.&lt;init&gt;(Unknown</span> <span class="s">Source)</span>
+<span class="lineno" data-linenos="3 "></span>    <span class="n">at</span> <span class="s">java.lang.StringBuilder.&lt;init&gt;(Unknown</span> <span class="s">Source)</span>
+</code></pre></div></li>
 </ul>
-<pre><code class="Matlab">java.lang.OutOfMemoryError: GC overhead limit exceeded
-    at java.lang.AbstractStringBuilder.&lt;init&gt;(Unknown Source)
-    at java.lang.StringBuilder.&lt;init&gt;(Unknown Source)
-</code></pre>
-
 <ul>
 <li>On Windows, you can change the start-up folder as below or in general see <a href="https://www.mathworks.com/help/matlab/matlab_env/matlab-startup-folder.html">https://www.mathworks.com/help/matlab/matlab_env/matlab-startup-folder.html</a>.
 <img alt="image" src="https://user-images.githubusercontent.com/5241605/64047075-94f63200-cb22-11e9-890b-6b43db669412.png" /></li>
 </ul>
 <ul>
-<li><code>java.opts</code> increases the amount of memory allocated so that Java doesn't run out when using Miji to load movies. To change the amount of memory allocated (calciumImagingAnalysis sets to 7 Gb by default), change the below to a higher or lower number, e.g. 9 Gb would be <code>-Xmx9000m</code>.</li>
+<li><code>java.opts</code> increases the amount of memory allocated so that Java doesn't run out when using Miji to load movies. To change the amount of memory allocated (calciumImagingAnalysis sets to 7 Gb by default), change the below to a higher or lower number, e.g. 9 Gb would be <code>-Xmx9000m</code>.
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="o">-</span><span class="n">Xmx7000m</span>
+</code></pre></div></li>
 </ul>
-<pre><code class="Java">-Xmx7000m
-</code></pre>
-
 <h2 id="selecting-scripts-folder-in-fijiapp-on-mac-os-x">Selecting <code>scripts</code> folder in <code>Fiji.app</code> on Mac OS X<a class="headerlink" href="#selecting-scripts-folder-in-fijiapp-on-mac-os-x" title="Permanent link">&para;</a></h2>
 <p>Navigate to the applications folder and select <code>Fiji.app</code> and <code>Show Package Contents</code>.
 <img alt="screen shot 2019-02-12 at 6 46 45 pm" src="https://user-images.githubusercontent.com/5241605/52684369-e2021600-2efa-11e9-90ec-83d861841182.png" /></p>
@@ -271,46 +271,41 @@
 <img alt="screen shot 2019-02-12 at 6 52 42 pm" src="https://user-images.githubusercontent.com/5241605/52684381-ea5a5100-2efa-11e9-9652-30f7b220117c.png" /></p>
 <h2 id="fiji-wont-start-using-miji-or-mijstart">Fiji won't start using <code>Miji</code> or <code>MIJ.start</code><a class="headerlink" href="#fiji-wont-start-using-miji-or-mijstart" title="Permanent link">&para;</a></h2>
 <ul>
-<li>If calling <code>Miji</code> or <code>MIJ.start</code> does not lead to a Fiji GUI appearing (e.g. the below output is seen in the command window), this is likely because the last Fiji/ImageJ instance was closed improperly (e.g. by closing ImageJ with <code>File-&gt;Quit</code> or pressing the close button instead of <code>MIJ.exit</code> in the Matlab command window), leading to a headless Fiji that cannot be properly closed by Miji/Matlab.</li>
+<li>If calling <code>Miji</code> or <code>MIJ.start</code> does not lead to a Fiji GUI appearing (e.g. the below output is seen in the command window), this is likely because the last Fiji/ImageJ instance was closed improperly (e.g. by closing ImageJ with <code>File-&gt;Quit</code> or pressing the close button instead of <code>MIJ.exit</code> in the Matlab command window), leading to a headless Fiji that cannot be properly closed by Miji/Matlab.
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="o">--------------------------------------------------------------</span>
+<span class="lineno" data-linenos="2 "></span><span class="n">Status</span><span class="o">&gt;</span> <span class="n">ImageJ</span> <span class="n">is</span> <span class="n">already</span> <span class="n">started</span><span class="p">.</span>
+<span class="lineno" data-linenos="3 "></span><span class="o">--------------------------------------------------------------</span>
+</code></pre></div></li>
 </ul>
-<pre><code class="Matlab">--------------------------------------------------------------
-Status&gt; ImageJ is already started.
---------------------------------------------------------------
-</code></pre>
-
-<p>If this occurs, run the following commands one at a time:</p>
-<pre><code class="Matlab">resetMiji
-% An instance of Miji should appear.
-currP=pwd;Miji;cd(currP);
-MIJ.exit
-</code></pre>
-
+<p>If this occurs, run the following commands one at a time:
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">resetMiji</span>
+<span class="lineno" data-linenos="2 "></span><span class="s">%</span> <span class="s">An</span> <span class="s">instance</span> <span class="s">of</span> <span class="s">Miji</span> <span class="s">should</span> <span class="s">appear.</span>
+<span class="lineno" data-linenos="3 "></span><span class="n">currP</span><span class="p">=</span><span class="n">pwd</span><span class="p">;</span><span class="n">Miji</span><span class="p">;</span><span class="n">cd</span><span class="p">(</span><span class="n">currP</span><span class="p">);</span>
+<span class="lineno" data-linenos="4 "></span><span class="n">MIJ</span><span class="p">.</span><span class="n">exit</span>
+</code></pre></div></p>
 <h2 id="downloadcnmfgithubrepositoriesm-not-downloading-correctly"><code>downloadCnmfGithubRepositories.m</code> not downloading correctly<a class="headerlink" href="#downloadcnmfgithubrepositoriesm-not-downloading-correctly" title="Permanent link">&para;</a></h2>
 <ul>
-<li>If when trying to download using <code>downloadCnmfGithubRepositories.m</code> the below error is encountered, try to run <code>downloadCnmfGithubRepositories</code> several more times as <code>websave</code> (MATLAB built-in function) sometimes momentarily does not obtain the correct write permissions and fails.</li>
+<li>If when trying to download using <code>downloadCnmfGithubRepositories.m</code> the below error is encountered, try to run <code>downloadCnmfGithubRepositories</code> several more times as <code>websave</code> (MATLAB built-in function) sometimes momentarily does not obtain the correct write permissions and fails.
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="p">@@@@@@@</span>
+<span class="lineno" data-linenos="2 "></span><span class="n">Error</span> <span class="s">using</span> <span class="s">websave</span> <span class="s">(line</span> <span class="s">104)</span>
+<span class="lineno" data-linenos="3 "></span><span class="n">Unable</span> <span class="s">to</span> <span class="s">open</span> <span class="s">output</span> <span class="s">file:</span> <span class="s">&#39;signal_extraction\cnmfe.zip&#39;</span> <span class="s">for</span> <span class="s">writing.</span> <span class="s">Common</span> <span class="s">reasons</span> <span class="s">include</span> <span class="s">that</span> <span class="s">the</span> <span class="s">file</span> <span class="s">exists</span> <span class="s">and</span> <span class="s">does</span> <span class="s">not</span> <span class="s">have</span> <span class="s">write</span> <span class="s">permission</span> <span class="s">or</span> <span class="s">the</span> <span class="s">folder</span> <span class="s">does</span> <span class="s">not</span> <span class="s">have</span> <span class="s">write</span> <span class="s">permissions.</span>
+</code></pre></div></li>
 </ul>
-<pre><code class="Matlab">@@@@@@@
-Error using websave (line 104)
-Unable to open output file: 'signal_extraction\cnmfe.zip' for writing. Common reasons include that the file exists and does not have write permission or the folder does not have write permissions.
-</code></pre>
-
 <h2 id="modelpreprocessmovie-analysis-options-list-not-showing"><code>modelPreprocessMovie</code> analysis options list not showing<a class="headerlink" href="#modelpreprocessmovie-analysis-options-list-not-showing" title="Permanent link">&para;</a></h2>
 <ul>
 <li>MATLAB changed <code>uitables</code> internal implementation, hence <code>findjobj</code> (File Exchange function) broke causing <code>reorderableListbox</code> (File Exchange function) to also break. An updated <code>findjobj</code> has been added to the <code>calciumImagingAnalysis</code> repository and this error (see below) should no longer occur.</li>
 </ul>
-<pre><code class="Matlab">Error in reorderableListbox (line 127)
-jScrollPane = jScrollPane(1);
-</code></pre>
-
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">Error</span> <span class="s">in</span> <span class="s">reorderableListbox</span> <span class="s">(line</span> <span class="s">127)</span>
+<span class="lineno" data-linenos="2 "></span><span class="n">jScrollPane</span> <span class="p">=</span> <span class="n">jScrollPane</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</code></pre></div>
 <h2 id="miji-not-loading-correctly"><code>Miji</code> not loading correctly<a class="headerlink" href="#miji-not-loading-correctly" title="Permanent link">&para;</a></h2>
 <ul>
 <li>The below error occurs when the wrong version of <code>Fiji</code> is downloaded. Please <strong>2015 December 22</strong> version download from <a href="https://imagej.net/Fiji/Downloads">https://imagej.net/Fiji/Downloads</a> as that implementation of <code>Miji.m</code> appears to work correctly with MATLAB.</li>
 </ul>
-<pre><code class="Matlab">@@@@@@@
-Error using javaObject
-No class MIJ can be located on the Java class path
-</code></pre>
-
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="p">@@@@@@@</span>
+<span class="lineno" data-linenos="2 "></span><span class="n">Error</span> <span class="s">using</span> <span class="s">javaObject</span>
+<span class="lineno" data-linenos="3 "></span><span class="n">No</span> <span class="s">class</span> <span class="s">MIJ</span> <span class="s">can</span> <span class="s">be</span> <span class="s">located</span> <span class="s">on</span> <span class="s">the</span> <span class="s">Java</span> <span class="s">class</span> <span class="s">path</span>
+</code></pre></div>
 <h2 id="viewmovie-or-other-functions-where-movies-need-to-be-loaded-end-without-executing"><code>viewMovie</code> or other functions where movies need to be loaded end without executing<a class="headerlink" href="#viewmovie-or-other-functions-where-movies-need-to-be-loaded-end-without-executing" title="Permanent link">&para;</a></h2>
 <ul>
 <li>It is likely that the regular expression given to <code>calciumImagingAnalysis</code> does not match any of the files in the folder being analyzed.</li>
@@ -352,7 +347,7 @@ No class MIJ can be located on the Java class path
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../help_analysis_methods/" class="btn btn-neutral float-right" title="Analysis methods">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../help_inscopix/" class="btn btn-neutral float-right" title="Inscopix">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
         <a href="../api_ciapkg/" class="btn btn-neutral" title="ciapkg"><span class="icon icon-circle-arrow-left"></span> Previous</a>
@@ -384,13 +379,12 @@ No class MIJ can be located on the Java class path
         <span><a href="../api_ciapkg/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
       
-        <span style="margin-left: 15px"><a href="../help_analysis_methods/" style="color: #fcfcfc">Next &raquo;</a></span>
+        <span style="margin-left: 15px"><a href="../help_inscopix/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>
     <script>var base_url = '..';</script>
     <script src="../js/theme.js" defer></script>
-      <script src="../search/main.js" defer></script>
     <script defer>
         window.onload = function () {
             SphinxRtdTheme.Navigation.enable(true);
