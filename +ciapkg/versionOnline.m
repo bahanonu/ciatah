@@ -35,9 +35,11 @@ function [onlineVersion, dateTimeStr] = versionOnline(varargin)
 		% Get version information online
 		% Get information about specific version file online using GitHub API
 		[versionInfo, status] = urlread(options.versionURL,'Timeout',options.timeOutSec);
+		% [versionInfo, status] = webread(options.versionURL,'Timeout',options.timeOutSec);
 		if status==1
 			versionInfo = jsondecode(versionInfo);
 			[onlineVersion, status] = urlread(versionInfo.download_url,'Timeout',options.timeOutSec);
+			% [onlineVersion, status] = webread(versionInfo.download_url,'Timeout',options.timeOutSec);
 			if status==0
 				disp('Could not dowload CIAPKG version information.')
 				return;

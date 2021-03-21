@@ -35,3 +35,115 @@ html{
 	  word-wrap: break-word;
 	background-color: black;
 }
+.codehilite pre code{
+	/*overflow-x: auto;
+    white-space: pre-wrap;
+    white-space: -moz-pre-wrap;
+    white-space: -pre-wrap;
+    white-space: -o-pre-wrap;
+    word-wrap: break-word;*/
+    /*background-color: black;*/
+}
+/*html{
+	background-color: black;
+}
+pre code {
+    white-space: pre-wrap;
+}
+code:before {
+    counter-reset: listing;
+}
+pre.code code {
+    counter-increment: listing;
+}
+pre.code code::before {
+  content: counter(listing) ". ";
+  display: inline-block;
+  width: 8em;
+  padding-left: auto;
+  margin-left: auto;
+  text-align: right;
+}*/
+.highlight pre{
+	padding: 0;
+}
+.lineno{
+	color: gray;
+	font-style: italic;
+}
+
+[data-linenos]:before {
+  content: attr(data-linenos);
+  /*padding-right: 10px;*/
+  /*display: table-cell;*/
+}
+h2{
+	padding-top: 1em;
+	border-top: 3px solid black;
+}
+/*h2:before{*/
+	/*content: <hr>;*/
+/*}*/
+hr{
+	height: 0px;
+	border-top: 3px solid black;
+}
+.caption{
+	border-top: 3px solid #333300;
+}
+.wy-menu-vertical li.current{
+}
+.wy-menu-vertical li.toctree-l1.current>a{
+	background-color: #161616;
+	color: #d9d9d9;
+	border-top: none;
+	border-bottom: none;
+	/*solid 1px #c9c9c9*/
+}
+.wy-menu-vertical li.toctree-l1{
+	background-color: black;
+}
+.wy-menu-vertical li.toctree-l1 a{
+	color: #d9d9d9;
+}
+
+.wy-menu-vertical li.toctree-l2{
+	background-color: black;
+}
+.wy-menu-vertical li.toctree-l2 a{
+	color: #d9d9d9;
+}
+
+
+.wy-menu-vertical li.toctree-l2.current>a{
+	background-color: #161616;
+	color: #d9d9d9;
+}
+
+.wy-menu-vertical li.toctree-l2.current li.toctree-l3>a{
+	background-color: black;
+	color: #d9d9d9;
+}
+
+.wy-menu-vertical li.toctree-l3{
+	background-color: black;
+}
+.wy-menu-vertical li.toctree-l3 a{
+	color: #d9d9d9;
+}
+
+.wy-menu-vertical li.toctree-l2 a:hover{
+	background-color: #161616;
+}
+
+.wy-side-nav-search{
+	background-color: black;
+}
+
+.subsection1{
+	border-bottom: 3px solid #333300;
+	padding-top: 1em;
+	font-weight: bold;
+	/*background-color: #161616;*/
+	/*color: #d9d9d9;*/
+}

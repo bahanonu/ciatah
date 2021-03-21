@@ -19,6 +19,7 @@ import sys
 # pip install mkdocs
 # pip install mdx_truly_sane_lists
 # pip install pymdown-extensions
+# pip install mkdocs-macros-plugin
 
 # If you want to view the docs before building
 # mkdocs serve

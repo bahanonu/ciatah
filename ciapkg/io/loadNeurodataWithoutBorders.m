@@ -5,7 +5,10 @@ function [inputImages,inputTraces,infoStruct, algorithmStr] = loadNeurodataWitho
 	% inputs
 		% inputFilePath - Str: path to NWB file. If a cell, will only load the first string.
 	% outputs
-		%
+		% inputImages - 3D or 4D matrix containing cells and their spatial information, format: [x y nCells].
+		% inputSignals - 2D matrix containing activity traces in [nCells nFrames] format.
+		% infoStruct - contains information about the file, e.g. the 'description' property that can contain information about the algorithm.
+		% algorithmStr - String of the algorithm name.
 
 	% changelog
 		% 2021.02.05 [19:02:44] - Parse the algorithm associated with the NWB signal extraction data.

@@ -12,17 +12,18 @@ function obj = loadDependencies(obj,varargin)
 		% 2020.06.28 [14:25:04] - Added ability for users to force update.
 		% 2021.01.22 [13:42:36] - NWB from specific release to reduce compatibility errors.
 		% 2021.02.01 [15:10:41] - Calls non-class function for use in more functions without needing to load CIAtah class.
+		% 2021.03.20 [18:12:20] - Added EXTRACT support to list of functions to download.
 	% TODO
 		% Verify all dependencies download and if not ask user to download again.
 
 	%========================
 	% DESCRIPTION
 	options.guiEnabled = 1;
-	options.dependencyStr = {'downloadMiji','downloadCnmfGithubRepositories','example_downloadTestData','loadMiji','downloadNeuroDataWithoutBorders'};
+	options.dependencyStr = {'downloadMiji','downloadCnmfGithubRepositories','example_downloadTestData','loadMiji','downloadNeuroDataWithoutBorders','downloadEXTRACT'};
 
-	options.dispStr = {'Download Fiji (to run Miji)','Download CNMF, CNMF-E, and CVX code.','Download test one- and two photon datasets.','Load Fiji/Miji into MATLAB path.','Download NWB (NeuroDataWithoutBorders)'};
+	options.dispStr = {'Download Fiji (to run Miji)','Download CNMF, CNMF-E, and CVX code.','Download test one- and two photon datasets.','Load Fiji/Miji into MATLAB path.','Download NWB (NeuroDataWithoutBorders)','Download EXTRACT'};
 	% Int vector: index of options.dependencyStr to run by default with no GUI
-	options.depIdxArray = [1 2 3 5];
+	options.depIdxArray = [1 2 3 5 6];
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)

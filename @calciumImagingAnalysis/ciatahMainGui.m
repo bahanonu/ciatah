@@ -1,4 +1,4 @@
-function [idNumIdxArray, validFoldersIdx, ok] = calciumImagingAnalysisMainGui(obj,fxnsToRun,inputTxt,currentIdx)
+function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inputTxt,currentIdx)
 	% Main GUI for calciumImagingAnalysis startup
 	% Biafra Ahanonu
 	% started: 2020.03.23 [22:36:36] - branch from calciumImagingAnalysis 2020.05.07 [15:47:29]
@@ -44,8 +44,8 @@ function [idNumIdxArray, validFoldersIdx, ok] = calciumImagingAnalysisMainGui(ob
 
 		hFig = figure;
 		hListboxS = struct;
-		set(hFig,'Name','CIAtah: start-up GUI','NumberTitle','off')
-		uicontrol('Style','text','String',['CIAtah'],'Units','normalized','Position',[1 97.5 20 2.5]/100,'BackgroundColor','white','HorizontalAlignment','Left','ForegroundColor','black','FontWeight','bold','FontAngle','italic');
+		set(hFig,'Name',[ciapkg.pkgName ': start-up GUI'],'NumberTitle','off')
+		uicontrol('Style','text','String',[ciapkg.pkgName],'Units','normalized','Position',[1 97.5 20 2.5]/100,'BackgroundColor','white','HorizontalAlignment','Left','ForegroundColor','black','FontWeight','bold','FontAngle','italic');
 		uicontrol('Style','text','String',[inputTxt 10 'Press TAB to select next section, ENTER to continue, and ESC to exit.'],'Units','normalized','Position',[10 92 90 8]/100,'BackgroundColor','white','HorizontalAlignment','Left','ForegroundColor','black');
 
 		% set(hFig,'Color',[0,0,0]);
@@ -74,14 +74,14 @@ function [idNumIdxArray, validFoldersIdx, ok] = calciumImagingAnalysisMainGui(ob
 
 		selBoxInfo.methods.string = fxnsToRun;
 		selBoxInfo.cellExtract.string = usrIdxChoiceDisplay;
-		selBoxInfo.cellExtractFiletype.string = {'CIAtah format','NeuroDataWithoutBorders (NWB) format'};
+		selBoxInfo.cellExtractFiletype.string = {[ciapkg.pkgName ' format'],'NeuroDataWithoutBorders (NWB) format'};
 		selBoxInfo.folderFilt.string = useAltValid;
 		selBoxInfo.subject.string = subjectStrUnique;
 		selBoxInfo.assay.string = assayStrUnique;
 		selBoxInfo.folders.string = selectList;
 		selBoxInfo.guiEnabled.string = {'GUI in methods enabled','GUI in methods disabled'};
 
-		selBoxInfo.methods.title = 'Select a CIAtah method:';
+		selBoxInfo.methods.title = ['Select a ' ciapkg.pkgName ' method:'];
 		selBoxInfo.cellExtract.title = 'Cell-extraction method:';
 		selBoxInfo.cellExtractFiletype.title = 'Cell-extraction file format:';
 		selBoxInfo.folderFilt.title = 'Folder select filters:';
@@ -335,12 +335,16 @@ function [idNumIdxArray, validFoldersIdx, ok] = calciumImagingAnalysisMainGui(ob
 
 		% If NWB chosen as file-type, verify user has correct NWB inputs
 		if any(strcmp('cellExtractFiletypeBox',get(src,'Tag')))&nwbSetMovieInfoSwitch==0
-			get(hListboxS.cellExtractFiletype,'Value')
+			disp(['cellExtractFiletype: ' num2str(get(hListboxS.cellExtractFiletype,'Value'))])
 			if get(hListboxS.cellExtractFiletype,'Value')==2
 				nwbSetMovieInfoSwitch = 1;
 				checkEnabled = 0;
-				uiwait(msgbox(['Please enter information for NWB cell-extraction and imaging movie regular expressions (for locating files) and whether cell-extraction files are located in a sub-folder within each folder.' 10 10 'Press OK/enter to continue.'],'Note to user','modal'));
+				dispStr = 'Please enter information for NWB cell-extraction and imaging movie regular expressions (for locating files) and whether cell-extraction files are located in a sub-folder within each folder.';
+				disp(dispStr)
+				disp('If Matlab UI is non-responsive, make sure you have checked for and closed pop-up dialog boxes.')
+				uiwait(msgbox([dispStr 10 10 'Press OK/enter to continue.'],'Note to user','modal'));
 				obj.setMovieInfo;
+				disp(['NWB information set! Remember to select the ' ciapkg.pkgName ' GUI then press Enter to start a module.'])
 				pause(0.1);
 				checkEnabled = 1;
 			end

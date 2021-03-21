@@ -8,7 +8,7 @@ function [success] = updatePkg(varargin)
 		%
 
 	% changelog
-		%
+		% 2021.03.09 [‏‎21:34:52] - Option on whether to update package (only 0 for now). Also alert user if behind a version.
 	% TODO
 		%
 
@@ -24,6 +24,8 @@ function [success] = updatePkg(varargin)
 	options.versionURL = 'https://api.github.com/repos/bahanonu/calciumImagingAnalysis/contents/ciapkg/VERSION';
 	% Binary: 1 = pop-up GUI enabled
 	options.showGui = 1;
+	% Binary: 1 = update code, 0 = only check for update and notify user behind a version.
+	options.updatePackage = 0;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -49,10 +51,28 @@ function [success] = updatePkg(varargin)
 
 		if verCompare==1
 			verInfoStr = 'Running most up-to-date version!';
+			verInfoStr2 = 'Running most up-to-date version!';
 		elseif verCompare<1
 			verInfoStr = 'Running behind! Initiating update [IGNORE for now].';
+			verInfoStr2 = 'Running a version behind, consider updating.';
 		elseif verCompare>1
 			verInfoStr = 'I do not know how, but you are running a version ahead! [Dev build]';
+			verInfoStr2 = 'I do not know how, but you are running a version ahead! [Dev build]';
+		end
+
+		if options.updatePackage==0
+			if iscell(onlineVersion)
+				onlineVersionTmp = onlineVersion{1};
+			else
+				onlineVersionTmp = onlineVersion;
+			end
+			verInfoStr = sprintf('%s\n Local version: %s.\n Online version %s.\n',verInfoStr2,currentVersion,onlineVersionTmp);
+			warning(verInfoStr)
+			if verCompare<1
+				msgbox(verInfoStr,'Note on CIAtah version.')
+			end
+			success = 1;
+			return
 		end
 
 		disp(verInfoStr)
@@ -81,6 +101,12 @@ function [success] = updatePkg(varargin)
 	end
 	function [verCompare,compareVector] = subfxn_verCompare(verId1,verId2)
 		fprintf('Comparing\nLocal:  %s.\nOnline: %s.\n',verId1,verId2);
+		if iscell(verId1)
+			verId1 = verId1{1};
+		end
+		if iscell(verId2)
+			verId2 = verId2{1};
+		end
 		% Remove version tag
 		verId1 = strrep(verId1,'v','');
 		verId2 = strrep(verId2,'v','');
@@ -89,7 +115,7 @@ function [success] = updatePkg(varargin)
 		verId1 = cellfun(@(x) str2num(x),strsplit(verId1,'.'));
 		verId2 = cellfun(@(x) str2num(x),strsplit(verId2,'.'));
 		compareVector = zeros([1 max(length(verId1),length(verId2))]);
-		nLevels = length(compareVector)
+		nLevels = length(compareVector);
 
 		% Start at the highest level and only continue comparing while version 2 is greater than or equal to version 1.
 		lockOut = 0; % 1 = higher level is an old version, so only calculate version difference
@@ -110,6 +136,6 @@ function [success] = updatePkg(varargin)
 		if sum(compareVector)>0
 			verCompare = 2;
 		end
-		disp(compareVector)
+		% disp(compareVector)
 	end
 end

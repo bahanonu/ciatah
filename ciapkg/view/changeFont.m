@@ -10,6 +10,7 @@ function [success] = changeFont(FontSize,varargin)
 	% changelog
 		% 2020.04.28 [19:17:49] - Added ability to change all the font colors at the same time, useful for making presentations on non-white backgrounds.
 		% 2020.10.01 [09:39:33] - Added support for changing font type.
+        % 2021.03.07 [16:35:55] - Add font name support.
 	% TODO
 		% Add support for changing other font aspects, e.g. figure Font family, command window font, etc.
 
@@ -19,6 +20,8 @@ function [success] = changeFont(FontSize,varargin)
 	options.FontSize = [];
 	% Float: [r g b] vector between 0 to 1.
 	options.fontColor = [];
+	% Str: Name of font family, e.g. Consolas.
+	options.fontName = [];
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -50,7 +53,11 @@ function [success] = changeFont(FontSize,varargin)
 				catch
 
 				end
-			end
+            end
+            if ~isempty(options.fontName)
+                set(findall(gcf,'-property','FontName'),'FontName',options.fontName);
+            end
+            
 		end
 		success = 1;
 	catch err

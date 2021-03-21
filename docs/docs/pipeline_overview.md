@@ -5,14 +5,14 @@ The general pipeline for processing calcium imaging data is below. This reposito
 <!-- ![image](https://user-images.githubusercontent.com/5241605/61981834-ab532000-afaf-11e9-97c2-4b1d7d759a30.png) -->
 ![ciapkg_pipeline.png](img/ciapkg_pipeline.png)
 
-To start using the `calciumImagingAnalysis` software package, enter the following into the MATLAB command window.
+To start using the `{{ site.name }}` software package, enter the following into the MATLAB command window.
 
 ```Matlab
 % Loads all directories
 loadBatchFxns;
 
 % Loads the class into an object.
-obj = calciumImagingAnalysis;
+obj = ciatah;
 
 % Open the class menu
 obj % then hit enter, no semicolon!
@@ -23,14 +23,14 @@ obj.runPipeline; % then hit enter!
 The general order of functions that users should run is ([optional] are those not critical for most datasets):
 
 - `loadDependencies`
-  - If user is running calciumImagingAnalysis for the first time, this module has several options to download and load CNMF/CNMF-E code for cell extraction, Fiji for viewing/modifying videos (using Miji), and test data from a miniature microscope experiment.
+  - If user is running {{ site.name }} for the first time, this module has several options to download and load CNMF/CNMF-E code for cell extraction, Fiji for viewing/modifying videos (using Miji), and test data from a miniature microscope experiment.
 - `modelDownsampleRawMovies` [optional]
   - If users have raw calcium imaging data that needs to be spatially downsampled, e.g. raw data from Inscopix nVista software.
 - `modelAddNewFolders`
   - Users should always use this method first, used to add folders to the current class object.
-  - For example, if users ran `example_downloadTestData.m`, then add the folder `[githubRepoPath]\data\2014_04_01_p203_m19_check01_raw` where `githubRepoPath` is the absolute path to the current `calciumImagingAnalysis` repository.
+  - For example, if users ran `example_downloadTestData.m`, then add the folder `[githubRepoPath]\data\2014_04_01_p203_m19_check01_raw` where `githubRepoPath` is the absolute path to the current `{{ site.name }}` repository.
 - `viewMovie`
-  - Users should check that calciumImagingAnalysis loads their movies correctly and that Miji is working.
+  - Users should check that {{ site.name }} loads their movies correctly and that Miji is working.
   - Users can view movies from disk, which allows checking of very large movies quickly.
   - Remember to check that `Imaging movie regexp:` (regular expression class uses to find user movies within given folders) setting matches name of movies currently in repository.
 - `viewMovieRegistrationTest` [optional]
@@ -38,7 +38,7 @@ The general order of functions that users should run is ([optional] are those no
   - `tregRunX` folders (where `X` is a number) contain details of each run setting. Delete from analysis folder if don't need outputs later.
   - Remember to adjust contrast in resulting montage movies since different filtering will change the absolute pixel values.
 - `modelPreprocessMovie`
-  - Main processing method for calciumImagingAnalysis. Performs motion correction, spatial filtering, cropping, down-sampling, and relative fluorescence calculations. If using Inscopix nVista 1.0 or 2.0, also will correct for dropped frames.
+  - Main processing method for {{ site.name }}. Performs motion correction, spatial filtering, cropping, down-sampling, and relative fluorescence calculations. If using Inscopix nVista 1.0 or 2.0, also will correct for dropped frames.
 - `modelModifyMovies`
   - GUI that allows users to remove movie regions not relevant to cell extraction.
 - `modelExtractSignalsFromMovie`

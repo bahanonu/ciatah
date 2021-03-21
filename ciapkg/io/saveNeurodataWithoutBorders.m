@@ -14,9 +14,10 @@ function [success] = saveNeurodataWithoutBorders(image_masks,roi_response_data,a
 	% changelog
 		% 2020.07.01 [09:40:20] - Convert roi_response_data to cell if user inputs only a matrix.
 		% 2020.09.15 [20:30:32] - Automatically creates directory where file is to be stored if it is not present.
-		% 2021.02.01 [�?‎15:14:40] - Function checks that yaml, matnwb, and nwb_schnitzer_lab loaded, else tries to load to make sure all dependencies are present and active.
+		% 2021.02.01 [?‎15:14:40] - Function checks that yaml, matnwb, and nwb_schnitzer_lab loaded, else tries to load to make sure all dependencies are present and active.
 		% 2021.02.01 [15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
 		% 2021.02.03 [12:34:06] - Added a check for inputs with a single signal and function returns as it is not supported.
+		% 2021.03.20 [19:35:28] - Update to checking if only a single signal input.
 	% TODO
 		%
 
@@ -105,8 +106,10 @@ function [success] = saveNeurodataWithoutBorders(image_masks,roi_response_data,a
 
 		tmpData = roi_response_data;
 		roi_response_data = struct;
+        disp(['Input images size: ' num2str(size(image_masks))])
 		for i=1:length(tmpData)
-			if size(1,tmpData{i})==1
+            disp(['Input traces #' num2str(i) ' size: ' num2str(size(tmpData{i}))])
+			if size(tmpData{i},1)==1
 				disp('Only a single output, NWB will not support at the moment.')
 				return;
 			end

@@ -12,6 +12,7 @@ function obj = computeManualSortSignals(obj)
 		% 2019.05.15 [13:13:10] Added support for reading movie from disk to allow sorting of large imaging movies
 		% 2019.09.09 [18:14:48] - Update to handling uigetfile output.
 		% 2021.01.21 [10:37:07] - Updated to support HDF5 and regexp for movie manual names along with misc. other changes.
+		% 2021.03.17 [16:34:59] - If user hasn't called modelVarsFromFiles, computeManualSortSignals called the function. However, this lead to a mismatch between computeManualSortSignals fileNum and obj.fileNum, leading to mismatch between xcoords, etc. and input signals/images.
 	% TODO
 		% ADD PERSONS NAME TO THE FILE
 
@@ -38,7 +39,7 @@ function obj = computeManualSortSignals(obj)
 			obj.fileNum = fileNum;
 			% fileNum = obj.fileNum;
 			display(repmat('#',1,21))
-			display([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ' (' num2str(fileNum) '/' num2str(nFiles) '): ' obj.fileIDNameArray{obj.fileNum}]);
+			display([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ' (' num2str(obj.fileNum) '/' num2str(nFiles) '): ' obj.fileIDNameArray{obj.fileNum}]);
 			% =======
 			% path to current folder
 			currentFolderPath = obj.inputFolders{obj.fileNum};
@@ -98,7 +99,9 @@ function obj = computeManualSortSignals(obj)
 				skipReload = 1;
 			catch
 				obj.guiEnabled = 0;
+				% originalFileNum = 
 				obj.modelVarsFromFiles();
+				obj.fileNum = fileNum;
 				obj.guiEnabled = 1;
 				skipReload = 0;
 			end
@@ -290,7 +293,7 @@ function obj = computeManualSortSignals(obj)
 			% ioptions.inputStr = subjAssayIDStr;
 			ioptions.valid = valid;
 			ioptions.sessionID = [folderBaseSaveStr '_' num2str(java.lang.System.currentTimeMillis)];
-			ioptions.inputStr = [num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ' (' num2str(fileNum) '/' num2str(nFiles) '): ' obj.folderBaseSaveStr{obj.fileNum}];
+			ioptions.inputStr = [num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ' (' num2str(obj.fileNum) '/' num2str(nFiles) '): ' obj.folderBaseSaveStr{obj.fileNum}];
 			ioptions.showROITrace = usrIdxChoiceROI;
 			ioptions.cropSizeLength = usrIdxCropSizeLength;
 			ioptions.cropSize = usrIdxCropSizeLength;
@@ -298,8 +301,8 @@ function obj = computeManualSortSignals(obj)
 			ioptions.thresholdOutline = userIdxImageThresholdOutline;
 			ioptions.colormap = obj.colormap;
 
-			ioptions.coord.xCoords = max(1,round(obj.objLocations{fileNum}.(obj.signalExtractionMethod)(:,1)));
-			ioptions.coord.yCoords = max(1,round(obj.objLocations{fileNum}.(obj.signalExtractionMethod)(:,2)));
+			ioptions.coord.xCoords = max(1,round(obj.objLocations{obj.fileNum}.(obj.signalExtractionMethod)(:,1)));
+			ioptions.coord.yCoords = max(1,round(obj.objLocations{obj.fileNum}.(obj.signalExtractionMethod)(:,2)));
 
 			ioptions.inputSignalsSecond = rawSignals2;
 

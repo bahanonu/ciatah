@@ -1,4 +1,4 @@
-# CIAtah (calciumImagingAnalysis [`CIAPKG`])
+# {{ site.name }} (calciumImagingAnalysis [`CIAPKG`])
 ![GitHub top language](https://img.shields.io/github/languages/top/bahanonu/calciumImagingAnalysis?style=flat-square&logo=appveyor)
 ![GitHub license](https://img.shields.io/github/license/bahanonu/calciumImagingAnalysis?style=flat-square&logo=appveyor)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/bahanonu/calciumImagingAnalysis?style=flat-square&logo=appveyor)](https://github.com/bahanonu/calciumImagingAnalysis/releases/latest?style=flat-square&logo=appveyor)
@@ -11,20 +11,20 @@
 
 Created by __Biafra Ahanonu, PhD__.
 
-`CIAtah` (pronounced cheetah) or `calciumImagingAnalysis` (`CIAPKG`) is a software package for analysis of one- and two-photon calcium imaging datasets.
+`{{ site.name }}` (pronounced cheetah) or `calciumImagingAnalysis` (`CIAPKG`) is a software package for analysis of one- and two-photon calcium imaging datasets.
 
 __Download the software at [https://github.com/bahanonu/calciumImagingAnalysis](https://github.com/bahanonu/calciumImagingAnalysis).__
 
-<img src="https://user-images.githubusercontent.com/5241605/81605697-b9c7c800-9386-11ea-9e9f-569c743b24b9.png" width="42%" align="center" alt="calciumImagingAnalysis_logo" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
+<img src="https://user-images.githubusercontent.com/5241605/99499485-d6dce500-292d-11eb-8c68-b089fe1985c8.png" width="42%" align="center" alt="CIAtah_logo" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
 
-- This user guide contains instructions to setup, run, and troubleshoot `CIAtah`.
-- Note: `CIAtah` is a class (`ciatah` or `calciumImagingAnalysis` within MATLAB) with various GUIs to allow processing of calcium imaging data. In addition, users can access the underlying `CIAtah` functions to make custom workflows. See [Custom command-line pipelines](api_example_pipeline.md).
+- This user guide contains instructions to setup, run, and troubleshoot `{{ site.name }}`.
+- Note: `{{ site.name }}` is a class (`{{ site.namelow }}` or `calciumImagingAnalysis` within MATLAB) with various GUIs to allow processing of calcium imaging data. In addition, users can access the underlying `{{ site.name }}` functions to make custom workflows. See [Custom command-line pipelines](api_example_pipeline.md).
 - Read my overview of calcium imaging analysis methods at [Calcium imaging cell identification and fluorescence activity trace reconstruction, part 1](https://bahanonu.com/brain/#c20181209).
 
 <img src="https://user-images.githubusercontent.com/5241605/94530890-9c3db280-01f0-11eb-99f0-e977f5edb304.gif" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="75%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
 
 <p align="center">
-  <strong>CIAtah sell sorting GUI</strong>
+  <strong>{{ site.name }} cell sorting GUI</strong>
 </p>
 <p align="center">
   <a href="https://user-images.githubusercontent.com/5241605/100851700-64dec280-343a-11eb-974c-d6d29faf9eb2.gif">
@@ -32,7 +32,7 @@ __Download the software at [https://github.com/bahanonu/calciumImagingAnalysis](
   </a>
 </p>
 
-`CIAtah` features:
+`{{ site.name }}` features:
 
 - Includes a GUI to allow users to do large-scale batch analysis, accessed via the repository's `calciumImagingAnalysis` class.
 - The underlying functions can also be used to create GUI-less, command line-ready analysis pipelines. Functions located in `ciapkg` and `+ciapkg` sub-folders.
@@ -48,10 +48,10 @@ __Download the software at [https://github.com/bahanonu/calciumImagingAnalysis](
 
 The main sections of the site:
 
-- `Setup` - installation of `CIAtah`.
+- `Setup` - installation of `{{ site.name }}`.
 - `Repository` - notes about the software package and data formats.
-- `Processing data` - sections related to processing calcium imaging movies using the `CIAtah` class.
-- `API` - details how to run `CIAtah` from the command line. Will include more details on the many underlying functions in the future.
+- `Processing data` - sections related to processing calcium imaging movies using the `{{ site.name }}` class.
+- `API` - details how to run `{{ site.name }}` from the command line. Will include more details on the many underlying functions in the future.
 - `Help` - several section that provide hints and help for processing calcium imaging.
 - `Misc` - miscellaneous information about the repository.
 

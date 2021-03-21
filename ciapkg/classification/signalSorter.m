@@ -70,6 +70,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 		% 2020.09.22 [03:09:59] - Ensure NWB files are read correctly.
 		% 2020.10.13 [01:22:47] - Display context menu for keyboard shortcuts, easier than separate figure. User can select with right-click or via a menu in the GUI.
 		% 2020.10.13 [22:31:23] - Users can now scroll through cells using mouse scroll wheel.
+		% 2021.03.10 [16:33:23] - User can now input just NWB path without a blank variable for inputSignals. Also added support for CIAtah mat files.
 	% TODO
 		% DONE: New GUI interface to allow users to scroll through video and see cell activity at that point
 		% DONE: allow option to mark rest as bad signals
@@ -241,10 +242,19 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 	end
 	display(options)
 
-	% If inputs NWB format
-	if ischar(inputImages)
-		[inputImages,inputSignals,infoStruct] = loadNeurodataWithoutBorders(inputImages);
-		options.nSignals = size(inputImages,3);
+	% If inputs are NWB or CIAtah mat format
+	if nargin==1|ischar(inputImages)
+		[~,~,inputEXT] = fileparts(inputImages);
+		switch inputEXT
+			case '.nwb'
+				[inputImages,inputSignals,infoStruct,algorithmStr] = loadNeurodataWithoutBorders(inputImages);
+				options.nSignals = size(inputImages,3);
+			case '.mat'
+				[inputImages,inputSignals,infoStruct,algorithmStr] = ciapkg.io.loadSignalExtraction(inputImages);
+				options.nSignals = size(inputImages,3);
+			otherwise
+				
+		end
 	end
 
 	% Modify dataset name if given NWB file

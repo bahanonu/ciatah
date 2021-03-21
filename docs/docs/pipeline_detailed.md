@@ -1,10 +1,16 @@
-# Detailed processing pipeline
+# Detailed {{ site.name }} processing pipeline
+
+The following detailed pipeline assumes you have started a {{ site.name }} object using the below command:
+
+```Matlab
+obj = ciatah;
+```
 
 ## Spatially downsample raw movies or convert to HDF5 with `modelDownsampleRawMovies`
 
 Users have the ability to spatially downsample raw movies, often necessary to denoise the data, save storage space, and improve runtimes of later processing steps. For most data, users can downsample 2 or 4 times in each spatial dimension while still retaining sufficient pixels per cell to facilitate cell-extraction.
 
-To run, either select `modelDownsampleRawMovies` in the GUI menu or type the below command after initializing a calciumImagingAnalysis obj.
+To run, either select `modelDownsampleRawMovies` in the GUI menu or type the below command after initializing a {{ site.name }} obj.
 
 ```Matlab
 obj.modelDownsampleRawMovies;
@@ -21,7 +27,7 @@ The function will automatically put each file in its corresponding folder, __mak
 
 ### Converting Inscopix ISXD files to HDF5
 
-To convert from Inscopix ISXD file format (output by nVista v3+ and nVoke) to HDF5 run `modelDownsampleRawMovies` without changing the regular expression or make sure it looks for `.*.isxd` or similar. Users will need the latest version of the [Inscopix Data Processing Software](https://www.inscopix.com/nVista#Data_Analysis) as these functions take advantage of their API. If calciumImagingAnalysis cannot automatically find the API, it will ask the user to direct it to the _root_ location of the Inscopix Data Processing Software (see below).
+To convert from Inscopix ISXD file format (output by nVista v3+ and nVoke) to HDF5 run `modelDownsampleRawMovies` without changing the regular expression or make sure it looks for `.*.isxd` or similar. Users will need the latest version of the [Inscopix Data Processing Software](https://www.inscopix.com/nVista#Data_Analysis) as these functions take advantage of their API. If {{ site.name }} cannot automatically find the API, it will ask the user to direct it to the _root_ location of the Inscopix Data Processing Software (see below).
 
 ![image](https://user-images.githubusercontent.com/5241605/67715327-df5f2800-f986-11e9-9f91-eeabe7688fed.png)
 
@@ -42,7 +48,7 @@ Within each folder will be a sub-folder called `preprocRunTest` inside of which 
 
 ## Preprocessing calcium imaging movies with `modelPreprocessMovie`
 
-After users instantiate an object of the `calciumImagingAnalysis` class and enter a folder, they can start preprocessing of their calcium imaging data with `modelPreprocessMovie`.
+After users instantiate an object of the `{{ site.name }}` class and enter a folder, they can start preprocessing of their calcium imaging data with `modelPreprocessMovie`.
 
 - See below for a series of windows to get started, the options for motion correction, cropping unneeded regions, Δ_F/F_, and temporal downsampling were selected for use in the study associated with this repository.
 - If users have not specified the path to Miji, a window appears asking them to select the path to Miji's `scripts` folder.
@@ -75,7 +81,7 @@ The algorithm will then run all the requested preprocessing steps and presented 
 
 ![image](https://user-images.githubusercontent.com/5241605/49829599-b53b5200-fd43-11e8-82eb-1e94fd7950e7.png)
 
-******************************************
+<!-- ****************************************** -->
 
 ## Manual movie cropping with `modelModifyMovies`
 
@@ -83,7 +89,7 @@ If users need to eliminate specific regions of their movie before running cell e
 
 ![image](https://user-images.githubusercontent.com/5241605/49829899-8f627d00-fd44-11e8-96fb-2e909b4f0d78.png)
 
-******************************************
+<!-- ****************************************** -->
 
 ## Extracting cells with `modelExtractSignalsFromMovie`
 
@@ -91,7 +97,7 @@ Users can run PCA-ICA, CNMF, CNMF-E, and ROI cell extraction by following the be
 
 We normally estimate the number of PCs and ICs on the high end, manually sort to get an estimate of the number of cells, then run PCA-ICA again with IC 1.5-3x the number of cells and PCs 1-1.5x number of ICs.
 
-To run CNMF or CNMF-E, run `loadDependencies` module (e.g. `obj.loadDependencies`) after calciumImagingAnalysis class is loaded. CVX (a CNMF dependency) will also be downloaded and `cvx_setup` run to automatically set it up.
+To run CNMF or CNMF-E, run `loadDependencies` module (e.g. `obj.loadDependencies`) after {{ site.name }} class is loaded. CVX (a CNMF dependency) will also be downloaded and `cvx_setup` run to automatically set it up.
 
 ![image](https://user-images.githubusercontent.com/5241605/49830421-fa608380-fd45-11e8-8d9a-47a3d2921111.png)
 
@@ -101,20 +107,38 @@ The resulting output (on _Figure 45+_) at the end should look something like:
 
 <!-- ![image](https://user-images.githubusercontent.com/5241605/51728907-c2c44700-2026-11e9-9614-1a57c3a60f5f.png) -->
 
-******************************************
+<!-- ****************************************** -->
+
+## Loading cell-extraction output data for custom scripts
+
+Users can load outputs from cell extraction using the below command. This will then allow users to use the images and activity traces for downstream analysis as needed.
+
+```Matlab
+[inputImages,inputSignals,infoStruct,algorithmStr,inputSignals2] = ciapkg.io.loadSignalExtraction('pathToFile');
+```
+
+Note, the outputs correspond to the below:
+
+- `inputImages` - 3D or 4D matrix containing cells and their spatial information, format: [x y nCells].
+- `inputSignals` - 2D matrix containing activity traces in [nCells nFrames] format.
+- `infoStruct` - contains information about the file, e.g. the 'description' property that can contain information about the algorithm.
+- `algorithmStr` - String of the algorithm name.
+- `inputSignals2` - same as inputSignals but for secondary traces an algorithm outputs.
+
+<!-- ****************************************** -->
 
 ## Loading cell-extraction output data with `modelVarsFromFiles`
 
-In general, after running cell-extraction (`modelExtractSignalsFromMovie`) on a dataset, run the `modelVarsFromFiles` module. This allows `calciumImagingAnalysis` to load/pre-load information about that cell-extraction run.
+In general, after running cell-extraction (`modelExtractSignalsFromMovie`) on a dataset, run the `modelVarsFromFiles` module. This allows `{{ site.name }}` to load/pre-load information about that cell-extraction run.
 
-If you had to restart MATLAB or are just loading calciumImagingAnalysis fresh but have previously run cell extraction, run this method before doing anything else with that cell-extraction data.
+If you had to restart MATLAB or are just loading {{ site.name }} fresh but have previously run cell extraction, run this method before doing anything else with that cell-extraction data.
 
 A menu will pop-up like below when `modelVarsFromFiles` is loaded, you can normally just leave the defaults as is.
 
 ![image](https://user-images.githubusercontent.com/5241605/67052600-7f00f880-f0f3-11e9-9555-96fe32b4de6d.png)
 
 
-******************************************
+<!-- ****************************************** -->
 
 ## Validating cell extraction with `viewCellExtractionOnMovie`
 
@@ -124,10 +148,21 @@ Below is an example, with black outlines indicating location of cell extraction 
 
 ![2014_04_01_p203_m19_check01_raw_viewCellExtractionOnMovie_ezgif-4-57913bcfdf3f_2](https://user-images.githubusercontent.com/5241605/59560798-50033a80-8fcc-11e9-8228-f9a3d83ca591.gif)
 
-******************************************
+<!-- ****************************************** -->
 
 ## Sorting cell extraction outputs with `computeManualSortSignals`
-Outputs from PCA-ICA (and most other common cell extraction algorithms like CNMF, etc.) output signal sources that are not cells and thus must be manually removed from the output. The repository contains a GUI for sorting cells from not cells. GUI also contains a shortcut menu that users can access by right-clicking or selecting the top-left menu.
+
+<p align="center">
+  <strong>{{ site.name }} cell sorting GUI</strong>
+</p>
+<p align="center">
+  <a href="https://user-images.githubusercontent.com/5241605/100851700-64dec280-343a-11eb-974c-d6d29faf9eb2.gif">
+    <img src="https://user-images.githubusercontent.com/5241605/100851700-64dec280-343a-11eb-974c-d6d29faf9eb2.gif" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="75%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
+  </a>
+</p>
+
+
+Outputs from most common cell-extraction algorithms like PCA-ICA, CNMF, etc. contain signal sources that are not cells and thus must be manually removed from the output. The repository contains a GUI for sorting cells from not cells. GUI also contains a shortcut menu that users can access by right-clicking or selecting the top-left menu.
 
 Below users can see a list of options that are given before running the code, those highlighted in green
 
@@ -138,11 +173,9 @@ Below users can see a list of options that are given before running the code, th
 - To manually sort on large movies that will not fit into RAM, select the below options (highlighted in green). This will load only chunks of the movie asynchronously into the GUI as you sort cell extraction outputs.
 ![image](https://user-images.githubusercontent.com/5241605/59215159-5d07d000-8b6d-11e9-8dd7-0d69d5fd38b6.png)
 
-### Usage
+### Cell sorting from the command line with `signalSorter`
 
-Below are two examples of the interface and code to run if not using the `calciumImagingAnalysis` GUI.
-
-Usage instructions below for `signalSorter.m`:
+Usage instructions below for `signalSorter`, e.g. if not using the `{{ site.name }}` GUI.
 
 __Main inputs__
 
@@ -171,6 +204,8 @@ iopts.backgroundNeutral = repmat(230,[1 3])/255;
 [inputImagesSorted, inputSignalsSorted, choices] = signalSorter(inputImages, inputSignals, 'options',iopts);
 ```
 
+Examples of the interface on two different datasets:
+
 #### BLA one-photon imaging data signal sorting GUI
 
 ![out-1](https://user-images.githubusercontent.com/5241605/34796712-3868cb3a-f60b-11e7-830e-8eec5b2c76d7.gif)
@@ -183,7 +218,7 @@ iopts.backgroundNeutral = repmat(230,[1 3])/255;
 
 <a href="https://user-images.githubusercontent.com/5241605/95838435-9ec30080-0cf6-11eb-981d-fc8b5d46de7b.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/95838435-9ec30080-0cf6-11eb-981d-fc8b5d46de7b.png" alt="drawing" width="900" height="auto" /></a>
 
-******************************************
+<!-- ****************************************** -->
 
 ## Removing cells not within brain region with `modelModifyRegionAnalysis`
 
@@ -191,7 +226,7 @@ If the imaging field-of-view includes cells from other brain regions, they can b
 
 ![image](https://user-images.githubusercontent.com/5241605/49834696-e9b60a80-fd51-11e8-90bb-9854b7ccaeb8.png)
 
-******************************************
+<!-- ****************************************** -->
 
 ## Cross-session cell alignment with `computeMatchObjBtwnTrials`
 
@@ -221,4 +256,4 @@ To evaluate how well cross-session alignment works, `computeMatchObjBtwnTrials` 
 
 ### Save cross-session cell alignment with `modelSaveMatchObjBtwnTrials`
 
-Users can save out the alignment structure by running `modelSaveMatchObjBtwnTrials`. This will allow users to select a folder where `calciumImagingAnalysis` will save a MAT-file with the alignment structure information for each animal.
+Users can save out the alignment structure by running `modelSaveMatchObjBtwnTrials`. This will allow users to select a folder where `{{ site.name }}` will save a MAT-file with the alignment structure information for each animal.

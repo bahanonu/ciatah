@@ -15,6 +15,7 @@ function loadDependencies(varargin)
 		% 2021.01.22 [13:42:36] - NWB from specific release to reduce compatibility errors.
 		% 2021.02.01 [15:10:41] - Separated into non-class function for use in more functions without needing to load CIAtah class.
 		% 2021.02.01 [‏‎15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
+		% 2021.03.20 [18:12:20] - Added EXTRACT support to list of functions to download.
 	% TODO
 		% Verify all dependencies download and if not ask user to download again.
 
@@ -22,11 +23,11 @@ function loadDependencies(varargin)
 	% DESCRIPTION
 	options.externalProgramsDir = ciapkg.getDirExternalPrograms();
 	options.guiEnabled = 1;
-	options.dependencyStr = {'downloadMiji','downloadCnmfGithubRepositories','example_downloadTestData','loadMiji','downloadNeuroDataWithoutBorders'};
+	options.dependencyStr = {'downloadMiji','downloadCnmfGithubRepositories','example_downloadTestData','loadMiji','downloadNeuroDataWithoutBorders','downloadEXTRACT'};
 
-	options.dispStr = {'Download Fiji (to run Miji)','Download CNMF, CNMF-E, and CVX code.','Download test one- and two photon datasets.','Load Fiji/Miji into MATLAB path.','Download NWB (NeuroDataWithoutBorders)'};
+	options.dispStr = {'Download Fiji (to run Miji)','Download CNMF, CNMF-E, and CVX code.','Download test one- and two photon datasets.','Load Fiji/Miji into MATLAB path.','Download NWB (NeuroDataWithoutBorders)','Download EXTRACT'};
 	% Int vector: index of options.dependencyStr to run by default with no GUI
-	options.depIdxArray = [1 2 3 5];
+	options.depIdxArray = [1 2 3 5 6];
 	% Binary: 1 = force update even if already downloaded. 0 = skip if already downloaded
 	options.forceUpdate = 0;
 	% get options
@@ -94,6 +95,16 @@ function loadDependencies(varargin)
 				optionsH.gitRepos = cellfun(@(x) [x '/archive/master.zip'],optionsH.gitRepos,'UniformOutput',false);
 				optionsH.outputDir = optionsH.gitNameDisp;
 				optionsH.gitName = cellfun(@(x) [x '-master'],optionsH.gitNameDisp,'UniformOutput',false);
+				[success] = downloadGithubRepositories('options',optionsH);
+			case 'downloadEXTRACT'
+				optionsH.forceUpdate = forceUpdate;
+				optionsH.signalExtractionDir = options.externalProgramsDir;
+				optionsH.gitNameDisp = {'extract'};
+				optionsH.gitRepos = {'https://github.com/schnitzer-lab/EXTRACT-public'};
+				optionsH.gitRepos = cellfun(@(x) [x '/archive/master.zip'],optionsH.gitRepos,'UniformOutput',false);
+				optionsH.outputDir = optionsH.gitNameDisp;
+				% optionsH.gitName = cellfun(@(x) [x '-master'],optionsH.gitNameDisp,'UniformOutput',false);
+				optionsH.gitName = {'EXTRACT-public-master'};
 				[success] = downloadGithubRepositories('options',optionsH);
 			case 'downloadNeuroDataWithoutBorders'
 				optionsH.forceUpdate = forceUpdate;

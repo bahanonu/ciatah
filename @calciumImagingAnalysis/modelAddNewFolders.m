@@ -26,7 +26,7 @@ function obj = modelAddNewFolders(obj,varargin)
 	try
 		nExistingFolders = length(obj.inputFolders);
 		if isempty(options.folderCellArray)
-			sel = 0
+			sel = 0;
 			if isempty(options.inputMethod)
 				usrIdxChoiceStr = {...
 					'manually enter folders to list',...

@@ -21,6 +21,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		% 2019.11.10 [20:34:42] - Add a warning with some common tips for users if error during cell extraction. Skip modelVarsFromFiles and viewObjmaps loading to reduce user confusion for any folders that had issues during cell extraction.
 		% 2020.05.08 [20:01:52] - Make creation of settings an explicit option that the user can change.
 		% 2021.02.01 [‏‎15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
+		% 2021.02.25 [16:44:41] - Update `saveRunTimes` to handle case in which user selects multiple movies for cell extraction.
+		% 2021.03.20 [19:23:25] - Convert ndSparse outputs to single from cell-extraction algorithms (e.g. for CELLMax/EXTRACT) when saving as NWB. Updated EXTRACT support to include additional options.
 	% TODO
 		%
 
@@ -85,7 +87,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				% getAlgorithmRootPath('CELLMax_Wrapper.m','CELLMax',obj);
 				getAlgorithmRootPath('runCELLMax.m','CELLMax',obj,1);
 			case 'EXTRACT'
-				getAlgorithmRootPath('extractor.m','EXTRACT',obj,1);
+				getAlgorithmRootPath('extractor.m','EXTRACT',obj,0);
 			otherwise
 		end
 	end
@@ -458,7 +460,11 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				nwbSavePath = [tmpDirHere filesep thisDirSaveStrFile obj.extractionMethodSaveStr.(obj.signalExtractionMethod) '.nwb'];
 			end
 			nwbOpts.fpathYML = [obj.externalProgramsDir filesep 'nwb_schnitzer_lab' filesep 'ExampleMetadata.yml'];
-			[success] = saveNeurodataWithoutBorders(inputImages,inputTraces,obj.signalExtractionMethod,nwbSavePath,'options',nwbOpts);
+			if issparse(inputImages)
+				[success] = saveNeurodataWithoutBorders(single(full(inputImages)),inputTraces,obj.signalExtractionMethod,nwbSavePath,'options',nwbOpts);
+			else
+				[success] = saveNeurodataWithoutBorders(inputImages,inputTraces,obj.signalExtractionMethod,nwbSavePath,'options',nwbOpts);
+			end
 		end
 	end
 	function getAlgorithmRootPath(algorithmFile,algorithmName,obj,rootFlag)
@@ -470,6 +476,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			if rootFlag==1
 				[pathToAdd,~,~] = fileparts(pathToAdd);
 			end
+			% Get all sub-directories
+			pathToAdd = genpath(pathToAdd);
 			try
 				pathList = strjoin(pathToAdd,pathsep);
 			catch
@@ -586,9 +594,17 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		runtimeTable.daytime{addRow,1} = datestr(now,'HH:MM','local');
 		runtimeTable.folder{addRow,1} = obj.folderBaseSaveStr{obj.fileNum};
 		runtimeTable.algorithm{addRow,1} = algorithm;
-		runtimeTable.frames(addRow,1) = movieDims.z;
-		runtimeTable.width(addRow,1) = movieDims.x;
-		runtimeTable.height(addRow,1) = movieDims.y;
+
+		if iscell(movieList)
+			if length(movieList)>1
+				disp("Only adding the first movie's information to the runtime output.")
+			end
+		elseif length(movieDims.z)>1
+				disp("Only adding the first movie's information to the runtime output.")
+		end
+		runtimeTable.frames(addRow,1) = movieDims.z(1);
+		runtimeTable.width(addRow,1) = movieDims.x(1);
+		runtimeTable.height(addRow,1) = movieDims.y(1);
 
 		fprintf('saving %s\n',runtimeTablePath);
 		writetable(runtimeTable,runtimeTablePath,'FileType','text','Delimiter',',');
@@ -831,17 +847,21 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 							'EXTRACT | Use GPU (''gpu'') or CPU (''cpu'')?',...
 							'EXTRACT | avg_cell_radius (Avg. cell radius, also controls cell elimination)? Leave blank for GUI to estimate radius.',...
 							'EXTRACT | cellfind_min_snr (threshold on the max instantaneous per-pixel SNR in the movie for searching for cells)?',...
-							'EXTRACT | preprocess? (1 = yes, 0 = no)',...
+							'EXTRACT | preprocess? (1 = yes, 0 = no, [ONLY SELECT 1 on raw, motion-corrected movies])',...
 							'EXTRACT | num_partitions? Int: number of partitions in x and y.',...
-							'EXTRACT | compact_output? (1 = yes, 0 = no)'...
+							'EXTRACT | compact_output? (1 = yes, 0 = no)',...
+							'EXTRACT | trace_output_option? Trace output type("nonneg" or "raw")',...
+							'EXTRACT | use_sparse_arrays? (1 = yes, 0 = no)'...
 						},...
 						dlgStr,1,...
 						{...
 							'cpu',...
 							'',...
-							'2'...
+							'1'...
 							'0',...
-							'1',...
+							'2',...
+							'0',...
+							'nonneg',...
 							'0',...
 						}...
 					);setNo = 1;
@@ -852,6 +872,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 					options.EXTRACT.num_partitions_x = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.EXTRACT.num_partitions_y = options.EXTRACT.num_partitions_x;
 					options.EXTRACT.compact_output = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.EXTRACT.trace_output_option = movieSettings{setNo};setNo = setNo+1;
+					options.EXTRACT.use_sparse_arrays = str2num(movieSettings{setNo});setNo = setNo+1;
 
 				case 'CNMF'
 					movieSettings = inputdlg({...
@@ -1421,6 +1443,9 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		% end
 		% extractConfig.num_estimated_cells = nPCsnICs(1);
 
+		% Load default configuration
+		extractConfig = get_defaults([]);
+
 		extractConfig.avg_cell_radius = gridWidth.(obj.subjectStr{obj.fileNum});
 		extractConfig.preprocess = options.EXTRACT.preprocess;
 		switch options.EXTRACT.gpuOrCPU
@@ -1432,12 +1457,14 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			otherwise
 				% body
 		end
-		extractConfig.remove_static_background = false;
-		extractConfig.skip_dff = true;
+		% extractConfig.remove_static_background = false;
+		% extractConfig.skip_dff = true;
 
-		% extractConfig.cellfind_min_snr = options.EXTRACT.cellfind_min_snr;
-		% extractConfig.num_partitions_x = options.EXTRACT.num_partitions_x;
-		% extractConfig.num_partitions_y = options.EXTRACT.num_partitions_y;
+		extractConfig.cellfind_min_snr = options.EXTRACT.cellfind_min_snr;
+		extractConfig.num_partitions_x = options.EXTRACT.num_partitions_x;
+		extractConfig.num_partitions_y = options.EXTRACT.num_partitions_y;
+		extractConfig.trace_output_option = options.EXTRACT.trace_output_option;
+		extractConfig.use_sparse_arrays = options.EXTRACT.use_sparse_arrays;
 		% extractConfig.compact_output = options.EXTRACT.compact_output;
 
 		% extractConfig.thresholds.T_min_snr = 3; % multiply with noise_std
@@ -1463,18 +1490,24 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		extractAnalysisOutput.filters = outStruct.spatial_weights;
 		% permute so it is [nCells frames]
 		extractAnalysisOutput.traces = permute(outStruct.temporal_weights, [2 1]);
-		extractAnalysisOutput.info = outStruct.info;
-		extractAnalysisOutput.config = outStruct.config;
-		extractAnalysisOutput.info = outStruct.info;
-		% Remove the large summary field since takes up unnecessary space
-		extractAnalysisOutput.info.summary = [];
-		extractAnalysisOutput.file = movieList{1};
-		extractAnalysisOutput.userInputConfig = extractConfig;
-		% for backwards compatibility
-		extractAnalysisOutput.opts = outStruct.config;
-		extractAnalysisOutput.time.startTime = startTime;
-		extractAnalysisOutput.time.endTime = tic;
-		extractAnalysisOutput.time.totalTime = toc(startTime);
+		try
+			extractAnalysisOutput.info = outStruct.info;
+			extractAnalysisOutput.config = outStruct.config;
+			extractAnalysisOutput.info = outStruct.info;
+			% Remove the large summary field since takes up unnecessary space
+			extractAnalysisOutput.info.summary = [];
+			extractAnalysisOutput.file = movieList{1};
+			extractAnalysisOutput.userInputConfig = extractConfig;
+			% for backwards compatibility
+			extractAnalysisOutput.opts = outStruct.config;
+			extractAnalysisOutput.time.startTime = startTime;
+			extractAnalysisOutput.time.endTime = tic;
+			extractAnalysisOutput.time.totalTime = toc(startTime);
+		catch err
+			display(repmat('@',1,7))
+			disp(getReport(err,'extended','hyperlinks','on'));
+			display(repmat('@',1,7))
+		end
 
 		% =======
 		% save EXTRACT signals
@@ -1845,6 +1878,22 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 					display(thisSubjectStr);
 					gridWidth.(thisSubjectStr) = options.CNMF.gridWidth;
 					gridSpacing.(thisSubjectStr) = options.CNMF.gridWidth;
+				end
+				gridWidth
+				gridSpacing
+				return;
+			end
+		end
+
+		if strcmp(signalExtractionMethod{signalExtractNo},'EXTRACT')
+			if ~isempty(options.EXTRACT.avg_cell_radius)
+				display('Use manually entered values.')
+				for thisSubjectStr=subjectList
+					display(repmat('=',1,21))
+					thisSubjectStr = thisSubjectStr{1};
+					display(thisSubjectStr);
+					gridWidth.(thisSubjectStr) = options.EXTRACT.avg_cell_radius;
+					gridSpacing.(thisSubjectStr) = options.EXTRACT.avg_cell_radius;
 				end
 				gridWidth
 				gridSpacing
