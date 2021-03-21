@@ -1,31 +1,61 @@
-site_name: CIAtah (calciumImagingAnalysis [ciapkg])
+site_name: CIAtah
 # For online, to end in /data instead of /data.html
 use_directory_urls: true
 theme:
   name: readthedocs
   nav_style: dark
-  highlightjs: true
-  hljs_style: github
-  hljs_languages:
-      - matlab
-      - python
+  # highlightjs: true
+  highlightjs: false
+  # hljs_style: github
+  # hljs_languages:
+  #     - matlab
+  #     - python
   # navigation_depth: 3
   shortcuts:
       help: 191    # ?
       next: 78     # n
       previous: 80 # p
       search: 83   # s
-markdown_extensions:
+  features:
+      - navigation.sections
+      - navigation.expand
+plugins:
+  - macros
+markdown_extensions:  
   - toc:
       permalink: true
+  # - codehilite
   - pymdownx.magiclink
   - mdx_truly_sane_lists
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - pymdownx.highlight:
+      linenums: true
+      linenums_style: pymdownx-inline
+      use_pygments: true
+      css_class: 'codehilite'
+      guess_lang: false
     # - markdown.extensions.toc:
     #       slugify: !!python/name:pymdownx.slugs.uslugify
     #       permalink: "\ue157"
 #     - codehilite
+extra_javascript:
+  # - https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js
+  # - javascripts/config.js
 extra_css:
+  # - https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/default.min.css
     - css/extra.css
+    - css/pygments.css
+
+# VARIABLES TO USE THROUGHOUT THE WEBSITE
+extra:
+  site:
+    name: CIAtah
+    namelow: ciatah
+    nameold: calciumImagingAnalysis
+
+# NAVIGATION
 nav:
   - Home: index.md
   - One-page readme: alldocs.md
@@ -47,17 +77,24 @@ nav:
     - ciapkg: api_ciapkg.md
   - Help:
     - Issues and fixes: help_issues.md
-    - Analysis methods: help_analysis_methods.md
+    - <div class='subsection1'>Data</div>: black
     - Inscopix: help_inscopix.md
-    - Large movie analysis: help_large_movie_analysis.md
+    - Neurodata Without Borders: help_nwb.md
+
+    - <div class='subsection1'>Interface</div>: blank
     - Movie display and noise: help_contrast.md
-    - Cross-session alignemnt: help_cross_session_alignment.md
-    - Manual cell sorting: help_manual_cell_sorting.md
-    - Improving signal-to-noise: help_snr.md
-    - Motion correction: help_motion_correction.md
-    - Spatial filtering: help_spatial_filtering.md
+    
+    - <div class='subsection1'>Analysis</div>: blank
+    - Analysis methods: help_analysis_methods.md
+    - Large movie analysis: help_large_movie_analysis.md
     - Stripe removal: help_stripe_removal.md
+    - Improving signal-to-noise: help_snr.md
+    - Spatial filtering: help_spatial_filtering.md
     - Temporal downsampling: help_temporal_downsampling.md
+    - Motion correction: help_motion_correction.md
+    - Cell extraction: help_cell_extraction.md
+    - Manual cell sorting: help_manual_cell_sorting.md
+    - Cross-session alignemnt: help_cross_session_alignment.md
     - Animal tracking: help_animal_tracking.md
   - Misc:
     - Acknowledgments: acknowledgments.md

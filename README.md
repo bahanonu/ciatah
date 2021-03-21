@@ -30,7 +30,7 @@
 - Includes all major calcium imaging analysis steps: movie visualization (including reading from disk), pre-processing (motion correction, spatiotemporal downsampling, spatial filtering, relative fluorescence calculation, etc.), support for multiple cell-extraction methods (CELLMax, PCA-ICA, CNMF, CNMF-E, EXTRACT, etc.), manual classification via GUIs, automated cell classification (coming soon!), cross-session cell alignment, and more.
 - Has several example one- and two-photon calcium imaging datasets that `ciatah` can automatically download to help users test out the package.
 - Includes code for determining animal position (e.g. in open-field assay).
-- Supports [Neurodata Without Borders](https://www.nwb.org/) data standard (see [calcium imaging tutorial](https://neurodatawithoutborders.github.io/matnwb/tutorials/html/ophys.html)) for reading/writing cell-extraction (e.g. outputs of PCA-ICA, CELLMax, CNMF, CNMF-E, etc.). Supports reading and writing NWB movie files with continued integration planned.
+- Supports [Neurodata Without Borders](https://www.nwb.org/) data standard (see [calcium imaging tutorial](https://neurodatawithoutborders.github.io/matnwb/tutorials/html/ophys.html)) for reading/writing cell-extraction (e.g. outputs of PCA-ICA, CELLMax, CNMF, CNMF-E, EXTRACT, etc.). Supports reading and writing NWB movie files with continued integration planned.
 - Supports most major imaging movie file formats: HDF5, NWB, AVI, ISXD [Inscopix], and TIFF.
 - Requires `MATLAB`.
 <!-- <hr> -->
@@ -251,7 +251,7 @@ Please email any additional questions not covered in the repository to `github [
 
 ## License
 
-Copyright (C) 2013-2020 Biafra Ahanonu
+Copyright (C) 2013-2021 Biafra Ahanonu
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 

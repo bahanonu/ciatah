@@ -20,6 +20,8 @@ markdown_extensions:
       permalink: true
   - pymdownx.magiclink
   - mdx_truly_sane_lists
+  - pymdownx.highlight:
+        linenums: true
     # - markdown.extensions.toc:
     #       slugify: !!python/name:pymdownx.slugs.uslugify
     #       permalink: "\ue157"

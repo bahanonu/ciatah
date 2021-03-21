@@ -7,15 +7,23 @@ The naming convention in general is below. Both TIF and AVI raw files are suppor
 ### Input and output files
 - Default raw imaging data filename: `concat_.*.(h5|tif)`.
 - Default raw processed data filename: `folderName_(processing steps).h5`, where `folderName` is the directory name where the calcium imaging movies are located.
-- Main files output by `calciumImagingAnalysis`. Below, `.*` normally indicates the folder name prefixed to the filename.
+- Main files output by `{{ site.name }}`. Below, `.*` normally indicates the folder name prefixed to the filename.
   - `.*_pcaicaAnalysis.mat`: Where PCA-ICA outputs are stored.
   - `.*_ICdecisions_.*.mat`: Where decisions for cell (=1) and not cell (=0) are stored in a `valid` variable.
   - `.*_regionModSelectUser.mat`: A mask of the region (=1) to include in further analyses.
   - `.*_turboreg_crop_dfof_1.h5`: Processed movie, in this case motion corrected, cropped, and Δ_F/F_.
   - `processing_info`: a folder containing preprocessing information.
 
+### Loading data
+
+Users can load data from any NWB or {{ site.name }}-style MAT files containing cell-extraction outputs using the `ciapkg.io.loadSignalExtraction` function as below.
+
+```Matlab
+[inputImages,inputSignals,infoStruct,algorithmStr,inputSignals2] = ciapkg.io.loadSignalExtraction(fileName);
+```
+
 ### NWB Support
-calciumImagingAnalysis supports NWB format and by default will output cell-extraction analysis as calciumImagingAnalysis format unless user specifies otherwise. NWB files are by default stored in the `nwbFiles` sub-folder. This can be changed by setting the `obj.nwbFileFolder` property to a different folder name.
+{{ site.name }} supports NWB format and by default will output cell-extraction analysis as {{ site.name }} format unless user specifies otherwise. NWB files are by default stored in the `nwbFiles` sub-folder. This can be changed by setting the `obj.nwbFileFolder` property to a different folder name. Learn more about saving and loading
 
 - Default image mask HDF5 dataset name: `/processing/ophys/ImageSegmentation/PlaneSegmentation`.
 - Default fluorescence activity HDF5 dataset name: `/processing/ophys/Fluorescence/RoiResponseSeries`.

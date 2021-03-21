@@ -77,7 +77,7 @@ function obj = runPipeline(obj,varargin)
 	currentIdx = intersect(currentIdx,duplicateIdx);
 	% [idNumIdxArray, ok] = listdlg('ListString',fxnsToRun,'InitialValue',currentIdx(1),'ListSize',dlgSize,'Name','Sir! I have a plan! Select a calcium imaging analysis method or procedure to run:');
 
-	[idNumIdxArray, fileIdxArray, ok] = obj.calciumImagingAnalysisMainGui(fxnsToRun,['"Sir! I have a plan!" Hover over methods for tooltip descriptions.'],currentIdx);
+	[idNumIdxArray, fileIdxArray, ok] = obj.ciatahMainGui(fxnsToRun,['"Sir! I have a plan!" Hover over methods for tooltip descriptions.'],currentIdx);
 	obj.foldersToAnalyze = fileIdxArray;
 	bypassUI = 1;
 
