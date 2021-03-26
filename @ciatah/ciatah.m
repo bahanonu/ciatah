@@ -630,7 +630,7 @@ classdef ciatah < dynamicprops
 			clc
 			% ' Calcium Imaging Analysis Class
 			disp([...
-			'CIAtah (calciumImagingAnalysis)' 10 ...
+			ciapkg.pkgName ' (calciumImagingAnalysis)' 10 ...
 			'A software package for analyzing one- and two-photon calcium imaging datasets.' 10 10 ...
 			'Biafra Ahanonu <<a href="emailto:bahanonu@alum.mit.edu">bahanonu@alum.mit.edu</a>>' 10 ...
 			'Version ' obj.classVersion 10 10 ...
@@ -639,7 +639,7 @@ classdef ciatah < dynamicprops
 			obj.usaflag;
 
 			disp(repmat('*',1,42))
-			disp('Constructing CIAtah imaging analysis object...')
+			disp(['Constructing ' ciapkg.pkgName ' imaging analysis object...'])
 
 			% Ensure that default directory is the CIAtah repository root
 			functionLocation = dbstack('-completenames');
@@ -675,8 +675,10 @@ classdef ciatah < dynamicprops
 
 			obj = initializeObj(obj);
 
+			ciapkg.io.updatePkg('updatePackage',0);
+
 			disp(repmat('*',1,42))
-			disp('Done initializing CIAtah!')
+			disp(['Done initializing ' ciapkg.pkgName '!'])
 			disp(repmat('*',1,42))
 
 			disp([...
