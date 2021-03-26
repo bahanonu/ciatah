@@ -1,14 +1,14 @@
 function [success] = updatePkg(varargin)
 	% Checks ciapkg version against GitHub repo and updates `ciapkg` and `+ciapkg` folders.
 	% Biafra Ahanonu
-	% started: 2020.08.18 [‏‎11:16:56]
+	% started: 2020.08.18 [‎11:16:56]
 	% inputs
 		%
 	% outputs
 		%
 
 	% changelog
-		% 2021.03.09 [‏‎21:34:52] - Option on whether to update package (only 0 for now). Also alert user if behind a version.
+		% 2021.03.09 [21:34:52] - Option on whether to update package (only 0 for now). Also alert user if behind a version.
 	% TODO
 		%
 
@@ -16,12 +16,13 @@ function [success] = updatePkg(varargin)
 	% Char cell array: list of directories to remove then update, lead private, _external_programs, and data directories intact.
 	options.removeDirs = {...
 		'@calciumImagingAnalysis',...
+		'@ciatah',...
 		'+ciapkg',...
 		'ciapkg',...
 		'docs',...
 		'file_exchange'};
 	% [IGNORE] Char: GitHub API URL to VERSION file on CIAPKG repository.
-	options.versionURL = 'https://api.github.com/repos/bahanonu/calciumImagingAnalysis/contents/ciapkg/VERSION';
+	options.versionURL = 'https://api.github.com/repos/bahanonu/calciumImagingAnalysis/contents/+ciapkg/VERSION';
 	% Binary: 1 = pop-up GUI enabled
 	options.showGui = 1;
 	% Binary: 1 = update code, 0 = only check for update and notify user behind a version.
@@ -49,7 +50,10 @@ function [success] = updatePkg(varargin)
 		% Compare to see if running an old version.
 		verCompare = subfxn_verCompare(currentVersion,onlineVersion);
 
-		if verCompare==1
+		if isnan(verCompare)==1
+			verInfoStr = 'Cannot obtain online version, check internet or update manually.';
+			verInfoStr2 = verInfoStr;
+		elseif verCompare==1
 			verInfoStr = 'Running most up-to-date version!';
 			verInfoStr2 = 'Running most up-to-date version!';
 		elseif verCompare<1
@@ -101,6 +105,13 @@ function [success] = updatePkg(varargin)
 	end
 	function [verCompare,compareVector] = subfxn_verCompare(verId1,verId2)
 		fprintf('Comparing\nLocal:  %s.\nOnline: %s.\n',verId1,verId2);
+
+		if isempty(verId1)==1|isempty(verId2)==1
+			verCompare = NaN;
+			compareVector = [];
+			return;
+		end
+
 		if iscell(verId1)
 			verId1 = verId1{1};
 		end

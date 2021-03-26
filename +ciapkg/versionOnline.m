@@ -9,12 +9,13 @@ function [onlineVersion, dateTimeStr] = versionOnline(varargin)
 
 	% changelog
 		% 2021.02.02 [13:42:19] - Updated to handle new VERSION file that includes datestamp on 2nd line.
+		% 2021.03.21 [17:41:54] - Update VERSION path.
 	% TODO
 		%
 
 	%========================
 	% Char: GitHub API URL to VERSION file on CIAPKG repository.
-	options.versionURL = 'https://api.github.com/repos/bahanonu/calciumImagingAnalysis/contents/ciapkg/VERSION';
+	options.versionURL = 'https://api.github.com/repos/bahanonu/calciumImagingAnalysis/contents/+ciapkg/VERSION';
 	% Int: time in second before urlread function errors due to timeout
 	options.timeOutSec = 1;
 	% get options
