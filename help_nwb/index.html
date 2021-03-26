@@ -54,7 +54,7 @@
                 <ul>
                     <li class="toctree-l1"><a class="reference internal" href="../install/">Quick Start</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../install2/">Install</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../install_alt/">Install</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../example_data/">Example data</a>
                     </li>
@@ -190,13 +190,11 @@
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">% Full path to the movie</span>
 <span class="lineno" data-linenos="2 "></span><span class="n">saveNeurodataWithoutBorders</span><span class="p">(</span><span class="n">cellExtractionImages</span><span class="p">,{</span><span class="n">cellExtractionSignals</span><span class="p">},</span><span class="n">cellExtractionAlgorithm</span><span class="p">,</span><span class="n">nwbFilePath</span><span class="p">);</span>
 </code></pre></div>
-
 <h2 id="where-cellextractionalgorithm-is-the-algorithm-used-consisting-of">Where <code>cellExtractionAlgorithm</code> is the algorithm used, consisting of:<a class="headerlink" href="#where-cellextractionalgorithm-is-the-algorithm-used-consisting-of" title="Permanent link">&para;</a></h2>
 <h2 id="loading-nwb">Loading NWB<a class="headerlink" href="#loading-nwb" title="Permanent link">&para;</a></h2>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">% Full path to the movie</span>
 <span class="lineno" data-linenos="2 "></span><span class="p">[</span><span class="n">inputImages</span><span class="p">,</span><span class="n">inputTraces</span><span class="p">,</span><span class="n">infoStruct</span><span class="p">,</span> <span class="n">algorithmStr</span><span class="p">]</span> <span class="p">=</span> <span class="n">loadNeurodataWithoutBorders</span><span class="p">(</span><span class="n">nwbFilePath</span><span class="p">);</span>
 </code></pre></div>
-
 <p>Outputs mean:
 - <code>inputImages</code> - 3D or 4D matrix containing cells and their spatial information.
 - <code>inputTraces</code> - 2D matrix containing trace outputs.

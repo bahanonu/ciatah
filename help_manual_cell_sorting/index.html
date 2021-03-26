@@ -54,7 +54,7 @@
                 <ul>
                     <li class="toctree-l1"><a class="reference internal" href="../install/">Quick Start</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../install2/">Install</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../install_alt/">Install</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../example_data/">Example data</a>
                     </li>
@@ -220,7 +220,6 @@
 <span class="lineno" data-linenos="11 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">backgroundNeutral</span> <span class="p">=</span> <span class="nb">repmat</span><span class="p">(</span><span class="mi">230</span><span class="p">,[</span><span class="mi">1</span> <span class="mi">3</span><span class="p">])</span><span class="o">/</span><span class="mi">255</span><span class="p">;</span>
 <span class="lineno" data-linenos="12 "></span><span class="p">[</span><span class="n">inputImagesSorted</span><span class="p">,</span> <span class="n">inputSignalsSorted</span><span class="p">,</span> <span class="n">choices</span><span class="p">]</span> <span class="p">=</span> <span class="n">signalSorter</span><span class="p">(</span><span class="n">inputImages</span><span class="p">,</span> <span class="n">inputSignals</span><span class="p">,</span> <span class="s">&#39;options&#39;</span><span class="p">,</span><span class="n">iopts</span><span class="p">);</span>
 </code></pre></div>
-
 <h3 id="signalsorter-use-with-large-or-remote-server-imaging-movies"><code>signalSorter</code> use with large or remote server imaging movies<a class="headerlink" href="#signalsorter-use-with-large-or-remote-server-imaging-movies" title="Permanent link">&para;</a></h3>
 <p>For imaging movies that are too large to fit into RAM or that are stored on remote systems, run the below commands. Remember to change <code>inputImages</code>, <code>inputSignals</code>, <code>iopts.inputMovie</code>, and <code>iopts.inputDatasetName</code> to values appropriate for your data). <strong>Note: only HDF5 files are supported with this feature due to use of spatial chunking.</strong></p>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span><span class="c">% CRITICAL USER PARAMETERS</span>
@@ -253,7 +252,6 @@
 <span class="lineno" data-linenos="28 "></span>
 <span class="lineno" data-linenos="29 "></span><span class="p">[</span><span class="o">~</span><span class="p">,</span> <span class="o">~</span><span class="p">,</span> <span class="n">choices</span><span class="p">]</span> <span class="p">=</span> <span class="n">signalSorter</span><span class="p">(</span><span class="n">inputImages</span><span class="p">,</span> <span class="n">inputSignals</span><span class="p">,</span> <span class="s">&#39;options&#39;</span><span class="p">,</span><span class="n">iopts</span><span class="p">);</span>
 </code></pre></div>
-
 <h2 id="interface">Interface<a class="headerlink" href="#interface" title="Permanent link">&para;</a></h2>
 <p><a href="https://user-images.githubusercontent.com/5241605/47396409-68da7b00-d6df-11e8-8c91-e85c3af356b5.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/47396409-68da7b00-d6df-11e8-8c91-e85c3af356b5.png" alt="drawing" width="900" height="auto" /></a></p>
 <p>GUI also contains a shortcut menu that users can access by right-clicking or selecting the top-left menu.</p>
@@ -309,44 +307,47 @@
 <img src="https://user-images.githubusercontent.com/5241605/51698177-6a595f00-1fbe-11e9-9992-448881665c25.gif" alt="drawing" width="600" height="auto"/></li>
 </ul>
 <!-- ![2016_01_20_p460_m19_lineartrack01_s_good_cellmax_510_1_32](https://user-images.githubusercontent.com/5241605/51698177-6a595f00-1fbe-11e9-9992-448881665c25.gif) -->
-
 <!-- ![out-1](https://user-images.githubusercontent.com/5241605/34796712-3868cb3a-f60b-11e7-830e-8eec5b2c76d7.gif) -->
 
 <ul>
 <li>Example of good cells on left and bad on right. Subplots: CELLMax output, mean movie frame centered on the cell and aligned to cell transients, and example CELLMax traces.
-<img src="https://user-images.githubusercontent.com/5241605/35294233-e0ec1ca2-002a-11e8-837c-857c93a6c810.png" alt="drawing" width="600" height="auto"/>
-<!-- <img alt="image" src="https://user-images.githubusercontent.com/5241605/35294233-e0ec1ca2-002a-11e8-837c-857c93a6c810.png" /> --></li>
+<img src="https://user-images.githubusercontent.com/5241605/35294233-e0ec1ca2-002a-11e8-837c-857c93a6c810.png" alt="drawing" width="600" height="auto"/></li>
 </ul>
+<!-- ![image](https://user-images.githubusercontent.com/5241605/35294233-e0ec1ca2-002a-11e8-837c-857c93a6c810.png) -->
+
 <ul>
 <li>Example of not-cells or borderline not-cells.
 <img src="https://user-images.githubusercontent.com/5241605/51698178-6a595f00-1fbe-11e9-940f-5dbcb08d4018.gif" alt="drawing" width="600" height="auto"/>
-<img src="https://user-images.githubusercontent.com/5241605/51698179-6a595f00-1fbe-11e9-9d4e-35ba75342cc4.gif" alt="drawing" width="600" height="auto"/>
-<!-- <img alt="2016_01_20_p460_m19_lineartrack01_s_bad_cellmax_517_1_32" src="https://user-images.githubusercontent.com/5241605/51698178-6a595f00-1fbe-11e9-940f-5dbcb08d4018.gif" /> -->
-<!-- <img alt="2016_01_20_p460_m19_lineartrack01_s_bad_cellmax_511" src="https://user-images.githubusercontent.com/5241605/51698179-6a595f00-1fbe-11e9-9d4e-35ba75342cc4.gif" /> --></li>
+<img src="https://user-images.githubusercontent.com/5241605/51698179-6a595f00-1fbe-11e9-9d4e-35ba75342cc4.gif" alt="drawing" width="600" height="auto"/></li>
 </ul>
+<!-- ![2016_01_20_p460_m19_lineartrack01_s_bad_cellmax_517_1_32](https://user-images.githubusercontent.com/5241605/51698178-6a595f00-1fbe-11e9-940f-5dbcb08d4018.gif) -->
+<!-- ![2016_01_20_p460_m19_lineartrack01_s_bad_cellmax_511](https://user-images.githubusercontent.com/5241605/51698179-6a595f00-1fbe-11e9-9d4e-35ba75342cc4.gif) -->
+
 <ul>
 <li>Good cells with their matched movies aligned to algorithm (PCA-ICA in this case) detected transients.
 <img src="https://cloud.githubusercontent.com/assets/5241605/26423683/67e85184-4083-11e7-88ff-f3bbe3600ffc.png" alt="drawing" width="600"/>
 <img src="https://cloud.githubusercontent.com/assets/5241605/26423903/426a38b8-4084-11e7-93d5-f9962ea5b826.gif" alt="drawing" width="300"/>
 <img src="https://cloud.githubusercontent.com/assets/5241605/26423927/52804e2c-4084-11e7-8184-f3ae240dedea.png" alt="drawing" width="600" height="auto"/>
-<img src="https://cloud.githubusercontent.com/assets/5241605/26423979/7f5348fa-4084-11e7-8c62-a277ecbbd13a.gif" alt="drawing" width="300" height="auto"/>
-<!-- <img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/26423683/67e85184-4083-11e7-88ff-f3bbe3600ffc.png" /> -->
-<!-- <img alt="output3" src="https://cloud.githubusercontent.com/assets/5241605/26423903/426a38b8-4084-11e7-93d5-f9962ea5b826.gif" /> -->
-<!-- <img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/26423927/52804e2c-4084-11e7-8184-f3ae240dedea.png" /> -->
-<!-- <img alt="output5" src="https://cloud.githubusercontent.com/assets/5241605/26423979/7f5348fa-4084-11e7-8c62-a277ecbbd13a.gif" /> --></li>
+<img src="https://cloud.githubusercontent.com/assets/5241605/26423979/7f5348fa-4084-11e7-8c62-a277ecbbd13a.gif" alt="drawing" width="300" height="auto"/></li>
 </ul>
+<!-- ![image](https://cloud.githubusercontent.com/assets/5241605/26423683/67e85184-4083-11e7-88ff-f3bbe3600ffc.png) -->
+<!-- ![output3](https://cloud.githubusercontent.com/assets/5241605/26423903/426a38b8-4084-11e7-93d5-f9962ea5b826.gif) -->
+<!-- ![image](https://cloud.githubusercontent.com/assets/5241605/26423927/52804e2c-4084-11e7-8184-f3ae240dedea.png) -->
+<!-- ![output5](https://cloud.githubusercontent.com/assets/5241605/26423979/7f5348fa-4084-11e7-8c62-a277ecbbd13a.gif) -->
+
 <ul>
 <li>Additional examples of good cells.
 <img src="https://cloud.githubusercontent.com/assets/5241605/10896133/e6c55e7a-816c-11e5-8527-f730ea0f7265.png" alt="drawing" width="600" height="auto"/>
-<img src="https://cloud.githubusercontent.com/assets/5241605/11968975/bc4f24dc-a8c7-11e5-8b87-cf39eb52b62b.png" alt="drawing" width="600" height="auto"/>
-<!-- <img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/10896133/e6c55e7a-816c-11e5-8527-f730ea0f7265.png" /> -->
-<!-- <img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/11968975/bc4f24dc-a8c7-11e5-8b87-cf39eb52b62b.png" /> --></li>
+<img src="https://cloud.githubusercontent.com/assets/5241605/11968975/bc4f24dc-a8c7-11e5-8b87-cf39eb52b62b.png" alt="drawing" width="600" height="auto"/></li>
 </ul>
+<!-- ![image](https://cloud.githubusercontent.com/assets/5241605/10896133/e6c55e7a-816c-11e5-8527-f730ea0f7265.png) -->
+<!-- ![image](https://cloud.githubusercontent.com/assets/5241605/11968975/bc4f24dc-a8c7-11e5-8b87-cf39eb52b62b.png) -->
+
 <ul>
 <li>As noted, without the transient aligned movie (see above), cells with unusual traces might be discarded, e.g. all three below are actual cells when the movie is visualized.
-<img src="https://cloud.githubusercontent.com/assets/5241605/11164758/4ea1c02a-8aae-11e5-90bf-b6314eebb53a.png" alt="drawing" width="600" height="auto"/>
-<!-- <img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/11164758/4ea1c02a-8aae-11e5-90bf-b6314eebb53a.png" /> --></li>
+<img src="https://cloud.githubusercontent.com/assets/5241605/11164758/4ea1c02a-8aae-11e5-90bf-b6314eebb53a.png" alt="drawing" width="600" height="auto"/></li>
 </ul>
+<!-- ![image](https://cloud.githubusercontent.com/assets/5241605/11164758/4ea1c02a-8aae-11e5-90bf-b6314eebb53a.png) -->
               
             </div>
           </div>
