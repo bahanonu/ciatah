@@ -17,6 +17,10 @@ classdef ciatah < dynamicprops
 		% 2019.09/10 - Added GUI font option and signalExtractionTraceOutputType.
 		% 2019.10.15 [21:57:45] - Improved checking for directories that should not be loaded, remove need for verLessThan('matlab','9.0') check.
 		% 2019.12.22 [09:01:38] - Re-vamped selection list dialog boxes for methods, cell-extraction, folders, etc. Now loads as a figure and for some (like methods list) has tooltips that describe each list item.
+		% 2020.03.23 [22:36:36] - Re-vamped selection dialog so everything is on a single panel and users can interactively alter how they filter folders.
+		% 2020.05.07 [15:13:53] - Refactored a bit to remove methods that do not need to be in the main class definition to allow easier updating later.
+		% 2021.03.25 [20:15:31] - Use ciapkg.getDir() to ensure using root directory consistently rather than ciapkgRoot.
+		% 2021.03.25 [22:46:38] - Moved many smaller helper functions in ciatah.m to their own M-files to make maintenance easier.
 	% TODO
 		%
 
@@ -38,7 +42,7 @@ classdef ciatah < dynamicprops
 		defaultObjDir = pwd;
 		classVersion = ciapkg.version();
 		serverPath = '';
-		privateSettingsPath = ['private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
+		privateSettingsPath = [ciapkg.getDir() filesep 'private' filesep 'settings' filesep 'privateLoadBatchFxns.m'];
 		% place where functions can temporarily story user settings
 		functionSettings = struct(...
 			'null', NaN...
@@ -46,6 +50,8 @@ classdef ciatah < dynamicprops
 
 		% user information
 		userName = 'USA';
+		% Taxonomic species name, defaults to mouse.
+		species = 'mus musculus';
 
 		% counters and stores
 		% index of current folder
@@ -58,7 +64,7 @@ classdef ciatah < dynamicprops
 		% Github repo path, for updating the repository code
 		githubUrl = 'https://github.com/bahanonu/calciumImagingAnalysis';
 		% Folder to put downloaded external programs
-		externalProgramsDir = '_external_programs';
+		externalProgramsDir = ciapkg.getDirExternalPrograms();
 
 		% String: name of the analysis file to put in a folder to indicate to other computers the current computer is analyzing the folder and they should skip
 		concurrentAnalysisFilename = '_currentlyAnalyzingFolderCheck.mat';
@@ -101,11 +107,11 @@ classdef ciatah < dynamicprops
 		% paths for specific types of files
 		currentDateTimeSessionStr = datestr(now,'yyyymmdd_HHMMSS_FFF','local');
 		currentDateTimeStr = datestr(now,'yyyymmdd','local');
-		picsSavePath = ['private' filesep 'pics' filesep datestr(now,'yyyymmdd','local') filesep];
-		dataSavePath = ['private' filesep 'data' filesep datestr(now,'yyyymmdd','local') filesep];
-		dataSavePathFixed = ['private' filesep 'data' filesep];
-		logSavePath = ['private' filesep 'logs' filesep datestr(now,'yyyymmdd','local') filesep];
-		settingsSavePath = ['private' filesep 'settings'];
+		picsSavePath = [ciapkg.getDir() filesep 'private' filesep 'pics' filesep datestr(now,'yyyymmdd','local') filesep];
+		dataSavePath = [ciapkg.getDir() filesep 'private' filesep 'data' filesep datestr(now,'yyyymmdd','local') filesep];
+		dataSavePathFixed = [ciapkg.getDir() filesep 'private' filesep 'data' filesep];
+		logSavePath = [ciapkg.getDir() filesep 'private' filesep 'logs' filesep datestr(now,'yyyymmdd','local') filesep];
+		settingsSavePath = [ciapkg.getDir() filesep 'private' filesep 'settings'];
 		%
 		dataSaveFilenameModifier = '';
 		% table save
@@ -161,7 +167,7 @@ classdef ciatah < dynamicprops
 			'CNMF-E (Zhou, 2018)',...
 			'ROI',...
 			'CELLMax (Kitch/Ahanonu)',...
-			'EXTRACT (Inan, 2017)',...
+			'EXTRACT (Inan, 2021)',...
 			'CELLMax [EM] (Kitch/Ahanonu)'...
 			};
 
@@ -797,192 +803,22 @@ classdef ciatah < dynamicprops
 		% set methods, for IO to specific variables in a controlled manner
 		obj = setMainSettings(obj)
 
-		function obj = setup(obj)
-			uiwait(msgbox(['CIAtah setup will:' 10 '1 - check and download dependencies as needed,' 10 '2 - then ask for a list of folders to include for analysis,' 10 '3 - and finally name for movie files to look for.' 10 10 'Press OK to continue.'],'Note to user','modal'));
-
-			% Download and load dependent software packages into "_external_programs" folder.
-			% Also download test data into "data" folder.
-			obj.loadDependencies;
-			disp('Finished loading dependencies, now choose folders to add...');
-
-			% Add folders containing imaging data.
-			obj.modelAddNewFolders;
-
-			% [optional] Set the names CIAtah will look for in each folder
-			obj.setMovieInfo;
-		end
-
-		function obj = update(obj)
-			uiwait(msgbox('The CIAtah GitHub website will open. Click "Clone or download" button to download most recent version of CIAtah.'))
-			web(obj.githubUrl);
-		end
-
-		function obj = display(obj)
-			% Overload display method so can run object by just typing 'obj' in command window.
-			obj.runPipeline;
-			% display('hello');
-		end
-
-		% function obj = delete(obj)
-			% Warn the user before deleting class
-			% % Overload delete method to verify with user.
-			% scnsize = get(0,'ScreenSize');
-			% dependencyStr = {'downloadCnmfGithubRepositories','loadMiji','example_downloadTestData'};
-			% [fileIdxArray, ok] = listdlg('ListString',dependencyStr,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','Which dependency to load?');
-			% obj.runPipeline;
-			% % disp('hello');
-		% end
-
-		function obj = showVars(obj)
-			obj.disp;
-		end
-
-		function obj = downloadLatestGithubVersion(obj)
-			% Blank function
-		end
-
-		function obj = showProtocolSubjectsSessions(obj)
-			protocolList = unique(obj.protocol);
-			for i = 1:length(protocolList)
-				protocolStr = protocolList{i};
-				subjectList = obj.subjectStr(strcmp(protocolStr,obj.protocol));
-				fprintf('Protocol %s | %d subjects | %d sessions\n',protocolStr,length(unique(subjectList)),length(subjectList))
-				% disp([num2str(i) ' | ' obj.inputFolders{i}])
-			end
-		end
-
-		function obj = showFolders(obj)
-			for i = 1:length(obj.inputFolders)
-				disp([num2str(i) ' | ' obj.inputFolders{i}])
-			end
-		end
-
-		function valid = getValid(obj,validType)
-			try
-				fprintf('Getting %s identifications...\n',validType)
-				obj.valid{obj.fileNum}.(obj.signalExtractionMethod).(validType);
-				valid = obj.valid{obj.fileNum}.(obj.signalExtractionMethod).(validType);
-			catch
-				valid=[];
-			end
-		end
-
-		function obj = changeCaxis(obj)
-			userInput = inputdlg('CAXIS min max');str2num(userInput{1});
-			S = findobj(gcf,'Type','Axes');
-			% C = cell2mat(get(S,'Clim'));
-			C = str2num(userInput{1});
-			% C = [-1 7];
-			set(S,'CLim',C);
-		end
-
-		function obj = changeFont(obj,varargin)
-			%========================
-			% DESCRIPTION
-			options.fontSize = [];
-			% get options
-			options = getOptions(options,varargin);
-			% disp(options)
-			% unpack options into current workspace
-			% fn=fieldnames(options);
-			% for i=1:length(fn)
-			% 	eval([fn{i} '=options.' fn{i} ';']);
-			% end
-			%========================
-
-			if isempty(options.fontSize)
-				userInput = inputdlg('New font');
-				userInput = str2num(userInput{1});
-				set(findall(gcf,'-property','FontSize'),'FontSize',userInput);
-			else
-				set(findall(gcf,'-property','FontSize'),'FontSize',options.fontSize);
-			end
-		end
-
-		function obj = checkToolboxes(obj)
-			license('inuse')
-		end
-
-		function GetSize(obj)
-			props = properties(obj);
-			totSize = 0;
-			for ii=1:length(props)
-				currentProperty = getfield(obj, char(props(ii)));
-				s = whos('currentProperty');
-				totSize = totSize + s.bytes;
-			end
-			fprintf(1, '%d bytes\n', totSize);
-		end
-
-		function makeFolderDirs(obj)
-			% ensure private folders are set
-			if ~exist(obj.picsSavePath,'dir');mkdir(obj.picsSavePath);end
-			if ~exist(obj.dataSavePath,'dir');mkdir(obj.dataSavePath);end
-			if ~exist(obj.logSavePath,'dir');mkdir(obj.logSavePath);end
-			% save the current object instance
-		end
-
-		function flagOut = usaflag(obj)
-			% disp([...
-			% '* * * * * * * * * * =========================' 10 ...
-			% '* * * * * * * * * * :::::::::::::::::::::::::' 10 ...
-			% '* * * * * * * * * * =========================' 10 ...
-			% '* * * * * * * * * * :::::::::::::::::::::::::' 10 ...
-			% '* * * * * * * * * * =========================' 10 ...
-			% ':::::::::::::::::::::::::::::::::::::::::::::' 10 ...
-			% '=============================================' 10 ...
-			% ':::::::::::::::::::::::::::::::::::::::::::::' 10 ...
-			% '=============================================' 10 ...
-			% ':::::::::::::::::::::::::::::::::::::::::::::' 10 ...
-			% '=============================================' 10 ...
-			% ':::::::::::::::::::::::::::::::::::::::::::::' 10 ...
-			% '=============================================' 10])
-
-			s1 = char(compose(repmat('\x2736 ',[1 10])));
-			s2 = @(x) char(compose(repmat('\x2015',[1 x])));
-
-			flagOut = [...
-			'' s1 '' s2(25) '' 10 ...
-			'' s1 '' s2(25) '' 10 ...
-			'' s1 '' s2(25) '' 10 ...
-			'' s1 '' s2(25) '' 10 ...
-			'' s1 '' s2(25) '' 10 ...
-			'' s2(45) '' 10 ...
-			'' s2(45) '' 10 ...
-			'' s2(45) '' 10 ...
-			'' s2(45) '' 10 ...
-			'' s2(45) '' 10 ...
-			'' s2(45) '' 10 ...
-			'' s2(45) '' 10 ...
-			'' s2(45) '' 10];
-
-			if nargout==0
-				disp(flagOut);
-			end
-		end
-
-		function obj = saveObj(obj)
-
-			if isempty(obj.objSaveLocation)
-				[filePath,folderPath,~] = uiputfile('*.*','select folder to save object mat file to','calciumImagingAnalysis_properties.mat');
-				% exit if user picks nothing
-				% if folderListInfo==0; return; end
-				savePath = [folderPath filesep filePath];
-				% tmpObj = obj;
-				% obj = struct(obj);
-				obj.objSaveLocation = savePath;
-			else
-				savePath = obj.objSaveLocation;
-			end
-			disp(['saving to: ' savePath])
-			try
-			  save(savePath,'obj','-v7.3');
-			catch
-			  disp('Problem saving, choose new location...')
-			  obj.objSaveLocation = [];
-			  obj.saveObj();
-			end
-			% obj = tmpObj;
-		end
+		% Helper functions
+		% obj = delete(obj)
+		obj = setup(obj)
+		obj = update(obj)
+		obj = display(obj)
+		obj = showVars(obj)
+		obj = downloadLatestGithubVersion(obj)
+		obj = showProtocolSubjectsSessions(obj)
+		obj = showFolders(obj)
+		[valid] = getValid(obj,validType)
+		obj = changeCaxis(obj)
+		obj = changeFont(obj)
+		obj = checkToolboxes(obj)
+		obj = GetSize(obj)
+		obj = makeFolderDirs(obj)
+		[flagOut] = usaflag(obj)
+		obj = saveObj(obj)
 	end
 end
