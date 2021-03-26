@@ -104,17 +104,17 @@
                 <ul>
                     <li class="toctree-l1"><a class="reference internal" href="../help_issues/">Issues and fixes</a>
                     </li>
-                    <li class="toctree-l1"><a class="" href="../black"><div class='subsection1'>Data</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Data</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_inscopix/">Inscopix</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_nwb/">Neurodata Without Borders</a>
                     </li>
-                    <li class="toctree-l1"><a class="" href="../blank"><div class='subsection1'>Interface</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Interface</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_contrast/">Movie display and noise</a>
                     </li>
-                    <li class="toctree-l1"><a class="" href="../blank"><div class='subsection1'>Analysis</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Analysis</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_analysis_methods/">Analysis methods</a>
                     </li>
@@ -206,18 +206,19 @@
 </li>
 </ul>
 <h4 id="parallel-computing-toolbox-pct">Parallel Computing Toolbox (PCT)<a class="headerlink" href="#parallel-computing-toolbox-pct" title="Permanent link">&para;</a></h4>
-<p>By default both <code>calciumImagingAnalysis</code> and PCT auto-start a parallel pool for functions that use parallelization (e.g. or calls to <code>parfor</code>). For some users this may not be desired, in that case go to MATLAB preferences and uncheck the below.</p>
+<p>By default both <code>CIAtah</code> and PCT auto-start a parallel pool for functions that use parallelization (e.g. or calls to <code>parfor</code>). For some users this may not be desired, in that case go to MATLAB preferences and uncheck the below.</p>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/67807212-99bb6180-fa51-11e9-81e1-9ab0fac8847a.png" /></p>
 <p>Or enter the following commands into the MATLAB command window:</p>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">parSet</span> <span class="p">=</span> <span class="n">parallel</span><span class="p">.</span><span class="n">Settings</span><span class="p">;</span>
 <span class="lineno" data-linenos="2 "></span><span class="n">parSet</span><span class="p">.</span><span class="n">Pool</span><span class="p">.</span><span class="n">AutoCreate</span> <span class="p">=</span> <span class="n">false</span><span class="p">;</span>
 </code></pre></div>
+
 <h4 id="imagej">ImageJ<a class="headerlink" href="#imagej" title="Permanent link">&para;</a></h4>
 <ul>
 <li>Run <code>downloadMiji</code> from <code>downloads\downloadMiji.m</code> or <code>obj.loadDependencies</code> (when class initialized) to download Fiji version appropriate to your platform.</li>
 <li>Else download Fiji (preferably <strong>2015 December 22</strong> version): <a href="https://imagej.net/Fiji/Downloads">https://imagej.net/Fiji/Downloads</a>.</li>
 <li>Make sure have Miji in Fiji installation: <a href="http://bigwww.epfl.ch/sage/soft/mij/">http://bigwww.epfl.ch/sage/soft/mij/</a>.</li>
-<li>This is used as an alternative to the <code>calciumImagingAnalysis</code> <code>playMovie.m</code> function for viewing movies and is needed for some movie modification steps.</li>
+<li>This is used as an alternative to the <code>CIAtah</code> <code>playMovie.m</code> function for viewing movies and is needed for some movie modification steps.</li>
 </ul>
 <h4 id="saleae">Saleae<a class="headerlink" href="#saleae" title="Permanent link">&para;</a></h4>
 <ul>

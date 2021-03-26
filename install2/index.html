@@ -92,17 +92,17 @@
                 <ul>
                     <li class="toctree-l1"><a class="reference internal" href="../help_issues/">Issues and fixes</a>
                     </li>
-                    <li class="toctree-l1"><a class="" href="../black"><div class='subsection1'>Data</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Data</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_inscopix/">Inscopix</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_nwb/">Neurodata Without Borders</a>
                     </li>
-                    <li class="toctree-l1"><a class="" href="../blank"><div class='subsection1'>Interface</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Interface</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_contrast/">Movie display and noise</a>
                     </li>
-                    <li class="toctree-l1"><a class="" href="../blank"><div class='subsection1'>Analysis</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Analysis</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_analysis_methods/">Analysis methods</a>
                     </li>
@@ -176,22 +176,22 @@
               
                 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
 <p>Note, this is an alternative method of installation to that outlined in <a href="../install/">Quick Start</a>.</p>
-<p>Clone the <code>calciumImagingAnalysis</code> repository or download the repository zip and unzip.</p>
+<p>Clone the <code>CIAtah</code> repository or download the repository zip and unzip.</p>
 <ul>
-<li>Point the MATLAB path to the <code>calciumImagingAnalysis</code> folder.</li>
+<li>Point the MATLAB path to the <code>CIAtah</code> folder.</li>
 <li>Run <code>loadBatchFxns.m</code> before using functions in the directory. This adds all needed directories and sub-directories to the MATLAB path.</li>
-<li>Type <code>obj = calciumImagingAnalysis;</code> into MATLAB command window and follow instructions that appear after to add data and run analysis.</li>
-<li>Run the <code>calciumImagingAnalysis</code> class method <code>loadDependencies</code> or type <code>obj.loadDependencies</code> after initializing a <code>calciumImagingAnalysis</code> object into the command window to download and add Fiji to path, download CNMF/CNMF-E repositories, download/setup CVX (for CNMF/CNMF-E), and download example data.</li>
+<li>Type <code>obj = ciatah;</code> into MATLAB command window and follow instructions that appear after to add data and run analysis.</li>
+<li>Run the <code>ciatah</code> class method <code>loadDependencies</code> or type <code>obj.loadDependencies</code> after initializing a <code>ciatah</code> object into the command window to download and add Fiji to path, download CNMF/CNMF-E repositories, download/setup CVX (for CNMF/CNMF-E), and download example data.</li>
 </ul>
 <p>Note</p>
 <ul>
-<li>Place <code>calciumImagingAnalysis</code> in a folder where MATLAB will have write permissions, as it also creates a <code>private</code> subdirectory to store some user information along with downloading required external software packages.</li>
-<li><code>file_exchange</code> folder contains File Exchange functions used by <code>calciumImagingAnalysis</code>.</li>
-<li>In general, it is best to set the MATLAB startup directory to the <code>calciumImagingAnalysis</code> folder. This allows <code>java.opts</code> and <code>startup.m</code> to set the correct Java memory requirements and load the correct folders into the MATLAB path.</li>
-<li>If <code>calciumImagingAnalysis</code> IS NOT the startup folder, place <code>java.opts</code> wherever the MATLAB startup folder is so the correct Java memory requirements are set (important for using ImageJ/Miji in MATLAB).</li>
-<li>If it appears an old <code>calciumImagingAnalysis</code> repository is loaded after pulling a new version, run <code>restoredefaultpath</code> and check that old <code>calciumImagingAnalysis</code> folders are not in the MATLAB path.</li>
+<li>Place <code>CIAtah</code> in a folder where MATLAB will have write permissions, as it also creates a <code>private</code> subdirectory to store some user information along with downloading required external software packages.</li>
+<li><code>file_exchange</code> folder contains File Exchange functions used by <code>CIAtah</code>.</li>
+<li>In general, it is best to set the MATLAB startup directory to the <code>CIAtah</code> folder. This allows <code>java.opts</code> and <code>startup.m</code> to set the correct Java memory requirements and load the correct folders into the MATLAB path.</li>
+<li>If <code>CIAtah</code> IS NOT the startup folder, place <code>java.opts</code> wherever the MATLAB startup folder is so the correct Java memory requirements are set (important for using ImageJ/Miji in MATLAB).</li>
+<li>If it appears an old <code>CIAtah</code> repository is loaded after pulling a new version, run <code>restoredefaultpath</code> and check that old <code>CIAtah</code> folders are not in the MATLAB path.
+<!-- - This version of <code>CIAtah</code> has been tested on Windows MATLAB <code>2015b</code>, <code>2017a</code>, and <code>2018b</code>. Moderate testing on Windows and OSX (10.10.5) <code>2017b</code> and <code>2018b</code>. --></li>
 </ul>
-<!-- - This version of `calciumImagingAnalysis` has been tested on Windows MATLAB `2015b`, `2017a`, and `2018b`. Moderate testing on Windows and OSX (10.10.5) `2017b` and `2018b`. -->
               
             </div>
           </div>

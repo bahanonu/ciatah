@@ -90,17 +90,17 @@
                 <ul>
                     <li class="toctree-l1"><a class="reference internal" href="../help_issues/">Issues and fixes</a>
                     </li>
-                    <li class="toctree-l1"><a class="" href="../black"><div class='subsection1'>Data</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Data</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_inscopix/">Inscopix</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_nwb/">Neurodata Without Borders</a>
                     </li>
-                    <li class="toctree-l1"><a class="" href="../blank"><div class='subsection1'>Interface</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Interface</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_contrast/">Movie display and noise</a>
                     </li>
-                    <li class="toctree-l1"><a class="" href="../blank"><div class='subsection1'>Analysis</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Analysis</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_analysis_methods/">Analysis methods</a>
                     </li>
@@ -174,21 +174,30 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="macro-rendering-error"><em>Macro Rendering Error</em><a class="headerlink" href="#macro-rendering-error" title="Permanent link">&para;</a></h1>
-<p><strong>TemplateSyntaxError</strong>: expected token 'end of print statement', got ':'</p>
-<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span>Traceback (most recent call last):
-<span class="lineno" data-linenos=" 2 "></span>  File &quot;C:\software\anaconda3\lib\site-packages\mkdocs_macros\plugin.py&quot;, line 441, in render
-<span class="lineno" data-linenos=" 3 "></span>    md_template = self.env.from_string(markdown)
-<span class="lineno" data-linenos=" 4 "></span>  File &quot;C:\software\anaconda3\lib\site-packages\jinja2\environment.py&quot;, line 941, in from_string
-<span class="lineno" data-linenos=" 5 "></span>    return cls.from_code(self, self.compile(source), globals, None)
-<span class="lineno" data-linenos=" 6 "></span>  File &quot;C:\software\anaconda3\lib\site-packages\jinja2\environment.py&quot;, line 638, in compile
-<span class="lineno" data-linenos=" 7 "></span>    self.handle_exception(source=source_hint)
-<span class="lineno" data-linenos=" 8 "></span>  File &quot;C:\software\anaconda3\lib\site-packages\jinja2\environment.py&quot;, line 832, in handle_exception
-<span class="lineno" data-linenos=" 9 "></span>    reraise(*rewrite_traceback_stack(source=source))
-<span class="lineno" data-linenos="10 "></span>  File &quot;C:\software\anaconda3\lib\site-packages\jinja2\_compat.py&quot;, line 28, in reraise
-<span class="lineno" data-linenos="11 "></span>    raise value.with_traceback(tb)
-<span class="lineno" data-linenos="12 "></span>  File &quot;&lt;unknown&gt;&quot;, line 21, in template
-<span class="lineno" data-linenos="13 "></span>jinja2.exceptions.TemplateSyntaxError: expected token &#39;end of print statement&#39;, got &#39;:&#39;
+                <h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
+<p>Please cite <a href="http://science.sciencemag.org/content/363/6424/276.full">Corder<em>, Ahanonu</em>, et al. 2019</a> <em>Science</em> publication or the <a href="https://doi.org/10.5281/zenodo.2222294">Ahanonu, 2018</a> <em>Zenodo</em> release if you used the software package or code from this repository to advance/help your research:</p>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span>@article<span class="nb">{</span>corderahanonu2019amygdalar,
+<span class="lineno" data-linenos=" 2 "></span>  title=<span class="nb">{</span>An amygdalar neural ensemble that encodes the unpleasantness of pain<span class="nb">}</span>,
+<span class="lineno" data-linenos=" 3 "></span>  author=<span class="nb">{</span>Corder, Gregory and Ahanonu, Biafra and Grewe, Benjamin F and Wang, Dong and Schnitzer, Mark J and Scherrer, Gr<span class="nb">{</span><span class="k">\&#39;</span>e<span class="nb">}</span>gory<span class="nb">}</span>,
+<span class="lineno" data-linenos=" 4 "></span>  journal=<span class="nb">{</span>Science<span class="nb">}</span>,
+<span class="lineno" data-linenos=" 5 "></span>  volume=<span class="nb">{</span>363<span class="nb">}</span>,
+<span class="lineno" data-linenos=" 6 "></span>  number=<span class="nb">{</span>6424<span class="nb">}</span>,
+<span class="lineno" data-linenos=" 7 "></span>  pages=<span class="nb">{</span>276--281<span class="nb">}</span>,
+<span class="lineno" data-linenos=" 8 "></span>  year=<span class="nb">{</span>2019<span class="nb">}</span>,
+<span class="lineno" data-linenos=" 9 "></span>  publisher=<span class="nb">{</span>American Association for the Advancement of Science<span class="nb">}</span>
+<span class="lineno" data-linenos="10 "></span><span class="nb">}</span>
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span>@misc<span class="nb">{</span>biafra<span class="nb">_</span>ahanonu<span class="nb">_</span>2018<span class="nb">_</span>2222295,
+<span class="lineno" data-linenos=" 2 "></span>  author       = <span class="nb">{</span>Biafra Ahanonu<span class="nb">}</span>,
+<span class="lineno" data-linenos=" 3 "></span>  title        = <span class="nb">{{</span> CIAtah : a software package for
+<span class="lineno" data-linenos=" 4 "></span>                   analyzing one- and two-photon calcium imaging
+<span class="lineno" data-linenos=" 5 "></span>                   datasets.<span class="nb">}}</span>,
+<span class="lineno" data-linenos=" 6 "></span>  month        = December,
+<span class="lineno" data-linenos=" 7 "></span>  year         = 2018,
+<span class="lineno" data-linenos=" 8 "></span>  doi          = <span class="nb">{</span>10.5281/zenodo.2222295<span class="nb">}</span>,
+<span class="lineno" data-linenos=" 9 "></span>  url          = <span class="nb">{</span>https://doi.org/10.5281/zenodo.2222295<span class="nb">}</span>
+<span class="lineno" data-linenos="10 "></span><span class="nb">}</span>
 </code></pre></div>
               
             </div>

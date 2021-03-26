@@ -90,17 +90,17 @@
                 <ul class="current">
                     <li class="toctree-l1"><a class="reference internal" href="../help_issues/">Issues and fixes</a>
                     </li>
-                    <li class="toctree-l1"><a class="" href="../black"><div class='subsection1'>Data</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Data</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_inscopix/">Inscopix</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_nwb/">Neurodata Without Borders</a>
                     </li>
-                    <li class="toctree-l1"><a class="" href="../blank"><div class='subsection1'>Interface</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Interface</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_contrast/">Movie display and noise</a>
                     </li>
-                    <li class="toctree-l1"><a class="" href="../blank"><div class='subsection1'>Analysis</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Analysis</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_analysis_methods/">Analysis methods</a>
                     </li>
@@ -112,7 +112,7 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#removestripsfrommovie">removeStripsFromMovie</a>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#calciumimaginganalysis">calciumImagingAnalysis</a>
+    <li class="toctree-l2"><a class="reference internal" href="#ciatah">CIAtah</a>
     </li>
     </ul>
                     </li>
@@ -181,7 +181,7 @@
             <div class="section">
               
                 <h1 id="stripe-removal-from-movies">Stripe removal from movies<a class="headerlink" href="#stripe-removal-from-movies" title="Permanent link">&para;</a></h1>
-<p>Some cameras will produce vertical and/or horizontal stripes in the movies that users will want to remove. Below is an example of process to remove strip from movies. The underlying function is <code>removeStripsFromMovie</code> and users can remove using <code>modelPreprocessMovie</code> module in the <code>calciumImagingAnalysis</code> class.</p>
+<p>Some cameras will produce vertical and/or horizontal stripes in the movies that users will want to remove. Below is an example of process to remove strip from movies. The underlying function is <code>removeStripsFromMovie</code> and users can remove using <code>modelPreprocessMovie</code> module in the <code>CIAtah</code> class.</p>
 <p>Vertical and horizontal stripes can be removed with the vertical and horizontal aspect of the the Fourier spectrum. In my default implementation for users I attenuate at lower frequencies since those usually do not contain the camera-induced stripes. If users have experimental induced stripes, they should lower the frequency threshold to include low frequency (spatially large) stripes.</p>
 <h2 id="example-implementation">Example implementation<a class="headerlink" href="#example-implementation" title="Permanent link">&para;</a></h2>
 <p>Below is an example removal of stripes showing both the Fourier domain analysis in the top row and the real domain processing in the bottom row. Bottom right shows the difference between the original and filtered movie, indicating where the stripes have been removed.</p>
@@ -193,8 +193,8 @@
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">% This will produce a result similar to above.</span>
 <span class="lineno" data-linenos="2 "></span><span class="n">removeStripsFromMovie</span><span class="p">(</span><span class="n">inputMovie</span><span class="p">,</span><span class="s">&#39;stripOrientation&#39;</span><span class="p">,</span><span class="n">both</span><span class="p">,</span><span class="s">&#39;meanFilterSize&#39;</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="s">&#39;freqLowExclude&#39;</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="s">&#39;bandpassType&#39;</span><span class="p">,</span><span class="s">&#39;highpass&#39;</span><span class="p">)</span>
 </code></pre></div></p>
-<h2 id="calciumimaginganalysis">calciumImagingAnalysis<a class="headerlink" href="#calciumimaginganalysis" title="Permanent link">&para;</a></h2>
-<p>To use within the <code>calciumImagingAnalysis</code> class, select <code>modelPreprocessMovie</code> module and have <code>stripeRemoval</code> selected then on the options page, choose whether to remove vertical, horizontal, or both stripes.
+<h2 id="ciatah">CIAtah<a class="headerlink" href="#ciatah" title="Permanent link">&para;</a></h2>
+<p>To use within the <code>CIAtah</code> class, select <code>modelPreprocessMovie</code> module and have <code>stripeRemoval</code> selected then on the options page, choose whether to remove vertical, horizontal, or both stripes.
 <img alt="image" src="https://user-images.githubusercontent.com/5241605/71019922-1bbe2300-20b0-11ea-9c5f-232326884db4.png" />
 <img alt="image" src="https://user-images.githubusercontent.com/5241605/71020018-5922b080-20b0-11ea-9637-abead3c26110.png" /></p>
 <p>A second example of how stripe removal can improve image quality using <code>removeStripsFromMovie</code>.

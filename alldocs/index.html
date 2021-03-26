@@ -49,6 +49,22 @@
                 <ul class="current">
                     <li class="toctree-l1 current"><a class="reference internal current" href="./">One-page readme</a>
     <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#contents">Contents</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#quick-start-guide">Quick start guide</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#ciatah-main-gui-notes">CIAtah main GUI notes</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#additional-quick-start-notes">Additional quick start notes</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#acknowledgments">Acknowledgments</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#references">References</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#questions">Questions?</a>
+    </li>
     </ul>
                     </li>
                 </ul>
@@ -92,17 +108,17 @@
                 <ul>
                     <li class="toctree-l1"><a class="reference internal" href="../help_issues/">Issues and fixes</a>
                     </li>
-                    <li class="toctree-l1"><a class="" href="../black"><div class='subsection1'>Data</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Data</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_inscopix/">Inscopix</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_nwb/">Neurodata Without Borders</a>
                     </li>
-                    <li class="toctree-l1"><a class="" href="../blank"><div class='subsection1'>Interface</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Interface</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_contrast/">Movie display and noise</a>
                     </li>
-                    <li class="toctree-l1"><a class="" href="../blank"><div class='subsection1'>Analysis</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Analysis</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_analysis_methods/">Analysis methods</a>
                     </li>
@@ -170,22 +186,647 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="macro-rendering-error"><em>Macro Rendering Error</em><a class="headerlink" href="#macro-rendering-error" title="Permanent link">&para;</a></h1>
-<p><strong>TemplateSyntaxError</strong>: expected token 'end of print statement', got ':'</p>
-<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span>Traceback (most recent call last):
-<span class="lineno" data-linenos=" 2 "></span>  File &quot;C:\software\anaconda3\lib\site-packages\mkdocs_macros\plugin.py&quot;, line 441, in render
-<span class="lineno" data-linenos=" 3 "></span>    md_template = self.env.from_string(markdown)
-<span class="lineno" data-linenos=" 4 "></span>  File &quot;C:\software\anaconda3\lib\site-packages\jinja2\environment.py&quot;, line 941, in from_string
-<span class="lineno" data-linenos=" 5 "></span>    return cls.from_code(self, self.compile(source), globals, None)
-<span class="lineno" data-linenos=" 6 "></span>  File &quot;C:\software\anaconda3\lib\site-packages\jinja2\environment.py&quot;, line 638, in compile
-<span class="lineno" data-linenos=" 7 "></span>    self.handle_exception(source=source_hint)
-<span class="lineno" data-linenos=" 8 "></span>  File &quot;C:\software\anaconda3\lib\site-packages\jinja2\environment.py&quot;, line 832, in handle_exception
-<span class="lineno" data-linenos=" 9 "></span>    reraise(*rewrite_traceback_stack(source=source))
-<span class="lineno" data-linenos="10 "></span>  File &quot;C:\software\anaconda3\lib\site-packages\jinja2\_compat.py&quot;, line 28, in reraise
-<span class="lineno" data-linenos="11 "></span>    raise value.with_traceback(tb)
-<span class="lineno" data-linenos="12 "></span>  File &quot;&lt;unknown&gt;&quot;, line 167, in template
-<span class="lineno" data-linenos="13 "></span>jinja2.exceptions.TemplateSyntaxError: expected token &#39;end of print statement&#39;, got &#39;:&#39;
+                <h1 id="ciatah">CIAtah<a class="headerlink" href="#ciatah" title="Permanent link">&para;</a></h1>
+<p><em>Note: in general use the individual pages in the navigation pane on the left, as those will be most up-to-date.</em></p>
+<p><img src="https://user-images.githubusercontent.com/5241605/51068051-78c27680-15cd-11e9-9434-9d181b00ef8e.png" align="center"></p>
+<hr>
+
+<p>Software package for calcium imaging analysis of one- and two-photon imaging datasets.</p>
+<p><img src="https://user-images.githubusercontent.com/5241605/81605697-b9c7c800-9386-11ea-9e9f-569c743b24b9.png" width="42%" align="right" alt="calciumImagingAnalysis_logo"></p>
+<ul>
+<li>Includes a GUI to allow users to do large-scale batch analysis, accessed via the repository's <code>CIAtah</code> class.</li>
+<li>The underlying functions can also be used to create GUI-less, command line-ready analysis pipelines. Functions located in <code>ciapkg</code> and <code>+ciapkg</code> sub-folders.</li>
+<li>Includes all major calcium imaging analysis steps: pre-processing (motion correction, spatiotemporal downsampling, spatial filtering, relative fluorescence calculation, etc.), support for multiple cell-extraction methods, automated cell classification (coming soon!), cross-session cell alignment, and more.</li>
+<li>Has several example calcium imaging datasets that it will automatically download to help users test out the package.</li>
+<li>Includes code for determining animal position (e.g. in open-field assay).</li>
+<li>Supports <a href="https://www.nwb.org/">Neurodata Without Borders</a> data standard (see <a href="https://neurodatawithoutborders.github.io/matnwb/tutorials/html/ophys.html">calcium imaging tutorial</a>) for reading/writing cell-extraction (e.g. outputs of PCA-ICA, CELLMax, CNMF, CNMF-E, etc.). Supports reading NWB movie files (write support coming soon).</li>
+<li>Requires <code>MATLAB</code>.
+<!-- <hr> --></li>
+</ul>
+<p>Contact: <strong>Biafra Ahanonu, PhD (bahanonu [at] alum [dot] mit [dot] edu)</strong>.</p>
+<p>Made in USA.<br>
+<img src="https://user-images.githubusercontent.com/5241605/71493809-322a5400-27ff-11ea-9b2d-52ff20b5f332.png" align="center" title="USA" alt="USA" width="100px"></p>
+<hr />
+<h2 id="contents">Contents<a class="headerlink" href="#contents" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="#quick-start-guide">Quick start guide</a></li>
+<li><a href="#acknowledgments">Acknowledgments</a></li>
+<li><a href="#references">References</a></li>
+<li><a href="#questions">Questions</a></li>
+</ul>
+<p><strong>Detailed README</strong></p>
+<ul>
+<li><a href="#repository-notes">Repository notes</a></li>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#data">Data</a></li>
+<li><a href="#processing-calcium-imaging-data">Processing calcium imaging data</a><ul>
+<li><a href="#check-movie-registration-before-pre-processing-with-viewmovieregistrationtest">Check movie registration before pre-processing with <code>viewMovieRegistrationTest</code></a></li>
+<li><a href="#preprocessing-calcium-imaging-movies-with-modelpreprocessmovie">Preprocessing calcium imaging movies with  <code>modelPreprocessMovie</code></a></li>
+<li><a href="#manual-movie-cropping-with-modelmodifymovies">Manual movie cropping with  <code>modelModifyMovies</code></a></li>
+<li><a href="#extracting-cells-with-modelextractsignalsfrommovie">Extracting cells with  <code>modelExtractSignalsFromMovie</code></a></li>
+<li><a href="#loading-cell-extraction-output-data-with-modelvarsfromfiles">Loading cell-extraction output data with <code>modelVarsFromFiles</code></a></li>
+<li><a href="#validating-cell-extraction-with--viewcellextractiononmovie">Validating cell extraction with  <code>viewCellExtractionOnMovie</code></a></li>
+<li><a href="#sorting-cell-extraction-outputs-with-computemanualsortsignals">Sorting cell extraction outputs with <code>computeManualSortSignals</code></a></li>
+<li><a href="#removing-cells-not-within-brain-region-with-modelmodifyregionanalysis">Removing cells not within brain region with  <code>modelModifyRegionAnalysis</code></a></li>
+<li><a href="#cross-session-cell-alignment-with-computematchobjbtwntrials">Cross-session cell alignment with  <code>computeMatchObjBtwnTrials</code></a></li>
+</ul>
+</li>
+<li><a href="#imagejmatlab-based-mouse-location-tracking">ImageJ+MATLAB based mouse location tracking</a></li>
+<li><a href="#license">License</a></li>
+</ul>
+<hr />
+<h2 id="quick-start-guide">Quick start guide<a class="headerlink" href="#quick-start-guide" title="Permanent link">&para;</a></h2>
+<p>Below are steps needed to quickly get started using the <code>CIAtah</code> software package in MATLAB.</p>
+<ul>
+<li>Clone the <code>CIAtah</code> repository (using <a href="https://desktop.github.com/">GitHub desktop</a> or command line) or download the repository zip and unzip.</li>
+<li>Point the MATLAB path to the <code>CIAtah</code> root folder (<em>NOT</em> <code>@ciatah</code> sub-folder in the repository).<ul>
+<li>Alternatively, download the package from <code>File Exchange</code> using the Add-Ons explorer in MATLAB. See <code>CIAtah</code> entry at:
+ <a href="https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis"><img alt="View CIAtah on File Exchange" src="https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg" /></a> or <a href="https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis">https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis</a>.</li>
+</ul>
+</li>
+<li>Run the below MATLAB commands.</li>
+<li>Afterwards, likely want to run <code>modelAddNewFolders</code> module first in order to add folders containing imaging data to the current class object.</li>
+<li>[Optional] Users on Windows systems should download <code>Everything</code> (<a href="https://www.voidtools.com/">https://www.voidtools.com/</a>). It is a very useful and extremely fast search engine for files and folders on a computer that can allow users to quickly get lists of folders then need to analyze in <code>CIAtah</code>.</li>
+<li>[Optional] Users who want to run analysis via the command line can run <code>edit ciapkg.demo.cmdLinePipeline</code> and run each segment of code there to see what commands are needed to perform each step. It assumes you have already run <code>example_downloadTestData</code>.</li>
+</ul>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span><span class="c">% Run these commands in MATLAB to get started.</span>
+<span class="lineno" data-linenos=" 2 "></span>
+<span class="lineno" data-linenos=" 3 "></span><span class="c">% Loads the class into an object for use in this session</span>
+<span class="lineno" data-linenos=" 4 "></span><span class="n">obj</span> <span class="p">=</span> <span class="n">ciatah</span><span class="p">;</span>
+<span class="lineno" data-linenos=" 5 "></span>
+<span class="lineno" data-linenos=" 6 "></span><span class="c">% Runs routines to check dependencies and help user get setup.</span>
+<span class="lineno" data-linenos=" 7 "></span><span class="n">obj</span><span class="p">.</span><span class="n">setup</span><span class="p">;</span>
+<span class="lineno" data-linenos=" 8 "></span>
+<span class="lineno" data-linenos=" 9 "></span><span class="c">% Open the class menu (always type `obj` then enter load the class/modules menu)</span>
+<span class="lineno" data-linenos="10 "></span><span class="n">obj </span><span class="s">% then hit enter, no semicolon!</span><span class="p"></span>
 </code></pre></div>
+
+<h3 id="ciatah-main-gui-notes"><code>CIAtah</code> main GUI notes<a class="headerlink" href="#ciatah-main-gui-notes" title="Permanent link">&para;</a></h3>
+<ul>
+<li>All main decisions for choosing a method/procedure to run, cell-extraction algorithm, and which folders to analyze are in a single window.</li>
+<li>The GUI will real-time update the selected folders based on the selections in the subject, assay, and folder filter areas.</li>
+<li>Sections not relevant for a specific method are grayed out.</li>
+<li>Tab to cycle through selection areas. Green background is the currently selected area, dark gray background is area that had previously been selected but is not the active area, and white background is for areas that have not been selected yet.</li>
+<li>Hover mouse over method names for tooltip that gives additional information.</li>
+</ul>
+<p><strong>For example, selecting middle two assays automatically changes selection in <code>Loaded folders</code> section.</strong></p>
+<p><a href="https://user-images.githubusercontent.com/5241605/79494880-96ed0280-7fd8-11ea-85e1-05a13dc26e90.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/79494880-96ed0280-7fd8-11ea-85e1-05a13dc26e90.png" alt="image" width="45%" height="auto"/></a>
+<a href="https://user-images.githubusercontent.com/5241605/79494959-b97f1b80-7fd8-11ea-8197-7be457d24638.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/79494959-b97f1b80-7fd8-11ea-8197-7be457d24638.png" alt="image" width="45%" height="auto"/></a></p>
+<p><strong>Certain sections become available when user selects the appropriate method (e.g. cell-extraction method available when selecting <code>modelExtractSignalsFromMovie</code>).</strong></p>
+<p><a href="https://user-images.githubusercontent.com/5241605/79495026-d4ea2680-7fd8-11ea-8d4d-02164e1af1d6.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/79495026-d4ea2680-7fd8-11ea-8d4d-02164e1af1d6.png" alt="image" width="50%" height="auto"/></a></p>
+<h3 id="additional-quick-start-notes">Additional quick start notes<a class="headerlink" href="#additional-quick-start-notes" title="Permanent link">&para;</a></h3>
+<ul>
+<li>See additional details in <a href="#processing-calcium-imaging-data">Processing calcium imaging data</a> for running the full processing pipeline.</li>
+<li>To force load all directories, including most external software packages (in <code>_external_programs</code> folder), type <code>ciapkg.loadAllDirs;</code> into MATLAB command line. This is most relevant when you need to access specific functions in an outside repository that are normally hidden until needed.</li>
+<li>When issues are encountered, first check the <code>*Common issues and fixes</code> Wiki page to see if a solution is there. Else, submit a new issue or email Biafra (bahanonu [at] alum.mit.edu).</li>
+<li>Notes:<ul>
+<li>There are two sets of test data that are downloaded:<ul>
+<li><strong>Single session analysis</strong>: <code>data\2014_04_01_p203_m19_check01_raw</code> can be used to test the pipeline until the cross-session alignment step.</li>
+<li><strong>Batch analysis</strong>: <code>data\batch</code> contains three imaging sessions that should be processed and can then be used for the cross-session alignment step. Users should try these sessions to get used to batched analysis.</li>
+</ul>
+</li>
+<li>For Fiji dependency, when path to <code>Miji.m</code> (e.g. <code>\Fiji.app\scripts</code> folder) is requested, likely in <code>\_external_programs\FIJI_FOLDER\Fiji.app\scripts</code> where <code>FIJI_FOLDER</code> varies depending on OS, unless the user requested a custom path or on OSX (in which case, find Fiji the install directory).<ul>
+<li>If you run into Java heap space memory errors when Miji tries to load Fiji in MATLAB, make sure "java.opts" file is in MATLAB start-up folder or that <code>CIAtah</code> folder is the MATLAB start-up folder (<a href="https://www.mathworks.com/help/matlab/matlab_env/matlab-startup-folder.html">instructions on changing</a>).</li>
+</ul>
+</li>
+<li><code>CIAtah</code> often uses <a href="https://www.cheatography.com/davechild/cheat-sheets/regular-expressions/">regular expressions</a> to find relevant movie and other files in folders to analyze.<ul>
+<li>For example, by default it looks for any movie files in a folder containing <code>concat</code>, e.g. <code>concat_recording_20140401_180333.h5</code> (test data). If you have a file called <code>rawData_2019_01_01_myInterestingExperiment.avi</code> and all your raw data files start with <code>rawData_</code> then change the regular expression to <code>rawData_</code> when requested by the repository. See <code>setMovieInfo</code> module to change after adding new folders.</li>
+</ul>
+</li>
+<li><code>CIAtah</code> generally assumes users have imaging data associated with <em>one</em> imaging session and animal in a given folder. Follow folder naming conventions in <a href="#data">Data</a> for best experience.</li>
+<li>External software packages are downloaded into <code>_external_programs</code> folder and should be placed there if done manually.</li>
+</ul>
+</li>
+</ul>
+<p>Users can alternatively run setup as below.
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span><span class="c">% Run these commands in MATLAB to get started.</span>
+<span class="lineno" data-linenos=" 2 "></span>
+<span class="lineno" data-linenos=" 3 "></span><span class="c">% Loads all directories</span>
+<span class="lineno" data-linenos=" 4 "></span><span class="n">loadBatchFxns</span><span class="p">;</span>
+<span class="lineno" data-linenos=" 5 "></span>
+<span class="lineno" data-linenos=" 6 "></span><span class="c">% Loads the class into an object for use in this session</span>
+<span class="lineno" data-linenos=" 7 "></span><span class="n">obj</span> <span class="p">=</span> <span class="n">ciatah</span><span class="p">;</span>
+<span class="lineno" data-linenos=" 8 "></span>
+<span class="lineno" data-linenos=" 9 "></span><span class="c">% Download and load dependent software packages into &quot;_external_programs&quot; folder.</span>
+<span class="lineno" data-linenos="10 "></span><span class="c">% Also download test data into &quot;data&quot; folder.</span>
+<span class="lineno" data-linenos="11 "></span><span class="c">% Normally only need to one once after first downloading CIAtah package.</span>
+<span class="lineno" data-linenos="12 "></span><span class="n">obj</span><span class="p">.</span><span class="n">loadDependencies</span><span class="p">;</span>
+<span class="lineno" data-linenos="13 "></span>
+<span class="lineno" data-linenos="14 "></span><span class="c">% Add folders containing imaging data.</span>
+<span class="lineno" data-linenos="15 "></span><span class="n">obj</span><span class="p">.</span><span class="n">modelAddNewFolders</span><span class="p">;</span>
+<span class="lineno" data-linenos="16 "></span>
+<span class="lineno" data-linenos="17 "></span><span class="c">% [optional] Set the names CIAtah will look for in each folder</span>
+<span class="lineno" data-linenos="18 "></span><span class="n">obj</span><span class="p">.</span><span class="n">setMovieInfo</span><span class="p">;</span>
+<span class="lineno" data-linenos="19 "></span>
+<span class="lineno" data-linenos="20 "></span><span class="c">% Open class menu to pick module to run.</span>
+<span class="lineno" data-linenos="21 "></span><span class="n">obj</span><span class="p">.</span><span class="n">runPipeline</span><span class="p">;</span> <span class="c">% then hit enter!</span>
+</code></pre></div></p>
+<hr />
+<h2 id="acknowledgments">Acknowledgments<a class="headerlink" href="#acknowledgments" title="Permanent link">&para;</a></h2>
+<p>Thanks to Jones G. Parker, PhD (<a href="https://parker-laboratory.com/">https://parker-laboratory.com/</a>) for providing extensive user feedback during development of the <code>CIAtah</code> software package.</p>
+<p>Additional thanks to Drs. Jesse Marshall, Jérôme Lecoq, Tony H. Kim, Hakan Inan, Lacey Kitch, Maggie Larkin, Elizabeth Otto Hamel, Laurie Burns, and Claudia Schmuckermair for providing feedback, specific functions, or helping develop aspects of the code used in the <code>CIAtah</code> software package.</p>
+<h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
+<p>Please cite <a href="http://science.sciencemag.org/content/363/6424/276.full">Corder<em>, Ahanonu</em>, et al. 2019</a> <em>Science</em> publication or the <a href="https://doi.org/10.5281/zenodo.2222294">Ahanonu, 2018</a> <em>Zenodo</em> release if you used the software package or code from this repository to advance/help your research:</p>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span>@article<span class="nb">{</span>corderahanonu2019amygdalar,
+<span class="lineno" data-linenos=" 2 "></span>  title=<span class="nb">{</span>An amygdalar neural ensemble that encodes the unpleasantness of pain<span class="nb">}</span>,
+<span class="lineno" data-linenos=" 3 "></span>  author=<span class="nb">{</span>Corder, Gregory and Ahanonu, Biafra and Grewe, Benjamin F and Wang, Dong and Schnitzer, Mark J and Scherrer, Gr<span class="nb">{</span><span class="k">\&#39;</span>e<span class="nb">}</span>gory<span class="nb">}</span>,
+<span class="lineno" data-linenos=" 4 "></span>  journal=<span class="nb">{</span>Science<span class="nb">}</span>,
+<span class="lineno" data-linenos=" 5 "></span>  volume=<span class="nb">{</span>363<span class="nb">}</span>,
+<span class="lineno" data-linenos=" 6 "></span>  number=<span class="nb">{</span>6424<span class="nb">}</span>,
+<span class="lineno" data-linenos=" 7 "></span>  pages=<span class="nb">{</span>276--281<span class="nb">}</span>,
+<span class="lineno" data-linenos=" 8 "></span>  year=<span class="nb">{</span>2019<span class="nb">}</span>,
+<span class="lineno" data-linenos=" 9 "></span>  publisher=<span class="nb">{</span>American Association for the Advancement of Science<span class="nb">}</span>
+<span class="lineno" data-linenos="10 "></span><span class="nb">}</span>
+</code></pre></div>
+
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span>@misc<span class="nb">{</span>biafra<span class="nb">_</span>ahanonu<span class="nb">_</span>2018<span class="nb">_</span>2222295,
+<span class="lineno" data-linenos=" 2 "></span>  author       = <span class="nb">{</span>Biafra Ahanonu<span class="nb">}</span>,
+<span class="lineno" data-linenos=" 3 "></span>  title        = <span class="nb">{{</span> CIAtah : a software package for
+<span class="lineno" data-linenos=" 4 "></span>                   analyzing one- and two-photon calcium imaging
+<span class="lineno" data-linenos=" 5 "></span>                   datasets.<span class="nb">}}</span>,
+<span class="lineno" data-linenos=" 6 "></span>  month        = December,
+<span class="lineno" data-linenos=" 7 "></span>  year         = 2018,
+<span class="lineno" data-linenos=" 8 "></span>  doi          = <span class="nb">{</span>10.5281/zenodo.2222295<span class="nb">}</span>,
+<span class="lineno" data-linenos=" 9 "></span>  url          = <span class="nb">{</span>https://doi.org/10.5281/zenodo.2222295<span class="nb">}</span>
+<span class="lineno" data-linenos="10 "></span><span class="nb">}</span>
+</code></pre></div>
+
+<h2 id="questions">Questions?<a class="headerlink" href="#questions" title="Permanent link">&para;</a></h2>
+<p>Please email any additional questions not covered in the repository to <code>bahanonu [at] alum.mit.edu</code> or open an issue.</p>
+<hr />
+<h1 id="detailed-readme">Detailed README<a class="headerlink" href="#detailed-readme" title="Permanent link">&para;</a></h1>
+<p>All the remaining sections encompass a more detailed README that provide a step-by-step instructions for running the entire analysis pipeline along with notes, tips, data organization, and other information.</p>
+<h2 id="repository-notes">Repository notes<a class="headerlink" href="#repository-notes" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Covers preprocessing of calcium imaging videos, cell and activity trace extraction (supports the following methods: PCA-ICA, CELLMax, EXTRACT, CNMF, CNMF-E, and ROI), manual and automated sorting of cell extraction outputs, cross-session alignment of cells, and more.</li>
+<li>Supports <code>PCA-ICA</code>, <code>CNMF</code>, <code>CNMF-E</code>, and <code>ROI</code> cell extraction methods publicly along with <code>CELLMax</code> and <code>EXTRACT</code> for Schnitzer Lab collaborators. Additional methods can be integrated upon request.</li>
+<li>Most extensively tested on Windows MATLAB <code>2018b</code> and <code>2019a</code>. Moderate testing on Windows MATLAB <code>2015b</code>, <code>2017a</code>, <code>2017b</code>, and <code>2018b</code> along with OSX (10.10.5) <code>2017b</code> and <code>2018b</code>. Individual functions and <code>ciatah</code> class should work on other MATLAB versions after <code>2015b</code>, but submit an issue if errors occur. Newer MATLAB version preferred.</li>
+<li>This repository consists of code used in and released with<ul>
+<li>G. Corder<em>, __B. Ahanonu</em>__, B. F. Grewe, D. Wang, M. J. Schnitzer, and G. Scherrer (2019). An amygdalar neural ensemble encoding the unpleasantness of painful experiences. <em>Science</em>, 363, 276-281. <a href="http://science.sciencemag.org/content/363/6424/276">http://science.sciencemag.org/content/363/6424/276</a>.</li>
+<li>and similar code helped process imaging or behavioral data in:<ul>
+<li>J.G. Parker<em>, J.D. Marshall</em>, <strong>B. Ahanonu</strong>, Y.W. Wu, T.H. Kim, B.F. Grewe, Y. Zhang, J.Z. Li, J.B. Ding, M.D. Ehlers, and M.J. Schnitzer (2018). Diametric neural ensemble dynamics in parkinsonian and dyskinetic states. <em>Nature</em>, 557, 177–182. <a href="https://doi.org/10.1038/s41586-018-0090-6">https://doi.org/10.1038/s41586-018-0090-6</a>.</li>
+<li>Y. Li, A. Mathis, B.F. Grewe, J.A. Osterhout, B. Ahanonu, M.J. Schnitzer, V.N. Murthy, and C. Dulac (2017). Neuronal representation of social information in the medial amygdala of awake behaving mice. Cell, 171(5), 1176-1190. <a href="https://doi.org/10.1016/j.cell.2017.10.015">https://doi.org/10.1016/j.cell.2017.10.015</a>.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Code mostly developed while in <a href="http://pyramidal.stanford.edu/">Prof. Mark Schnitzer's lab</a> at Stanford University. Credit to those who helped in <a href="#acknowledgments">Acknowledgments</a>.</li>
+<li>Please check the 'Wiki' for further instructions on specific processing/analysis steps and additional information of software used by this package.</li>
+<li>When issues are encountered, first check the <code>Common issues and fixes</code> Wiki page to see if a solution is there. Else, submit a new issue.</li>
+</ul>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/61981834-ab532000-afaf-11e9-97c2-4b1d7d759a30.png" /></p>
+<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
+<p>Clone the <code>CIAtah</code> repository or download the repository zip and unzip.</p>
+<ul>
+<li>Point the MATLAB path to the <code>CIAtah</code> folder.</li>
+<li>Run <code>loadBatchFxns.m</code> before using functions in the directory. This adds all needed directories and sub-directories to the MATLAB path.</li>
+<li>Type <code>obj = ciatah;</code> into MATLAB command window and follow instructions that appear after to add data and run analysis.</li>
+<li>Run the <code>ciatah</code> class method <code>loadDependencies</code> or type <code>obj.loadDependencies</code> after initializing a <code>ciatah</code> object into the command window to download and add Fiji to path, download CNMF/CNMF-E repositories, download/setup CVX (for CNMF/CNMF-E), and download example data.</li>
+</ul>
+<p>Note</p>
+<ul>
+<li>Place <code>CIAtah</code> in a folder where MATLAB will have write permissions, as it also creates a <code>private</code> subdirectory to store some user information along with downloading required external software packages.</li>
+<li><code>file_exchange</code> folder contains File Exchange functions used by <code>CIAtah</code>.</li>
+<li>In general, it is best to set the MATLAB startup directory to the <code>CIAtah</code> folder. This allows <code>java.opts</code> and <code>startup.m</code> to set the correct Java memory requirements and load the correct folders into the MATLAB path.</li>
+<li>If <code>CIAtah</code> IS NOT the startup folder, place <code>java.opts</code> wherever the MATLAB startup folder is so the correct Java memory requirements are set (important for using ImageJ/Miji in MATLAB).</li>
+<li>If it appears an old <code>CIAtah</code> repository is loaded after pulling a new version, run <code>restoredefaultpath</code> and check that old <code>CIAtah</code> folders are not in the MATLAB path.
+<!-- - This version of <code>CIAtah</code> has been tested on Windows MATLAB <code>2015b</code>, <code>2017a</code>, and <code>2018b</code>. Moderate testing on Windows and OSX (10.10.5) <code>2017b</code> and <code>2018b</code>. --></li>
+</ul>
+<h3 id="test-data">Test data<a class="headerlink" href="#test-data" title="Permanent link">&para;</a></h3>
+<p>To download test data, run <code>loadDependencies</code> module (e.g. <code>obj.loadDependencies</code>) and select <code>Download test one-photon data.</code> option to download example one-photon miniature microscope test data to use for testing <code>CIAtah</code> preprocessing, cell extraction, and cell classification code. The data will be located in the <code>data</code> folder within the repository root directory.</p>
+<p>Else run <code>example_downloadTestData.m</code> if haven't started an instance of CIAtah.</p>
+<h3 id="dependencies">Dependencies<a class="headerlink" href="#dependencies" title="Permanent link">&para;</a></h3>
+<p>By default external MATLAB-based software packages are stored in <code>_external_programs</code>.</p>
+<h4 id="matlab-toolbox-dependencies">MATLAB Toolbox dependencies<a class="headerlink" href="#matlab-toolbox-dependencies" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Primary toolboxes<ul>
+<li>distrib_computing_toolbox</li>
+<li>image_toolbox</li>
+<li>signal_toolbox</li>
+<li>statistics_toolbox</li>
+</ul>
+</li>
+<li>Secondary toolboxes (not required for main pre-processing pipeline)<ul>
+<li>video_and_image_blockset</li>
+<li>bioinformatics_toolbox</li>
+<li>financial_toolbox</li>
+<li>neural_network_toolbox</li>
+</ul>
+</li>
+</ul>
+<h4 id="parallel-computing-toolbox-pct">Parallel Computing Toolbox (PCT)<a class="headerlink" href="#parallel-computing-toolbox-pct" title="Permanent link">&para;</a></h4>
+<p>By default both <code>CIAtah</code> and PCT auto-start a parallel pool for functions that use parallelization (e.g. or calls to <code>parfor</code>). For some users this may not be desired, in that case go to MATLAB preferences and uncheck the below.</p>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/67807212-99bb6180-fa51-11e9-81e1-9ab0fac8847a.png" /></p>
+<p>Or enter the following commands into the MATLAB command window:</p>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">parSet</span> <span class="p">=</span> <span class="n">parallel</span><span class="p">.</span><span class="n">Settings</span><span class="p">;</span>
+<span class="lineno" data-linenos="2 "></span><span class="n">parSet</span><span class="p">.</span><span class="n">Pool</span><span class="p">.</span><span class="n">AutoCreate</span> <span class="p">=</span> <span class="n">false</span><span class="p">;</span>
+</code></pre></div>
+
+<h4 id="imagej">ImageJ<a class="headerlink" href="#imagej" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Run <code>downloadMiji</code> from <code>downloads\downloadMiji.m</code> or <code>obj.loadDependencies</code> (when class initialized) to download Fiji version appropriate to your platform.</li>
+<li>Else download Fiji (preferably <strong>2015 December 22</strong> version): <a href="https://imagej.net/Fiji/Downloads">https://imagej.net/Fiji/Downloads</a>.</li>
+<li>Make sure have Miji in Fiji installation: <a href="http://bigwww.epfl.ch/sage/soft/mij/">http://bigwww.epfl.ch/sage/soft/mij/</a>.</li>
+<li>This is used as an alternative to the <code>CIAtah</code> <code>playMovie.m</code> function for viewing movies and is needed for some movie modification steps.</li>
+</ul>
+<h4 id="saleae">Saleae<a class="headerlink" href="#saleae" title="Permanent link">&para;</a></h4>
+<ul>
+<li><em>Only download</em> if doing behavior and imaging experiments that use this DAQ device to collect data.</li>
+<li>Download 1.2.26: <a href="https://support.saleae.com/logic-software/legacy-software/older-software-releases#1-2-26-download">https://support.saleae.com/logic-software/legacy-software/older-software-releases#1-2-26-download</a>.</li>
+</ul>
+<h4 id="cnmf-and-cnmf-e">CNMF and CNMF-E<a class="headerlink" href="#cnmf-and-cnmf-e" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Download repositories by running <code>downloadCnmfGithubRepositories.m</code> or <code>obj.loadDependencies</code> (when class is initialized).</li>
+<li>CNMF: <a href="https://github.com/flatironinstitute/CaImAn-MATLAB">https://github.com/flatironinstitute/CaImAn-MATLAB</a>.</li>
+<li>CNMF-E: <a href="https://github.com/bahanonu/CNMF_E">https://github.com/bahanonu/CNMF_E</a><ul>
+<li>forked from <a href="https://github.com/zhoupc/CNMF_E">https://github.com/zhoupc/CNMF_E</a> to fix HDF5, movies with NaNs, and other related compatibility issues.</li>
+</ul>
+</li>
+<li>CVX: <a href="http://cvxr.com/cvx/download/">http://cvxr.com/cvx/download/</a>.<ul>
+<li>Download <code>All platforms</code> (<em>Redistributable: free solvers only</em>), e.g. <a href="http://web.cvxr.com/cvx/cvx-rd.zip">http://web.cvxr.com/cvx/cvx-rd.zip</a>.</li>
+</ul>
+</li>
+</ul>
+<h4 id="neurodata-without-borders">Neurodata Without Borders<a class="headerlink" href="#neurodata-without-borders" title="Permanent link">&para;</a></h4>
+<p>Neurodata Without Borders (NWB) file support requires the following GitHub repositories be present in the <code>_external_programs</code> folder. These are downloaded automatically when running <code>obj.setup</code>.</p>
+<ul>
+<li><a href="https://github.com/schnitzer-lab/nwb_schnitzer_lab">https://github.com/schnitzer-lab/nwb_schnitzer_lab</a>.</li>
+<li><a href="https://github.com/ewiger/yamlmatlab">https://github.com/ewiger/yamlmatlab</a>.</li>
+<li><a href="https://github.com/NeurodataWithoutBorders/matnwb">https://github.com/NeurodataWithoutBorders/matnwb</a>.</li>
+</ul>
+<h3 id="repository-organization">Repository organization<a class="headerlink" href="#repository-organization" title="Permanent link">&para;</a></h3>
+<p>Below are a list of the top-level directories and what types of functions or files are within.</p>
+<ul>
+<li><strong>@ciatah</strong> - Contains <code>ciatah</code> class and associated methods for calcium imaging analysis.</li>
+<li><strong><em>external</em>programs</strong>_ - External software packages (e.g. CNMF, CELLMax, and others) are stored here.</li>
+<li><strong><em>overloaded</em></strong> - Functions that overload core MATLAB functions to add functionality or fix display issues.</li>
+<li><strong>+ciapkg</strong> - Package containing CIAtah functions. All functions will eventually be moved here to create a clean namespace.</li>
+<li><strong>ciapkg</strong><ul>
+<li><strong>behavior</strong> - Processing of behavior files (e.g. accelerometer data, Saleae files, etc.).</li>
+<li><strong>classification</strong> - Classification of cells, e.g. manual classification of cell extraction outputs or cross-session grouping of cells.</li>
+<li><strong>data</strong> - Location of test data.</li>
+<li><strong>download</strong> - Functions that help download external code packages or data.</li>
+<li><strong>file_exchange</strong> - Contains any outside code from MATLAB's File Exchange that are dependencies in repository functions.</li>
+<li><strong>hdf5</strong> - Functions concerned with HDF5 input/output.</li>
+<li><strong>image</strong> - Functions concerned with processing images (or [x y] matrices).</li>
+<li><strong>inscopix</strong> - Functions concerned with Inscopix-specific data processing (e.g. using the ISX MATLAB API).</li>
+<li><strong>io</strong> - Contains functions concerned with file or function input-output.</li>
+<li><strong>motion_correction</strong> - Functions concerned with motion correction.</li>
+<li><strong>movie_processing</strong> - Functions concerned with preprocessing calcium imaging videos, e.g. spatial filtering, downsampling, etc.</li>
+<li><strong>neighbor</strong> - Detection and display of neighboring cell information.</li>
+<li><strong><em>private</em></strong> - This directory contains various user settings, output pictures/data/logs from <code>ciatah</code> modules, and more. This directory is NOT included in the MATLAB path, hence is good for storing related scripts without interfering with <code>CIAtah</code>.</li>
+<li><strong>python</strong> - Python code, e.g. for processing Saleae data.</li>
+<li><strong>serial</strong> - Code for saving and processing serial port data, e.g. Arduino streaming data.</li>
+<li><strong>settings</strong> - Functions concerned with settings for other functions.</li>
+<li><strong>signal_extraction</strong> - Functions related to cell extraction, e.g. running PCA-ICA.</li>
+<li><strong>signal_processing</strong> - Functions to process cell activity traces.</li>
+<li><strong>tracking</strong> - ImageJ and MATLAB functions to track animal location in behavior movies.</li>
+<li><strong>unit_tests</strong> [optional] - Functions to validate specific repository functions.</li>
+<li><strong>video</strong> - Functions to manipulate or process videos, e.g. making movie montages or adding dropped frames.</li>
+<li><strong>view</strong> - Functions concerned with displaying data or information to the user, normally do not process data.</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="data">Data<a class="headerlink" href="#data" title="Permanent link">&para;</a></h2>
+<p>The class generally operates on the principal that a single imaging session is contained within a single folder or directory. Thus, even if a single imaging session contains multiple trials (e.g. the imaging data is split across multiple movies) this is fine as the class will concatenate them during the preprocessing step.</p>
+<p>The naming convention in general is below. Both TIF and AVI raw files are converted to HDF5 after processing since that format offers more flexibility during cell extraction and other steps.</p>
+<h3 id="input-and-output-files">Input and output files<a class="headerlink" href="#input-and-output-files" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Default raw imaging data filename: <code>concat_.*.(h5|tif)</code>.</li>
+<li>Default raw processed data filename: <code>folderName_(processing steps).h5</code>, where <code>folderName</code> is the directory name where the calcium imaging movies are located.</li>
+<li>Main files output by <code>CIAtah</code>. Below, <code>.*</code> normally indicates the folder name prefixed to the filename.<ul>
+<li><code>.*_pcaicaAnalysis.mat</code>: Where PCA-ICA outputs are stored.</li>
+<li><code>.*_ICdecisions_.*.mat</code>: Where decisions for cell (=1) and not cell (=0) are stored in a <code>valid</code> variable.</li>
+<li><code>.*_regionModSelectUser.mat</code>: A mask of the region (=1) to include in further analyses.</li>
+<li><code>.*_turboreg_crop_dfof_1.h5</code>: Processed movie, in this case motion corrected, cropped, and Δ_F/F_.</li>
+<li><code>processing_info</code>: a folder containing preprocessing information.</li>
+</ul>
+</li>
+</ul>
+<h3 id="nwb-support">NWB Support<a class="headerlink" href="#nwb-support" title="Permanent link">&para;</a></h3>
+<p>CIAtah supports NWB format and by default will output cell-extraction analysis as CIAtah format unless user specifies otherwise. NWB files are by default stored in the <code>nwbFiles</code> sub-folder. This can be changed by setting the <code>obj.nwbFileFolder</code> property to a different folder name.</p>
+<ul>
+<li>Default image mask HDF5 dataset name: '/processing/ophys/ImageSegmentation/PlaneSegmentation'.</li>
+<li>Default fluorescence activity HDF5 dataset name: '/processing/ophys/Fluorescence/RoiResponseSeries'.</li>
+</ul>
+<h3 id="preferred-folder-naming-format">Preferred folder naming format<a class="headerlink" href="#preferred-folder-naming-format" title="Permanent link">&para;</a></h3>
+<p>Folders should following the format <code>YYYY_MM_DD_pXXX_mXXX_assayXX_trialXX</code> where:</p>
+<ul>
+<li><code>YYYY_MM_DD</code> = normal year/month/day scheme.</li>
+<li><code>pXXX</code> = protocol number, e.g. p162, for the set of experiments performed for the same set of animals.</li>
+<li><code>mXXX</code> = subject ID/number, e.g. m805 or animal ID.</li>
+<li><code>assayXX</code> = assay ID and session number, e.g. vonfrey01 is the 1st von Frey assay session.</li>
+<li><code>trialXX</code> = the trial number of the current assay session, only applicable if multiple trials in the same assay session.</li>
+</ul>
+<h3 id="videos">Videos<a class="headerlink" href="#videos" title="Permanent link">&para;</a></h3>
+<ul>
+<li>HDF5:<ul>
+<li>Saved as a <code>[x y t]</code> 3D matrix where <code>x</code> and <code>y</code> are the height and width of video while <code>t</code> is number of frames.</li>
+<li><code>/1</code> as the name for directory containing movie data.</li>
+<li>HDF can be read in using Fiji, see <a href="http://lmb.informatik.uni-freiburg.de/resources/opensource/imagej_plugins/hdf5.html">http://lmb.informatik.uni-freiburg.de/resources/opensource/imagej_plugins/hdf5.html</a>.</li>
+<li>Each HDF5 file should contain imaging data in a dataset name, e.g. <code>/1</code> is the default datasetname for <code>[x y frames]</code> 2D calcium imaging movies in this repository.</li>
+<li>Most functions have a <code>inputDatasetName</code> option to specify the dataset name if different from <code>/1</code>.</li>
+</ul>
+</li>
+<li>TIF<ul>
+<li>Normal <code>[x y frames]</code> tif.</li>
+</ul>
+</li>
+<li>AVI<ul>
+<li>Raw uncompressed grayscale <code>[x y frames]</code> avi.</li>
+</ul>
+</li>
+</ul>
+<h3 id="cell-images">Cell images<a class="headerlink" href="#cell-images" title="Permanent link">&para;</a></h3>
+<ul>
+<li>IC filters from PCA-ICA and images from CNMF(-E).<ul>
+<li><code>[x y n]</code> matrix</li>
+<li><code>x</code> and <code>y</code> being height/width of video and <code>n</code> is number of ICs output.</li>
+</ul>
+</li>
+</ul>
+<h3 id="cell-traces">Cell traces<a class="headerlink" href="#cell-traces" title="Permanent link">&para;</a></h3>
+<ul>
+<li>IC traces from PCA-ICA and images from CNMF(-E).<ul>
+<li><code>[n f]</code> matrix.</li>
+<li><code>n</code> is number of ICs output and <code>f</code> is number of movie frames.</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="processing-calcium-imaging-data">Processing calcium imaging data<a class="headerlink" href="#processing-calcium-imaging-data" title="Permanent link">&para;</a></h2>
+<p>The general pipeline for processing calcium imaging data is below. This repository includes code to do nearly every step.</p>
+<!-- ![image](https://user-images.githubusercontent.com/5241605/61981834-ab532000-afaf-11e9-97c2-4b1d7d759a30.png) -->
+
+<p><img alt="ciapkg_pipeline.png" src="../img/ciapkg_pipeline.png" /></p>
+<p>To start using the <code>CIAtah</code> software package, enter the following into the MATLAB command window.</p>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span><span class="c">% Loads all directories</span>
+<span class="lineno" data-linenos=" 2 "></span><span class="n">loadBatchFxns</span><span class="p">;</span>
+<span class="lineno" data-linenos=" 3 "></span>
+<span class="lineno" data-linenos=" 4 "></span><span class="c">% Loads the class into an object.</span>
+<span class="lineno" data-linenos=" 5 "></span><span class="n">obj</span> <span class="p">=</span> <span class="n">ciatah</span><span class="p">;</span>
+<span class="lineno" data-linenos=" 6 "></span>
+<span class="lineno" data-linenos=" 7 "></span><span class="c">% Open the class menu</span>
+<span class="lineno" data-linenos=" 8 "></span><span class="n">obj </span><span class="s">% then hit enter, no semicolon!</span><span class="p"></span>
+<span class="lineno" data-linenos=" 9 "></span><span class="c">% Alternatively</span>
+<span class="lineno" data-linenos="10 "></span><span class="n">obj</span><span class="p">.</span><span class="n">runPipeline</span><span class="p">;</span> <span class="c">% then hit enter!</span>
+</code></pre></div>
+
+<p>The general order of functions that users should run is ([optional] are those not critical for most datasets):</p>
+<ul>
+<li><code>loadDependencies</code><ul>
+<li>If user is running CIAtah for the first time, this module has several options to download and load CNMF/CNMF-E code for cell extraction, Fiji for viewing/modifying videos (using Miji), and test data from a miniature microscope experiment.</li>
+</ul>
+</li>
+<li><code>modelDownsampleRawMovies</code> [optional]<ul>
+<li>If users have raw calcium imaging data that needs to be spatially downsampled, e.g. raw data from Inscopix nVista software.</li>
+</ul>
+</li>
+<li><code>modelAddNewFolders</code><ul>
+<li>Users should always use this method first, used to add folders to the current class object.</li>
+<li>For example, if users ran <code>example_downloadTestData.m</code>, then add the folder <code>[githubRepoPath]\data\2014_04_01_p203_m19_check01_raw</code> where <code>githubRepoPath</code> is the absolute path to the current <code>CIAtah</code> repository.</li>
+</ul>
+</li>
+<li><code>viewMovie</code><ul>
+<li>Users should check that CIAtah loads their movies correctly and that Miji is working.</li>
+<li>Remember to check that <code>Imaging movie regexp:</code> (regular expression class uses to find user movies within given folders) setting matches name of movies currently in repository.</li>
+</ul>
+</li>
+<li><code>viewMovieRegistrationTest</code> [optional]<ul>
+<li>Users can check different spatial filtering and registration settings.</li>
+<li><code>tregRunX</code> folders (where <code>X</code> is a number) contain details of each run setting. Delete from analysis folder if don't need outputs later.</li>
+<li>Remember to adjust contrast in resulting montage movies since different filtering will change the absolute pixel values.</li>
+</ul>
+</li>
+<li><code>modelPreprocessMovie</code><ul>
+<li>Main processing method for CIAtah. Performs motion correction, spatial filtering, cropping, down-sampling, and relative fluorescence calculations. If using Inscopix nVista 1.0 or 2.0, also will correct for dropped frames.</li>
+</ul>
+</li>
+<li><code>modelModifyMovies</code><ul>
+<li>GUI that allows users to remove movie regions not relevant to cell extraction.</li>
+</ul>
+</li>
+<li><code>modelExtractSignalsFromMovie</code><ul>
+<li>Performs cell extraction, currently PCA-ICA with the ability to run more recent algorithms (e.g. CNMF) upon request.</li>
+</ul>
+</li>
+<li><code>modelVarsFromFiles</code><ul>
+<li>Run after <code>modelExtractSignalsFromMovie</code> to load cell image and trace information into the current class object.</li>
+</ul>
+</li>
+<li><code>viewCellExtractionOnMovie</code> [optional]<ul>
+<li>This function overlays the cell extraction outputs on snippets of the processed video, allowing users to check that cell extraction correctly identified all the cells.</li>
+</ul>
+</li>
+<li><code>computeManualSortSignals</code><ul>
+<li>A GUI to allow users to classify cells and not cells in cell extraction outputs.</li>
+</ul>
+</li>
+<li><code>modelModifyRegionAnalysis</code> [optional]<ul>
+<li>Users are able to select specific cells from cell extraction manual sorting to include in further analyses.</li>
+</ul>
+</li>
+<li><code>computeMatchObjBtwnTrials</code><ul>
+<li>Method to register cells across imaging sessions. Also includes visual check GUI in <code>viewMatchObjBtwnSessions</code> method.</li>
+<li><strong>Note: it is heavily advised that throughout a particular animal's imaging sessions, that you keep the acquisition frame dimensions identical.</strong> This makes cross-session registration easier. Else you will have to crop all sessions for that animal to the same size ensuring that the area of interest is present in each.</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="spatially-downsample-raw-movies-or-convert-to-hdf5-with-modeldownsamplerawmovies">Spatially downsample raw movies or convert to HDF5 with <code>modelDownsampleRawMovies</code><a class="headerlink" href="#spatially-downsample-raw-movies-or-convert-to-hdf5-with-modeldownsamplerawmovies" title="Permanent link">&para;</a></h2>
+<p>Users have the ability to spatially downsample raw movies, often necessary to denoise the data, save storage space, and improve runtimes of later processing steps. For most data, users can downsample 2 or 4 times in each spatial dimension while still retaining sufficient pixels per cell to facilitate cell-extraction.</p>
+<p>To run, either select <code>modelDownsampleRawMovies</code> in the GUI menu or type the below command after initializing a CIAtah obj.</p>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">obj</span><span class="p">.</span><span class="n">modelDownsampleRawMovies</span><span class="p">;</span>
+</code></pre></div>
+
+<p>This will pop-up the following screen. Users can</p>
+<ul>
+<li>input several folders where ISXD files are by separating each folder path with a comma (<code>Folder(s) where raw HDF5s are located</code>),</li>
+<li>specify a common root folder to save files to (<code>Folder to save downsampled HDF5s to:</code>),</li>
+<li>and input a root directory that contains the sub-folders with the raw data (<code>Decompression source root folder(s)</code>).
+The function will automatically put each file in its corresponding folder, <strong>make sure folder names are unique</strong> (this should be done anyways for data analysis reasons).</li>
+</ul>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/67715130-71b2fc00-f986-11e9-970e-9d1252c25db8.png" /></p>
+<h3 id="converting-inscopix-isxd-files-to-hdf5">Converting Inscopix ISXD files to HDF5<a class="headerlink" href="#converting-inscopix-isxd-files-to-hdf5" title="Permanent link">&para;</a></h3>
+<p>To convert from Inscopix ISXD file format (output by nVista v3+ and nVoke) to HDF5 run <code>modelDownsampleRawMovies</code> without changing the regular expression or make sure it looks for <code>.*.isxd</code> or similar. Users will need the latest version of the <a href="https://www.inscopix.com/nVista#Data_Analysis">Inscopix Data Processing Software</a> as these functions take advantage of their API. If CIAtah cannot automatically find the API, it will ask the user to direct it to the <em>root</em> location of the Inscopix Data Processing Software (see below).</p>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/67715327-df5f2800-f986-11e9-9f91-eeabe7688fed.png" /></p>
+<h2 id="check-movie-registration-before-pre-processing-with-viewmovieregistrationtest">Check movie registration before pre-processing with <code>viewMovieRegistrationTest</code><a class="headerlink" href="#check-movie-registration-before-pre-processing-with-viewmovieregistrationtest" title="Permanent link">&para;</a></h2>
+<p>Users should spatially filter one-photon or other data with background noise (e.g. neuropil). To get a feel for how the different spatial filtering affects SNR/movie data before running the full processing pipeline, run <code>viewMovieRegistrationTest</code> module. Then select either <code>matlab divide by lowpass before registering</code> or <code>matlab bandpass before registering</code> then change <code>filterBeforeRegFreqLow</code> and <code>filterBeforeRegFreqHigh</code> settings, see below.</p>
+<p>Within each folder will be a sub-folder called <code>preprocRunTest</code> inside of which is a series of sub-folders called <code>preprocRun##</code> that will contain a file called <code>settings.mat</code> that can be loaded into <code>modelPreprocessMovie</code> so the same settings that worked during the test can be used during the actual pre-processing run.</p>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/52497447-f3f65880-2b8a-11e9-8875-c6b408e5c011.png" /></p>
+<ul>
+<li>You'll get an output like the below:<ul>
+<li><strong>A</strong>: The top left is without any filtering while the other 3 are with different bandpass filtering options.</li>
+<li><strong>B</strong>: Cell ΔF/F intensity profile from the raw movie. Obtain by selecting <code>Analyze-&gt;Plot profile</code> from Fiji menu after selecting a square segment running through a cell.</li>
+<li><strong>C</strong>: Same cell ΔF/F intensity profile from the bottom/left movie (note the y-axis is the same as above). Obtained in same manner as <strong>B</strong>.</li>
+</ul>
+</li>
+</ul>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/59561146-695ab580-8fd1-11e9-892b-ce1f5fc7800e.png" /></p>
+<h2 id="preprocessing-calcium-imaging-movies-with-modelpreprocessmovie">Preprocessing calcium imaging movies with <code>modelPreprocessMovie</code><a class="headerlink" href="#preprocessing-calcium-imaging-movies-with-modelpreprocessmovie" title="Permanent link">&para;</a></h2>
+<p>After users instantiate an object of the <code>ciatah</code> class and enter a folder, they can start preprocessing of their calcium imaging data with <code>modelPreprocessMovie</code>.</p>
+<ul>
+<li>See below for a series of windows to get started, the options for motion correction, cropping unneeded regions, Δ_F/F_, and temporal downsampling were selected for use in the study associated with this repository.</li>
+<li>If users have not specified the path to Miji, a window appears asking them to select the path to Miji's <code>scripts</code> folder.</li>
+<li>If users are using the test dataset, it is recommended that they do not use temporal downsampling.</li>
+<li>Vertical and horizontal stripes in movies (e.g. CMOS camera artifacts) can be removed via <code>stripeRemoval</code> step. Remember to select correct <code>stripOrientationRemove</code>,<code>stripSize</code>, and <code>stripfreqLowExclude</code> options in the preprocessing options menu.</li>
+</ul>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/49827992-93d86700-fd3f-11e8-9936-d7143bbec3db.png" /></p>
+<p>Next the user is presented with a series of options for motion correction, image registration, and cropping.:</p>
+<ul>
+<li>The options highlighted in green are those that should be considered by users.</li>
+<li>Users can over their mouse over each option to get tips on what they mean.</li>
+<li>In particular, make sure that <code>inputDatasetName</code> is correct for HDF5 files and that <code>fileFilterRegexp</code> matches the form of the calcium imaging movie files to be analyzed.</li>
+<li>After this, the user is asked to let the algorithm know how many frames of the movie to analyze (defaults to all frames).</li>
+<li>Then the user is asked to select a region to use for motion correction. In general, it is best to select areas with high contrast and static markers such as blood vessels. Stay away from the edge of the movie or areas outside the brain (e.g. the edge of microendoscope GRIN lens in one-photon miniature microscope movies).</li>
+</ul>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/49828665-4ceb7100-fd41-11e8-9da6-9f5a510f1c13.png" /></p>
+<h3 id="saveload-preprocessing-settings">Save/load preprocessing settings<a class="headerlink" href="#saveload-preprocessing-settings" title="Permanent link">&para;</a></h3>
+<p>Users can also enable saving and loading of previously selected pre-processing settings by changing the red option below.</p>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/70419318-10b52400-1a1a-11ea-9b43-782ac6624042.png" /></p>
+<p>Settings loaded from previous run (e.g. of <code>modelPreprocessMovie</code>) or file (e.g. from <code>viewMovieRegistrationTest</code> runs) are highlighted in orange. Settings that user has just changed are still highlighted in green.</p>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/70418766-e6169b80-1a18-11ea-9713-f5a8301fe1c1.png" /></p>
+<p>The algorithm will then run all the requested preprocessing steps and presented the user with the option of viewing a slice of the processed file. Users have now completed pre-processing.</p>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/49829599-b53b5200-fd43-11e8-82eb-1e94fd7950e7.png" /></p>
+<hr />
+<h2 id="manual-movie-cropping-with-modelmodifymovies">Manual movie cropping with <code>modelModifyMovies</code><a class="headerlink" href="#manual-movie-cropping-with-modelmodifymovies" title="Permanent link">&para;</a></h2>
+<p>If users need to eliminate specific regions of their movie before running cell extraction, that option is provided. Users select a region using an ImageJ interface and select <code>done</code> when they want to move onto the next movie or start the cropping. Movies have <code>NaNs</code> or <code>0s</code> added in the cropped region rather than changing the dimensions of the movie.</p>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/49829899-8f627d00-fd44-11e8-96fb-2e909b4f0d78.png" /></p>
+<hr />
+<h2 id="extracting-cells-with-modelextractsignalsfrommovie">Extracting cells with <code>modelExtractSignalsFromMovie</code><a class="headerlink" href="#extracting-cells-with-modelextractsignalsfrommovie" title="Permanent link">&para;</a></h2>
+<p>Users can run PCA-ICA, CNMF, CNMF-E, and ROI cell extraction by following the below set of option screens. Details on running the new Schnitzer lab cell-extraction methods will be added here after they are released.</p>
+<p>We normally estimate the number of PCs and ICs on the high end, manually sort to get an estimate of the number of cells, then run PCA-ICA again with IC 1.5-3x the number of cells and PCs 1-1.5x number of ICs.</p>
+<p>To run CNMF or CNMF-E, run <code>loadDependencies</code> module (e.g. <code>obj.loadDependencies</code>) after ciatah class is loaded. CVX (a CNMF dependency) will also be downloaded and <code>cvx_setup</code> run to automatically set it up.</p>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/49830421-fa608380-fd45-11e8-8d9a-47a3d2921111.png" /></p>
+<p>The resulting output (on <em>Figure 45+</em>) at the end should look something like:</p>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/67053021-fe42fc00-f0f4-11e9-980c-88f463cb5043.png" /></p>
+<!-- ![image](https://user-images.githubusercontent.com/5241605/51728907-c2c44700-2026-11e9-9614-1a57c3a60f5f.png) -->
+
+<hr />
+<h2 id="loading-cell-extraction-output-data-with-modelvarsfromfiles">Loading cell-extraction output data with <code>modelVarsFromFiles</code><a class="headerlink" href="#loading-cell-extraction-output-data-with-modelvarsfromfiles" title="Permanent link">&para;</a></h2>
+<p>In general, after running cell-extraction (<code>modelExtractSignalsFromMovie</code>) on a dataset, run the <code>modelVarsFromFiles</code> module. This allows <code>CIAtah</code> to load/pre-load information about that cell-extraction run.</p>
+<p>If you had to restart MATLAB or are just loading CIAtah fresh but have previously run cell extraction, run this method before doing anything else with that cell-extraction data.</p>
+<p>A menu will pop-up like below when <code>modelVarsFromFiles</code> is loaded, you can normally just leave the defaults as is.</p>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/67052600-7f00f880-f0f3-11e9-9555-96fe32b4de6d.png" /></p>
+<hr />
+<h2 id="validating-cell-extraction-with-viewcellextractiononmovie">Validating cell extraction with <code>viewCellExtractionOnMovie</code><a class="headerlink" href="#validating-cell-extraction-with-viewcellextractiononmovie" title="Permanent link">&para;</a></h2>
+<p>After users have run cell extraction, they should check that cells are not being missed during the process. Running the method <code>viewCellExtractionOnMovie</code> will create a movie with outlines of cell extraction outputs overlaid on the movie.</p>
+<p>Below is an example, with black outlines indicating location of cell extraction outputs. If users see active cells (red flashes) that are not outlined, that indicates either exclusion or other parameters should be altered in the previous <code>modelExtractSignalsFromMovie</code> cell extraction step.</p>
+<p><img alt="2014_04_01_p203_m19_check01_raw_viewCellExtractionOnMovie_ezgif-4-57913bcfdf3f_2" src="https://user-images.githubusercontent.com/5241605/59560798-50033a80-8fcc-11e9-8228-f9a3d83ca591.gif" /></p>
+<hr />
+<h2 id="sorting-cell-extraction-outputs-with-computemanualsortsignals">Sorting cell extraction outputs with <code>computeManualSortSignals</code><a class="headerlink" href="#sorting-cell-extraction-outputs-with-computemanualsortsignals" title="Permanent link">&para;</a></h2>
+<p>Outputs from PCA-ICA (and most other common cell extraction algorithms like CNMF, etc.) output signal sources that are not cells and thus must be manually removed from the output. The repository contains a GUI for sorting cells from not cells. Below users can see a list of options that are given before running the code, those highlighted in green</p>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/49845107-43322f80-fd7a-11e8-96b9-3f870d4b9009.png" /></p>
+<h3 id="gui-usage-on-large-imaging-datasets">GUI usage on large imaging datasets<a class="headerlink" href="#gui-usage-on-large-imaging-datasets" title="Permanent link">&para;</a></h3>
+<ul>
+<li>To manually sort on large movies that will not fit into RAM, select the below options (highlighted in green). This will load only chunks of the movie asynchronously into the GUI as you sort cell extraction outputs.
+<img alt="image" src="https://user-images.githubusercontent.com/5241605/59215159-5d07d000-8b6d-11e9-8dd7-0d69d5fd38b6.png" /></li>
+</ul>
+<h3 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h3>
+<p>Below are two examples of the interface and code to run if not using the <code>CIAtah</code> GUI.</p>
+<p>Usage instructions below for <code>signalSorter.m</code>:</p>
+<p><strong>Main inputs</strong></p>
+<ul>
+<li><code>inputImages</code> - [x y N] matrix where N = number of images, x/y are dimensions.</li>
+<li><code>inputSignals</code> - [N frames] <em>double</em> matrix where N = number of signals (traces).</li>
+<li><code>inputMovie</code> - [x y frames] matrix</li>
+</ul>
+<p><strong>Main outputs</strong></p>
+<ul>
+<li><code>choices</code> - [N 1] vector of 1 = cell, 0 = not a cell</li>
+<li><code>inputImagesSorted</code> - [x y N] filtered by <code>choices</code></li>
+<li><code>inputSignalsSorted</code> - [N frames] filtered by <code>choice</code></li>
+</ul>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">inputMovie</span> <span class="p">=</span> <span class="n">inputMovie</span><span class="p">;</span> <span class="c">% movie associated with traces</span>
+<span class="lineno" data-linenos=" 2 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">valid</span> <span class="p">=</span> <span class="s">&#39;neutralStart&#39;</span><span class="p">;</span> <span class="c">% all choices start out gray or neutral to not bias user</span>
+<span class="lineno" data-linenos=" 3 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">cropSizeLength</span> <span class="p">=</span> <span class="mi">20</span><span class="p">;</span> <span class="c">% region, in px, around a signal source for transient cut movies (subplot 2)</span>
+<span class="lineno" data-linenos=" 4 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">cropSize</span> <span class="p">=</span> <span class="mi">20</span><span class="p">;</span> <span class="c">% see above</span>
+<span class="lineno" data-linenos=" 5 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">medianFilterTrace</span> <span class="p">=</span> <span class="mi">0</span><span class="p">;</span> <span class="c">% whether to subtract a rolling median from trace</span>
+<span class="lineno" data-linenos=" 6 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">subtractMean</span> <span class="p">=</span> <span class="mi">0</span><span class="p">;</span> <span class="c">% whether to subtract the trace mean</span>
+<span class="lineno" data-linenos=" 7 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">movieMin</span> <span class="p">=</span> <span class="o">-</span><span class="mf">0.01</span><span class="p">;</span> <span class="c">% helps set contrast for subplot 2, preset movie min here or it is calculated</span>
+<span class="lineno" data-linenos=" 8 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">movieMax</span> <span class="p">=</span> <span class="mf">0.05</span><span class="p">;</span> <span class="c">% helps set contrast for subplot 2, preset movie max here or it is calculated</span>
+<span class="lineno" data-linenos=" 9 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">backgroundGood</span> <span class="p">=</span> <span class="p">[</span><span class="mi">208</span><span class="p">,</span><span class="mi">229</span><span class="p">,</span><span class="mi">180</span><span class="p">]</span><span class="o">/</span><span class="mi">255</span><span class="p">;</span>
+<span class="lineno" data-linenos="10 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">backgroundBad</span> <span class="p">=</span> <span class="p">[</span><span class="mi">244</span><span class="p">,</span><span class="mi">166</span><span class="p">,</span><span class="mi">166</span><span class="p">]</span><span class="o">/</span><span class="mi">255</span><span class="p">;</span>
+<span class="lineno" data-linenos="11 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">backgroundNeutral</span> <span class="p">=</span> <span class="nb">repmat</span><span class="p">(</span><span class="mi">230</span><span class="p">,[</span><span class="mi">1</span> <span class="mi">3</span><span class="p">])</span><span class="o">/</span><span class="mi">255</span><span class="p">;</span>
+<span class="lineno" data-linenos="12 "></span><span class="p">[</span><span class="n">inputImagesSorted</span><span class="p">,</span> <span class="n">inputSignalsSorted</span><span class="p">,</span> <span class="n">choices</span><span class="p">]</span> <span class="p">=</span> <span class="n">signalSorter</span><span class="p">(</span><span class="n">inputImages</span><span class="p">,</span> <span class="n">inputSignals</span><span class="p">,</span> <span class="s">&#39;options&#39;</span><span class="p">,</span><span class="n">iopts</span><span class="p">);</span>
+</code></pre></div>
+
+<h4 id="bla-one-photon-imaging-data-signal-sorting-gui">BLA one-photon imaging data signal sorting GUI<a class="headerlink" href="#bla-one-photon-imaging-data-signal-sorting-gui" title="Permanent link">&para;</a></h4>
+<p><img alt="out-1" src="https://user-images.githubusercontent.com/5241605/34796712-3868cb3a-f60b-11e7-830e-8eec5b2c76d7.gif" /></p>
+<h4 id="mpfc-one-photon-imaging-data-signal-sorting-gui-from-example_downloadtestdatam">mPFC one-photon imaging data signal sorting GUI (from <code>example_downloadTestData.m</code>)<a class="headerlink" href="#mpfc-one-photon-imaging-data-signal-sorting-gui-from-example_downloadtestdatam" title="Permanent link">&para;</a></h4>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/46322488-04c00d80-c59e-11e8-9e8a-18b3b8e4567d.png" /></p>
+<hr />
+<h2 id="removing-cells-not-within-brain-region-with-modelmodifyregionanalysis">Removing cells not within brain region with <code>modelModifyRegionAnalysis</code><a class="headerlink" href="#removing-cells-not-within-brain-region-with-modelmodifyregionanalysis" title="Permanent link">&para;</a></h2>
+<p>If the imaging field-of-view includes cells from other brain regions, they can be removed using <code>modelModifyRegionAnalysis</code></p>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/49834696-e9b60a80-fd51-11e8-90bb-9854b7ccaeb8.png" /></p>
+<hr />
+<h2 id="cross-session-cell-alignment-with-computematchobjbtwntrials">Cross-session cell alignment with <code>computeMatchObjBtwnTrials</code><a class="headerlink" href="#cross-session-cell-alignment-with-computematchobjbtwntrials" title="Permanent link">&para;</a></h2>
+<p>This step allows users to align cells across imaging sessions (e.g. those taken on different days). See the <code>Cross session cell alignment</code> wiki page for more details and notes on cross-session alignment.</p>
+<ul>
+<li>Users run <code>computeMatchObjBtwnTrials</code> to do cross-day alignment (first row in pictures below).</li>
+<li>Users then run <code>viewMatchObjBtwnSessions</code> to get a sense for how well the alignment ran.</li>
+<li><code>computeCellDistances</code> and <code>computeCrossDayDistancesAlignment</code> allow users to compute the within session pairwise Euclidean centroid distance for all cells and the cross-session pairwise distance for all global matched cells, respectively.</li>
+</ul>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/49835713-eec88900-fd54-11e8-8d24-f7c426802297.png" /></p>
+<p>Users can then get the matrix that gives the session IDs</p>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">% Global IDs is a matrix of [globalID sessionID]</span>
+<span class="lineno" data-linenos="2 "></span><span class="c">% Each (globalID, sessionID) pair gives the within session ID for that particular global ID</span>
+<span class="lineno" data-linenos="3 "></span><span class="n">globalIDs</span> <span class="p">=</span> <span class="n">alignmentStruct</span><span class="p">.</span><span class="n">globalIDs</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="view-cross-session-cell-alignment-with-viewmatchobjbtwnsessions">View cross-session cell alignment with <code>viewMatchObjBtwnSessions</code><a class="headerlink" href="#view-cross-session-cell-alignment-with-viewmatchobjbtwnsessions" title="Permanent link">&para;</a></h3>
+<p>To evaluate how well cross-session alignment works, <code>computeMatchObjBtwnTrials</code> will automatically run <code>viewMatchObjBtwnSessions</code> at the end, but users can also run it separately after alignment. The left are raw dorsal striatum cell maps from a single animal. The right shows after cross-session alignment; color is used to indicate a global ID cell (e.g. the same cell matched across multiple days). Thus, same color cell = same cell across sessions.</p>
+<p><a href="https://cloud.githubusercontent.com/assets/5241605/25643108/9bcfccda-2f52-11e7-8514-31968752bd95.gif" target="_blank"><img src="https://cloud.githubusercontent.com/assets/5241605/25643108/9bcfccda-2f52-11e7-8514-31968752bd95.gif" alt="2017_05_02_p545_m121_p215_raw" width="auto" height="400"/></a>
+<a href="https://cloud.githubusercontent.com/assets/5241605/25643473/dd7b11ce-2f54-11e7-8d84-eb98c5ef801c.gif" target="_blank"><img src="https://cloud.githubusercontent.com/assets/5241605/25643473/dd7b11ce-2f54-11e7-8d84-eb98c5ef801c.gif" alt="2017_05_02_p545_m121_p215_corrected_biafraalgorithm2" width="auto" height="400"/></a></p>
+<h3 id="save-cross-session-cell-alignment-with-modelsavematchobjbtwntrials">Save cross-session cell alignment with <code>modelSaveMatchObjBtwnTrials</code><a class="headerlink" href="#save-cross-session-cell-alignment-with-modelsavematchobjbtwntrials" title="Permanent link">&para;</a></h3>
+<p>Users can save out the alignment structure by running <code>modelSaveMatchObjBtwnTrials</code>. This will allow users to select a folder where <code>CIAtah</code> will save a MAT-file with the alignment structure information for each animal.</p>
+<h1 id="imagejmatlab-based-mouse-location-tracking">ImageJ+MATLAB based mouse location tracking<a class="headerlink" href="#imagejmatlab-based-mouse-location-tracking" title="Permanent link">&para;</a></h1>
+<p>Functions needed (have entire <code>CIAtah</code> loaded anyways):</p>
+<ul>
+<li><code>mm_tracking.ijm</code> is the tracking function for use in ImageJ, place in
+<code>plugins</code> folder. If already had <code>CIAtah</code> download Fiji, place in the <code>_external_programs/[Fiji directory]/Fiji.app/plugins</code> folder.</li>
+<li><code>removeIncorrectObjs.m</code> is a function to clean-up the ImageJ output.</li>
+<li><code>createTrackingOverlayVideo</code> is a way to check the output from the
+tracking by overlaying mouse tracker onto the video.</li>
+</ul>
+<h2 id="instructions-for-imagej-and-matlab">Instructions for ImageJ and Matlab<a class="headerlink" href="#instructions-for-imagej-and-matlab" title="Permanent link">&para;</a></h2>
+<p>Example screen after running <code>mm_tracking</code> within ImageJ, click to expand.</p>
+<p><a href="https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png" alt="image" width="600" height="auto"/></a></p>
+<!-- <a href="https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png" target="_blank">![image](https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png)</a> -->
+
+<p>After the above screen, there will be multiple other screens culminating in one where a threshold is chosen that is used to remove non-animal pixels from analysis. The threshold matters quite a bit and the script ignores anything that isn't red (i.e. larger than threshold) OR not within the range specified by the parameters below.</p>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/71494852-8c2f1780-2807-11ea-93b7-8c51e21116b3.png" /></p>
+<p>The script opens the AVI as a virtual stack and asks for the threshold is so that I can quickly scan through the entire movie to make sure the set threshold works even with slight/major changes in illumination, e.g. the below threshold will work across many frames</p>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/71494077-7f0f2a00-2801-11ea-9144-f1fc6b04c27a.png" /></p>
+<p>If the threshold is set to low, certain frames will not have the animal detected, e.g. if the lighting changes.
+<img alt="image" src="https://user-images.githubusercontent.com/5241605/71494720-7e2cc700-2806-11ea-976e-3e9b70b00861.png" /></p>
+<p>Once ImageJ is finished, within Matlab run the following code (cleans up the ImageJ tracking by removing small objects and adding NaNs for missing frames along with making a movie to check output). Modify to point toward paths specific for your data.</p>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span><span class="c">% CSV file from imageJ and AVI movie path used in ImageJ</span>
+<span class="lineno" data-linenos=" 2 "></span><span class="n">moviePath</span> <span class="p">=</span> <span class="s">&#39;PATH_TO_AVI_USED_IN_IMAEJ&#39;</span><span class="p">;</span>
+<span class="lineno" data-linenos=" 3 "></span><span class="n">csvPath</span> <span class="p">=</span> <span class="s">&#39;PATH_TO_CSV_OUTPUT_BY_IMAGEJ&#39;</span><span class="p">;</span>
+<span class="lineno" data-linenos=" 4 "></span><span class="c">% clean up tracking</span>
+<span class="lineno" data-linenos=" 5 "></span><span class="p">[</span><span class="n">trackingTableFilteredCell</span><span class="p">]</span> <span class="p">=</span> <span class="n">removeIncorrectObjs</span><span class="p">(</span><span class="n">csvPath</span><span class="p">,</span><span class="s">&#39;inputMovie&#39;</span><span class="p">,{</span><span class="n">moviePath</span><span class="p">});</span>
+<span class="lineno" data-linenos=" 6 "></span><span class="c">% make tracking video</span>
+<span class="lineno" data-linenos=" 7 "></span><span class="c">% frames to use as example check</span>
+<span class="lineno" data-linenos=" 8 "></span><span class="n">nFrames</span><span class="p">=</span><span class="mi">1500</span><span class="p">:</span><span class="mi">2500</span><span class="p">;</span>
+<span class="lineno" data-linenos=" 9 "></span><span class="n">inputMovie</span> <span class="p">=</span> <span class="n">loadMovieList</span><span class="p">(</span><span class="n">moviePath</span><span class="p">,</span><span class="s">&#39;frameList&#39;</span><span class="p">,</span><span class="n">nFrames</span><span class="p">);</span>
+<span class="lineno" data-linenos="10 "></span><span class="p">[</span><span class="n">inputTrackingVideo</span><span class="p">]</span> <span class="p">=</span> <span class="n">createTrackingOverlayVideo</span><span class="p">(</span><span class="n">inputMovie</span><span class="p">,</span><span class="n">movmean</span><span class="p">(</span><span class="n">trackingTableFilteredCell</span><span class="p">.</span><span class="n">XM</span><span class="p">(</span><span class="n">nFrames</span><span class="p">),</span><span class="mi">5</span><span class="p">),</span><span class="n">movmean</span><span class="p">(</span><span class="n">trackingTableFilteredCell</span><span class="p">.</span><span class="n">YM</span><span class="p">(</span><span class="n">nFrames</span><span class="p">),</span><span class="mi">5</span><span class="p">));</span>
+<span class="lineno" data-linenos="11 "></span><span class="n">playMovie</span><span class="p">(</span><span class="n">inputTrackingVideo</span><span class="p">);</span>
+</code></pre></div>
+
+<h3 id="example-output-from-2017_09_11_p540_m381_openfield01_091112017">Example output from 2017_09_11_p540_m381_openfield01_091112017<a class="headerlink" href="#example-output-from-2017_09_11_p540_m381_openfield01_091112017" title="Permanent link">&para;</a></h3>
+<p><!-- <img alt="image" src="https://user-images.githubusercontent.com/5241605/34800547-2a10a3b0-f619-11e7-9c88-88750c9875cd.png" /> -->
+<img src="https://user-images.githubusercontent.com/5241605/34800547-2a10a3b0-f619-11e7-9c88-88750c9875cd.png" alt="image" width="400" height="auto"/></p>
+<p>Using <code>createTrackingOverlayVideo</code> to verify tracking matches animal position on a per frame basis.
+<!-- <img alt="image" src="https://user-images.githubusercontent.com/5241605/34800536-19eefcf2-f619-11e7-954f-dba59f4fd427.png" /> -->
+<img src="https://user-images.githubusercontent.com/5241605/34800536-19eefcf2-f619-11e7-954f-dba59f4fd427.png" alt="image" width="400" height="auto"/></p>
+<h2 id="license">License<a class="headerlink" href="#license" title="Permanent link">&para;</a></h2>
+<p>Copyright (C) 2013-2020 Biafra Ahanonu</p>
+<p>This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.</p>
+<p>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.</p>
+<p>You should have received a copy of the GNU General Public License along with this program.  If not, see <a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>.</p>
               
             </div>
           </div>

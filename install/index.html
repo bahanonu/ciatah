@@ -54,7 +54,7 @@
                 <ul class="current">
                     <li class="toctree-l1 current"><a class="reference internal current" href="./">Quick Start</a>
     <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#calciumimaginganalysis-main-gui-notes">calciumImagingAnalysis main GUI notes</a>
+    <li class="toctree-l2"><a class="reference internal" href="#ciatah-main-gui-notes">CIAtah main GUI notes</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#additional-quick-start-notes">Additional quick start notes</a>
     </li>
@@ -96,17 +96,17 @@
                 <ul>
                     <li class="toctree-l1"><a class="reference internal" href="../help_issues/">Issues and fixes</a>
                     </li>
-                    <li class="toctree-l1"><a class="" href="../black"><div class='subsection1'>Data</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Data</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_inscopix/">Inscopix</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_nwb/">Neurodata Without Borders</a>
                     </li>
-                    <li class="toctree-l1"><a class="" href="../blank"><div class='subsection1'>Interface</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Interface</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_contrast/">Movie display and noise</a>
                     </li>
-                    <li class="toctree-l1"><a class="" href="../blank"><div class='subsection1'>Analysis</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Analysis</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_analysis_methods/">Analysis methods</a>
                     </li>
@@ -179,12 +179,12 @@
             <div class="section">
               
                 <h2 id="quick-start-guide">Quick start guide<a class="headerlink" href="#quick-start-guide" title="Permanent link">&para;</a></h2>
-<p>Below are steps needed to quickly get started using the <code>calciumImagingAnalysis</code> software package in MATLAB.</p>
+<p>Below are steps needed to quickly get started using the <code>CIAtah</code> software package in MATLAB.</p>
 <ul>
-<li>Clone the <code>calciumImagingAnalysis</code> repository (using <a href="https://desktop.github.com/">GitHub desktop</a> or command line) or download the repository zip and unzip.</li>
-<li>Point the MATLAB path to the <code>calciumImagingAnalysis</code> root folder (<em>NOT</em> <code>@calciumImagingAnalysis</code> sub-folder in the repository).<ul>
-<li>Alternatively, download the package from <code>File Exchange</code> using the Add-Ons explorer in MATLAB. See <code>calciumImagingAnalysis</code> entry at:
- <a href="https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis"><img alt="View calciumImagingAnalysis on File Exchange" src="https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg" /></a> or <a href="https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis">https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis</a>.</li>
+<li>Clone the <code>CIAtah</code> repository (using <a href="https://desktop.github.com/">GitHub desktop</a> or command line) or download the repository zip and unzip.</li>
+<li>Point the MATLAB path to the <code>CIAtah</code> root folder (<em>NOT</em> <code>@ciatah</code> sub-folder in the repository).<ul>
+<li>Alternatively, download the package from <code>File Exchange</code> using the Add-Ons explorer in MATLAB. See <code>CIAtah</code> entry at:
+ <a href="https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis"><img alt="View CIAtah on File Exchange" src="https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg" /></a> or <a href="https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis">https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis</a>.</li>
 </ul>
 </li>
 <li>Run the below MATLAB commands.</li>
@@ -192,20 +192,21 @@
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span><span class="c">% Run these commands in MATLAB to get started.</span>
 <span class="lineno" data-linenos=" 2 "></span>
 <span class="lineno" data-linenos=" 3 "></span><span class="c">% Loads the class into an object for use in this session</span>
-<span class="lineno" data-linenos=" 4 "></span><span class="n">obj</span> <span class="p">=</span> <span class="n">calciumImagingAnalysis</span><span class="p">;</span>
+<span class="lineno" data-linenos=" 4 "></span><span class="n">obj</span> <span class="p">=</span> <span class="n">ciatah</span><span class="p">;</span>
 <span class="lineno" data-linenos=" 5 "></span>
 <span class="lineno" data-linenos=" 6 "></span><span class="c">% Runs routines to check dependencies and help user get setup.</span>
 <span class="lineno" data-linenos=" 7 "></span><span class="n">obj</span><span class="p">.</span><span class="n">setup</span><span class="p">;</span>
 <span class="lineno" data-linenos=" 8 "></span>
 <span class="lineno" data-linenos=" 9 "></span><span class="c">% Open the class menu (always type `obj` then enter load the class/modules menu)</span>
-<span class="lineno" data-linenos="10 "></span><span class="n">obj</span> <span class="s">%</span> <span class="s">then</span> <span class="s">hit</span> <span class="s">enter,</span> <span class="s">no</span> <span class="s">semicolon!</span>
+<span class="lineno" data-linenos="10 "></span><span class="n">obj </span><span class="s">% then hit enter, no semicolon!</span><span class="p"></span>
 </code></pre></div>
+
 <ul>
 <li>Afterwards, likely want to run <code>modelAddNewFolders</code> module first in order to add folders containing imaging data to the current class object.</li>
-<li>[Optional] Users on Windows systems should download <code>Everything</code> (<a href="https://www.voidtools.com/">https://www.voidtools.com/</a>). It is a very useful and extremely fast search engine for files and folders on a computer that can allow users to quickly get lists of folders then need to analyze in <code>calciumImagingAnalysis</code>.</li>
+<li>[Optional] Users on Windows systems should download <code>Everything</code> (<a href="https://www.voidtools.com/">https://www.voidtools.com/</a>). It is a very useful and extremely fast search engine for files and folders on a computer that can allow users to quickly get lists of folders then need to analyze in <code>CIAtah</code>.</li>
 <li>[Optional] Users who want to run analysis via the command line can run <code>edit ciapkg.demo.cmdLinePipeline</code> and run each segment of code there to see what commands are needed to perform each step. It assumes you have already run <code>example_downloadTestData</code>.</li>
 </ul>
-<h3 id="calciumimaginganalysis-main-gui-notes"><code>calciumImagingAnalysis</code> main GUI notes<a class="headerlink" href="#calciumimaginganalysis-main-gui-notes" title="Permanent link">&para;</a></h3>
+<h3 id="ciatah-main-gui-notes"><code>CIAtah</code> main GUI notes<a class="headerlink" href="#ciatah-main-gui-notes" title="Permanent link">&para;</a></h3>
 <ul>
 <li>All main decisions for choosing a method/procedure to run, cell-extraction algorithm, and which folders to analyze are in a single window.</li>
 <li>The GUI will real-time update the selected folders based on the selections in the subject, assay, and folder filter areas.</li>
@@ -221,7 +222,7 @@
 <h3 id="additional-quick-start-notes">Additional quick start notes<a class="headerlink" href="#additional-quick-start-notes" title="Permanent link">&para;</a></h3>
 <ul>
 <li>See additional details in <a href="#processing-calcium-imaging-data">Processing calcium imaging data</a> for running the full processing pipeline.</li>
-<li>Settings used to pre-process imaging movies (<code>modelPreprocessMovie</code> module) are stored inside the HDF5 file to allow <code>calciumImagingAnalysis</code> to load them again later.</li>
+<li>Settings used to pre-process imaging movies (<code>modelPreprocessMovie</code> module) are stored inside the HDF5 file to allow <code>CIAtah</code> to load them again later.</li>
 <li>To force load all directories, including most external software packages (in <code>_external_programs</code> folder), type <code>ciapkg.loadAllDirs;</code> into MATLAB command line. This is most relevant when you need to access specific functions in an outside repository that are normally hidden until needed.</li>
 <li>When issues are encountered, first check the <code>*Common issues and fixes</code> Wiki page to see if a solution is there. Else, submit a new issue or email Biafra (bahanonu [at] alum.mit.edu).</li>
 <li>Notes:<ul>
@@ -230,15 +231,15 @@
 <li><strong>Batch analysis</strong>: <code>data\batch</code> contains three imaging sessions that should be processed and can then be used for the cross-session alignment step. Users should try these sessions to get used to batched analysis.</li>
 </ul>
 </li>
-<li>For Fiji dependency, when path to <code>Miji.m</code> (e.g. <code>\Fiji.app\scripts</code> folder) is requested, likely in <code>calciumImagingAnalysis\_external_programs\FIJI_FOLDER\Fiji.app\scripts</code> where <code>FIJI_FOLDER</code> varies depending on OS, unless the user requested a custom path or on OSX (in which case, find Fiji the install directory).<ul>
-<li>If you run into Java heap space memory errors when Miji tries to load Fiji in MATLAB, make sure "java.opts" file is in MATLAB start-up folder or that <code>calciumImagingAnalysis</code> folder is the MATLAB start-up folder (<a href="https://www.mathworks.com/help/matlab/matlab_env/matlab-startup-folder.html">instructions on changing</a>).</li>
+<li>For Fiji dependency, when path to <code>Miji.m</code> (e.g. <code>\Fiji.app\scripts</code> folder) is requested, likely in <code>\_external_programs\FIJI_FOLDER\Fiji.app\scripts</code> where <code>FIJI_FOLDER</code> varies depending on OS, unless the user requested a custom path or on OSX (in which case, find Fiji the install directory).<ul>
+<li>If you run into Java heap space memory errors when Miji tries to load Fiji in MATLAB, make sure "java.opts" file is in MATLAB start-up folder or that <code>CIAtah</code> folder is the MATLAB start-up folder (<a href="https://www.mathworks.com/help/matlab/matlab_env/matlab-startup-folder.html">instructions on changing</a>).</li>
 </ul>
 </li>
-<li><code>calciumImagingAnalysis</code> often uses <a href="https://www.cheatography.com/davechild/cheat-sheets/regular-expressions/">regular expressions</a> to find relevant movie and other files in folders to analyze.<ul>
+<li><code>CIAtah</code> often uses <a href="https://www.cheatography.com/davechild/cheat-sheets/regular-expressions/">regular expressions</a> to find relevant movie and other files in folders to analyze.<ul>
 <li>For example, by default it looks for any movie files in a folder containing <code>concat</code>, e.g. <code>concat_recording_20140401_180333.h5</code> (test data). If you have a file called <code>rawData_2019_01_01_myInterestingExperiment.avi</code> and all your raw data files start with <code>rawData_</code> then change the regular expression to <code>rawData_</code> when requested by the repository. See <code>setMovieInfo</code> module to change after adding new folders.</li>
 </ul>
 </li>
-<li><code>calciumImagingAnalysis</code> generally assumes users have imaging data associated with <em>one</em> imaging session and animal in a given folder. Follow folder naming conventions in <a href="#data">Data</a> for best experience.</li>
+<li><code>CIAtah</code> generally assumes users have imaging data associated with <em>one</em> imaging session and animal in a given folder. Follow folder naming conventions in <a href="#data">Data</a> for best experience.</li>
 <li>External software packages are downloaded into <code>_external_programs</code> folder and should be placed there if done manually.</li>
 </ul>
 </li>
@@ -250,17 +251,17 @@
 <span class="lineno" data-linenos=" 4 "></span><span class="n">loadBatchFxns</span><span class="p">;</span>
 <span class="lineno" data-linenos=" 5 "></span>
 <span class="lineno" data-linenos=" 6 "></span><span class="c">% Loads the class into an object for use in this session</span>
-<span class="lineno" data-linenos=" 7 "></span><span class="n">obj</span> <span class="p">=</span> <span class="n">calciumImagingAnalysis</span><span class="p">;</span>
+<span class="lineno" data-linenos=" 7 "></span><span class="n">obj</span> <span class="p">=</span> <span class="n">ciatah</span><span class="p">;</span>
 <span class="lineno" data-linenos=" 8 "></span>
 <span class="lineno" data-linenos=" 9 "></span><span class="c">% Download and load dependent software packages into &quot;_external_programs&quot; folder.</span>
 <span class="lineno" data-linenos="10 "></span><span class="c">% Also download test data into &quot;data&quot; folder.</span>
-<span class="lineno" data-linenos="11 "></span><span class="c">% Normally only need to one once after first downloading calciumImagingAnalysis package.</span>
+<span class="lineno" data-linenos="11 "></span><span class="c">% Normally only need to one once after first downloading CIAtah package.</span>
 <span class="lineno" data-linenos="12 "></span><span class="n">obj</span><span class="p">.</span><span class="n">loadDependencies</span><span class="p">;</span>
 <span class="lineno" data-linenos="13 "></span>
 <span class="lineno" data-linenos="14 "></span><span class="c">% Add folders containing imaging data.</span>
 <span class="lineno" data-linenos="15 "></span><span class="n">obj</span><span class="p">.</span><span class="n">modelAddNewFolders</span><span class="p">;</span>
 <span class="lineno" data-linenos="16 "></span>
-<span class="lineno" data-linenos="17 "></span><span class="c">% [optional] Set the names calciumImagingAnalysis will look for in each folder</span>
+<span class="lineno" data-linenos="17 "></span><span class="c">% [optional] Set the names CIAtah will look for in each folder</span>
 <span class="lineno" data-linenos="18 "></span><span class="n">obj</span><span class="p">.</span><span class="n">setMovieInfo</span><span class="p">;</span>
 <span class="lineno" data-linenos="19 "></span>
 <span class="lineno" data-linenos="20 "></span><span class="c">% Open class menu to pick module to run.</span>

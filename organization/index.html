@@ -92,17 +92,17 @@
                 <ul>
                     <li class="toctree-l1"><a class="reference internal" href="../help_issues/">Issues and fixes</a>
                     </li>
-                    <li class="toctree-l1"><a class="" href="../black"><div class='subsection1'>Data</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Data</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_inscopix/">Inscopix</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_nwb/">Neurodata Without Borders</a>
                     </li>
-                    <li class="toctree-l1"><a class="" href="../blank"><div class='subsection1'>Interface</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Interface</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_contrast/">Movie display and noise</a>
                     </li>
-                    <li class="toctree-l1"><a class="" href="../blank"><div class='subsection1'>Analysis</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Analysis</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_analysis_methods/">Analysis methods</a>
                     </li>
@@ -177,31 +177,33 @@
                 <h3 id="repository-organization">Repository organization<a class="headerlink" href="#repository-organization" title="Permanent link">&para;</a></h3>
 <p>Below are a list of the top-level directories and what types of functions or files are within.</p>
 <ul>
-<li><strong>@calciumImagingAnalysis</strong> - Contains <code>calciumImagingAnalysis</code> class and associated methods for calcium imaging analysis.</li>
+<li>__@ciatah - Contains <code>ciatah</code> class and associated methods for calcium imaging analysis.</li>
 <li><strong><em>external</em>programs</strong>_ - External software packages (e.g. CNMF, CELLMax, and others) are stored here.</li>
-<li><strong><em>overloaded</em></strong> - Functions that overload core MATLAB functions to add functionality or fix display issues.</li>
-<li><strong>behavior</strong> - Processing of behavior files (e.g. accelerometer data, Saleae files, etc.).</li>
-<li><strong>classification</strong> - Classification of cells, e.g. manual classification of cell extraction outputs or cross-session grouping of cells.</li>
-<li><strong>data</strong> - Location of test data.</li>
-<li><strong>download</strong> - Functions that help download external code packages or data.</li>
-<li><strong>file_exchange</strong> - Contains any outside code from MATLAB's File Exchange that are dependencies in repository functions.</li>
-<li><strong>hdf5</strong> - Functions concerned with HDF5 input/output.</li>
-<li><strong>image</strong> - Functions concerned with processing images (or [x y] matrices).</li>
-<li><strong>inscopix</strong> - Functions concerned with Inscopix-specific data processing (e.g. using the ISX MATLAB API).</li>
-<li><strong>io</strong> - Contains functions concerned with file or function input-output.</li>
-<li><strong>motion_correction</strong> - Functions concerned with motion correction.</li>
-<li><strong>movie_processing</strong> - Functions concerned with preprocessing calcium imaging videos, e.g. spatial filtering, downsampling, etc.</li>
-<li><strong>neighbor</strong> - Detection and display of neighboring cell information.</li>
-<li><strong><em>private</em></strong> - This directory contains various user settings, output pictures/data/logs from <code>calciumImagingAnalysis</code> modules, and more. This directory is NOT included in the MATLAB path, hence is good for storing related scripts without interfering with <code>calciumImagingAnalysis</code>.</li>
-<li><strong>python</strong> - Python code, e.g. for processing Saleae data.</li>
-<li><strong>serial</strong> - Code for saving and processing serial port data, e.g. Arduino streaming data.</li>
-<li><strong>settings</strong> - Functions concerned with settings for other functions.</li>
-<li><strong>signal_extraction</strong> - Functions related to cell extraction, e.g. running PCA-ICA.</li>
-<li><strong>signal_processing</strong> - Functions to process cell activity traces.</li>
-<li><strong>tracking</strong> - ImageJ and MATLAB functions to track animal location in behavior movies.</li>
-<li><strong>unit_tests</strong> [optional] - Functions to validate specific repository functions.</li>
-<li><strong>video</strong> - Functions to manipulate or process videos, e.g. making movie montages or adding dropped frames.</li>
-<li><strong>view</strong> - Functions concerned with displaying data or information to the user, normally do not process data.</li>
+<li><strong>+ciapkg</strong> - Package containing CIAtah functions. All functions will eventually be moved here to create a clean namespace.</li>
+<li><strong>ciapkg</strong>
+    - <strong><em>overloaded</em></strong> - Functions that overload core MATLAB functions to add functionality or fix display issues.
+    - <strong>behavior</strong> - Processing of behavior files (e.g. accelerometer data, Saleae files, etc.).
+    - <strong>classification</strong> - Classification of cells, e.g. manual classification of cell extraction outputs or cross-session grouping of cells.
+    - <strong>data</strong> - Location of test data.
+    - <strong>download</strong> - Functions that help download external code packages or data.
+    - <strong>file_exchange</strong> - Contains any outside code from MATLAB's File Exchange that are dependencies in repository functions.
+    - <strong>hdf5</strong> - Functions concerned with HDF5 input/output.
+    - <strong>image</strong> - Functions concerned with processing images (or [x y] matrices).
+    - <strong>inscopix</strong> - Functions concerned with Inscopix-specific data processing (e.g. using the ISX MATLAB API).
+    - <strong>io</strong> - Contains functions concerned with file or function input-output.
+    - <strong>motion_correction</strong> - Functions concerned with motion correction.
+    - <strong>movie_processing</strong> - Functions concerned with preprocessing calcium imaging videos, e.g. spatial filtering, downsampling, etc.
+    - <strong>neighbor</strong> - Detection and display of neighboring cell information.
+    - <strong><em>private</em></strong> - This directory contains various user settings, output pictures/data/logs from <code>CIAtah</code> modules, and more. This directory is NOT included in the MATLAB path, hence is good for storing related scripts without interfering with <code>CIAtah</code>.
+    - <strong>python</strong> - Python code, e.g. for processing Saleae data.
+    - <strong>serial</strong> - Code for saving and processing serial port data, e.g. Arduino streaming data.
+    - <strong>settings</strong> - Functions concerned with settings for other functions.
+    - <strong>signal_extraction</strong> - Functions related to cell extraction, e.g. running PCA-ICA.
+    - <strong>signal_processing</strong> - Functions to process cell activity traces.
+    - <strong>tracking</strong> - ImageJ and MATLAB functions to track animal location in behavior movies.
+    - <strong>unit_tests</strong> [optional] - Functions to validate specific repository functions.
+    - <strong>video</strong> - Functions to manipulate or process videos, e.g. making movie montages or adding dropped frames.
+    - <strong>view</strong> - Functions concerned with displaying data or information to the user, normally do not process data.</li>
 </ul>
               
             </div>
