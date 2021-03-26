@@ -76,7 +76,7 @@ end
 
 ![2017_05_02_p545_m121_p215_raw](https://cloud.githubusercontent.com/assets/5241605/25643108/9bcfccda-2f52-11e7-8514-31968752bd95.gif)
 
-- `calciumImagingAnalysis` (Biafra's) registration algorithm
+- `{{ site.name }}` (Biafra's) registration algorithm
   - Color is used to indicate a global ID cell (e.g. the same cell matched across multiple days). Thus, same color cell = same cell across sessions under the quick iteration parameters used in the below run.
 
 ![2017_05_02_p545_m121_p215_corrected_biafraalgorithm2](https://cloud.githubusercontent.com/assets/5241605/25643473/dd7b11ce-2f54-11e7-8d84-eb98c5ef801c.gif)

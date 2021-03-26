@@ -21,7 +21,7 @@ theme:
       - navigation.expand
 plugins:
   - macros
-markdown_extensions:  
+markdown_extensions:
   - toc:
       permalink: true
   # - codehilite
@@ -54,6 +54,8 @@ extra:
     name: CIAtah
     namelow: ciatah
     nameold: calciumImagingAnalysis
+  code:
+    mainclass: ciatah
 
 # NAVIGATION
 nav:
@@ -83,7 +85,7 @@ nav:
 
     - <div class='subsection1'>Interface</div>: blank
     - Movie display and noise: help_contrast.md
-    
+
     - <div class='subsection1'>Analysis</div>: blank
     - Analysis methods: help_analysis_methods.md
     - Large movie analysis: help_large_movie_analysis.md

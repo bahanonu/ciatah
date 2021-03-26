@@ -17,7 +17,7 @@ By default external MATLAB-based software packages are stored in `_external_prog
 
 #### Parallel Computing Toolbox (PCT)
 
-By default both `calciumImagingAnalysis` and PCT auto-start a parallel pool for functions that use parallelization (e.g. or calls to `parfor`). For some users this may not be desired, in that case go to MATLAB preferences and uncheck the below.
+By default both `{{ site.name }}` and PCT auto-start a parallel pool for functions that use parallelization (e.g. or calls to `parfor`). For some users this may not be desired, in that case go to MATLAB preferences and uncheck the below.
 
 ![image](https://user-images.githubusercontent.com/5241605/67807212-99bb6180-fa51-11e9-81e1-9ab0fac8847a.png)
 
@@ -33,7 +33,7 @@ parSet.Pool.AutoCreate = false;
 - Run `downloadMiji` from `downloads\downloadMiji.m` or `obj.loadDependencies` (when class initialized) to download Fiji version appropriate to your platform.
 - Else download Fiji (preferably __2015 December 22__ version): https://imagej.net/Fiji/Downloads.
 - Make sure have Miji in Fiji installation: http://bigwww.epfl.ch/sage/soft/mij/.
-- This is used as an alternative to the `calciumImagingAnalysis` `playMovie.m` function for viewing movies and is needed for some movie modification steps.
+- This is used as an alternative to the `{{ site.name }}` `playMovie.m` function for viewing movies and is needed for some movie modification steps.
 
 #### Saleae
 

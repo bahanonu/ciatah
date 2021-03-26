@@ -12,7 +12,7 @@ playMovie('path\to\youMovie.isxd');
 
 ## Converting ISXD files to HDF5
 
-To convert ISXD files to HDF5, see `convertInscopixIsxdToHdf5` function in the `inscopix` folder or `modelDownsampleRawMovies` module in calciumImagingAnalysis.
+To convert ISXD files to HDF5, see `convertInscopixIsxdToHdf5` function in the `inscopix` folder or `modelDownsampleRawMovies` module in {{ site.name }}.
 
 __Note__: By default the Inscopix API gives out a frame full of 0s for dropped frames. So those 0s frames are maintained after converting/downsampling to HDF5 or you will also get a frame with 0s if you use `loadMovieList` to read frames that were dropped from isxd files. Adjust analysis accordingly.
 
@@ -33,9 +33,9 @@ opts.saveFolder = 'ALT_FOLDER_PATH'; % Char: alternative file path
 convertInscopixIsxdToHdf5(moviePath,'options',opts);
 ```
 
-The same functionality can be achieved by loading a `calciumImagingAnalysis` module using the below commands. By default `modelDownsampleRawMovies` module will see `.isxd` files and call `convertInscopixIsxdToHdf5`. This can be done on multiple folders by separating them with commas in the `modelDownsampleRawMovies` menu.
+The same functionality can be achieved by loading a `{{ site.name }}` module using the below commands. By default `modelDownsampleRawMovies` module will see `.isxd` files and call `convertInscopixIsxdToHdf5`. This can be done on multiple folders by separating them with commas in the `modelDownsampleRawMovies` menu.
 
 ```Matlab
-obj = calciumImagingAnalysis;
+obj = {{ code.mainclass }};
 obj.modelDownsampleRawMovies;
 ```

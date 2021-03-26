@@ -18,7 +18,7 @@ Please cite [Corder*, Ahanonu*, et al. 2019](http://science.sciencemag.org/conte
 ```Latex
 @misc{biafra_ahanonu_2018_2222295,
   author       = {Biafra Ahanonu},
-  title        = {{calciumImagingAnalysis: a software package for
+  title        = {{{{ site.name }}: a software package for
                    analyzing one- and two-photon calcium imaging
                    datasets.}},
   month        = December,

@@ -1,6 +1,6 @@
 # Common issues and fixes
 
-Page outlines some common issues and fixes to them that may be encountered while using `calciumImagingAnalysis`. These are mostly due to quirks specific to MATLAB, Fiji, or the computing environment `calciumImagingAnalysis` is used on.
+Page outlines some common issues and fixes to them that may be encountered while using `{{ site.name }}`. These are mostly due to quirks specific to MATLAB, Fiji, or the computing environment `{{ site.name }}` is used on.
 
 ***
 ## Contents
@@ -37,7 +37,7 @@ Page outlines some common issues and fixes to them that may be encountered while
 
 ## Out of memory using `Miji`
 
--  If you get a `java.lang.OutOfMemoryError: GC overhead limit exceeded` style error (see below code) when trying to open a movie with `Miji`, make sure that you initialize MATLAB in the `calciumImagingAnalysis` path or place the `java.opts` file in your MATLAB start-up folder.
+-  If you get a `java.lang.OutOfMemoryError: GC overhead limit exceeded` style error (see below code) when trying to open a movie with `Miji`, make sure that you initialize MATLAB in the `{{ site.name }}` path or place the `java.opts` file in your MATLAB start-up folder.
 ```Matlab
 java.lang.OutOfMemoryError: GC overhead limit exceeded
 	at java.lang.AbstractStringBuilder.<init>(Unknown Source)
@@ -47,7 +47,7 @@ java.lang.OutOfMemoryError: GC overhead limit exceeded
 - On Windows, you can change the start-up folder as below or in general see https://www.mathworks.com/help/matlab/matlab_env/matlab-startup-folder.html.
 ![image](https://user-images.githubusercontent.com/5241605/64047075-94f63200-cb22-11e9-890b-6b43db669412.png)
 
-- `java.opts` increases the amount of memory allocated so that Java doesn't run out when using Miji to load movies. To change the amount of memory allocated (calciumImagingAnalysis sets to 7 Gb by default), change the below to a higher or lower number, e.g. 9 Gb would be `-Xmx9000m`.
+- `java.opts` increases the amount of memory allocated so that Java doesn't run out when using Miji to load movies. To change the amount of memory allocated ({{ site.name }} sets to 7 Gb by default), change the below to a higher or lower number, e.g. 9 Gb would be `-Xmx9000m`.
 ```Java
 -Xmx7000m
 ```
@@ -90,7 +90,7 @@ Unable to open output file: 'signal_extraction\cnmfe.zip' for writing. Common re
 
 ## `modelPreprocessMovie` analysis options list not showing
 
-- MATLAB changed `uitables` internal implementation, hence `findjobj` (File Exchange function) broke causing `reorderableListbox` (File Exchange function) to also break. An updated `findjobj` has been added to the `calciumImagingAnalysis` repository and this error (see below) should no longer occur.
+- MATLAB changed `uitables` internal implementation, hence `findjobj` (File Exchange function) broke causing `reorderableListbox` (File Exchange function) to also break. An updated `findjobj` has been added to the `{{ site.name }}` repository and this error (see below) should no longer occur.
 
 ```Matlab
 Error in reorderableListbox (line 127)
@@ -109,7 +109,7 @@ No class MIJ can be located on the Java class path
 
 ## `viewMovie` or other functions where movies need to be loaded end without executing
 
-- It is likely that the regular expression given to `calciumImagingAnalysis` does not match any of the files in the folder being analyzed.
+- It is likely that the regular expression given to `{{ site.name }}` does not match any of the files in the folder being analyzed.
 - For example, in `viewMovie`, the below `Image movie regexp` setting should be changed to `concat` correspond to the demo raw imaging data's name.
 
 ![image](https://user-images.githubusercontent.com/5241605/51725501-63ab0600-2017-11e9-94e3-182fcd55fa22.png)
