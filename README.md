@@ -10,7 +10,7 @@
 
 <img src="https://user-images.githubusercontent.com/5241605/51068051-78c27680-15cd-11e9-9434-9d181b00ef8e.png" align="center">
 
-## Full documentation at https://bahanonu.github.io/calciumImagingAnalysis/
+## Full documentation at https://bahanonu.github.io/calciumImagingAnalysis/.
 
 <hr>
 
@@ -27,7 +27,7 @@
 `CIAtah` features:
 - A GUI with different modules to allow users to do large-scale batch analysis, accessed via the repository's `ciatah` class.
 - The `ciatah` functions can be used to create GUI-less, command line-ready analysis pipelines. Functions are located in the `ciapkg` sub-folder and in the `+ciapkg` package.
-- Includes all major calcium imaging analysis steps: movie visualization (including reading from disk), pre-processing (motion correction, spatiotemporal downsampling, spatial filtering, relative fluorescence calculation, etc.), support for multiple cell-extraction methods (CELLMax, PCA-ICA, CNMF, CNMF-E, EXTRACT, etc.), manual classification via GUIs, automated cell classification (coming soon!), cross-session cell alignment, and more.
+- Includes all major calcium imaging analysis steps: movie visualization (including reading from disk for fast viewing of large movies), pre-processing (motion correction, spatiotemporal downsampling, spatial filtering, relative fluorescence calculation, etc.), support for multiple cell-extraction methods (CELLMax, PCA-ICA, <a href='https://github.com/flatironinstitute/CaImAn-MATLAB' target='_blank'>CNMF</a>, CNMF-E, <a href='https://github.com/schnitzer-lab/EXTRACT-public' target='_blank'>EXTRACT</a>, etc.), manual classification via GUIs, automated cell classification (coming soon!), cross-session cell alignment, and more.
 - Has several example one- and two-photon calcium imaging datasets that `ciatah` can automatically download to help users test out the package.
 - Includes code for determining animal position (e.g. in open-field assay).
 - Supports [Neurodata Without Borders](https://www.nwb.org/) data standard (see [calcium imaging tutorial](https://neurodatawithoutborders.github.io/matnwb/tutorials/html/ophys.html)) for reading/writing cell-extraction (e.g. outputs of PCA-ICA, CELLMax, CNMF, CNMF-E, EXTRACT, etc.). Supports reading and writing NWB movie files with continued integration planned.
@@ -110,7 +110,7 @@ Below are steps needed to quickly get started using the `CIAtah` software packag
  cd('calciumImagingAnalysis-master')
  ```
 
-- Run `CIAtah` using the below MATLAB commands. Call `obj;` in the MATLAB command window each time you want to go back to the main GUI.
+- Run `CIAtah` using the below MATLAB commands. Call `obj;` in the MATLAB command window each time you want to go back to the main GUI. __Note: `calciumImagingAnalysis` class is now called `ciatah`, all functionality is the same.__
 
 ```MATLAB
 % Loads the class into an object for use in this session

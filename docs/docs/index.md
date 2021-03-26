@@ -34,7 +34,7 @@ __Download the software at [https://github.com/bahanonu/calciumImagingAnalysis](
 
 `{{ site.name }}` features:
 
-- Includes a GUI to allow users to do large-scale batch analysis, accessed via the repository's `calciumImagingAnalysis` class.
+- Includes a GUI to allow users to do large-scale batch analysis, accessed via the repository's `{{ site.name }}` class.
 - The underlying functions can also be used to create GUI-less, command line-ready analysis pipelines. Functions located in `ciapkg` and `+ciapkg` sub-folders.
 - Includes all major calcium imaging analysis steps: pre-processing (motion correction, spatiotemporal downsampling, spatial filtering, relative fluorescence calculation, etc.), support for multiple cell-extraction methods, automated cell classification (coming soon!), cross-session cell alignment, and more.
 - Has several example one- and two-photon calcium imaging datasets that it will automatically download to help users test out the package.

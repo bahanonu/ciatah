@@ -93,7 +93,7 @@ If users need to eliminate specific regions of their movie before running cell e
 
 ## Extracting cells with `modelExtractSignalsFromMovie`
 
-Users can run PCA-ICA, CNMF, CNMF-E, and ROI cell extraction by following the below set of option screens. Details on running the new Schnitzer lab cell-extraction methods will be added here after they are released.
+Users can run PCA-ICA, <a href='https://github.com/schnitzer-lab/EXTRACT-public' target='_blank'>EXTRACT</a>, CNMF, CNMF-E, and ROI cell extraction by following the below set of option screens. Details on running the new Schnitzer lab cell-extraction methods (e.g. CELLMax) will be added here after they are released.
 
 We normally estimate the number of PCs and ICs on the high end, manually sort to get an estimate of the number of cells, then run PCA-ICA again with IC 1.5-3x the number of cells and PCs 1-1.5x number of ICs.
 

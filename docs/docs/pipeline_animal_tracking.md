@@ -1,9 +1,9 @@
 # ImageJ+MATLAB based mouse location tracking
 
-Functions needed (have entire `calciumImagingAnalysis` loaded anyways):
+Functions needed (have entire `{{ site.name }}` loaded anyways):
 
 - `mm_tracking.ijm` is the tracking function for use in ImageJ, place in
-`plugins` folder. If already had `calciumImagingAnalysis` download Fiji, place in the `_external_programs/[Fiji directory]/Fiji.app/plugins` folder.
+`plugins` folder. If already had `{{ site.name }}` download Fiji, place in the `_external_programs/[Fiji directory]/Fiji.app/plugins` folder.
 - `removeIncorrectObjs.m` is a function to clean-up the ImageJ output.
 - `createTrackingOverlayVideo` is a way to check the output from the
 tracking by overlaying mouse tracker onto the video.

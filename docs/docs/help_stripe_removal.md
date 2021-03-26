@@ -1,6 +1,6 @@
 # Stripe removal from movies
 
-Some cameras will produce vertical and/or horizontal stripes in the movies that users will want to remove. Below is an example of process to remove strip from movies. The underlying function is `removeStripsFromMovie` and users can remove using `modelPreprocessMovie` module in the `calciumImagingAnalysis` class.
+Some cameras will produce vertical and/or horizontal stripes in the movies that users will want to remove. Below is an example of process to remove strip from movies. The underlying function is `removeStripsFromMovie` and users can remove using `modelPreprocessMovie` module in the `{{ site.name }}` class.
 
 Vertical and horizontal stripes can be removed with the vertical and horizontal aspect of the the Fourier spectrum. In my default implementation for users I attenuate at lower frequencies since those usually do not contain the camera-induced stripes. If users have experimental induced stripes, they should lower the frequency threshold to include low frequency (spatially large) stripes.
 
@@ -18,8 +18,8 @@ To run stripe removal on any `inputMovie` movie matrix already loaded in MATLAB,
 removeStripsFromMovie(inputMovie,'stripOrientation',both,'meanFilterSize',7,'freqLowExclude',10,'bandpassType','highpass')
 ```
 
-## calciumImagingAnalysis
-To use within the `calciumImagingAnalysis` class, select `modelPreprocessMovie` module and have `stripeRemoval` selected then on the options page, choose whether to remove vertical, horizontal, or both stripes.
+## {{ site.name }}
+To use within the `{{ site.name }}` class, select `modelPreprocessMovie` module and have `stripeRemoval` selected then on the options page, choose whether to remove vertical, horizontal, or both stripes.
 ![image](https://user-images.githubusercontent.com/5241605/71019922-1bbe2300-20b0-11ea-9c5f-232326884db4.png)
 ![image](https://user-images.githubusercontent.com/5241605/71020018-5922b080-20b0-11ea-9637-abead3c26110.png)
 

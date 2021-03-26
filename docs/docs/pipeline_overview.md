@@ -42,7 +42,7 @@ The general order of functions that users should run is ([optional] are those no
 - `modelModifyMovies`
   - GUI that allows users to remove movie regions not relevant to cell extraction.
 - `modelExtractSignalsFromMovie`
-  - Performs cell extraction, currently PCA-ICA with the ability to run more recent algorithms (e.g. CNMF) upon request.
+  - Performs cell extraction on processed movies. Currently supports PCA-ICA, CNMF, CNMF-e, ROI, and EXTRACT. Support for CELLMax will be enabled in the public repository upon release.
 - `modelVarsFromFiles`
   - Run after `modelExtractSignalsFromMovie` to load cell image and trace information into the current class object.
 - `viewCellExtractionOnMovie` [optional]

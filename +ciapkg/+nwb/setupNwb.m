@@ -9,6 +9,7 @@ function [success] = setupNwb(varargin)
 
 	% changelog
 		% 2021.02.01 [‏‎15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
+		% 2021.03.26 [06:27:48] - Fix for options.defaultObjDir leading to incorrect NWB folder and cores not being generated.
 	% TODO
 		%
 
@@ -36,7 +37,7 @@ function [success] = setupNwb(varargin)
 			try
 				disp('Generating matnwb types core files with "generateCore.m"')
 				origPath = pwd;
-				mat2nwbPath = [options.defaultObjDir filesep options.externalProgramsDir filesep options.matnwbDir];
+				mat2nwbPath = [options.externalProgramsDir filesep options.matnwbDir];
 				disp(['cd ' mat2nwbPath])
 				cd(mat2nwbPath);
 				generateCore;

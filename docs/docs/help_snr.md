@@ -1,6 +1,6 @@
 # Preprocessing: Improving SNR
 
-This relates to methods within the `calciumImagingAnalysis` class for checking ΔF/F during cell sorting and ways to improve SNR (esp. in miniscope movies), also see [Preprocessing:-Spatial-filtering](../Preprocessing:-Spatial-filtering).
+This relates to methods within the `{{ site.name }}` class for checking ΔF/F during cell sorting and ways to improve SNR (esp. in miniscope movies), also see [Preprocessing:-Spatial-filtering](../Preprocessing:-Spatial-filtering).
 
 ## Movie cell ROI trace during cell sorting
 - If users press `r` while in the interface, it will show users a ROI calculated trace (which will contain more cross-talk, but will give you a direct measure of ΔF/F from your movie compared to ICA/CNMF-E/etc. traces.

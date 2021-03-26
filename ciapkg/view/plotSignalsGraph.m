@@ -10,6 +10,7 @@ function [tmpTrace] = plotSignalsGraph(IcaTraces,varargin)
 		% 2019.04.22 [19:14:47] - changed from plot to line so when exporting to illustrator don't need to merge lines.
 		% 2019.12.24 [11:20:14] - Allow
 		% 2021.01.24 [10:08:13] - Function outputs the modified traces for parent functions to use for additional plotting behavior.
+        % 2021.03.25 [16:20:00] - Fix minIncrementAmount issue.
 	% TODO
 		% add options for how much to offset
 
@@ -100,6 +101,7 @@ function [tmpTrace] = plotSignalsGraph(IcaTraces,varargin)
 			end
 		else
 			incrementAmount = incrementAmount+options.incrementAmount;
+            minIncrementAmount = 0;
 		end
 		tmpTrace(i,:)=tmpTrace(i,:)+incrementAmount+incrementAmountAll+minIncrementAmount;
 		if options.smoothTrace==1

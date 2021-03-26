@@ -9,12 +9,15 @@ function [onlineVersion, dateTimeStr] = versionOnline(varargin)
 
 	% changelog
 		% 2021.02.02 [13:42:19] - Updated to handle new VERSION file that includes datestamp on 2nd line.
+		% 2021.03.21 [17:41:54] - Update VERSION path.
+		% 2021.03.25 [23:18:06] - Now checks multiple location of VERSION file to future proof in case it is moved.
 	% TODO
 		%
 
 	%========================
 	% Char: GitHub API URL to VERSION file on CIAPKG repository.
-	options.versionURL = 'https://api.github.com/repos/bahanonu/calciumImagingAnalysis/contents/ciapkg/VERSION';
+		% https://raw.githubusercontent.com/bahanonu/calciumImagingAnalysis/master
+	options.versionURL = {'https://api.github.com/repos/bahanonu/calciumImagingAnalysis/contents/+ciapkg/VERSION','https://api.github.com/repos/bahanonu/calciumImagingAnalysis/contents/ciapkg/VERSION','https://api.github.com/repos/bahanonu/calciumImagingAnalysis/contents/VERSION'};
 	% Int: time in second before urlread function errors due to timeout
 	options.timeOutSec = 1;
 	% get options
@@ -32,24 +35,41 @@ function [onlineVersion, dateTimeStr] = versionOnline(varargin)
 		onlineVersion = '';
 		dateTimeStr = '';
 
-		% Get version information online
-		% Get information about specific version file online using GitHub API
-		[versionInfo, status] = urlread(options.versionURL,'Timeout',options.timeOutSec);
-		% [versionInfo, status] = webread(options.versionURL,'Timeout',options.timeOutSec);
-		if status==1
-			versionInfo = jsondecode(versionInfo);
-			[onlineVersion, status] = urlread(versionInfo.download_url,'Timeout',options.timeOutSec);
-			% [onlineVersion, status] = webread(versionInfo.download_url,'Timeout',options.timeOutSec);
-			if status==0
-				disp('Could not dowload CIAPKG version information.')
-				return;
-			end
-			if ~isempty(regexp(onlineVersion,'\n'))
-				onlineVersionTmp = strsplit(onlineVersion,'\n');
-				onlineVersion = onlineVersionTmp{1};
-				dateTimeStr = onlineVersionTmp{2};
+		if iscell(options.versionURL)
+
+		elseif ischar(options.versionURL)
+			options.versionURL = {options.versionURL};
+		else
+			disp('Incorrect version URL')
+			return;
+		end
+
+		nChecks = length(options.versionURL);
+
+		for checkNo = 1:nChecks
+			% Get version information online
+			% Get information about specific version file online using GitHub API
+			[versionInfo, status] = urlread(options.versionURL{checkNo},'Timeout',options.timeOutSec);
+			% [versionInfo, status] = webread(options.versionURL,'Timeout',options.timeOutSec);
+			if status==1
+				versionInfo = jsondecode(versionInfo);
+				[onlineVersion, status] = urlread(versionInfo.download_url,'Timeout',options.timeOutSec);
+				% [onlineVersion, status] = webread(versionInfo.download_url,'Timeout',options.timeOutSec);
+				if status==0
+					disp('Could not dowload CIAPKG version information.')
+					return;
+				end
+				if ~isempty(regexp(onlineVersion,'\n'))
+					onlineVersionTmp = strsplit(onlineVersion,'\n');
+					onlineVersion = onlineVersionTmp{1};
+					dateTimeStr = onlineVersionTmp{2};
+				end
+				disp(['URL #' num2str(checkNo)])
+				% Stop early
+				break
 			end
 		end
+
 		success = 1;
 	catch err
 		onlineVersion = '';
