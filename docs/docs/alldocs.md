@@ -161,10 +161,11 @@ Please cite [Corder*, Ahanonu*, et al. 2019](http://science.sciencemag.org/conte
 }
 ```
 
+{% raw %}
 ```Latex
 @misc{biafra_ahanonu_2018_2222295,
   author       = {Biafra Ahanonu},
-  title        = {{{{ site.name }}: a software package for
+  title        = {{ CIAtah : a software package for
                    analyzing one- and two-photon calcium imaging
                    datasets.}},
   month        = December,
@@ -173,6 +174,7 @@ Please cite [Corder*, Ahanonu*, et al. 2019](http://science.sciencemag.org/conte
   url          = {https://doi.org/10.5281/zenodo.2222295}
 }
 ```
+{% endraw %}
 
 ## Questions?
 Please email any additional questions not covered in the repository to `bahanonu [at] alum.mit.edu` or open an issue.

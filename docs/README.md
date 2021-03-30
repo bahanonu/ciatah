@@ -4,7 +4,7 @@ This directory contains the documentation for `CIAtah` that can be built from th
 
 ## Instructions
 
-The documentation can always be found at https://bahanonu.github.io/calciumImagingAnalysis/.
+The documentation can always be found at https://bahanonu.github.io/ciatah/.
 
 Run `make_docs_local.py`, e.g. `python -m make_docs_local.py` in the command line, to make the documents to view locally.
 
