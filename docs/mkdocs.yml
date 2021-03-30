@@ -63,7 +63,7 @@ nav:
   - One-page readme: alldocs.md
   - Setup:
     - Quick Start: install.md
-    - Install: install2.md
+    - Install: install_alt.md
     - Example data: example_data.md
     - Dependencies: dependencies.md
   - Repository:
@@ -79,14 +79,14 @@ nav:
     - ciapkg: api_ciapkg.md
   - Help:
     - Issues and fixes: help_issues.md
-    - <div class='subsection1'>Data</div>: black
+    - <div class='subsection1'>Data</div>: index.md
     - Inscopix: help_inscopix.md
     - Neurodata Without Borders: help_nwb.md
 
-    - <div class='subsection1'>Interface</div>: blank
+    - <div class='subsection1'>Interface</div>: index.md
     - Movie display and noise: help_contrast.md
 
-    - <div class='subsection1'>Analysis</div>: blank
+    - <div class='subsection1'>Analysis</div>: index.md
     - Analysis methods: help_analysis_methods.md
     - Large movie analysis: help_large_movie_analysis.md
     - Stripe removal: help_stripe_removal.md
