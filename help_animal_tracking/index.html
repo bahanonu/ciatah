@@ -174,43 +174,60 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="tracking">Tracking<a class="headerlink" href="#tracking" title="Permanent link">&para;</a></h1>
-<p>Code for ImageJ and Matlab based image tracking.</p>
+                <h1 id="animal-tracking">Animal tracking<a class="headerlink" href="#animal-tracking" title="Permanent link">&para;</a></h1>
+<p>Code for ImageJ- and Matlab-based image tracking.</p>
 <h1 id="imagej-based-tracking">ImageJ based tracking<a class="headerlink" href="#imagej-based-tracking" title="Permanent link">&para;</a></h1>
-<p>Functions needed (have entire <code>miniscope_analysis</code> loaded anyways):</p>
+<p>Functions needed (have entire <code>CIAtah</code> pipeline loaded anyways to ensure all dependencies are met):</p>
 <ul>
 <li><code>mm_tracking.ijm</code> is the tracking function for use in ImageJ, place in
-<code>plugins</code> folder.</li>
-<li><code>removeIncorrectObjs.m</code> is a function to clean-up the ImageJ output.</li>
-<li><code>createTrackingOverlayVideo</code> is a way to check the output from the
-tracking by overlaying mouse tracker onto the video.</li>
+<code>plugins</code> folder. It is found in the <code>ciapkg\tracking</code> folder of the repository.</li>
+<li><code>removeIncorrectObjs()</code> is a function to clean-up the ImageJ output.</li>
+<li><code>createTrackingOverlayVideo()</code> is a function that allows users to check the output from the tracking by overlaying the mouse tracker onto the video.</li>
 </ul>
 <h2 id="instructions-for-imagej-and-matlab">Instructions for ImageJ and Matlab<a class="headerlink" href="#instructions-for-imagej-and-matlab" title="Permanent link">&para;</a></h2>
-<p>Example screen after running <code>mm_tracking</code> within ImageJ, click to expand.
-<a href="https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png" target="_blank"><img alt="image" src="https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png" /></a></p>
-<p>Once ImageJ is finished, within Matlab run the following code (cleans up the ImageJ tracking by removing small objects and adding NaNs for missing frames along with making a movie to check output). Modify to point toward paths specific for your data.
-<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span><span class="c">% CSV file from imageJ and AVI movie path used in ImageJ</span>
-<span class="lineno" data-linenos=" 2 "></span><span class="n">moviePath</span> <span class="p">=</span> <span class="s">&#39;PATH_TO_AVI_USED_IN_IMAEJ&#39;</span><span class="p">;</span>
-<span class="lineno" data-linenos=" 3 "></span><span class="n">csvPath</span> <span class="p">=</span> <span class="s">&#39;PATH_TO_CSV_OUTPUT_BY_IMAGEJ&#39;</span><span class="p">;</span>
-<span class="lineno" data-linenos=" 4 "></span><span class="c">% clean up tracking</span>
-<span class="lineno" data-linenos=" 5 "></span><span class="p">[</span><span class="n">trackingTableFilteredCell</span><span class="p">]</span> <span class="p">=</span> <span class="n">removeIncorrectObjs</span><span class="p">(</span><span class="n">csvPath</span><span class="p">,</span><span class="s">&#39;inputMovie&#39;</span><span class="p">,{</span><span class="n">moviePath</span><span class="p">});</span>
-<span class="lineno" data-linenos=" 6 "></span><span class="c">% make tracking video</span>
-<span class="lineno" data-linenos=" 7 "></span><span class="c">% frames to use as example check</span>
-<span class="lineno" data-linenos=" 8 "></span><span class="n">nFrames</span><span class="p">=</span><span class="mi">1500</span><span class="p">:</span><span class="mi">2500</span><span class="p">;</span>
-<span class="lineno" data-linenos=" 9 "></span><span class="n">inputMovie</span> <span class="p">=</span> <span class="n">loadMovieList</span><span class="p">(</span><span class="n">moviePath</span><span class="p">,</span><span class="s">&#39;frameList&#39;</span><span class="p">,</span><span class="n">nFrames</span><span class="p">);</span>
-<span class="lineno" data-linenos="10 "></span><span class="p">[</span><span class="n">inputTrackingVideo</span><span class="p">]</span> <span class="p">=</span> <span class="n">createTrackingOverlayVideo</span><span class="p">(</span><span class="n">inputMovie</span><span class="p">,</span><span class="n">movmean</span><span class="p">(</span><span class="n">trackingTableFilteredCell</span><span class="p">.</span><span class="n">XM</span><span class="p">(</span><span class="n">nFrames</span><span class="p">),</span><span class="mi">5</span><span class="p">),</span><span class="n">movmean</span><span class="p">(</span><span class="n">trackingTableFilteredCell</span><span class="p">.</span><span class="n">YM</span><span class="p">(</span><span class="n">nFrames</span><span class="p">),</span><span class="mi">5</span><span class="p">));</span>
-<span class="lineno" data-linenos="11 "></span><span class="n">playMovie</span><span class="p">(</span><span class="n">inputTrackingVideo</span><span class="p">);</span>
+<p>Run <code>mm_tracking</code> from the <code>Plugins</code> menu of ImageJ. Several settings to check:</p>
+<ul>
+<li><code>number of session folders to analyze</code> - this will indicate how many movies you want to analyze. Depending on <code>analyze movies from a list file</code> setting, a GUI will appear asking you to select movies to analyze (preferably AVIs) or a text file with a list of movies.</li>
+<li><code>pixel to cm conversion, distance (cm)</code> - Make sure pixel to cm conversion indicates a measurable distance in the video, e.g. from one side of the box to another. The program will ask you to draw this distance to estimate pixels/cm.</li>
+<li><code>crop stack?</code> - keep this selected, as allow removal of parts of movie where the animal will not go, improving results.</li>
+<li><code>erode and dilate</code> - likely keep this selected, as it essentially makes sure the mouse is a solid object and smooths the tracking.</li>
+<li><code>analyze movies from a list file</code> - select this option if you have a text file with the location of each movie to be analyzed on a new line. Use this to analyze many movies in batch.</li>
+<li><code>hide loaded movie</code> - uncheck this to be able to visualize as ImageJ completes each step in the processing. Leave checked to improve speed of analysis.</li>
+</ul>
+<p>Example screen after running <code>mm_tracking</code> within ImageJ, click to expand.</p>
+<!-- <a href="https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png" target="_blank">![image](https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png)</a> -->
+<p><a href="https://user-images.githubusercontent.com/5241605/113023298-554a5e80-913a-11eb-88ed-181c133184f1.png" target="_blank"><img alt="image" src="https://user-images.githubusercontent.com/5241605/113023298-554a5e80-913a-11eb-88ed-181c133184f1.png" /></a></p>
+<p>Once ImageJ is finished, within <code>MATLAB</code> run the following code (cleans up the ImageJ tracking by removing small objects and adding NaNs for missing frames along with making a movie to check output). Modify to point toward paths specific for your data.
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">% CSV file from imageJ and AVI movie path used in ImageJ</span>
+<span class="lineno" data-linenos="2 "></span><span class="n">moviePath</span> <span class="p">=</span> <span class="s">&#39;PATH_TO_AVI_USED_IN_IMAEJ&#39;</span><span class="p">;</span>
+<span class="lineno" data-linenos="3 "></span><span class="n">csvPath</span> <span class="p">=</span> <span class="s">&#39;PATH_TO_CSV_OUTPUT_BY_IMAGEJ&#39;</span><span class="p">;</span>
+<span class="lineno" data-linenos="4 "></span><span class="c">% clean up tracking</span>
+<span class="lineno" data-linenos="5 "></span><span class="p">[</span><span class="n">trackingTableFilteredCell</span><span class="p">]</span> <span class="p">=</span> <span class="n">removeIncorrectObjs</span><span class="p">(</span><span class="n">csvPath</span><span class="p">,</span><span class="s">&#39;inputMovie&#39;</span><span class="p">,{</span><span class="n">moviePath</span><span class="p">});</span>
 </code></pre></div></p>
-<h2 id="example-output-from-2017_09_11_p540_m381_openfield01_091112017">Example output from 2017_09_11_p540_m381_openfield01_091112017<a class="headerlink" href="#example-output-from-2017_09_11_p540_m381_openfield01_091112017" title="Permanent link">&para;</a></h2>
-<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/34800547-2a10a3b0-f619-11e7-9c88-88750c9875cd.png" /></p>
-<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/34800536-19eefcf2-f619-11e7-954f-dba59f4fd427.png" /></p>
-<h1 id="matlab-based-tracking">Matlab based tracking<a class="headerlink" href="#matlab-based-tracking" title="Permanent link">&para;</a></h1>
+<h2 id="example-output-from-animal-in-open-field-during-miniature-microscope-imaging">Example output from animal in open field during miniature microscope imaging<a class="headerlink" href="#example-output-from-animal-in-open-field-during-miniature-microscope-imaging" title="Permanent link">&para;</a></h2>
+<!-- 2017_09_11_p540_m381_openfield01_091112017 -->
+
+<p>Tracking of an animal over time (green = early in session, red = late in session).
+<img alt="image" src="https://user-images.githubusercontent.com/5241605/34800547-2a10a3b0-f619-11e7-9c88-88750c9875cd.png" /></p>
+<h2 id="tracking-video">Tracking video<a class="headerlink" href="#tracking-video" title="Permanent link">&para;</a></h2>
+<p>The tracking video can be used to quickly validate that the animal is being correctly tracked.</p>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">% make tracking video</span>
+<span class="lineno" data-linenos="2 "></span><span class="c">% frames to use as example check</span>
+<span class="lineno" data-linenos="3 "></span><span class="n">nFrames</span><span class="p">=</span><span class="mi">1500</span><span class="p">:</span><span class="mi">2500</span><span class="p">;</span>
+<span class="lineno" data-linenos="4 "></span><span class="n">inputMovie</span> <span class="p">=</span> <span class="n">loadMovieList</span><span class="p">(</span><span class="n">moviePath</span><span class="p">,</span><span class="s">&#39;frameList&#39;</span><span class="p">,</span><span class="n">nFrames</span><span class="p">);</span>
+<span class="lineno" data-linenos="5 "></span><span class="p">[</span><span class="n">inputTrackingVideo</span><span class="p">]</span> <span class="p">=</span> <span class="n">createTrackingOverlayVideo</span><span class="p">(</span><span class="n">inputMovie</span><span class="p">,</span><span class="n">movmean</span><span class="p">(</span><span class="n">trackingTableFilteredCell</span><span class="p">.</span><span class="n">XM</span><span class="p">(</span><span class="n">nFrames</span><span class="p">),</span><span class="mi">5</span><span class="p">),</span><span class="n">movmean</span><span class="p">(</span><span class="n">trackingTableFilteredCell</span><span class="p">.</span><span class="n">YM</span><span class="p">(</span><span class="n">nFrames</span><span class="p">),</span><span class="mi">5</span><span class="p">));</span>
+<span class="lineno" data-linenos="6 "></span><span class="n">playMovie</span><span class="p">(</span><span class="n">inputTrackingVideo</span><span class="p">);</span>
+</code></pre></div>
+<p>Overlay of tracking (red circle) on the mouse in a specific frame.
+<img alt="image" src="https://user-images.githubusercontent.com/5241605/34800536-19eefcf2-f619-11e7-954f-dba59f4fd427.png" /></p>
+<!-- # Matlab based tracking
+
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span>
 </code></pre></div>
-<ul>
-<li>Refer to <a href="https://github.com/schnitzer-lab/miniscope_analysis/issues/21">https://github.com/schnitzer-lab/miniscope_analysis/issues/21</a> for additional details about testing this function.</li>
-</ul>
-<p><img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/10858250/c899794e-7f10-11e5-9a01-5f3c31606be9.png" /></p>
+
+* Refer to https://github.com/schnitzer-lab/miniscope_analysis/issues/21 for additional details about testing this function.
+
+![image](https://cloud.githubusercontent.com/assets/5241605/10858250/c899794e-7f10-11e5-9a01-5f3c31606be9.png) -->
               
             </div>
           </div>
