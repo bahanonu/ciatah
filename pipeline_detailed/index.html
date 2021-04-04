@@ -142,17 +142,17 @@
                 <ul>
                     <li class="toctree-l1"><a class="reference internal" href="../help_issues/">Issues and fixes</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Data</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href="../blank/"><div class='subsection1'>Data</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_inscopix/">Inscopix</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_nwb/">Neurodata Without Borders</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Interface</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href="../blank/"><div class='subsection1'>Interface</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_contrast/">Movie display and noise</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Analysis</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href="../blank/"><div class='subsection1'>Analysis</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_analysis_methods/">Analysis methods</a>
                     </li>
@@ -228,11 +228,13 @@
 <p>The following detailed pipeline assumes you have started a CIAtah object using the below command:</p>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">obj</span> <span class="p">=</span> <span class="n">ciatah</span><span class="p">;</span>
 </code></pre></div>
+
 <h2 id="spatially-downsample-raw-movies-or-convert-to-hdf5-with-modeldownsamplerawmovies">Spatially downsample raw movies or convert to HDF5 with <code>modelDownsampleRawMovies</code><a class="headerlink" href="#spatially-downsample-raw-movies-or-convert-to-hdf5-with-modeldownsamplerawmovies" title="Permanent link">&para;</a></h2>
 <p>Users have the ability to spatially downsample raw movies, often necessary to denoise the data, save storage space, and improve runtimes of later processing steps. For most data, users can downsample 2 or 4 times in each spatial dimension while still retaining sufficient pixels per cell to facilitate cell-extraction.</p>
 <p>To run, either select <code>modelDownsampleRawMovies</code> in the GUI menu or type the below command after initializing a CIAtah obj.</p>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">obj</span><span class="p">.</span><span class="n">modelDownsampleRawMovies</span><span class="p">;</span>
 </code></pre></div>
+
 <p>This will pop-up the following screen. Users can
 - input several folders where ISXD files are by separating each folder path with a comma (<code>Folder(s) where raw HDF5s are located</code>),
 - specify a common root folder to save files to (<code>Folder to save downsampled HDF5s to:</code>),
@@ -302,6 +304,7 @@ The function will automatically put each file in its corresponding folder, <stro
 <p>Users can load outputs from cell extraction using the below command. This will then allow users to use the images and activity traces for downstream analysis as needed.</p>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="p">[</span><span class="n">inputImages</span><span class="p">,</span><span class="n">inputSignals</span><span class="p">,</span><span class="n">infoStruct</span><span class="p">,</span><span class="n">algorithmStr</span><span class="p">,</span><span class="n">inputSignals2</span><span class="p">]</span> <span class="p">=</span> <span class="n">ciapkg</span><span class="p">.</span><span class="n">io</span><span class="p">.</span><span class="n">loadSignalExtraction</span><span class="p">(</span><span class="s">&#39;pathToFile&#39;</span><span class="p">);</span>
 </code></pre></div>
+
 <p>Note, the outputs correspond to the below:</p>
 <ul>
 <li><code>inputImages</code> - 3D or 4D matrix containing cells and their spatial information, format: [x y nCells].</li>
@@ -329,6 +332,7 @@ The function will automatically put each file in its corresponding folder, <stro
 <p align="center">
   <strong>CIAtah cell sorting GUI</strong>
 </p>
+
 <p align="center">
   <a href="https://user-images.githubusercontent.com/5241605/100851700-64dec280-343a-11eb-974c-d6d29faf9eb2.gif">
     <img src="https://user-images.githubusercontent.com/5241605/100851700-64dec280-343a-11eb-974c-d6d29faf9eb2.gif" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="75%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
@@ -370,6 +374,7 @@ The function will automatically put each file in its corresponding folder, <stro
 <span class="lineno" data-linenos="11 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">backgroundNeutral</span> <span class="p">=</span> <span class="nb">repmat</span><span class="p">(</span><span class="mi">230</span><span class="p">,[</span><span class="mi">1</span> <span class="mi">3</span><span class="p">])</span><span class="o">/</span><span class="mi">255</span><span class="p">;</span>
 <span class="lineno" data-linenos="12 "></span><span class="p">[</span><span class="n">inputImagesSorted</span><span class="p">,</span> <span class="n">inputSignalsSorted</span><span class="p">,</span> <span class="n">choices</span><span class="p">]</span> <span class="p">=</span> <span class="n">signalSorter</span><span class="p">(</span><span class="n">inputImages</span><span class="p">,</span> <span class="n">inputSignals</span><span class="p">,</span> <span class="s">&#39;options&#39;</span><span class="p">,</span><span class="n">iopts</span><span class="p">);</span>
 </code></pre></div>
+
 <p>Examples of the interface on two different datasets:</p>
 <h4 id="bla-one-photon-imaging-data-signal-sorting-gui">BLA one-photon imaging data signal sorting GUI<a class="headerlink" href="#bla-one-photon-imaging-data-signal-sorting-gui" title="Permanent link">&para;</a></h4>
 <p><img alt="out-1" src="https://user-images.githubusercontent.com/5241605/34796712-3868cb3a-f60b-11e7-830e-8eec5b2c76d7.gif" /></p>
@@ -397,6 +402,7 @@ The function will automatically put each file in its corresponding folder, <stro
 <span class="lineno" data-linenos="2 "></span><span class="c">% Each (globalID, sessionID) pair gives the within session ID for that particular global ID</span>
 <span class="lineno" data-linenos="3 "></span><span class="n">globalIDs</span> <span class="p">=</span> <span class="n">alignmentStruct</span><span class="p">.</span><span class="n">globalIDs</span><span class="p">;</span>
 </code></pre></div>
+
 <h3 id="view-cross-session-cell-alignment-with-viewmatchobjbtwnsessions">View cross-session cell alignment with <code>viewMatchObjBtwnSessions</code><a class="headerlink" href="#view-cross-session-cell-alignment-with-viewmatchobjbtwnsessions" title="Permanent link">&para;</a></h3>
 <p>To evaluate how well cross-session alignment works, <code>computeMatchObjBtwnTrials</code> will automatically run <code>viewMatchObjBtwnSessions</code> at the end, but users can also run it separately after alignment. The left are raw dorsal striatum cell maps from a single animal. The right shows after cross-session alignment; color is used to indicate a global ID cell (e.g. the same cell matched across multiple days). Thus, same color cell = same cell across sessions.</p>
 <p><a href="https://cloud.githubusercontent.com/assets/5241605/25643108/9bcfccda-2f52-11e7-8514-31968752bd95.gif" target="_blank"><img src="https://cloud.githubusercontent.com/assets/5241605/25643108/9bcfccda-2f52-11e7-8514-31968752bd95.gif" alt="2017_05_02_p545_m121_p215_raw" width="auto" height="400"/></a>

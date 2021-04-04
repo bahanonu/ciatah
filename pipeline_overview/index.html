@@ -92,17 +92,17 @@
                 <ul>
                     <li class="toctree-l1"><a class="reference internal" href="../help_issues/">Issues and fixes</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Data</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href="../blank/"><div class='subsection1'>Data</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_inscopix/">Inscopix</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_nwb/">Neurodata Without Borders</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Interface</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href="../blank/"><div class='subsection1'>Interface</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_contrast/">Movie display and noise</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Analysis</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href="../blank/"><div class='subsection1'>Analysis</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_analysis_methods/">Analysis methods</a>
                     </li>
@@ -177,6 +177,7 @@
                 <h1 id="processing-calcium-imaging-data">Processing calcium imaging data<a class="headerlink" href="#processing-calcium-imaging-data" title="Permanent link">&para;</a></h1>
 <p>The general pipeline for processing calcium imaging data is below. This repository includes code to do nearly every step.</p>
 <!-- ![image](https://user-images.githubusercontent.com/5241605/61981834-ab532000-afaf-11e9-97c2-4b1d7d759a30.png) -->
+
 <p><img alt="ciapkg_pipeline.png" src="../img/ciapkg_pipeline.png" /></p>
 <p>To start using the <code>CIAtah</code> software package, enter the following into the MATLAB command window.</p>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span><span class="c">% Loads all directories</span>
@@ -186,10 +187,11 @@
 <span class="lineno" data-linenos=" 5 "></span><span class="n">obj</span> <span class="p">=</span> <span class="n">ciatah</span><span class="p">;</span>
 <span class="lineno" data-linenos=" 6 "></span>
 <span class="lineno" data-linenos=" 7 "></span><span class="c">% Open the class menu</span>
-<span class="lineno" data-linenos=" 8 "></span><span class="n">obj</span> <span class="s">%</span> <span class="s">then</span> <span class="s">hit</span> <span class="s">enter,</span> <span class="s">no</span> <span class="s">semicolon!</span>
+<span class="lineno" data-linenos=" 8 "></span><span class="n">obj </span><span class="s">% then hit enter, no semicolon!</span><span class="p"></span>
 <span class="lineno" data-linenos=" 9 "></span><span class="c">% Alternatively</span>
 <span class="lineno" data-linenos="10 "></span><span class="n">obj</span><span class="p">.</span><span class="n">runPipeline</span><span class="p">;</span> <span class="c">% then hit enter!</span>
 </code></pre></div>
+
 <p>The general order of functions that users should run is ([optional] are those not critical for most datasets):</p>
 <ul>
 <li><code>loadDependencies</code><ul>

@@ -126,17 +126,17 @@
     </li>
     </ul>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Data</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href="../blank/"><div class='subsection1'>Data</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_inscopix/">Inscopix</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_nwb/">Neurodata Without Borders</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Interface</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href="../blank/"><div class='subsection1'>Interface</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_contrast/">Movie display and noise</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Analysis</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href="../blank/"><div class='subsection1'>Analysis</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_analysis_methods/">Analysis methods</a>
                     </li>
@@ -249,8 +249,8 @@
 <ul>
 <li>If you get a <code>java.lang.OutOfMemoryError: GC overhead limit exceeded</code> style error (see below code) when trying to open a movie with <code>Miji</code>, make sure that you initialize MATLAB in the <code>CIAtah</code> path or place the <code>java.opts</code> file in your MATLAB start-up folder.
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">java</span><span class="p">.</span><span class="n">lang</span><span class="p">.</span><span class="n">OutOfMemoryError</span><span class="p">:</span> <span class="n">GC</span> <span class="n">overhead</span> <span class="n">limit</span> <span class="n">exceeded</span>
-<span class="lineno" data-linenos="2 "></span>    <span class="n">at</span> <span class="s">java.lang.AbstractStringBuilder.&lt;init&gt;(Unknown</span> <span class="s">Source)</span>
-<span class="lineno" data-linenos="3 "></span>    <span class="n">at</span> <span class="s">java.lang.StringBuilder.&lt;init&gt;(Unknown</span> <span class="s">Source)</span>
+<span class="lineno" data-linenos="2 "></span><span class="n">    at </span><span class="s">java.lang.AbstractStringBuilder.&lt;init&gt;(Unknown Source)</span><span class="p"></span>
+<span class="lineno" data-linenos="3 "></span><span class="n">    at </span><span class="s">java.lang.StringBuilder.&lt;init&gt;(Unknown Source)</span><span class="p"></span>
 </code></pre></div></li>
 </ul>
 <ul>
@@ -279,7 +279,7 @@
 </ul>
 <p>If this occurs, run the following commands one at a time:
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">resetMiji</span>
-<span class="lineno" data-linenos="2 "></span><span class="s">%</span> <span class="s">An</span> <span class="s">instance</span> <span class="s">of</span> <span class="s">Miji</span> <span class="s">should</span> <span class="s">appear.</span>
+<span class="lineno" data-linenos="2 "></span><span class="s">% An instance of Miji should appear.</span><span class="p"></span>
 <span class="lineno" data-linenos="3 "></span><span class="n">currP</span><span class="p">=</span><span class="n">pwd</span><span class="p">;</span><span class="n">Miji</span><span class="p">;</span><span class="n">cd</span><span class="p">(</span><span class="n">currP</span><span class="p">);</span>
 <span class="lineno" data-linenos="4 "></span><span class="n">MIJ</span><span class="p">.</span><span class="n">exit</span>
 </code></pre></div></p>
@@ -287,25 +287,27 @@
 <ul>
 <li>If when trying to download using <code>downloadCnmfGithubRepositories.m</code> the below error is encountered, try to run <code>downloadCnmfGithubRepositories</code> several more times as <code>websave</code> (MATLAB built-in function) sometimes momentarily does not obtain the correct write permissions and fails.
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="p">@@@@@@@</span>
-<span class="lineno" data-linenos="2 "></span><span class="n">Error</span> <span class="s">using</span> <span class="s">websave</span> <span class="s">(line</span> <span class="s">104)</span>
-<span class="lineno" data-linenos="3 "></span><span class="n">Unable</span> <span class="s">to</span> <span class="s">open</span> <span class="s">output</span> <span class="s">file:</span> <span class="s">&#39;signal_extraction\cnmfe.zip&#39;</span> <span class="s">for</span> <span class="s">writing.</span> <span class="s">Common</span> <span class="s">reasons</span> <span class="s">include</span> <span class="s">that</span> <span class="s">the</span> <span class="s">file</span> <span class="s">exists</span> <span class="s">and</span> <span class="s">does</span> <span class="s">not</span> <span class="s">have</span> <span class="s">write</span> <span class="s">permission</span> <span class="s">or</span> <span class="s">the</span> <span class="s">folder</span> <span class="s">does</span> <span class="s">not</span> <span class="s">have</span> <span class="s">write</span> <span class="s">permissions.</span>
+<span class="lineno" data-linenos="2 "></span><span class="n">Error </span><span class="s">using websave (line 104)</span><span class="p"></span>
+<span class="lineno" data-linenos="3 "></span><span class="n">Unable </span><span class="s">to open output file: &#39;signal_extraction\cnmfe.zip&#39; for writing. Common reasons include that the file exists and does not have write permission or the folder does not have write permissions.</span><span class="p"></span>
 </code></pre></div></li>
 </ul>
 <h2 id="modelpreprocessmovie-analysis-options-list-not-showing"><code>modelPreprocessMovie</code> analysis options list not showing<a class="headerlink" href="#modelpreprocessmovie-analysis-options-list-not-showing" title="Permanent link">&para;</a></h2>
 <ul>
 <li>MATLAB changed <code>uitables</code> internal implementation, hence <code>findjobj</code> (File Exchange function) broke causing <code>reorderableListbox</code> (File Exchange function) to also break. An updated <code>findjobj</code> has been added to the <code>CIAtah</code> repository and this error (see below) should no longer occur.</li>
 </ul>
-<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">Error</span> <span class="s">in</span> <span class="s">reorderableListbox</span> <span class="s">(line</span> <span class="s">127)</span>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">Error </span><span class="s">in reorderableListbox (line 127)</span><span class="p"></span>
 <span class="lineno" data-linenos="2 "></span><span class="n">jScrollPane</span> <span class="p">=</span> <span class="n">jScrollPane</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
 </code></pre></div>
+
 <h2 id="miji-not-loading-correctly"><code>Miji</code> not loading correctly<a class="headerlink" href="#miji-not-loading-correctly" title="Permanent link">&para;</a></h2>
 <ul>
 <li>The below error occurs when the wrong version of <code>Fiji</code> is downloaded. Please <strong>2015 December 22</strong> version download from <a href="https://imagej.net/Fiji/Downloads">https://imagej.net/Fiji/Downloads</a> as that implementation of <code>Miji.m</code> appears to work correctly with MATLAB.</li>
 </ul>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="p">@@@@@@@</span>
-<span class="lineno" data-linenos="2 "></span><span class="n">Error</span> <span class="s">using</span> <span class="s">javaObject</span>
-<span class="lineno" data-linenos="3 "></span><span class="n">No</span> <span class="s">class</span> <span class="s">MIJ</span> <span class="s">can</span> <span class="s">be</span> <span class="s">located</span> <span class="s">on</span> <span class="s">the</span> <span class="s">Java</span> <span class="s">class</span> <span class="s">path</span>
+<span class="lineno" data-linenos="2 "></span><span class="n">Error </span><span class="s">using javaObject</span><span class="p"></span>
+<span class="lineno" data-linenos="3 "></span><span class="n">No </span><span class="s">class MIJ can be located on the Java class path</span><span class="p"></span>
 </code></pre></div>
+
 <h2 id="viewmovie-or-other-functions-where-movies-need-to-be-loaded-end-without-executing"><code>viewMovie</code> or other functions where movies need to be loaded end without executing<a class="headerlink" href="#viewmovie-or-other-functions-where-movies-need-to-be-loaded-end-without-executing" title="Permanent link">&para;</a></h2>
 <ul>
 <li>It is likely that the regular expression given to <code>CIAtah</code> does not match any of the files in the folder being analyzed.</li>
@@ -347,7 +349,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href=".." class="btn btn-neutral float-right" title="<div class='subsection1'>Data</div>">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../blank/" class="btn btn-neutral float-right" title="<div class='subsection1'>Data</div>">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
         <a href="../api_ciapkg/" class="btn btn-neutral" title="ciapkg"><span class="icon icon-circle-arrow-left"></span> Previous</a>
@@ -379,7 +381,7 @@
         <span><a href="../api_ciapkg/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
       
-        <span style="margin-left: 15px"><a href=".." style="color: #fcfcfc">Next &raquo;</a></span>
+        <span style="margin-left: 15px"><a href="../blank/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>

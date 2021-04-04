@@ -106,17 +106,17 @@
                 <ul>
                     <li class="toctree-l1"><a class="reference internal" href="../help_issues/">Issues and fixes</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Data</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href="../blank/"><div class='subsection1'>Data</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_inscopix/">Inscopix</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_nwb/">Neurodata Without Borders</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Interface</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href="../blank/"><div class='subsection1'>Interface</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_contrast/">Movie display and noise</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href=".."><div class='subsection1'>Analysis</div></a>
+                    <li class="toctree-l1"><a class="reference internal" href="../blank/"><div class='subsection1'>Analysis</div></a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../help_analysis_methods/">Analysis methods</a>
                     </li>
@@ -208,6 +208,7 @@
 <p>Users can load data from any NWB or CIAtah-style MAT files containing cell-extraction outputs using the <code>ciapkg.io.loadSignalExtraction</code> function as below.</p>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="p">[</span><span class="n">inputImages</span><span class="p">,</span><span class="n">inputSignals</span><span class="p">,</span><span class="n">infoStruct</span><span class="p">,</span><span class="n">algorithmStr</span><span class="p">,</span><span class="n">inputSignals2</span><span class="p">]</span> <span class="p">=</span> <span class="n">ciapkg</span><span class="p">.</span><span class="n">io</span><span class="p">.</span><span class="n">loadSignalExtraction</span><span class="p">(</span><span class="n">fileName</span><span class="p">);</span>
 </code></pre></div>
+
 <h3 id="nwb-support">NWB Support<a class="headerlink" href="#nwb-support" title="Permanent link">&para;</a></h3>
 <p>CIAtah supports NWB format and by default will output cell-extraction analysis as CIAtah format unless user specifies otherwise. NWB files are by default stored in the <code>nwbFiles</code> sub-folder. This can be changed by setting the <code>obj.nwbFileFolder</code> property to a different folder name. Learn more about saving and loading</p>
 <ul>
