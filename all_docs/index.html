@@ -544,7 +544,7 @@
 <span class="lineno" data-linenos="16 "></span>
 <span class="lineno" data-linenos="17 "></span><span class="c">% Open the class menu (always type `obj` then enter load the class/modules menu)</span>
 <span class="lineno" data-linenos="18 "></span>
-<span class="lineno" data-linenos="19 "></span><span class="n">obj </span><span class="s">% then hit enter, no semicolon!</span><span class="p"></span>
+<span class="lineno" data-linenos="19 "></span><span class="n">obj</span> <span class="s">%</span> <span class="s">then</span> <span class="s">hit</span> <span class="s">enter,</span> <span class="s">no</span> <span class="s">semicolon!</span>
 </code></pre></div>
 <ul>
 <li>Afterwards, likely want to run <code>modelAddNewFolders</code> module first in order to add folders containing imaging data to the current class object.</li>
@@ -1023,7 +1023,7 @@
 <span class="lineno" data-linenos="12 "></span>
 <span class="lineno" data-linenos="13 "></span><span class="c">% Open the class menu</span>
 <span class="lineno" data-linenos="14 "></span>
-<span class="lineno" data-linenos="15 "></span><span class="n">obj </span><span class="s">% then hit enter, no semicolon!</span><span class="p"></span>
+<span class="lineno" data-linenos="15 "></span><span class="n">obj</span> <span class="s">%</span> <span class="s">then</span> <span class="s">hit</span> <span class="s">enter,</span> <span class="s">no</span> <span class="s">semicolon!</span>
 <span class="lineno" data-linenos="16 "></span>
 <span class="lineno" data-linenos="17 "></span><span class="c">% Alternatively</span>
 <span class="lineno" data-linenos="18 "></span>
@@ -1427,22 +1427,28 @@
 <span class="lineno" data-linenos="21 "></span><span class="n">playMovie</span><span class="p">(</span><span class="n">inputTrackingVideo</span><span class="p">);</span>
 </code></pre></div>
 <h4 id="example-output-from-2017_09_11_p540_m381_openfield01_091112017">Example output from 2017_09_11_p540_m381_openfield01_091112017<a class="headerlink" href="#example-output-from-2017_09_11_p540_m381_openfield01_091112017" title="Permanent link">¶</a></h4>
-<!-- <img alt="image" src="https://user-images.githubusercontent.com/5241605/34800547-2a10a3b0-f619-11e7-9c88-88750c9875cd.png" /> -->
+<!-- ![image](https://user-images.githubusercontent.com/5241605/34800547-2a10a3b0-f619-11e7-9c88-88750c9875cd.png) -->
 <p><img alt="image" height="auto" src="https://user-images.githubusercontent.com/5241605/34800547-2a10a3b0-f619-11e7-9c88-88750c9875cd.png" width="400"/></p>
 <p>Using <code>createTrackingOverlayVideo</code> to verify tracking matches animal position on a per frame basis.</p>
 <!-- ![image](https://user-images.githubusercontent.com/5241605/34800536-19eefcf2-f619-11e7-954f-dba59f4fd427.png) -->
 <p><img alt="image" height="auto" src="https://user-images.githubusercontent.com/5241605/34800536-19eefcf2-f619-11e7-954f-dba59f4fd427.png" width="400"/></p>
 <h2 id="api"><div class="subsection1"><em>â€”APIâ€”</em></div><a class="headerlink" href="#api" title="Permanent link">¶</a></h2>
 <h2 id="example-sitename-pipeline-via-the-command-line">Example <code>CIAtah</code> pipeline via the command line.<a class="headerlink" href="#example-sitename-pipeline-via-the-command-line" title="Permanent link">¶</a></h2>
-<p>Below is an example <code>cacliumImagingAnalysis</code> pipeline using the command line for those that do not want to use the class or want to create their own custom batch analyses. It assumes you have already run <code>example_downloadTestData</code> to download the example test data.</p>
-<p>Can also access the pipeline by typing <code>edit ciapkg.demo.cmdLinePipeline</code> into the command line or run by typing in <code>ciapkg.demo.cmdLinePipeline;</code>;</p>
-<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">% Running CIAtah command line</span>
-<span class="lineno" data-linenos="2 "></span>
-<span class="lineno" data-linenos="3 "></span>
-<span class="lineno" data-linenos="4 "></span>
-<span class="lineno" data-linenos="5 "></span><span class="c">%% Load movie to analyze</span>
-<span class="lineno" data-linenos="6 "></span>
-<span class="lineno" data-linenos="7 "></span><span class="n">inputMovie</span> <span class="p">=</span> <span class="n">loadMovieList</span><span class="p">([</span><span class="n">ciapkg</span><span class="p">.</span><span class="n">getDir</span><span class="p">()</span> <span class="n">filesep</span> <span class="s">'data'</span> <span class="n">filesep</span> <span class="s">'2014_04_01_p203_m19_check01'</span> <span class="n">filesep</span> <span class="s">'concat_recording_20140401_180333.h5'</span><span class="p">]);</span>
+<p>Below is an example <code>CIAtah</code> pipeline using the command line for those that do not want to use the class or want to create their own custom batch analyses. It assumes you have already run <code>example_downloadTestData</code> to download the example test data and have MATLAB path set to the <code>CIAtah</code> root directory.</p>
+<p>Can also access the pipeline by typing <code>edit ciapkg.demo.cmdLinePipeline</code> into the MATLAB command window or run by typing in <code>ciapkg.demo.cmdLinePipeline;</code>.</p>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span><span class="c">% Running CIAtah from MATLAB command line/window</span>
+<span class="lineno" data-linenos=" 2 "></span>
+<span class="lineno" data-linenos=" 3 "></span>
+<span class="lineno" data-linenos=" 4 "></span>
+<span class="lineno" data-linenos=" 5 "></span><span class="c">%% Load CIAtah functions</span>
+<span class="lineno" data-linenos=" 6 "></span>
+<span class="lineno" data-linenos=" 7 "></span><span class="n">loadBatchFxns</span><span class="p">();</span>
+<span class="lineno" data-linenos=" 8 "></span>
+<span class="lineno" data-linenos=" 9 "></span>
+<span class="lineno" data-linenos="10 "></span>
+<span class="lineno" data-linenos="11 "></span><span class="c">%% Load movie to analyze</span>
+<span class="lineno" data-linenos="12 "></span>
+<span class="lineno" data-linenos="13 "></span><span class="n">inputMovie</span> <span class="p">=</span> <span class="n">loadMovieList</span><span class="p">([</span><span class="n">ciapkg</span><span class="p">.</span><span class="n">getDir</span><span class="p">()</span> <span class="n">filesep</span> <span class="s">'data'</span> <span class="n">filesep</span> <span class="s">'2014_04_01_p203_m19_check01'</span> <span class="n">filesep</span> <span class="s">'concat_recording_20140401_180333.h5'</span><span class="p">]);</span>
 </code></pre></div>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">%% Visualize slice of the movie</span>
 <span class="lineno" data-linenos="2 "></span>
@@ -1568,9 +1574,9 @@
 <span class="lineno" data-linenos="2 "></span>
 <span class="lineno" data-linenos="3 "></span><span class="n">figure</span><span class="p">;</span>
 <span class="lineno" data-linenos="4 "></span>
-<span class="lineno" data-linenos="5 "></span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span><span class="n">imagesc</span><span class="p">(</span><span class="n">max</span><span class="p">(</span><span class="n">IcaFilters</span><span class="p">,[],</span><span class="mi">3</span><span class="p">));</span><span class="n">axis </span><span class="s">equal tight</span><span class="p">;</span> <span class="n">title</span><span class="p">(</span><span class="s">'Raw filters'</span><span class="p">)</span>
+<span class="lineno" data-linenos="5 "></span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span><span class="n">imagesc</span><span class="p">(</span><span class="n">max</span><span class="p">(</span><span class="n">IcaFilters</span><span class="p">,[],</span><span class="mi">3</span><span class="p">));</span><span class="n">axis</span> <span class="s">equal</span> <span class="s">tight</span><span class="p">;</span> <span class="n">title</span><span class="p">(</span><span class="s">'Raw filters'</span><span class="p">)</span>
 <span class="lineno" data-linenos="6 "></span>
-<span class="lineno" data-linenos="7 "></span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span><span class="n">imagesc</span><span class="p">(</span><span class="n">max</span><span class="p">(</span><span class="n">outImages</span><span class="p">,[],</span><span class="mi">3</span><span class="p">));</span><span class="n">axis </span><span class="s">equal tight</span><span class="p">;</span> <span class="n">title</span><span class="p">(</span><span class="s">'Sorted filters'</span><span class="p">)</span>
+<span class="lineno" data-linenos="7 "></span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span><span class="n">imagesc</span><span class="p">(</span><span class="n">max</span><span class="p">(</span><span class="n">outImages</span><span class="p">,[],</span><span class="mi">3</span><span class="p">));</span><span class="n">axis</span> <span class="s">equal</span> <span class="s">tight</span><span class="p">;</span> <span class="n">title</span><span class="p">(</span><span class="s">'Sorted filters'</span><span class="p">)</span>
 </code></pre></div>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">%% Create an overlay of extraction outputs on the movie and signal-based movie</span>
 <span class="lineno" data-linenos="2 "></span>
@@ -1728,9 +1734,9 @@
 </ul>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">java</span><span class="p">.</span><span class="n">lang</span><span class="p">.</span><span class="n">OutOfMemoryError</span><span class="p">:</span> <span class="n">GC</span> <span class="n">overhead</span> <span class="n">limit</span> <span class="n">exceeded</span>
 <span class="lineno" data-linenos="2 "></span>
-<span class="lineno" data-linenos="3 "></span><span class="n">    at </span><span class="s">java.lang.AbstractStringBuilder.&lt;init&gt;(Unknown Source)</span><span class="p"></span>
+<span class="lineno" data-linenos="3 "></span>    <span class="n">at</span> <span class="s">java.lang.AbstractStringBuilder.&lt;init&gt;(Unknown</span> <span class="s">Source)</span>
 <span class="lineno" data-linenos="4 "></span>
-<span class="lineno" data-linenos="5 "></span><span class="n">    at </span><span class="s">java.lang.StringBuilder.&lt;init&gt;(Unknown Source)</span><span class="p"></span>
+<span class="lineno" data-linenos="5 "></span>    <span class="n">at</span> <span class="s">java.lang.StringBuilder.&lt;init&gt;(Unknown</span> <span class="s">Source)</span>
 </code></pre></div>
 <ul>
 <li>On Windows, you can change the start-up folder as below or in general see <a href="https://www.mathworks.com/help/matlab/matlab_env/matlab-startup-folder.html">https://www.mathworks.com/help/matlab/matlab_env/matlab-startup-folder.html</a>.</li>
@@ -1761,7 +1767,7 @@
 <p>If this occurs, run the following commands one at a time:</p>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">resetMiji</span>
 <span class="lineno" data-linenos="2 "></span>
-<span class="lineno" data-linenos="3 "></span><span class="s">% An instance of Miji should appear.</span><span class="p"></span>
+<span class="lineno" data-linenos="3 "></span><span class="s">%</span> <span class="s">An</span> <span class="s">instance</span> <span class="s">of</span> <span class="s">Miji</span> <span class="s">should</span> <span class="s">appear.</span>
 <span class="lineno" data-linenos="4 "></span>
 <span class="lineno" data-linenos="5 "></span><span class="n">currP</span><span class="p">=</span><span class="n">pwd</span><span class="p">;</span><span class="n">Miji</span><span class="p">;</span><span class="n">cd</span><span class="p">(</span><span class="n">currP</span><span class="p">);</span>
 <span class="lineno" data-linenos="6 "></span>
@@ -1773,15 +1779,15 @@
 </ul>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="p">@@@@@@@</span>
 <span class="lineno" data-linenos="2 "></span>
-<span class="lineno" data-linenos="3 "></span><span class="n">Error </span><span class="s">using websave (line 104)</span><span class="p"></span>
+<span class="lineno" data-linenos="3 "></span><span class="n">Error</span> <span class="s">using</span> <span class="s">websave</span> <span class="s">(line</span> <span class="s">104)</span>
 <span class="lineno" data-linenos="4 "></span>
-<span class="lineno" data-linenos="5 "></span><span class="n">Unable </span><span class="s">to open output file: 'signal_extraction\cnmfe.zip' for writing. Common reasons include that the file exists and does not have write permission or the folder does not have write permissions.</span><span class="p"></span>
+<span class="lineno" data-linenos="5 "></span><span class="n">Unable</span> <span class="s">to</span> <span class="s">open</span> <span class="s">output</span> <span class="s">file:</span> <span class="s">'signal_extraction\cnmfe.zip'</span> <span class="s">for</span> <span class="s">writing.</span> <span class="s">Common</span> <span class="s">reasons</span> <span class="s">include</span> <span class="s">that</span> <span class="s">the</span> <span class="s">file</span> <span class="s">exists</span> <span class="s">and</span> <span class="s">does</span> <span class="s">not</span> <span class="s">have</span> <span class="s">write</span> <span class="s">permission</span> <span class="s">or</span> <span class="s">the</span> <span class="s">folder</span> <span class="s">does</span> <span class="s">not</span> <span class="s">have</span> <span class="s">write</span> <span class="s">permissions.</span>
 </code></pre></div>
 <h3 id="modelpreprocessmovie-analysis-options-list-not-showing"><code>modelPreprocessMovie</code> analysis options list not showing<a class="headerlink" href="#modelpreprocessmovie-analysis-options-list-not-showing" title="Permanent link">¶</a></h3>
 <ul>
 <li>MATLAB changed <code>uitables</code> internal implementation, hence <code>findjobj</code> (File Exchange function) broke causing <code>reorderableListbox</code> (File Exchange function) to also break. An updated <code>findjobj</code> has been added to the <code>CIAtah</code> repository and this error (see below) should no longer occur.</li>
 </ul>
-<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">Error </span><span class="s">in reorderableListbox (line 127)</span><span class="p"></span>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">Error</span> <span class="s">in</span> <span class="s">reorderableListbox</span> <span class="s">(line</span> <span class="s">127)</span>
 <span class="lineno" data-linenos="2 "></span>
 <span class="lineno" data-linenos="3 "></span><span class="n">jScrollPane</span> <span class="p">=</span> <span class="n">jScrollPane</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
 </code></pre></div>
@@ -1791,9 +1797,9 @@
 </ul>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="p">@@@@@@@</span>
 <span class="lineno" data-linenos="2 "></span>
-<span class="lineno" data-linenos="3 "></span><span class="n">Error </span><span class="s">using javaObject</span><span class="p"></span>
+<span class="lineno" data-linenos="3 "></span><span class="n">Error</span> <span class="s">using</span> <span class="s">javaObject</span>
 <span class="lineno" data-linenos="4 "></span>
-<span class="lineno" data-linenos="5 "></span><span class="n">No </span><span class="s">class MIJ can be located on the Java class path</span><span class="p"></span>
+<span class="lineno" data-linenos="5 "></span><span class="n">No</span> <span class="s">class</span> <span class="s">MIJ</span> <span class="s">can</span> <span class="s">be</span> <span class="s">located</span> <span class="s">on</span> <span class="s">the</span> <span class="s">Java</span> <span class="s">class</span> <span class="s">path</span>
 </code></pre></div>
 <h3 id="viewmovie-or-other-functions-where-movies-need-to-be-loaded-end-without-executing"><code>viewMovie</code> or other functions where movies need to be loaded end without executing<a class="headerlink" href="#viewmovie-or-other-functions-where-movies-need-to-be-loaded-end-without-executing" title="Permanent link">¶</a></h3>
 <ul>
@@ -2795,19 +2801,19 @@
 <span class="lineno" data-linenos="22 "></span>
 <span class="lineno" data-linenos="23 "></span><span class="c">% Re-register input images for particular imaging session for later analysis.</span>
 <span class="lineno" data-linenos="24 "></span>
-<span class="lineno" data-linenos="25 "></span><span class="n">for </span><span class="s">iterationNo = 1:length(globalRegCoords)</span><span class="p"></span>
+<span class="lineno" data-linenos="25 "></span><span class="n">for</span> <span class="s">iterationNo</span> <span class="s">=</span> <span class="s">1:length(globalRegCoords)</span>
 <span class="lineno" data-linenos="26 "></span>
-<span class="lineno" data-linenos="27 "></span>    <span class="n">fn</span><span class="p">=</span><span class="n">fieldnames</span><span class="p">(</span><span class="n">globalRegCoords</span><span class="p">{</span><span class="n">iterationNo</span><span class="p">});</span><span class="n"></span>
+<span class="lineno" data-linenos="27 "></span>    <span class="n">fn</span><span class="p">=</span><span class="n">fieldnames</span><span class="p">(</span><span class="n">globalRegCoords</span><span class="p">{</span><span class="n">iterationNo</span><span class="p">});</span>
 <span class="lineno" data-linenos="28 "></span>
-<span class="lineno" data-linenos="29 "></span><span class="n">    for </span><span class="s">i=1:length(fn)</span><span class="p"></span>
+<span class="lineno" data-linenos="29 "></span>    <span class="n">for</span> <span class="s">i=1:length(fn)</span>
 <span class="lineno" data-linenos="30 "></span>
 <span class="lineno" data-linenos="31 "></span>        <span class="n">localCoords</span> <span class="p">=</span> <span class="n">globalRegCoords</span><span class="p">{</span><span class="n">iterationNo</span><span class="p">}.(</span><span class="n">fn</span><span class="p">{</span><span class="nb">i</span><span class="p">});</span>
 <span class="lineno" data-linenos="32 "></span>
-<span class="lineno" data-linenos="33 "></span>        <span class="p">[</span><span class="n">inputImages</span><span class="p">,</span> <span class="n">localCoords</span><span class="p">]</span> <span class="p">=</span> <span class="n">turboregMovie</span><span class="p">(</span><span class="n">inputImages</span><span class="p">,</span><span class="s">'precomputedRegistrationCooords'</span><span class="p">,</span><span class="n">localCoords</span><span class="p">);</span><span class="n"></span>
+<span class="lineno" data-linenos="33 "></span>        <span class="p">[</span><span class="n">inputImages</span><span class="p">,</span> <span class="n">localCoords</span><span class="p">]</span> <span class="p">=</span> <span class="n">turboregMovie</span><span class="p">(</span><span class="n">inputImages</span><span class="p">,</span><span class="s">'precomputedRegistrationCooords'</span><span class="p">,</span><span class="n">localCoords</span><span class="p">);</span>
 <span class="lineno" data-linenos="34 "></span>
-<span class="lineno" data-linenos="35 "></span><span class="n">    end</span>
+<span class="lineno" data-linenos="35 "></span>    <span class="n">end</span>
 <span class="lineno" data-linenos="36 "></span>
-<span class="lineno" data-linenos="37 "></span><span class="s">end</span><span class="p"></span>
+<span class="lineno" data-linenos="37 "></span><span class="s">end</span>
 </code></pre></div>
 <h3 id="algorithm-results">Algorithm results<a class="headerlink" href="#algorithm-results" title="Permanent link">¶</a></h3>
 <h4 id="cross-session-metrics-and-results-on-cross-session-amygdala-response-to-pain">Cross-session metrics and results on cross-session amygdala response to pain<a class="headerlink" href="#cross-session-metrics-and-results-on-cross-session-amygdala-response-to-pain" title="Permanent link">¶</a></h4>

@@ -183,9 +183,10 @@
 <li>Has several example calcium imaging datasets that it will automatically download to help users test out the package.</li>
 <li>Includes code for determining animal position (e.g. in open-field assay).</li>
 <li>Supports <a href="https://www.nwb.org/">Neurodata Without Borders</a> data standard (see <a href="https://neurodatawithoutborders.github.io/matnwb/tutorials/html/ophys.html">calcium imaging tutorial</a>) for reading/writing cell-extraction (e.g. outputs of PCA-ICA, CELLMax, CNMF, CNMF-E, etc.). Supports reading NWB movie files (write support coming soon).</li>
-<li>Requires <code>MATLAB</code>.
-<!-- <hr> --></li>
+<li>Requires <code>MATLAB</code>.</li>
 </ul>
+<!-- <hr> -->
+
 <p>Contact: <strong>Biafra Ahanonu, PhD (bahanonu [at] alum [dot] mit [dot] edu)</strong>.</p>
 <p>Made in USA.<br>
 <img src="https://user-images.githubusercontent.com/5241605/71493809-322a5400-27ff-11ea-9b2d-52ff20b5f332.png" align="center" title="USA" alt="USA" width="100px"></p>
@@ -241,9 +242,8 @@
 <span class="lineno" data-linenos=" 7 "></span><span class="n">obj</span><span class="p">.</span><span class="n">setup</span><span class="p">;</span>
 <span class="lineno" data-linenos=" 8 "></span>
 <span class="lineno" data-linenos=" 9 "></span><span class="c">% Open the class menu (always type `obj` then enter load the class/modules menu)</span>
-<span class="lineno" data-linenos="10 "></span><span class="n">obj </span><span class="s">% then hit enter, no semicolon!</span><span class="p"></span>
+<span class="lineno" data-linenos="10 "></span><span class="n">obj</span> <span class="s">%</span> <span class="s">then</span> <span class="s">hit</span> <span class="s">enter,</span> <span class="s">no</span> <span class="s">semicolon!</span>
 </code></pre></div>
-
 <h3 id="ciatah-main-gui-notes"><code>CIAtah</code> main GUI notes<a class="headerlink" href="#ciatah-main-gui-notes" title="Permanent link">&para;</a></h3>
 <ul>
 <li>All main decisions for choosing a method/procedure to run, cell-extraction algorithm, and which folders to analyze are in a single window.</li>
@@ -321,7 +321,6 @@
 <span class="lineno" data-linenos=" 9 "></span>  publisher=<span class="nb">{</span>American Association for the Advancement of Science<span class="nb">}</span>
 <span class="lineno" data-linenos="10 "></span><span class="nb">}</span>
 </code></pre></div>
-
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span>@misc<span class="nb">{</span>biafra<span class="nb">_</span>ahanonu<span class="nb">_</span>2018<span class="nb">_</span>2222295,
 <span class="lineno" data-linenos=" 2 "></span>  author       = <span class="nb">{</span>Biafra Ahanonu<span class="nb">}</span>,
 <span class="lineno" data-linenos=" 3 "></span>  title        = <span class="nb">{{</span> CIAtah : a software package for
@@ -333,7 +332,6 @@
 <span class="lineno" data-linenos=" 9 "></span>  url          = <span class="nb">{</span>https://doi.org/10.5281/zenodo.2222295<span class="nb">}</span>
 <span class="lineno" data-linenos="10 "></span><span class="nb">}</span>
 </code></pre></div>
-
 <h2 id="questions">Questions?<a class="headerlink" href="#questions" title="Permanent link">&para;</a></h2>
 <p>Please email any additional questions not covered in the repository to <code>bahanonu [at] alum.mit.edu</code> or open an issue.</p>
 <hr />
@@ -372,9 +370,10 @@
 <li><code>file_exchange</code> folder contains File Exchange functions used by <code>CIAtah</code>.</li>
 <li>In general, it is best to set the MATLAB startup directory to the <code>CIAtah</code> folder. This allows <code>java.opts</code> and <code>startup.m</code> to set the correct Java memory requirements and load the correct folders into the MATLAB path.</li>
 <li>If <code>CIAtah</code> IS NOT the startup folder, place <code>java.opts</code> wherever the MATLAB startup folder is so the correct Java memory requirements are set (important for using ImageJ/Miji in MATLAB).</li>
-<li>If it appears an old <code>CIAtah</code> repository is loaded after pulling a new version, run <code>restoredefaultpath</code> and check that old <code>CIAtah</code> folders are not in the MATLAB path.
-<!-- - This version of <code>CIAtah</code> has been tested on Windows MATLAB <code>2015b</code>, <code>2017a</code>, and <code>2018b</code>. Moderate testing on Windows and OSX (10.10.5) <code>2017b</code> and <code>2018b</code>. --></li>
+<li>If it appears an old <code>CIAtah</code> repository is loaded after pulling a new version, run <code>restoredefaultpath</code> and check that old <code>CIAtah</code> folders are not in the MATLAB path.</li>
 </ul>
+<!-- - This version of `CIAtah` has been tested on Windows MATLAB `2015b`, `2017a`, and `2018b`. Moderate testing on Windows and OSX (10.10.5) `2017b` and `2018b`. -->
+
 <h3 id="test-data">Test data<a class="headerlink" href="#test-data" title="Permanent link">&para;</a></h3>
 <p>To download test data, run <code>loadDependencies</code> module (e.g. <code>obj.loadDependencies</code>) and select <code>Download test one-photon data.</code> option to download example one-photon miniature microscope test data to use for testing <code>CIAtah</code> preprocessing, cell extraction, and cell classification code. The data will be located in the <code>data</code> folder within the repository root directory.</p>
 <p>Else run <code>example_downloadTestData.m</code> if haven't started an instance of CIAtah.</p>
@@ -404,7 +403,6 @@
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">parSet</span> <span class="p">=</span> <span class="n">parallel</span><span class="p">.</span><span class="n">Settings</span><span class="p">;</span>
 <span class="lineno" data-linenos="2 "></span><span class="n">parSet</span><span class="p">.</span><span class="n">Pool</span><span class="p">.</span><span class="n">AutoCreate</span> <span class="p">=</span> <span class="n">false</span><span class="p">;</span>
 </code></pre></div>
-
 <h4 id="imagej">ImageJ<a class="headerlink" href="#imagej" title="Permanent link">&para;</a></h4>
 <ul>
 <li>Run <code>downloadMiji</code> from <code>downloads\downloadMiji.m</code> or <code>obj.loadDependencies</code> (when class initialized) to download Fiji version appropriate to your platform.</li>
@@ -541,7 +539,6 @@
 <h2 id="processing-calcium-imaging-data">Processing calcium imaging data<a class="headerlink" href="#processing-calcium-imaging-data" title="Permanent link">&para;</a></h2>
 <p>The general pipeline for processing calcium imaging data is below. This repository includes code to do nearly every step.</p>
 <!-- ![image](https://user-images.githubusercontent.com/5241605/61981834-ab532000-afaf-11e9-97c2-4b1d7d759a30.png) -->
-
 <p><img alt="ciapkg_pipeline.png" src="../img/ciapkg_pipeline.png" /></p>
 <p>To start using the <code>CIAtah</code> software package, enter the following into the MATLAB command window.</p>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span><span class="c">% Loads all directories</span>
@@ -551,11 +548,10 @@
 <span class="lineno" data-linenos=" 5 "></span><span class="n">obj</span> <span class="p">=</span> <span class="n">ciatah</span><span class="p">;</span>
 <span class="lineno" data-linenos=" 6 "></span>
 <span class="lineno" data-linenos=" 7 "></span><span class="c">% Open the class menu</span>
-<span class="lineno" data-linenos=" 8 "></span><span class="n">obj </span><span class="s">% then hit enter, no semicolon!</span><span class="p"></span>
+<span class="lineno" data-linenos=" 8 "></span><span class="n">obj</span> <span class="s">%</span> <span class="s">then</span> <span class="s">hit</span> <span class="s">enter,</span> <span class="s">no</span> <span class="s">semicolon!</span>
 <span class="lineno" data-linenos=" 9 "></span><span class="c">% Alternatively</span>
 <span class="lineno" data-linenos="10 "></span><span class="n">obj</span><span class="p">.</span><span class="n">runPipeline</span><span class="p">;</span> <span class="c">% then hit enter!</span>
 </code></pre></div>
-
 <p>The general order of functions that users should run is ([optional] are those not critical for most datasets):</p>
 <ul>
 <li><code>loadDependencies</code><ul>
@@ -622,7 +618,6 @@
 <p>To run, either select <code>modelDownsampleRawMovies</code> in the GUI menu or type the below command after initializing a CIAtah obj.</p>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">obj</span><span class="p">.</span><span class="n">modelDownsampleRawMovies</span><span class="p">;</span>
 </code></pre></div>
-
 <p>This will pop-up the following screen. Users can</p>
 <ul>
 <li>input several folders where ISXD files are by separating each folder path with a comma (<code>Folder(s) where raw HDF5s are located</code>),</li>
@@ -734,7 +729,6 @@ The function will automatically put each file in its corresponding folder, <stro
 <span class="lineno" data-linenos="11 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">backgroundNeutral</span> <span class="p">=</span> <span class="nb">repmat</span><span class="p">(</span><span class="mi">230</span><span class="p">,[</span><span class="mi">1</span> <span class="mi">3</span><span class="p">])</span><span class="o">/</span><span class="mi">255</span><span class="p">;</span>
 <span class="lineno" data-linenos="12 "></span><span class="p">[</span><span class="n">inputImagesSorted</span><span class="p">,</span> <span class="n">inputSignalsSorted</span><span class="p">,</span> <span class="n">choices</span><span class="p">]</span> <span class="p">=</span> <span class="n">signalSorter</span><span class="p">(</span><span class="n">inputImages</span><span class="p">,</span> <span class="n">inputSignals</span><span class="p">,</span> <span class="s">&#39;options&#39;</span><span class="p">,</span><span class="n">iopts</span><span class="p">);</span>
 </code></pre></div>
-
 <h4 id="bla-one-photon-imaging-data-signal-sorting-gui">BLA one-photon imaging data signal sorting GUI<a class="headerlink" href="#bla-one-photon-imaging-data-signal-sorting-gui" title="Permanent link">&para;</a></h4>
 <p><img alt="out-1" src="https://user-images.githubusercontent.com/5241605/34796712-3868cb3a-f60b-11e7-830e-8eec5b2c76d7.gif" /></p>
 <h4 id="mpfc-one-photon-imaging-data-signal-sorting-gui-from-example_downloadtestdatam">mPFC one-photon imaging data signal sorting GUI (from <code>example_downloadTestData.m</code>)<a class="headerlink" href="#mpfc-one-photon-imaging-data-signal-sorting-gui-from-example_downloadtestdatam" title="Permanent link">&para;</a></h4>
@@ -757,7 +751,6 @@ The function will automatically put each file in its corresponding folder, <stro
 <span class="lineno" data-linenos="2 "></span><span class="c">% Each (globalID, sessionID) pair gives the within session ID for that particular global ID</span>
 <span class="lineno" data-linenos="3 "></span><span class="n">globalIDs</span> <span class="p">=</span> <span class="n">alignmentStruct</span><span class="p">.</span><span class="n">globalIDs</span><span class="p">;</span>
 </code></pre></div>
-
 <h3 id="view-cross-session-cell-alignment-with-viewmatchobjbtwnsessions">View cross-session cell alignment with <code>viewMatchObjBtwnSessions</code><a class="headerlink" href="#view-cross-session-cell-alignment-with-viewmatchobjbtwnsessions" title="Permanent link">&para;</a></h3>
 <p>To evaluate how well cross-session alignment works, <code>computeMatchObjBtwnTrials</code> will automatically run <code>viewMatchObjBtwnSessions</code> at the end, but users can also run it separately after alignment. The left are raw dorsal striatum cell maps from a single animal. The right shows after cross-session alignment; color is used to indicate a global ID cell (e.g. the same cell matched across multiple days). Thus, same color cell = same cell across sessions.</p>
 <p><a href="https://cloud.githubusercontent.com/assets/5241605/25643108/9bcfccda-2f52-11e7-8514-31968752bd95.gif" target="_blank"><img src="https://cloud.githubusercontent.com/assets/5241605/25643108/9bcfccda-2f52-11e7-8514-31968752bd95.gif" alt="2017_05_02_p545_m121_p215_raw" width="auto" height="400"/></a>
@@ -797,13 +790,12 @@ tracking by overlaying mouse tracker onto the video.</li>
 <span class="lineno" data-linenos="10 "></span><span class="p">[</span><span class="n">inputTrackingVideo</span><span class="p">]</span> <span class="p">=</span> <span class="n">createTrackingOverlayVideo</span><span class="p">(</span><span class="n">inputMovie</span><span class="p">,</span><span class="n">movmean</span><span class="p">(</span><span class="n">trackingTableFilteredCell</span><span class="p">.</span><span class="n">XM</span><span class="p">(</span><span class="n">nFrames</span><span class="p">),</span><span class="mi">5</span><span class="p">),</span><span class="n">movmean</span><span class="p">(</span><span class="n">trackingTableFilteredCell</span><span class="p">.</span><span class="n">YM</span><span class="p">(</span><span class="n">nFrames</span><span class="p">),</span><span class="mi">5</span><span class="p">));</span>
 <span class="lineno" data-linenos="11 "></span><span class="n">playMovie</span><span class="p">(</span><span class="n">inputTrackingVideo</span><span class="p">);</span>
 </code></pre></div>
-
 <h3 id="example-output-from-2017_09_11_p540_m381_openfield01_091112017">Example output from 2017_09_11_p540_m381_openfield01_091112017<a class="headerlink" href="#example-output-from-2017_09_11_p540_m381_openfield01_091112017" title="Permanent link">&para;</a></h3>
-<p><!-- <img alt="image" src="https://user-images.githubusercontent.com/5241605/34800547-2a10a3b0-f619-11e7-9c88-88750c9875cd.png" /> -->
-<img src="https://user-images.githubusercontent.com/5241605/34800547-2a10a3b0-f619-11e7-9c88-88750c9875cd.png" alt="image" width="400" height="auto"/></p>
-<p>Using <code>createTrackingOverlayVideo</code> to verify tracking matches animal position on a per frame basis.
-<!-- <img alt="image" src="https://user-images.githubusercontent.com/5241605/34800536-19eefcf2-f619-11e7-954f-dba59f4fd427.png" /> -->
-<img src="https://user-images.githubusercontent.com/5241605/34800536-19eefcf2-f619-11e7-954f-dba59f4fd427.png" alt="image" width="400" height="auto"/></p>
+<!-- ![image](https://user-images.githubusercontent.com/5241605/34800547-2a10a3b0-f619-11e7-9c88-88750c9875cd.png) -->
+<p><img src="https://user-images.githubusercontent.com/5241605/34800547-2a10a3b0-f619-11e7-9c88-88750c9875cd.png" alt="image" width="400" height="auto"/></p>
+<p>Using <code>createTrackingOverlayVideo</code> to verify tracking matches animal position on a per frame basis.</p>
+<!-- ![image](https://user-images.githubusercontent.com/5241605/34800536-19eefcf2-f619-11e7-954f-dba59f4fd427.png) -->
+<p><img src="https://user-images.githubusercontent.com/5241605/34800536-19eefcf2-f619-11e7-954f-dba59f4fd427.png" alt="image" width="400" height="auto"/></p>
 <h2 id="license">License<a class="headerlink" href="#license" title="Permanent link">&para;</a></h2>
 <p>Copyright (C) 2013-2020 Biafra Ahanonu</p>
 <p>This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.</p>

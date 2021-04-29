@@ -176,20 +176,21 @@
             <div class="section">
               
                 <h1 id="example-ciatah-pipeline-via-the-command-line">Example <code>CIAtah</code> pipeline via the command line.<a class="headerlink" href="#example-ciatah-pipeline-via-the-command-line" title="Permanent link">&para;</a></h1>
-<p>Below is an example <code>cacliumImagingAnalysis</code> pipeline using the command line for those that do not want to use the class or want to create their own custom batch analyses. It assumes you have already run <code>example_downloadTestData</code> to download the example test data.</p>
-<p>Can also access the pipeline by typing <code>edit ciapkg.demo.cmdLinePipeline</code> into the command line or run by typing in <code>ciapkg.demo.cmdLinePipeline;</code>;</p>
-<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">% Running CIAtah command line</span>
+<p>Below is an example <code>CIAtah</code> pipeline using the command line for those that do not want to use the class or want to create their own custom batch analyses. It assumes you have already run <code>example_downloadTestData</code> to download the example test data and have MATLAB path set to the <code>CIAtah</code> root directory.</p>
+<p>Can also access the pipeline by typing <code>edit ciapkg.demo.cmdLinePipeline</code> into the MATLAB command window or run by typing in <code>ciapkg.demo.cmdLinePipeline;</code>.</p>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">% Running CIAtah from MATLAB command line/window</span>
 <span class="lineno" data-linenos="2 "></span>
-<span class="lineno" data-linenos="3 "></span><span class="c">%% Load movie to analyze</span>
-<span class="lineno" data-linenos="4 "></span><span class="n">inputMovie</span> <span class="p">=</span> <span class="n">loadMovieList</span><span class="p">([</span><span class="n">ciapkg</span><span class="p">.</span><span class="n">getDir</span><span class="p">()</span> <span class="n">filesep</span> <span class="s">&#39;data&#39;</span> <span class="n">filesep</span> <span class="s">&#39;2014_04_01_p203_m19_check01&#39;</span> <span class="n">filesep</span> <span class="s">&#39;concat_recording_20140401_180333.h5&#39;</span><span class="p">]);</span>
+<span class="lineno" data-linenos="3 "></span><span class="c">%% Load CIAtah functions</span>
+<span class="lineno" data-linenos="4 "></span><span class="n">loadBatchFxns</span><span class="p">();</span>
+<span class="lineno" data-linenos="5 "></span>
+<span class="lineno" data-linenos="6 "></span><span class="c">%% Load movie to analyze</span>
+<span class="lineno" data-linenos="7 "></span><span class="n">inputMovie</span> <span class="p">=</span> <span class="n">loadMovieList</span><span class="p">([</span><span class="n">ciapkg</span><span class="p">.</span><span class="n">getDir</span><span class="p">()</span> <span class="n">filesep</span> <span class="s">&#39;data&#39;</span> <span class="n">filesep</span> <span class="s">&#39;2014_04_01_p203_m19_check01&#39;</span> <span class="n">filesep</span> <span class="s">&#39;concat_recording_20140401_180333.h5&#39;</span><span class="p">]);</span>
 </code></pre></div>
-
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">%% Visualize slice of the movie</span>
 <span class="lineno" data-linenos="2 "></span><span class="n">playMovie</span><span class="p">(</span><span class="n">inputMovie</span><span class="p">(:,:,</span><span class="mi">1</span><span class="p">:</span><span class="mi">500</span><span class="p">));</span>
 <span class="lineno" data-linenos="3 "></span><span class="c">% Alternatively, visualize by entering the file path</span>
 <span class="lineno" data-linenos="4 "></span><span class="n">playMovie</span><span class="p">(</span><span class="n">inputMoviePath</span><span class="p">);</span>
 </code></pre></div>
-
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">%% Downsample input movie if need to</span>
 <span class="lineno" data-linenos="2 "></span><span class="n">inputMovieD</span> <span class="p">=</span> <span class="n">downsampleMovie</span><span class="p">(</span><span class="n">inputMovie</span><span class="p">,</span><span class="s">&#39;downsampleDimension&#39;</span><span class="p">,</span><span class="s">&#39;space&#39;</span><span class="p">,</span><span class="s">&#39;downsampleFactor&#39;</span><span class="p">,</span><span class="mi">4</span><span class="p">);</span>
 <span class="lineno" data-linenos="3 "></span><span class="n">playMovie</span><span class="p">(</span><span class="n">inputMovie</span><span class="p">,</span><span class="s">&#39;extraMovie&#39;</span><span class="p">,</span><span class="n">inputMovieD</span><span class="p">);</span>
@@ -200,7 +201,6 @@
 <span class="lineno" data-linenos="8 "></span><span class="n">opts</span><span class="p">.</span><span class="n">downsampleFactor</span> <span class="p">=</span> <span class="mi">4</span><span class="p">;</span> <span class="c">% How much to downsample original movie, set to 1 for no downsampling.</span>
 <span class="lineno" data-linenos="9 "></span><span class="n">convertInscopixIsxdToHdf5</span><span class="p">(</span><span class="n">moviePath</span><span class="p">,</span><span class="s">&#39;options&#39;</span><span class="p">,</span><span class="n">opts</span><span class="p">);</span>
 </code></pre></div>
-
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">%% Remove stripes from movie if needed</span>
 <span class="lineno" data-linenos="2 "></span><span class="c">% Show full filter sequence for one frame</span>
 <span class="lineno" data-linenos="3 "></span><span class="n">sopts</span><span class="p">.</span><span class="n">stripOrientation</span> <span class="p">=</span> <span class="s">&#39;both&#39;</span><span class="p">;</span>
@@ -211,12 +211,10 @@
 <span class="lineno" data-linenos="8 "></span><span class="c">% Run on the entire movie</span>
 <span class="lineno" data-linenos="9 "></span><span class="n">removeStripsFromMovie</span><span class="p">(</span><span class="n">inputMovie</span><span class="p">,</span><span class="s">&#39;options&#39;</span><span class="p">,</span><span class="n">sopts</span><span class="p">);</span>
 </code></pre></div>
-
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">%% Get coordinates to crop</span>
 <span class="lineno" data-linenos="2 "></span><span class="p">[</span><span class="n">cropCoords</span><span class="p">]</span> <span class="p">=</span> <span class="n">getCropCoords</span><span class="p">(</span><span class="nb">squeeze</span><span class="p">(</span><span class="n">inputMovie</span><span class="p">(:,:,</span><span class="mi">1</span><span class="p">)));</span>
 <span class="lineno" data-linenos="3 "></span><span class="n">toptions</span><span class="p">.</span><span class="n">cropCoords</span> <span class="p">=</span> <span class="n">cropCoords</span><span class="p">;</span>
 </code></pre></div>
-
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span><span class="c">%% Motion correction</span>
 <span class="lineno" data-linenos=" 2 "></span><span class="c">% Or have turboreg run manual correction</span>
 <span class="lineno" data-linenos=" 3 "></span><span class="n">toptions</span><span class="p">.</span><span class="n">cropCoords</span> <span class="p">=</span> <span class="s">&#39;manual&#39;</span><span class="p">;</span>
@@ -234,59 +232,47 @@
 <span class="lineno" data-linenos="15 "></span>    <span class="n">toptions</span><span class="p">.</span><span class="n">freqHigh</span> <span class="p">=</span> <span class="mi">7</span><span class="p">;</span>
 <span class="lineno" data-linenos="16 "></span><span class="p">[</span><span class="n">inputMovie2</span><span class="p">,</span> <span class="o">~</span><span class="p">]</span> <span class="p">=</span> <span class="n">turboregMovie</span><span class="p">(</span><span class="n">inputMovie</span><span class="p">,</span><span class="s">&#39;options&#39;</span><span class="p">,</span><span class="n">toptions</span><span class="p">);</span>
 </code></pre></div>
-
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">%% Compare raw and motion corrected movies</span>
 <span class="lineno" data-linenos="2 "></span><span class="n">playMovie</span><span class="p">(</span><span class="n">inputMovie</span><span class="p">,</span><span class="s">&#39;extraMovie&#39;</span><span class="p">,</span><span class="n">inputMovie2</span><span class="p">);</span>
 </code></pre></div>
-
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">%% Run dF/F</span>
 <span class="lineno" data-linenos="2 "></span><span class="n">inputMovie3</span> <span class="p">=</span> <span class="n">dfofMovie</span><span class="p">(</span><span class="n">single</span><span class="p">(</span><span class="n">inputMovie2</span><span class="p">),</span><span class="s">&#39;dfofType&#39;</span><span class="p">,</span><span class="s">&#39;dfof&#39;</span><span class="p">);</span>
 </code></pre></div>
-
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">%% Run temporal downsampling</span>
 <span class="lineno" data-linenos="2 "></span><span class="n">inputMovie3</span> <span class="p">=</span> <span class="n">downsampleMovie</span><span class="p">(</span><span class="n">inputMovie3</span><span class="p">,</span><span class="s">&#39;downsampleDimension&#39;</span><span class="p">,</span><span class="s">&#39;time&#39;</span><span class="p">,</span><span class="s">&#39;downsampleFactor&#39;</span><span class="p">,</span><span class="mi">4</span><span class="p">);</span>
 </code></pre></div>
-
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">%% Final check of movie before cell extraction</span>
 <span class="lineno" data-linenos="2 "></span><span class="n">playMovie</span><span class="p">(</span><span class="n">inputMovie3</span><span class="p">);</span>
 </code></pre></div>
-
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">%% Run PCA-ICA cell extraction. CNMF-e, CNMF, ROI, and other cell-extraction algorithms are also available.</span>
 <span class="lineno" data-linenos="2 "></span><span class="n">nPCs</span> <span class="p">=</span> <span class="mi">300</span><span class="p">;</span> <span class="n">nICs</span> <span class="p">=</span> <span class="mi">225</span><span class="p">;</span>
 <span class="lineno" data-linenos="3 "></span><span class="p">[</span><span class="n">PcaOutputSpatial</span><span class="p">,</span> <span class="n">PcaOutputTemporal</span><span class="p">,</span> <span class="n">PcaOutputSingularValues</span><span class="p">,</span> <span class="n">PcaInfo</span><span class="p">]</span> <span class="p">=</span> <span class="n">run_pca</span><span class="p">(</span><span class="n">inputMovie3</span><span class="p">,</span> <span class="n">nPCs</span><span class="p">,</span> <span class="s">&#39;movie_dataset_name&#39;</span><span class="p">,</span><span class="s">&#39;/1&#39;</span><span class="p">);</span>
 <span class="lineno" data-linenos="4 "></span><span class="p">[</span><span class="n">IcaFilters</span><span class="p">,</span> <span class="n">IcaTraces</span><span class="p">,</span> <span class="n">IcaInfo</span><span class="p">]</span> <span class="p">=</span> <span class="n">run_ica</span><span class="p">(</span><span class="n">PcaOutputSpatial</span><span class="p">,</span> <span class="n">PcaOutputTemporal</span><span class="p">,</span> <span class="n">PcaOutputSingularValues</span><span class="p">,</span> <span class="nb">size</span><span class="p">(</span><span class="n">inputMovie3</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="nb">size</span><span class="p">(</span><span class="n">inputMovie3</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="n">nICs</span><span class="p">,</span> <span class="s">&#39;output_units&#39;</span><span class="p">,</span><span class="s">&#39;fl&#39;</span><span class="p">,</span><span class="s">&#39;mu&#39;</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span><span class="s">&#39;term_tol&#39;</span><span class="p">,</span><span class="mf">5e-6</span><span class="p">,</span><span class="s">&#39;max_iter&#39;</span><span class="p">,</span><span class="mf">1e3</span><span class="p">);</span>
 <span class="lineno" data-linenos="5 "></span><span class="n">IcaTraces</span> <span class="p">=</span> <span class="nb">permute</span><span class="p">(</span><span class="n">IcaTraces</span><span class="p">,[</span><span class="mi">2</span> <span class="mi">1</span><span class="p">]);</span>
 </code></pre></div>
-
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">%% Save outputs to NWB format</span>
 <span class="lineno" data-linenos="2 "></span><span class="n">saveNeurodataWithoutBorders</span><span class="p">(</span><span class="n">IcaFilters</span><span class="p">,{</span><span class="n">IcaTraces</span><span class="p">},</span><span class="s">&#39;pcaica&#39;</span><span class="p">,</span><span class="s">&#39;pcaica.nwb&#39;</span><span class="p">);</span>
 </code></pre></div>
-
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">%% Run signal sorting using matrix inputs</span>
 <span class="lineno" data-linenos="2 "></span><span class="p">[</span><span class="n">outImages</span><span class="p">,</span> <span class="n">outSignals</span><span class="p">,</span> <span class="n">choices</span><span class="p">]</span> <span class="p">=</span> <span class="n">signalSorter</span><span class="p">(</span><span class="n">IcaFilters</span><span class="p">,</span><span class="n">IcaTraces</span><span class="p">,</span><span class="s">&#39;inputMovie&#39;</span><span class="p">,</span><span class="n">inputMovie3</span><span class="p">);</span>
 </code></pre></div>
-
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">%% Run signal sorting using NWB</span>
 <span class="lineno" data-linenos="2 "></span><span class="p">[</span><span class="n">outImages</span><span class="p">,</span> <span class="n">outSignals</span><span class="p">,</span> <span class="n">choices</span><span class="p">]</span> <span class="p">=</span> <span class="n">signalSorter</span><span class="p">(</span><span class="s">&#39;pcaica.nwb&#39;</span><span class="p">,[],</span><span class="s">&#39;inputMovie&#39;</span><span class="p">,</span><span class="n">inputMovie3</span><span class="p">);</span>
 </code></pre></div>
-
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">%% Plot results of sorting</span>
 <span class="lineno" data-linenos="2 "></span><span class="n">figure</span><span class="p">;</span>
-<span class="lineno" data-linenos="3 "></span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span><span class="n">imagesc</span><span class="p">(</span><span class="n">max</span><span class="p">(</span><span class="n">IcaFilters</span><span class="p">,[],</span><span class="mi">3</span><span class="p">));</span><span class="n">axis </span><span class="s">equal tight</span><span class="p">;</span> <span class="n">title</span><span class="p">(</span><span class="s">&#39;Raw filters&#39;</span><span class="p">)</span>
-<span class="lineno" data-linenos="4 "></span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span><span class="n">imagesc</span><span class="p">(</span><span class="n">max</span><span class="p">(</span><span class="n">outImages</span><span class="p">,[],</span><span class="mi">3</span><span class="p">));</span><span class="n">axis </span><span class="s">equal tight</span><span class="p">;</span> <span class="n">title</span><span class="p">(</span><span class="s">&#39;Sorted filters&#39;</span><span class="p">)</span>
+<span class="lineno" data-linenos="3 "></span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span><span class="n">imagesc</span><span class="p">(</span><span class="n">max</span><span class="p">(</span><span class="n">IcaFilters</span><span class="p">,[],</span><span class="mi">3</span><span class="p">));</span><span class="n">axis</span> <span class="s">equal</span> <span class="s">tight</span><span class="p">;</span> <span class="n">title</span><span class="p">(</span><span class="s">&#39;Raw filters&#39;</span><span class="p">)</span>
+<span class="lineno" data-linenos="4 "></span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span><span class="n">imagesc</span><span class="p">(</span><span class="n">max</span><span class="p">(</span><span class="n">outImages</span><span class="p">,[],</span><span class="mi">3</span><span class="p">));</span><span class="n">axis</span> <span class="s">equal</span> <span class="s">tight</span><span class="p">;</span> <span class="n">title</span><span class="p">(</span><span class="s">&#39;Sorted filters&#39;</span><span class="p">)</span>
 </code></pre></div>
-
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">%% Create an overlay of extraction outputs on the movie and signal-based movie</span>
 <span class="lineno" data-linenos="2 "></span><span class="p">[</span><span class="n">inputMovieO</span><span class="p">]</span> <span class="p">=</span> <span class="n">createImageOutlineOnMovie</span><span class="p">(</span><span class="n">inputMovie3</span><span class="p">,</span><span class="n">IcaFilters</span><span class="p">,</span><span class="s">&#39;dilateOutlinesFactor&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">);</span>
 <span class="lineno" data-linenos="3 "></span><span class="p">[</span><span class="n">signalMovie</span><span class="p">]</span> <span class="p">=</span> <span class="n">createSignalBasedMovie</span><span class="p">(</span><span class="n">IcaTraces</span><span class="p">,</span><span class="n">IcaFilters</span><span class="p">,</span><span class="s">&#39;signalType&#39;</span><span class="p">,</span><span class="s">&#39;peak&#39;</span><span class="p">);</span>
 </code></pre></div>
-
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">%% Play all three movies</span>
 <span class="lineno" data-linenos="2 "></span><span class="c">% Normalize all the movies</span>
 <span class="lineno" data-linenos="3 "></span><span class="n">movieM</span> <span class="p">=</span> <span class="n">cellfun</span><span class="p">(@(</span><span class="n">x</span><span class="p">)</span> <span class="n">normalizeVector</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="s">&#39;normRange&#39;</span><span class="p">,</span><span class="s">&#39;zeroToOne&#39;</span><span class="p">),{</span><span class="n">inputMovie3</span><span class="p">,</span><span class="n">inputMovieO</span><span class="p">,</span><span class="n">signalMovie</span><span class="p">},</span><span class="s">&#39;UniformOutput&#39;</span><span class="p">,</span><span class="n">false</span><span class="p">);</span>
 <span class="lineno" data-linenos="4 "></span><span class="n">playMovie</span><span class="p">(</span><span class="nb">cat</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">movieM</span><span class="p">{:}));</span>
 </code></pre></div>
-
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span><span class="c">%% Run cross-session alignment of cells</span>
 <span class="lineno" data-linenos=" 2 "></span><span class="c">% Create input images, cell array of [x y nCells] matrices</span>
 <span class="lineno" data-linenos=" 3 "></span><span class="n">inputImages</span> <span class="p">=</span> <span class="p">{</span><span class="n">day1Images</span><span class="p">,</span><span class="n">day2Images</span><span class="p">,</span><span class="n">day3Images</span><span class="p">};</span>

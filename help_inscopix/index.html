@@ -185,7 +185,6 @@
 <p>ISXD files can be directly visualized from disk by running <code>playMovie</code> from MATLAB command line:</p>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">playMovie</span><span class="p">(</span><span class="s">&#39;path\to\youMovie.isxd&#39;</span><span class="p">);</span>
 </code></pre></div>
-
 <h2 id="converting-isxd-files-to-hdf5">Converting ISXD files to HDF5<a class="headerlink" href="#converting-isxd-files-to-hdf5" title="Permanent link">&para;</a></h2>
 <p>To convert ISXD files to HDF5, see <code>convertInscopixIsxdToHdf5</code> function in the <code>inscopix</code> folder or <code>modelDownsampleRawMovies</code> module in CIAtah.</p>
 <p><strong>Note</strong>: By default the Inscopix API gives out a frame full of 0s for dropped frames. So those 0s frames are maintained after converting/downsampling to HDF5 or you will also get a frame with 0s if you use <code>loadMovieList</code> to read frames that were dropped from isxd files. Adjust analysis accordingly.</p>

@@ -197,7 +197,6 @@
 </ul>
 <p>Example screen after running <code>mm_tracking</code> within ImageJ, click to expand.</p>
 <!-- <a href="https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png" target="_blank">![image](https://user-images.githubusercontent.com/5241605/34800762-1fa35480-f61a-11e7-91fb-65a260436725.png)</a> -->
-
 <p><a href="https://user-images.githubusercontent.com/5241605/113023298-554a5e80-913a-11eb-88ed-181c133184f1.png" target="_blank"><img alt="image" src="https://user-images.githubusercontent.com/5241605/113023298-554a5e80-913a-11eb-88ed-181c133184f1.png" /></a></p>
 <p>Once ImageJ is finished, within <code>MATLAB</code> run the following code (cleans up the ImageJ tracking by removing small objects and adding NaNs for missing frames along with making a movie to check output). Modify to point toward paths specific for your data.
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">% CSV file from imageJ and AVI movie path used in ImageJ</span>
@@ -220,7 +219,6 @@
 <span class="lineno" data-linenos="5 "></span><span class="p">[</span><span class="n">inputTrackingVideo</span><span class="p">]</span> <span class="p">=</span> <span class="n">createTrackingOverlayVideo</span><span class="p">(</span><span class="n">inputMovie</span><span class="p">,</span><span class="n">movmean</span><span class="p">(</span><span class="n">trackingTableFilteredCell</span><span class="p">.</span><span class="n">XM</span><span class="p">(</span><span class="n">nFrames</span><span class="p">),</span><span class="mi">5</span><span class="p">),</span><span class="n">movmean</span><span class="p">(</span><span class="n">trackingTableFilteredCell</span><span class="p">.</span><span class="n">YM</span><span class="p">(</span><span class="n">nFrames</span><span class="p">),</span><span class="mi">5</span><span class="p">));</span>
 <span class="lineno" data-linenos="6 "></span><span class="n">playMovie</span><span class="p">(</span><span class="n">inputTrackingVideo</span><span class="p">);</span>
 </code></pre></div>
-
 <p>Overlay of tracking (red circle) on the mouse in a specific frame.
 <img alt="image" src="https://user-images.githubusercontent.com/5241605/34800536-19eefcf2-f619-11e7-954f-dba59f4fd427.png" /></p>
 <!-- # Matlab based tracking
