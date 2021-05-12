@@ -10,7 +10,7 @@
 <!-- ![Hits](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https%3A%2F%2Fgithub.com%2Fbahanonu%2FcalciumImagingAnalysis) -->
 <!-- <img src="https://hitcounter.pythonanywhere.com/count/tag.svg?url=https%3A%2F%2Fgithub.com%2Fbahanonu%2FcalciumImagingAnalysis" onerror="this.style.display='none'" alt=''> -->
 
-<img src="https://user-images.githubusercontent.com/5241605/117599875-a0736c00-b0ff-11eb-91df-0699cb1b288d.png" align="center" onerror="this.style.display='none'" alt=''>
+<img src="https://user-images.githubusercontent.com/5241605/117930569-03593480-b2b3-11eb-87f2-314e8ed77e94.png" align="center" onerror="this.style.display='none'" alt=''>
 <br>
 
 `CIAtah` (pronounced cheetah; formerly <ins>c</ins>alcium<ins>I</ins>maging<ins>A</ins>nalysis [ciapkg]) is a software package for analyzing one- and two-photon calcium imaging datasets.
@@ -116,7 +116,7 @@ Below are steps needed to quickly get started using the `CIAtah` software packag
 
 ### Install
 
-- __Install__ Clone the `CIAtah` repository (using [GitHub desktop](https://desktop.github.com/) or command line) or download the repository zip and unzip (e.g. run below MATLAB command).
+- Clone the `CIAtah` repository (using [GitHub desktop](https://desktop.github.com/) or command line) or download the repository zip and unzip (e.g. run below MATLAB command).
   - Point the MATLAB path to the `CIAtah` root folder (*NOT* `@CIAtah` sub-folder in the repository).
   - Alternatively (not recommended since lags GitHub repository), download the package from `File Exchange` using the Add-Ons explorer in MATLAB. See `CIAtah` entry at:
  [![View CIAtah on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis) or https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis.
@@ -151,7 +151,7 @@ obj % then hit enter, no semicolon!
 - Run `obj;` in the command window to see the main GUI.
 - Full documentation at https://bahanonu.github.io/ciatah/.
 - __[Optional]__ Users on Windows systems can download `Everything` (https://www.voidtools.com/). It is a very useful and extremely fast search engine for files and folders that allows users to quickly obtain lists of full folder paths for analysis in `CIAtah`.
-- __[Optional]__ Users who want to analyze data via the command line can run `edit ciapkg.demo.cmdLinePipeline` and run each segment of code there to see what commands are needed to perform each step. It assumes you have already run `example_downloadTestData`.
+<!-- - __[Optional]__ Users who want to analyze data via the command line can run `edit ciapkg.demo.cmdLinePipeline` and run each segment of code there to see what commands are needed to perform each step. It assumes you have already run `example_downloadTestData`. -->
 
 ### Visualize movies quickly using read from disk
 
