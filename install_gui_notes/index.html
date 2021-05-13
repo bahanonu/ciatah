@@ -9,7 +9,7 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>Quick Start - CIAtah</title>
+  <title>Additional quick start notes - CIAtah</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
   <link rel="stylesheet" href="../css/theme.css" />
@@ -19,8 +19,8 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "Quick Start";
-    var mkdocs_page_input_path = "install.md";
+    var mkdocs_page_name = "Additional quick start notes";
+    var mkdocs_page_input_path = "install_gui_notes.md";
     var mkdocs_page_url = null;
   </script>
   
@@ -52,18 +52,8 @@
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Setup</span></p>
-                <ul class="current">
-                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Quick Start</a>
-    <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#install">Install</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#setup-ciatah">Setup CIAtah</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#ciatah-main-gui-notes">CIAtah main GUI notes</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#additional-quick-start-notes">Additional quick start notes</a>
-    </li>
-    </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../install/">Quick Start</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../install_alt/">Install</a>
                     </li>
@@ -167,12 +157,8 @@
     <li><a href="..">Docs</a> &raquo;</li>
     
       
-        
-          <li>Setup &raquo;</li>
-        
-      
     
-    <li>Quick Start</li>
+    <li>Additional quick start notes</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -183,83 +169,27 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="quick-start-guide">Quick start guide<a class="headerlink" href="#quick-start-guide" title="Permanent link">&para;</a></h1>
-<p>Below are steps needed to quickly get started using the <code>CIAtah</code> software package in MATLAB.</p>
-<h2 id="install">Install<a class="headerlink" href="#install" title="Permanent link">&para;</a></h2>
+                <h1 id="additional-quick-start-notes">Additional quick start notes<a class="headerlink" href="#additional-quick-start-notes" title="Permanent link">&para;</a></h1>
 <ul>
-<li>Clone the <code>CIAtah</code> repository (using <a href="https://desktop.github.com/">GitHub desktop</a> or command line) or download the repository zip and unzip  (e.g. run below MATLAB command).</li>
-<li>Point the MATLAB path to the <code>CIAtah</code> root folder (<em>NOT</em> <code>@ciatah</code> sub-folder in the repository).<ul>
-<li>Alternatively, download the package from <code>File Exchange</code> using the Add-Ons explorer in MATLAB. See <code>CIAtah</code> entry at:
- <a href="https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis"><img alt="View CIAtah on File Exchange" src="https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg" /></a> or <a href="https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis">https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis</a>.</li>
-</ul>
-</li>
-</ul>
-<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">% Optional: this will set MATLAB working folder to the default user path. Make sure you have read/write permissions.</span>
-<span class="lineno" data-linenos="2 "></span><span class="k">try</span><span class="p">;</span> <span class="n">cd</span><span class="p">(</span><span class="n">userpath</span><span class="p">);</span> <span class="k">catch</span><span class="p">;</span> <span class="k">end</span><span class="p">;</span>
-<span class="lineno" data-linenos="3 "></span>
-<span class="lineno" data-linenos="4 "></span><span class="c">% Download and unzip current repository</span>
-<span class="lineno" data-linenos="5 "></span><span class="n">unzip</span><span class="p">(</span><span class="s">&#39;https://github.com/bahanonu/ciatah/archive/master.zip&#39;</span><span class="p">);</span>
-<span class="lineno" data-linenos="6 "></span>
-<span class="lineno" data-linenos="7 "></span><span class="c">% Make CIAtah the working folder</span>
-<span class="lineno" data-linenos="8 "></span><span class="n">cd</span><span class="p">(</span><span class="s">&#39;ciatah-master&#39;</span><span class="p">)</span>
-</code></pre></div>
-<h2 id="setup-ciatah">Setup <code>CIAtah</code><a class="headerlink" href="#setup-ciatah" title="Permanent link">&para;</a></h2>
-<ul>
-<li>Run <code>CIAtah</code> using the below MATLAB commands. Call <code>obj;</code> in the MATLAB command window each time you want to go back to the main GUI. <strong>Note: <code>calciumImagingAnalysis</code> class is now called <code>ciatah</code>, all functionality is the same.</strong></li>
-</ul>
-<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span><span class="c">% Run these commands in MATLAB to get started.</span>
-<span class="lineno" data-linenos=" 2 "></span>
-<span class="lineno" data-linenos=" 3 "></span><span class="c">% Loads the class into an object for use in this session</span>
-<span class="lineno" data-linenos=" 4 "></span><span class="n">obj</span> <span class="p">=</span> <span class="n">ciatah</span><span class="p">;</span>
-<span class="lineno" data-linenos=" 5 "></span>
-<span class="lineno" data-linenos=" 6 "></span><span class="c">% Runs routines to check dependencies and help user get setup.</span>
-<span class="lineno" data-linenos=" 7 "></span><span class="n">obj</span><span class="p">.</span><span class="n">setup</span><span class="p">;</span>
-<span class="lineno" data-linenos=" 8 "></span>
-<span class="lineno" data-linenos=" 9 "></span><span class="c">% Open the class menu (always type `obj` then enter load the class/modules menu)</span>
-<span class="lineno" data-linenos="10 "></span><span class="n">obj</span> <span class="s">%</span> <span class="s">then</span> <span class="s">hit</span> <span class="s">enter,</span> <span class="s">no</span> <span class="s">semicolon!</span>
-</code></pre></div>
-<ul>
-<li>Afterwards, likely want to run <code>modelAddNewFolders</code> module first in order to add folders containing imaging data to the current class object.</li>
-<li>[Optional] Users on Windows systems should download <code>Everything</code> (<a href="https://www.voidtools.com/">https://www.voidtools.com/</a>). It is a very useful and extremely fast search engine for files and folders on a computer that can allow users to quickly get lists of folders then need to analyze in <code>CIAtah</code>.</li>
-<li>[Optional] Users who want to run analysis via the command line can run <code>edit ciapkg.demo.cmdLinePipeline</code> and run each segment of code there to see what commands are needed to perform each step. It assumes you have already run <code>example_downloadTestData</code>.</li>
-</ul>
-<h2 id="ciatah-main-gui-notes"><code>CIAtah</code> main GUI notes<a class="headerlink" href="#ciatah-main-gui-notes" title="Permanent link">&para;</a></h2>
-<ul>
-<li>All main decisions for choosing a method/procedure to run, cell-extraction algorithm, and which folders to analyze are in a single window.</li>
-<li>The GUI will real-time update the selected folders based on the selections in the subject, assay, and folder filter areas.</li>
-<li>Sections not relevant for a specific method are grayed out.</li>
-<li>Tab to cycle through selection areas. Green background is the currently selected area, dark gray background is area that had previously been selected but is not the active area, and white background is for areas that have not been selected yet.</li>
-<li>Hover mouse over method names for tooltip that gives additional information.</li>
-</ul>
-<p><strong>For example, selecting middle two assays automatically changes selection in <code>Loaded folders</code> section.</strong></p>
-<p><a href="https://user-images.githubusercontent.com/5241605/79494880-96ed0280-7fd8-11ea-85e1-05a13dc26e90.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/79494880-96ed0280-7fd8-11ea-85e1-05a13dc26e90.png" alt="image" width="45%" height="auto"/></a>
-<a href="https://user-images.githubusercontent.com/5241605/79494959-b97f1b80-7fd8-11ea-8197-7be457d24638.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/79494959-b97f1b80-7fd8-11ea-8197-7be457d24638.png" alt="image" width="45%" height="auto"/></a></p>
-<p><strong>Certain sections become available when user selects the appropriate method (e.g. cell-extraction method available when selecting <code>modelExtractSignalsFromMovie</code>).</strong></p>
-<p><a href="https://user-images.githubusercontent.com/5241605/79495026-d4ea2680-7fd8-11ea-8d4d-02164e1af1d6.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/79495026-d4ea2680-7fd8-11ea-8d4d-02164e1af1d6.png" alt="image" width="50%" height="auto"/></a></p>
-<h2 id="additional-quick-start-notes">Additional quick start notes<a class="headerlink" href="#additional-quick-start-notes" title="Permanent link">&para;</a></h2>
-<ul>
-<li>See additional details in <a href="#processing-calcium-imaging-data">Processing calcium imaging data</a> for running the full processing pipeline.</li>
-<li>Settings used to pre-process imaging movies (<code>modelPreprocessMovie</code> module) are stored inside the HDF5 file to allow <code>CIAtah</code> to load them again later.</li>
+<li>See additional details on the <a href="https://bahanonu.github.io/ciatah/pipeline_overview/">Processing calcium imaging data</a> page for running the full processing pipeline.</li>
+<li>Settings used to pre-process imaging movies (<code>modelPreprocessMovie</code> module) are stored inside the processed HDF5 movie to allow <code>CIAtah</code> to load them again later.</li>
 <li>To force load all directories, including most external software packages (in <code>_external_programs</code> folder), type <code>ciapkg.loadAllDirs;</code> into MATLAB command line. This is most relevant when you need to access specific functions in an outside repository that are normally hidden until needed.</li>
-<li>When issues are encountered, first check the <code>*Common issues and fixes</code> Wiki page to see if a solution is there. Else, submit a new issue or email Biafra (bahanonu [at] alum.mit.edu).</li>
-<li>Notes:<ul>
+<li>When issues are encountered, first check the <a href="https://bahanonu.github.io/ciatah/help_issues/">Common issues and fixes</a> page to see if a solution is there. Else, submit a new issue or email Biafra.</li>
 <li>There are two sets of test data that are downloaded:<ul>
 <li><strong>Single session analysis</strong>: <code>data\2014_04_01_p203_m19_check01_raw</code> can be used to test the pipeline until the cross-session alignment step.</li>
 <li><strong>Batch analysis</strong>: <code>data\batch</code> contains three imaging sessions that should be processed and can then be used for the cross-session alignment step. Users should try these sessions to get used to batched analysis.</li>
 </ul>
 </li>
-<li>For Fiji dependency, when path to <code>Miji.m</code> (e.g. <code>\Fiji.app\scripts</code> folder) is requested, likely in <code>\_external_programs\FIJI_FOLDER\Fiji.app\scripts</code> where <code>FIJI_FOLDER</code> varies depending on OS, unless the user requested a custom path or on OSX (in which case, find Fiji the install directory).<ul>
-<li>If you run into Java heap space memory errors when Miji tries to load Fiji in MATLAB, make sure "java.opts" file is in MATLAB start-up folder or that <code>CIAtah</code> folder is the MATLAB start-up folder (<a href="https://www.mathworks.com/help/matlab/matlab_env/matlab-startup-folder.html">instructions on changing</a>).</li>
+<li>For Fiji dependency, when path to <code>Miji.m</code> (e.g. <code>\Fiji.app\scripts</code> folder) is requested, likely in <code>[CIAtah directory]\_external_programs\FIJI_FOLDER\Fiji.app\scripts</code> where <code>FIJI_FOLDER</code> varies depending on OS, unless the user requested a custom path or on OSX (in which case, find Fiji the install directory).<ul>
+<li>If you run into Java heap space memory errors when Miji tries to load Fiji in MATLAB, make sure "java.opts" file is in MATLAB start-up folder or that the <code>CIAtah</code> root folder is the MATLAB start-up folder (<a href="https://www.mathworks.com/help/matlab/matlab_env/matlab-startup-folder.html">instructions on changing</a>).</li>
 </ul>
 </li>
 <li><code>CIAtah</code> often uses <a href="https://www.cheatography.com/davechild/cheat-sheets/regular-expressions/">regular expressions</a> to find relevant movie and other files in folders to analyze.<ul>
 <li>For example, by default it looks for any movie files in a folder containing <code>concat</code>, e.g. <code>concat_recording_20140401_180333.h5</code> (test data). If you have a file called <code>rawData_2019_01_01_myInterestingExperiment.avi</code> and all your raw data files start with <code>rawData_</code> then change the regular expression to <code>rawData_</code> when requested by the repository. See <code>setMovieInfo</code> module to change after adding new folders.</li>
 </ul>
 </li>
-<li><code>CIAtah</code> generally assumes users have imaging data associated with <em>one</em> imaging session and animal in a given folder. Follow folder naming conventions in <a href="#data">Data</a> for best experience.</li>
+<li><code>CIAtah</code> generally assumes users have imaging data associated with <em>one</em> imaging session and animal in a given folder. Follow folder naming conventions in <a href="https://bahanonu.github.io/ciatah/data/#preferred-folder-naming-format">Data formats</a> for the best experience.</li>
 <li>External software packages are downloaded into <code>_external_programs</code> folder and should be placed there if done manually.</li>
-</ul>
-</li>
 </ul>
 <p>Users can alternatively run setup as below.
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span><span class="c">% Run these commands in MATLAB to get started.</span>
@@ -289,15 +219,6 @@
           </div>
           <footer>
   
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="../install_alt/" class="btn btn-neutral float-right" title="Install">Next <span class="icon icon-circle-arrow-right"></span></a>
-      
-      
-        <a href="../all_docs/" class="btn btn-neutral" title="One-page readme"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-      
-    </div>
-  
 
   <hr/>
 
@@ -320,10 +241,6 @@
     <span class="rst-current-version" data-toggle="rst-current-version">
       
       
-        <span><a href="../all_docs/" style="color: #fcfcfc;">&laquo; Previous</a></span>
-      
-      
-        <span style="margin-left: 15px"><a href="../install_alt/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>

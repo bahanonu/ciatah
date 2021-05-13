@@ -40,6 +40,10 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#quick-start-guide">Quick start guide</a>
 <ul>
+<li class="toctree-l3"><a class="reference internal" href="#install">Install</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#setup-sitename">Setup CIAtah</a>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#sitename-main-gui-notes">CIAtah main GUI notes</a>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#additional-quick-start-notes">Additional quick start notes</a>
@@ -511,8 +515,9 @@
 <!-- --8<-- -->
 <h2 id="quick-start-guide">Quick start guide<a class="headerlink" href="#quick-start-guide" title="Permanent link">¶</a></h2>
 <p>Below are steps needed to quickly get started using the <code>CIAtah</code> software package in MATLAB.</p>
+<h3 id="install">Install<a class="headerlink" href="#install" title="Permanent link">¶</a></h3>
 <ul>
-<li>Clone the <code>CIAtah</code> repository (using <a href="https://desktop.github.com/">GitHub desktop</a> or command line) or download the repository zip and unzip.</li>
+<li>Clone the <code>CIAtah</code> repository (using <a href="https://desktop.github.com/">GitHub desktop</a> or command line) or download the repository zip and unzip  (e.g. run below MATLAB command).</li>
 </ul>
 <ul>
 <li>
@@ -523,8 +528,25 @@
 </li>
 </ul>
 <p><a href="https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis"><img alt="View {{ site.name }} on File Exchange" src="https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg"/></a> or <a href="https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis">https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis</a>.</p>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span><span class="c">% Optional: this will set MATLAB working folder to the default user path. Make sure you have read/write permissions.</span>
+<span class="lineno" data-linenos=" 2 "></span>
+<span class="lineno" data-linenos=" 3 "></span><span class="k">try</span><span class="p">;</span> <span class="n">cd</span><span class="p">(</span><span class="n">userpath</span><span class="p">);</span> <span class="k">catch</span><span class="p">;</span> <span class="k">end</span><span class="p">;</span>
+<span class="lineno" data-linenos=" 4 "></span>
+<span class="lineno" data-linenos=" 5 "></span>
+<span class="lineno" data-linenos=" 6 "></span>
+<span class="lineno" data-linenos=" 7 "></span><span class="c">% Download and unzip current repository</span>
+<span class="lineno" data-linenos=" 8 "></span>
+<span class="lineno" data-linenos=" 9 "></span><span class="n">unzip</span><span class="p">(</span><span class="s">'https://github.com/bahanonu/ciatah/archive/master.zip'</span><span class="p">);</span>
+<span class="lineno" data-linenos="10 "></span>
+<span class="lineno" data-linenos="11 "></span>
+<span class="lineno" data-linenos="12 "></span>
+<span class="lineno" data-linenos="13 "></span><span class="c">% Make CIAtah the working folder</span>
+<span class="lineno" data-linenos="14 "></span>
+<span class="lineno" data-linenos="15 "></span><span class="n">cd</span><span class="p">(</span><span class="s">'ciatah-master'</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="setup-sitename">Setup <code>CIAtah</code><a class="headerlink" href="#setup-sitename" title="Permanent link">¶</a></h3>
 <ul>
-<li>Run the below MATLAB commands.</li>
+<li>Run <code>CIAtah</code> using the below MATLAB commands. Call <code>obj;</code> in the MATLAB command window each time you want to go back to the main GUI. <strong>Note: <code>calciumImagingAnalysis</code> class is now called <code>ciatah</code>, all functionality is the same.</strong></li>
 </ul>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span><span class="c">% Run these commands in MATLAB to get started.</span>
 <span class="lineno" data-linenos=" 2 "></span>
