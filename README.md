@@ -123,13 +123,13 @@ Below are steps needed to quickly get started using the `CIAtah` software packag
 
  ```Matlab
  % Optional: this will set MATLAB working folder to the default user path. Make sure you have read/write permissions.
- cd(userpath);
+ try; cd(userpath); catch; end;
 
  % Download and unzip current repository
- unzip('https://github.com/bahanonu/calciumImagingAnalysis/archive/master.zip');
+ unzip('https://github.com/bahanonu/ciatah/archive/master.zip');
 
  % Make CIAtah the working folder
- cd('calciumImagingAnalysis-master')
+ cd('ciatah-master')
  ```
 
 ### Setup `CIAtah`
