@@ -1,4 +1,5 @@
 site_name: CIAtah
+site_author: Biafra Ahanonu
 # For online, to end in /data instead of /data.html
 use_directory_urls: true
 theme:
@@ -21,6 +22,8 @@ theme:
       - navigation.expand
 plugins:
   - macros
+  # - search
+  # - markdownextradata: {}
 markdown_extensions:
   - toc:
       permalink: true
@@ -30,6 +33,14 @@ markdown_extensions:
   - pymdownx.highlight
   - pymdownx.superfences
   - pymdownx.inlinehilite
+  - pymdownx.snippets:
+      base_path: docs
+  - markdown_include.include:
+      base_path: docs
+      # headingOffset: 0
+      headingOffset: 1
+      # inheritHeadingDepth: True
+      # inheritHeadingDepth: False
   - pymdownx.highlight:
       linenums: true
       linenums_style: pymdownx-inline
@@ -56,11 +67,14 @@ extra:
     nameold: calciumImagingAnalysis
   code:
     mainclass: ciatah
+    package: ciapkg
 
 # NAVIGATION
 nav:
   - Home: index.md
-  - One-page readme: alldocs.md
+  - End-to-end:
+    # - One-page readme: alldocs.md
+    - One-page readme: all_docs.md
   - Setup:
     - Quick Start: install.md
     - Install: install_alt.md
@@ -70,23 +84,35 @@ nav:
     - Data formats: data.md
     - Notes: notes.md
     - Organization: organization.md
-  - Processing data:
-      - Overview: pipeline_overview.md
-      - Step-by-step: pipeline_detailed.md
-      - Animal tracking: pipeline_animal_tracking.md
+  - Processing imaging data:
+    - Overview: pipeline_overview.md
+    # - Step-by-step: pipeline_detailed.md
+    - One-page step-by-step: pipeline_detailed_all.md
+    - 1| Downsample raw movies: pipeline_detailed_downsample_raw.md
+    - 2| Check pre-process settings: pipeline_detailed_preprocess_check.md
+    - 3| <u><strong>Processing imaging movies</strong></u>: pipeline_detailed_preprocess.md
+    - 4| Movie clean-up: pipeline_detailed_modify_movies.md
+    - 5| <u><strong>Cell extraction</strong></u>: pipeline_detailed_signal_extraction.md
+    - 6| Loading cell extraction outputs: pipeline_detailed_signal_extraction_load.md
+    - 7| <u><strong>Cell extraction validation</strong></u>: pipeline_detailed_signal_extraction_validation.md
+    - 8| <u><strong>Manual cell sorting</strong></u>: pipeline_detailed_signal_sorting_manual.md
+    - 9| Region-specific analysis: pipeline_detailed_signal_region_analysis.md
+    - 10| <u><strong>Cross-session alignment</strong></u>: pipeline_detailed_cross_session.md
+  - Animal tracking:
+    - Animal tracking (ImageJ+MATLAB): pipeline_animal_tracking.md
   - API:
     - Custom pipelines: api_example_pipeline.md
     - ciapkg: api_ciapkg.md
   - Help:
     - Issues and fixes: help_issues.md
-    - <div class='subsection1'>Data</div>: index.md
+    - <div class='subsection1'>Data</div>: blank.md
     - Inscopix: help_inscopix.md
     - Neurodata Without Borders: help_nwb.md
 
-    - <div class='subsection1'>Interface</div>: index.md
+    - <div class='subsection1'>Interface</div>: blank.md
     - Movie display and noise: help_contrast.md
 
-    - <div class='subsection1'>Analysis</div>: index.md
+    - <div class='subsection1'>Analysis</div>: blank.md
     - Analysis methods: help_analysis_methods.md
     - Large movie analysis: help_large_movie_analysis.md
     - Stripe removal: help_stripe_removal.md

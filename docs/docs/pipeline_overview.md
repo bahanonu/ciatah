@@ -5,6 +5,17 @@ The general pipeline for processing calcium imaging data is below. This reposito
 <!-- ![image](https://user-images.githubusercontent.com/5241605/61981834-ab532000-afaf-11e9-97c2-4b1d7d759a30.png) -->
 ![ciapkg_pipeline.png](img/ciapkg_pipeline.png)
 
+## Guides 
+Below are recordings for users who want to learn more about calcium imaging analysis.
+
+### Webinar
+This webinar gives an overview of calcium imaging analysis (with a focus on CIAtah) along with tips for improving experiments and analysis: https://info.inscopix.com/inscopix-inspire-view-webinarbiafra-ahanonu-signal-in-the-noise-distinguishing-relevant-neural-activity-in-calcium-imaging.
+
+### Workshop tutorial
+This recording gives an overview of setting up and using CIAtah: https://www.youtube.com/watch?v=I6abW3uuJJw.
+
+## Workflow
+
 To start using the `{{ site.name }}` software package, enter the following into the MATLAB command window.
 
 ```Matlab

@@ -1,4 +1,4 @@
-## Acknowledgments
+# Acknowledgments
 
 Thanks to Jones G. Parker, PhD (<https://parker-laboratory.com/>) for providing extensive user feedback during development of the `{{ site.name }}` software package.
 

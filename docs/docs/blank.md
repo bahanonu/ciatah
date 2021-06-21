@@ -5,8 +5,6 @@
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/bahanonu/calciumImagingAnalysis?style=flat-square&logo=appveyor)](https://github.com/bahanonu/calciumImagingAnalysis/releases/latest?style=flat-square&logo=appveyor)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/bahanonu/calciumImagingAnalysis?style=flat-square&logo=appveyor)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg?style=flat-square)](https://github.com/bahanonu/calciumImagingAnalysis/graphs/commit-activity?style=flat-square&logo=appveyor)
-![visitors](https://visitor-badge.glitch.me/badge?page_id=bahanonu.calciumImagingAnalysis)
-![Hits](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https%3A%2F%2Fgithub.com%2Fbahanonu%2FcalciumImagingAnalysis)
 
 <img src="https://user-images.githubusercontent.com/5241605/51068051-78c27680-15cd-11e9-9434-9d181b00ef8e.png" align="center">
 
@@ -16,24 +14,13 @@ Created by __Biafra Ahanonu, PhD__.
 
 `{{ site.name }}` (pronounced cheetah, formerly `calciumImagingAnalysis` [`CIAPKG`]) is a software package for analysis of one- and two-photon calcium imaging datasets.
 
-__Download the software at [https://github.com/bahanonu/ciatah](https://github.com/bahanonu/ciatah).__
+__Download the software at [https://github.com/bahanonu/calciumImagingAnalysis](https://github.com/bahanonu/calciumImagingAnalysis).__
 
 <img src="https://user-images.githubusercontent.com/5241605/99499485-d6dce500-292d-11eb-8c68-b089fe1985c8.png" width="42%" align="center" alt="CIAtah_logo" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
 
 - This user guide contains instructions to setup, run, and troubleshoot `{{ site.name }}`.
 - Note: `{{ site.name }}` is a class (`{{ site.namelow }}` within MATLAB) with various GUIs to allow processing of calcium imaging data. In addition, users can access the underlying `{{ site.name }}` functions to make custom workflows. See [Custom command-line pipelines](api_example_pipeline.md).
-
-## Guides
-
-Below are recordings for users who want to learn more about calcium imaging analysis.
-
 - Read my overview of calcium imaging analysis methods at [Calcium imaging cell identification and fluorescence activity trace reconstruction, part 1](https://bahanonu.com/brain/#c20181209).
-
-### Webinar
-This webinar gives an overview of calcium imaging analysis (with a focus on CIAtah) along with tips for improving experiments and analysis: https://info.inscopix.com/inscopix-inspire-view-webinarbiafra-ahanonu-signal-in-the-noise-distinguishing-relevant-neural-activity-in-calcium-imaging.
-
-### Workshop tutorial
-This recording gives an overview of setting up and using CIAtah: https://www.youtube.com/watch?v=I6abW3uuJJw.
 
 <!-- <img src="https://user-images.githubusercontent.com/5241605/94530890-9c3db280-01f0-11eb-99f0-e977f5edb304.gif" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="75%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
  -->
@@ -67,19 +54,12 @@ This recording gives an overview of setting up and using CIAtah: https://www.you
 
 `{{ site.name }}` features:
 
-- A GUI with different modules for large-scale batch analysis.
-- `CIAtah` functions (in `ciapkg`/`+ciapkg` folders) can be used to create GUI-less, command line-ready analysis pipelines.
-- Includes all major calcium imaging analysis steps:
-  - movie visualization (including reading from disk, for fast viewing of large movies)
-  - pre-processing (motion correction, spatiotemporal downsampling, spatial filtering, relative fluorescence calculation, etc.)
-  - support for multiple cell-extraction methods (CELLMax, PCA-ICA, <a href='https://github.com/flatironinstitute/CaImAn-MATLAB' target='_blank'>CNMF</a>, CNMF-E, <a href='https://github.com/schnitzer-lab/EXTRACT-public' target='_blank'>EXTRACT</a>, etc.)
-  - manual classification of cells via GUIs,
-  - automated cell classification (i.e. CLEAN algorithm, coming soon!),
-  - cross-session cell alignment, and more.
-- Includes example one- and two-photon calcium imaging datasets for testing `ciatah`.
-- Supports a plethora of major imaging movie file formats: HDF5, NWB, AVI, ISXD [Inscopix], TIFF, and [Bio-Formats](https://www.openmicroscopy.org/bio-formats/) compatible formats (Olympus [OIR] and Zeiss [CZI and LSM] currently, additional support to be added or upon request).
-- Supports [Neurodata Without Borders](https://www.nwb.org/) data standard (see [calcium imaging tutorial](https://neurodatawithoutborders.github.io/matnwb/tutorials/html/ophys.html)) for reading/writing cell-extraction and imaging movie files.
-- Animal position tracking (e.g. in open-field assay).
+- Includes a GUI to allow users to do large-scale batch analysis, accessed via the repository's `{{ site.name }}` class.
+- The underlying functions can also be used to create GUI-less, command line-ready analysis pipelines. Functions located in `ciapkg` and `+ciapkg` sub-folders.
+- Includes all major calcium imaging analysis steps: pre-processing (motion correction, spatiotemporal downsampling, spatial filtering, relative fluorescence calculation, etc.), support for multiple cell-extraction methods, automated cell classification (coming soon!), cross-session cell alignment, and more.
+- Has several example one- and two-photon calcium imaging datasets that it will automatically download to help users test out the package.
+- Includes code for determining animal position (e.g. in open-field assay).
+- Supports [Neurodata Without Borders](https://www.nwb.org/) data standard (see [calcium imaging tutorial](https://neurodatawithoutborders.github.io/matnwb/tutorials/html/ophys.html)) for reading/writing cell-extraction (e.g. outputs of PCA-ICA, CELLMax, CNMF, CNMF-E, etc.). Supports reading and writing NWB movie files with continued integration with NWB planned.
 - Requires `MATLAB`.
 
 ![ciapkg_pipeline.png](img/ciapkg_pipeline.png)
