@@ -103,7 +103,11 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		tmpList2 = fieldnames(selBoxInfo);
 		for ff = 1:length(tmpList2)
 			try
-				hListboxS.(tmpList2{ff}) = uicontrol(hFig, 'style','listbox','Units','normalized','position',selBoxInfo.(tmpList2{ff}).loc/100, 'string',selBoxInfo.(tmpList2{ff}).string,'Value',selBoxInfo.(tmpList2{ff}).Value,'Tag',selBoxInfo.(tmpList2{ff}).Tag);
+				hListboxS.(tmpList2{ff}) = uicontrol(hFig, 'style','listbox','Units','normalized',...
+                    'position',selBoxInfo.(tmpList2{ff}).loc/100,...
+                    'string',selBoxInfo.(tmpList2{ff}).string,...
+                    'Value',selBoxInfo.(tmpList2{ff}).Value,...
+                    'Tag',selBoxInfo.(tmpList2{ff}).Tag);
 				if strcmp('methods',tmpList2{ff})==1
 					set(hListboxS.(tmpList2{ff}),'background',[0.8 0.9 0.8]);
 				end
@@ -114,7 +118,10 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 
 				hListboxT.(tmpList2{ff}) = uicontrol('Style','Text','String',selBoxInfo.(tmpList2{ff}).title,'Units','normalized','Position',selBoxInfo.(tmpList2{ff}).titleLoc/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','Bold');
 				set(hListboxS.(tmpList2{ff}),'Max',2,'Min',0);
-			catch
+            catch err
+                disp(repmat('@',1,7))
+                disp(getReport(err,'extended','hyperlinks','on'));
+                disp(repmat('@',1,7))
 			end
 		end
 		hListbox = hListboxS.methods;

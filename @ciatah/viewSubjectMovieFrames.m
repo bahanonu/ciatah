@@ -9,7 +9,7 @@ function obj = viewSubjectMovieFrames(obj)
 		%
 
 	% changelog
-		%
+		% 2021.06.18 [21:41:07] - added modelVarsFromFilesCheck() to check and load signals if user hasn't already.
 	% TODO
 		%
 
@@ -80,7 +80,8 @@ function obj = viewSubjectMovieFrames(obj)
 				% pause
 			end
 			uiwait(msgbox('press OK to finish','Success','modal'));
-			MIJ.run('Close All Without Saving');
+			% MIJ.run('Close All Without Saving');
+			manageMiji('startStop','closeAllWindows');
 		case 2
 			[fileIdxArray idNumIdxArray nFilesToAnalyze nFiles] = obj.getAnalysisSubsetsToAnalyze();
 			for thisFileNumIdx = 1:nFilesToAnalyze
@@ -125,8 +126,8 @@ function obj = viewSubjectMovieFrames(obj)
 				% pause
 			end
 			uiwait(msgbox('press OK to finish','Success','modal'));
-			MIJ.run('Close All Without Saving');
-
+			% MIJ.run('Close All Without Saving');
+			manageMiji('startStop','closeAllWindows');
 		case 3
 			[fileIdxArray idNumIdxArray nFilesToAnalyze nFiles] = obj.getAnalysisSubsetsToAnalyze();
 			movieListAll = {};
@@ -157,7 +158,8 @@ function obj = viewSubjectMovieFrames(obj)
 			MIJ.createImage('Montage', primaryMovie, true);
 			% for foobar=1:3; MIJ.run('In [+]'); end
 			uiwait(msgbox('press OK to finish','Success','modal'));
-			MIJ.run('Close All Without Saving');
+			% MIJ.run('Close All Without Saving');
+			manageMiji('startStop','closeAllWindows');
 		case 4
 			[fileIdxArray idNumIdxArray nFilesToAnalyze nFiles] = obj.getAnalysisSubsetsToAnalyze();
 			for thisSubjectStr = subjectList
@@ -175,6 +177,10 @@ function obj = viewSubjectMovieFrames(obj)
 						display('===')
 						thisFileNum = validFoldersIdx(folderNo);
 						obj.fileNum = thisFileNum;
+
+						% Check that signal extraction information is loaded.
+						obj.modelVarsFromFilesCheck(thisFileNum);
+
 						[inputSignals inputImages signalPeaks signalPeakIdx valid] = modelGetSignalsImages(obj,'returnType','raw');
 						if isempty(inputSignals);display('no input signals');continue;end
 
@@ -243,7 +249,8 @@ function obj = viewSubjectMovieFrames(obj)
 				end
 			end
 			uiwait(msgbox('press OK to finish','Success','modal'));
-			MIJ.run('Close All Without Saving');
+			% MIJ.run('Close All Without Saving');
+			manageMiji('startStop','closeAllWindows');
 		otherwise
 			% body
 	end

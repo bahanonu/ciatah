@@ -70,11 +70,13 @@ function [inputImages,inputSignals,infoStruct,algorithmStr,inputSignals2] = load
 		[~,~,inputEXT] = fileparts(inputFilePath);
 		switch inputEXT
 			case '.nwb'
+				disp('Loading NWB file.')
 				nwbOpts.groupImages = options.nwbGroupImages;
 				nwbOpts.groupSignalSeries = options.nwbGroupSignalSeries;
 				[inputImages,inputSignals,infoStruct,algorithmStr] = loadNeurodataWithoutBorders(inputFilePath,'options',nwbOpts);
 				return;
 			case '.mat'
+				disp(['Loading ' ciapkg.pkgName ' MAT-file.'])
 				% Do nothing, go to the next steps below.
 			otherwise
 				% Do nothing

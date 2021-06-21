@@ -250,7 +250,8 @@ function obj = viewMovieRegistrationTest(obj)
 							else
 								uiwait(msgbox('Press OK to move onto next movie','Success','modal'));
 							end
-							MIJ.run('Close All Without Saving');
+							% MIJ.run('Close All Without Saving');
+							manageMiji('startStop','closeAllWindows');
 						catch err
 							disp(repmat('@',1,7))
 							disp(getReport(err,'extended','hyperlinks','on'));

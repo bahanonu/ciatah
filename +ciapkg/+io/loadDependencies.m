@@ -16,6 +16,7 @@ function loadDependencies(varargin)
 		% 2021.02.01 [15:10:41] - Separated into non-class function for use in more functions without needing to load CIAtah class.
 		% 2021.02.01 [‏‎15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
 		% 2021.03.20 [18:12:20] - Added EXTRACT support to list of functions to download.
+		% 2021.06.19 [23:46:58] - Switched to support for original MIJ calling of ImageJ using just jar files, easier compatibility across MATLAB versions and OSes.
 	% TODO
 		% Verify all dependencies download and if not ask user to download again.
 
@@ -23,11 +24,11 @@ function loadDependencies(varargin)
 	% DESCRIPTION
 	options.externalProgramsDir = ciapkg.getDirExternalPrograms();
 	options.guiEnabled = 1;
-	options.dependencyStr = {'downloadMiji','downloadCnmfGithubRepositories','example_downloadTestData','loadMiji','downloadNeuroDataWithoutBorders','downloadEXTRACT'};
+	options.dependencyStr = {'downloadMiji','downloadCnmfGithubRepositories','example_downloadTestData','loadMiji','downloadNeuroDataWithoutBorders','downloadEXTRACT','downloadBioFormats','downloadImageJ'};
 
-	options.dispStr = {'Download Fiji (to run Miji)','Download CNMF, CNMF-E, and CVX code.','Download test one- and two photon datasets.','Load Fiji/Miji into MATLAB path.','Download NWB (NeuroDataWithoutBorders)','Download EXTRACT'};
+	options.dispStr = {'Download Fiji (to run Miji)','Download CNMF, CNMF-E, and CVX code.','Download test one- and two photon datasets.','Load Fiji/Miji into MATLAB path.','Download NWB (NeuroDataWithoutBorders)','Download EXTRACT','Download Bio-Formats','Download ImageJ'};
 	% Int vector: index of options.dependencyStr to run by default with no GUI
-	options.depIdxArray = [1 2 3 5 6];
+	options.depIdxArray = [2 3 5 6 7 8];
 	% Binary: 1 = force update even if already downloaded. 0 = skip if already downloaded
 	options.forceUpdate = 0;
 	% get options
@@ -123,6 +124,33 @@ function loadDependencies(varargin)
 				% Add NWB folders to path.
 				ciapkg.nwb.setupNwb;
 				% obj.loadBatchFunctionFolders;
+			case 'downloadBioFormats'
+				optionsH.forceUpdate = forceUpdate;
+				optionsH.signalExtractionDir = options.externalProgramsDir;
+				optionsH.gitNameDisp = {'bfmatlab'};
+				optionsH.gitRepos = {'https://downloads.openmicroscopy.org/bio-formats/6.6.1/artifacts/bfmatlab.zip'};
+				optionsH.outputDir = optionsH.gitNameDisp;
+				% optionsH.gitName = cellfun(@(x) [x '-master'],optionsH.gitNameDisp,'UniformOutput',false);
+				optionsH.gitName = {'bfmatlab'};
+				[success] = downloadGithubRepositories('options',optionsH);
+			case 'downloadImageJ'
+				% Download mij.jar and ij.ar.
+				downloadFiles = {'http://bigwww.epfl.ch/sage/soft/mij/mij.jar','http://rsb.info.nih.gov/ij/upgrade/ij.jar'}
+				downloadFileNames = {'mij.jar','ij.jar'};
+				imagejPath = [options.externalProgramsDir filesep 'imagej'];
+				ciapkg.io.mkdir(imagejPath);
+				nFiles = length(downloadFiles);
+				for i=1:nFiles
+					rawSavePathDownload = [imagejPath filesep downloadFileNames{i}];
+					downloadUrl = downloadFiles{i};
+					if exist(rawSavePathDownload,'file')~=2|forceUpdate==1
+						fprintf('Downloading %s file to %s\n',downloadUrl,rawSavePathDownload)
+						websave(rawSavePathDownload,downloadUrl);
+					else
+						fprintf('Already downloaded %s\n',rawSavePathDownload)
+					end
+				end
+				manageMiji('startStop','setupImageJ');
 			otherwise
 				% nothing
 		end

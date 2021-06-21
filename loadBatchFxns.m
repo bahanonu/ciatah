@@ -126,6 +126,16 @@ function loadBatchFxns(varargin)
 		display(repmat('@',1,7))
 	end
 
+	if workerCheck==1
+	else
+		if loadMijiCheck==0
+			disp('Skipping loading of Miji.')
+		else
+			manageMiji('startStop','setupImageJ');
+		end
+	end
+	loadMijiCheck = 0;
+
 	if loadMijiCheck==0
 		disp('Skipping loading of Miji.')
 	elseif workerCheck==1

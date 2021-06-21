@@ -9,7 +9,7 @@ function [vectorMovie] = createMovieFromVector(inputVector,movieDim,varargin)
 		% vectorMovie - 3D movie ([x y t]) with dimensions of movieDim and class of inputVector
 
 	% changelog
-		%
+		% 2021.05.04 [09:29:19] - Users can now manually change value assigned to center line or signal.
 	% TODO
 		%
 
@@ -20,6 +20,10 @@ function [vectorMovie] = createMovieFromVector(inputVector,movieDim,varargin)
 	options.windowSize = [-30:30];
 	% movie height downsample size
 	options.secondDimDownsample = 5;
+    % Float: numbers between 0 to 1, value to make for signal
+    options.signalValue = 0.5;
+    % Float: numbers between 0 to 1, value to make for center line
+    options.centerLineValue = 1;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -41,7 +45,7 @@ function [vectorMovie] = createMovieFromVector(inputVector,movieDim,varargin)
 		nStims = length(windowSize);
 
 		if ~isempty(options.normalizeVector)
-			display('Normalizing vector...')
+			disp('Normalizing vector...')
 			inputVector = normalizeVector(inputVector,'normRange',options.normalizeVector);
 		end
 
@@ -66,12 +70,12 @@ function [vectorMovie] = createMovieFromVector(inputVector,movieDim,varargin)
 					relativeStimValue = round(inputVector(frameVectorIdx(thisFrameVectorNo))*movieDimY);
 				end
 				% add relative (to max) value of vector to movie
-				vectorMovie(1:relativeStimValue,thisFrameVectorNo,frameNo) = 0.05;
+				vectorMovie(1:relativeStimValue,thisFrameVectorNo,frameNo) = options.signalValue;
 			end
 
 			% resize vector movie to match movie dimensions given
 			vectorMovie(:,:,frameNo) = imresize(vectorMovie(:,1:length(frameVectorIdx),frameNo),[movieDimY movieDim(2)],'bilinear');
-			vectorMovie(:,round(end/2),frameNo) = 1;
+			vectorMovie(:,round(end/2),frameNo) = options.centerLineValue;
 
 			reverseStr = cmdWaitbar(frameNo,nFrames,reverseStr,'inputStr','creating matrix: ','waitbarOn',1,'displayEvery',5);
 		end

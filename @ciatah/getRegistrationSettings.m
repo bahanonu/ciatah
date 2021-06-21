@@ -18,6 +18,7 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		% 2020.05.28 [21:07:27] - Added support for nargin=1.
 		% 2020.10.21 [16:52:06] - Add support for user canceling the input.
 		% 2020.10.24 [18:30:56] - Added support for calculating dropped frames if entire frame of a movie is a set value.
+		% 2021.06.21 [14:27:26] - Switch to single page support.
 	% TODO
 		% DONE: Allow user to input prior settings, indicate those changed from default by orange or similar color.
 
@@ -337,32 +338,43 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		% propertySettingsStr.(property);
 	end
 
+	modX = 1.55;
+	modX_text = 2;
 	figNoDefault = 1337;
 	uiListHandles = {};
 	uiTextHandles = {};
-	uiXIncrement = 0.025;
-	uiXOffset = 0.02;
+	uiXIncrement = 0.025/modX;
+	uiXOffset = 0.02/modX;
 	uiYOffset = 0.90;
 	uiTxtSize = 0.4;
 	uiBoxSize = 0.55;
-	uiFontSize = 11;
+	uiFontSize = 9;
 	nGuiSubsets = 3;
 	% subsetList = round(linspace(1,nPropertiesToChange,nGuiSubsets));
 	subsetList = [1 35 nPropertiesToChange];
 	% subsetList
 	% for subsetNo = 1:nGuiSubsets
 	nGuiSubsetsTrue = (nGuiSubsets-1);
+
+	nGuiSubsets = 2;
+	nGuiSubsetsTrue = (nGuiSubsets-1);
+	% nGuiSubsetsTrue = 1;
 	figure(figNoDefault);
 	for thisSet = 1:nGuiSubsetsTrue
 		% 1:nPropertiesToChange
 		% subsetStartTime = tic;
 		subsetStartIdx = subsetList(thisSet);
 		subsetEndIdx = subsetList(thisSet+1);
+
+		subsetStartIdx = 1;
+		subsetEndIdx = nPropertiesToChange;
+
 		if thisSet==nGuiSubsetsTrue
 			propertySubsetList = subsetStartIdx:(subsetEndIdx);
 		else
 			propertySubsetList = subsetStartIdx:(subsetEndIdx-1);
 		end
+
 
 		[figHandle figNo] = openFigure(figNoDefault, '');
 		clf
@@ -378,12 +390,16 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 			if propertyNo~=1
 				if isempty(regexp(property,'______________'))
 					spaceMod = 0.00;
+					FontWeightH = 'normal';
 				else
-					spaceMod = 0.02;
+					spaceMod = 0.01;
 					uiYOffset = uiYOffset-spaceMod;
+					FontWeightH = 'bold';
 				end
+			else
+				FontWeightH = 'bold';
 			end
-			uiTextHandles{propertyNo} = uicontrol('Style','text','String',[property '' 10],'Units','normalized','Position',[uiXOffset uiYOffset-uiXIncrement*propertyNoDisp+0.027 uiTxtSize 0.0225],'BackgroundColor',[0.9 0.9 0.9],'ForegroundColor','black','HorizontalAlignment','Left','FontSize',uiFontSize,'ToolTip',propertyTooltip);
+			uiTextHandles{propertyNo} = uicontrol('Style','text','String',[property '' 10],'Units','normalized','Position',[uiXOffset uiYOffset-uiXIncrement*propertyNoDisp+modX_text*(0.027/modX) uiTxtSize 0.0225/modX],'BackgroundColor',[0.9 0.9 0.9],'ForegroundColor','black','HorizontalAlignment','Left','FontSize',uiFontSize,'ToolTip',propertyTooltip,'FontWeight',FontWeightH);
 			% jEdit = findjobj(uiTextHandles{propertyNo});
 			% lineColor = java.awt.Color(1,0,0);  % =red
 			% thickness = 3;  % pixels

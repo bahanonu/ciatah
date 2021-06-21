@@ -4,7 +4,9 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 	% started 2013.11.09 [10:39:50]
 	%
 	% inputs
-		% inputMovie - [X Y Z] matrix of X,Y height/width and Z frames
+		% inputMovie - either grayscale or color movie matrix:
+			% grayscale: [x y t] matrix of x,y height/width and t frames
+			% RGB: [x y C t] matrix of x,y height/width, t frames, and C color channel (3 as RGB)
 	% options
 		% fps -
 		% extraMovie - extra movie to play, [X Y Z] matrix of X,Y height/width and Z frames
@@ -29,6 +31,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		% 2021.01.14 [20:12:10] - Update passing of HDF5 dataset name to ciapkg.io.readFrame.
 		% 2021.01.17 [19:21:12] - Integrated contrast sliders directly into the main GUI so users don't have to open up a separate GUI. Make GUI sliders thinner.
 		% 2021.02.05 [16:25:12] - Added feature to sub-sample movie to make display run faster for larger movies.
+		% 2021.04.23 [13:05:29] - Add support for playing RGB movie of dimension [x y C t] if input directly as matrix.
 
 	% ========================
 	% options
@@ -150,7 +153,11 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 	else
 		inputMovieIsChar = 0;
 		inputMovieDims = size(inputMovie);
-		nFramesOriginal = inputMovieDims(3);
+		if length(inputMovieDims)==4
+			nFramesOriginal = inputMovieDims(4);	
+		else
+			nFramesOriginal = inputMovieDims(3);		
+		end
 		readMovieChunks = 0;
 	end
 
@@ -167,7 +174,11 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 
 	% ==========================================
 	if options.nFrames==0
-		nFrames = size(inputMovie,3);
+		if length(inputMovieDims)==4
+			nFrames = size(inputMovie,4);
+		else
+			nFrames = size(inputMovie,3);		
+		end
 	else
 		nFrames = options.nFrames;
 	end
@@ -261,7 +272,11 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		[tmpFrame] = ciapkg.io.readFrame(inputMovie,1,'movieFileID',movieFileID,'inputMovieDims',inputMovieDims,'inputDatasetName',options.inputDatasetName);
 		% tmpFrame = loadMovieList(inputMovie,'inputDatasetName',options.inputDatasetName,'displayInfo',0,'displayDiagnosticInfo',0,'displayWarnings',0,'frameList',1);
 	else
-		tmpFrame = squeeze(inputMovie(:,:,1));
+		if length(size(inputMovie))==4
+			tmpFrame = squeeze(inputMovie(:,:,:,1));	
+		else
+			tmpFrame = squeeze(inputMovie(:,:,1));	
+		end
 	end
 	if sparseInputMovie==1
 		tmpFrame = full(tmpFrame);
@@ -457,7 +472,11 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 				% thisFrame = subfxn_readMovieDisk(inputMovie,frame,movieType);
 				[thisFrame] = ciapkg.io.readFrame(inputMovie,frame,'movieFileID',movieFileID,'inputMovieDims',inputMovieDims,'inputDatasetName',options.inputDatasetName);
 			else
-				thisFrame = squeeze(inputMovie(:,:,frame));
+				if length(size(inputMovie))==4
+					thisFrame = squeeze(inputMovie(:,:,:,frame));	
+				else
+					thisFrame = squeeze(inputMovie(:,:,frame));	
+				end
 			end
 			if sparseInputMovie==1
 				thisFrame = full(thisFrame);
@@ -523,7 +542,11 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 				ssm = options.subSampleMovie;
 				set(montageHandle,'Cdata',thisFrame(1:ssm:end,1:ssm:end),'AlphaData',imAlpha(1:ssm:end,1:ssm:end));
 			else
-				set(montageHandle,'Cdata',thisFrame,'AlphaData',imAlpha);
+				if length(size(thisFrame))==3
+					% set(montageHandle,'Cdata',squeeze(thisFrame(:,:,1)),'AlphaData',imAlpha);
+				else
+					set(montageHandle,'Cdata',thisFrame,'AlphaData',imAlpha);
+				end
 			end
 			if strcmp(options.colormapColor,'gray')
 				set(axHandle,'color',[1 0 0]);

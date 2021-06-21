@@ -124,6 +124,7 @@ function viewVennDiagram(circleAreas,overlapAreas,totalArea,varargin)
 
 	% Plot text indicating the exact numbers for each area of overlap
 	if options.displayText==1
+		rdDgts = options.roundDigits;
 		% str1 = sprintf('%d | %0.1f | %0.1f',idPairsFixed(idPairNo,1), circleAreasOriginal(1),circleAreas(1));
 		% str2 = sprintf('%d | %0.1f | %0.1f',idPairsFixed(idPairNo,2), circleAreasOriginal(2),circleAreas(2));
 		% str3 = sprintf('%d | %0.1f | %0.1f',idPairsFixed(idPairNo,3), circleAreasOriginal(3),circleAreas(3));

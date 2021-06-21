@@ -9,7 +9,7 @@ function [success] = saveMatrixToFile(inputMatrix,savePath,varargin)
 		%
 
 	% changelog
-		%
+		% 2021.04.24 [16:00:01] - updated TIFF saving to add support for export of multi-channel color timeseries TIFF stack if in format [x y C t] where x,y = width/height, C = RGB channels, t = frames
 	% TODO
 		% Add checking of data size so tiff can be automatically switched
 
@@ -82,6 +82,10 @@ function [success] = saveMatrixToFile(inputMatrix,savePath,varargin)
 			case 'tiff'
 				tiffOptions.comp = 'no';
 				tiffOptions.overwrite = true;
+                if length(size(inputMatrix))==4
+                    tiffOptions.color = true;
+                    disp('Saving TIFF as color timeseries stack.');
+                end
 				fprintf('Saving to: %s\n',savePath);
 				saveastiff(inputMatrix, savePath, tiffOptions);
 			case 'hdf5'

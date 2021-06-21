@@ -17,6 +17,13 @@
 
 ## Full documentation at https://bahanonu.github.io/ciatah/.
 
+Below are recordings for users who want to learn more about calcium imaging analysis and the CIAtah pipeline.
+
+### Webinar
+This webinar gives an overview of calcium imaging analysis (with a focus on CIAtah) along with tips for improving experiments and analysis: https://info.inscopix.com/inscopix-inspire-view-webinarbiafra-ahanonu-signal-in-the-noise-distinguishing-relevant-neural-activity-in-calcium-imaging.
+
+### Workshop tutorial
+This recording gives an overview of setting up and using CIAtah: https://www.youtube.com/watch?v=I6abW3uuJJw.
 <!-- <hr> -->
 
 <!-- <img src="https://user-images.githubusercontent.com/5241605/81605697-b9c7c800-9386-11ea-9e9f-569c743b24b9.png" width="42%" align="right" alt="calciumImagingAnalysis_logo"> -->
@@ -52,12 +59,12 @@ Made in USA.<br>
   - pre-processing (motion correction, spatiotemporal downsampling, spatial filtering, relative fluorescence calculation, etc.)
   - support for multiple cell-extraction methods (CELLMax, PCA-ICA, <a href='https://github.com/flatironinstitute/CaImAn-MATLAB' target='_blank'>CNMF</a>, CNMF-E, <a href='https://github.com/schnitzer-lab/EXTRACT-public' target='_blank'>EXTRACT</a>, etc.)
   - manual classification of cells via GUIs,
-  - automated cell classification (coming soon!),
+  - automated cell classification (i.e. CLEAN algorithm, coming soon!),
   - cross-session cell alignment, and more.
 - Includes example one- and two-photon calcium imaging datasets for testing `ciatah`.
-- Animal position tracking (e.g. in open-field assay).
-- Supports most major imaging movie file formats: HDF5, NWB, AVI, ISXD [Inscopix], and TIFF.
+- Supports a plethora of major imaging movie file formats: HDF5, NWB, AVI, ISXD [Inscopix], TIFF, and [Bio-Formats](https://www.openmicroscopy.org/bio-formats/) compatible formats (Olympus [OIR] and Zeiss [CZI and LSM] currently, additional support to be added or upon request).
 - Supports [Neurodata Without Borders](https://www.nwb.org/) data standard (see [calcium imaging tutorial](https://neurodatawithoutborders.github.io/matnwb/tutorials/html/ophys.html)) for reading/writing cell-extraction and imaging movie files.
+- Animal position tracking (e.g. in open-field assay).
 - Requires `MATLAB`.
 <!-- <hr> -->
 
@@ -114,7 +121,7 @@ Made in USA.<br>
 
 Below are steps needed to quickly get started using the `CIAtah` software package in MATLAB.
 
-### Install
+### Download and install `CIAtah`
 
 - Clone the `CIAtah` repository (using [GitHub desktop](https://desktop.github.com/) or command line) or download the repository zip and unzip (e.g. run below MATLAB command).
   - Point the MATLAB path to the `CIAtah` root folder (*NOT* `@CIAtah` sub-folder in the repository).
@@ -131,6 +138,14 @@ Below are steps needed to quickly get started using the `CIAtah` software packag
  % Make CIAtah the working folder
  cd('ciatah-master')
  ```
+
+### Check required toolboxes are installed
+
+`CIAtah` depends on several MATLAB toolboxes to run properly. Run the below command to have `CIAtah` check whether dependencies have been installed properly. If not use the `Add-Ons` (https://www.mathworks.com/help/matlab/matlab_env/get-add-ons.html) explorer to install each toolbox.
+
+```Matlab
+ciapkg.io.matlabToolboxCheck;`
+```
 
 ### Setup `CIAtah`
 
@@ -151,6 +166,7 @@ obj % then hit enter, no semicolon!
 - Run `obj;` in the command window to see the main GUI.
 - Full documentation at https://bahanonu.github.io/ciatah/.
 - __[Optional]__ Users on Windows systems can download `Everything` (https://www.voidtools.com/). It is a very useful and extremely fast search engine for files and folders that allows users to quickly obtain lists of full folder paths for analysis in `CIAtah`.
+- __[Optional]__ If run into issues opening certain AVI files (e.g. due to codec issues) with CIAtah/MATLAB, install `K-Lite Codec Pack` (https://codecguide.com/download_kl.htm) or similar for added support.
 <!-- - __[Optional]__ Users who want to analyze data via the command line can run `edit ciapkg.demo.cmdLinePipeline` and run each segment of code there to see what commands are needed to perform each step. It assumes you have already run `example_downloadTestData`. -->
 
 ### Visualize movies quickly using read from disk

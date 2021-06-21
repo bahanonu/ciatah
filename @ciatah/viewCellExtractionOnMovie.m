@@ -9,6 +9,7 @@ function obj = viewCellExtractionOnMovie(obj,varargin)
 
 	% changelog
 		% 2019.10.29 [16:31:37] - Added a check for already loaded files
+		% 2021.06.18 [21:41:07] - added modelVarsFromFilesCheck() to check and load signals if user hasn't already.
 	% TODO
 		% Give users the option to scroll back and forth by having a horizontal scrollbar
 
@@ -228,6 +229,8 @@ function obj = viewCellExtractionOnMovie(obj,varargin)
 				obj.fileNum = fileNum;
 				display(repmat('=',1,21))
 				display([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.fileIDNameArray{obj.fileNum}]);
+
+				obj.modelVarsFromFilesCheck(fileNum);
 
 				if isempty(analyzeSpecificFolder)
 					movieList = getFileList(obj.inputFolders{obj.fileNum}, fileFilterRegexp);
@@ -510,7 +513,9 @@ function obj = viewCellExtractionOnMovie(obj,varargin)
 					% 	'yes','motion','other','yes');
 					movieDecision = 'yes';
 					% MIJ.run('Close');
-					MIJ.run('Close All Without Saving');
+					%  MIJ.run('Close All Without Saving');
+					manageMiji('startStop','closeAllWindows');
+					manageMiji('startStop','exit');
 					% MIJ.exit;
 				catch err
 					disp(repmat('@',1,7))

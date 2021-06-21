@@ -10,6 +10,7 @@ function obj = modelModifyMovies(obj)
 	% changelog
 		% 2019.06.10 [11:01:55] - Added support for non-Miji based masking.
 		% 2019.10.28 [15:58:45] - Cast the movie mask to be same type as the movie to deal with integer movie inputs.
+		% 2021.06.20 [00:21:33] - manageMiji('startStop','closeAllWindows'); added to improve support for ImageJ over Fiji implementation of Miji.
 	% TODO
 		%
 
@@ -135,11 +136,13 @@ function obj = modelModifyMovies(obj)
 								movieMaskArray{thisFileNumIdx}{maskNo} = MIJ.getCurrentImage;
 								% Ensure that it is a binary mask, sometimes ImageJ would give out negative values
 								movieMaskArray{thisFileNumIdx}{maskNo} = movieMaskArray{thisFileNumIdx}{maskNo}>0;
-								MIJ.run('Close All Without Saving');
+								% MIJ.run('Close All Without Saving');
+								manageMiji('startStop','closeAllWindows');
 							catch err
 								movieMaskArray{thisFileNumIdx}{maskNo} = [];
 								try
-									MIJ.run('Close All Without Saving');
+									% MIJ.run('Close All Without Saving');
+									manageMiji('startStop','closeAllWindows');
 								catch
 								end
 								display(repmat('@',1,7))
@@ -147,7 +150,8 @@ function obj = modelModifyMovies(obj)
 								display(repmat('@',1,7))
 							end
 						else
-							MIJ.run('Close All Without Saving');
+							% MIJ.run('Close All Without Saving');
+							manageMiji('startStop','closeAllWindows');
 							movieMaskArray{thisFileNumIdx}{maskNo} = [];
 						end
 					elseif strcmp(options.videoPlayer,'matlab')

@@ -71,6 +71,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 		% 2020.10.13 [01:22:47] - Display context menu for keyboard shortcuts, easier than separate figure. User can select with right-click or via a menu in the GUI.
 		% 2020.10.13 [22:31:23] - Users can now scroll through cells using mouse scroll wheel.
 		% 2021.03.10 [16:33:23] - User can now input just NWB path without a blank variable for inputSignals. Also added support for CIAtah mat files.
+		% 2021.05.09 [15:20:18] - Since ciapkg.io.loadSignalExtraction already supports loading NWB or CIAtah MAT-file cell extraction files, remove remove redundancy and only call ciapkg.io.loadSignalExtraction rather than loadNeurodataWithoutBorders. Added support for progress bar when movie not input.
 	% TODO
 		% DONE: New GUI interface to allow users to scroll through video and see cell activity at that point
 		% DONE: allow option to mark rest as bad signals
@@ -244,17 +245,8 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 
 	% If inputs are NWB or CIAtah mat format
 	if nargin==1|ischar(inputImages)
-		[~,~,inputEXT] = fileparts(inputImages);
-		switch inputEXT
-			case '.nwb'
-				[inputImages,inputSignals,infoStruct,algorithmStr] = loadNeurodataWithoutBorders(inputImages);
-				options.nSignals = size(inputImages,3);
-			case '.mat'
-				[inputImages,inputSignals,infoStruct,algorithmStr] = ciapkg.io.loadSignalExtraction(inputImages);
-				options.nSignals = size(inputImages,3);
-			otherwise
-				
-		end
+		[inputImages,inputSignals,infoStruct,algorithmStr] = ciapkg.io.loadSignalExtraction(inputImages);
+		options.nSignals = size(inputImages,3);
 	end
 
 	% Modify dataset name if given NWB file
@@ -396,6 +388,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 		options.movieMin = 0;
 	end
 
+	% =====================
 	% Set all starting values to neutral (e.g. gray in GUI, to reduce bias).
 	if strcmp(valid,'neutralStart')==1
 		valid = zeros([options.nSignals 1],'logical')+3;
@@ -797,6 +790,9 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 	% loop over chosen filters
 	nImages = size(inputImages,3);
 
+	axValid = [];
+	axValidAll = [];
+
 	% initialize loop variables
 	saveData=0;
 	i = 1; % the current signal # being sorted
@@ -1022,8 +1018,10 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 								axis equal tight;
 							end
 							s2Pos = plotboxpos(inputMoviePlotLoc2Handle);
-							cbh = colorbar(inputMoviePlotLoc2Handle,'Location','eastoutside','Position',[s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)],'FontSize',options.fontSize-2);
-							ylabel(cbh,'Fluorescence (e.g. \DeltaF/F or \DeltaF/\sigma)','FontSize',options.fontSize-1);
+							if loopCount==1
+								cbh = colorbar(inputMoviePlotLoc2Handle,'Location','eastoutside','Position',[s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)],'FontSize',options.fontSize-2);
+								ylabel(cbh,'Fluorescence (e.g. \DeltaF/F or \DeltaF/\sigma)','FontSize',options.fontSize-1);
+							end
 						end
 					catch err
 
@@ -1056,11 +1054,12 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 			else
 				set(mainFig,'CurrentAxes',inputMoviePlotLoc2Handle);
 			end
-				[thisImageCrop] = subfxnCropImages(thisImage);
-				imagesc(thisImageCrop);
-				% colormap gray
-				axis off; % ij square
-				title(['signal ' cellIDStr 10 '(' num2str(sum(valid==1)) ' good)'],'FontSize',options.fontSize,'Interpreter','tex');
+
+			[thisImageCrop] = subfxnCropImages(thisImage);
+			imagesc(thisImageCrop);
+			% colormap gray
+			axis off; % ij square
+			title(['signal ' cellIDStr 10 '(' num2str(sum(valid==1)) ' good)'],'FontSize',options.fontSize,'Interpreter','tex');
 		end
 
 		% use thresholded image as AlphaData to overlay on cell map, reduce number of times this is accessed to speed-up analysis
@@ -1368,6 +1367,7 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 			set(gcf,'pointer','custom','PointerShapeCData',NaN([16 16]));
 		end
 
+		% Display options if movie present
 		if ~isempty(options.inputMovie)
 			try
 				if options.peakTrigMovieMontage==0
@@ -1513,14 +1513,6 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 					title(['Press Q to change movie contrast.' 10 'Press Z to turn zoom on.' 10 'Press B to switch to movie montage.' 10 'Zoom enabled in trace panel.'],'FontSize',options.fontSize,'Interpreter','tex')
 				end
 
-				% ==========================================
-				% ADD PROGRESS BAR
-				if exist('axValid','var')==1
-					[axValid axValidAll] = subfxnSignalSorterProgressBars(i,valid,inputMoviePlotLocHandle,inputMoviePlotLoc2Handle,options,mainFig,axValid,axValidAll,cellIDStr);
-				else
-					[axValid axValidAll] = subfxnSignalSorterProgressBars(i,valid,inputMoviePlotLocHandle,inputMoviePlotLoc2Handle,options,mainFig,[],[],cellIDStr);
-				end
-
 				set(mainFig,'CurrentAxes',inputMoviePlotLocHandle);
 
 				frameNoTotal = 0; % use this to lock
@@ -1540,6 +1532,9 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 				set(objMapPlotLocHandle,'ButtonDownFcn',@subfxnSelectCellOnCellmap)
 				set(objMapZoomPlotLocHandle,'ButtonDownFcn',@subfxnSelectCellOnCellmap)
 				set(mainFig, 'KeyPressFcn', @(source,eventdata) figure(mainFig));
+
+				% Create progress bar
+				[axValid, axValidAll] = subfxn_progressBarCreate(axValid, axValidAll);
 
 				while strcmp(keyIn,'3')
 					frameNoTotal = frameNoTotal+1;
@@ -1576,9 +1571,17 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 			end
 		else
 			keyIn = get(gcf,'CurrentCharacter');
+			% Create progress bar
+			[axValid, axValidAll] = subfxn_progressBarCreate(axValid, axValidAll);
+
+			while strcmp(keyIn,'3')
+				keyIn = get(gcf,'CurrentCharacter');
+				pause(1/options.fps);
+			end
 			reply = double(keyIn);
 			set(gcf,'currentch','3');
 		end
+
 		figure(mainFig);
 		warning('on','all')
 
@@ -1609,7 +1612,7 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 			end
 		end
 		% loop if user gets to either end
-		i=i+directionOfNextChoice;
+		i = i+directionOfNextChoice;
 		if i<=0; i = nImages; end
 		if i>nImages; i = 1; end
 		figure(mainFig);
@@ -1629,6 +1632,26 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 	warning('on','all')
 	warning('query','all')
 	safeExit = 1;
+
+	function [axValid, axValidAll] = subfxn_progressBarCreate(axValid, axValidAll)
+		% ==========================================
+		% ADD PROGRESS BAR
+		if isempty(options.inputMovie)
+			tmpHandleProgressBar = avgSpikeTracePlotHandle;
+			tmpHandleProgressBar2 = inputMoviePlotLoc2Handle;
+		else
+			tmpHandleProgressBar = inputMoviePlotLocHandle;
+			tmpHandleProgressBar2 = inputMoviePlotLoc2Handle;
+        end
+        if isempty(axValid)==1
+		% if exist('axValid','var')==0
+		% if i==1&loopCount==1
+			disp('Creating sorter progress bar...')
+			[axValid, axValidAll] = subfxnSignalSorterProgressBars(i,valid,tmpHandleProgressBar,tmpHandleProgressBar2,options,mainFig,[],[],cellIDStr);
+		else
+			[axValid, axValidAll] = subfxnSignalSorterProgressBars(i,valid,tmpHandleProgressBar,tmpHandleProgressBar2,options,mainFig,axValid,axValidAll,cellIDStr);
+		end
+	end
 	function subfxnUserInputGui(replyTmp)
 		if nargin>0
 			% Change keyIn to force while loop to exit, need for certain commands.
@@ -2184,7 +2207,7 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 		end
 	end
 end
-function [axValid axValidAll] = subfxnSignalSorterProgressBars(i,valid,inputMoviePlotLocHandle,inputMoviePlotLoc2Handle,options,mainFig,axValid,axValidAll,cellIDStr)
+function [axValid, axValidAll] = subfxnSignalSorterProgressBars(i,valid,inputMoviePlotLocHandle,inputMoviePlotLoc2Handle,options,mainFig,axValid,axValidAll,cellIDStr)
 	validData = cat(3,...
 		double(valid(:)'==0|valid(:)'>1),...% Red
 		double(valid(:)'==1|valid(:)'>1),...% Green
@@ -2206,6 +2229,7 @@ function [axValid axValidAll] = subfxnSignalSorterProgressBars(i,valid,inputMovi
 		cbh = colorbar(inputMoviePlotLoc2Handle,'Location','eastoutside','Position',[s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)],'FontSize',options.fontSize-2);
 		ylabel(cbh,'Fluorescence (e.g. \DeltaF/F or \DeltaF/\sigma)','FontSize',options.fontSize-1);
 
+		set(mainFig,'CurrentAxes',inputMoviePlotLocHandle);
 		s3Pos = plotboxpos(gca);
 
 		axValid = axes('Position',[s3Pos(1) 0.98 s3Pos(3) 0.02],'XTick',[],'YTick',[]);

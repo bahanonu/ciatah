@@ -20,9 +20,11 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		% 2019.10.29 [17:21:23] - Added a check to make sure that filenames produced are valid MATLAB ones for settings, e.g. for CNMF-e.
 		% 2019.11.10 [20:34:42] - Add a warning with some common tips for users if error during cell extraction. Skip modelVarsFromFiles and viewObjmaps loading to reduce user confusion for any folders that had issues during cell extraction.
 		% 2020.05.08 [20:01:52] - Make creation of settings an explicit option that the user can change.
-		% 2021.02.01 [‏‎15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
+		% 2021.02.01 [�?‎15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
 		% 2021.02.25 [16:44:41] - Update `saveRunTimes` to handle case in which user selects multiple movies for cell extraction.
 		% 2021.03.20 [19:23:25] - Convert ndSparse outputs to single from cell-extraction algorithms (e.g. for CELLMax/EXTRACT) when saving as NWB. Updated EXTRACT support to include additional options.
+		% 2021.04.08 [16:23:20] - Use filesep in getAlgorithmRootPath to avoid issues in Unix-based systems.
+		% 2021.06.16 [09:07:46] - Fix issue of passing multiple movies to PCA-ICA.
 	% TODO
 		%
 
@@ -471,7 +473,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		% First try to automatically add the folder
 		try
 			% foundFiles = dir(fullfile([obj.defaultObjDir filesep obj.externalProgramsDir], ['**\' algorithmFile '']));
-			foundFiles = dir(fullfile([obj.externalProgramsDir], ['**\' algorithmFile '']));
+			foundFiles = dir(fullfile([obj.externalProgramsDir], ['**' filesep algorithmFile '']));
 			pathToAdd = foundFiles.folder;
 			if rootFlag==1
 				[pathToAdd,~,~] = fileparts(pathToAdd);
@@ -498,7 +500,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		end
 
 		if exist(algorithmFile,'file')~=2
-			pathToAlgorithm = uigetdir('\.',sprintf('Enter path to %s root folder (e.g. from github)',algorithmName));
+			pathToAlgorithm = uigetdir([filesep '.'],sprintf('Enter path to %s root folder (e.g. from github)',algorithmName));
 			if ischar(pathToAlgorithm)
 				privateLoadBatchFxnsPath = obj.privateSettingsPath;
 				% if exist(privateLoadBatchFxnsPath,'file')~=0
@@ -1095,6 +1097,13 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		nICs = nPCsnICs(2);
 		%
 		movieList = getFileList(obj.inputFolders{obj.fileNum}, fileFilterRegexp);
+		
+		% Ensure only a single movie is passed, else PCA-ICA runs into dimension errors.
+		if iscell(movieList)
+			if length(movieList)>2
+				movieList = movieList{1};
+			end
+		end
 		% [inputMovie] = loadMovieList(movieList,'convertToDouble',0,'frameList',[]);
 
 		if oldPCAICA==1
@@ -1115,15 +1124,17 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				imageSaveDimOrder = 'zxy';
 			end
 		else
-			display('running PCA-ICA, new version...')
+			disp('running PCA-ICA, new version...')
 			[PcaOutputSpatial, PcaOutputTemporal, PcaOutputSingularValues, PcaInfo] = run_pca(movieList, nPCs, 'movie_dataset_name',obj.inputDatasetName);
-
+			disp(['PcaOutputSpatial: ' num2str(size(PcaOutputSpatial))]);
+			disp(['PcaOutputTemporal: ' num2str(size(PcaOutputTemporal))]);
+			disp(['PcaOutputSingularValues: ' num2str(size(PcaOutputSingularValues))]);
 			if isempty(PcaOutputTemporal)
-				display('PCs are empty, skipping...')
+				disp('PCs are empty, skipping...')
 				return;
 			end
 
-			display('+++')
+			disp('+++')
 			movieDims = loadMovieList(movieList,'convertToDouble',0,'frameList',[],'inputDatasetName',obj.inputDatasetName,'treatMoviesAsContinuous',1,'getMovieDims',1);
 
 			% output_units = 'fl';
