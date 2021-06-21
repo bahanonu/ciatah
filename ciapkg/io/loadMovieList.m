@@ -50,7 +50,7 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 		% 2020.08.31 [15:47:49] - Add option to suppress warnings.
 		% 2020.10.19 [12:11:14] - Improved comments and options descriptions.
 		% 2021.02.15 [11:55:36] - Fixed loading HDF5 datasetname that has only a single frame, loadMovieList would ask for 3rd dimension information that did not exist.
-		% 2021.06.21 [10:22:32] - Added support for Bio-Formats compatible files, specifically Olympus (OIR) and Zeiss ()
+		% 2021.06.21 [10:22:32] - Added support for Bio-Formats compatible files, specifically Olympus (OIR) and Zeiss (CZI, LSM).
 
 	% TODO
 		% OPEN

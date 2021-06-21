@@ -8,7 +8,7 @@ function [inputMatrix, coords] = cropMatrix(inputMatrix,varargin)
 		% inputMatrix - cropped or NaN'd matrix, same name to reduce memory usage
 	% changelog
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals].
-		% 2021.04.18 [14:42:53] - Updated to make imrect the default method of selecting the coordinates
+		% 2021.04.18 [14:42:53] - Updated to make imrect the default method of selecting the coordinates.
 	% TODO
 		%
 

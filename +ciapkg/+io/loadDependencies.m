@@ -24,11 +24,11 @@ function loadDependencies(varargin)
 	% DESCRIPTION
 	options.externalProgramsDir = ciapkg.getDirExternalPrograms();
 	options.guiEnabled = 1;
-	options.dependencyStr = {'downloadMiji','downloadCnmfGithubRepositories','example_downloadTestData','loadMiji','downloadNeuroDataWithoutBorders','downloadEXTRACT','downloadBioFormats','downloadImageJ'};
+	options.dependencyStr = {'downloadImageJ','downloadCnmfGithubRepositories','example_downloadTestData','downloadNeuroDataWithoutBorders','downloadEXTRACT','downloadBioFormats','downloadMiji','loadMiji'};
 
-	options.dispStr = {'Download Fiji (to run Miji)','Download CNMF, CNMF-E, and CVX code.','Download test one- and two photon datasets.','Load Fiji/Miji into MATLAB path.','Download NWB (NeuroDataWithoutBorders)','Download EXTRACT','Download Bio-Formats','Download ImageJ'};
+	options.dispStr = {'Download ImageJ','Download CNMF, CNMF-E, and CVX code.','Download test one- and two photon datasets.','Download NWB (NeuroDataWithoutBorders)','Download EXTRACT','Download Bio-Formats','Download Fiji (to run Miji)','Load Fiji/Miji into MATLAB path.'};
 	% Int vector: index of options.dependencyStr to run by default with no GUI
-	options.depIdxArray = [2 3 5 6 7 8];
+	options.depIdxArray = [1 2 3 4 5 6];
 	% Binary: 1 = force update even if already downloaded. 0 = skip if already downloaded
 	options.forceUpdate = 0;
 	% get options
