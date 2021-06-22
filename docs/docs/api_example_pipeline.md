@@ -4,27 +4,51 @@ Below is an example `{{ site.name }}` pipeline using the command line for those 
 
 Can also access the pipeline by typing `edit ciapkg.demo.cmdLinePipeline` into the MATLAB command window or run by typing in `ciapkg.demo.cmdLinePipeline;`.
 
+## Setup
 ```MATLAB
 % Running {{ site.name }} from MATLAB command line/window
 
-%% Load {{ site.name }} functions
-loadBatchFxns();
+guiEnabled = 1;
+saveAnalysis = 1;
+inputDatasetName = '/1';
+rawFileRegexp = 'concat';
 
-%% Load movie to analyze
-inputMovie = loadMovieList([ciapkg.getDir() filesep 'data' filesep '2014_04_01_p203_m19_check01' filesep 'concat_recording_20140401_180333.h5']);
+% Setup folder paths
+analysisFolderPath = [ciapkg.getDir() filesep 'data' filesep '2014_04_01_p203_m19_check01'];
+[~,folderName,~] = fileparts(analysisFolderPath);
+% Setup NWB folder paths
+nwbFilePath = [analysisFolderPath filesep 'nwbFiles' filesep folderName];
+nwbFileFolderPath = [analysisFolderPath filesep 'nwbFiles'];
+
+% Load {{ site.name }} functions
+loadBatchFxns();
 ```
 
 ```MATLAB
-%% Visualize slice of the movie
-playMovie(inputMovie(:,:,1:500));
-% Alternatively, visualize by entering the file path
-playMovie(inputMoviePath);
+%% Download test data, only a single session
+example_downloadTestData('downloadExtraFiles',0);
 ```
 
+```MATLAB
+%% Load movie to analyze
+inputMoviePath = getFileList(analysisFolderPath,rawFileRegexp,'sortMethod','natural');
+% inputMoviePath = [analysisFolderPath filesep 'concat_recording_20140401_180333.h5'];
+inputMovie = loadMovieList(inputMoviePath,'inputDatasetName',inputDatasetName);
+```
+
+## Visualize movie
+```MATLAB
+%% Visualize slice of the movie
+playMovie(inputMovie(:,:,1:500),'extraTitleText','Raw movie');
+% Alternatively, visualize by entering the file path
+playMovie(inputMoviePath,'extraTitleText','Raw movie directly from file');
+```
+
+## Downsample movie
 ```MATLAB
 %% Downsample input movie if need to
 inputMovieD = downsampleMovie(inputMovie,'downsampleDimension','space','downsampleFactor',4);
-playMovie(inputMovie,'extraMovie',inputMovieD);
+playMovie(inputMovie,'extraMovie',inputMovieD,'extraTitleText','Raw movie vs. down-sampled movie');
 
 % Alternatively, if you have Inscopix ISXD files, downsample by reading segments from disk using.
 moviePath = 'PATH_TO_ISXD';
@@ -33,6 +57,7 @@ opts.downsampleFactor = 4; % How much to downsample original movie, set to 1 for
 convertInscopixIsxdToHdf5(moviePath,'options',opts);
 ```
 
+## Remove stripe artifacts (e.g. from camera) from movie
 ```MATLAB
 %% Remove stripes from movie if needed
 % Show full filter sequence for one frame
@@ -45,10 +70,23 @@ removeStripsFromMovie(inputMovie(:,:,1),'options',sopts,'showImages',1);
 removeStripsFromMovie(inputMovie,'options',sopts);
 ```
 
+## Detrend movie if needed (default linear trend), e.g. to compensate for bleaching over time.
 ```MATLAB
-%% Get coordinates to crop
-[cropCoords] = getCropCoords(squeeze(inputMovie(:,:,1)));
-toptions.cropCoords = cropCoords;
+%% Detrend movie
+inputMovie = normalizeMovie(inputMovie,'normalizationType','detrend','detrendDegree',1);
+```
+
+## Run motion correction
+```MATLAB
+%% Get coordinates to crop from the user separately or set automatically
+if guiEnabled==1
+	[cropCoords] = getCropCoords(squeeze(inputMovie(:,:,1)));
+	toptions.cropCoords = cropCoords;
+	% Or have turboreg function itself directly ask the user for manual area from which to obtain correction coordinates
+	% toptions.cropCoords = 'manual';
+else
+	toptions.cropCoords = [26 34 212 188];
+end
 ```
 
 ```MATLAB
@@ -75,11 +113,13 @@ toptions.pxToCrop = 10;
 playMovie(inputMovie,'extraMovie',inputMovie2);
 ```
 
+## Convert movie to units of relative fluorescence
 ```MATLAB
 %% Run dF/F
 inputMovie3 = dfofMovie(single(inputMovie2),'dfofType','dfof');
 ```
 
+## Downsample movie
 ```MATLAB
 %% Run temporal downsampling
 inputMovie3 = downsampleMovie(inputMovie3,'downsampleDimension','time','downsampleFactor',4);
@@ -90,44 +130,66 @@ inputMovie3 = downsampleMovie(inputMovie3,'downsampleDimension','time','downsamp
 playMovie(inputMovie3);
 ```
 
+## Run PCA-ICA
 ```MATLAB
 %% Run PCA-ICA cell extraction. CNMF-e, CNMF, ROI, and other cell-extraction algorithms are also available.
-nPCs = 300; nICs = 225;
-[PcaOutputSpatial, PcaOutputTemporal, PcaOutputSingularValues, PcaInfo] = run_pca(inputMovie3, nPCs, 'movie_dataset_name','/1');
-[IcaFilters, IcaTraces, IcaInfo] = run_ica(PcaOutputSpatial, PcaOutputTemporal, PcaOutputSingularValues, size(inputMovie3,1), size(inputMovie3,2), nICs, 'output_units','fl','mu',0.1,'term_tol',5e-6,'max_iter',1e3);
-IcaTraces = permute(IcaTraces,[2 1]);
+nPCs = 300;
+nICs = 225;
+pcaicaStruct = ciapkg.signal_extraction.runPcaIca(inputMovie3,nPCs,nICs,'version',2,'output_units','fl','mu',0.1,'term_tol',5e-6,'max_iter',1e3);
 ```
 
 ```MATLAB
 %% Save outputs to NWB format
-saveNeurodataWithoutBorders(IcaFilters,{IcaTraces},'pcaica','pcaica.nwb');
+if saveAnalysis==1
+	saveNeurodataWithoutBorders(pcaicaStruct.IcaFilters,{pcaicaStruct.IcaTraces},'pcaica',[nwbFilePath '_pcaicaAnalysis.nwb']);
+end
 ```
 
-Run CNMF or CNMF-e cell extraction.
+## Run CNMF or CNMF-e cell extraction.
 ```MATLAB
-%% Run CNMF or CNMF-e cell extraction. Check each function with "edit" for options.
+%% Run CNMF or CNMF-e cell extraction
 numExpectedComponents = 225;
 cellWidth = 10;
 cnmfOptions.otherCNMF.tau = cellWidth/2; % expected width of cells
 
 % Run CNMF
-[cnmfAnalysisOutput] = computeCnmfSignalExtractionClass(movieList,numExpectedComponents,'options',cnmfOptions);
+[success] = cnmfVersionDirLoad('current');
+[cnmfAnalysisOutput] = computeCnmfSignalExtractionClass(inputMovie3,numExpectedComponents,'options',cnmfOptions);
 
 % Run CNMF-e
-[cnmfeAnalysisOutput] = computeCnmfeSignalExtraction_batch(movieList{1},'options',cnmfeOptions);
+[success] = cnmfVersionDirLoad('cnmfe');
+cnmfeOptions.gSiz = cellWidth;
+cnmfeOptions.gSig = ceil(cellWidth/4);
+[cnmfeAnalysisOutput] = computeCnmfeSignalExtraction_batch(outputMoviePath,'options',cnmfeOptions);
 
-%% Save outputs to NWB format
-saveNeurodataWithoutBorders(cnmfAnalysisOutput.extractedImages,{cnmfAnalysisOutput.extractedSignals,cnmfAnalysisOutput.extractedSignalsEst},'cnmf','cnmf.nwb');
-saveNeurodataWithoutBorders(cnmfeAnalysisOutput.extractedImages,{cnmfeAnalysisOutput.extractedSignals,cnmfeAnalysisOutput.extractedSignalsEst},'cnmfe','cnmfe.nwb');
+% Save outputs to NWB format
+if saveAnalysis==1
+	% Save CNMF
+	saveNeurodataWithoutBorders(cnmfAnalysisOutput.extractedImages,{cnmfAnalysisOutput.extractedSignals,cnmfAnalysisOutput.extractedSignalsEst},'cnmf',[nwbFilePath '_cnmf.nwb']);
+
+	% Save CNMF-E
+	saveNeurodataWithoutBorders(cnmfeAnalysisOutput.extractedImages,{cnmfeAnalysisOutput.extractedSignals,cnmfeAnalysisOutput.extractedSignalsEst},'cnmfe',[nwbFilePath '_cnmfe.nwb']);
+end
+[success] = cnmfVersionDirLoad('none');
 ```
 
-Run EXTRACT cell extraction.
+## Run EXTRACT cell extraction.
 ```MATLAB
 %% Run EXTRACT cell extraction. Check each function with "edit" for options.
 % Load default configuration
+loadBatchFxns('loadEverything');
 extractConfig = get_defaults([]);
 
-outStruct = extractor(inputMovie,extractConfig);
+% See https://github.com/schnitzer-lab/EXTRACT-public#configurations.
+cellWidth = 10;
+extractConfig.avg_cell_radius = cellWidth;
+extractConfig.num_partitions_x = 2;
+extractConfig.num_partitions_y = 2;
+extractConfig.use_sparse_arrays = 0;
+
+outStruct = extractor(inputMovie3,extractConfig);
+
+% Grab outputs and put into standard format
 extractAnalysisOutput.filters = outStruct.spatial_weights;
 % permute so it is [nCells frames]
 extractAnalysisOutput.traces = permute(outStruct.temporal_weights, [2 1]);
@@ -139,10 +201,16 @@ extractAnalysisOutput.info = outStruct.info;
 extractAnalysisOutput.userInputConfig = extractConfig;
 extractAnalysisOutput.opts = outStruct.config;
 
-%% Save outputs to NWB format
-saveNeurodataWithoutBorders(extractAnalysisOutput.filters,{extractAnalysisOutput.traces},'cnmf','cnmf.nwb');
+% Save outputs to NWB format
+if saveAnalysis==1
+	saveNeurodataWithoutBorders(extractAnalysisOutput.filters,{extractAnalysisOutput.traces},'extract',[nwbFilePath '_extract.nwb']);
+end
+
+% Remove EXTRACT from the path.
+loadBatchFxns();
 ```
 
+## Manual sort output cells
 ```MATLAB
 %% Run signal sorting using matrix inputs
 [outImages, outSignals, choices] = signalSorter(IcaFilters,IcaTraces,'inputMovie',inputMovie3);
@@ -150,7 +218,7 @@ saveNeurodataWithoutBorders(extractAnalysisOutput.filters,{extractAnalysisOutput
 
 ```MATLAB
 %% Run signal sorting using NWB
-[outImages, outSignals, choices] = signalSorter('pcaica.nwb',[],'inputMovie',inputMovie3);
+[outImages, outSignals, choices] = signalSorter([nwbFilePath '_pcaicaAnalysis.nwb'],[],'inputMovie',inputMovie3);
 ```
 
 ```MATLAB
@@ -160,6 +228,44 @@ subplot(1,2,1);imagesc(max(IcaFilters,[],3));axis equal tight; title('Raw filter
 subplot(1,2,2);imagesc(max(outImages,[],3));axis equal tight; title('Sorted filters')
 ```
 
+```MATLAB
+% Run signal sorting using NWB files from cell extraction.
+if saveAnalysis==1&guiEnabled==1
+	disp(repmat('=',1,21));disp('Running signalSorter using NWB file input.')
+	nwbFileList = getFileList(nwbFileFolderPath,'.nwb');
+	if ~isempty(nwbFileList)
+		nFiles = length(nwbFileList);
+		outImages = {};
+		outSignals = {};
+		choices = {};
+		for fileNo = 1:nFiles
+			[outImages{fileNo}, outSignals{fileNo}, choices{fileNo}] = signalSorter(nwbFileList{fileNo},[],'inputMovie',inputMovie3);
+		end
+
+		% Plot results of sorting
+		for fileNo = 1:nFiles
+			try
+				[inputImagesTmp,inputSignalsTmp,infoStructTmp,algorithmStrTmp,inputSignals2Tmp] = ciapkg.io.loadSignalExtraction(nwbFileList{fileNo});
+				figure;
+				subplot(1,2,1); 
+					imagesc(max(inputImagesTmp,[],3));
+					axis equal tight; 
+					title([algorithmStrTmp ' | Raw filters'])
+				subplot(1,2,2); 
+					imagesc(max(outImages{fileNo},[],3));
+					axis equal tight; 
+					title('Sorted filters')
+			catch err
+				disp(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				disp(repmat('@',1,7))
+			end
+		end
+	end
+end
+```
+
+## Overlay cells on movies as sanity check
 ```MATLAB
 %% Create an overlay of extraction outputs on the movie and signal-based movie
 [inputMovieO] = createImageOutlineOnMovie(inputMovie3,IcaFilters,'dilateOutlinesFactor',0);
@@ -173,16 +279,73 @@ movieM = cellfun(@(x) normalizeVector(x,'normRange','zeroToOne'),{inputMovie3,in
 playMovie(cat(2,movieM{:}));
 ```
 
+## Batch process example movies and perform cross-session cell alignment
+```MATLAB
+%% Run pre-processing on 3 batch movies then do cross-session alignment
+batchMovieList = {...
+[ciapkg.getDir() filesep 'data' filesep 'batch' filesep '2014_08_05_p104_m19_PAV08'],...
+[ciapkg.getDir() filesep 'data' filesep 'batch' filesep '2014_08_06_p104_m19_PAV09'],...
+[ciapkg.getDir() filesep 'data' filesep 'batch' filesep '2014_08_07_p104_m19_PAV10']...
+};
+```
+
+```MATLAB
+% USER INTERFACE Get the motion correction crop coordinates
+cropCoordsCell = {};
+nFolders = length(batchMovieList);
+for folderNo = 1:nFolders
+	analysisFolderPath = batchMovieList{folderNo};
+	inputMoviePath = getFileList(analysisFolderPath,rawFileRegexp,'sortMethod','natural');
+	% inputMoviePath = [analysisFolderPath filesep 'concat_recording_20140401_180333.h5'];
+	inputMovie = loadMovieList(inputMoviePath,'inputDatasetName',inputDatasetName,'frameList',1:2);
+
+	[cropCoords] = getCropCoords(squeeze(inputMovie(:,:,1)));
+	% toptions.cropCoords = cropCoords;
+	cropCoordsCell{folderNo} = cropCoords;
+end
+```
+
+```MATLAB
+%% Run pre-processing on each of the movies.
+procMovieCell = cell([1 nFolders]);
+for folderNo = 1:nFolders
+	inputMoviePath = getFileList(analysisFolderPath,rawFileRegexp,'sortMethod','natural');
+	inputMovie = loadMovieList(inputMoviePath,'inputDatasetName',inputDatasetName,'frameList',[]);
+	procOpts.motionCorrectionCropCoords = cropCoordsCell{folderNo};
+	procOpts.dfofMovie = 1;
+	procOpts.motionCorrectionFlag = 1;
+	procOpts.normalizeMovieFlag = 1;
+	procOpts.normalizeType = 'divideByLowpass';
+	procOpts.freqLow = 0;
+	procOpts.freqHigh = 7;
+	procOpts.downsampleTimeFactor = 4;
+	procMovieCell{folderNo} = ciapkg.demo.runPreprocessing(inputMovie,'options',procOpts);
+end
+disp('Done with pre-processing!')
+```
+
+```MATLAB
+%% Run cell-extraction on the movies
+pcaicaStructCell = cell([1 nFolders]);
+nPCs = 300;
+nICs = 225;
+for folderNo = 1:nFolders
+	inputMoviePath = getFileList(analysisFolderPath,rawFileRegexp,'sortMethod','natural');
+	pcaicaStruct{folderNo} = ciapkg.signal_extraction.runPcaIca(procMovieCell{folderNo},nPCs,nICs,'version',2,'outputUnits','fl','mu',0.1,'term_tol',5e-6,'max_iter',1e3);
+end
+disp('Done with PCA-ICA analysis pre-processing!')
+```
+
 ```MATLAB
 %% Run cross-session alignment of cells
 % Create input images, cell array of [x y nCells] matrices
-inputImages = {day1Images,day2Images,day3Images};
+inputImages = cellfun(@(x) x.IcaFilters,pcaicaStruct,'UniformOutput',false);
 
 % options to change
 opts.maxDistance = 5; % distance in pixels between centroids for them to be grouped
 opts.trialToAlign = 1; % which session to start alignment on
 opts.nCorrections = 1; %number of rounds to register session cell maps.
-opts.RegisTypeFinal = 2 % 3 = rotation/translation and iso scaling; 2 = rotation/translation, no iso scaling
+opts.RegisTypeFinal = 2; % 3 = rotation/translation and iso scaling; 2 = rotation/translation, no iso scaling
 
 % Run alignment code
 [alignmentStruct] = matchObjBtwnTrials(inputImages,'options',opts);
@@ -193,4 +356,12 @@ globalIDs = alignmentStruct.globalIDs;
 
 % View the cross-session matched cells, saved to `private\_tmpFiles` sub-folder.
 [success] = createMatchObjBtwnTrialsMaps(inputImages,alignmentStruct);
+```
+
+```MATLAB
+%% Display cross-session matching movies
+disp('Playing movie frames')
+crossSessionMovie1 = [ciapkg.getDir filesep 'private' filesep '_tmpFiles' filesep 'matchObjColorMap50percentMatchedSession_matchedCells.avi'];
+crossSessionMovie2 = [ciapkg.getDir filesep 'private' filesep '_tmpFiles' filesep 'matchObjColorMapAllMatchedSession_matchedCells.avi'];
+playMovie(crossSessionMovie1,'extraMovie',crossSessionMovie2,'rgbDisplay',1);
 ```

@@ -144,7 +144,7 @@ Below are steps needed to quickly get started using the `CIAtah` software packag
 `CIAtah` depends on several MATLAB toolboxes to run properly. Run the below command to have `CIAtah` check whether dependencies have been installed properly. If not use the `Add-Ons` (https://www.mathworks.com/help/matlab/matlab_env/get-add-ons.html) explorer to install each toolbox.
 
 ```Matlab
-ciapkg.io.matlabToolboxCheck;`
+ciapkg.io.matlabToolboxCheck;
 ```
 
 ### Setup `CIAtah`

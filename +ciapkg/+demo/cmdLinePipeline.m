@@ -10,6 +10,7 @@
 	% 2020.10.17 [19:30:01] - Update to use ciapkg.signal_extraction.runPcaIca for PCA-ICA to make easier for users to run in the future.
 	% 2021.01.17 [21:38:55] - Updated to show detrend example
 	% 2021.06.20 [16:04:42] - Added CNMF/CNMF-e and EXTRACT to cell extraction examples.
+	% 2021.06.22 [09:20:06] - Updated to make NWB saving, etc. smoother.
 
 % =================================================
 %% Initialize
@@ -18,13 +19,22 @@ saveAnalysis = 1;
 inputDatasetName = '/1';
 rawFileRegexp = 'concat';
 
+% Setup folder paths
+analysisFolderPath = [ciapkg.getDir() filesep 'data' filesep '2014_04_01_p203_m19_check01'];
+[~,folderName,~] = fileparts(analysisFolderPath);
+% Setup NWB folder paths
+nwbFilePath = [analysisFolderPath filesep 'nwbFiles' filesep folderName];
+nwbFileFolderPath = [analysisFolderPath filesep 'nwbFiles'];
+
+% Load CIAtah functions
+loadBatchFxns();
+
 % =================================================
 %% Download test data, only a single session
 example_downloadTestData('downloadExtraFiles',0);
 
 % =================================================
 %% Load movie to analyze
-analysisFolderPath = [ciapkg.getDir() filesep 'data' filesep '2014_04_01_p203_m19_check01'];
 inputMoviePath = getFileList(analysisFolderPath,rawFileRegexp,'sortMethod','natural');
 % inputMoviePath = [analysisFolderPath filesep 'concat_recording_20140401_180333.h5'];
 inputMovie = loadMovieList(inputMoviePath,'inputDatasetName',inputDatasetName);
@@ -44,6 +54,12 @@ if guiEnabled==1
 	playMovie(inputMovie,'extraMovie',inputMovieD,'extraTitleText','Raw movie vs. down-sampled movie');
 end
 
+% Alternatively, if you have Inscopix ISXD files, downsample by reading segments from disk using.
+moviePath = 'PATH_TO_ISXD';
+opts.maxChunkSize = 5000; % Max chunk size in Mb to load into RAM.
+opts.downsampleFactor = 4; % How much to downsample original movie, set to 1 for no downsampling.
+convertInscopixIsxdToHdf5(moviePath,'options',opts);
+
 % =================================================
 %% Remove stripes from movie if needed
 if guiEnabled==1
@@ -59,7 +75,7 @@ if guiEnabled==1
 end
 
 % =================================================
-%% Detrend movie if needed (default linear trend), e.g. to compensate for bleaching
+%% Detrend movie if needed (default linear trend), e.g. to compensate for bleaching over time.
 inputMovie = normalizeMovie(inputMovie,'normalizationType','detrend','detrendDegree',1);
 
 % =================================================
@@ -70,7 +86,7 @@ if guiEnabled==1
 	% Or have turboreg function itself directly ask the user for manual area from which to obtain correction coordinates
 	% toptions.cropCoords = 'manual';
 else
-	toptions.cropCoords = [26    34   212   188];
+	toptions.cropCoords = [26 34 212 188];
 end
 
 % =================================================
@@ -106,6 +122,9 @@ if guiEnabled==1
 	playMovie(inputMovie3,'extraTitleText','Processed movie for cell extraction');
 end
 
+outputMoviePath = [analysisFolderPath filesep folderName '_spatialFiltBfReg_turboreg_crop_dfof_downsampleTime.h5'];
+saveMatrixToFile(inputMovie3,outputMoviePath);
+
 % =================================================
 %% Run PCA-ICA cell extraction
 nPCs = 300;
@@ -113,11 +132,9 @@ nICs = 225;
 pcaicaStruct = ciapkg.signal_extraction.runPcaIca(inputMovie3,nPCs,nICs,'version',2,'output_units','fl','mu',0.1,'term_tol',5e-6,'max_iter',1e3);
 
 %% Save outputs to NWB format
-[~,folderName,~] = fileparts(analysisFolderPath);
 % mkdir([analysisFolderPath filesep 'nwbFiles']);
-nwbFilePath = [analysisFolderPath filesep 'nwbFiles' filesep folderName '_pcaicaAnalysis.nwb'];
 if saveAnalysis==1
-	saveNeurodataWithoutBorders(pcaicaStruct.IcaFilters,{pcaicaStruct.IcaTraces},'pcaica',nwbFilePath);
+	saveNeurodataWithoutBorders(pcaicaStruct.IcaFilters,{pcaicaStruct.IcaTraces},'pcaica',[nwbFilePath '_pcaicaAnalysis.nwb']);
 end
 
 % =================================================
@@ -128,16 +145,21 @@ cnmfOptions.otherCNMF.tau = cellWidth/2; % expected width of cells
 
 % Run CNMF
 [success] = cnmfVersionDirLoad('current');
-[cnmfAnalysisOutput] = computeCnmfSignalExtractionClass(movieList,numExpectedComponents,'options',cnmfOptions);
+[cnmfAnalysisOutput] = computeCnmfSignalExtractionClass(inputMovie3,numExpectedComponents,'options',cnmfOptions);
 
 % Run CNMF-e
 [success] = cnmfVersionDirLoad('cnmfe');
-[cnmfeAnalysisOutput] = computeCnmfeSignalExtraction_batch(movieList{1},'options',cnmfeOptions);
+cnmfeOptions.gSiz = cellWidth;
+cnmfeOptions.gSig = ceil(cellWidth/4);
+[cnmfeAnalysisOutput] = computeCnmfeSignalExtraction_batch(outputMoviePath,'options',cnmfeOptions);
 
 % Save outputs to NWB format
 if saveAnalysis==1
-	saveNeurodataWithoutBorders(cnmfAnalysisOutput.extractedImages,{cnmfAnalysisOutput.extractedSignals,cnmfAnalysisOutput.extractedSignalsEst},'cnmf','cnmf.nwb');
-	saveNeurodataWithoutBorders(cnmfeAnalysisOutput.extractedImages,{cnmfeAnalysisOutput.extractedSignals,cnmfeAnalysisOutput.extractedSignalsEst},'cnmfe','cnmfe.nwb');
+	% Save CNMF
+	saveNeurodataWithoutBorders(cnmfAnalysisOutput.extractedImages,{cnmfAnalysisOutput.extractedSignals,cnmfAnalysisOutput.extractedSignalsEst},'cnmf',[nwbFilePath '_cnmf.nwb']);
+
+	% Save CNMF-E
+	saveNeurodataWithoutBorders(cnmfeAnalysisOutput.extractedImages,{cnmfeAnalysisOutput.extractedSignals,cnmfeAnalysisOutput.extractedSignalsEst},'cnmfe',[nwbFilePath '_cnmfe.nwb']);
 end
 [success] = cnmfVersionDirLoad('none');
 
@@ -147,7 +169,16 @@ end
 loadBatchFxns('loadEverything');
 extractConfig = get_defaults([]);
 
-outStruct = extractor(inputMovie,extractConfig);
+% See https://github.com/schnitzer-lab/EXTRACT-public#configurations.
+cellWidth = 10;
+extractConfig.avg_cell_radius = cellWidth;
+extractConfig.num_partitions_x = 2;
+extractConfig.num_partitions_y = 2;
+extractConfig.use_sparse_arrays = 0;
+
+outStruct = extractor(inputMovie3,extractConfig);
+
+% Grab outputs and put into standard format
 extractAnalysisOutput.filters = outStruct.spatial_weights;
 % permute so it is [nCells frames]
 extractAnalysisOutput.traces = permute(outStruct.temporal_weights, [2 1]);
@@ -160,25 +191,61 @@ extractAnalysisOutput.userInputConfig = extractConfig;
 extractAnalysisOutput.opts = outStruct.config;
 
 % Save outputs to NWB format
-saveNeurodataWithoutBorders(extractAnalysisOutput.filters,{extractAnalysisOutput.traces},'cnmf','cnmf.nwb');
+if saveAnalysis==1
+	saveNeurodataWithoutBorders(extractAnalysisOutput.filters,{extractAnalysisOutput.traces},'extract',[nwbFilePath '_extract.nwb']);
+end
+
+% Remove EXTRACT from the path.
 loadBatchFxns();
 
 % =================================================
 %% USER INTERFACE Run cell sorting using matrix outputs from cell extraction.
 if guiEnabled==1
 	[outImages, outSignals, choices] = signalSorter(pcaicaStruct.IcaFilters,pcaicaStruct.IcaTraces,'inputMovie',inputMovie3);
+
+	% Plot results of sorting
+	figure;
+	subplot(1,2,1);imagesc(max(IcaFilters,[],3));axis equal tight; title('Raw filters')
+	subplot(1,2,2);imagesc(max(outImages,[],3));axis equal tight; title('Sorted filters')
 end
+
+%% Run signal sorting using NWB
+[outImages, outSignals, choices] = signalSorter([nwbFilePath '_pcaicaAnalysis.nwb'],[],'inputMovie',inputMovie3);
 
 %% USER INTERFACE Run signal sorting using NWB files from cell extraction.
 if saveAnalysis==1&guiEnabled==1
 	disp(repmat('=',1,21));disp('Running signalSorter using NWB file input.')
-	[outImages, outSignals, choices] = signalSorter(nwbFilePath,[],'inputMovie',inputMovie3);
-end
+	nwbFileList = getFileList(nwbFileFolderPath,'.nwb');
+	if ~isempty(nwbFileList)
+		nFiles = length(nwbFileList);
+		outImages = {};
+		outSignals = {};
+		choices = {};
+		for fileNo = 1:nFiles
+			[outImages{fileNo}, outSignals{fileNo}, choices{fileNo}] = signalSorter(nwbFileList{fileNo},[],'inputMovie',inputMovie3);
+		end
 
-%% Plot results of sorting
-figure;
-subplot(1,2,1);imagesc(max(IcaFilters,[],3));axis equal tight; title('Raw filters')
-subplot(1,2,2);imagesc(max(outImages,[],3));axis equal tight; title('Sorted filters')
+		% Plot results of sorting
+		for fileNo = 1:nFiles
+			try
+				[inputImagesTmp,inputSignalsTmp,infoStructTmp,algorithmStrTmp,inputSignals2Tmp] = ciapkg.io.loadSignalExtraction(nwbFileList{fileNo});
+				figure;
+				subplot(1,2,1); 
+					imagesc(max(inputImagesTmp,[],3));
+					axis equal tight; 
+					title([algorithmStrTmp ' | Raw filters'])
+				subplot(1,2,2); 
+					imagesc(max(outImages{fileNo},[],3));
+					axis equal tight; 
+					title('Sorted filters')
+			catch err
+				disp(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				disp(repmat('@',1,7))
+			end
+		end
+	end
+end
 
 % =================================================
 %% USER INTERFACE Create an overlay of extraction outputs on the movie and signal-based movie
@@ -264,8 +331,8 @@ globalIDs = alignmentStruct.globalIDs;
 % View the cross-session matched cells, saved to `private\_tmpFiles` sub-folder.
 [success] = createMatchObjBtwnTrialsMaps(inputImages,alignmentStruct);
 
-% Display cross-session matching movies
+%% Display cross-session matching movies
 disp('Playing movie frames')
-crossSessionMovie1 = 'private\_tmpFiles\matchObjColorMap50percentMatchedSession_matchedCells.avi';
-crossSessionMovie2 = 'private\_tmpFiles\matchObjColorMapAllMatchedSession_matchedCells.avi';
+crossSessionMovie1 = [ciapkg.getDir filesep 'private' filesep '_tmpFiles' filesep 'matchObjColorMap50percentMatchedSession_matchedCells.avi'];
+crossSessionMovie2 = [ciapkg.getDir filesep 'private' filesep '_tmpFiles' filesep 'matchObjColorMapAllMatchedSession_matchedCells.avi'];
 playMovie(crossSessionMovie1,'extraMovie',crossSessionMovie2,'rgbDisplay',1);

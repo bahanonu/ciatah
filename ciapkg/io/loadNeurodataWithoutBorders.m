@@ -110,7 +110,11 @@ function [inputImages,inputTraces,infoStruct, algorithmStr] = loadNeurodataWitho
 		try
 			if isfield(infoStruct,'description')
 				tmpStr = regexp(infoStruct.description,'Extraction method: \w+','match');
-				tmpStr = strsplit(tmpStr{1}{1},': ');
+				try
+					tmpStr = strsplit(tmpStr{1}{1},': ');
+				catch
+					tmpStr = strsplit(tmpStr{1},': ');
+				end
 				algorithmStr = tmpStr{2};
 			end
 		catch err
