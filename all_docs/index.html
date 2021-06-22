@@ -1642,17 +1642,17 @@
 <span class="lineno" data-linenos="10 "></span>
 <span class="lineno" data-linenos="11 "></span><span class="c">% Run CNMF</span>
 <span class="lineno" data-linenos="12 "></span>
-<span class="lineno" data-linenos="13 "></span><span class="p">[</span><span class="n">cnmfAnalysisOutput</span><span class="p">]</span> <span class="p">=</span> <span class="n">computeCnmfSignalExtractionClass</span><span class="p">(</span><span class="n">movieList</span><span class="p">,</span><span class="n">numExpectedComponents</span><span class="p">,</span><span class="s">'options'</span><span class="p">,</span><span class="n">cnmfOptions</span><span class="p">);</span>
+<span class="lineno" data-linenos="13 "></span><span class="p">[</span><span class="n">cnmfAnalysisOutput</span><span class="p">]</span> <span class="p">=</span> <span class="n">computeCnmfSignalExtractionClass</span><span class="p">(</span><span class="n">inputMovie3</span><span class="p">,</span><span class="n">numExpectedComponents</span><span class="p">,</span><span class="s">'options'</span><span class="p">,</span><span class="n">cnmfOptions</span><span class="p">);</span>
 <span class="lineno" data-linenos="14 "></span>
 <span class="lineno" data-linenos="15 "></span>
 <span class="lineno" data-linenos="16 "></span>
 <span class="lineno" data-linenos="17 "></span><span class="c">% Run CNMF-e</span>
 <span class="lineno" data-linenos="18 "></span>
-<span class="lineno" data-linenos="19 "></span><span class="p">[</span><span class="n">cnmfeAnalysisOutput</span><span class="p">]</span> <span class="p">=</span> <span class="n">computeCnmfeSignalExtraction_batch</span><span class="p">(</span><span class="n">movieList</span><span class="p">{</span><span class="mi">1</span><span class="p">},</span><span class="s">'options'</span><span class="p">,</span><span class="n">cnmfeOptions</span><span class="p">);</span>
+<span class="lineno" data-linenos="19 "></span><span class="p">[</span><span class="n">cnmfeAnalysisOutput</span><span class="p">]</span> <span class="p">=</span> <span class="n">computeCnmfeSignalExtraction_batch</span><span class="p">(</span><span class="n">inputMovie3</span><span class="p">,</span><span class="s">'options'</span><span class="p">,</span><span class="n">cnmfeOptions</span><span class="p">);</span>
 <span class="lineno" data-linenos="20 "></span>
 <span class="lineno" data-linenos="21 "></span>
 <span class="lineno" data-linenos="22 "></span>
-<span class="lineno" data-linenos="23 "></span><span class="c">%% Save outputs to NWB format</span>
+<span class="lineno" data-linenos="23 "></span><span class="c">% Save outputs to NWB format</span>
 <span class="lineno" data-linenos="24 "></span>
 <span class="lineno" data-linenos="25 "></span><span class="n">saveNeurodataWithoutBorders</span><span class="p">(</span><span class="n">cnmfAnalysisOutput</span><span class="p">.</span><span class="n">extractedImages</span><span class="p">,{</span><span class="n">cnmfAnalysisOutput</span><span class="p">.</span><span class="n">extractedSignals</span><span class="p">,</span><span class="n">cnmfAnalysisOutput</span><span class="p">.</span><span class="n">extractedSignalsEst</span><span class="p">},</span><span class="s">'cnmf'</span><span class="p">,</span><span class="s">'cnmf.nwb'</span><span class="p">);</span>
 <span class="lineno" data-linenos="26 "></span>
@@ -1667,7 +1667,7 @@
 <span class="lineno" data-linenos=" 6 "></span>
 <span class="lineno" data-linenos=" 7 "></span>
 <span class="lineno" data-linenos=" 8 "></span>
-<span class="lineno" data-linenos=" 9 "></span><span class="n">outStruct</span> <span class="p">=</span> <span class="n">extractor</span><span class="p">(</span><span class="n">inputMovie</span><span class="p">,</span><span class="n">extractConfig</span><span class="p">);</span>
+<span class="lineno" data-linenos=" 9 "></span><span class="n">outStruct</span> <span class="p">=</span> <span class="n">extractor</span><span class="p">(</span><span class="n">inputMovie3</span><span class="p">,</span><span class="n">extractConfig</span><span class="p">);</span>
 <span class="lineno" data-linenos="10 "></span>
 <span class="lineno" data-linenos="11 "></span><span class="n">extractAnalysisOutput</span><span class="p">.</span><span class="n">filters</span> <span class="p">=</span> <span class="n">outStruct</span><span class="p">.</span><span class="n">spatial_weights</span><span class="p">;</span>
 <span class="lineno" data-linenos="12 "></span>
@@ -1691,7 +1691,7 @@
 <span class="lineno" data-linenos="30 "></span>
 <span class="lineno" data-linenos="31 "></span>
 <span class="lineno" data-linenos="32 "></span>
-<span class="lineno" data-linenos="33 "></span><span class="c">%% Save outputs to NWB format</span>
+<span class="lineno" data-linenos="33 "></span><span class="c">% Save outputs to NWB format</span>
 <span class="lineno" data-linenos="34 "></span>
 <span class="lineno" data-linenos="35 "></span><span class="n">saveNeurodataWithoutBorders</span><span class="p">(</span><span class="n">extractAnalysisOutput</span><span class="p">.</span><span class="n">filters</span><span class="p">,{</span><span class="n">extractAnalysisOutput</span><span class="p">.</span><span class="n">traces</span><span class="p">},</span><span class="s">'cnmf'</span><span class="p">,</span><span class="s">'cnmf.nwb'</span><span class="p">);</span>
 </code></pre></div>
