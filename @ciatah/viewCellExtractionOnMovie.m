@@ -496,7 +496,7 @@ function obj = viewCellExtractionOnMovie(obj,varargin)
 				% 	'yes','motion','other','yes');
 				movieDecision = 'yes';
 			case 'imagej'
-				msgbox('Change contrast by pressing ctrl+shift+c');
+				msgHandle = msgbox('Change contrast by pressing ctrl+shift+c');
 				try
 					% Miji;
 					% MIJ.createImage([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) '[' num2str(movieNo) '/' num2str(nMovies) ']' ': ' obj.folderBaseSaveStr{obj.fileNum}], primaryMovie, true);
@@ -515,8 +515,9 @@ function obj = viewCellExtractionOnMovie(obj,varargin)
 					% MIJ.run('Close');
 					%  MIJ.run('Close All Without Saving');
 					manageMiji('startStop','closeAllWindows');
-					manageMiji('startStop','exit');
+					% manageMiji('startStop','exit');
 					% MIJ.exit;
+					delete(msgHandle);
 				catch err
 					disp(repmat('@',1,7))
 					disp(getReport(err,'extended','hyperlinks','on'));

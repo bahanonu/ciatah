@@ -277,25 +277,25 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		ok = 1;
 		[figHandle figNo] = openFigure(1776, '');clf;
 		instructTextPos = [1 80 70 20]/100;
-		listTextPos = [1 1+32 98 60-32]/100;
-		listTextPos2 = [1 1 98 60-31]/100;
+		listTextPos = [1 40 98 28]/100;
+		listTextPos2 = [1 1 98 28]/100;
 
-		shortcutMenuHandle = uicontrol('style','pushbutton','Units','normalized','position',[1 65 30 3]/100,'FontSize',9,'string','Reset to default list order','callback',@subfxn_resetSetpsMenu);
-		shortcutMenuHandle2 = uicontrol('style','pushbutton','Units','normalized','position',[32 65 30 3]/100,'FontSize',9,'string','Select default options (e.g. post-dragging)','callback',@subfxn_highlightDefault);
-		shortcutMenuHandle2 = uicontrol('style','pushbutton','Units','normalized','position',[63 65 30 3]/100,'FontSize',9,'string','Finished','callback',@subfxn_closeOptions);
+		shortcutMenuHandle = uicontrol('style','pushbutton','Units','normalized','position',[1 75 30 3]/100,'FontSize',9,'string','Reset to default list order','callback',@subfxn_resetSetpsMenu);
+		shortcutMenuHandle2 = uicontrol('style','pushbutton','Units','normalized','position',[32 75 30 3]/100,'FontSize',9,'string','Select default options (e.g. post-dragging)','callback',@subfxn_highlightDefault);
+		shortcutMenuHandle2 = uicontrol('style','pushbutton','Units','normalized','position',[63 75 30 3]/100,'FontSize',9,'string','Finished','callback',@subfxn_closeOptions);
 		% shortcutMenuHandle = uicontrol('style','pushbutton','Units','normalized','position',[32 62 30 3]/100,'FontSize',9,'string','Next screen','callback',@subfxn_highlightDefault);
 
 
+		uicontrol('Style','Text','String',['Analysis steps to perform.'],'Units','normalized','Position',[1 68 90 3]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold');
 		[hListbox jListbox jScrollPane jDND] = reorderableListbox('String',analysisOptionListStr,'Units','normalized','Position',listTextPos,'Max',Inf,'Min',0,'Value',defaultChoiceIdx,...
 			'MousePressedCallback',@subfxn_analysisOutputMenuChange,...
 			'MouseReleasedCallback',@subfxn_analysisOutputMenuChange,...
 			'DragOverCallback',@subfxn_analysisOutputMenuChange2,...
 			'DropCallback',@subfxn_analysisOutputMenuChange...
 			);
-		uicontrol('Style','Text','String',['Analysis steps to perform.'],'Units','normalized','Position',[1 62 90 1]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold');
 
+		uicontrol('Style','Text','String',['At which analysis step should files be saved to disk?'],'Units','normalized','Position',[1 30 90 3]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold');
 		[hListboxS jListboxS jScrollPaneS jDNDS] = reorderableListbox('String',analysisOptionListStr,'Units','normalized','Position',listTextPos2,'Max',Inf,'Min',0,'Value',hListbox.Value(end));
-		uicontrol('Style','Text','String',['At which analysis step should files be saved to disk?'],'Units','normalized','Position',[1 30.5 90 1]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold');
 
 		uicontrol('Style','Text','String',['Analysis step selection and ordering' 10 '======='...
 			10 'Gentlemen, you can not fight in here! This is the War Room.' 10 'We can know only that we know nothing.' 10 'And that is the highest degree of human wisdom.'...

@@ -14,6 +14,7 @@ function obj = computeManualSortSignals(obj)
 		% 2021.01.21 [10:37:07] - Updated to support HDF5 and regexp for movie manual names along with misc. other changes.
 		% 2021.03.17 [16:34:59] - If user hasn't called modelVarsFromFiles, computeManualSortSignals called the function. However, this lead to a mismatch between computeManualSortSignals fileNum and obj.fileNum, leading to mismatch between xcoords, etc. and input signals/images.
 		% 2021.06.18 [21:41:07] - added modelVarsFromFilesCheck() to check and load signals if user hasn't already.
+		% 2021.06.21 [21:03:25] - Fix check to make sure variables are loaded.
 	% ADDED
 		% ADD PERSONS NAME TO THE FILE - DONE.
 	% TODO
@@ -42,9 +43,6 @@ function obj = computeManualSortSignals(obj)
 			% fileNum = obj.fileNum;
 			display(repmat('#',1,21))
 			display([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ' (' num2str(obj.fileNum) '/' num2str(nFiles) '): ' obj.fileIDNameArray{obj.fileNum}]);
-
-			% Check that signal extraction information is loaded.
-			obj.modelVarsFromFilesCheck(fileNum);
 			% =======
 			% path to current folder
 			currentFolderPath = obj.inputFolders{obj.fileNum};
@@ -98,6 +96,11 @@ function obj = computeManualSortSignals(obj)
 				obj.userName = scorerName;
 				% usrIdxChoiceSettings = settingStruct.usrIdxChoiceSettings;
 			end
+
+
+			% Check that signal extraction information is loaded.
+			obj.modelVarsFromFilesCheck(fileNum);
+			skipReload = 0;
 
 			% get list of movies
 			movieList = getFileList(currentFolderPath, fileFilterRegexp);

@@ -19,6 +19,7 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		% 2020.10.21 [16:52:06] - Add support for user canceling the input.
 		% 2020.10.24 [18:30:56] - Added support for calculating dropped frames if entire frame of a movie is a set value.
 		% 2021.06.21 [14:27:26] - Switch to single page support.
+		% 2021.06.21 [20:52:36] - Multi-column layout since most computers are widescreen now.
 	% TODO
 		% DONE: Allow user to input prior settings, indicate those changed from default by orange or similar color.
 
@@ -338,20 +339,22 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		% propertySettingsStr.(property);
 	end
 
-	modX = 1.55;
-	modX_text = 2;
+	modX = 1.05;
+	modX_text = 1.1;
 	figNoDefault = 1337;
 	uiListHandles = {};
 	uiTextHandles = {};
 	uiXIncrement = 0.025/modX;
 	uiXOffset = 0.02/modX;
 	uiYOffset = 0.90;
+	uiYOffsetOrig = uiYOffset;
 	uiTxtSize = 0.4;
 	uiBoxSize = 0.55;
 	uiFontSize = 9;
 	nGuiSubsets = 3;
 	% subsetList = round(linspace(1,nPropertiesToChange,nGuiSubsets));
 	subsetList = [1 35 nPropertiesToChange];
+	propNoSwitch = 36;
 	% subsetList
 	% for subsetNo = 1:nGuiSubsets
 	nGuiSubsetsTrue = (nGuiSubsets-1);
@@ -375,31 +378,55 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 			propertySubsetList = subsetStartIdx:(subsetEndIdx-1);
 		end
 
-
 		[figHandle figNo] = openFigure(figNoDefault, '');
 		clf
 		uicontrol('Style','Text','String',inputTitleStr,'Units','normalized','Position',[uiXOffset uiYOffset+0.05 0.8 0.05],'BackgroundColor','white','HorizontalAlignment','Left','FontSize',uiFontSize);
 		uicontrol('Style','Text','String',sprintf('Options page %d/%d: Mouse over each options for tips. To continue, press enter. Orange = previous non-default settings.\n>>>On older MATLAB versions, select the command window before pressing enter.',thisSet,nGuiSubsets-1),'Units','normalized','Position',[uiXOffset uiYOffset+0.02 uiTxtSize+uiBoxSize 0.05],'BackgroundColor','white','HorizontalAlignment','Left','FontSize',uiFontSize);
 
-		propertyNoDisp = 1;
+		propNoDisp = 1;
 		for propertyNo = propertySubsetList
 			property = char(propertyList(propertyNo));
 			% propertyTooltip = turboregSettingTooltips.(property);
 			propertyTooltip = char(preprocessingSettingsAll.(property).tooltip{1});
+
+			if propertyNo==propNoSwitch
+				propNoDisp = 1;
+				uiYOffset = uiYOffsetOrig;
+			end
+			if propertyNo>=propNoSwitch
+				colNo = 49/100;
+				uiTxtSize = 0.4/2;
+				uiBoxSize = 0.55/2;
+			else
+				colNo = 0/100;				
+				uiTxtSize = 0.4/2;
+				uiBoxSize = 0.55/2;
+			end
+
 			% disp([num2str(propertyNo) ' | ' property])
-			if propertyNo~=1
+			if isempty(intersect(propertyNo,[1,propNoSwitch]))
 				if isempty(regexp(property,'______________'))
 					spaceMod = 0.00;
 					FontWeightH = 'normal';
 				else
-					spaceMod = 0.01;
+					spaceMod = 0.02;
 					uiYOffset = uiYOffset-spaceMod;
 					FontWeightH = 'bold';
 				end
 			else
 				FontWeightH = 'bold';
 			end
-			uiTextHandles{propertyNo} = uicontrol('Style','text','String',[property '' 10],'Units','normalized','Position',[uiXOffset uiYOffset-uiXIncrement*propertyNoDisp+modX_text*(0.027/modX) uiTxtSize 0.0225/modX],'BackgroundColor',[0.9 0.9 0.9],'ForegroundColor','black','HorizontalAlignment','Left','FontSize',uiFontSize,'ToolTip',propertyTooltip,'FontWeight',FontWeightH);
+
+			textPos = [uiXOffset+colNo uiYOffset-uiXIncrement*propNoDisp+modX_text*(0.027/modX) uiTxtSize 0.0225/modX];
+			uiTextHandles{propertyNo} = uicontrol('Style','text','String',[property '' 10],'Units','normalized',...
+				'Position',textPos,...
+				'BackgroundColor',[0.9 0.9 0.9],'ForegroundColor','black','HorizontalAlignment','Left','FontSize',uiFontSize,'ToolTip',propertyTooltip,'FontWeight',FontWeightH);
+
+			listPos = [uiXOffset+uiTxtSize+colNo uiYOffset-uiXIncrement*propNoDisp uiBoxSize 0.05];
+			uiListHandles{propertyNo} = uicontrol('Style', 'popup','String', propertySettingsStr.(property),'Units','normalized',...
+				'Position', listPos,...
+				'Callback',@subfxnInterfaceCallback,'FontSize',uiFontSize,'Tag',property);
+
 			% jEdit = findjobj(uiTextHandles{propertyNo});
 			% lineColor = java.awt.Color(1,0,0);  % =red
 			% thickness = 3;  % pixels
@@ -409,17 +436,15 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 			% jEdit.repaint;  % redraw the modified control
 			% uiTextHandles{propertyNo}.Enable = 'Inactive';
 			% optionCallback = ['set(uiListHandles{propertyNo}, ''Backgroundcolor'', ''g'')'];
-			% uiListHandles{propertyNo} = uicontrol('Style', 'popup','String', propertySettingsStr.(property),'Units','normalized','Position', [uiXOffset+uiTxtSize uiYOffset-uiXIncrement*propertyNoDisp uiBoxSize 0.05],'Callback',@(hObject,callbackdata){set(hObject, 'Backgroundcolor', [208,229,180]/255);},'FontSize',uiFontSize);
-			uiListHandles{propertyNo} = uicontrol('Style', 'popup','String', propertySettingsStr.(property),'Units','normalized','Position', [uiXOffset+uiTxtSize uiYOffset-uiXIncrement*propertyNoDisp uiBoxSize 0.05],'Callback',@subfxnInterfaceCallback,'FontSize',uiFontSize,'Tag',property);
+			% uiListHandles{propertyNo} = uicontrol('Style', 'popup','String', propertySettingsStr.(property),'Units','normalized','Position', [uiXOffset+uiTxtSize uiYOffset-uiXIncrement*propNoDisp uiBoxSize 0.05],'Callback',@(hObject,callbackdata){set(hObject, 'Backgroundcolor', [208,229,180]/255);},'FontSize',uiFontSize);
 			% ,'ToolTip',propertyTooltip
 
 			% If property is non-default, set to orange to alert user.
 			if any(ismember(nonDefaultProperties,property))
 				set(uiListHandles{propertyNo},'Backgroundcolor',[254 216 177]/255);
-
 			end
 
-			propertyNoDisp = propertyNoDisp+1;
+			propNoDisp = propNoDisp+1;
 		end
 		pause
 		uiYOffset = 0.90;

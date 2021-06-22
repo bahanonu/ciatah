@@ -17,6 +17,7 @@ function loadDependencies(varargin)
 		% 2021.02.01 [‏‎15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
 		% 2021.03.20 [18:12:20] - Added EXTRACT support to list of functions to download.
 		% 2021.06.19 [23:46:58] - Switched to support for original MIJ calling of ImageJ using just jar files, easier compatibility across MATLAB versions and OSes.
+		% 2021.06.21 [16:45:59] - Update order.
 	% TODO
 		% Verify all dependencies download and if not ask user to download again.
 

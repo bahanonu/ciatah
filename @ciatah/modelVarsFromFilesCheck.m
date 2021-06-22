@@ -8,7 +8,7 @@ function obj = modelVarsFromFilesCheck(obj,folderNo,varargin)
 		%
 
 	% changelog
-		%
+		% 2021.06.21 [21:03:42] - Add check for objLocations
 	% TODO
 		%
 
@@ -28,6 +28,7 @@ function obj = modelVarsFromFilesCheck(obj,folderNo,varargin)
 
 	try
 		try
+			max(1,round(obj.objLocations{folderNo}.(obj.signalExtractionMethod)(:,1)));
 			[rawSignals rawImages signalPeaks signalPeaksArray, ~, ~, rawSignals2] = modelGetSignalsImages(obj,'returnType','raw');
 			% obj.nSignals{fileNum}
 			skipReload = 1;
