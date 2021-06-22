@@ -10,6 +10,7 @@ function obj = viewCreateObjmaps(obj,varargin)
 	% changelog
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
 		% 2019.12.19 [21:18:12] - Allow user to brighten processed overlay movie.
+		% 2021.06.18 [21:41:07] - added modelVarsFromFilesCheck() to check and load signals if user hasn't already.
 	% TODO
 		%
 
@@ -144,6 +145,9 @@ function obj = viewCreateObjmaps(obj,varargin)
 			obj.fileNum = thisFileNum;
 			display(repmat('=',1,21))
 			display([num2str(thisFileNum) '/' num2str(nFiles) ': ' obj.fileIDNameArray{obj.fileNum}]);
+
+			% Check that signal extraction information is loaded.
+			obj.modelVarsFromFilesCheck(thisFileNum);
 			% =====================
 			% for backwards compatibility, will be removed in the future.
 			nIDs = length(obj.stimulusNameArray);

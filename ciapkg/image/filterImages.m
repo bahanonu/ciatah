@@ -161,21 +161,27 @@ function [inputImages, inputSignals, valid, imageSizes, imgFeatures] = filterIma
 	display('done!');
 
 	if options.makePlots==1
-		[figHandle figNo] = openFigure(99, '');
-			%
-			subplot(2,1,1)
-			hist(imageSizes,round(logspace(0,log10(max(imageSizes)))));
-			box off;title('distribution of IC sizes');xlabel('area (px^2)');ylabel('count');
-			set(gca,'xscale','log');
-			h = findobj(gca,'Type','patch');
-			set(h,'FaceColor',[0 0 0],'EdgeColor','w');
-			%
-			subplot(2,1,2)
-			hist(find(valid==0),round(logspace(0,log10(max(find(valid==0))))));
-			box off;title('rank of removed ICs');xlabel('rank');ylabel('count');
-			set(gca,'xscale','log')
-			h = findobj(gca,'Type','patch');
-			set(h,'FaceColor',[0 0 0],'EdgeColor','w');
+        try
+            [figHandle figNo] = openFigure(99, '');
+                %
+                subplot(2,1,1)
+                hist(imageSizes,round(logspace(0,log10(max(imageSizes)))));
+                box off;title('distribution of IC sizes');xlabel('area (px^2)');ylabel('count');
+                set(gca,'xscale','log');
+                h = findobj(gca,'Type','patch');
+                set(h,'FaceColor',[0 0 0],'EdgeColor','w');
+                %
+                subplot(2,1,2)
+                hist(find(valid==0),round(logspace(0,log10(max(find(valid==0))))));
+                box off;title('rank of removed ICs');xlabel('rank');ylabel('count');
+                set(gca,'xscale','log')
+                h = findobj(gca,'Type','patch');
+                set(h,'FaceColor',[0 0 0],'EdgeColor','w');
+        catch err
+			disp(repmat('@',1,7))
+			disp(getReport(err,'extended','hyperlinks','on'));
+			disp(repmat('@',1,7))
+        end
 	end
 end
 	% for i = 1:nImages

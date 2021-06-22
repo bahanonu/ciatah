@@ -50,9 +50,12 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 		% 2020.08.31 [15:47:49] - Add option to suppress warnings.
 		% 2020.10.19 [12:11:14] - Improved comments and options descriptions.
 		% 2021.02.15 [11:55:36] - Fixed loading HDF5 datasetname that has only a single frame, loadMovieList would ask for 3rd dimension information that did not exist.
+		% 2021.06.21 [10:22:32] - Added support for Bio-Formats compatible files, specifically Olympus (OIR) and Zeiss (CZI, LSM).
 
 	% TODO
 		% OPEN
+			% Bio-Formats
+				% Allow outputting as a [x y c t] matrix to allow support for multiple color channels without needing to re-read file multiple times.
 			% Determine file type by properties of file instead of extension (don't trust input...)
 			% Remove all use of tmpMovie....
 			% Add ability to degrade gracefully with HDF5 dataset names, so try several backup datasetnames if one doesn't work.
@@ -65,7 +68,12 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 
 	% ========================
 	% Cell array of str: list of supported file types, in general DO NOT change.
-	options.supportedTypes = {'.h5','.hdf5','.nwb','.tif','.tiff','.avi','.isxd'};
+	options.supportedTypes = {'.h5','.hdf5','.tif','.tiff','.avi',...
+		'.nwb',... % Neurodata Without Borders format
+		'.isxd',... % Inscopix format
+		'.oir',... % Olympus formats
+		'.czi','.lsm'... % Zeiss formats
+	};
 	% Str: movie type.
 	options.movieType = 'tiff';
 	% Str: hierarchy name in HDF5 file where movie data is located.
@@ -106,8 +114,12 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 	options.useH5info = 1;
 	% Int: [] = do nothing, 1-3 indicates R,G,B channels to take from multicolor RGB AVI
 	options.rgbChannel = [];
+	% Int: Bio-Formats series number to load.
+	options.bfSeriesNo = 1;
+	% Int: Bio-Formats channel number to load.
+	options.bfChannelNo = 1;
 	% get options
-	options = getOptions(options,varargin);
+	options = ciapkg.io.getOptions(options,varargin);
 	% unpack options into current workspace
 	% fn=fieldnames(options);
 	% for i=1:length(fn)
@@ -302,6 +314,22 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 				dims.two(iMovie) = xyDims(2);
 				dims.three(iMovie) = nFrames;
 				tmpFrame = inputMovieIsx.get_frame_data(0);
+			case 'bioformats'
+				bfreaderTmp = bfGetReader(thisMoviePath);
+				omeMeta = bfreaderTmp.getMetadataStore();
+				stackSizeX = omeMeta.getPixelsSizeX(0).getValue(); % image width, pixels
+				stackSizeY = omeMeta.getPixelsSizeY(0).getValue(); % image height, pixels
+				stackSizeZ = omeMeta.getPixelsSizeZ(0).getValue();
+				nFrames = stackSizeZ;
+				xyDims = [stackSizeY stackSizeX];
+				dims.x(iMovie) = xyDims(1);
+				dims.y(iMovie) = xyDims(2);
+				dims.z(iMovie) = nFrames;
+				dims.one(iMovie) = xyDims(1);
+				dims.two(iMovie) = xyDims(2);
+				dims.three(iMovie) = nFrames;
+				tmpFrame = bfGetPlane(bfreaderTmp, 1);
+				nChannels = omeMeta.getChannelCount(0);
 		end
 		if isempty(options.loadSpecificImgClass)
 			imgClass = class(tmpFrame);
@@ -684,6 +712,67 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 					iframe = iframe + 1;
 				end
 			% ========================
+			case 'bioformats'
+				% Setup movie class
+				bfreaderTmp = bfGetReader(thisMoviePath);
+				omeMeta = bfreaderTmp.getMetadataStore();
+				stackSizeX = omeMeta.getPixelsSizeX(0).getValue(); % image width, pixels
+				stackSizeY = omeMeta.getPixelsSizeY(0).getValue(); % image height, pixels
+				stackSizeZ = omeMeta.getPixelsSizeZ(0).getValue();
+				nChannels = omeMeta.getChannelCount(0);
+
+				nFramesHere = stackSizeZ;
+				xyDims = [stackSizeX stackSizeY];
+
+				if isempty(thisFrameList)
+					nFrames = nFramesHere;
+					framesToGrab = 1:nFrames;
+				else
+					nFrames = length(thisFrameList);
+					framesToGrab = thisFrameList;
+				end
+				vidHeight = xyDims(1);
+				vidWidth = xyDims(2);
+
+				% Preallocate movie structure.
+				tmpMovie = zeros(vidHeight, vidWidth, nFrames, imgClass);
+
+				% Read one frame at a time.
+				reverseStr = '';
+				iframe = 1;
+				nFrames = length(framesToGrab);
+
+				% Read in movie data
+				tmpMovie = bfopen(thisMoviePath);
+
+				% bfopen returns an n-by-4 cell array, where n is the number of series in the dataset. If s is the series index between 1 and n:
+				% The data{s, 1} element is an m-by-2 cell array, where m is the number of planes in the s-th series. If t is the plane index between 1 and m:
+				% The data{s, 1}{t, 1} element contains the pixel data for the t-th plane in the s-th series.
+				% The data{s, 1}{t, 2} element contains the label for the t-th plane in the s-th series.
+				% The data{s, 2} element contains original metadata key/value pairs that apply to the s-th series.
+				% The data{s, 3} element contains color lookup tables for each plane in the s-th series.
+				% The data{s, 4} element contains a standardized OME metadata structure, which is the same regardless of the input file format, and contains common metadata values such as physical pixel sizes - see OME metadata below for examples.
+
+				% Frame information
+				frameInfo = tmpMovie{options.bfSeriesNo, 1}(:,2);
+
+				% Grab just the movie frames and convert from cell to matrix.
+				tmpMovie = tmpMovie{options.bfSeriesNo, 1}(:,1);
+				tmpMovie = cat(3,tmpMovie{:});
+
+				% Only keep single channel if more than 1 channel in an image.
+				if nChannels>1
+					try
+						chanKeepIdx = cell2mat(cellfun(@(x) str2num(cell2mat(regexp(x,'(?<=C\?=|C=)\d+(?=/)','match'))),frameInfo,'UniformOutput',false));
+						chanKeepIdx = chanKeepIdx==options.bfChannelNo;
+						tmpMovie = tmpMovie(:,:,chanKeepIdx);
+					catch err
+						disp(repmat('@',1,7))
+						disp(getReport(err,'extended','hyperlinks','on'));
+						disp(repmat('@',1,7))
+					end
+				end
+			% ========================
 			otherwise
 				% let's just not deal with this for now
 				return;
@@ -840,16 +929,20 @@ function [movieType, supported] = getMovieFileType(thisMoviePath)
 		return;
 	end
 	% files are assumed to be named correctly (lying does no one any good)
-	if strcmp(ext,'.h5')||strcmp(ext,'.hdf5')
+	if any(strcmp(ext,{'.h5','.hdf5'}))		
 		movieType = 'hdf5';
 	elseif strcmp(ext,'.nwb')
 		movieType = 'hdf5';
-	elseif strcmp(ext,'.tif')||strcmp(ext,'.tiff')
+	elseif any(strcmp(ext,{'.tif','.tiff'}))		
 		movieType = 'tiff';
 	elseif strcmp(ext,'.avi')
 		movieType = 'avi';
-	elseif strcmp(ext,'.isxd')
+	elseif strcmp(ext,'.isxd') % Inscopix file format
 		movieType = 'isxd';
+	elseif strcmp(ext,'.oir') % Olympus file format
+		movieType = 'bioformats';
+	elseif any(strcmp(ext,{'.czi','.lsm'})) % Zeiss file format
+		movieType = 'bioformats';
 	else
 		movieType = '';
 		supported = 0;

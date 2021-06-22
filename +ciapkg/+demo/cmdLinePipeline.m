@@ -9,22 +9,27 @@
 	% 2020.09.23 [08:35:58] - Updated to add support for cross-session analysis and use ciapkg.demo.runPreprocessing() to process the other imaging sessions.
 	% 2020.10.17 [19:30:01] - Update to use ciapkg.signal_extraction.runPcaIca for PCA-ICA to make easier for users to run in the future.
 	% 2021.01.17 [21:38:55] - Updated to show detrend example
+	% 2021.06.20 [16:04:42] - Added CNMF/CNMF-e and EXTRACT to cell extraction examples.
 
+% =================================================
 %% Initialize
 guiEnabled = 1;
 saveAnalysis = 1;
 inputDatasetName = '/1';
 rawFileRegexp = 'concat';
 
+% =================================================
 %% Download test data, only a single session
 example_downloadTestData('downloadExtraFiles',0);
 
+% =================================================
 %% Load movie to analyze
 analysisFolderPath = [ciapkg.getDir() filesep 'data' filesep '2014_04_01_p203_m19_check01'];
 inputMoviePath = getFileList(analysisFolderPath,rawFileRegexp,'sortMethod','natural');
 % inputMoviePath = [analysisFolderPath filesep 'concat_recording_20140401_180333.h5'];
 inputMovie = loadMovieList(inputMoviePath,'inputDatasetName',inputDatasetName);
 
+% =================================================
 %% USER INTERFACE Visualize slice of the movie
 if guiEnabled==1
 	playMovie(inputMovie(:,:,1:500),'extraTitleText','Raw movie');
@@ -32,12 +37,14 @@ if guiEnabled==1
 	playMovie(inputMoviePath,'extraTitleText','Raw movie directly from file');
 end
 
+% =================================================
 %% USER INTERFACE Downsample input movie if need to
 if guiEnabled==1
 	inputMovieD = downsampleMovie(inputMovie,'downsampleDimension','space','downsampleFactor',4);
 	playMovie(inputMovie,'extraMovie',inputMovieD,'extraTitleText','Raw movie vs. down-sampled movie');
 end
 
+% =================================================
 %% Remove stripes from movie if needed
 if guiEnabled==1
 	% Show full filter sequence for one frame
@@ -51,9 +58,11 @@ if guiEnabled==1
 	inputMovie = removeStripsFromMovie(inputMovie,'options',sopts);
 end
 
+% =================================================
 %% Detrend movie if needed (default linear trend), e.g. to compensate for bleaching
 inputMovie = normalizeMovie(inputMovie,'normalizationType','detrend','detrendDegree',1);
 
+% =================================================
 %% USER INTERFACE Get coordinates to crop from the user separately
 if guiEnabled==1
 	[cropCoords] = getCropCoords(squeeze(inputMovie(:,:,1)));
@@ -64,7 +73,9 @@ else
 	toptions.cropCoords = [26    34   212   188];
 end
 
-%% Motion correction
+% =================================================
+%% Pre-process movies
+% Motion correction
 toptions.turboregRotation = 0;
 toptions.removeEdges = 1;
 toptions.pxToCrop = 10;
@@ -95,6 +106,7 @@ if guiEnabled==1
 	playMovie(inputMovie3,'extraTitleText','Processed movie for cell extraction');
 end
 
+% =================================================
 %% Run PCA-ICA cell extraction
 nPCs = 300;
 nICs = 225;
@@ -108,6 +120,50 @@ if saveAnalysis==1
 	saveNeurodataWithoutBorders(pcaicaStruct.IcaFilters,{pcaicaStruct.IcaTraces},'pcaica',nwbFilePath);
 end
 
+% =================================================
+%% Run CNMF or CNMF-e cell extraction
+numExpectedComponents = 225;
+cellWidth = 10;
+cnmfOptions.otherCNMF.tau = cellWidth/2; % expected width of cells
+
+% Run CNMF
+[success] = cnmfVersionDirLoad('current');
+[cnmfAnalysisOutput] = computeCnmfSignalExtractionClass(movieList,numExpectedComponents,'options',cnmfOptions);
+
+% Run CNMF-e
+[success] = cnmfVersionDirLoad('cnmfe');
+[cnmfeAnalysisOutput] = computeCnmfeSignalExtraction_batch(movieList{1},'options',cnmfeOptions);
+
+% Save outputs to NWB format
+if saveAnalysis==1
+	saveNeurodataWithoutBorders(cnmfAnalysisOutput.extractedImages,{cnmfAnalysisOutput.extractedSignals,cnmfAnalysisOutput.extractedSignalsEst},'cnmf','cnmf.nwb');
+	saveNeurodataWithoutBorders(cnmfeAnalysisOutput.extractedImages,{cnmfeAnalysisOutput.extractedSignals,cnmfeAnalysisOutput.extractedSignalsEst},'cnmfe','cnmfe.nwb');
+end
+[success] = cnmfVersionDirLoad('none');
+
+% =================================================
+%% Run EXTRACT cell extraction. Check each function with "edit" for options.
+% Load default configuration
+loadBatchFxns('loadEverything');
+extractConfig = get_defaults([]);
+
+outStruct = extractor(inputMovie,extractConfig);
+extractAnalysisOutput.filters = outStruct.spatial_weights;
+% permute so it is [nCells frames]
+extractAnalysisOutput.traces = permute(outStruct.temporal_weights, [2 1]);
+
+% Other run information if saving as a MAT-file.
+extractAnalysisOutput.info = outStruct.info;
+extractAnalysisOutput.config = outStruct.config;
+extractAnalysisOutput.info = outStruct.info;
+extractAnalysisOutput.userInputConfig = extractConfig;
+extractAnalysisOutput.opts = outStruct.config;
+
+% Save outputs to NWB format
+saveNeurodataWithoutBorders(extractAnalysisOutput.filters,{extractAnalysisOutput.traces},'cnmf','cnmf.nwb');
+loadBatchFxns();
+
+% =================================================
 %% USER INTERFACE Run cell sorting using matrix outputs from cell extraction.
 if guiEnabled==1
 	[outImages, outSignals, choices] = signalSorter(pcaicaStruct.IcaFilters,pcaicaStruct.IcaTraces,'inputMovie',inputMovie3);
@@ -124,6 +180,7 @@ figure;
 subplot(1,2,1);imagesc(max(IcaFilters,[],3));axis equal tight; title('Raw filters')
 subplot(1,2,2);imagesc(max(outImages,[],3));axis equal tight; title('Sorted filters')
 
+% =================================================
 %% USER INTERFACE Create an overlay of extraction outputs on the movie and signal-based movie
 [inputMovieO] = createImageOutlineOnMovie(inputMovie3,IcaFilters,'dilateOutlinesFactor',0);
 if guiEnabled==1
@@ -138,6 +195,7 @@ end
 movieM = cellfun(@(x) normalizeVector(x,'normRange','zeroToOne'),{inputMovie3,inputMovieO,signalMovie},'UniformOutput',false);
 playMovie(cat(2,movieM{:}));
 
+% =================================================
 %% Run pre-processing on 3 batch movies then do cross-session alignment
 batchMovieList = {...
 [ciapkg.getDir() filesep 'data' filesep 'batch' filesep '2014_08_05_p104_m19_PAV08'],...

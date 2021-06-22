@@ -13,6 +13,7 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		% 2019.10.08 [09:14:33] - Add option for user to input crop coordinates in case they have a NaN or other border from motion correction, so that does not affect spatial filtering. User can also now input a char for inputMovie and have it load within the function to help reduce memory overhead
 		% 2019.10.29 [13:51:04] - Added support for parallel.pool.Constant when PCT auto-start parallel pool disabled.
 		% 2021.01.15 [21:09:55] - Moved detrend support into normalizeMovie.
+		% 2021.06.02 [20:04:49] - Detrend movie now uses nanmean to get around issues in motion corrected videos.
 	% TODO
 		%
 
@@ -717,12 +718,12 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		%Get dimension information about 3D movie matrix
 		[inputMovieX, inputMovieY, inputMovieZ] = size(inputMovie);
 
-		frameMeanInputMovie = squeeze(mean(inputMovie,[1 2]));
+		frameMeanInputMovie = squeeze(nanmean(inputMovie,[1 2]));
 
 		trendVals = frameMeanInputMovie - detrend(frameMeanInputMovie,option.detrendDegree);
 
 		% meanInputMovie = detrend(frameMeanInputMovie,0);
-		meanInputMovie = mean(frameMeanInputMovie);
+		meanInputMovie = nanmean(frameMeanInputMovie);
 
 		nFramesToNormalize = options.maxFrame;
 		nFrames = nFramesToNormalize;

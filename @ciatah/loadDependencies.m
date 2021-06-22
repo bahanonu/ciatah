@@ -50,9 +50,9 @@ function obj = loadDependencies(obj,varargin)
 	% end
 
 	sopts.guiEnabled = obj.guiEnabled;
-	sopts.dependencyStr = options.dependencyStr;
-	sopts.dispStr = options.dispStr;
-	sopts.depIdxArray = options.depIdxArray;
+	% sopts.dependencyStr = options.dependencyStr;
+	% sopts.dispStr = options.dispStr;
+	% sopts.depIdxArray = options.depIdxArray;
 
 	ciapkg.io.loadDependencies('options',sopts);
 

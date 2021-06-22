@@ -34,7 +34,7 @@ function [output1,output2] = exampleFxn(input1,input2,varargin)
 	end
 end
 
-% calciumImagingAnalysis method
+% CIAtah method
 function obj = functionName(obj,varargin)
 	% DESCRIPTION
 	% Biafra Ahanonu

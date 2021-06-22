@@ -12,6 +12,8 @@ function obj = viewMovie(obj)
 		% 2019.10.09 [17:58:22] - Make view movie multi-column
 		% 2020.10.25 [21:05:21] - Added support for viewing movies from disk.
 		% 2021.02.24 [09:04:24] - Fix treatMoviesAsContinuous=0 + playMovieFromDisk=1 issue.
+		% 2021.06.18 [21:41:07] - added modelVarsFromFilesCheck() to check and load signals if user hasn't already.
+		% 2021.06.20 [‏‎00:14:59] - Added support for simple and advanced settings.
 	% TODO
 		%
 	% =====================
@@ -19,6 +21,7 @@ function obj = viewMovie(obj)
 	FRAMES_PER_SECOND = obj.FRAMES_PER_SECOND;
 	% DOWNSAMPLE_FACTOR = obj.DOWNSAMPLE_FACTOR;
 	options.videoPlayer = [];
+	options.settingsType = '';
 	% =====================
 	currentDateTimeStr = datestr(now,'yyyymmdd_HHMM','local');
 	if isempty(options.videoPlayer)
@@ -29,6 +32,14 @@ function obj = viewMovie(obj)
 	end
 	if strcmp(options.videoPlayer,'imagej')
 		modelAddOutsideDependencies('miji');
+	end
+
+	if isempty(options.settingsType)
+		usrIdxChoiceStr = {'Simple settings','Advanced settings'};
+		usrIdxChoiceSetting = {'simple','advanced'};
+		scnsize = get(0,'ScreenSize');
+		[sel, ok] = listdlg('ListString',usrIdxChoiceStr,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','Which settings to load?');
+		options.settingsType = usrIdxChoiceSetting{sel};
 	end
 
 	% Load folders to be analyzed.
@@ -44,18 +55,19 @@ function obj = viewMovie(obj)
 		defaultFileFilterRegexp = obj.fileFilterRegexpRaw;
 	end
 	% =====================
-	if iscell(obj.videoDir);
+	if iscell(obj.videoDir)
 		videoDir = strjoin(obj.videoDir,',');
 	else
 		videoDir = obj.videoDir;
-	end;
+	end
 	% =====================
 	AddOpts.Resize='on';
 	AddOpts.WindowStyle='normal';
 	AddOpts.Interpreter='tex';
 
-	% movieSettings = inputdlg({...
-	movieSettings = inputdlgcol({...
+	options.settingsType
+
+	settingStr = {...
 			'char: Imaging movie regexp (IMPORTANT, make sure matches the movie you want to view):',...
 			'start:end frames (leave blank for all)',...
 			'behavior:movie sample rate (downsample factor): ',...
@@ -78,13 +90,12 @@ function obj = viewMovie(obj)
 			'video regular expression:',...
 			'rotate second video (0 = no, 1 = yes)',...
 			'treat movie as continuous (0 = no, 1 = yes):',...
-			'dataset name',...
+			'HDF5 dataset name',...
 			'downsample factor for movie viewing (1 = no downsample):',...
 			'Create cell extraction outlines on movie (0 = no, 1 = yes, 2 = yes, all outputs):',...
 			'Cell extraction outlines threshold (float btwn 0 and 1):',...
-		},...
-		'view movie settings',[1 100],...
-		{...
+			};
+	settingDefaults = {...
 			defaultFileFilterRegexp,...
 			'1:500',...
 			num2str(obj.DOWNSAMPLE_FACTOR),...
@@ -111,7 +122,37 @@ function obj = viewMovie(obj)
 			'1',...
 			'0',...
 			'0.4',...
-		},AddOpts,2);
+		};
+
+	switch options.settingsType
+		case 'simple'
+			settingsKeepIdx = [1 2 3 13 17 23];
+			nCols = 1;
+		otherwise
+			settingsKeepIdx = 1:length(settingStr);
+			nCols = 2;
+			% Do nothing
+	end
+
+	% movieSettings = inputdlg({...
+	movieSettings = inputdlgcol(settingStr(settingsKeepIdx),...
+		'view movie settings',[1 100],...
+		settingDefaults(settingsKeepIdx),...
+		AddOpts,nCols);
+
+	switch options.settingsType
+		case 'simple'
+			% Add new settings to default
+			settingStr{settingsKeepIdx};
+			sN = 1;
+			for ii = 1:length(settingsKeepIdx)
+				settingDefaults{settingsKeepIdx(ii)} = movieSettings{sN};
+				sN=sN+1;
+			end
+			movieSettings = settingDefaults;
+		otherwise
+			% Do nothing
+	end
 	
 	% concat the two
 	% movieSettings = cat(1,movieSettings,movieSettings2);
@@ -665,7 +706,8 @@ function obj = viewMovie(obj)
 						'Movie decision', ...
 						'yes','motion','other','yes');
 					% MIJ.run('Close');
-					MIJ.run('Close All Without Saving');
+					% MIJ.run('Close All Without Saving');
+					manageMiji('startStop','closeAllWindows');
 					% MIJ.exit;
 				catch err
 					disp(repmat('@',1,7))

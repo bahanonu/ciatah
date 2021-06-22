@@ -9,8 +9,9 @@ function [success] = updatePkg(varargin)
 
 	% changelog
 		% 2021.03.09 [21:34:52] - Option on whether to update package (only 0 for now). Also alert user if behind a version.
+		% 2021.06.21 [16:18:07] - Updated to ciatah from calciumImagingAnalysis URLs.
 	% TODO
-		%
+		% Only check once every couple of days to warn user instead of every time.
 
 	%========================
 	% Char cell array: list of directories to remove then update, lead private, _external_programs, and data directories intact.
@@ -22,7 +23,7 @@ function [success] = updatePkg(varargin)
 		'docs',...
 		'file_exchange'};
 	% [IGNORE] Char: GitHub API URL to VERSION file on CIAPKG repository.
-	options.versionURL = 'https://api.github.com/repos/bahanonu/calciumImagingAnalysis/contents/+ciapkg/VERSION';
+	options.versionURL = {'https://api.github.com/repos/bahanonu/ciatah/contents/+ciapkg/VERSION','https://api.github.com/repos/bahanonu/ciatah/contents/ciapkg/VERSION','https://api.github.com/repos/bahanonu/ciatah/contents/VERSION'};
 	% Binary: 1 = pop-up GUI enabled
 	options.showGui = 1;
 	% Binary: 1 = update code, 0 = only check for update and notify user behind a version.

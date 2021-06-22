@@ -9,6 +9,7 @@ function obj = modelModifyRegionAnalysis(obj,varargin)
 
 	% changelog
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
+		% 2021.06.18 [21:41:07] - added modelVarsFromFilesCheck() to check and load signals if user hasn't already.
 	% TODO
 		%
 	%========================
@@ -46,6 +47,8 @@ function obj = modelModifyRegionAnalysis(obj,varargin)
 			obj.fileNum = fileNum;
 			display(repmat('=',1,21))
 			display([num2str(fileNum) '/' num2str(nFolders) ': ' obj.fileIDNameArray{obj.fileNum}]);
+
+			obj.modelVarsFromFilesCheck(fileNum);
 
 			if strcmp(analysisToRun,'loadPreviousSelections')
 				regionFile = getFileList(obj.inputFolders{obj.fileNum},obj.regionModSaveStr);

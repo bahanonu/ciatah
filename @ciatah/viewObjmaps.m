@@ -10,6 +10,7 @@ function obj = viewObjmaps(obj,varargin)
 	% changelog
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
 		% 2020.05.07 [14:54:27] - Fix to deal with empty valid folders.
+		% 2021.06.18 [21:41:07] - added modelVarsFromFilesCheck() to check and load signals if user hasn't already.
 	% TODO
 		%
 
@@ -144,6 +145,10 @@ function obj = viewObjmaps(obj,varargin)
 			[~,foldername,~] = fileparts(obj.inputFolders{obj.fileNum});
 			validType = 'NULL';
 			linkAx = [];
+
+			% Check that signal extraction information is loaded.
+			obj.modelVarsFromFilesCheck(thisFileNum);
+
 			% =====================
 			% for backwards compatibility, will be removed in the future.
 			nIDs = length(obj.stimulusNameArray);

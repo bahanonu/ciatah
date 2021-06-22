@@ -21,6 +21,7 @@ classdef ciatah < dynamicprops
 		% 2020.05.07 [15:13:53] - Refactored a bit to remove methods that do not need to be in the main class definition to allow easier updating later.
 		% 2021.03.25 [20:15:31] - Use ciapkg.getDir() to ensure using root directory consistently rather than ciapkgRoot.
 		% 2021.03.25 [22:46:38] - Moved many smaller helper functions in ciatah.m to their own M-files to make maintenance easier.
+		% 2021.06.18 [20:28:28] - Added modelVarsFromFilesCheck support.
 	% TODO
 		%
 
@@ -275,9 +276,10 @@ classdef ciatah < dynamicprops
 		nwbFileFolder = 'nwbFiles';
 		% Str: blank, use calciumImagingAnalysis regexp, else force use of this regexp for NWB files
 		nwbFileRegexp = '';
-		% Name of H5 group for images and signal series in NWB files
+		% Name of H5 group for movies, images, and signal series in NWB files
 		nwbGroupImages = '/processing/ophys/ImageSegmentation/PlaneSegmentation';
 		nwbGroupSignalSeries = '/processing/ophys/Fluorescence/RoiResponseSeries';
+		nwbGroupMovie = '/acquisition/TwoPhotonSeries/data';
 
 		settingOptions = struct(...
 			'analysisType',  {{'group','individual'}},...
@@ -453,12 +455,13 @@ classdef ciatah < dynamicprops
 		'modelLoadSaveData',
 		'modelExportData',
 		'',
-		'------- PREPROCESS -------',
-		'modelDownsampleRawMovies',
+		'------- VISUALIZATION/PREPROCESS CHECK -------',
 		'viewMovieFiltering',
 		'viewMovieRegistrationTest',
-		'',
 		'viewMovie',
+		'',
+		'------- PREPROCESS -------',
+		'modelDownsampleRawMovies',
 		'modelPreprocessMovie',
 		'modelModifyMovies',
 		'removeConcurrentAnalysisFiles',
@@ -822,5 +825,6 @@ classdef ciatah < dynamicprops
 		obj = makeFolderDirs(obj)
 		[flagOut] = usaflag(obj)
 		obj = saveObj(obj)
+		obj = modelVarsFromFilesCheck(obj,folderNo,varargin)
 	end
 end

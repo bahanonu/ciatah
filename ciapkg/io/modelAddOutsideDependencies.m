@@ -9,7 +9,8 @@ function [success] = modelAddOutsideDependencies(dependencyName,varargin)
 
 	% changelog
 		% 2019.10.15 [12:29:30] - Added flag to prevent recursive loop between resetMiji and modelAddOutsideDependencies.
-		% 2021.02.01 [‏‎15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
+		% 2021.02.01 [??‎15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
+		% 2021.06.20 [00:20:12] - Updated to add support for ImageJ call instead of Fiji.
 	% TODO
 		%
 
@@ -31,6 +32,17 @@ function [success] = modelAddOutsideDependencies(dependencyName,varargin)
 		success = 0;
 		switch dependencyName
 			case 'miji'
+				if exist('MIJ','class')==8
+					disp('Miji loaded!')
+					return;
+				else
+					manageMiji('startStop','setupImageJ');
+					if exist('MIJ','class')==8
+						disp('Miji loaded!')
+						return;
+					end
+				end
+
 				if exist('Miji.m','file')==2
 					display(['Miji located in: ' which('Miji.m')]);
 					% Miji is loaded, continue
@@ -61,7 +73,7 @@ function [success] = modelAddOutsideDependencies(dependencyName,varargin)
 					if exist('pathToMiji','var')==0
 						if exist(options.defaultExternalProgramDir,'dir')==7
 							loadPathHere = options.defaultExternalProgramDir;
-							loadStr = ['Enter path to Miji.m in Fiji (likely in "scripts" folder, e.g. calciumImagingAnalysis\' options.defaultExternalProgramDir '\Fiji.app\scripts)'];
+							loadStr = ['Enter path to Miji.m in Fiji (likely in "scripts" folder, e.g. ' filesep ciapkg.pkgName options.defaultExternalProgramDir '\Fiji.app\scripts)'];
 						else
 							loadPathHere = '\.';
 							loadStr = ['Enter path to Miji.m in Fiji (likely in "scripts" folder, e.g. \Fiji.app\scripts)'];

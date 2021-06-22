@@ -1,12 +1,28 @@
-## Quick start guide
+# Quick start guide
 
 Below are steps needed to quickly get started using the `{{ site.name }}` software package in MATLAB.
 
-- Clone the `{{ site.name }}` repository (using [GitHub desktop](https://desktop.github.com/) or command line) or download the repository zip and unzip.
+## Install
+- Clone the `{{ site.name }}` repository (using [GitHub desktop](https://desktop.github.com/) or command line) or download the repository zip and unzip  (e.g. run below MATLAB command).
 - Point the MATLAB path to the `{{ site.name }}` root folder (*NOT* `@{{ code.mainclass }}` sub-folder in the repository).
   - Alternatively, download the package from `File Exchange` using the Add-Ons explorer in MATLAB. See `{{ site.name }}` entry at:
  [![View {{ site.name }} on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis) or https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis.
-- Run the below MATLAB commands.
+
+ ```Matlab
+ % Optional: this will set MATLAB working folder to the default user path. Make sure you have read/write permissions.
+ try; cd(userpath); catch; end;
+
+ % Download and unzip current repository
+ unzip('https://github.com/bahanonu/{{ code.mainclass }}/archive/master.zip');
+
+ % Make CIAtah the working folder
+ cd('{{ code.mainclass }}-master')
+ ```
+
+
+## Setup `{{ site.name }}`
+
+- Run `{{ site.name }}` using the below MATLAB commands. Call `obj;` in the MATLAB command window each time you want to go back to the main GUI. __Note: `calciumImagingAnalysis` class is now called `ciatah`, all functionality is the same.__
 
 ```MATLAB
 % Run these commands in MATLAB to get started.
@@ -25,7 +41,7 @@ obj % then hit enter, no semicolon!
 - [Optional] Users on Windows systems should download `Everything` (https://www.voidtools.com/). It is a very useful and extremely fast search engine for files and folders on a computer that can allow users to quickly get lists of folders then need to analyze in `{{ site.name }}`.
 - [Optional] Users who want to run analysis via the command line can run `edit ciapkg.demo.cmdLinePipeline` and run each segment of code there to see what commands are needed to perform each step. It assumes you have already run `example_downloadTestData`.
 
-### `{{ site.name }}` main GUI notes
+## `{{ site.name }}` main GUI notes
 - All main decisions for choosing a method/procedure to run, cell-extraction algorithm, and which folders to analyze are in a single window.
 - The GUI will real-time update the selected folders based on the selections in the subject, assay, and folder filter areas.
 - Sections not relevant for a specific method are grayed out.
@@ -42,7 +58,7 @@ __Certain sections become available when user selects the appropriate method (e.
 <a href="https://user-images.githubusercontent.com/5241605/79495026-d4ea2680-7fd8-11ea-8d4d-02164e1af1d6.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/79495026-d4ea2680-7fd8-11ea-8d4d-02164e1af1d6.png" alt="image" width="50%" height="auto"/></a>
 
 
-### Additional quick start notes
+## Additional quick start notes
 
 - See additional details in [Processing calcium imaging data](#processing-calcium-imaging-data) for running the full processing pipeline.
 - Settings used to pre-process imaging movies (`modelPreprocessMovie` module) are stored inside the HDF5 file to allow `{{ site.name }}` to load them again later.

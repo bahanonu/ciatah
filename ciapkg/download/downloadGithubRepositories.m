@@ -104,7 +104,13 @@ function [success] = downloadGithubRepositories(varargin)
 
 			% Rename to proper folder for calciumImagingAnalysis
 			fprintf('Renaming %s to %s \n',[signalExtractionDir filesep gitName{gitNo}],[signalExtractionDir filesep outputDir{gitNo}])
-			movefile([signalExtractionDir filesep gitName{gitNo}],[signalExtractionDir filesep outputDir{gitNo}]);
+			oldDir = [signalExtractionDir filesep gitName{gitNo}];
+			newDir = [signalExtractionDir filesep outputDir{gitNo}];
+			if strcmp(oldDir,newDir)==1
+				disp('Same directory, ignore name change!')
+			else
+				movefile(oldDir,newDir);
+			end
 
 			% fprintf('\n\n')
 		end

@@ -15,7 +15,9 @@ function [inputImagesTranslated, outputStruct] = computeManualMotionCorrection(i
 	% changelog
 		% 2020.04.07 [19:39:24] - Updated to allow just using the register aspect of the function. Also made registering callback based.
 		% 2020.04.08 [10:35:49] - Added support for rotation.
-		% 2020.05.28 [08:48:57] - Slight update
+		% 2020.05.28 [08:48:57] - Slight update.
+		% 2021.04.16 [10:31:29] - Add default gamma option.
+		% 2021.04.27 [16:26:14] - Update to fix issue of prior figure (even after clf) maintaining previous key press and exiting, causing uiwait to fail.
 	% TODO
 		% Add ability to auto-crop if inputs are not of the right size them convert back to correct size after manual correction
 		% inputRegisterImage - [x y nCells] - Image to register to.
@@ -35,6 +37,10 @@ function [inputImagesTranslated, outputStruct] = computeManualMotionCorrection(i
 	options.registerUseOutlines = 1;
 	% Cell array of matrices: cell array of {[x y z]} matrices that should match each Z dimension in inputImages
 	options.altInputImages = {};
+    % Str: max or mean
+    options.cellCombineType = 'max';
+    % Float: default gamma.
+    options.gammaCorrection = 1;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -58,8 +64,15 @@ function [inputImagesTranslated, outputStruct] = computeManualMotionCorrection(i
 				options.altInputImages = inputImages;
 			else
 				switchInputImagesBack = 0;
-			end
-			inputImages = cellfun(@(x) nanmax(x,[],3),inputImages,'UniformOutput',false);
+            end
+            switch options.cellCombineType
+                case 'max'
+                    inputImages = cellfun(@(x) nanmax(x,[],3),inputImages,'UniformOutput',false);
+                case 'mean'
+                    inputImages = cellfun(@(x) nanmean(x,3),inputImages,'UniformOutput',false);
+                otherwise
+                    inputImages = cellfun(@(x) nanmax(x,[],3),inputImages,'UniformOutput',false);
+            end                
 			inputImages = cat(3,inputImages{:});
 			disp(['inputImages: ' num2str(size(inputImages))])
 		else
@@ -141,12 +154,14 @@ function [outputStruct] = subfxnRegisterImage(inputImages,inputRegisterImage,opt
     inputRegisterImageOutlinesOriginal = inputRegisterImageOutlines;
 
 	[figHandle figNo] = openFigure(options.translationFigNo, '');
+	% Force current character to be a new figure.
+    set(gcf,'currentch','3');
 	clf
 	% normalize input marker image
 	inputImages = normalizeVector(single(inputImages),'normRange','zeroToOne');
 	inputImagesOriginal = inputImages;
-	gammaCorrection = 1;
-    gammaCorrectionRef = 1;
+	gammaCorrection = options.gammaCorrection;
+    gammaCorrectionRef = options.gammaCorrection;
 	inputImages = imadjust(inputImages,[],[],gammaCorrection);
 	inputRegisterImage = imadjust(inputRegisterImage,[],[],gammaCorrectionRef);
 	continueRegistering = 1;
@@ -157,7 +172,7 @@ function [outputStruct] = subfxnRegisterImage(inputImages,inputRegisterImage,opt
 	set(figHandle, 'KeyPressFcn', @(source,eventdata) subfxnRespondUser(source,eventdata));
 	figure(figHandle)
 	rgbImage = subfxncreateRgbImg();
-	imgTitleFxn = @(imgNo,imgN,gammaCorrection,gammaCorrectionRef,translationVector,rotationVector) sprintf('Image %d/%d\nup/down/left/right arrows for translation | "A" = rotate left, "S" = rotate right | f to finish\n1/2 keys for image gamma down/up | gamma = %0.3f |  gamma_r = %0.3f | translation %d %d | rotation %d\npurple = reference image, green = image to manually translate',imgNo,imgN,gammaCorrection,gammaCorrectionRef,translationVector,rotationVector);
+	imgTitleFxn = @(imgNo,imgN,gammaCorrection,gammaCorrectionRef,translationVector,rotationVector) sprintf('Image %d/%d\nup/down/left/right arrows for translation | "A" = rotate left, "S" = rotate right | f to finish\n1/2 keys for image gamma down/up | gamma = %0.3f |  gamma(ref) = %0.3f | translation %d %d | rotation %d\npurple = reference image, green = image to manually translate',imgNo,imgN,gammaCorrection,gammaCorrectionRef,translationVector,rotationVector);
 	
     imgTitle = imgTitleFxn(imgNo,imgN,gammaCorrection,gammaCorrectionRef,translationVector,rotationVector);
 	imgHandle = imagesc(rgbImage);
@@ -226,7 +241,8 @@ function gammaCorrection = subfxnGammaUpdate(gammaCorrection,gDelta)
     if gammaCorrection<=1
         gDelta = gDelta/10;
     else
-        gammaCorrection = round(gammaCorrection);
+    	gDelta = gDelta/5;
+        % gammaCorrection = gammaCorrection+round(gammaCorrection-round(gammaCorrection));
     end
     gammaCorrection = gammaCorrection+gDelta;
     if gammaCorrection<0

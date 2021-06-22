@@ -31,7 +31,11 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% 2020.09.22 [00:11:03] - Updated to add NWB support.
 		% 2020.10.24 [18:30:56] - Added support for calculating dropped frames if entire frame of a movie is a set value. Changed order so that dropped frames calculated before dF/F.
 		% 2021.02.15 [12:06:59] - _inputMovieF0 now saved to processing subfolder.
+		% 2021.04.11 [10:52:10] - Fixed thisFrame issue when displaying area to use for motion correction if treatMoviesAsContinuous=0 and processMoviesSeparately=0, e.g. would load reference frame from each and if there were 3 movies, would assume RGB, causing display to be white. Also update so the display frame takes into account custom frame list range.
+		% 2021.06.09 [00:40:35] - Updated checking of options. Also save ordering of options selected.
+		% 2021.06.20 [00:22:38] - Added manageMiji('startStop','closeAllWindows'); support.
 	% TODO
+		% Allow users to save out analysis options order and load it back in.
 		% Insert NaNs or mean of the movie into dropped frame location, see line 260
 		% Allow easy switching between analyzing all files in a folder together and each file in a folder individually
 		% FML, make this object oriented...
@@ -181,6 +185,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	% List of analysis options
 	analysisOptionList = {...
 		'medianFilter',...
+		'downsampleSpace',...
 		'spatialFilter',...
 		'stripeRemoval',...
 		'turboreg',...
@@ -194,6 +199,12 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		'downsampleSpace',...
 		'fft_lowpass'...
 		};
+
+	% List of default analysis options to select
+	defaultChoiceList = {'turboreg','crop','fixDropFrames','dfof','downsampleTime'};
+
+	analysisOptionListOrig = analysisOptionList;
+	defaultChoiceListOrig = defaultChoiceList;
 
 	analysisOptsInfo = struct(...
 		'medianFilter',struct(...
@@ -234,8 +245,25 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			'str','Low-pass FFT and save (ignore most cases, check for neuropil).')...
 	);
 
-	% List of default analysis options to select
-	defaultChoiceList = {'turboreg','crop','fixDropFrames','dfof','downsampleTime'};
+
+	defaultChoiceIdx = find(ismember(analysisOptionList,defaultChoiceList));
+	defaultChoiceIdxS = find(ismember(analysisOptionList{end},defaultChoiceList));
+	if isfield(obj.functionSettings,'modelPreprocessMovieFunction')
+        if ~isempty(obj.functionSettings.modelPreprocessMovieFunction)
+        	try
+            	analysisOptionList = obj.functionSettings.modelPreprocessMovieFunction.analysisOptionList;
+            	defaultChoiceList = obj.functionSettings.modelPreprocessMovieFunction.defaultChoiceList;
+            	defaultChoiceIdx = obj.functionSettings.modelPreprocessMovieFunction.defaultChoiceIdx;
+            catch err
+				disp(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				disp(repmat('@',1,7))
+			end
+        else
+        end
+	else
+		% Do nothing
+	end
 
 	analysisOptionListStr = analysisOptionList;
 	for optNoS = 1:length(analysisOptionListStr)
@@ -245,15 +273,36 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% analysisOptionListStr(strcmp(analysisOptionListStr,'turboreg')) = {'turboreg (motion correction, can include spatial filtering)'};
 
 	%defaultChoiceIdx = find(cellfun(@(x) sum(strcmp(x,defaultChoiceList)),analysisOptionList));
-	defaultChoiceIdx = find(ismember(analysisOptionList,defaultChoiceList));
 	try
 		ok = 1;
 		[figHandle figNo] = openFigure(1776, '');clf;
-		instructTextPos = [0.01 0.65 0.7 0.34];
-		listTextPos = [0.01 0.01 0.98 0.6];
+		instructTextPos = [1 80 70 20]/100;
+		listTextPos = [1 40 98 28]/100;
+		listTextPos2 = [1 1 98 28]/100;
 
-		[hListbox jListbox jScrollPane jDND] = reorderableListbox('String',analysisOptionListStr,'Units','normalized','Position',listTextPos,'Max',Inf,'Min',0,'Value',defaultChoiceIdx);
-		uicontrol('Style','Text','String',['Analysis step selection and ordering' 10 '=======' 10 'We can know only that we know nothing.' 10 'And that is the highest degree of human wisdom.' 10 10 '1: Click items to select.' 10 '2: Drag to re-order analysis.' 10 '3: Click command window and press ENTER to continue.'],'Units','normalized','Position',instructTextPos,'BackgroundColor','white','HorizontalAlignment','Left');
+		shortcutMenuHandle = uicontrol('style','pushbutton','Units','normalized','position',[1 75 30 3]/100,'FontSize',9,'string','Reset to default list order','callback',@subfxn_resetSetpsMenu);
+		shortcutMenuHandle2 = uicontrol('style','pushbutton','Units','normalized','position',[32 75 30 3]/100,'FontSize',9,'string','Select default options (e.g. post-dragging)','callback',@subfxn_highlightDefault);
+		shortcutMenuHandle2 = uicontrol('style','pushbutton','Units','normalized','position',[63 75 30 3]/100,'FontSize',9,'string','Finished','callback',@subfxn_closeOptions);
+		% shortcutMenuHandle = uicontrol('style','pushbutton','Units','normalized','position',[32 62 30 3]/100,'FontSize',9,'string','Next screen','callback',@subfxn_highlightDefault);
+
+
+		uicontrol('Style','Text','String',['Analysis steps to perform.'],'Units','normalized','Position',[1 68 90 3]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold');
+		[hListbox jListbox jScrollPane jDND] = reorderableListbox('String',analysisOptionListStr,'Units','normalized','Position',listTextPos,'Max',Inf,'Min',0,'Value',defaultChoiceIdx,...
+			'MousePressedCallback',@subfxn_analysisOutputMenuChange,...
+			'MouseReleasedCallback',@subfxn_analysisOutputMenuChange,...
+			'DragOverCallback',@subfxn_analysisOutputMenuChange2,...
+			'DropCallback',@subfxn_analysisOutputMenuChange...
+			);
+
+		uicontrol('Style','Text','String',['At which analysis step should files be saved to disk?'],'Units','normalized','Position',[1 30 90 3]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold');
+		[hListboxS jListboxS jScrollPaneS jDNDS] = reorderableListbox('String',analysisOptionListStr,'Units','normalized','Position',listTextPos2,'Max',Inf,'Min',0,'Value',hListbox.Value(end));
+
+		uicontrol('Style','Text','String',['Analysis step selection and ordering' 10 '======='...
+			10 'Gentlemen, you can not fight in here! This is the War Room.' 10 'We can know only that we know nothing.' 10 'And that is the highest degree of human wisdom.'...
+			10 10 '1: Click items to select.' 10 '2: Drag to re-order analysis.' 10 '3: Click command window and press ENTER to continue.'],'Units','normalized','Position',instructTextPos,'BackgroundColor','white','HorizontalAlignment','Left');
+
+
+		emptyBox = uicontrol('Style','Text','String',[''],'Units','normalized','Position',[1 1 1 1]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold');
 
 		if ismac
 			cmdWinEditorFont = 'Menlo-Regular';
@@ -273,8 +322,10 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% Wait for user input
 		% set(gcf, 'WindowScrollWheelFcn', @mouseWheelChange);
 		% set(gcf,'KeyPressFcn', @(src,event) set(gcf,'Tag','next'));
+		set(gcf,'KeyPressFcn', @subfxn_closeOptionsKey);
 		% waitfor(gcf,'Tag');
-		pause
+		waitfor(emptyBox);
+		% pause
 		% hListbox.String(hListbox.Value)
 		analysisOptionsIdx = hListbox.Value;
 		analysisOptionList = hListbox.String;
@@ -312,25 +363,33 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 
 	defaultSaveList = analysisOptionList{analysisOptionsIdx(end)};
 	defaultSaveIdx = find(ismember(analysisOptionList,defaultSaveList));
+	% List of files to save
+	saveIdx = hListboxS.Value;
 
-	try
+	% Whether to use the old method
+	oldMethod = 0;
+	if oldMethod==1
+		try
+			[figHandle figNo] = openFigure(1776, '');clf;
+			[hListbox jListbox jScrollPane jDND] = reorderableListbox('String',analysisOptionListStr,'Units','normalized','Position',listTextPos,'Max',Inf,'Min',0,'Value',defaultSaveIdx);
+			uicontrol('Style','Text','String',['Analysis steps to save' 10 '=======' 10 'Gentlemen, you can not fight in here! This is the War Room.' 10 10 '1: Click analysis steps to save output' 10 '2: Click command window and press ENTER to continue'],'Units','normalized','Position',instructTextPos,'BackgroundColor','white','HorizontalAlignment','Left');
+			usaFlagPic(USAflagStr);
+			pause
+			saveIdx = hListbox.Value;
+			% close(1776);
+			[figHandle figNo] = openFigure(1776, '');clf;
+		catch err
+			display(repmat('@',1,7))
+			disp(getReport(err,'extended','hyperlinks','on'));
+			display(repmat('@',1,7))
+			display('BACKUP DIALOG')
+			[saveIdx, ok] = listdlg('ListString',analysisOptionList,'InitialValue',defaultSaveIdx,...
+				'Name','Gentlemen, you can not fight in here! This is the War Room.',...
+				'PromptString','select at which stages to save a file. if option not selected for analysis, will be ignored',...
+				'ListSize',[scnsize(3)*0.4 scnsize(4)*0.3]);
+		end
+	else
 		[figHandle figNo] = openFigure(1776, '');clf;
-		[hListbox jListbox jScrollPane jDND] = reorderableListbox('String',analysisOptionListStr,'Units','normalized','Position',listTextPos,'Max',Inf,'Min',0,'Value',defaultSaveIdx);
-		uicontrol('Style','Text','String',['Analysis steps to save' 10 '=======' 10 'Gentlemen, you can not fight in here! This is the War Room.' 10 10 '1: Click analysis steps to save output' 10 '2: Click command window and press ENTER to continue'],'Units','normalized','Position',instructTextPos,'BackgroundColor','white','HorizontalAlignment','Left');
-		usaFlagPic(USAflagStr);
-		pause
-		saveIdx = hListbox.Value;
-		% close(1776);
-		[figHandle figNo] = openFigure(1776, '');clf;
-	catch err
-		display(repmat('@',1,7))
-		disp(getReport(err,'extended','hyperlinks','on'));
-		display(repmat('@',1,7))
-		display('BACKUP DIALOG')
-		[saveIdx, ok] = listdlg('ListString',analysisOptionList,'InitialValue',defaultSaveIdx,...
-			'Name','Gentlemen, you can not fight in here! This is the War Room.',...
-			'PromptString','select at which stages to save a file. if option not selected for analysis, will be ignored',...
-			'ListSize',[scnsize(3)*0.4 scnsize(4)*0.3]);
 	end
 
 	% Update file filter to the last saved out option
@@ -344,6 +403,15 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	if isempty(defaultSaveIdx)
 		defaultSaveIdx = find(ismember(analysisOptionList,defaultSaveList));
 	end
+
+	if isfield(obj.functionSettings,'modelPreprocessMovieFunction')
+		% usrInput = obj.functionSettings.modelEditStimTable.usrInput;
+    else
+        obj.functionSettings.modelPreprocessMovieFunction = struct;
+    end
+    obj.functionSettings.modelPreprocessMovieFunction.analysisOptionList = analysisOptionList;
+    obj.functionSettings.modelPreprocessMovieFunction.defaultChoiceList = analysisOptionList(analysisOptionsIdx);
+    obj.functionSettings.modelPreprocessMovieFunction.defaultChoiceIdx = analysisOptionsIdx;
 
 	% ========================
 	movieSettings = inputdlg({...
@@ -1004,6 +1072,109 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	       	set(gcf,'Tag','next')
 	    end
 	end
+	function subfxn_resetSetpsMenu(src,event)
+		% analysisOptionListOrig = analysisOptionList;
+		% defaultChoiceListOrig = defaultChoiceList;
+		analysisOptionListStr = analysisOptionListOrig;
+		for optNoS = 1:length(analysisOptionListStr)
+			analysisOptionListStr{optNoS} = analysisOptsInfo.(analysisOptionListStr{optNoS}).str;
+		end
+		defaultChoiceIdx = find(ismember(analysisOptionListOrig,defaultChoiceListOrig));
+		hListbox.String = analysisOptionListStr;
+		hListbox.Value = defaultChoiceIdx;
+
+		hListboxS.String = analysisOptionListStr;
+		hListboxS.Value = defaultChoiceIdx(end);
+	end
+	function subfxn_highlightDefault(src,event)
+		% analysisOptionListOrig = analysisOptionList;
+		% defaultChoiceListOrig = defaultChoiceList;
+		% analysisOptionListStr = analysisOptionListOrig;
+		% for optNoS = 1:length(analysisOptionListStr)
+		% 	analysisOptionListStr{optNoS} = analysisOptsInfo.(analysisOptionListStr{optNoS}).str;
+		% end
+		% Correct back to original names before proceeding
+		tmpList = hListbox.String;
+		fnTmp = fieldnames(analysisOptsInfo);
+		for optNoS = 1:length(tmpList)
+			for fnNo = 1:length(fnTmp)
+				if strcmp(tmpList{optNoS},analysisOptsInfo.(fnTmp{fnNo}).str)==1
+					tmpList{optNoS} = fnTmp{fnNo};
+				end
+			end
+		end
+
+		defaultChoiceIdx = find(ismember(tmpList,defaultChoiceListOrig));
+		% hListbox.String = analysisOptionListStr;
+		hListbox.Value = defaultChoiceIdx;
+		hListboxS.Value = defaultChoiceIdx(end);
+	end
+	function subfxn_analysisOutputMenuChange(src,event)
+		% analysisOptionListOrig = analysisOptionList;
+		% defaultChoiceListOrig = defaultChoiceList;
+		% analysisOptionListStr = analysisOptionListOrig;
+		% for optNoS = 1:length(analysisOptionListStr)
+		% 	analysisOptionListStr{optNoS} = analysisOptsInfo.(analysisOptionListStr{optNoS}).str;
+		% end
+		% Correct back to original names before proceeding
+		return;
+		tmpList = hListbox.String;
+		hListboxS.String = hListbox.String
+		fnTmp = fieldnames(analysisOptsInfo);
+		for optNoS = 1:length(tmpList)
+			for fnNo = 1:length(fnTmp)
+				if strcmp(tmpList{optNoS},analysisOptsInfo.(fnTmp{fnNo}).str)==1
+					tmpList{optNoS} = fnTmp{fnNo};
+				end
+			end
+		end
+
+		tmpList = tmpList{end};
+		defaultChoiceIdx = find(ismember(tmpList,tmpList));
+		% hListbox.String = analysisOptionListStr;
+		hListboxS.Value = defaultChoiceIdx;
+
+		% defaultSaveList = analysisOptionList{analysisOptionsIdx(end)};
+		% defaultSaveIdx = find(ismember(analysisOptionList,defaultSaveList));
+	end	
+	function subfxn_analysisOutputMenuChange2(src,event,PERMORDER)
+		% analysisOptionListOrig = analysisOptionList;
+		% defaultChoiceListOrig = defaultChoiceList;
+		% analysisOptionListStr = analysisOptionListOrig;
+		% for optNoS = 1:length(analysisOptionListStr)
+		% 	analysisOptionListStr{optNoS} = analysisOptsInfo.(analysisOptionListStr{optNoS}).str;
+		% end
+		% Correct back to original names before proceeding
+		hListboxS.String = hListbox.String(PERMORDER);
+		tmpList = hListboxS.String;
+		fnTmp = fieldnames(analysisOptsInfo);
+		for optNoS = 1:length(tmpList)
+			for fnNo = 1:length(fnTmp)
+				if strcmp(tmpList{optNoS},analysisOptsInfo.(fnTmp{fnNo}).str)==1
+					tmpList{optNoS} = fnTmp{fnNo};
+				end
+			end
+		end
+
+		% tmpList2 = tmpList(hListbox.Value);
+		% tmpList2
+		% tmpList2 = tmpList2{end};
+		% defaultChoiceIdx = find(ismember(tmpList2,tmpList));
+		% hListbox.String = analysisOptionListStr;
+		hListboxS.Value = hListbox.Value(end);
+
+		% defaultSaveList = analysisOptionList{analysisOptionsIdx(end)};
+		% defaultSaveIdx = find(ismember(analysisOptionList,defaultSaveList));
+	end	
+	function subfxn_closeOptions(src,event)
+		delete(emptyBox);
+	end
+	function subfxn_closeOptionsKey(src,event)
+		if event.Key=="return"
+			delete(emptyBox)
+		end
+	end
+
 	function subfxnAddDroppedFrames()
 		% TODO: to make this proper, need to verify that the log file names match those of movie files
 		display(repmat('-',1,7));
@@ -1252,8 +1423,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		if exist('turboRegCoords','var')
 			% Adjust crop coordinates if downsampling in space takes place before turboreg
 			disp(['Adjusting motion correction crop coordinates for spatial downsampling: ' num2str(turboRegCoords{fileNum}{movieNo})]);
-			orderCheck = find(strcmp(analysisOptionList,'downsampleSpace'))<find(strcmp(analysisOptionList,'turboreg'));
-			if ~isempty(turboRegCoords{fileNum}{movieNo})&&orderCheck==1
+			orderCheck = find(strcmp(analysisOptionList(analysisOptionsIdx),'downsampleSpace'))<find(strcmp(analysisOptionList(analysisOptionsIdx),'turboreg'));
+			if ~isempty(turboRegCoords{fileNum}{movieNo})&&any(orderCheck)==1
 				turboRegCoords{fileNum}{movieNo} = floor(turboRegCoords{fileNum}{movieNo}/options.downsampleFactor);
 				% Ensure that the turbo crop coordinates are greater than zero
 				turboRegCoords{fileNum}{movieNo} = max(1,turboRegCoords{fileNum}{movieNo});
@@ -1963,11 +2134,26 @@ function [turboRegCoords] = turboregCropSelection(options,folderList)
 						inputFilePath = movieList{movieNo};
 					end
 
-					thisFrame = loadMovieList(inputFilePath,'convertToDouble',0,'frameList',options.refCropFrame,'inputDatasetName',options.datasetName,'treatMoviesAsContinuous',options.turboreg.treatMoviesAsContinuousSwitch,'loadSpecificImgClass','single');
+					frameToGrabHere = options.refCropFrame;
+					if isempty(options.frameList)
+					else
+						frameToGrabHere = frameToGrabHere + options.frameList(1);	
+					end
+					thisFrame = loadMovieList(inputFilePath,'convertToDouble',0,'frameList',frameToGrabHere,'inputDatasetName',options.datasetName,'treatMoviesAsContinuous',options.turboreg.treatMoviesAsContinuousSwitch,'loadSpecificImgClass','single');
+                    
+                    if size(thisFrame,3)>1
+                       % thisFrame = max(thisFrame,[],3);
+                       thisFrame = squeeze(thisFrame(:,:,1)); 
+                    end
 
-					[figHandle figNo] = openFigure(9, '');
-					titleStr = ['Click to drag-n-draw region.' 10 'Double-click region to continue.' 10 'Note: Only cropping for motion correction, original movie dimensions retained after registration.'];
-					subplot(1,2,1);imagesc(thisFrame); axis image; colormap gray; title(titleStr)
+					[figHandle, figNo] = openFigure(9, '');
+					titleStr = ['Click to drag-n-draw region.' 10 'Double-click region to continue.' 10 'Note: Only cropping for motion correction.' 10 'Original movie dimensions retained after registration.' 10 'Frame: ' num2str(frameToGrabHere)];
+					subplot(1,2,1);
+                        imagesc(thisFrame);
+                        axis image;
+                        colormap gray;
+                        title(titleStr)
+                        box off;
 					set(0,'DefaultTextInterpreter','none');
 					% suptitle([num2str(fileNumIdx) '\' num2str(nFilesToRun) ': ' 10 strrep(thisDir,'\','/')],'fontSize',12,'plotregion',0.9,'titleypos',0.95);
 					uicontrol('Style','Text','String',[num2str(fileNumIdx) '\' num2str(nFilesToRun) ': ' strrep(thisDir,'\','/')],'Units','normalized','Position',[0.1 0.9 0.8 0.10],'BackgroundColor','white','HorizontalAlignment','Center');
@@ -2168,7 +2354,8 @@ function [ostruct options] = playOutputMovies(ostruct,options)
 				for foobar=1:2; MIJ.run('Enhance Contrast','saturated=0.35'); end
 				MIJ.run('Start Animation [\]');
 				uiwait(msgbox('press OK to move onto next movie','Success','modal'));
-				MIJ.run('Close All Without Saving');
+				% MIJ.run('Close All Without Saving');
+				manageMiji('startStop','closeAllWindows');
 			catch err
 				disp(repmat('@',1,7))
 				disp(getReport(err,'extended','hyperlinks','on'));

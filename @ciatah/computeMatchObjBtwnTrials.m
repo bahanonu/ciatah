@@ -9,6 +9,7 @@ function obj = computeMatchObjBtwnTrials(obj,varargin)
 
 	% changelog
 		% 2019.07.03 [16:36:32] - Updated to call viewMatchObjBtwnSessions afterwards as an option
+		% 2021.06.18 [21:41:07] - added modelVarsFromFilesCheck() to check and load signals if user hasn't already.
 	% TODO
 		%
 
@@ -101,6 +102,10 @@ function obj = computeMatchObjBtwnTrials(obj,varargin)
 				obj.fileNum = validFoldersIdx(idx);
 				display(repmat('*',1,7))
 				display([num2str(idx) '/' num2str(length(validFoldersIdx)) ': ' obj.fileIDNameArray{obj.fileNum}]);
+
+				% Check that signal extraction information is loaded.
+				obj.modelVarsFromFilesCheck(obj.fileNum);
+
 				% obj.folderBaseSaveStr{obj.fileNum}
 				% [rawSignalsTmp rawImagesTmp signalPeaks signalPeaksArray] = modelGetSignalsImages(obj,'returnType','raw');
 				[rawSignalsTmp, rawImagesTmp, signalPeaks, signalPeaksArray] = modelGetSignalsImages(obj,'returnType','filtered');

@@ -21,6 +21,7 @@ function loadBatchFxns(varargin)
 		% 2020.06.05 [23:35:43] - If user doesn't have Parallel Toolbox, still works
 		% 2020.07.21 [14:11:42] - Fix to make sure all sub-folders (not just the root) are also removed in the case of certain external_programs.
 		% 2021.02.01 [‏‎15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
+		% 2021.06.20 [00:22:38] - Added manageMiji('startStop','closeAllWindows'); support.
 	% TODO
 		%
 
@@ -125,6 +126,16 @@ function loadBatchFxns(varargin)
 		disp(getReport(err,'extended','hyperlinks','on'));
 		display(repmat('@',1,7))
 	end
+
+	if workerCheck==1
+	else
+		if loadMijiCheck==0
+			disp('Skipping loading of Miji.')
+		else
+			manageMiji('startStop','setupImageJ');
+		end
+	end
+	loadMijiCheck = 0;
 
 	if loadMijiCheck==0
 		disp('Skipping loading of Miji.')

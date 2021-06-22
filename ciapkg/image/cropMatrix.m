@@ -1,4 +1,4 @@
-function [inputMatrix] = cropMatrix(inputMatrix,varargin)
+function [inputMatrix, coords] = cropMatrix(inputMatrix,varargin)
 	% Crops a matrix either by removing rows or adding NaNs to where data was previously.
 	% Biafra Ahanonu
 	% 2014.01.23 [16:06:01]
@@ -7,7 +7,8 @@ function [inputMatrix] = cropMatrix(inputMatrix,varargin)
 	% outputs
 		% inputMatrix - cropped or NaN'd matrix, same name to reduce memory usage
 	% changelog
-		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
+		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals].
+		% 2021.04.18 [14:42:53] - Updated to make imrect the default method of selecting the coordinates.
 	% TODO
 		%
 
@@ -43,11 +44,20 @@ function [inputMatrix] = cropMatrix(inputMatrix,varargin)
 	elseif isempty(options.inputCoords)
         %figure(102020); colormap gray;
 		thisFrame = squeeze(inputMatrix(:,:,round(end/2)));
-		[coords] = getCropCoords(thisFrame)
+		% [coords] = getCropCoords(thisFrame)
+
+		h = subfxn_getImRect(thisFrame,'Select a region');
+		p = round(wait(h));
+
+		% Get the x and y corner coordinates as integers
+		coords(1) = p(1); %xmin
+		coords(2) = p(2); %ymin
+		coords(3) = p(1)+p(3); %xmax
+		coords(4) = p(2)+p(4); %ymax
 	else
 		coords = options.inputCoords;
 	end
-	display('cropping matrix...');
+	disp('cropping matrix...');
 	switch options.cropOrNaN
 		case 'NaN'
 			rowLen = size(inputMatrix,1);
@@ -75,7 +85,8 @@ function [coords] = getCropCoords(thisFrame)
 	imagesc(thisFrame);
     axis image;
     colormap parula;
-    title('select region')
+    title('Select a region. Double click region to continue.')
+    box off;
 
 	% Use ginput to select corner points of a rectangular
 	% region by pointing and clicking the subject twice
@@ -92,4 +103,19 @@ function [coords] = getCropCoords(thisFrame)
 
 	% Display the subsetted image with appropriate axis ratio
 	figure(9);subplot(1,2,2);imagesc(thisFrameCropped); axis image; colormap gray; title('cropped region');drawnow;
+end
+function h = subfxn_getImRect(thisFrame,titleStr)
+	% close(142568)
+	figure(9);
+	clf
+	subplot(1,2,1);
+		imagesc(thisFrame);
+		axis image;
+		% colormap parula;
+		title('select region')
+
+	h = imrect(gca);
+	addNewPositionCallback(h,@(p) title([titleStr 10 mat2str(p,3)]));
+	fcn = makeConstrainToRectFcn('imrect',get(gca,'XLim'),get(gca,'YLim'));
+	setPositionConstraintFcn(h,fcn);
 end
