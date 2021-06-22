@@ -9,7 +9,7 @@
   <meta name="author" content="Biafra Ahanonu">
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-<title>Install</title>
+<title>Manual movie cropping.</title>
 
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
@@ -20,8 +20,8 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "Install";
-    var mkdocs_page_input_path = "install_alt.md";
+    var mkdocs_page_name = "4| Movie clean-up";
+    var mkdocs_page_input_path = "pipeline_detailed_modify_movies.md";
     var mkdocs_page_url = null;
   </script>
   
@@ -53,12 +53,10 @@
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Setup</span></p>
-                <ul class="current">
+                <ul>
                     <li class="toctree-l1"><a class="reference internal" href="../install/">Quick Start</a>
                     </li>
-                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Install</a>
-    <ul class="current">
-    </ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../install_alt/">Install</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../example_data/">Example data</a>
                     </li>
@@ -75,7 +73,7 @@
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Processing imaging data</span></p>
-                <ul>
+                <ul class="current">
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_overview/">Overview</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_all/">One-page step-by-step</a>
@@ -86,7 +84,9 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_preprocess/">3| <u><strong>Processing imaging movies</strong></u></a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_modify_movies/">4| Movie clean-up</a>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">4| Movie clean-up</a>
+    <ul class="current">
+    </ul>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_signal_extraction/">5| <u><strong>Cell extraction</strong></u></a>
                     </li>
@@ -184,11 +184,11 @@
     
       
         
-          <li>Setup &raquo;</li>
+          <li>Processing imaging data &raquo;</li>
         
       
     
-    <li>Install</li>
+    <li>4| Movie clean-up</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -199,24 +199,11 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h1>
-<p>Note, this is an alternative method of installation to that outlined in <a href="../install/">Quick Start</a>.</p>
-<p>Clone the <code>CIAtah</code> repository or download the repository zip and unzip.</p>
-<ul>
-<li>Point the MATLAB path to the <code>CIAtah</code> folder.</li>
-<li>Run <code>loadBatchFxns.m</code> before using functions in the directory. This adds all needed directories and sub-directories to the MATLAB path.</li>
-<li>Type <code>obj = ciatah;</code> into MATLAB command window and follow instructions that appear after to add data and run analysis.</li>
-<li>Run the <code>ciatah</code> class method <code>loadDependencies</code> or type <code>obj.loadDependencies</code> after initializing a <code>ciatah</code> object into the command window to download and add Fiji to path, download CNMF/CNMF-E repositories, download/setup CVX (for CNMF/CNMF-E), and download example data.</li>
-</ul>
-<p>Note</p>
-<ul>
-<li>Place <code>CIAtah</code> in a folder where MATLAB will have write permissions, as it also creates a <code>private</code> subdirectory to store some user information along with downloading required external software packages.</li>
-<li><code>file_exchange</code> folder contains File Exchange functions used by <code>CIAtah</code>.</li>
-<li>In general, it is best to set the MATLAB startup directory to the <code>CIAtah</code> folder. This allows <code>java.opts</code> and <code>startup.m</code> to set the correct Java memory requirements and load the correct folders into the MATLAB path.</li>
-<li>If <code>CIAtah</code> IS NOT the startup folder, place <code>java.opts</code> wherever the MATLAB startup folder is so the correct Java memory requirements are set (important for using ImageJ/Miji in MATLAB).</li>
-<li>If it appears an old <code>CIAtah</code> repository is loaded after pulling a new version, run <code>restoredefaultpath</code> and check that old <code>CIAtah</code> folders are not in the MATLAB path.</li>
-</ul>
-<!-- - This version of `CIAtah` has been tested on Windows MATLAB `2015b`, `2017a`, and `2018b`. Moderate testing on Windows and OSX (10.10.5) `2017b` and `2018b`. -->
+                <h1 id="manual-movie-cropping-with-modelmodifymovies">Manual movie cropping with <code>modelModifyMovies</code><a class="headerlink" href="#manual-movie-cropping-with-modelmodifymovies" title="Permanent link">&para;</a></h1>
+<p>If users need to eliminate specific regions of their movie before running cell extraction, that option is provided. Users select a region using an ImageJ interface and select <code>done</code> when they want to move onto the next movie or start the cropping. Movies have <code>NaNs</code> or <code>0s</code> added in the cropped region rather than changing the dimensions of the movie.</p>
+<p>This is generally advised for movies such as miniature microscope movies imaged through a GRIN lens probe where the outside or edge or the GRIN lens are visible. This can lead to large fluctuations that can throw off some algorithms (e.g. PCA-ICA can end up assigning many components to these "signals").</p>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/49829899-8f627d00-fd44-11e8-96fb-2e909b4f0d78.png" /></p>
+<!-- ****************************************** -->
               
             </div>
           </div>
@@ -224,10 +211,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../example_data/" class="btn btn-neutral float-right" title="Example data">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../pipeline_detailed_signal_extraction/" class="btn btn-neutral float-right" title="5| <u><strong>Cell extraction</strong></u>">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
-        <a href="../install/" class="btn btn-neutral" title="Quick Start"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../pipeline_detailed_preprocess/" class="btn btn-neutral" title="3| <u><strong>Processing imaging movies</strong></u>"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -253,10 +240,10 @@
     <span class="rst-current-version" data-toggle="rst-current-version">
       
       
-        <span><a href="../install/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+        <span><a href="../pipeline_detailed_preprocess/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
       
-        <span style="margin-left: 15px"><a href="../example_data/" style="color: #fcfcfc">Next &raquo;</a></span>
+        <span style="margin-left: 15px"><a href="../pipeline_detailed_signal_extraction/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>

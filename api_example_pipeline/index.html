@@ -6,10 +6,11 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  
+  <meta name="author" content="Biafra Ahanonu">
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>Custom pipelines - CIAtah</title>
+<title>Custom pipelines</title>
+
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
   <link rel="stylesheet" href="../css/theme.css" />
@@ -71,13 +72,36 @@
                     <li class="toctree-l1"><a class="reference internal" href="../organization/">Organization</a>
                     </li>
                 </ul>
-                <p class="caption"><span class="caption-text">Processing data</span></p>
+                <p class="caption"><span class="caption-text">Processing imaging data</span></p>
                 <ul>
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_overview/">Overview</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed/">Step-by-step</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_all/">One-page step-by-step</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_animal_tracking/">Animal tracking</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_downsample_raw/">1| Downsample raw movies</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_preprocess_check/">2| Check pre-process settings</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_preprocess/">3| <u><strong>Processing imaging movies</strong></u></a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_modify_movies/">4| Movie clean-up</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_signal_extraction/">5| <u><strong>Cell extraction</strong></u></a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_signal_extraction_load/">6| Loading cell extraction outputs</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_signal_extraction_validation/">7| <u><strong>Cell extraction validation</strong></u></a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_signal_sorting_manual/">8| <u><strong>Manual cell sorting</strong></u></a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_signal_region_analysis/">9| Region-specific analysis</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_cross_session/">10| <u><strong>Cross-session alignment</strong></u></a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Animal tracking</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_animal_tracking/">Animal tracking (ImageJ+MATLAB)</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">API</span></p>
@@ -253,6 +277,42 @@
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">%% Save outputs to NWB format</span>
 <span class="lineno" data-linenos="2 "></span><span class="n">saveNeurodataWithoutBorders</span><span class="p">(</span><span class="n">IcaFilters</span><span class="p">,{</span><span class="n">IcaTraces</span><span class="p">},</span><span class="s">&#39;pcaica&#39;</span><span class="p">,</span><span class="s">&#39;pcaica.nwb&#39;</span><span class="p">);</span>
 </code></pre></div>
+<p>Run CNMF or CNMF-e cell extraction.
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span><span class="c">%% Run CNMF or CNMF-e cell extraction. Check each function with &quot;edit&quot; for options.</span>
+<span class="lineno" data-linenos=" 2 "></span><span class="n">numExpectedComponents</span> <span class="p">=</span> <span class="mi">225</span><span class="p">;</span>
+<span class="lineno" data-linenos=" 3 "></span><span class="n">cellWidth</span> <span class="p">=</span> <span class="mi">10</span><span class="p">;</span>
+<span class="lineno" data-linenos=" 4 "></span><span class="n">cnmfOptions</span><span class="p">.</span><span class="n">otherCNMF</span><span class="p">.</span><span class="n">tau</span> <span class="p">=</span> <span class="n">cellWidth</span><span class="o">/</span><span class="mi">2</span><span class="p">;</span> <span class="c">% expected width of cells</span>
+<span class="lineno" data-linenos=" 5 "></span>
+<span class="lineno" data-linenos=" 6 "></span><span class="c">% Run CNMF</span>
+<span class="lineno" data-linenos=" 7 "></span><span class="p">[</span><span class="n">cnmfAnalysisOutput</span><span class="p">]</span> <span class="p">=</span> <span class="n">computeCnmfSignalExtractionClass</span><span class="p">(</span><span class="n">movieList</span><span class="p">,</span><span class="n">numExpectedComponents</span><span class="p">,</span><span class="s">&#39;options&#39;</span><span class="p">,</span><span class="n">cnmfOptions</span><span class="p">);</span>
+<span class="lineno" data-linenos=" 8 "></span>
+<span class="lineno" data-linenos=" 9 "></span><span class="c">% Run CNMF-e</span>
+<span class="lineno" data-linenos="10 "></span><span class="p">[</span><span class="n">cnmfeAnalysisOutput</span><span class="p">]</span> <span class="p">=</span> <span class="n">computeCnmfeSignalExtraction_batch</span><span class="p">(</span><span class="n">movieList</span><span class="p">{</span><span class="mi">1</span><span class="p">},</span><span class="s">&#39;options&#39;</span><span class="p">,</span><span class="n">cnmfeOptions</span><span class="p">);</span>
+<span class="lineno" data-linenos="11 "></span>
+<span class="lineno" data-linenos="12 "></span><span class="c">%% Save outputs to NWB format</span>
+<span class="lineno" data-linenos="13 "></span><span class="n">saveNeurodataWithoutBorders</span><span class="p">(</span><span class="n">cnmfAnalysisOutput</span><span class="p">.</span><span class="n">extractedImages</span><span class="p">,{</span><span class="n">cnmfAnalysisOutput</span><span class="p">.</span><span class="n">extractedSignals</span><span class="p">,</span><span class="n">cnmfAnalysisOutput</span><span class="p">.</span><span class="n">extractedSignalsEst</span><span class="p">},</span><span class="s">&#39;cnmf&#39;</span><span class="p">,</span><span class="s">&#39;cnmf.nwb&#39;</span><span class="p">);</span>
+<span class="lineno" data-linenos="14 "></span><span class="n">saveNeurodataWithoutBorders</span><span class="p">(</span><span class="n">cnmfeAnalysisOutput</span><span class="p">.</span><span class="n">extractedImages</span><span class="p">,{</span><span class="n">cnmfeAnalysisOutput</span><span class="p">.</span><span class="n">extractedSignals</span><span class="p">,</span><span class="n">cnmfeAnalysisOutput</span><span class="p">.</span><span class="n">extractedSignalsEst</span><span class="p">},</span><span class="s">&#39;cnmfe&#39;</span><span class="p">,</span><span class="s">&#39;cnmfe.nwb&#39;</span><span class="p">);</span>
+</code></pre></div></p>
+<p>Run EXTRACT cell extraction.
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span><span class="c">%% Run EXTRACT cell extraction. Check each function with &quot;edit&quot; for options.</span>
+<span class="lineno" data-linenos=" 2 "></span><span class="c">% Load default configuration</span>
+<span class="lineno" data-linenos=" 3 "></span><span class="n">extractConfig</span> <span class="p">=</span> <span class="n">get_defaults</span><span class="p">([]);</span>
+<span class="lineno" data-linenos=" 4 "></span>
+<span class="lineno" data-linenos=" 5 "></span><span class="n">outStruct</span> <span class="p">=</span> <span class="n">extractor</span><span class="p">(</span><span class="n">inputMovie</span><span class="p">,</span><span class="n">extractConfig</span><span class="p">);</span>
+<span class="lineno" data-linenos=" 6 "></span><span class="n">extractAnalysisOutput</span><span class="p">.</span><span class="n">filters</span> <span class="p">=</span> <span class="n">outStruct</span><span class="p">.</span><span class="n">spatial_weights</span><span class="p">;</span>
+<span class="lineno" data-linenos=" 7 "></span><span class="c">% permute so it is [nCells frames]</span>
+<span class="lineno" data-linenos=" 8 "></span><span class="n">extractAnalysisOutput</span><span class="p">.</span><span class="n">traces</span> <span class="p">=</span> <span class="nb">permute</span><span class="p">(</span><span class="n">outStruct</span><span class="p">.</span><span class="n">temporal_weights</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span> <span class="mi">1</span><span class="p">]);</span>
+<span class="lineno" data-linenos=" 9 "></span>
+<span class="lineno" data-linenos="10 "></span><span class="c">% Other run information if saving as a MAT-file.</span>
+<span class="lineno" data-linenos="11 "></span><span class="n">extractAnalysisOutput</span><span class="p">.</span><span class="n">info</span> <span class="p">=</span> <span class="n">outStruct</span><span class="p">.</span><span class="n">info</span><span class="p">;</span>
+<span class="lineno" data-linenos="12 "></span><span class="n">extractAnalysisOutput</span><span class="p">.</span><span class="n">config</span> <span class="p">=</span> <span class="n">outStruct</span><span class="p">.</span><span class="n">config</span><span class="p">;</span>
+<span class="lineno" data-linenos="13 "></span><span class="n">extractAnalysisOutput</span><span class="p">.</span><span class="n">info</span> <span class="p">=</span> <span class="n">outStruct</span><span class="p">.</span><span class="n">info</span><span class="p">;</span>
+<span class="lineno" data-linenos="14 "></span><span class="n">extractAnalysisOutput</span><span class="p">.</span><span class="n">userInputConfig</span> <span class="p">=</span> <span class="n">extractConfig</span><span class="p">;</span>
+<span class="lineno" data-linenos="15 "></span><span class="n">extractAnalysisOutput</span><span class="p">.</span><span class="n">opts</span> <span class="p">=</span> <span class="n">outStruct</span><span class="p">.</span><span class="n">config</span><span class="p">;</span>
+<span class="lineno" data-linenos="16 "></span>
+<span class="lineno" data-linenos="17 "></span><span class="c">%% Save outputs to NWB format</span>
+<span class="lineno" data-linenos="18 "></span><span class="n">saveNeurodataWithoutBorders</span><span class="p">(</span><span class="n">extractAnalysisOutput</span><span class="p">.</span><span class="n">filters</span><span class="p">,{</span><span class="n">extractAnalysisOutput</span><span class="p">.</span><span class="n">traces</span><span class="p">},</span><span class="s">&#39;cnmf&#39;</span><span class="p">,</span><span class="s">&#39;cnmf.nwb&#39;</span><span class="p">);</span>
+</code></pre></div></p>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">%% Run signal sorting using matrix inputs</span>
 <span class="lineno" data-linenos="2 "></span><span class="p">[</span><span class="n">outImages</span><span class="p">,</span> <span class="n">outSignals</span><span class="p">,</span> <span class="n">choices</span><span class="p">]</span> <span class="p">=</span> <span class="n">signalSorter</span><span class="p">(</span><span class="n">IcaFilters</span><span class="p">,</span><span class="n">IcaTraces</span><span class="p">,</span><span class="s">&#39;inputMovie&#39;</span><span class="p">,</span><span class="n">inputMovie3</span><span class="p">);</span>
 </code></pre></div>
@@ -303,7 +363,7 @@
         <a href="../api_ciapkg/" class="btn btn-neutral float-right" title="ciapkg">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
-        <a href="../pipeline_animal_tracking/" class="btn btn-neutral" title="Animal tracking"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../pipeline_animal_tracking/" class="btn btn-neutral" title="Animal tracking (ImageJ+MATLAB)"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   

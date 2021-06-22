@@ -9,7 +9,7 @@
   <meta name="author" content="Biafra Ahanonu">
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-<title>Install</title>
+<title>Spatially downsample raw movies or convert to HDF5</title>
 
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
@@ -20,8 +20,8 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "Install";
-    var mkdocs_page_input_path = "install_alt.md";
+    var mkdocs_page_name = "1| Downsample raw movies";
+    var mkdocs_page_input_path = "pipeline_detailed_downsample_raw.md";
     var mkdocs_page_url = null;
   </script>
   
@@ -53,12 +53,10 @@
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Setup</span></p>
-                <ul class="current">
+                <ul>
                     <li class="toctree-l1"><a class="reference internal" href="../install/">Quick Start</a>
                     </li>
-                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Install</a>
-    <ul class="current">
-    </ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../install_alt/">Install</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../example_data/">Example data</a>
                     </li>
@@ -75,12 +73,16 @@
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Processing imaging data</span></p>
-                <ul>
+                <ul class="current">
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_overview/">Overview</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_all/">One-page step-by-step</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_downsample_raw/">1| Downsample raw movies</a>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">1| Downsample raw movies</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#converting-inscopix-isxd-files-to-hdf5">Converting Inscopix ISXD files to HDF5</a>
+    </li>
+    </ul>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_preprocess_check/">2| Check pre-process settings</a>
                     </li>
@@ -184,11 +186,11 @@
     
       
         
-          <li>Setup &raquo;</li>
+          <li>Processing imaging data &raquo;</li>
         
       
     
-    <li>Install</li>
+    <li>1| Downsample raw movies</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -199,24 +201,21 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h1>
-<p>Note, this is an alternative method of installation to that outlined in <a href="../install/">Quick Start</a>.</p>
-<p>Clone the <code>CIAtah</code> repository or download the repository zip and unzip.</p>
-<ul>
-<li>Point the MATLAB path to the <code>CIAtah</code> folder.</li>
-<li>Run <code>loadBatchFxns.m</code> before using functions in the directory. This adds all needed directories and sub-directories to the MATLAB path.</li>
-<li>Type <code>obj = ciatah;</code> into MATLAB command window and follow instructions that appear after to add data and run analysis.</li>
-<li>Run the <code>ciatah</code> class method <code>loadDependencies</code> or type <code>obj.loadDependencies</code> after initializing a <code>ciatah</code> object into the command window to download and add Fiji to path, download CNMF/CNMF-E repositories, download/setup CVX (for CNMF/CNMF-E), and download example data.</li>
-</ul>
-<p>Note</p>
-<ul>
-<li>Place <code>CIAtah</code> in a folder where MATLAB will have write permissions, as it also creates a <code>private</code> subdirectory to store some user information along with downloading required external software packages.</li>
-<li><code>file_exchange</code> folder contains File Exchange functions used by <code>CIAtah</code>.</li>
-<li>In general, it is best to set the MATLAB startup directory to the <code>CIAtah</code> folder. This allows <code>java.opts</code> and <code>startup.m</code> to set the correct Java memory requirements and load the correct folders into the MATLAB path.</li>
-<li>If <code>CIAtah</code> IS NOT the startup folder, place <code>java.opts</code> wherever the MATLAB startup folder is so the correct Java memory requirements are set (important for using ImageJ/Miji in MATLAB).</li>
-<li>If it appears an old <code>CIAtah</code> repository is loaded after pulling a new version, run <code>restoredefaultpath</code> and check that old <code>CIAtah</code> folders are not in the MATLAB path.</li>
-</ul>
-<!-- - This version of `CIAtah` has been tested on Windows MATLAB `2015b`, `2017a`, and `2018b`. Moderate testing on Windows and OSX (10.10.5) `2017b` and `2018b`. -->
+                <h1 id="spatially-downsample-raw-movies-or-convert-to-hdf5-with-modeldownsamplerawmovies">Spatially downsample raw movies or convert to HDF5 with <code>modelDownsampleRawMovies</code><a class="headerlink" href="#spatially-downsample-raw-movies-or-convert-to-hdf5-with-modeldownsamplerawmovies" title="Permanent link">&para;</a></h1>
+<p>Users have the ability to spatially downsample raw movies, often necessary to denoise the data, save storage space, and improve runtimes of later processing steps. For most data, users can downsample 2 or 4 times in each spatial dimension while still retaining sufficient pixels per cell to facilitate cell-extraction.</p>
+<p>To run, either select <code>modelDownsampleRawMovies</code> in the GUI menu or type the below command after initializing a CIAtah obj.</p>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">obj</span><span class="p">.</span><span class="n">modelDownsampleRawMovies</span><span class="p">;</span>
+</code></pre></div>
+<p>This will pop-up the following screen. Users can
+- input several folders where ISXD files are by separating each folder path with a comma (<code>Folder(s) where raw HDF5s are located</code>),
+- specify a common root folder to save files to (<code>Folder to save downsampled HDF5s to:</code>),
+- and input a root directory that contains the sub-folders with the raw data (<code>Decompression source root folder(s)</code>).
+The function will automatically put each file in its corresponding folder, <strong>make sure folder names are unique</strong> (this should be done anyways for data analysis reasons).</p>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/67715130-71b2fc00-f986-11e9-970e-9d1252c25db8.png" /></p>
+<h2 id="converting-inscopix-isxd-files-to-hdf5">Converting Inscopix ISXD files to HDF5<a class="headerlink" href="#converting-inscopix-isxd-files-to-hdf5" title="Permanent link">&para;</a></h2>
+<p>To convert from Inscopix ISXD file format (output by nVista v3+ and nVoke) to HDF5 run <code>modelDownsampleRawMovies</code> without changing the regular expression or make sure it looks for <code>.*.isxd</code> or similar. Users will need the latest version of the <a href="https://www.inscopix.com/nVista#Data_Analysis">Inscopix Data Processing Software</a> as these functions take advantage of their API. If CIAtah cannot automatically find the API, it will ask the user to direct it to the <em>root</em> location of the Inscopix Data Processing Software (see below).</p>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/67715327-df5f2800-f986-11e9-9f91-eeabe7688fed.png" /></p>
+<!-- ****************************************** -->
               
             </div>
           </div>
@@ -224,10 +223,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../example_data/" class="btn btn-neutral float-right" title="Example data">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../pipeline_detailed_preprocess_check/" class="btn btn-neutral float-right" title="2| Check pre-process settings">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
-        <a href="../install/" class="btn btn-neutral" title="Quick Start"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../pipeline_detailed_all/" class="btn btn-neutral" title="One-page step-by-step"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -253,10 +252,10 @@
     <span class="rst-current-version" data-toggle="rst-current-version">
       
       
-        <span><a href="../install/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+        <span><a href="../pipeline_detailed_all/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
       
-        <span style="margin-left: 15px"><a href="../example_data/" style="color: #fcfcfc">Next &raquo;</a></span>
+        <span style="margin-left: 15px"><a href="../pipeline_detailed_preprocess_check/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>

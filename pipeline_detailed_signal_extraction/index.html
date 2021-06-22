@@ -9,7 +9,7 @@
   <meta name="author" content="Biafra Ahanonu">
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-<title>Install</title>
+<title>Automated cell extraction.</title>
 
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
@@ -20,8 +20,8 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "Install";
-    var mkdocs_page_input_path = "install_alt.md";
+    var mkdocs_page_name = "5| <u><strong>Cell extraction</strong></u>";
+    var mkdocs_page_input_path = "pipeline_detailed_signal_extraction.md";
     var mkdocs_page_url = null;
   </script>
   
@@ -53,12 +53,10 @@
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Setup</span></p>
-                <ul class="current">
+                <ul>
                     <li class="toctree-l1"><a class="reference internal" href="../install/">Quick Start</a>
                     </li>
-                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Install</a>
-    <ul class="current">
-    </ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../install_alt/">Install</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../example_data/">Example data</a>
                     </li>
@@ -75,7 +73,7 @@
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Processing imaging data</span></p>
-                <ul>
+                <ul class="current">
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_overview/">Overview</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_all/">One-page step-by-step</a>
@@ -88,7 +86,9 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_modify_movies/">4| Movie clean-up</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_signal_extraction/">5| <u><strong>Cell extraction</strong></u></a>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">5| <u><strong>Cell extraction</strong></u></a>
+    <ul class="current">
+    </ul>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_signal_extraction_load/">6| Loading cell extraction outputs</a>
                     </li>
@@ -184,11 +184,11 @@
     
       
         
-          <li>Setup &raquo;</li>
+          <li>Processing imaging data &raquo;</li>
         
       
     
-    <li>Install</li>
+    <li>5| <u><strong>Cell extraction</strong></u></li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -199,24 +199,16 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h1>
-<p>Note, this is an alternative method of installation to that outlined in <a href="../install/">Quick Start</a>.</p>
-<p>Clone the <code>CIAtah</code> repository or download the repository zip and unzip.</p>
-<ul>
-<li>Point the MATLAB path to the <code>CIAtah</code> folder.</li>
-<li>Run <code>loadBatchFxns.m</code> before using functions in the directory. This adds all needed directories and sub-directories to the MATLAB path.</li>
-<li>Type <code>obj = ciatah;</code> into MATLAB command window and follow instructions that appear after to add data and run analysis.</li>
-<li>Run the <code>ciatah</code> class method <code>loadDependencies</code> or type <code>obj.loadDependencies</code> after initializing a <code>ciatah</code> object into the command window to download and add Fiji to path, download CNMF/CNMF-E repositories, download/setup CVX (for CNMF/CNMF-E), and download example data.</li>
-</ul>
-<p>Note</p>
-<ul>
-<li>Place <code>CIAtah</code> in a folder where MATLAB will have write permissions, as it also creates a <code>private</code> subdirectory to store some user information along with downloading required external software packages.</li>
-<li><code>file_exchange</code> folder contains File Exchange functions used by <code>CIAtah</code>.</li>
-<li>In general, it is best to set the MATLAB startup directory to the <code>CIAtah</code> folder. This allows <code>java.opts</code> and <code>startup.m</code> to set the correct Java memory requirements and load the correct folders into the MATLAB path.</li>
-<li>If <code>CIAtah</code> IS NOT the startup folder, place <code>java.opts</code> wherever the MATLAB startup folder is so the correct Java memory requirements are set (important for using ImageJ/Miji in MATLAB).</li>
-<li>If it appears an old <code>CIAtah</code> repository is loaded after pulling a new version, run <code>restoredefaultpath</code> and check that old <code>CIAtah</code> folders are not in the MATLAB path.</li>
-</ul>
-<!-- - This version of `CIAtah` has been tested on Windows MATLAB `2015b`, `2017a`, and `2018b`. Moderate testing on Windows and OSX (10.10.5) `2017b` and `2018b`. -->
+                <h1 id="extracting-cells-with-modelextractsignalsfrommovie">Extracting cells with <code>modelExtractSignalsFromMovie</code><a class="headerlink" href="#extracting-cells-with-modelextractsignalsfrommovie" title="Permanent link">&para;</a></h1>
+<p>Users can run PCA-ICA, <a href='https://github.com/schnitzer-lab/EXTRACT-public' target='_blank'>EXTRACT</a>, CNMF, CNMF-E, and ROI cell extraction by following the below set of option screens. Details on running the new Schnitzer lab cell-extraction methods (e.g. CELLMax) will be added here after they are released.</p>
+<p>We normally estimate the number of PCs and ICs on the high end, manually sort to get an estimate of the number of cells, then run PCA-ICA again with IC 1.5-3x the number of cells and PCs 1-1.5x number of ICs.</p>
+<p>To run CNMF or CNMF-E, run <code>loadDependencies</code> module (e.g. <code>obj.loadDependencies</code>) after CIAtah class is loaded. CVX (a CNMF dependency) will also be downloaded and <code>cvx_setup</code> run to automatically set it up.</p>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/49830421-fa608380-fd45-11e8-8d9a-47a3d2921111.png" /></p>
+<p>The resulting output (on <em>Figure 45+</em>) at the end should look something like:</p>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/67053021-fe42fc00-f0f4-11e9-980c-88f463cb5043.png" /></p>
+<!-- ![image](https://user-images.githubusercontent.com/5241605/51728907-c2c44700-2026-11e9-9614-1a57c3a60f5f.png) -->
+
+<!-- ****************************************** -->
               
             </div>
           </div>
@@ -224,10 +216,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../example_data/" class="btn btn-neutral float-right" title="Example data">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../pipeline_detailed_signal_extraction_load/" class="btn btn-neutral float-right" title="6| Loading cell extraction outputs">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
-        <a href="../install/" class="btn btn-neutral" title="Quick Start"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../pipeline_detailed_modify_movies/" class="btn btn-neutral" title="4| Movie clean-up"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -253,10 +245,10 @@
     <span class="rst-current-version" data-toggle="rst-current-version">
       
       
-        <span><a href="../install/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+        <span><a href="../pipeline_detailed_modify_movies/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
       
-        <span style="margin-left: 15px"><a href="../example_data/" style="color: #fcfcfc">Next &raquo;</a></span>
+        <span style="margin-left: 15px"><a href="../pipeline_detailed_signal_extraction_load/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>

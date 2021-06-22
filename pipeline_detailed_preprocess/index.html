@@ -9,7 +9,7 @@
   <meta name="author" content="Biafra Ahanonu">
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-<title>Install</title>
+<title>Preprocessing calcium imaging movies</title>
 
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
@@ -20,8 +20,8 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "Install";
-    var mkdocs_page_input_path = "install_alt.md";
+    var mkdocs_page_name = "3| <u><strong>Processing imaging movies</strong></u>";
+    var mkdocs_page_input_path = "pipeline_detailed_preprocess.md";
     var mkdocs_page_url = null;
   </script>
   
@@ -53,12 +53,10 @@
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Setup</span></p>
-                <ul class="current">
+                <ul>
                     <li class="toctree-l1"><a class="reference internal" href="../install/">Quick Start</a>
                     </li>
-                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Install</a>
-    <ul class="current">
-    </ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../install_alt/">Install</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../example_data/">Example data</a>
                     </li>
@@ -75,7 +73,7 @@
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Processing imaging data</span></p>
-                <ul>
+                <ul class="current">
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_overview/">Overview</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_all/">One-page step-by-step</a>
@@ -84,7 +82,11 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_preprocess_check/">2| Check pre-process settings</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_preprocess/">3| <u><strong>Processing imaging movies</strong></u></a>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">3| <u><strong>Processing imaging movies</strong></u></a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#saveload-preprocessing-settings">Save/load preprocessing settings</a>
+    </li>
+    </ul>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_modify_movies/">4| Movie clean-up</a>
                     </li>
@@ -184,11 +186,11 @@
     
       
         
-          <li>Setup &raquo;</li>
+          <li>Processing imaging data &raquo;</li>
         
       
     
-    <li>Install</li>
+    <li>3| <u><strong>Processing imaging movies</strong></u></li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -199,24 +201,32 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h1>
-<p>Note, this is an alternative method of installation to that outlined in <a href="../install/">Quick Start</a>.</p>
-<p>Clone the <code>CIAtah</code> repository or download the repository zip and unzip.</p>
+                <h1 id="preprocessing-calcium-imaging-movies-with-modelpreprocessmovie">Preprocessing calcium imaging movies with <code>modelPreprocessMovie</code><a class="headerlink" href="#preprocessing-calcium-imaging-movies-with-modelpreprocessmovie" title="Permanent link">&para;</a></h1>
+<p>After users instantiate an object of the <code>CIAtah</code> class and enter a folder, they can start preprocessing of their calcium imaging data with <code>modelPreprocessMovie</code>.</p>
 <ul>
-<li>Point the MATLAB path to the <code>CIAtah</code> folder.</li>
-<li>Run <code>loadBatchFxns.m</code> before using functions in the directory. This adds all needed directories and sub-directories to the MATLAB path.</li>
-<li>Type <code>obj = ciatah;</code> into MATLAB command window and follow instructions that appear after to add data and run analysis.</li>
-<li>Run the <code>ciatah</code> class method <code>loadDependencies</code> or type <code>obj.loadDependencies</code> after initializing a <code>ciatah</code> object into the command window to download and add Fiji to path, download CNMF/CNMF-E repositories, download/setup CVX (for CNMF/CNMF-E), and download example data.</li>
+<li>See below for a series of windows to get started, the options for motion correction, cropping unneeded regions, Δ_F/F_, and temporal downsampling were selected for use in the study associated with this repository.</li>
+<li>If users have not specified the path to Miji, a window appears asking them to select the path to Miji's <code>scripts</code> folder.</li>
+<li>If users are using the test dataset, it is recommended that they do not use temporal downsampling.</li>
+<li>Vertical and horizontal stripes in movies (e.g. CMOS camera artifacts) can be removed via <code>stripeRemoval</code> step. Remember to select correct <code>stripOrientationRemove</code>,<code>stripSize</code>, and <code>stripfreqLowExclude</code> options in the preprocessing options menu.</li>
 </ul>
-<p>Note</p>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/49827992-93d86700-fd3f-11e8-9936-d7143bbec3db.png" /></p>
+<p>Next the user is presented with a series of options for motion correction, image registration, and cropping.:</p>
 <ul>
-<li>Place <code>CIAtah</code> in a folder where MATLAB will have write permissions, as it also creates a <code>private</code> subdirectory to store some user information along with downloading required external software packages.</li>
-<li><code>file_exchange</code> folder contains File Exchange functions used by <code>CIAtah</code>.</li>
-<li>In general, it is best to set the MATLAB startup directory to the <code>CIAtah</code> folder. This allows <code>java.opts</code> and <code>startup.m</code> to set the correct Java memory requirements and load the correct folders into the MATLAB path.</li>
-<li>If <code>CIAtah</code> IS NOT the startup folder, place <code>java.opts</code> wherever the MATLAB startup folder is so the correct Java memory requirements are set (important for using ImageJ/Miji in MATLAB).</li>
-<li>If it appears an old <code>CIAtah</code> repository is loaded after pulling a new version, run <code>restoredefaultpath</code> and check that old <code>CIAtah</code> folders are not in the MATLAB path.</li>
+<li>The options highlighted in green are those that should be considered by users.</li>
+<li>Users can over their mouse over each option to get tips on what they mean.</li>
+<li>In particular, make sure that <code>inputDatasetName</code> is correct for HDF5 files and that <code>fileFilterRegexp</code> matches the form of the calcium imaging movie files to be analyzed.</li>
+<li>After this, the user is asked to let the algorithm know how many frames of the movie to analyze (defaults to all frames).</li>
+<li>Then the user is asked to select a region to use for motion correction. In general, it is best to select areas with high contrast and static markers such as blood vessels. Stay away from the edge of the movie or areas outside the brain (e.g. the edge of microendoscope GRIN lens in one-photon miniature microscope movies).</li>
 </ul>
-<!-- - This version of `CIAtah` has been tested on Windows MATLAB `2015b`, `2017a`, and `2018b`. Moderate testing on Windows and OSX (10.10.5) `2017b` and `2018b`. -->
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/49828665-4ceb7100-fd41-11e8-9da6-9f5a510f1c13.png" /></p>
+<h2 id="saveload-preprocessing-settings">Save/load preprocessing settings<a class="headerlink" href="#saveload-preprocessing-settings" title="Permanent link">&para;</a></h2>
+<p>Users can also enable saving and loading of previously selected pre-processing settings by changing the red option below.</p>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/70419318-10b52400-1a1a-11ea-9b43-782ac6624042.png" /></p>
+<p>Settings loaded from previous run (e.g. of <code>modelPreprocessMovie</code>) or file (e.g. from <code>viewMovieRegistrationTest</code> runs) are highlighted in orange. Settings that user has just changed are still highlighted in green.</p>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/70418766-e6169b80-1a18-11ea-9713-f5a8301fe1c1.png" /></p>
+<p>The algorithm will then run all the requested preprocessing steps and presented the user with the option of viewing a slice of the processed file. Users have now completed pre-processing.</p>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/49829599-b53b5200-fd43-11e8-82eb-1e94fd7950e7.png" /></p>
+<!-- ****************************************** -->
               
             </div>
           </div>
@@ -224,10 +234,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../example_data/" class="btn btn-neutral float-right" title="Example data">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../pipeline_detailed_modify_movies/" class="btn btn-neutral float-right" title="4| Movie clean-up">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
-        <a href="../install/" class="btn btn-neutral" title="Quick Start"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../pipeline_detailed_preprocess_check/" class="btn btn-neutral" title="2| Check pre-process settings"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -253,10 +263,10 @@
     <span class="rst-current-version" data-toggle="rst-current-version">
       
       
-        <span><a href="../install/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+        <span><a href="../pipeline_detailed_preprocess_check/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
       
-        <span style="margin-left: 15px"><a href="../example_data/" style="color: #fcfcfc">Next &raquo;</a></span>
+        <span style="margin-left: 15px"><a href="../pipeline_detailed_modify_movies/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>

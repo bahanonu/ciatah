@@ -9,7 +9,7 @@
   <meta name="author" content="Biafra Ahanonu">
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-<title>Detailed {{ site.name }} processing pipeline</title>
+<title>One-page step-by-step</title>
 
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
@@ -20,8 +20,8 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "Detailed {{ site.name }} processing pipeline";
-    var mkdocs_page_input_path = "pipeline_detailed.md";
+    var mkdocs_page_name = "One-page step-by-step";
+    var mkdocs_page_input_path = "pipeline_detailed_all.md";
     var mkdocs_page_url = null;
   </script>
   
@@ -73,10 +73,64 @@
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Processing imaging data</span></p>
-                <ul>
+                <ul class="current">
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_overview/">Overview</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_all/">One-page step-by-step</a>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">One-page step-by-step</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#spatially-downsample-raw-movies-or-convert-to-hdf5-with-modeldownsamplerawmovies">Spatially downsample raw movies or convert to HDF5 with modelDownsampleRawMovies</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#converting-inscopix-isxd-files-to-hdf5">Converting Inscopix ISXD files to HDF5</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#check-movie-registration-before-pre-processing-with-viewmovieregistrationtest">Check movie registration before pre-processing with viewMovieRegistrationTest</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#preprocessing-calcium-imaging-movies-with-modelpreprocessmovie">Preprocessing calcium imaging movies with modelPreprocessMovie</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#saveload-preprocessing-settings">Save/load preprocessing settings</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#manual-movie-cropping-with-modelmodifymovies">Manual movie cropping with modelModifyMovies</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#extracting-cells-with-modelextractsignalsfrommovie">Extracting cells with modelExtractSignalsFromMovie</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#loading-cell-extraction-output-data-for-custom-scripts">Loading cell-extraction output data for custom scripts</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#loading-cell-extraction-output-data-with-modelvarsfromfiles">Loading cell-extraction output data with modelVarsFromFiles</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#validating-cell-extraction-with-viewcellextractiononmovie">Validating cell extraction with viewCellExtractionOnMovie</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#sorting-cell-extraction-outputs-with-computemanualsortsignals">Sorting cell extraction outputs with computeManualSortSignals</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#gui-usage-on-large-imaging-datasets">GUI usage on large imaging datasets</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#cell-sorting-from-the-command-line-with-signalsorter">Cell sorting from the command line with signalSorter</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#bla-one-photon-imaging-data-signal-sorting-gui">BLA one-photon imaging data signal sorting GUI</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#mpfc-one-photon-imaging-data-signal-sorting-gui-from-example_downloadtestdatam">mPFC one-photon imaging data signal sorting GUI (from example_downloadTestData.m)</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#context-menu">Context menu</a>
+    </li>
+        </ul>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#removing-cells-not-within-brain-region-with-modelmodifyregionanalysis">Removing cells not within brain region with modelModifyRegionAnalysis</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#cross-session-cell-alignment-with-computematchobjbtwntrials">Cross-session cell alignment with computeMatchObjBtwnTrials</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#view-cross-session-cell-alignment-with-viewmatchobjbtwnsessions">View cross-session cell alignment with viewMatchObjBtwnSessions</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#save-cross-session-cell-alignment-with-modelsavematchobjbtwntrials">Save cross-session cell alignment with modelSaveMatchObjBtwnTrials</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_downsample_raw/">1| Downsample raw movies</a>
                     </li>
@@ -181,8 +235,12 @@
     <li><a href="..">Docs</a> &raquo;</li>
     
       
+        
+          <li>Processing imaging data &raquo;</li>
+        
+      
     
-    <li>Detailed {{ site.name }} processing pipeline</li>
+    <li>One-page step-by-step</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -197,48 +255,86 @@
 <p>The following detailed pipeline assumes you have started a CIAtah object using the below command:</p>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">obj</span> <span class="p">=</span> <span class="n">ciatah</span><span class="p">;</span>
 </code></pre></div>
+<p>This is the one-page version of the guide. Visit the individual pages by using the sidebar at left, can be easier to follow for some.</p>
+<hr />
+<p>title: Spatially downsample raw movies or convert to HDF5</p>
+<hr />
 <h2 id="spatially-downsample-raw-movies-or-convert-to-hdf5-with-modeldownsamplerawmovies">Spatially downsample raw movies or convert to HDF5 with <code>modelDownsampleRawMovies</code><a class="headerlink" href="#spatially-downsample-raw-movies-or-convert-to-hdf5-with-modeldownsamplerawmovies" title="Permanent link">&para;</a></h2>
 <p>Users have the ability to spatially downsample raw movies, often necessary to denoise the data, save storage space, and improve runtimes of later processing steps. For most data, users can downsample 2 or 4 times in each spatial dimension while still retaining sufficient pixels per cell to facilitate cell-extraction.</p>
-<p>To run, either select <code>modelDownsampleRawMovies</code> in the GUI menu or type the below command after initializing a CIAtah obj.</p>
+<p>To run, either select <code>modelDownsampleRawMovies</code> in the GUI menu or type the below command after initializing a {{ site.name }} obj.</p>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">obj</span><span class="p">.</span><span class="n">modelDownsampleRawMovies</span><span class="p">;</span>
 </code></pre></div>
-<p>This will pop-up the following screen. Users can
-- input several folders where ISXD files are by separating each folder path with a comma (<code>Folder(s) where raw HDF5s are located</code>),
-- specify a common root folder to save files to (<code>Folder to save downsampled HDF5s to:</code>),
-- and input a root directory that contains the sub-folders with the raw data (<code>Decompression source root folder(s)</code>).
-The function will automatically put each file in its corresponding folder, <strong>make sure folder names are unique</strong> (this should be done anyways for data analysis reasons).</p>
+<p>This will pop-up the following screen. Users can</p>
+<ul>
+<li>input several folders where ISXD files are by separating each folder path with a comma (<code>Folder(s) where raw HDF5s are located</code>),</li>
+</ul>
+<ul>
+<li>specify a common root folder to save files to (<code>Folder to save downsampled HDF5s to:</code>),</li>
+</ul>
+<ul>
+<li>and input a root directory that contains the sub-folders with the raw data (<code>Decompression source root folder(s)</code>).</li>
+</ul>
+<p>The function will automatically put each file in its corresponding folder, <strong>make sure folder names are unique</strong> (this should be done anyways for data analysis reasons).</p>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/67715130-71b2fc00-f986-11e9-970e-9d1252c25db8.png" /></p>
 <h3 id="converting-inscopix-isxd-files-to-hdf5">Converting Inscopix ISXD files to HDF5<a class="headerlink" href="#converting-inscopix-isxd-files-to-hdf5" title="Permanent link">&para;</a></h3>
-<p>To convert from Inscopix ISXD file format (output by nVista v3+ and nVoke) to HDF5 run <code>modelDownsampleRawMovies</code> without changing the regular expression or make sure it looks for <code>.*.isxd</code> or similar. Users will need the latest version of the <a href="https://www.inscopix.com/nVista#Data_Analysis">Inscopix Data Processing Software</a> as these functions take advantage of their API. If CIAtah cannot automatically find the API, it will ask the user to direct it to the <em>root</em> location of the Inscopix Data Processing Software (see below).</p>
+<p>To convert from Inscopix ISXD file format (output by nVista v3+ and nVoke) to HDF5 run <code>modelDownsampleRawMovies</code> without changing the regular expression or make sure it looks for <code>.*.isxd</code> or similar. Users will need the latest version of the <a href="https://www.inscopix.com/nVista#Data_Analysis">Inscopix Data Processing Software</a> as these functions take advantage of their API. If {{ site.name }} cannot automatically find the API, it will ask the user to direct it to the <em>root</em> location of the Inscopix Data Processing Software (see below).</p>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/67715327-df5f2800-f986-11e9-9f91-eeabe7688fed.png" /></p>
+<!-- ****************************************** -->
+<hr />
+<p>title: Check movie registration before pre-processing</p>
+<hr />
 <h2 id="check-movie-registration-before-pre-processing-with-viewmovieregistrationtest">Check movie registration before pre-processing with <code>viewMovieRegistrationTest</code><a class="headerlink" href="#check-movie-registration-before-pre-processing-with-viewmovieregistrationtest" title="Permanent link">&para;</a></h2>
 <p>Users should spatially filter one-photon or other data with background noise (e.g. neuropil). To get a feel for how the different spatial filtering affects SNR/movie data before running the full processing pipeline, run <code>viewMovieRegistrationTest</code> module. Then select either <code>matlab divide by lowpass before registering</code> or <code>matlab bandpass before registering</code> then change <code>filterBeforeRegFreqLow</code> and <code>filterBeforeRegFreqHigh</code> settings, see below.</p>
 <p>Within each folder will be a sub-folder called <code>preprocRunTest</code> inside of which is a series of sub-folders called <code>preprocRun##</code> that will contain a file called <code>settings.mat</code> that can be loaded into <code>modelPreprocessMovie</code> so the same settings that worked during the test can be used during the actual pre-processing run.</p>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/52497447-f3f65880-2b8a-11e9-8875-c6b408e5c011.png" /></p>
 <ul>
-<li>You'll get an output like the below:<ul>
+<li>
+<p>You'll get an output like the below:</p>
+<ul>
 <li><strong>A</strong>: The top left is without any filtering while the other 3 are with different bandpass filtering options.</li>
+</ul>
+<ul>
 <li><strong>B</strong>: Cell ΔF/F intensity profile from the raw movie. Obtain by selecting <code>Analyze-&gt;Plot profile</code> from Fiji menu after selecting a square segment running through a cell.</li>
+</ul>
+<ul>
 <li><strong>C</strong>: Same cell ΔF/F intensity profile from the bottom/left movie (note the y-axis is the same as above). Obtained in same manner as <strong>B</strong>.</li>
 </ul>
 </li>
 </ul>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/59561146-695ab580-8fd1-11e9-892b-ce1f5fc7800e.png" /></p>
+<!-- ****************************************** -->
+<hr />
+<p>title: Preprocessing calcium imaging movies</p>
+<hr />
 <h2 id="preprocessing-calcium-imaging-movies-with-modelpreprocessmovie">Preprocessing calcium imaging movies with <code>modelPreprocessMovie</code><a class="headerlink" href="#preprocessing-calcium-imaging-movies-with-modelpreprocessmovie" title="Permanent link">&para;</a></h2>
-<p>After users instantiate an object of the <code>CIAtah</code> class and enter a folder, they can start preprocessing of their calcium imaging data with <code>modelPreprocessMovie</code>.</p>
+<p>After users instantiate an object of the <code>{{ site.name }}</code> class and enter a folder, they can start preprocessing of their calcium imaging data with <code>modelPreprocessMovie</code>.</p>
 <ul>
 <li>See below for a series of windows to get started, the options for motion correction, cropping unneeded regions, Δ_F/F_, and temporal downsampling were selected for use in the study associated with this repository.</li>
+</ul>
+<ul>
 <li>If users have not specified the path to Miji, a window appears asking them to select the path to Miji's <code>scripts</code> folder.</li>
+</ul>
+<ul>
 <li>If users are using the test dataset, it is recommended that they do not use temporal downsampling.</li>
+</ul>
+<ul>
 <li>Vertical and horizontal stripes in movies (e.g. CMOS camera artifacts) can be removed via <code>stripeRemoval</code> step. Remember to select correct <code>stripOrientationRemove</code>,<code>stripSize</code>, and <code>stripfreqLowExclude</code> options in the preprocessing options menu.</li>
 </ul>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/49827992-93d86700-fd3f-11e8-9936-d7143bbec3db.png" /></p>
 <p>Next the user is presented with a series of options for motion correction, image registration, and cropping.:</p>
 <ul>
 <li>The options highlighted in green are those that should be considered by users.</li>
+</ul>
+<ul>
 <li>Users can over their mouse over each option to get tips on what they mean.</li>
+</ul>
+<ul>
 <li>In particular, make sure that <code>inputDatasetName</code> is correct for HDF5 files and that <code>fileFilterRegexp</code> matches the form of the calcium imaging movie files to be analyzed.</li>
+</ul>
+<ul>
 <li>After this, the user is asked to let the algorithm know how many frames of the movie to analyze (defaults to all frames).</li>
+</ul>
+<ul>
 <li>Then the user is asked to select a region to use for motion correction. In general, it is best to select areas with high contrast and static markers such as blood vessels. Stay away from the edge of the movie or areas outside the brain (e.g. the edge of microendoscope GRIN lens in one-photon miniature microscope movies).</li>
 </ul>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/49828665-4ceb7100-fd41-11e8-9da6-9f5a510f1c13.png" /></p>
@@ -250,16 +346,21 @@ The function will automatically put each file in its corresponding folder, <stro
 <p>The algorithm will then run all the requested preprocessing steps and presented the user with the option of viewing a slice of the processed file. Users have now completed pre-processing.</p>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/49829599-b53b5200-fd43-11e8-82eb-1e94fd7950e7.png" /></p>
 <!-- ****************************************** -->
-
+<hr />
+<p>title: Manual movie cropping.</p>
+<hr />
 <h2 id="manual-movie-cropping-with-modelmodifymovies">Manual movie cropping with <code>modelModifyMovies</code><a class="headerlink" href="#manual-movie-cropping-with-modelmodifymovies" title="Permanent link">&para;</a></h2>
 <p>If users need to eliminate specific regions of their movie before running cell extraction, that option is provided. Users select a region using an ImageJ interface and select <code>done</code> when they want to move onto the next movie or start the cropping. Movies have <code>NaNs</code> or <code>0s</code> added in the cropped region rather than changing the dimensions of the movie.</p>
+<p>This is generally advised for movies such as miniature microscope movies imaged through a GRIN lens probe where the outside or edge or the GRIN lens are visible. This can lead to large fluctuations that can throw off some algorithms (e.g. PCA-ICA can end up assigning many components to these "signals").</p>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/49829899-8f627d00-fd44-11e8-96fb-2e909b4f0d78.png" /></p>
 <!-- ****************************************** -->
-
+<hr />
+<p>title: Automated cell extraction.</p>
+<hr />
 <h2 id="extracting-cells-with-modelextractsignalsfrommovie">Extracting cells with <code>modelExtractSignalsFromMovie</code><a class="headerlink" href="#extracting-cells-with-modelextractsignalsfrommovie" title="Permanent link">&para;</a></h2>
 <p>Users can run PCA-ICA, <a href='https://github.com/schnitzer-lab/EXTRACT-public' target='_blank'>EXTRACT</a>, CNMF, CNMF-E, and ROI cell extraction by following the below set of option screens. Details on running the new Schnitzer lab cell-extraction methods (e.g. CELLMax) will be added here after they are released.</p>
 <p>We normally estimate the number of PCs and ICs on the high end, manually sort to get an estimate of the number of cells, then run PCA-ICA again with IC 1.5-3x the number of cells and PCs 1-1.5x number of ICs.</p>
-<p>To run CNMF or CNMF-E, run <code>loadDependencies</code> module (e.g. <code>obj.loadDependencies</code>) after CIAtah class is loaded. CVX (a CNMF dependency) will also be downloaded and <code>cvx_setup</code> run to automatically set it up.</p>
+<p>To run CNMF or CNMF-E, run <code>loadDependencies</code> module (e.g. <code>obj.loadDependencies</code>) after {{ site.name }} class is loaded. CVX (a CNMF dependency) will also be downloaded and <code>cvx_setup</code> run to automatically set it up.</p>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/49830421-fa608380-fd45-11e8-8d9a-47a3d2921111.png" /></p>
 <p>The resulting output (on <em>Figure 45+</em>) at the end should look something like:</p>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/67053021-fe42fc00-f0f4-11e9-980c-88f463cb5043.png" /></p>
@@ -267,6 +368,9 @@ The function will automatically put each file in its corresponding folder, <stro
 
 <!-- ****************************************** -->
 
+<hr />
+<p>title: Loading cell extraction data.</p>
+<hr />
 <h2 id="loading-cell-extraction-output-data-for-custom-scripts">Loading cell-extraction output data for custom scripts<a class="headerlink" href="#loading-cell-extraction-output-data-for-custom-scripts" title="Permanent link">&para;</a></h2>
 <p>Users can load outputs from cell extraction using the below command. This will then allow users to use the images and activity traces for downstream analysis as needed.</p>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="p">[</span><span class="n">inputImages</span><span class="p">,</span><span class="n">inputSignals</span><span class="p">,</span><span class="n">infoStruct</span><span class="p">,</span><span class="n">algorithmStr</span><span class="p">,</span><span class="n">inputSignals2</span><span class="p">]</span> <span class="p">=</span> <span class="n">ciapkg</span><span class="p">.</span><span class="n">io</span><span class="p">.</span><span class="n">loadSignalExtraction</span><span class="p">(</span><span class="s">&#39;pathToFile&#39;</span><span class="p">);</span>
@@ -274,34 +378,54 @@ The function will automatically put each file in its corresponding folder, <stro
 <p>Note, the outputs correspond to the below:</p>
 <ul>
 <li><code>inputImages</code> - 3D or 4D matrix containing cells and their spatial information, format: [x y nCells].</li>
+</ul>
+<ul>
 <li><code>inputSignals</code> - 2D matrix containing activity traces in [nCells nFrames] format.</li>
+</ul>
+<ul>
 <li><code>infoStruct</code> - contains information about the file, e.g. the 'description' property that can contain information about the algorithm.</li>
+</ul>
+<ul>
 <li><code>algorithmStr</code> - String of the algorithm name.</li>
+</ul>
+<ul>
 <li><code>inputSignals2</code> - same as inputSignals but for secondary traces an algorithm outputs.</li>
 </ul>
 <!-- ****************************************** -->
 
-<h2 id="loading-cell-extraction-output-data-with-modelvarsfromfiles">Loading cell-extraction output data with <code>modelVarsFromFiles</code><a class="headerlink" href="#loading-cell-extraction-output-data-with-modelvarsfromfiles" title="Permanent link">&para;</a></h2>
-<p>In general, after running cell-extraction (<code>modelExtractSignalsFromMovie</code>) on a dataset, run the <code>modelVarsFromFiles</code> module. This allows <code>CIAtah</code> to load/pre-load information about that cell-extraction run.</p>
-<p>If you had to restart MATLAB or are just loading CIAtah fresh but have previously run cell extraction, run this method before doing anything else with that cell-extraction data.</p>
+<h3 id="loading-cell-extraction-output-data-with-modelvarsfromfiles">Loading cell-extraction output data with <code>modelVarsFromFiles</code><a class="headerlink" href="#loading-cell-extraction-output-data-with-modelvarsfromfiles" title="Permanent link">&para;</a></h3>
+<p>In general, after running cell-extraction (<code>modelExtractSignalsFromMovie</code>) on a dataset, run the <code>modelVarsFromFiles</code> module. This allows <code>{{ site.name }}</code> to load/pre-load information about that cell-extraction run.</p>
+<p>If you had to restart MATLAB or are just loading {{ site.name }} fresh but have previously run cell extraction, run this method before doing anything else with that cell-extraction data.</p>
 <p>A menu will pop-up like below when <code>modelVarsFromFiles</code> is loaded, you can normally just leave the defaults as is.</p>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/67052600-7f00f880-f0f3-11e9-9555-96fe32b4de6d.png" /></p>
 <!-- ****************************************** -->
 
+<hr />
+<p>title: Validating cell extraction data.</p>
+<hr />
 <h2 id="validating-cell-extraction-with-viewcellextractiononmovie">Validating cell extraction with <code>viewCellExtractionOnMovie</code><a class="headerlink" href="#validating-cell-extraction-with-viewcellextractiononmovie" title="Permanent link">&para;</a></h2>
 <p>After users have run cell extraction, they should check that cells are not being missed during the process. Running the method <code>viewCellExtractionOnMovie</code> will create a movie with outlines of cell extraction outputs overlaid on the movie.</p>
 <p>Below is an example, with black outlines indicating location of cell extraction outputs. If users see active cells (red flashes) that are not outlined, that indicates either exclusion or other parameters should be altered in the previous <code>modelExtractSignalsFromMovie</code> cell extraction step.</p>
 <p><img alt="2014_04_01_p203_m19_check01_raw_viewCellExtractionOnMovie_ezgif-4-57913bcfdf3f_2" src="https://user-images.githubusercontent.com/5241605/59560798-50033a80-8fcc-11e9-8228-f9a3d83ca591.gif" /></p>
 <!-- ****************************************** -->
-
+<hr />
+<p>title: Sorting cell extraction outputs.</p>
+<hr />
 <h2 id="sorting-cell-extraction-outputs-with-computemanualsortsignals">Sorting cell extraction outputs with <code>computeManualSortSignals</code><a class="headerlink" href="#sorting-cell-extraction-outputs-with-computemanualsortsignals" title="Permanent link">&para;</a></h2>
 <p align="center">
-  <strong>CIAtah cell sorting GUI</strong>
+
+  <strong>{{ site.name }} cell sorting GUI</strong>
+
 </p>
+
 <p align="center">
+
   <a href="https://user-images.githubusercontent.com/5241605/100851700-64dec280-343a-11eb-974c-d6d29faf9eb2.gif">
+
     <img src="https://user-images.githubusercontent.com/5241605/100851700-64dec280-343a-11eb-974c-d6d29faf9eb2.gif" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="75%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
+
   </a>
+
 </p>
 
 <p>Outputs from most common cell-extraction algorithms like PCA-ICA, CNMF, etc. contain signal sources that are not cells and thus must be manually removed from the output. The repository contains a GUI for sorting cells from not cells. GUI also contains a shortcut menu that users can access by right-clicking or selecting the top-left menu.</p>
@@ -309,35 +433,54 @@ The function will automatically put each file in its corresponding folder, <stro
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/49845107-43322f80-fd7a-11e8-96b9-3f870d4b9009.png" /></p>
 <h3 id="gui-usage-on-large-imaging-datasets">GUI usage on large imaging datasets<a class="headerlink" href="#gui-usage-on-large-imaging-datasets" title="Permanent link">&para;</a></h3>
 <ul>
-<li>To manually sort on large movies that will not fit into RAM, select the below options (highlighted in green). This will load only chunks of the movie asynchronously into the GUI as you sort cell extraction outputs.
-<img alt="image" src="https://user-images.githubusercontent.com/5241605/59215159-5d07d000-8b6d-11e9-8dd7-0d69d5fd38b6.png" /></li>
+<li>To manually sort on large movies that will not fit into RAM, select the below options (highlighted in green). This will load only chunks of the movie asynchronously into the GUI as you sort cell extraction outputs.</li>
 </ul>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/59215159-5d07d000-8b6d-11e9-8dd7-0d69d5fd38b6.png" /></p>
 <h3 id="cell-sorting-from-the-command-line-with-signalsorter">Cell sorting from the command line with <code>signalSorter</code><a class="headerlink" href="#cell-sorting-from-the-command-line-with-signalsorter" title="Permanent link">&para;</a></h3>
-<p>Usage instructions below for <code>signalSorter</code>, e.g. if not using the <code>CIAtah</code> GUI.</p>
+<p>Usage instructions below for <code>signalSorter</code>, e.g. if not using the <code>{{ site.name }}</code> GUI.</p>
 <p><strong>Main inputs</strong></p>
 <ul>
 <li><code>inputImages</code> - [x y N] matrix where N = number of images, x/y are dimensions.</li>
+</ul>
+<ul>
 <li><code>inputSignals</code> - [N frames] <em>double</em> matrix where N = number of signals (traces).</li>
+</ul>
+<ul>
 <li><code>inputMovie</code> - [x y frames] matrix</li>
 </ul>
 <p><strong>Main outputs</strong></p>
 <ul>
 <li><code>choices</code> - [N 1] vector of 1 = cell, 0 = not a cell</li>
+</ul>
+<ul>
 <li><code>inputImagesSorted</code> - [x y N] filtered by <code>choices</code></li>
+</ul>
+<ul>
 <li><code>inputSignalsSorted</code> - [N frames] filtered by <code>choice</code></li>
 </ul>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">inputMovie</span> <span class="p">=</span> <span class="n">inputMovie</span><span class="p">;</span> <span class="c">% movie associated with traces</span>
-<span class="lineno" data-linenos=" 2 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">valid</span> <span class="p">=</span> <span class="s">&#39;neutralStart&#39;</span><span class="p">;</span> <span class="c">% all choices start out gray or neutral to not bias user</span>
-<span class="lineno" data-linenos=" 3 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">cropSizeLength</span> <span class="p">=</span> <span class="mi">20</span><span class="p">;</span> <span class="c">% region, in px, around a signal source for transient cut movies (subplot 2)</span>
-<span class="lineno" data-linenos=" 4 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">cropSize</span> <span class="p">=</span> <span class="mi">20</span><span class="p">;</span> <span class="c">% see above</span>
-<span class="lineno" data-linenos=" 5 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">medianFilterTrace</span> <span class="p">=</span> <span class="mi">0</span><span class="p">;</span> <span class="c">% whether to subtract a rolling median from trace</span>
-<span class="lineno" data-linenos=" 6 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">subtractMean</span> <span class="p">=</span> <span class="mi">0</span><span class="p">;</span> <span class="c">% whether to subtract the trace mean</span>
-<span class="lineno" data-linenos=" 7 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">movieMin</span> <span class="p">=</span> <span class="o">-</span><span class="mf">0.01</span><span class="p">;</span> <span class="c">% helps set contrast for subplot 2, preset movie min here or it is calculated</span>
-<span class="lineno" data-linenos=" 8 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">movieMax</span> <span class="p">=</span> <span class="mf">0.05</span><span class="p">;</span> <span class="c">% helps set contrast for subplot 2, preset movie max here or it is calculated</span>
-<span class="lineno" data-linenos=" 9 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">backgroundGood</span> <span class="p">=</span> <span class="p">[</span><span class="mi">208</span><span class="p">,</span><span class="mi">229</span><span class="p">,</span><span class="mi">180</span><span class="p">]</span><span class="o">/</span><span class="mi">255</span><span class="p">;</span>
-<span class="lineno" data-linenos="10 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">backgroundBad</span> <span class="p">=</span> <span class="p">[</span><span class="mi">244</span><span class="p">,</span><span class="mi">166</span><span class="p">,</span><span class="mi">166</span><span class="p">]</span><span class="o">/</span><span class="mi">255</span><span class="p">;</span>
-<span class="lineno" data-linenos="11 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">backgroundNeutral</span> <span class="p">=</span> <span class="nb">repmat</span><span class="p">(</span><span class="mi">230</span><span class="p">,[</span><span class="mi">1</span> <span class="mi">3</span><span class="p">])</span><span class="o">/</span><span class="mi">255</span><span class="p">;</span>
-<span class="lineno" data-linenos="12 "></span><span class="p">[</span><span class="n">inputImagesSorted</span><span class="p">,</span> <span class="n">inputSignalsSorted</span><span class="p">,</span> <span class="n">choices</span><span class="p">]</span> <span class="p">=</span> <span class="n">signalSorter</span><span class="p">(</span><span class="n">inputImages</span><span class="p">,</span> <span class="n">inputSignals</span><span class="p">,</span> <span class="s">&#39;options&#39;</span><span class="p">,</span><span class="n">iopts</span><span class="p">);</span>
+<span class="lineno" data-linenos=" 2 "></span>
+<span class="lineno" data-linenos=" 3 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">valid</span> <span class="p">=</span> <span class="s">&#39;neutralStart&#39;</span><span class="p">;</span> <span class="c">% all choices start out gray or neutral to not bias user</span>
+<span class="lineno" data-linenos=" 4 "></span>
+<span class="lineno" data-linenos=" 5 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">cropSizeLength</span> <span class="p">=</span> <span class="mi">20</span><span class="p">;</span> <span class="c">% region, in px, around a signal source for transient cut movies (subplot 2)</span>
+<span class="lineno" data-linenos=" 6 "></span>
+<span class="lineno" data-linenos=" 7 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">cropSize</span> <span class="p">=</span> <span class="mi">20</span><span class="p">;</span> <span class="c">% see above</span>
+<span class="lineno" data-linenos=" 8 "></span>
+<span class="lineno" data-linenos=" 9 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">medianFilterTrace</span> <span class="p">=</span> <span class="mi">0</span><span class="p">;</span> <span class="c">% whether to subtract a rolling median from trace</span>
+<span class="lineno" data-linenos="10 "></span>
+<span class="lineno" data-linenos="11 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">subtractMean</span> <span class="p">=</span> <span class="mi">0</span><span class="p">;</span> <span class="c">% whether to subtract the trace mean</span>
+<span class="lineno" data-linenos="12 "></span>
+<span class="lineno" data-linenos="13 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">movieMin</span> <span class="p">=</span> <span class="o">-</span><span class="mf">0.01</span><span class="p">;</span> <span class="c">% helps set contrast for subplot 2, preset movie min here or it is calculated</span>
+<span class="lineno" data-linenos="14 "></span>
+<span class="lineno" data-linenos="15 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">movieMax</span> <span class="p">=</span> <span class="mf">0.05</span><span class="p">;</span> <span class="c">% helps set contrast for subplot 2, preset movie max here or it is calculated</span>
+<span class="lineno" data-linenos="16 "></span>
+<span class="lineno" data-linenos="17 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">backgroundGood</span> <span class="p">=</span> <span class="p">[</span><span class="mi">208</span><span class="p">,</span><span class="mi">229</span><span class="p">,</span><span class="mi">180</span><span class="p">]</span><span class="o">/</span><span class="mi">255</span><span class="p">;</span>
+<span class="lineno" data-linenos="18 "></span>
+<span class="lineno" data-linenos="19 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">backgroundBad</span> <span class="p">=</span> <span class="p">[</span><span class="mi">244</span><span class="p">,</span><span class="mi">166</span><span class="p">,</span><span class="mi">166</span><span class="p">]</span><span class="o">/</span><span class="mi">255</span><span class="p">;</span>
+<span class="lineno" data-linenos="20 "></span>
+<span class="lineno" data-linenos="21 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">backgroundNeutral</span> <span class="p">=</span> <span class="nb">repmat</span><span class="p">(</span><span class="mi">230</span><span class="p">,[</span><span class="mi">1</span> <span class="mi">3</span><span class="p">])</span><span class="o">/</span><span class="mi">255</span><span class="p">;</span>
+<span class="lineno" data-linenos="22 "></span>
+<span class="lineno" data-linenos="23 "></span><span class="p">[</span><span class="n">inputImagesSorted</span><span class="p">,</span> <span class="n">inputSignalsSorted</span><span class="p">,</span> <span class="n">choices</span><span class="p">]</span> <span class="p">=</span> <span class="n">signalSorter</span><span class="p">(</span><span class="n">inputImages</span><span class="p">,</span> <span class="n">inputSignals</span><span class="p">,</span> <span class="s">&#39;options&#39;</span><span class="p">,</span><span class="n">iopts</span><span class="p">);</span>
 </code></pre></div>
 <p>Examples of the interface on two different datasets:</p>
 <h4 id="bla-one-photon-imaging-data-signal-sorting-gui">BLA one-photon imaging data signal sorting GUI<a class="headerlink" href="#bla-one-photon-imaging-data-signal-sorting-gui" title="Permanent link">&para;</a></h4>
@@ -347,35 +490,54 @@ The function will automatically put each file in its corresponding folder, <stro
 <h4 id="context-menu">Context menu<a class="headerlink" href="#context-menu" title="Permanent link">&para;</a></h4>
 <p><a href="https://user-images.githubusercontent.com/5241605/95838435-9ec30080-0cf6-11eb-981d-fc8b5d46de7b.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/95838435-9ec30080-0cf6-11eb-981d-fc8b5d46de7b.png" alt="drawing" width="900" height="auto" /></a></p>
 <!-- ****************************************** -->
-
+<hr />
+<p>title: Removing cells not within region of interest.</p>
+<hr />
 <h2 id="removing-cells-not-within-brain-region-with-modelmodifyregionanalysis">Removing cells not within brain region with <code>modelModifyRegionAnalysis</code><a class="headerlink" href="#removing-cells-not-within-brain-region-with-modelmodifyregionanalysis" title="Permanent link">&para;</a></h2>
 <p>If the imaging field-of-view includes cells from other brain regions, they can be removed using <code>modelModifyRegionAnalysis</code></p>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/49834696-e9b60a80-fd51-11e8-90bb-9854b7ccaeb8.png" /></p>
 <!-- ****************************************** -->
-
+<hr />
+<p>title: Cross-session cell alignment.</p>
+<hr />
 <h2 id="cross-session-cell-alignment-with-computematchobjbtwntrials">Cross-session cell alignment with <code>computeMatchObjBtwnTrials</code><a class="headerlink" href="#cross-session-cell-alignment-with-computematchobjbtwntrials" title="Permanent link">&para;</a></h2>
 <p>This step allows users to align cells across imaging sessions (e.g. those taken on different days). See the <code>Cross session cell alignment</code> wiki page for more details and notes on cross-session alignment.</p>
 <ul>
 <li>Users run <code>computeMatchObjBtwnTrials</code> to do cross-day alignment (first row in pictures below).</li>
+</ul>
+<ul>
 <li>Users then run <code>viewMatchObjBtwnSessions</code> to get a sense for how well the alignment ran.</li>
+</ul>
+<ul>
 <li><code>computeCellDistances</code> and <code>computeCrossDayDistancesAlignment</code> allow users to compute the within session pairwise Euclidean centroid distance for all cells and the cross-session pairwise distance for all global matched cells, respectively.</li>
 </ul>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/49835713-eec88900-fd54-11e8-8d24-f7c426802297.png" /></p>
 <p>Users can then get the matrix that gives the session IDs</p>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">% Global IDs is a matrix of [globalID sessionID]</span>
-<span class="lineno" data-linenos="2 "></span><span class="c">% Each (globalID, sessionID) pair gives the within session ID for that particular global ID</span>
-<span class="lineno" data-linenos="3 "></span><span class="n">globalIDs</span> <span class="p">=</span> <span class="n">alignmentStruct</span><span class="p">.</span><span class="n">globalIDs</span><span class="p">;</span>
+<span class="lineno" data-linenos="2 "></span>
+<span class="lineno" data-linenos="3 "></span><span class="c">% Each (globalID, sessionID) pair gives the within session ID for that particular global ID</span>
+<span class="lineno" data-linenos="4 "></span>
+<span class="lineno" data-linenos="5 "></span><span class="n">globalIDs</span> <span class="p">=</span> <span class="n">alignmentStruct</span><span class="p">.</span><span class="n">globalIDs</span><span class="p">;</span>
 </code></pre></div>
 <h3 id="view-cross-session-cell-alignment-with-viewmatchobjbtwnsessions">View cross-session cell alignment with <code>viewMatchObjBtwnSessions</code><a class="headerlink" href="#view-cross-session-cell-alignment-with-viewmatchobjbtwnsessions" title="Permanent link">&para;</a></h3>
 <p>To evaluate how well cross-session alignment works, <code>computeMatchObjBtwnTrials</code> will automatically run <code>viewMatchObjBtwnSessions</code> at the end, but users can also run it separately after alignment. The left are raw dorsal striatum cell maps from a single animal. The right shows after cross-session alignment; color is used to indicate a global ID cell (e.g. the same cell matched across multiple days). Thus, same color cell = same cell across sessions.</p>
-<p><a href="https://cloud.githubusercontent.com/assets/5241605/25643108/9bcfccda-2f52-11e7-8514-31968752bd95.gif" target="_blank"><img src="https://cloud.githubusercontent.com/assets/5241605/25643108/9bcfccda-2f52-11e7-8514-31968752bd95.gif" alt="2017_05_02_p545_m121_p215_raw" width="auto" height="400"/></a>
-<a href="https://cloud.githubusercontent.com/assets/5241605/25643473/dd7b11ce-2f54-11e7-8d84-eb98c5ef801c.gif" target="_blank"><img src="https://cloud.githubusercontent.com/assets/5241605/25643473/dd7b11ce-2f54-11e7-8d84-eb98c5ef801c.gif" alt="2017_05_02_p545_m121_p215_corrected_biafraalgorithm2" width="auto" height="400"/></a></p>
+<p><a href="https://cloud.githubusercontent.com/assets/5241605/25643108/9bcfccda-2f52-11e7-8514-31968752bd95.gif" target="_blank"><img src="https://cloud.githubusercontent.com/assets/5241605/25643108/9bcfccda-2f52-11e7-8514-31968752bd95.gif" alt="2017_05_02_p545_m121_p215_raw" width="auto" height="400"/></a></p>
+<p><a href="https://cloud.githubusercontent.com/assets/5241605/25643473/dd7b11ce-2f54-11e7-8d84-eb98c5ef801c.gif" target="_blank"><img src="https://cloud.githubusercontent.com/assets/5241605/25643473/dd7b11ce-2f54-11e7-8d84-eb98c5ef801c.gif" alt="2017_05_02_p545_m121_p215_corrected_biafraalgorithm2" width="auto" height="400"/></a></p>
 <h3 id="save-cross-session-cell-alignment-with-modelsavematchobjbtwntrials">Save cross-session cell alignment with <code>modelSaveMatchObjBtwnTrials</code><a class="headerlink" href="#save-cross-session-cell-alignment-with-modelsavematchobjbtwntrials" title="Permanent link">&para;</a></h3>
-<p>Users can save out the alignment structure by running <code>modelSaveMatchObjBtwnTrials</code>. This will allow users to select a folder where <code>CIAtah</code> will save a MAT-file with the alignment structure information for each animal.</p>
+<p>Users can save out the alignment structure by running <code>modelSaveMatchObjBtwnTrials</code>. This will allow users to select a folder where <code>{{ site.name }}</code> will save a MAT-file with the alignment structure information for each animal.</p>
               
             </div>
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../pipeline_detailed_downsample_raw/" class="btn btn-neutral float-right" title="1| Downsample raw movies">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../pipeline_overview/" class="btn btn-neutral" title="Overview"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>
@@ -399,6 +561,10 @@ The function will automatically put each file in its corresponding folder, <stro
     <span class="rst-current-version" data-toggle="rst-current-version">
       
       
+        <span><a href="../pipeline_overview/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../pipeline_detailed_downsample_raw/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>

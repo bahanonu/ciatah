@@ -4,8 +4,9 @@
 <meta charset="utf-8"/>
 <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="Biafra Ahanonu" name="author"/>
 <link href="../img/favicon.ico" rel="shortcut icon"/>
-<title>One-page readme - CIAtah</title>
+<title>One-page readme</title>
 <link href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" rel="stylesheet"/>
 <link href="../css/theme.css" rel="stylesheet"/>
 <link href="../css/theme_extra.css" rel="stylesheet"/>
@@ -101,6 +102,18 @@
 <li class="toctree-l2"><a class="reference internal" href="#processing-data">â€”Processing dataâ€”</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#processing-calcium-imaging-data">Processing calcium imaging data</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#guides">Guides</a>
+<ul>
+<li class="toctree-l4"><a class="reference internal" href="#webinar">Webinar</a>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#workshop-tutorial">Workshop tutorial</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#workflow">Workflow</a>
+</li>
+</ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#detailed-sitename-processing-pipeline">Detailed CIAtah processing pipeline</a>
 <ul>
@@ -162,7 +175,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#example-sitename-pipeline-via-the-command-line">Example CIAtah pipeline via the command line.</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#ciapkg-useful-functions">CIAPKG useful functions.</a>
+<li class="toctree-l2"><a class="reference internal" href="#sitename-functions-within-codepackage-sub-package">CIAtah functions within {{ code.package }} sub-package.</a>
 <ul>
 <li class="toctree-l3"><a class="reference internal" href="#visualizing-movies">Visualizing movies</a>
 </li>
@@ -171,6 +184,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#sorting-cells">Sorting cells</a>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#pre-processing">Pre-processing</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#cell-extraction">Cell extraction</a>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#cross-session-alignment">Cross-session alignment</a>
 </li>
@@ -336,7 +351,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#cell-extraction">Cell extraction</a>
+<li class="toctree-l2"><a class="reference internal" href="#cell-extraction_1">Cell extraction</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#manual-cell-sorting-of-cell-extraction-outputs">Manual cell sorting of cell extraction outputs</a>
 <ul>
@@ -421,13 +436,36 @@
 <li class="toctree-l1"><a class="reference internal" href="../organization/">Organization</a>
 </li>
 </ul>
-<p class="caption"><span class="caption-text">Processing data</span></p>
+<p class="caption"><span class="caption-text">Processing imaging data</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../pipeline_overview/">Overview</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed/">Step-by-step</a>
+<li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_all/">One-page step-by-step</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../pipeline_animal_tracking/">Animal tracking</a>
+<li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_downsample_raw/">1| Downsample raw movies</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_preprocess_check/">2| Check pre-process settings</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_preprocess/">3| <u><strong>Processing imaging movies</strong></u></a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_modify_movies/">4| Movie clean-up</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_signal_extraction/">5| <u><strong>Cell extraction</strong></u></a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_signal_extraction_load/">6| Loading cell extraction outputs</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_signal_extraction_validation/">7| <u><strong>Cell extraction validation</strong></u></a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_signal_sorting_manual/">8| <u><strong>Manual cell sorting</strong></u></a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_signal_region_analysis/">9| Region-specific analysis</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_cross_session/">10| <u><strong>Cross-session alignment</strong></u></a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Animal tracking</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../pipeline_animal_tracking/">Animal tracking (ImageJ+MATLAB)</a>
 </li>
 </ul>
 <p class="caption"><span class="caption-text">API</span></p>
@@ -1030,6 +1068,13 @@
 <p>The general pipeline for processing calcium imaging data is below. This repository includes code to do nearly every step.</p>
 <!-- ![image](https://user-images.githubusercontent.com/5241605/61981834-ab532000-afaf-11e9-97c2-4b1d7d759a30.png) -->
 <p><img alt="ciapkg_pipeline.png" src="../img/ciapkg_pipeline.png"/></p>
+<h3 id="guides">Guides<a class="headerlink" href="#guides" title="Permanent link">¶</a></h3>
+<p>Below are recordings for users who want to learn more about calcium imaging analysis.</p>
+<h4 id="webinar">Webinar<a class="headerlink" href="#webinar" title="Permanent link">¶</a></h4>
+<p>This webinar gives an overview of calcium imaging analysis (with a focus on CIAtah) along with tips for improving experiments and analysis: <a href="https://info.inscopix.com/inscopix-inspire-view-webinarbiafra-ahanonu-signal-in-the-noise-distinguishing-relevant-neural-activity-in-calcium-imaging">https://info.inscopix.com/inscopix-inspire-view-webinarbiafra-ahanonu-signal-in-the-noise-distinguishing-relevant-neural-activity-in-calcium-imaging</a>.</p>
+<h4 id="workshop-tutorial">Workshop tutorial<a class="headerlink" href="#workshop-tutorial" title="Permanent link">¶</a></h4>
+<p>This recording gives an overview of setting up and using CIAtah: <a href="https://www.youtube.com/watch?v=I6abW3uuJJw">https://www.youtube.com/watch?v=I6abW3uuJJw</a>.</p>
+<h3 id="workflow">Workflow<a class="headerlink" href="#workflow" title="Permanent link">¶</a></h3>
 <p>To start using the <code>CIAtah</code> software package, enter the following into the MATLAB command window.</p>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span><span class="c">% Loads all directories</span>
 <span class="lineno" data-linenos=" 2 "></span>
@@ -1584,6 +1629,72 @@
 <span class="lineno" data-linenos="2 "></span>
 <span class="lineno" data-linenos="3 "></span><span class="n">saveNeurodataWithoutBorders</span><span class="p">(</span><span class="n">IcaFilters</span><span class="p">,{</span><span class="n">IcaTraces</span><span class="p">},</span><span class="s">'pcaica'</span><span class="p">,</span><span class="s">'pcaica.nwb'</span><span class="p">);</span>
 </code></pre></div>
+<p>Run CNMF or CNMF-e cell extraction.</p>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span><span class="c">%% Run CNMF or CNMF-e cell extraction. Check each function with "edit" for options.</span>
+<span class="lineno" data-linenos=" 2 "></span>
+<span class="lineno" data-linenos=" 3 "></span><span class="n">numExpectedComponents</span> <span class="p">=</span> <span class="mi">225</span><span class="p">;</span>
+<span class="lineno" data-linenos=" 4 "></span>
+<span class="lineno" data-linenos=" 5 "></span><span class="n">cellWidth</span> <span class="p">=</span> <span class="mi">10</span><span class="p">;</span>
+<span class="lineno" data-linenos=" 6 "></span>
+<span class="lineno" data-linenos=" 7 "></span><span class="n">cnmfOptions</span><span class="p">.</span><span class="n">otherCNMF</span><span class="p">.</span><span class="n">tau</span> <span class="p">=</span> <span class="n">cellWidth</span><span class="o">/</span><span class="mi">2</span><span class="p">;</span> <span class="c">% expected width of cells</span>
+<span class="lineno" data-linenos=" 8 "></span>
+<span class="lineno" data-linenos=" 9 "></span>
+<span class="lineno" data-linenos="10 "></span>
+<span class="lineno" data-linenos="11 "></span><span class="c">% Run CNMF</span>
+<span class="lineno" data-linenos="12 "></span>
+<span class="lineno" data-linenos="13 "></span><span class="p">[</span><span class="n">cnmfAnalysisOutput</span><span class="p">]</span> <span class="p">=</span> <span class="n">computeCnmfSignalExtractionClass</span><span class="p">(</span><span class="n">movieList</span><span class="p">,</span><span class="n">numExpectedComponents</span><span class="p">,</span><span class="s">'options'</span><span class="p">,</span><span class="n">cnmfOptions</span><span class="p">);</span>
+<span class="lineno" data-linenos="14 "></span>
+<span class="lineno" data-linenos="15 "></span>
+<span class="lineno" data-linenos="16 "></span>
+<span class="lineno" data-linenos="17 "></span><span class="c">% Run CNMF-e</span>
+<span class="lineno" data-linenos="18 "></span>
+<span class="lineno" data-linenos="19 "></span><span class="p">[</span><span class="n">cnmfeAnalysisOutput</span><span class="p">]</span> <span class="p">=</span> <span class="n">computeCnmfeSignalExtraction_batch</span><span class="p">(</span><span class="n">movieList</span><span class="p">{</span><span class="mi">1</span><span class="p">},</span><span class="s">'options'</span><span class="p">,</span><span class="n">cnmfeOptions</span><span class="p">);</span>
+<span class="lineno" data-linenos="20 "></span>
+<span class="lineno" data-linenos="21 "></span>
+<span class="lineno" data-linenos="22 "></span>
+<span class="lineno" data-linenos="23 "></span><span class="c">%% Save outputs to NWB format</span>
+<span class="lineno" data-linenos="24 "></span>
+<span class="lineno" data-linenos="25 "></span><span class="n">saveNeurodataWithoutBorders</span><span class="p">(</span><span class="n">cnmfAnalysisOutput</span><span class="p">.</span><span class="n">extractedImages</span><span class="p">,{</span><span class="n">cnmfAnalysisOutput</span><span class="p">.</span><span class="n">extractedSignals</span><span class="p">,</span><span class="n">cnmfAnalysisOutput</span><span class="p">.</span><span class="n">extractedSignalsEst</span><span class="p">},</span><span class="s">'cnmf'</span><span class="p">,</span><span class="s">'cnmf.nwb'</span><span class="p">);</span>
+<span class="lineno" data-linenos="26 "></span>
+<span class="lineno" data-linenos="27 "></span><span class="n">saveNeurodataWithoutBorders</span><span class="p">(</span><span class="n">cnmfeAnalysisOutput</span><span class="p">.</span><span class="n">extractedImages</span><span class="p">,{</span><span class="n">cnmfeAnalysisOutput</span><span class="p">.</span><span class="n">extractedSignals</span><span class="p">,</span><span class="n">cnmfeAnalysisOutput</span><span class="p">.</span><span class="n">extractedSignalsEst</span><span class="p">},</span><span class="s">'cnmfe'</span><span class="p">,</span><span class="s">'cnmfe.nwb'</span><span class="p">);</span>
+</code></pre></div>
+<p>Run EXTRACT cell extraction.</p>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span><span class="c">%% Run EXTRACT cell extraction. Check each function with "edit" for options.</span>
+<span class="lineno" data-linenos=" 2 "></span>
+<span class="lineno" data-linenos=" 3 "></span><span class="c">% Load default configuration</span>
+<span class="lineno" data-linenos=" 4 "></span>
+<span class="lineno" data-linenos=" 5 "></span><span class="n">extractConfig</span> <span class="p">=</span> <span class="n">get_defaults</span><span class="p">([]);</span>
+<span class="lineno" data-linenos=" 6 "></span>
+<span class="lineno" data-linenos=" 7 "></span>
+<span class="lineno" data-linenos=" 8 "></span>
+<span class="lineno" data-linenos=" 9 "></span><span class="n">outStruct</span> <span class="p">=</span> <span class="n">extractor</span><span class="p">(</span><span class="n">inputMovie</span><span class="p">,</span><span class="n">extractConfig</span><span class="p">);</span>
+<span class="lineno" data-linenos="10 "></span>
+<span class="lineno" data-linenos="11 "></span><span class="n">extractAnalysisOutput</span><span class="p">.</span><span class="n">filters</span> <span class="p">=</span> <span class="n">outStruct</span><span class="p">.</span><span class="n">spatial_weights</span><span class="p">;</span>
+<span class="lineno" data-linenos="12 "></span>
+<span class="lineno" data-linenos="13 "></span><span class="c">% permute so it is [nCells frames]</span>
+<span class="lineno" data-linenos="14 "></span>
+<span class="lineno" data-linenos="15 "></span><span class="n">extractAnalysisOutput</span><span class="p">.</span><span class="n">traces</span> <span class="p">=</span> <span class="nb">permute</span><span class="p">(</span><span class="n">outStruct</span><span class="p">.</span><span class="n">temporal_weights</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span> <span class="mi">1</span><span class="p">]);</span>
+<span class="lineno" data-linenos="16 "></span>
+<span class="lineno" data-linenos="17 "></span>
+<span class="lineno" data-linenos="18 "></span>
+<span class="lineno" data-linenos="19 "></span><span class="c">% Other run information if saving as a MAT-file.</span>
+<span class="lineno" data-linenos="20 "></span>
+<span class="lineno" data-linenos="21 "></span><span class="n">extractAnalysisOutput</span><span class="p">.</span><span class="n">info</span> <span class="p">=</span> <span class="n">outStruct</span><span class="p">.</span><span class="n">info</span><span class="p">;</span>
+<span class="lineno" data-linenos="22 "></span>
+<span class="lineno" data-linenos="23 "></span><span class="n">extractAnalysisOutput</span><span class="p">.</span><span class="n">config</span> <span class="p">=</span> <span class="n">outStruct</span><span class="p">.</span><span class="n">config</span><span class="p">;</span>
+<span class="lineno" data-linenos="24 "></span>
+<span class="lineno" data-linenos="25 "></span><span class="n">extractAnalysisOutput</span><span class="p">.</span><span class="n">info</span> <span class="p">=</span> <span class="n">outStruct</span><span class="p">.</span><span class="n">info</span><span class="p">;</span>
+<span class="lineno" data-linenos="26 "></span>
+<span class="lineno" data-linenos="27 "></span><span class="n">extractAnalysisOutput</span><span class="p">.</span><span class="n">userInputConfig</span> <span class="p">=</span> <span class="n">extractConfig</span><span class="p">;</span>
+<span class="lineno" data-linenos="28 "></span>
+<span class="lineno" data-linenos="29 "></span><span class="n">extractAnalysisOutput</span><span class="p">.</span><span class="n">opts</span> <span class="p">=</span> <span class="n">outStruct</span><span class="p">.</span><span class="n">config</span><span class="p">;</span>
+<span class="lineno" data-linenos="30 "></span>
+<span class="lineno" data-linenos="31 "></span>
+<span class="lineno" data-linenos="32 "></span>
+<span class="lineno" data-linenos="33 "></span><span class="c">%% Save outputs to NWB format</span>
+<span class="lineno" data-linenos="34 "></span>
+<span class="lineno" data-linenos="35 "></span><span class="n">saveNeurodataWithoutBorders</span><span class="p">(</span><span class="n">extractAnalysisOutput</span><span class="p">.</span><span class="n">filters</span><span class="p">,{</span><span class="n">extractAnalysisOutput</span><span class="p">.</span><span class="n">traces</span><span class="p">},</span><span class="s">'cnmf'</span><span class="p">,</span><span class="s">'cnmf.nwb'</span><span class="p">);</span>
+</code></pre></div>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">%% Run signal sorting using matrix inputs</span>
 <span class="lineno" data-linenos="2 "></span>
 <span class="lineno" data-linenos="3 "></span><span class="p">[</span><span class="n">outImages</span><span class="p">,</span> <span class="n">outSignals</span><span class="p">,</span> <span class="n">choices</span><span class="p">]</span> <span class="p">=</span> <span class="n">signalSorter</span><span class="p">(</span><span class="n">IcaFilters</span><span class="p">,</span><span class="n">IcaTraces</span><span class="p">,</span><span class="s">'inputMovie'</span><span class="p">,</span><span class="n">inputMovie3</span><span class="p">);</span>
@@ -1652,8 +1763,8 @@
 <span class="lineno" data-linenos="36 "></span>
 <span class="lineno" data-linenos="37 "></span><span class="p">[</span><span class="n">success</span><span class="p">]</span> <span class="p">=</span> <span class="n">createMatchObjBtwnTrialsMaps</span><span class="p">(</span><span class="n">inputImages</span><span class="p">,</span><span class="n">alignmentStruct</span><span class="p">);</span>
 </code></pre></div>
-<h2 id="ciapkg-useful-functions"><code>CIAPKG</code> useful functions.<a class="headerlink" href="#ciapkg-useful-functions" title="Permanent link">¶</a></h2>
-<p><code>CIAPKG</code> contains many useful functions for imaging analysis. Several are detailed below. For each users can visualize options with <code>help FUN</code> or <code>edit FUN</code>. If attempting to load a non-package function (e.g. it does not start with <code>ciapkg</code>), then append <code>ciapkg.all.</code>, e.g. <code>playMovie</code> would become <code>ciapkg.all.playMovie</code>. Alternatively, load all the functions into the workspace with <code>import ciapkg.all.*</code>.</p>
+<h2 id="sitename-functions-within-codepackage-sub-package"><code>CIAtah</code> functions within <code>{{ code.package }}</code> sub-package.<a class="headerlink" href="#sitename-functions-within-codepackage-sub-package" title="Permanent link">¶</a></h2>
+<p><code>CIAtah</code> contains many functions for imaging analysis, from processing videos to wrappers for running cell extraction algorithms and GUIs for visualizing movies and evaluating cell extraction outputs. Several are detailed below. For each users can visualize options with <code>help FUN</code> or <code>edit FUN</code>. If attempting to load a non-package function (e.g. it does not start with <code>{{ code.package }}</code>), then append <code>{{ code.package }}.api.</code>, e.g. <code>playMovie</code> would become <code>{{ code.package }}.api.playMovie</code>. Alternatively, load all the functions into the workspace with <code>import ciapkg.api.*</code>.</p>
 <h3 id="visualizing-movies">Visualizing movies<a class="headerlink" href="#visualizing-movies" title="Permanent link">¶</a></h3>
 <p><code>playMovie</code></p>
 <p><code>ciapkg.io.loadMovie</code> or <code>loadMovieList</code></p>
@@ -1672,7 +1783,22 @@
 <p><code>dfofMovie</code></p>
 <p><code>downsampleMovie</code></p>
 <p><code>normalizeMovie</code></p>
-<p><code>ciapkg.signal_extraction.runPcaIca</code></p>
+<h3 id="cell-extraction">Cell extraction<a class="headerlink" href="#cell-extraction" title="Permanent link">¶</a></h3>
+<ul>
+<li><em>PCA-ICA</em> - <code>ciapkg.signal_extraction.runPcaIca</code>.</li>
+</ul>
+<ul>
+<li><em>CNMF</em> - ``.</li>
+</ul>
+<ul>
+<li><em>CNMF-E</em> - ``.</li>
+</ul>
+<ul>
+<li><em>EXTRACT</em> - ``.</li>
+</ul>
+<ul>
+<li><em>ROI</em> - ``.</li>
+</ul>
 <h3 id="cross-session-alignment">Cross-session alignment<a class="headerlink" href="#cross-session-alignment" title="Permanent link">¶</a></h3>
 <p><code>matchObjBtwnTrials</code></p>
 <p><code>createMatchObjBtwnTrialsMaps</code></p>
@@ -2534,7 +2660,7 @@
 <span class="lineno" data-linenos="34 "></span>
 <span class="lineno" data-linenos="35 "></span><span class="n">regMovie</span> <span class="p">=</span> <span class="n">turboregMovie</span><span class="p">(</span><span class="n">inputMovieMatrix</span><span class="p">,</span><span class="s">'options'</span><span class="p">,</span><span class="n">ioptions</span><span class="p">);</span>
 </code></pre></div>
-<h2 id="cell-extraction">Cell extraction<a class="headerlink" href="#cell-extraction" title="Permanent link">¶</a></h2>
+<h2 id="cell-extraction_1">Cell extraction<a class="headerlink" href="#cell-extraction_1" title="Permanent link">¶</a></h2>
 <h2 id="manual-cell-sorting-of-cell-extraction-outputs">Manual cell sorting of cell extraction outputs<a class="headerlink" href="#manual-cell-sorting-of-cell-extraction-outputs" title="Permanent link">¶</a></h2>
 <p>This page will go over best practices and common issues seen when sorting cells from PCA-ICA. Advice can also apply to other cell sorting algorithms (CNMF, etc.).</p>
 <p>As a general note, it is a bad idea to bias users by using heuristics or computational models to pre-select or guess whether a cell extraction output is a cell or non-cell. This will skew results toward whatever the heuristics or model are looking for rather than reveal the true preferences of the user.</p>

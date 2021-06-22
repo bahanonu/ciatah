@@ -9,7 +9,7 @@
   <meta name="author" content="Biafra Ahanonu">
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-<title>Install</title>
+<title>Sorting cell extraction outputs.</title>
 
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
@@ -20,8 +20,8 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "Install";
-    var mkdocs_page_input_path = "install_alt.md";
+    var mkdocs_page_name = "8| <u><strong>Manual cell sorting</strong></u>";
+    var mkdocs_page_input_path = "pipeline_detailed_signal_sorting_manual.md";
     var mkdocs_page_url = null;
   </script>
   
@@ -53,12 +53,10 @@
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Setup</span></p>
-                <ul class="current">
+                <ul>
                     <li class="toctree-l1"><a class="reference internal" href="../install/">Quick Start</a>
                     </li>
-                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Install</a>
-    <ul class="current">
-    </ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../install_alt/">Install</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../example_data/">Example data</a>
                     </li>
@@ -75,7 +73,7 @@
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Processing imaging data</span></p>
-                <ul>
+                <ul class="current">
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_overview/">Overview</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_all/">One-page step-by-step</a>
@@ -94,7 +92,21 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_signal_extraction_validation/">7| <u><strong>Cell extraction validation</strong></u></a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_signal_sorting_manual/">8| <u><strong>Manual cell sorting</strong></u></a>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">8| <u><strong>Manual cell sorting</strong></u></a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#gui-usage-on-large-imaging-datasets">GUI usage on large imaging datasets</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#cell-sorting-from-the-command-line-with-signalsorter">Cell sorting from the command line with signalSorter</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#bla-one-photon-imaging-data-signal-sorting-gui">BLA one-photon imaging data signal sorting GUI</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#mpfc-one-photon-imaging-data-signal-sorting-gui-from-example_downloadtestdatam">mPFC one-photon imaging data signal sorting GUI (from example_downloadTestData.m)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#context-menu">Context menu</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_signal_region_analysis/">9| Region-specific analysis</a>
                     </li>
@@ -184,11 +196,11 @@
     
       
         
-          <li>Setup &raquo;</li>
+          <li>Processing imaging data &raquo;</li>
         
       
     
-    <li>Install</li>
+    <li>8| <u><strong>Manual cell sorting</strong></u></li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -199,24 +211,59 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h1>
-<p>Note, this is an alternative method of installation to that outlined in <a href="../install/">Quick Start</a>.</p>
-<p>Clone the <code>CIAtah</code> repository or download the repository zip and unzip.</p>
+                <h1 id="sorting-cell-extraction-outputs-with-computemanualsortsignals">Sorting cell extraction outputs with <code>computeManualSortSignals</code><a class="headerlink" href="#sorting-cell-extraction-outputs-with-computemanualsortsignals" title="Permanent link">&para;</a></h1>
+<p align="center">
+  <strong>CIAtah cell sorting GUI</strong>
+</p>
+<p align="center">
+  <a href="https://user-images.githubusercontent.com/5241605/100851700-64dec280-343a-11eb-974c-d6d29faf9eb2.gif">
+    <img src="https://user-images.githubusercontent.com/5241605/100851700-64dec280-343a-11eb-974c-d6d29faf9eb2.gif" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="75%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
+  </a>
+</p>
+
+<p>Outputs from most common cell-extraction algorithms like PCA-ICA, CNMF, etc. contain signal sources that are not cells and thus must be manually removed from the output. The repository contains a GUI for sorting cells from not cells. GUI also contains a shortcut menu that users can access by right-clicking or selecting the top-left menu.</p>
+<p>Below users can see a list of options that are given before running the code, those highlighted in green</p>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/49845107-43322f80-fd7a-11e8-96b9-3f870d4b9009.png" /></p>
+<h2 id="gui-usage-on-large-imaging-datasets">GUI usage on large imaging datasets<a class="headerlink" href="#gui-usage-on-large-imaging-datasets" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Point the MATLAB path to the <code>CIAtah</code> folder.</li>
-<li>Run <code>loadBatchFxns.m</code> before using functions in the directory. This adds all needed directories and sub-directories to the MATLAB path.</li>
-<li>Type <code>obj = ciatah;</code> into MATLAB command window and follow instructions that appear after to add data and run analysis.</li>
-<li>Run the <code>ciatah</code> class method <code>loadDependencies</code> or type <code>obj.loadDependencies</code> after initializing a <code>ciatah</code> object into the command window to download and add Fiji to path, download CNMF/CNMF-E repositories, download/setup CVX (for CNMF/CNMF-E), and download example data.</li>
+<li>To manually sort on large movies that will not fit into RAM, select the below options (highlighted in green). This will load only chunks of the movie asynchronously into the GUI as you sort cell extraction outputs.
+<img alt="image" src="https://user-images.githubusercontent.com/5241605/59215159-5d07d000-8b6d-11e9-8dd7-0d69d5fd38b6.png" /></li>
 </ul>
-<p>Note</p>
+<h2 id="cell-sorting-from-the-command-line-with-signalsorter">Cell sorting from the command line with <code>signalSorter</code><a class="headerlink" href="#cell-sorting-from-the-command-line-with-signalsorter" title="Permanent link">&para;</a></h2>
+<p>Usage instructions below for <code>signalSorter</code>, e.g. if not using the <code>CIAtah</code> GUI.</p>
+<p><strong>Main inputs</strong></p>
 <ul>
-<li>Place <code>CIAtah</code> in a folder where MATLAB will have write permissions, as it also creates a <code>private</code> subdirectory to store some user information along with downloading required external software packages.</li>
-<li><code>file_exchange</code> folder contains File Exchange functions used by <code>CIAtah</code>.</li>
-<li>In general, it is best to set the MATLAB startup directory to the <code>CIAtah</code> folder. This allows <code>java.opts</code> and <code>startup.m</code> to set the correct Java memory requirements and load the correct folders into the MATLAB path.</li>
-<li>If <code>CIAtah</code> IS NOT the startup folder, place <code>java.opts</code> wherever the MATLAB startup folder is so the correct Java memory requirements are set (important for using ImageJ/Miji in MATLAB).</li>
-<li>If it appears an old <code>CIAtah</code> repository is loaded after pulling a new version, run <code>restoredefaultpath</code> and check that old <code>CIAtah</code> folders are not in the MATLAB path.</li>
+<li><code>inputImages</code> - [x y N] matrix where N = number of images, x/y are dimensions.</li>
+<li><code>inputSignals</code> - [N frames] <em>double</em> matrix where N = number of signals (traces).</li>
+<li><code>inputMovie</code> - [x y frames] matrix</li>
 </ul>
-<!-- - This version of `CIAtah` has been tested on Windows MATLAB `2015b`, `2017a`, and `2018b`. Moderate testing on Windows and OSX (10.10.5) `2017b` and `2018b`. -->
+<p><strong>Main outputs</strong></p>
+<ul>
+<li><code>choices</code> - [N 1] vector of 1 = cell, 0 = not a cell</li>
+<li><code>inputImagesSorted</code> - [x y N] filtered by <code>choices</code></li>
+<li><code>inputSignalsSorted</code> - [N frames] filtered by <code>choice</code></li>
+</ul>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">inputMovie</span> <span class="p">=</span> <span class="n">inputMovie</span><span class="p">;</span> <span class="c">% movie associated with traces</span>
+<span class="lineno" data-linenos=" 2 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">valid</span> <span class="p">=</span> <span class="s">&#39;neutralStart&#39;</span><span class="p">;</span> <span class="c">% all choices start out gray or neutral to not bias user</span>
+<span class="lineno" data-linenos=" 3 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">cropSizeLength</span> <span class="p">=</span> <span class="mi">20</span><span class="p">;</span> <span class="c">% region, in px, around a signal source for transient cut movies (subplot 2)</span>
+<span class="lineno" data-linenos=" 4 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">cropSize</span> <span class="p">=</span> <span class="mi">20</span><span class="p">;</span> <span class="c">% see above</span>
+<span class="lineno" data-linenos=" 5 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">medianFilterTrace</span> <span class="p">=</span> <span class="mi">0</span><span class="p">;</span> <span class="c">% whether to subtract a rolling median from trace</span>
+<span class="lineno" data-linenos=" 6 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">subtractMean</span> <span class="p">=</span> <span class="mi">0</span><span class="p">;</span> <span class="c">% whether to subtract the trace mean</span>
+<span class="lineno" data-linenos=" 7 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">movieMin</span> <span class="p">=</span> <span class="o">-</span><span class="mf">0.01</span><span class="p">;</span> <span class="c">% helps set contrast for subplot 2, preset movie min here or it is calculated</span>
+<span class="lineno" data-linenos=" 8 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">movieMax</span> <span class="p">=</span> <span class="mf">0.05</span><span class="p">;</span> <span class="c">% helps set contrast for subplot 2, preset movie max here or it is calculated</span>
+<span class="lineno" data-linenos=" 9 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">backgroundGood</span> <span class="p">=</span> <span class="p">[</span><span class="mi">208</span><span class="p">,</span><span class="mi">229</span><span class="p">,</span><span class="mi">180</span><span class="p">]</span><span class="o">/</span><span class="mi">255</span><span class="p">;</span>
+<span class="lineno" data-linenos="10 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">backgroundBad</span> <span class="p">=</span> <span class="p">[</span><span class="mi">244</span><span class="p">,</span><span class="mi">166</span><span class="p">,</span><span class="mi">166</span><span class="p">]</span><span class="o">/</span><span class="mi">255</span><span class="p">;</span>
+<span class="lineno" data-linenos="11 "></span><span class="n">iopts</span><span class="p">.</span><span class="n">backgroundNeutral</span> <span class="p">=</span> <span class="nb">repmat</span><span class="p">(</span><span class="mi">230</span><span class="p">,[</span><span class="mi">1</span> <span class="mi">3</span><span class="p">])</span><span class="o">/</span><span class="mi">255</span><span class="p">;</span>
+<span class="lineno" data-linenos="12 "></span><span class="p">[</span><span class="n">inputImagesSorted</span><span class="p">,</span> <span class="n">inputSignalsSorted</span><span class="p">,</span> <span class="n">choices</span><span class="p">]</span> <span class="p">=</span> <span class="n">signalSorter</span><span class="p">(</span><span class="n">inputImages</span><span class="p">,</span> <span class="n">inputSignals</span><span class="p">,</span> <span class="s">&#39;options&#39;</span><span class="p">,</span><span class="n">iopts</span><span class="p">);</span>
+</code></pre></div>
+<p>Examples of the interface on two different datasets:</p>
+<h3 id="bla-one-photon-imaging-data-signal-sorting-gui">BLA one-photon imaging data signal sorting GUI<a class="headerlink" href="#bla-one-photon-imaging-data-signal-sorting-gui" title="Permanent link">&para;</a></h3>
+<p><img alt="out-1" src="https://user-images.githubusercontent.com/5241605/34796712-3868cb3a-f60b-11e7-830e-8eec5b2c76d7.gif" /></p>
+<h3 id="mpfc-one-photon-imaging-data-signal-sorting-gui-from-example_downloadtestdatam">mPFC one-photon imaging data signal sorting GUI (from <code>example_downloadTestData.m</code>)<a class="headerlink" href="#mpfc-one-photon-imaging-data-signal-sorting-gui-from-example_downloadtestdatam" title="Permanent link">&para;</a></h3>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/46322488-04c00d80-c59e-11e8-9e8a-18b3b8e4567d.png" /></p>
+<h3 id="context-menu">Context menu<a class="headerlink" href="#context-menu" title="Permanent link">&para;</a></h3>
+<p><a href="https://user-images.githubusercontent.com/5241605/95838435-9ec30080-0cf6-11eb-981d-fc8b5d46de7b.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/95838435-9ec30080-0cf6-11eb-981d-fc8b5d46de7b.png" alt="drawing" width="900" height="auto" /></a></p>
+<!-- ****************************************** -->
               
             </div>
           </div>
@@ -224,10 +271,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../example_data/" class="btn btn-neutral float-right" title="Example data">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../pipeline_detailed_signal_region_analysis/" class="btn btn-neutral float-right" title="9| Region-specific analysis">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
-        <a href="../install/" class="btn btn-neutral" title="Quick Start"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../pipeline_detailed_signal_extraction_validation/" class="btn btn-neutral" title="7| <u><strong>Cell extraction validation</strong></u>"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -253,10 +300,10 @@
     <span class="rst-current-version" data-toggle="rst-current-version">
       
       
-        <span><a href="../install/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+        <span><a href="../pipeline_detailed_signal_extraction_validation/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
       
-        <span style="margin-left: 15px"><a href="../example_data/" style="color: #fcfcfc">Next &raquo;</a></span>
+        <span style="margin-left: 15px"><a href="../pipeline_detailed_signal_region_analysis/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>
