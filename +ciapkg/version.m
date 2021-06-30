@@ -42,13 +42,13 @@ function [versionStr, dateTimeStr] = version(varargin)
 		try
 			% disp('readtable issues, trying backup')
 			fileID = fopen(verPath,'r');
-			verStr = fscanf(fileID,'%c')
+			verStr = fscanf(fileID,'%c');
 			fclose(fileID);
 			verStr = strsplit(verStr,'\n');
 			versionStr = strrep(verStr{1},'\n','');
 			dateTimeStr = verStr{2};
 		catch err
-			versionStr = 'v0.00.0'
+			versionStr = 'v0.00.0';
 			dateTimeStr = '00000000000000';
 			disp(repmat('@',1,7))
 			disp(getReport(err,'extended','hyperlinks','on'));

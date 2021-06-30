@@ -42,9 +42,9 @@ function [success] = updatePkg(varargin)
 		success = 0;
 
 		% Get online CIAPKG version
-		onlineVersion = ciapkg.versionOnline;
+		[onlineVersion onlineDateTimeStr] = ciapkg.versionOnline;
 		% Get local CIAPKG version
-		currentVersion = ciapkg.version;
+		[currentVersion currentDateTimeStr] = ciapkg.version;
 		% currentVersion = 'v3.19.20201021135616'
 		% currentVersion = 'v3.20.20201019131033';
 

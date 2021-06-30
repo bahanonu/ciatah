@@ -27,6 +27,7 @@ function [movieInfo] = getMovieInfo(inputMovie,varargin)
 	% ========================
 
 	try
+		movieInfo = [];
 		movieInfo = loadMovieList(inputMovie,'getMovieDims',1,'passArgs',varargin);
 	catch err
 		disp(repmat('@',1,7))

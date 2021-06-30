@@ -22,6 +22,7 @@ classdef ciatah < dynamicprops
 		% 2021.03.25 [20:15:31] - Use ciapkg.getDir() to ensure using root directory consistently rather than ciapkgRoot.
 		% 2021.03.25 [22:46:38] - Moved many smaller helper functions in ciatah.m to their own M-files to make maintenance easier.
 		% 2021.06.18 [20:28:28] - Added modelVarsFromFilesCheck support.
+		% 2021.06.30 [11:14:12] - Added FRAMES_PER_SECOND_PLAYBACK.
 	% TODO
 		%
 
@@ -32,6 +33,8 @@ classdef ciatah < dynamicprops
 
 		% FPS of movie(s) being analyzed
 		FRAMES_PER_SECOND =  5;
+		% FPS of movie playback
+		FRAMES_PER_SECOND_PLAYBACK =  5;
 		% Int: what factor temporally are analyzed movie from raw data
 		DOWNSAMPLE_FACTOR =  4;
 		% Float: estimated um per pixel

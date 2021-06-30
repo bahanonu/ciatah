@@ -14,7 +14,7 @@ function [thisFrame,movieFileID,inputMovieDims] = readFrame(inputMoviePath,frame
 			% [thisFrame] = ciapkg.io.readFrame(inputMoviePath,frameNo,'movieFileID',movieFileID,'inputMovieDims',inputMovieDims);
 
 	% changelog
-		%
+		% 2021.06.30 [01:26:29] - Updated handling of no file path character input.
 	% TODO
 		%
 
@@ -50,6 +50,7 @@ function [thisFrame,movieFileID,inputMovieDims] = readFrame(inputMoviePath,frame
 	try
 		movieFileID = [];
 		thisFrame = [];
+		inputMovieDims = [];
 
 		if ~isempty(options.frameList)
 			frameNo = options.frameList(frameNo);
@@ -60,6 +61,7 @@ function [thisFrame,movieFileID,inputMovieDims] = readFrame(inputMoviePath,frame
 			[movieType, supported, movieTypeSpecific] = ciapkg.io.getMovieFileType(inputMoviePath);
 		else
 			disp('Please input a file path.');
+			return;
 		end
 
 		% Get the movie file identifier to faster access/reading during future calls.

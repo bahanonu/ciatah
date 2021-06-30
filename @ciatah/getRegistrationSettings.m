@@ -20,6 +20,7 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		% 2020.10.24 [18:30:56] - Added support for calculating dropped frames if entire frame of a movie is a set value.
 		% 2021.06.21 [14:27:26] - Switch to single page support.
 		% 2021.06.21 [20:52:36] - Multi-column layout since most computers are widescreen now.
+		% 2021.06.29 [12:52:36] - Added regRegionUseBtwnSessions support and made fix for loading prior settings if they do not contain new settings.
 	% TODO
 		% DONE: Allow user to input prior settings, indicate those changed from default by orange or similar color.
 
@@ -72,6 +73,8 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 
 	% Create structure with options.
 	tS = [];
+
+	% ===================================
 	tS.MAIN______________ = [];
 		tS.MAIN______________.val = {{'====================='}};
 		tS.MAIN______________.str = {{'====================='}};
@@ -92,6 +95,8 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		tS.calcDroppedFramesFromMovie.val = {{[],0,1,NaN}};
 		tS.calcDroppedFramesFromMovie.str = {{'Calculate dropped frames from metadata.','All 0 frame is a dropped frame.','All 1 frame is a dropped frame.','All NaN frame is a dropped frame.'}};
 		tS.calcDroppedFramesFromMovie.tooltip =  {{'If metadata does not contain dropped frame information, set this if specific frames are set to a single value to indicate dropped frames.'}};
+
+	% ===================================
 	tS.REGISTRATION______________ = [];
 		tS.REGISTRATION______________.val = {{'====================='}};
 		tS.REGISTRATION______________.str = {{'====================='}};
@@ -128,6 +133,13 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		tS.motionCorrectionRefFrame.val = {{100,userSelectVal,1,10,100,1000}};
 		tS.motionCorrectionRefFrame.str = {{100,userSelectStr,1,10,100,1000}};
 		tS.motionCorrectionRefFrame.tooltip =  {{['The reference frame for motion correction.' 10 'Avoid selecting 1st couple of movie frames or one that has issues.']}};
+	tS.regRegionUseBtwnSessions = [];
+		% tS.regRegionUseBtwnSessions.val = {{-1,0,-2,0}};
+		tS.regRegionUseBtwnSessions.val = {{1,2,3,4}};
+		tS.regRegionUseBtwnSessions.str = {{'NO | do not duplicate area coords across multiple folders','YES | duplicate area coords across multiple folders','YES | duplicate area coords if subject (animal) the same','YES | duplicate area coords across ALL folders'}};
+		tS.regRegionUseBtwnSessions.tooltip =  {{['Between session motion correction area coordinates (area used to get registration translation coordinates).']}};
+
+	% ===================================
 	tS.REGISTRATION_NORMALIZATION______________ = [];
 		tS.REGISTRATION_NORMALIZATION______________.val = {{'====================='}};
 		tS.REGISTRATION_NORMALIZATION______________.str = {{'====================='}};
@@ -176,6 +188,8 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		tS.zapMean.val = {{0,1}};
 		tS.zapMean.str = {{0,1}};
 		tS.zapMean.tooltip = {{'Turboreg''s function to remove the mean. Leave disabled since this is already done outside turboreg.'}};
+
+	% ===================================
 	tS.MOVIE_NORMALIZATION______________ = [];
 		tS.MOVIE_NORMALIZATION______________.val = {{'====================='}};
 		tS.MOVIE_NORMALIZATION______________.str = {{'====================='}};
@@ -212,6 +226,8 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		tS.medianFilterSize.val = {{3,userSelectVal,5,7,9,11,13,15}};
 		tS.medianFilterSize.str = {{3,userSelectStr,5,7,9,11,13,15}};
 		tS.medianFilterSize.tooltip = {{['The size in pixels of the median filter.' 10 'If "medianFilter" is selected for preprocessing.']}};
+		
+	% ===================================
 	tS.MOVIE_DOWNSAMPLING______________ = [];
 		tS.MOVIE_DOWNSAMPLING______________.val = {{'====================='}};
 		tS.MOVIE_DOWNSAMPLING______________.str = {{'====================='}};
@@ -224,6 +240,8 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		tS.downsampleFactorSpace.val = {{2,userSelectVal,1,2,4,6,8,10,20}};
 		tS.downsampleFactorSpace.str = {{2,userSelectStr,1,2,4,6,8,10,20}};
 		tS.downsampleFactorSpace.tooltip = {{'By what factor to downsample movie in space.'}};
+		
+	% ===================================
 	tS.IO_and_MOVIE_IDENTIFICATION______________ = [];
 		tS.IO_and_MOVIE_IDENTIFICATION______________.val = {{'====================='}};
 		tS.IO_and_MOVIE_IDENTIFICATION______________.str = {{'====================='}};
@@ -266,6 +284,8 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		tS.nParallelWorkers.val = {{nWorkersDefault, userSelectVal, nWorkersDefault*2}};
 		tS.nParallelWorkers.str = {{nWorkersDefault, userSelectStr, nWorkersDefault*2}};
 		tS.nParallelWorkers.tooltip = {{defaultTooltips}};
+		
+	% ===================================
 	tS.STRIPE_REMOVAL______________ = [];
 		tS.STRIPE_REMOVAL______________.val = {{'====================='}};
 		tS.STRIPE_REMOVAL______________.str = {{'====================='}};
@@ -301,17 +321,19 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 
 				% Check if value had been modified from default, if so then add that as the 1st, default option.
 				% if isequal(options.inputSettings.(property).val{1},tS.(property).val{1})
-				if isfield(options.inputSettings.(property),'modified')
-					nonDefaultProperties{end+1} = property;
-					tS.(property).val = {[{options.inputSettings.(property).modified.val},tS.(property).val{1}]};
-					tS.(property).str = {[options.inputSettings.(property).modified.str,tS.(property).str{1}]};
+				if isfield(options.inputSettings,property)
+					if isfield(options.inputSettings.(property),'modified')
+						nonDefaultProperties{end+1} = property;
+						tS.(property).val = {[{options.inputSettings.(property).modified.val},tS.(property).val{1}]};
+						tS.(property).str = {[options.inputSettings.(property).modified.str,tS.(property).str{1}]};
 
-					% Ensure modification from default is passed onto future edits
-					tS.(property).modified = [];
-					% tS.(property).modified.val = tS.(property).val{1};
-					% tS.(property).modified.str = tS.(property).str{1};
-					tS.(property).modified.val = options.inputSettings.(property).modified.val;
-					tS.(property).modified.str = options.inputSettings.(property).modified.str;
+						% Ensure modification from default is passed onto future edits
+						tS.(property).modified = [];
+						% tS.(property).modified.val = tS.(property).val{1};
+						% tS.(property).modified.str = tS.(property).str{1};
+						tS.(property).modified.val = options.inputSettings.(property).modified.val;
+						tS.(property).modified.str = options.inputSettings.(property).modified.str;
+					end
 				end
 			end
 			options.inputSettings

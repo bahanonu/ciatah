@@ -28,6 +28,9 @@ function obj = viewMovie(obj)
 		usrIdxChoiceStr = {'matlab','imagej'};
 		scnsize = get(0,'ScreenSize');
 		[sel, ok] = listdlg('ListString',usrIdxChoiceStr,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','which video player to use?');
+		if ok==0
+			return;
+		end
 		options.videoPlayer = usrIdxChoiceStr{sel};
 	end
 	if strcmp(options.videoPlayer,'imagej')
@@ -39,6 +42,9 @@ function obj = viewMovie(obj)
 		usrIdxChoiceSetting = {'simple','advanced'};
 		scnsize = get(0,'ScreenSize');
 		[sel, ok] = listdlg('ListString',usrIdxChoiceStr,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','Which settings to load?');
+		if ok==0
+			return;
+		end
 		options.settingsType = usrIdxChoiceSetting{sel};
 	end
 
@@ -126,7 +132,7 @@ function obj = viewMovie(obj)
 
 	switch options.settingsType
 		case 'simple'
-			settingsKeepIdx = [1 2 3 13 17 23];
+			settingsKeepIdx = [1 2 3 4 13 17 23];
 			nCols = 1;
 		otherwise
 			settingsKeepIdx = 1:length(settingStr);
