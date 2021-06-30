@@ -34,6 +34,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% 2021.04.11 [10:52:10] - Fixed thisFrame issue when displaying area to use for motion correction if treatMoviesAsContinuous=0 and processMoviesSeparately=0, e.g. would load reference frame from each and if there were 3 movies, would assume RGB, causing display to be white. Also update so the display frame takes into account custom frame list range.
 		% 2021.06.09 [00:40:35] - Updated checking of options. Also save ordering of options selected.
 		% 2021.06.20 [00:22:38] - Added manageMiji('startStop','closeAllWindows'); support.
+		% 2021.06.29 [12:09:40] - Added support for dF/F where F0 is calculated using the minimum (or a soft minimum to reduce probability that one outlier throws off the calculation). Also changed turboregCropSelection so dialog box is now part of getRegistrationSettings.
 	% TODO
 		% Allow users to save out analysis options order and load it back in.
 		% Insert NaNs or mean of the movie into dropped frame location, see line 260
@@ -94,6 +95,10 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	options.supportedTypes = {'.h5','.hdf5','.tif','.tiff','.avi','.isxd'};
 	% Float: single value, likely 0, 1, or NaN, indicating when a frame should be considered dropped. Leave empty to ignore.
 	options.calcDroppedFramesFromMovie = [];
+	% String: 'soft' calculates based on percentile (to avoid outliers), 'min' calculates the normal minimum.
+	options.minType = 'soft';
+	% Float: Calculates the X percentile for minimum F0.
+	options.minSoftPct = 0.1/100;
 	% ====
 	% OLD OPTIONS
 	% should the movie be saved?
@@ -194,6 +199,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		'fixDropFrames',...
 		'dfof',...
 		'dfstd',...
+		'dfofMin',...
 		'medianFilter',...
 		'downsampleTime',...
 		'downsampleSpace',...
@@ -227,10 +233,13 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			'str','Border (add NaN border to movie after motion correction)'),...
 		'dfof',struct(...
 			'save','dfof',...
-			'str','Covert to dF/F0.'),...
+			'str','Covert to dF/F0, where F0 = mean all frames.'),...
 		'dfstd',struct(...
 			'save','dfstd',...
 			'str','Convert to dF/std.'),...
+		'dfofMin',struct(...
+			'save','dfofMin',...
+			'str','Convert to dF/F0, where F0 = min all frames (actual or soft).'),...
 		'fixDropFrames',struct(...
 			'save','fxFrms',...
 			'str','Fixed dropped frames (for Inscopix movies).'),...
@@ -247,13 +256,14 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 
 
 	defaultChoiceIdx = find(ismember(analysisOptionList,defaultChoiceList));
-	defaultChoiceIdxS = find(ismember(analysisOptionList{end},defaultChoiceList));
+	defaultSaveIdx = find(ismember(analysisOptionList{end},defaultChoiceList));
 	if isfield(obj.functionSettings,'modelPreprocessMovieFunction')
         if ~isempty(obj.functionSettings.modelPreprocessMovieFunction)
         	try
             	analysisOptionList = obj.functionSettings.modelPreprocessMovieFunction.analysisOptionList;
             	defaultChoiceList = obj.functionSettings.modelPreprocessMovieFunction.defaultChoiceList;
             	defaultChoiceIdx = obj.functionSettings.modelPreprocessMovieFunction.defaultChoiceIdx;
+            	defaultSaveIdx = obj.functionSettings.modelPreprocessMovieFunction.defaultSaveIdx;
             catch err
 				disp(repmat('@',1,7))
 				disp(getReport(err,'extended','hyperlinks','on'));
@@ -295,14 +305,14 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			);
 
 		uicontrol('Style','Text','String',['At which analysis step should files be saved to disk?'],'Units','normalized','Position',[1 30 90 3]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold');
-		[hListboxS jListboxS jScrollPaneS jDNDS] = reorderableListbox('String',analysisOptionListStr,'Units','normalized','Position',listTextPos2,'Max',Inf,'Min',0,'Value',hListbox.Value(end));
+		[hListboxS jListboxS jScrollPaneS jDNDS] = reorderableListbox('String',analysisOptionListStr,'Units','normalized','Position',listTextPos2,'Max',Inf,'Min',0,'Value',defaultSaveIdx);
 
 		uicontrol('Style','Text','String',['Analysis step selection and ordering' 10 '======='...
 			10 'Gentlemen, you can not fight in here! This is the War Room.' 10 'We can know only that we know nothing.' 10 'And that is the highest degree of human wisdom.'...
 			10 10 '1: Click items to select.' 10 '2: Drag to re-order analysis.' 10 '3: Click command window and press ENTER to continue.'],'Units','normalized','Position',instructTextPos,'BackgroundColor','white','HorizontalAlignment','Left');
 
 
-		emptyBox = uicontrol('Style','Text','String',[''],'Units','normalized','Position',[1 1 1 1]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold');
+		emptyBox = uicontrol('Style','Text','String',[''],'Units','normalized','Position',[1 1 1 1]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold','FontSize',7);
 
 		if ismac
 			cmdWinEditorFont = 'Menlo-Regular';
@@ -314,7 +324,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			cmdWinEditorFont = 'FixedWidth';
 		end
 
-		usaFlagPic = @(x) uicontrol('Style','Text','String',x,'Units','normalized','Position',[0.7 0.7 0.28 0.29],'BackgroundColor','white','HorizontalAlignment','Right','FontName',cmdWinEditorFont,'FontSize',5);
+		usaFlagPic = @(x) uicontrol('Style','Text','String',x,'Units','normalized','Position',[0.7 0.85 0.28 0.14],'BackgroundColor','white','HorizontalAlignment','Right','FontName',cmdWinEditorFont,'FontSize',5);
 
 		usaFlagPic(USAflagStr);
 		% exitHandle = uicontrol('style','pushbutton','Units', 'normalized','position',[5 85 50 3]/100,'FontSize',9,'string','Click here to finish','callback',@subfxnCloseFig,'HorizontalAlignment','Left');
@@ -365,6 +375,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	defaultSaveIdx = find(ismember(analysisOptionList,defaultSaveList));
 	% List of files to save
 	saveIdx = hListboxS.Value;
+	% saveIdx = hListboxS.Value;
 
 	% Whether to use the old method
 	oldMethod = 0;
@@ -412,6 +423,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
     obj.functionSettings.modelPreprocessMovieFunction.analysisOptionList = analysisOptionList;
     obj.functionSettings.modelPreprocessMovieFunction.defaultChoiceList = analysisOptionList(analysisOptionsIdx);
     obj.functionSettings.modelPreprocessMovieFunction.defaultChoiceIdx = analysisOptionsIdx;
+    obj.functionSettings.modelPreprocessMovieFunction.defaultSaveIdx = saveIdx;
 
 	% ========================
 	movieSettings = inputdlg({...
@@ -433,6 +445,10 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		}...
 	);
 	movieSettings
+	if isempty(movieSettings)
+		disp('User canceled input, exiting...')
+		return;
+	end
 	options.frameList = str2num(movieSettings{1});
 	obj.fileFilterRegexpRaw = movieSettings{2};
 	obj.inputDatasetName = movieSettings{3};
@@ -460,6 +476,9 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			usrIdxChoiceStr = {'Automatic (saved in class).','Manually load from file.'};
 			scnsize = get(0,'ScreenSize');
 			[sel, ok] = listdlg('ListString',usrIdxChoiceStr,'ListSize',[scnsize(3)*0.4 scnsize(4)*0.25],'Name','How to load previous settings? Press enter if no previous settings.','PromptString',{['Settings saved to "obj.preprocessSettings" and in MAT-file:'],settingsSaveStr});
+			if ok==0
+				return;
+			end
 			if sel==1
 				if isstruct(obj.preprocessSettings)
 					previousPreprocessSettings = obj.preprocessSettings;
@@ -893,6 +912,9 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 							case 'dfstd'
 								options.dfofType = 'dfstd';
 								dfofInputMovie();
+							case 'dfofMin'
+								options.dfofType = 'dfofMin';
+								dfofInputMovie();
 							case 'downsampleTime'
 								downsampleTimeInputMovie();
 							case 'downsampleSpace'
@@ -1117,22 +1139,25 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% 	analysisOptionListStr{optNoS} = analysisOptsInfo.(analysisOptionListStr{optNoS}).str;
 		% end
 		% Correct back to original names before proceeding
-		return;
+		% return;
 		tmpList = hListbox.String;
-		hListboxS.String = hListbox.String
-		fnTmp = fieldnames(analysisOptsInfo);
-		for optNoS = 1:length(tmpList)
-			for fnNo = 1:length(fnTmp)
-				if strcmp(tmpList{optNoS},analysisOptsInfo.(fnTmp{fnNo}).str)==1
-					tmpList{optNoS} = fnTmp{fnNo};
-				end
-			end
-		end
+		hListboxS.String = hListbox.String;
 
-		tmpList = tmpList{end};
-		defaultChoiceIdx = find(ismember(tmpList,tmpList));
-		% hListbox.String = analysisOptionListStr;
-		hListboxS.Value = defaultChoiceIdx;
+		% fnTmp = fieldnames(analysisOptsInfo);
+		% for optNoS = 1:length(tmpList)
+		% 	for fnNo = 1:length(fnTmp)
+		% 		if strcmp(tmpList{optNoS},analysisOptsInfo.(fnTmp{fnNo}).str)==1
+		% 			tmpList{optNoS} = fnTmp{fnNo};
+		% 		end
+		% 	end
+		% end
+
+		% tmpListEnd = tmpList{end};
+		% defaultChoiceIdx = find(ismember(tmpListEnd,tmpList));
+		% % hListbox.String = analysisOptionListStr;
+		% hListboxS.Value = defaultChoiceIdx;
+
+		hListboxS.Value = hListbox.Value(end);
 
 		% defaultSaveList = analysisOptionList{analysisOptionsIdx(end)};
 		% defaultSaveIdx = find(ismember(analysisOptionList,defaultSaveList));
@@ -1146,15 +1171,16 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% end
 		% Correct back to original names before proceeding
 		hListboxS.String = hListbox.String(PERMORDER);
-		tmpList = hListboxS.String;
-		fnTmp = fieldnames(analysisOptsInfo);
-		for optNoS = 1:length(tmpList)
-			for fnNo = 1:length(fnTmp)
-				if strcmp(tmpList{optNoS},analysisOptsInfo.(fnTmp{fnNo}).str)==1
-					tmpList{optNoS} = fnTmp{fnNo};
-				end
-			end
-		end
+
+		% tmpList = hListboxS.String;
+		% fnTmp = fieldnames(analysisOptsInfo);
+		% for optNoS = 1:length(tmpList)
+		% 	for fnNo = 1:length(fnTmp)
+		% 		if strcmp(tmpList{optNoS},analysisOptsInfo.(fnTmp{fnNo}).str)==1
+		% 			tmpList{optNoS} = fnTmp{fnNo};
+		% 		end
+		% 	end
+		% end
 
 		% tmpList2 = tmpList(hListbox.Value);
 		% tmpList2
@@ -1473,10 +1499,29 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		end
 		nRows = size(thisMovie,1);
 		reverseStr = '';
+
+		% Determine the type of F0 calculation to perform.
+		switch options.dfofType
+			case 'dfof'
+				F0fxn = @(x,y) nanmean(x,y);
+			case 'dfofMin'
+				switch options.minType
+					case 'min'
+						F0fxn = @(x,y) nanmin(x,y);
+					case 'soft'
+						F0fxn = @(x,y) prctile(x,options.minSoftPct,y);
+					otherwise
+						F0fxn = @(x,y) nanmin(x,y);
+				end
+			otherwise
+				F0fxn = @(x,y) nanmean(x,y);
+		end
+
 		for rowNo=1:nRows
 			% inputMovieF0 = nanmean(inputMovie,3);
 			rowFrame = single(squeeze(thisMovie(rowNo,:,:)));
-			inputMovieF0(rowNo,:) = nanmean(rowFrame,2);
+			% inputMovieF0(rowNo,:) = nanmean(rowFrame,2);
+			inputMovieF0(rowNo,:) = F0fxn(rowFrame,2);
 			if strcmp(options.dfofType,'dfstd')
 				inputMovieStd(rowNo,:) = nanstd(rowFrame,[],2);
 			else
@@ -1498,6 +1543,25 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				thisMovie = bsxfun(@ldivide,inputMovieF0,thisMovie);
 			case 'dfof'
 				display('F(t)/F0 - 1...')
+				% dfofMatrix = bsxfun(@ldivide,double(inputMovieF0),double(inputMovie));
+				% thisMovie = bsxfun(@ldivide,inputMovieF0,thisMovie);
+				reverseStr = '';
+				nFrames = size(thisMovie,3);
+				for frameNo = 1:nFrames
+					thisMovie(:,:,frameNo) = thisMovie(:,:,frameNo)./inputMovieF0;
+					if mod(rowNo,50)==0;reverseStr = cmdWaitbar(frameNo,nFrames,reverseStr,'inputStr','DFOF','waitbarOn',1,'displayEvery',50);end
+				end
+				thisMovie = thisMovie-1;
+			case 'dfofMin'
+				
+				switch options.minType
+					case 'min'
+						display('F(t)/F0 - 1, F0 = min...')
+					case 'soft'
+						display('F(t)/F0 - 1, F0 = min prctile...')
+					otherwise
+						display('F(t)/F0 - 1, F0 = min...')
+				end
 				% dfofMatrix = bsxfun(@ldivide,double(inputMovieF0),double(inputMovie));
 				% thisMovie = bsxfun(@ldivide,inputMovieF0,thisMovie);
 				reverseStr = '';
@@ -2081,12 +2145,19 @@ end
 function [turboRegCoords] = turboregCropSelection(options,folderList)
 	% Biafra Ahanonu
 	% 2013.11.10 [19:28:53]
-	usrIdxChoiceStr = {'NO | do not duplicate area coords across multiple folders','YES | duplicate area coords across multiple folders','YES | duplicate area coords if subject (animal) the same','YES | duplicate area coords across ALL folders'};
-	scnsize = get(0,'ScreenSize');
-	[sel, ok] = listdlg('ListString',usrIdxChoiceStr,'ListSize',[scnsize(3)*0.4 scnsize(4)*0.4],'Name','Motion correction area coordinates (area used to get registration translation coordinates)');
-	% : use over multiple folders?
+
+	useOldGui = 0;
 	usrIdxChoiceList = {-1,0,-2,0};
+	if useOldGui==1
+		usrIdxChoiceStr = {'NO | do not duplicate area coords across multiple folders','YES | duplicate area coords across multiple folders','YES | duplicate area coords if subject (animal) the same','YES | duplicate area coords across ALL folders'};
+		scnsize = get(0,'ScreenSize');
+		[sel, ok] = listdlg('ListString',usrIdxChoiceStr,'ListSize',[scnsize(3)*0.4 scnsize(4)*0.4],'Name','Motion correction area coordinates (area used to get registration translation coordinates)');
+		% : use over multiple folders?
+	end
+
+	sel = options.turboreg.regRegionUseBtwnSessions;
 	applyPreviousTurboreg = usrIdxChoiceList{sel};
+
 	if sel==4
 		runAllFolders = 1;
 	else

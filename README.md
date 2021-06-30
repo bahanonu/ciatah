@@ -171,7 +171,17 @@ obj % then hit enter, no semicolon!
 
 ### Visualize movies quickly using read from disk
 
-Users can quickly visualize movies in any of the supported formats (HDF5, NWB, AVI, TIFF, and ISXD) using the `playMovie` function. This will read directly from disk, allowing users to scroll through frames to visually check movies before or after processing. See below code:
+Users can quickly visualize movies in any of the supported formats (HDF5, NWB, AVI, TIFF, and ISXD) using the `playMovie` function. This will read directly from disk, allowing users to scroll through frames to visually check movies before or after processing. 
+
+Using the `ciatah` GUI class, users can select loaded folders and change the regular expression to match the name of the files in the movie, both for the raw data and for any processed movies in the folder. See below:
+
+<p align="center">
+  <a href="https://user-images.githubusercontent.com/5241605/124017037-17f4a780-d99b-11eb-9508-6e61a636d302.png">
+    <img src="https://user-images.githubusercontent.com/5241605/124017037-17f4a780-d99b-11eb-9508-6e61a636d302.png" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="60%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
+  </a>
+</p>
+
+Alternatively, users can run via the command-line:
 
 ```MATLAB
 % Use the absolute path to the movie file or a valid relative path.

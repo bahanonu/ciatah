@@ -51,6 +51,8 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 		% 2020.10.19 [12:11:14] - Improved comments and options descriptions.
 		% 2021.02.15 [11:55:36] - Fixed loading HDF5 datasetname that has only a single frame, loadMovieList would ask for 3rd dimension information that did not exist.
 		% 2021.06.21 [10:22:32] - Added support for Bio-Formats compatible files, specifically Olympus (OIR) and Zeiss (CZI, LSM).
+		% 2021.06.28 [16:57:27] - Added check that deals with users requesting more frames than are in the movie in the case where "options.largeMovieLoad==1" and a matrix is pre-allocated.
+		% 2021.06.30 [12:26:12] - Added additional checks for frameList to remove if negative or zero along with additional checks during movie loading to prevent loading frames outside movie extent.
 
 	% TODO
 		% OPEN
@@ -141,6 +143,12 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 	if ~isempty(options.loadMovieInEqualParts)
 		fprintf('Loading %d equal parts of %d frames each\n',options.loadMovieInEqualParts(1),options.loadMovieInEqualParts(2))
 		options.frameList = subfxnLoadEqualParts(movieList,options);
+	end
+
+	% Remove any frames that are zero or negative, not valid.
+	if ~isempty(options.frameList)
+		subfxnDisplay(['Removing invalid frames from user input frame list (negative or zero).'],options);
+		options.frameList(options.frameList<1) = [];
 	end
 
 	% ========================
@@ -338,7 +346,17 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 		end
 		% change dims.z if user specifies a list of frames
 		if (~isempty(options.frameList)|options.frameList>dims.z(iMovie))&options.treatMoviesAsContinuous==0
-			dims.z(iMovie) = length(options.frameList);
+			% Disallow frames that are longer than the length of the movie
+			frameListTmp = options.frameList;
+			if any(frameListTmp>dims.three(iMovie))
+				rmIDx = frameListTmp>dims.three(iMovie);
+				if options.displayInfo==1
+					disp(sprintf('Removing %d frames outside movie length.',sum(rmIDx)))
+				end
+				frameListTmp(rmIDx) = [];
+			else
+			end
+			dims.z(iMovie) = length(frameListTmp);
 		end
 		if options.displayInfo==1
 			reverseStr = cmdWaitbar(iMovie,numMovies,reverseStr,'inputStr','checking movies','waitbarOn',options.waitbarOn,'displayEvery',10);
@@ -362,7 +380,16 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 			if isempty(options.frameList)
 				zDimLength = sum(dims.z);
 			else
-				zDimLength = length(options.frameList);
+				frameListTmp = options.frameList;
+				zDimLength = length(frameListTmp);
+				if any(zDimLength>sum(dims.three))
+					rmIDx = frameListTmp>sum(dims.three);
+					if options.displayInfo==1
+						disp(sprintf('Removing %d frames outside movie length.',sum(rmIDx)))
+					end
+					frameListTmp(rmIDx) = [];
+					zDimLength = length(frameListTmp);
+				end
 			end
 		otherwise
 			% body
@@ -395,8 +422,7 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 			globalFrame{i} = frameList(g{i}) - zdimsCumsum(i);
 			dims.z(i) = length(globalFrame{i});
 		end
-		cellfun(@max,globalFrame,'UniformOutput',false)
-		cellfun(@min,globalFrame,'UniformOutput',false)
+		[cellfun(@max,globalFrame,'UniformOutput',false); cellfun(@min,globalFrame,'UniformOutput',false)]
 		% pause
 	else
 		globalFrame = [];
@@ -427,17 +453,23 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 	else
 		if strcmp(imgClass,'single')||strcmp(imgClass,'double')
 			if isempty(options.loadSpecificImgClass)
-				subfxnDisplay(['pre-allocating ' imgClass ' NaN matrix...'],options);
-				outputMovie = NaN([xDimMax yDimMax zDimLength],imgClass);
+				preallocSize = [xDimMax yDimMax zDimLength];
+				subfxnDisplay(['pre-allocating ' imgClass ' NaN matrix: ' num2str(preallocSize)],options);
+				outputMovie = NaN(preallocSize,imgClass);
 			else
-				subfxnDisplay('pre-allocating single ones matrix...',options);
-				outputMovie = ones([xDimMax yDimMax zDimLength],imgClass);
+				preallocSize = [xDimMax yDimMax zDimLength];
+				% subfxnDisplay('pre-allocating single ones matrix...',options);
+				subfxnDisplay(['pre-allocating ' imgClass ' ones matrix: ' num2str(preallocSize)],options);
+				outputMovie = ones(preallocSize,imgClass);
 				% j = whos('outputMovie');j.bytes=j.bytes*9.53674e-7;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
 				% return;
 				outputMovie(:,:,:) = 0;
 			end
 		else
-			outputMovie = zeros([xDimMax yDimMax zDimLength],imgClass);
+			preallocSize = [xDimMax yDimMax zDimLength];
+			% subfxnDisplay('pre-allocating single zeros matrix...',options);
+			subfxnDisplay(['pre-allocating ' imgClass ' zeros matrix: ' num2str(preallocSize)],options);
+			outputMovie = zeros(preallocSize,imgClass);
 		end
 	end
 	subfxnDisplay('-------',options);
@@ -455,6 +487,15 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 				subfxnDisplay(['no global frames:' num2str(iMovie) '/' num2str(numMovies) ': ' thisMoviePath],options);
 				continue
 			end
+		end
+
+		% Remove any frames that are outside the movie length.
+		if any(thisFrameList>dims.three(iMovie))
+			rmIDx2 = thisFrameList>dims.three(iMovie);
+			if options.displayInfo==1
+				disp(sprintf('Removing %d frames outside movie length.',sum(rmIDx2)))
+			end
+			thisFrameList(rmIDx2) = [];
 		end
 
 		if options.displayInfo==1
