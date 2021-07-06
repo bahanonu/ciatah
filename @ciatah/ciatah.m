@@ -34,7 +34,7 @@ classdef ciatah < dynamicprops
 		% FPS of movie(s) being analyzed
 		FRAMES_PER_SECOND =  5;
 		% FPS of movie playback
-		FRAMES_PER_SECOND_PLAYBACK =  5;
+		FRAMES_PER_SECOND_PLAYBACK =  20;
 		% Int: what factor temporally are analyzed movie from raw data
 		DOWNSAMPLE_FACTOR =  4;
 		% Float: estimated um per pixel

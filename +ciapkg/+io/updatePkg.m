@@ -1,15 +1,18 @@
 function [success] = updatePkg(varargin)
 	% Checks ciapkg version against GitHub repo and updates `ciapkg` and `+ciapkg` folders.
 	% Biafra Ahanonu
-	% started: 2020.08.18 [‎11:16:56]
+	% started: 2020.08.18 [11:16:56]
 	% inputs
 		%
 	% outputs
 		%
+	% Notes
+		% Follows https://semver.org convention.
 
 	% changelog
 		% 2021.03.09 [21:34:52] - Option on whether to update package (only 0 for now). Also alert user if behind a version.
 		% 2021.06.21 [16:18:07] - Updated to ciatah from calciumImagingAnalysis URLs.
+		% 2021.07.06 [11:33:22] - Updated comparison to ensure ignoring of lower level versions after higher level versions are found to differ.
 	% TODO
 		% Only check once every couple of days to warn user instead of every time.
 
@@ -41,10 +44,11 @@ function [success] = updatePkg(varargin)
 	try
 		success = 0;
 
+		% Versions follow MAJOR.MINOR.PATCH convention.
 		% Get online CIAPKG version
-		[onlineVersion onlineDateTimeStr] = ciapkg.versionOnline;
+		[onlineVersion, onlineDateTimeStr] = ciapkg.versionOnline;
 		% Get local CIAPKG version
-		[currentVersion currentDateTimeStr] = ciapkg.version;
+		[currentVersion, currentDateTimeStr] = ciapkg.version;
 		% currentVersion = 'v3.19.20201021135616'
 		% currentVersion = 'v3.20.20201019131033';
 
@@ -71,7 +75,8 @@ function [success] = updatePkg(varargin)
 			else
 				onlineVersionTmp = onlineVersion;
 			end
-			verInfoStr = sprintf('%s\n Local version: %s.\n Online version %s.\n',verInfoStr2,currentVersion,onlineVersionTmp);
+			% verInfoStr = sprintf('%s\n Local version: %s.\n Online version %s.\n',verInfoStr2,currentVersion,onlineVersionTmp);
+			verInfoStr = sprintf('%s\n Local version: %s (%s).\n Online version %s (%s).\n',verInfoStr2,currentVersion,currentDateTimeStr,onlineVersionTmp,onlineDateTimeStr);
 			warning(verInfoStr)
 			if verCompare<1
 				msgbox(verInfoStr,'Note on CIAtah version.')
@@ -129,12 +134,19 @@ function [success] = updatePkg(varargin)
 		compareVector = zeros([1 max(length(verId1),length(verId2))]);
 		nLevels = length(compareVector);
 
+		% Following MAJOR.MINOR.PATCH convention
 		% Start at the highest level and only continue comparing while version 2 is greater than or equal to version 1.
 		lockOut = 0; % 1 = higher level is an old version, so only calculate version difference
 		for verLvl = 1:nLevels
 			compareVector(verLvl) = verId1(verLvl) - verId2(verLvl);
-			if compareVector(verLvl)<0 & lockOut==0 % This level indicates an old version
+			% If higher version is older or newer, lower version is irrelevant so skip.
+			if lockOut==1
+				compareVector(verLvl) = 0;
+			end
+			if compareVector(verLvl)<0 && lockOut==0 % This level indicates an old version
 				verCompare = 0;
+				lockOut = 1;
+			elseif compareVector(verLvl)>0 && lockOut==0 % This level indicates this level is a newer version
 				lockOut = 1;
 			end
 		end

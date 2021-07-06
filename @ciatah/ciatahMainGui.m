@@ -11,16 +11,25 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		% 2020.05.07 [17:36:12] - Selection of NWB format forces user to give information on NWB.
 		% 2021.06.30 [00:10:53] - Updated to add support for viewing from disk a section of the movie if a single folder is selected. Will preview both raw and processed movies if available based on regular expressions. Users can change several options on the fly to select ones that work for their dataset.
 		% 2021.06.30 [11:27:17] - Changed interface to black and changed several options to popupmenu since they only allow a single input, so listbox was not necessary. Users can also run methods or exit the GUIs using push buttons.
+		% 2021.06.30 [11:27:17] - Update to ensure NWB switch is made after user selects it.
+		% 2021.07.01 [08:04:59] - Updated cell extraction loading and allow a cache for faster loading if user switches between methods in the same GUI load.
+		% 2021.07.01 [15:38:18] - Added support for folder loading button and some other additional improvements.
+		% 2021.07.06 [11:33:22] - Cell extraction now thresholded for cleaner visuals.
 	% TODO
 		%
 
 	try
+		%% ==========================================
+		% CONSTANTS AND VARIABLES
 		ok = 0;
 		tooltipStruct = obj.tts;
 		% Enable key check
 		checkEnabled = 1;
 		% Switch to only show setMovieInfo once with NWB
 		nwbSetMovieInfoSwitch = 0;
+		
+		% Temporary store of cell-extraction images for faster loading
+		signalExtImageCache = {};
 
 		% Binary: 1 = exit without running any functions, 0 = run functions
 		exitFlag = 0;
@@ -33,9 +42,9 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		% Use to stop the current movie looping
 		breakMovieLoop = 0;
 		enableMoviePreview = 1;
-		movieImgHandle = plot([],[],'-');;
-		movieAxes = plot([],[],'-');;
-		titleHandle = plot([],[],'-');;
+		movieImgHandle = plot([],[],'-');
+		movieAxes = plot([],[],'-');
+		titleHandle = plot([],[],'-');
 
 		excludeList = obj.methodExcludeList;
 		excludeListVer2 = obj.methodExcludeListVer2;
@@ -56,8 +65,10 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 			selectList = obj.inputFolders(:);
 		end
 
+		%% ==========================================
+		% SETUP FIGURE
 		useAltValid = {'no additional filter','manually sorted folders','not manually sorted folders','manual classification already in obj',['has ' obj.signalExtractionMethod ' extracted cells'],['missing ' obj.signalExtractionMethod ' extracted cells'],'fileFilterRegexp','valid auto',['has ' obj.fileFilterRegexp ' movie file'],'manual index entry'};
-		useAltValidStr = {'no additional filter','manually sorted folders','not manually sorted folders','manual classification already in obj',['has extracted cells'],'missing extracted cells','fileFilterRegexp','valid auto','movie file','manual index entry'};
+		useAltValidStr = {'no additional filter','manually sorted folders','not manually sorted folders','manual classification already in obj','has extracted cells','missing extracted cells','fileFilterRegexp','valid auto','movie file','manual index entry'};
 
 		hFig = figure;
 		figBackgroundColor = [0 0 0];
@@ -71,77 +82,14 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		uicontrol('Style','text','String',[inputTxt ' Press TAB to select next section, ENTER to continue, and ESC to exit.'],'Units','normalized','Position',[10 96 90 3]/100,'BackgroundColor',figBackgroundColor,'HorizontalAlignment','Left','ForegroundColor',figTextColor,'FontSize',9);
 
 
-		startMethodHandle = uicontrol('style','pushbutton','Units', 'normalized','position',[1 94 38 2]/100,'FontSize',9,'string','Start selected method (or press enter)','BackgroundColor',[153 255 153]/255,'callback',@startMethodCallback);
-		exitHandle = uicontrol('style','pushbutton','Units', 'normalized','position',[40 94 10 2]/100,'FontSize',9,'string','Exit','BackgroundColor',[255 153 153]/255,'callback',@exitCallback);
-
+		%% ==========================================
+		% SETUP MAIN GUI ELEMENTS
+		[selBoxInfo] = subfxn_guiElementSetupInfo();
 		
-
-		% set(hFig,'Color',[0,0,0]);
-		% currentIdx = find(strcmp(fxnsToRun,obj.currentMethod));
-
-		% set(hListboxS.cellExtractFiletype,'Callback',@(src,evt){set(src,'background',[1 1 1]*0.9)});
-		selBoxInfo.methods.Tag = 'methodBox';
-		selBoxInfo.cellExtract.Tag = 'cellExtractionBox';
-		selBoxInfo.cellExtractFiletype.Tag = 'cellExtractFiletypeBox';
-		selBoxInfo.folderFilt.Tag = 'folderFilt';
-		selBoxInfo.subject.Tag = 'subjectBox';
-		selBoxInfo.assay.Tag = 'assayBox';
-		selBoxInfo.folders.Tag = 'folders';
-		selBoxInfo.guiEnabled.Tag = 'folders';
-
-		selBoxInfo.methods.uiType = 'listbox';
-		selBoxInfo.cellExtract.uiType = 'popupmenu';
-		selBoxInfo.cellExtractFiletype.uiType = 'popupmenu';
-		selBoxInfo.folderFilt.uiType = 'popupmenu';
-		selBoxInfo.subject.uiType = 'listbox';
-		selBoxInfo.assay.uiType = 'listbox';
-		selBoxInfo.folders.uiType = 'listbox';
-		selBoxInfo.guiEnabled.uiType = 'popupmenu';
-
-		selBoxInfo.methods.Value = currentIdx;
-		selBoxInfo.cellExtract.Value = currentCellExtIdx;
-		if obj.nwbLoadFiles==1;ggg=2;else;ggg=1;end;
-		selBoxInfo.cellExtractFiletype.Value = ggg;
-		selBoxInfo.folderFilt.Value = 1;
-		selBoxInfo.subject.Value = 1:length(subjectStrUnique);
-		selBoxInfo.assay.Value = 1:length(assayStrUnique);
-		selBoxInfo.folders.Value = 1:length(selectList);
-		if obj.guiEnabled==1;ggg=1;else;ggg=2;end;
-		selBoxInfo.guiEnabled.Value = ggg;
-
-		selBoxInfo.methods.string = fxnsToRun;
-		selBoxInfo.cellExtract.string = usrIdxChoiceDisplay;
-		selBoxInfo.cellExtractFiletype.string = {[ciapkg.pkgName ' format'],'NeuroDataWithoutBorders (NWB) format'};
-		selBoxInfo.folderFilt.string = useAltValid;
-		selBoxInfo.subject.string = subjectStrUnique;
-		selBoxInfo.assay.string = assayStrUnique;
-		selBoxInfo.folders.string = selectList;
-		selBoxInfo.guiEnabled.string = {'GUI in methods enabled','GUI in methods disabled'};
-
-		selBoxInfo.methods.title = ['Select a ' ciapkg.pkgName ' method:'];
-		selBoxInfo.cellExtract.title = 'Cell-extraction method:';
-		selBoxInfo.cellExtractFiletype.title = 'Cell-extraction file format:';
-		selBoxInfo.folderFilt.title = 'Folder select filters:';
-		selBoxInfo.assay.title = 'Folder assay names:';
-		selBoxInfo.subject.title = 'Animal IDs:';
-		selBoxInfo.folders.title = 'Loaded folders:';
-		selBoxInfo.guiEnabled.title = 'GUI (methods with user options):';
-
-		mt = -10;
-		% [x0 y0 width height]
-		selBoxInfo.methods.loc = [1, 48, 38, 91-48];
-		selBoxInfo.cellExtract.loc = [50+mt, 89, 24-mt/2, 2];
-		selBoxInfo.cellExtractFiletype.loc = [50+mt, 84, 24-mt/2, 2];
-		selBoxInfo.folderFilt.loc = [75+mt-mt/2, 89, 24-mt/2, 2];
-		selBoxInfo.subject.loc = [50+mt, 71, 24-mt/2, 10];
-		selBoxInfo.assay.loc = [75+mt-mt/2, 71, 24-mt/2, 10];
-		selBoxInfo.folders.loc = [50+mt, 48, 49-mt, 20];
-		selBoxInfo.guiEnabled.loc = [75+mt-mt/2, 84, 24-mt/2, 2];
-
 		tmpList2 = fieldnames(selBoxInfo);
-		for ff = 1:length(tmpList2)
+		for guiElNo = 1:length(tmpList2)
 			try
-				bName = tmpList2{ff};
+				bName = tmpList2{guiElNo};
 				hListboxS.(bName) = uicontrol(hFig, 'style',selBoxInfo.(bName).uiType,'Units','normalized',...
                     'position',selBoxInfo.(bName).loc/100,...
                     'string',selBoxInfo.(bName).string,...
@@ -164,8 +112,23 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 			end
 		end
 		hListbox = hListboxS.methods;
-		% set(hListbox,'KeyPressFcn',@(src,evnt)onKeyPressRelease(src,evnt,'press',hFig))
 
+		%% ==========================================
+		% SETUP MAIN GUI BUTTONS
+		startMethodHandle = uicontrol('style','pushbutton','Units', 'normalized','position',[1 94 38 2]/100,'FontSize',9,'string','Start selected method (or press enter)','BackgroundColor',[153 255 153]/255,'callback',@startMethodCallback);
+		exitHandle = uicontrol('style','pushbutton','Units', 'normalized','position',[40 94 10 2]/100,'FontSize',9,'string','Exit','BackgroundColor',[255 153 153]/255,'callback',@exitCallback);
+
+		% [x0 y0 width height]
+		addFoldersLoc = hListboxT.folders.Position;
+		addFoldersLoc(3) = 0.30;
+		addFoldersLoc(1) = 0.69;
+		addFoldersHandle = uicontrol('style','pushbutton','Units', 'normalized','position',addFoldersLoc,'FontSize',9,'string','Click to add folders.','BackgroundColor',[153 153 153]/255,'callback',@callback_addFolders);
+		
+
+		%% ==========================================
+		% ADD CALLBACKS TO GUI ELEMENTS
+
+		% set(hListbox,'KeyPressFcn',@(src,evnt)onKeyPressRelease(src,evnt,'press',hFig))
 		% jTmp = findjobj(hListboxS.cellExtract);jTmp.setSelectionAppearanceReflectsFocus(0);
 
 		fxnToAttach = {'KeyReleaseFcn','Callback'};%, 'ButtonDownFcn' KeyReleaseFcn
@@ -182,9 +145,9 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		% Assign focus lost callbacks to each selection box
 		tmpList1 = fieldnames(hListboxS);
 		nwbSetMovieInfoSwitch = 1;
-		for ff = 1:length(tmpList1)
-			if strcmp(hListboxS.(tmpList1{ff}).Style,'listbox')
-				jScrollPane = findjobj(hListboxS.(tmpList1{ff}));
+		for jNo = 1:length(tmpList1)
+			if strcmp(hListboxS.(tmpList1{jNo}).Style,'listbox')
+				jScrollPane = findjobj(hListboxS.(tmpList1{jNo}));
 				jListbox = jScrollPane.getViewport.getComponent(0);
 				set(jListbox, 'FocusGainedCallback',{@onFocusGain});
 				set(jListbox, 'FocusLostCallback',{@onFocusLost});
@@ -214,12 +177,15 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		% idNumIdxArray
 		% turn off gui elements, run in batch
 
+		%% ==========================================
 		% CREATE MOVIE INFO
-		[movieAxes, movieAxesTwo] = subfxn_movieAxesCreate();
+		[movieAxes, movieAxesTwo, cellExtAxes] = subfxn_movieAxesCreate();
 
 		[runMoviesToggleHandle, fileFilterRegexpHandle, fileFilterRegexpRawHandle, FRAMES_PER_SECONDHandle, inputDatasetNameHandle] = subfxn_movieOptionsCreate();
 
 
+		%% ==========================================
+		% FINAL SETUP
 		figure(hFig)
 		uicontrol(hListbox)
 		% set(hFig, 'KeyPressFcn', @(src,event) onFigKeyPress(src,event,hListboxS));
@@ -232,20 +198,24 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		% Make sure GUI is up-to-date on first display.
 		onKeyPressRelease([],[],'press',hFig);
 
+		%% ==========================================
+		% WAIT FOR USER INPUT
 		try
 			uiwait(hFig)
 		catch
 		end
 
+		%% ==========================================
+		% EXIT AND SET VARIABLES BASED ON USER INPUT
 		if exitFlag==1
 			% idNumIdxArray = 1;
 			ok = 0;
 			if isvalid(hFig)
 				close(hFig)
 			end
+			commandwindow
 			return;
 		end
-		commandwindow
 		% disp(hListboxStruct)
 		% fxnsToRun{hListboxStruct.Value}
 		if isempty(hListboxStruct)
@@ -263,6 +233,7 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		if isvalid(hFig)
 			close(hFig)
 		end
+		return;
 		% idNumIdxArray = get(hListboxS.folders,'Value');
 	catch err
 		ok = 0;
@@ -272,6 +243,9 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		disp(getReport(err,'extended','hyperlinks','on'));
 		disp(repmat('@',1,7))
 	end
+
+	%% ==========================================
+	% SUB-FUNCTIONS
 
 	function onPropertyChange(src,event,inputTag)
 		% If NWB chosen as file-type, verify user has correct NWB inputs
@@ -400,7 +374,10 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 			[validFoldersIdx] = pipelineFolderFilter(obj,useAltValid,validFoldersIdx);
 
 			if strcmp(get(src,'Tag'),'folders')~=1
-				set(hListboxS.folders,'Value',validFoldersIdx);
+				if length(get(hListboxS.folders,'Value'))==1
+				else
+					set(hListboxS.folders,'Value',validFoldersIdx);				
+				end
 			end
 
 			useAltValid = {'no additional filter','manually sorted folders','not manually sorted folders','manual classification already in obj',['has ' obj.signalExtractionMethod ' extracted cells'],['missing ' obj.signalExtractionMethod ' extracted cells'],'fileFilterRegexp','valid auto',['has ' obj.fileFilterRegexp ' movie file'],'manual index entry'};
@@ -412,10 +389,12 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		% end
 
 		% If NWB chosen as file-type, verify user has correct NWB inputs
-		if any(strcmp('cellExtractFiletypeBox',get(src,'Tag')))&nwbSetMovieInfoSwitch==0
+		if any(strcmp('cellExtractFiletypeBox',get(src,'Tag')))&&nwbSetMovieInfoSwitch==0
 			disp(['cellExtractFiletype: ' num2str(get(hListboxS.cellExtractFiletype,'Value'))])
 			if get(hListboxS.cellExtractFiletype,'Value')==2
 				nwbSetMovieInfoSwitch = 1;
+				% Set class to know that it should load NWB files.
+				obj.nwbLoadFiles = 1;
 				checkEnabled = 0;
 				dispStr = 'Please enter information for NWB cell-extraction and imaging movie regular expressions (for locating files) and whether cell-extraction files are located in a sub-folder within each folder.';
 				disp(dispStr)
@@ -425,6 +404,8 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 				disp(['NWB information set! Remember to select the ' ciapkg.pkgName ' GUI then press Enter to start a module.'])
 				pause(0.1);
 				checkEnabled = 1;
+			else
+				obj.nwbLoadFiles = 0;
 			end
 		end
 
@@ -437,31 +418,40 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		if startMethodFlag==1
 			keyCheck = 1;
 		end
-		if keyCheck==1&checkEnabled==1
+		if keyCheck==1&&checkEnabled==1
 			if startMethodFlag==1||strcmp(evnt.Key,'return')
-				breakMovieLoop = 1;
-				% hListboxStruct.Value = hListbox.Value;
-				hListboxStruct.ValueFolder = get(hListboxS.folders,'Value');
-				hListboxStruct.Value = hListbox.Value;
-				hListboxStruct.guiIdx = get(hListboxS.guiEnabled,'Value');
-				hListboxStruct.nwbLoadFiles = get(hListboxS.cellExtractFiletype,'Value');
-				% hListboxStruct = struct(hListbox);
-				close(hFig)
+				subfxn_returnNormal();
 			else
 				% disp('Check')
 			end
 			% If escape, close.
-			if isfield(evnt,'Key')&&strcmp(evnt.Key,'escape')
-				breakMovieLoop = 1;
-				hListboxStruct = [];
-				close(hFig)
+			if strcmp(evnt.Key,'escape')
+				exitCallback();
+				% breakMovieLoop = 1;
+				% hListboxStruct = [];
+				% close(hFig)
 			end
 		else
-			movieCallback();
+			breakMovieLoop = 1;
+			pause(0.1);
+			breakMovieLoop = 0;
+			if isvalid(hFig)
+				movieCallback();
+			end
 		end
 
 		% catch
 		% end
+	end
+	function subfxn_returnNormal()
+		breakMovieLoop = 1;
+		% hListboxStruct.Value = hListbox.Value;
+		hListboxStruct.ValueFolder = get(hListboxS.folders,'Value');
+		hListboxStruct.Value = hListbox.Value;
+		hListboxStruct.guiIdx = get(hListboxS.guiEnabled,'Value');
+		hListboxStruct.nwbLoadFiles = get(hListboxS.cellExtractFiletype,'Value');
+		% hListboxStruct = struct(hListbox);
+		close(hFig)
 	end
 	function mouseMovedCallback(jListbox, jEventData, hListbox,tooltipStruct)
 		% Get the currently-hovered list-item
@@ -479,7 +469,7 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 			msgStr = sprintf('<html><b>%s</b>: <br>%s</html>', hoverValue, tooltipStruct.(hoverValue));
 		else
 			% msgStr = sprintf('<html><b>%s</b>: %s</html>', hoverValue, hoverValue);
-			msgStr = sprintf('<html><b>No tooltip.</b></html>', hoverValue, hoverValue);
+			msgStr = sprintf('<html><b>%s</b>: <br>No tooltip.</html>', hoverValue);
 		end
 		set(hListbox, 'TooltipString',msgStr);
 	end
@@ -493,6 +483,7 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		try
 			delete(movieAxes)
 			delete(movieAxesTwo)
+			delete(cellExtAxes)
 			warning on;
 		catch
 		end
@@ -524,27 +515,112 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		end
 		% breakLoop = ~breakLoop;
 	end
+	function callback_addFolders(source,eventdata)
+		% Set current method to modelAddNewFolders and start method.
+		hListbox.Value = 2;
+		obj.currentMethod = hListbox.String{hListbox.Value};
+		% breakMovieLoop = 1;
+		% exitFlag = 1;
+		% close(hFig)
+		subfxn_returnNormal();
+	end
 
-	function [movieAxes movieAxesTwo] = subfxn_movieAxesCreate()
+	function [movieAxes, movieAxesTwo, cellExtAxes] = subfxn_movieAxesCreate()
 		warning off;
-		txtW = 32;
+		txtW = 28;
+		txtWy = 33;
+		txtW2 = 28;
+		spW = 10; % Spacer between plots
 		dz = 2;
 		dy = 40;
+		dx = 3;
+		fontSizeH = 7;
 		% bOff = 50+mt;
-		bOff = 1;
-		movieAxes = axes('units','normalized','position',[bOff+4, 3, txtW, txtW]/100);
+		bOff = -1;
+		movieAxes = axes('units','normalized','position',[bOff+4, dx, txtW, txtWy]/100);
 			ht = imagesc(1);
-			colormap(movieAxes,'gray')
+			colormap(movieAxes,'gray');
 			box off;
-			title(movieAxes,'Select a single folder to view movie.')
+			title(movieAxes,['Processed movie.' 10 'Select a single folder to view movie.'],'FontSize',7,'Color',figTextColor);
+			set(movieAxes,'FontSize',fontSizeH);
 
-		movieAxesTwo = axes('units','normalized','position',[bOff+25+txtW, 3, txtW, txtW]/100); axis off;
+		movieAxesTwo = axes('units','normalized','position',[bOff+txtW+spW, dx, txtW, txtWy]/100); axis off;
 			ht = imagesc(1);
-			colormap(movieAxesTwo,'gray')
+			colormap(movieAxesTwo,'gray');
 			box off;
-			title(movieAxesTwo,'Raw movie.')
+			title(movieAxesTwo,'Raw movie.','FontSize',7,'Color',figTextColor);
+			set(movieAxesTwo,'FontSize',fontSizeH);
+
+		cellExtAxes = axes('units','normalized','position',[bOff+txtW*2+spW*1.5, dx, txtW, txtWy]/100); axis off;
+			ht = imagesc(1);
+			colormap(cellExtAxes,'gray');
+			box off;
+			title(cellExtAxes,'Cell extraction','FontSize',7,'Color',figTextColor);
 			% title('Select a single folder to view movie.')
 		warning on
+	end
+	function [selBoxInfo] = subfxn_guiElementSetupInfo()
+		% set(hFig,'Color',[0,0,0]);
+		% currentIdx = find(strcmp(fxnsToRun,obj.currentMethod));
+
+		% set(hListboxS.cellExtractFiletype,'Callback',@(src,evt){set(src,'background',[1 1 1]*0.9)});
+		selBoxInfo.methods.Tag = 'methodBox';
+		selBoxInfo.cellExtract.Tag = 'cellExtractionBox';
+		selBoxInfo.cellExtractFiletype.Tag = 'cellExtractFiletypeBox';
+		selBoxInfo.folderFilt.Tag = 'folderFilt';
+		selBoxInfo.subject.Tag = 'subjectBox';
+		selBoxInfo.assay.Tag = 'assayBox';
+		selBoxInfo.folders.Tag = 'folders';
+		selBoxInfo.guiEnabled.Tag = 'folders';
+
+		selBoxInfo.methods.uiType = 'listbox';
+		selBoxInfo.cellExtract.uiType = 'popupmenu';
+		selBoxInfo.cellExtractFiletype.uiType = 'popupmenu';
+		selBoxInfo.folderFilt.uiType = 'popupmenu';
+		selBoxInfo.subject.uiType = 'listbox';
+		selBoxInfo.assay.uiType = 'listbox';
+		selBoxInfo.folders.uiType = 'listbox';
+		selBoxInfo.guiEnabled.uiType = 'popupmenu';
+
+		selBoxInfo.methods.Value = currentIdx;
+		selBoxInfo.cellExtract.Value = currentCellExtIdx;
+		if obj.nwbLoadFiles==1;ggg=2;else;ggg=1;end
+		selBoxInfo.cellExtractFiletype.Value = ggg;
+		selBoxInfo.folderFilt.Value = 1;
+		selBoxInfo.subject.Value = 1:length(subjectStrUnique);
+		selBoxInfo.assay.Value = 1:length(assayStrUnique);
+		selBoxInfo.folders.Value = 1:length(selectList);
+		if obj.guiEnabled==1;ggg=1;else;ggg=2;end
+		selBoxInfo.guiEnabled.Value = ggg;
+
+		selBoxInfo.methods.string = fxnsToRun;
+		selBoxInfo.cellExtract.string = usrIdxChoiceDisplay;
+		selBoxInfo.cellExtractFiletype.string = {[ciapkg.pkgName ' format'],'NeuroDataWithoutBorders (NWB) format'};
+		selBoxInfo.folderFilt.string = useAltValid;
+		selBoxInfo.subject.string = subjectStrUnique;
+		selBoxInfo.assay.string = assayStrUnique;
+		selBoxInfo.folders.string = selectList;
+		selBoxInfo.guiEnabled.string = {'GUI in methods enabled','GUI in methods disabled'};
+
+		selBoxInfo.methods.title = ['Select a ' ciapkg.pkgName ' method:'];
+		selBoxInfo.cellExtract.title = 'Cell-extraction method:';
+		selBoxInfo.cellExtractFiletype.title = 'Cell-extraction file format:';
+		selBoxInfo.folderFilt.title = 'Folder select filters:';
+		selBoxInfo.assay.title = 'Folder assay names:';
+		selBoxInfo.subject.title = 'Animal IDs:';
+		selBoxInfo.folders.title = 'Loaded folders:';
+		selBoxInfo.guiEnabled.title = 'GUI (methods with user options):';
+
+		mt = -10;
+		% [x0 y0 width height]
+		selBoxInfo.methods.loc = [1, 48, 38, 91-48];
+		selBoxInfo.cellExtract.loc = [50+mt, 89, 24-mt/2, 2];
+		selBoxInfo.cellExtractFiletype.loc = [50+mt, 84, 24-mt/2, 2];
+		selBoxInfo.folderFilt.loc = [75+mt-mt/2, 89, 24-mt/2, 2];
+		selBoxInfo.subject.loc = [50+mt, 71, 24-mt/2, 10];
+		selBoxInfo.assay.loc = [75+mt-mt/2, 71, 24-mt/2, 10];
+		selBoxInfo.folders.loc = [50+mt, 48, 49-mt, 20];
+		selBoxInfo.guiEnabled.loc = [75+mt-mt/2, 84, 24-mt/2, 2];
 	end
 	function [runMoviesToggleHandle, fileFilterRegexpHandle, fileFilterRegexpRawHandle, FRAMES_PER_SECONDHandle, inputDatasetNameHandle] = subfxn_movieOptionsCreate()
 		warning off;
@@ -558,18 +634,18 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		runMoviesToggleHandle = uicontrol('style','pushbutton','Units', 'normalized','position',[bOff 45 98 2]/100,'FontSize',fontSizeH,'string','Preview movies by selecting one folder in "Loaded folders" (click this button to disable).','BackgroundColor',buttonBackgroundColor,'callback',@runMoviesToggleCallback);
 		
 		fileFilterRegexpHandle = uicontrol('style','edit','Units', 'normalized','position',[bOff dy txtW 2]/100,'FontSize',fontSizeH,'string',obj.fileFilterRegexp,'callback',@movieSettingsCallback,'KeyReleaseFcn',@movieSettingsCallback);
-			uicontrol('Style','text','String','Regular expression processed movie:','Units','normalized','Position',[bOff dy+dz txtW dz]/100,'BackgroundColor',figBackgroundColor,'ForegroundColor',figTextColor,'HorizontalAlignment','Left','FontWeight','normal','FontSize',fontSizeH);
+			uicontrol('Style','text','String','Processed movie regular expression:','Units','normalized','Position',[bOff dy+dz txtW dz]/100,'BackgroundColor',figBackgroundColor,'ForegroundColor',figTextColor,'HorizontalAlignment','Left','FontWeight','normal','FontSize',fontSizeH);
 		fileFilterRegexpRawHandle = uicontrol('style','edit','Units', 'normalized','position',[bOff+txtW dy txtW 2]/100,'FontSize',fontSizeH,'string',obj.fileFilterRegexpRaw,'callback',@movieSettingsCallback,'KeyReleaseFcn',@movieSettingsCallback);
-			uicontrol('Style','text','String','Regular expression raw movie:','Units','normalized','Position',[bOff+txtW dy+dz txtW dz]/100,'BackgroundColor',figBackgroundColor,'ForegroundColor',figTextColor,'HorizontalAlignment','Left','FontWeight','normal','FontSize',fontSizeH);
+			uicontrol('Style','text','String','Raw movie regular expression:','Units','normalized','Position',[bOff+txtW dy+dz txtW dz]/100,'BackgroundColor',figBackgroundColor,'ForegroundColor',figTextColor,'HorizontalAlignment','Left','FontWeight','normal','FontSize',fontSizeH);
 		FRAMES_PER_SECONDHandle = uicontrol('style','edit','Units', 'normalized','position',[bOff+2*txtW dy txtW 2]/100,'FontSize',fontSizeH,'string',num2str(obj.FRAMES_PER_SECOND_PLAYBACK),'callback',@movieSettingsCallback,'KeyReleaseFcn',@movieSettingsCallback);
 			uicontrol('Style','text','String','Playback frames per second:','Units','normalized','Position',[bOff+2*txtW dy+dz txtW dz]/100,'BackgroundColor',figBackgroundColor,'ForegroundColor',figTextColor,'HorizontalAlignment','Left','FontWeight','normal','FontSize',fontSizeH);
 		inputDatasetNameHandle = uicontrol('style','edit','Units', 'normalized','position',[bOff+3*txtW dy txtW 2]/100,'FontSize',fontSizeH,'string',obj.inputDatasetName,'callback',@movieSettingsCallback,'KeyReleaseFcn',@movieSettingsCallback);
-			uicontrol('Style','text','String','HDF5 dataset name','Units','normalized','Position',[bOff+3*txtW dy+dz txtW dz]/100,'BackgroundColor',figBackgroundColor,'ForegroundColor',figTextColor,'HorizontalAlignment','Left','FontWeight','normal','FontSize',fontSizeH);
+			uicontrol('Style','text','String','HDF5 dataset name:','Units','normalized','Position',[bOff+3*txtW dy+dz txtW dz]/100,'BackgroundColor',figBackgroundColor,'ForegroundColor',figTextColor,'HorizontalAlignment','Left','FontWeight','normal','FontSize',fontSizeH);
 		warning on
 	end
 	function movieCallback(source,eventdata)
 		try
-			if enableMoviePreview==0||isempty(obj.inputFolders)
+			if isempty(obj.inputFolders)
 				return;
 			end
 			FPShere = obj.FRAMES_PER_SECOND_PLAYBACK;
@@ -579,15 +655,17 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 				return;
 			end
 			thisFolderPath = obj.inputFolders{folderIdx};
+			obj.fileNum = folderIdx;
 			expCheck = {obj.fileFilterRegexp,obj.fileFilterRegexpRaw};
-			fileList = {};
-			thisFrame = {};
-			nFrames = {};
-			fileName = {};
-			movieCheck = {};
-			inputMovieDims = {};
-			inputMoviePath = {};
-			for zz = 1:2
+			nFiles = 2;
+			fileList = cell([1 nFiles]);
+			thisFrame = cell([1 nFiles]);
+			nFrames = cell([1 nFiles]);
+			fileName = cell([1 nFiles]);
+			movieCheck = cell([1 nFiles]);
+			inputMovieDims = cell([1 nFiles]);
+			inputMoviePath = cell([1 nFiles]);
+			for zz = 1:nFiles
 				fileList{zz} = getFileList(thisFolderPath,expCheck{zz});
 				if isempty(fileList{zz})
 					movieCheck{zz} = 0;
@@ -603,7 +681,7 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 				end
 				nFrames{zz} = inputMovieDims{zz}.three;
 				inputMovieDims{zz} = [inputMovieDims{zz}.one inputMovieDims{zz}.two];
-				[thisFrame{zz},movieFileID,~] = ciapkg.io.readFrame(inputMoviePath{zz},1,'inputDatasetName',obj.inputDatasetName);
+				[thisFrame{zz},~,~] = ciapkg.io.readFrame(inputMoviePath{zz},1,'inputDatasetName',obj.inputDatasetName);
 				if isempty(thisFrame{zz})
 					movieCheck{zz} = 0;
 					continue;
@@ -615,18 +693,25 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 			try
 				delete(movieAxes)
 				delete(movieAxesTwo)
+				delete(cellExtAxes)
 			catch
 			end
-			[movieAxes, movieAxesTwo] = subfxn_movieAxesCreate();
+			[movieAxes, movieAxesTwo, cellExtAxes] = subfxn_movieAxesCreate();
 			if movieCheck{1}==1
 				% [x0 y0 width height]
 				% movieAxes = axes('units','normalized','position',[50+mt+4, 3, 50, 18]/100); axis off;
-				movieImgHandle = imagesc(movieAxes,zeros(inputMovieDims{1}(1:2)));
+				tmpFrame = zeros(inputMovieDims{1}(1:2));
+				movieImgHandle = imagesc(movieAxes,tmpFrame);
 				% axis equal tight;colorbar
 				% axis equal tight;
 				axis(movieAxes,'image')
 				colormap(movieAxes,'gray')
 				box(movieAxes,'off');
+				
+				imagesc(cellExtAxes,tmpFrame);
+				set(cellExtAxes,'xcolor',figTextColor);set(cellExtAxes,'ycolor',figTextColor);
+				axis(cellExtAxes,'image');
+				box(cellExtAxes,'off');
 			end
 			if movieCheck{2}==1
 				movieImgHandleTwo = imagesc(movieAxesTwo,zeros(inputMovieDims{2}(1:2)));
@@ -637,25 +722,55 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 				box(movieAxesTwo,'off');
 			end
 
-			if movieCheck{1}==1|movieCheck{2}==1
+			if movieCheck{1}==1||movieCheck{2}==1
 				% Get the image cut movie
-				set(hFig,'CurrentAxes',movieAxes)
+				set(hFig,'CurrentAxes',movieAxes);
 				% cla reset
 				i = 1;
 				i2 = 1;
 
 				if movieCheck{1}==1
 					titleHandle = title(movieAxes,sprintf('%s\nFrame %d/%d',fileName{1},i,nFrames{1}),'FontSize',7,'Color',figTextColor);
-					[thisFrame,movieFileID,inputMovieDims] = ciapkg.io.readFrame(inputMoviePath{1},i,'inputDatasetName',obj.inputDatasetName);
+					[thisFrame,~,~] = ciapkg.io.readFrame(inputMoviePath{1},i,'inputDatasetName',obj.inputDatasetName);
 					set(movieImgHandle,'CData',thisFrame);
-					set(movieAxes,'xcolor',figTextColor);set(movieAxes,'ycolor',figTextColor) 
+					set(movieAxes,'xcolor',figTextColor);set(movieAxes,'ycolor',figTextColor);
 				end
 
 				if movieCheck{2}==1
 					titleHandleTwo = title(movieAxesTwo,sprintf('%s\nFrame %d/%d',fileName{2},i2,nFrames{2}),'FontSize',7,'Color',figTextColor);
-					[thisFrame2,movieFileID,inputMovieDims] = ciapkg.io.readFrame(inputMoviePath{2},i,'inputDatasetName',obj.inputDatasetName);
+					[thisFrame2,~,~] = ciapkg.io.readFrame(inputMoviePath{2},i,'inputDatasetName',obj.inputDatasetName);
 					set(movieImgHandleTwo,'CData',thisFrame2);
-					set(movieAxesTwo,'xcolor',figTextColor);set(movieAxesTwo,'ycolor',figTextColor) 
+					set(movieAxesTwo,'xcolor',figTextColor);set(movieAxesTwo,'ycolor',figTextColor);
+				end
+
+				try
+					% obj.signalExtractionMethod
+					try
+						inputImages = signalExtImageCache{obj.fileNum}.(obj.signalExtractionMethod){1};
+						inputSignals = signalExtImageCache{obj.fileNum}.(obj.signalExtractionMethod){2};
+					catch
+						[inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, validType, inputSignals2] = modelGetSignalsImages(obj,'fileNum',folderIdx,'returnType','raw','loadSignalPeaks',0,'fastFileLoad',1);
+						signalExtImageCache{obj.fileNum}.(obj.signalExtractionMethod) = {inputImages,inputSignals};
+					end
+					if isvalid(cellExtAxes)
+						inputImages = thresholdImages(inputImages,'fastThresholding',1,'threshold',0.3,'getBoundaryIndex',0,'imageFilter','median','medianFilterNeighborhoodSize',3);
+						if ~isempty(inputImages)
+							imagesc(cellExtAxes,max(inputImages,[],3));
+						end
+						title(cellExtAxes,sprintf('%s | %d cells',obj.signalExtractionMethod,size(inputSignals,1)),'FontSize',10,'Color',figTextColor);
+						set(cellExtAxes,'xcolor',figTextColor);set(cellExtAxes,'ycolor',figTextColor);
+						axis(cellExtAxes,'image');
+						box(cellExtAxes,'off');
+					end
+				catch err
+					disp(repmat('@',1,7))
+					disp(getReport(err,'extended','hyperlinks','on'));
+					disp(repmat('@',1,7))
+				end
+
+				% If so, only display a frame and then exit.
+				if enableMoviePreview==0||isempty(obj.inputFolders)
+					return;
 				end
 
 				% axis equal tight;
@@ -690,6 +805,13 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 						if i2>nFrames{2}
 							i2 = 1;
 						end
+					end
+					% Force stop loop if axes no longer there.
+					if ~isvalid(movieAxes)&~isvalid(movieAxesTwo)
+						break;
+					end
+					if breakMovieLoop==1
+						break;
 					end
 					pause(1/FPShere);
 				end

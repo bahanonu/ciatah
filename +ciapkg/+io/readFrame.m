@@ -1,7 +1,7 @@
 function [thisFrame,movieFileID,inputMovieDims] = readFrame(inputMoviePath,frameNo,varargin)
 	% Fast reading of frame from files on disk. This is an alternative to loadMovieList that is much faster when only a single frame needs to be read.
 	% Biafra Ahanonu
-	% started: 2020.10.19 [â€?â€Ž11:45:24]
+	% started: 2020.10.19 [11:45:24]
 	% inputs
 		% inputMoviePath | Str: path to a movie. Supports TIFF, AVI, HDF5, NWB, or Inscopix ISXD.
 		% frameNo | Int: frame number.
@@ -15,6 +15,7 @@ function [thisFrame,movieFileID,inputMovieDims] = readFrame(inputMoviePath,frame
 
 	% changelog
 		% 2021.06.30 [01:26:29] - Updated handling of no file path character input.
+		% 2021.07.03 [09:02:14] - Updated to have backup read method for different tiff styles.
 	% TODO
 		%
 
@@ -101,6 +102,14 @@ function [thisFrame,movieFileID,inputMovieDims] = readFrame(inputMoviePath,frame
 					tiffID.setDirectory(frameNo);
 					thisFrame = read(tiffID);
 				catch
+					try
+						% thisFrame = imread(inputMoviePathHere, 'tif', 'Index', frameNo, 'Info', imgInfo);
+						thisFrame = imread(inputMoviePathHere, 'tif', 'Index', frameNo);
+					catch err
+						disp(repmat('@',1,7))
+						disp(getReport(err,'extended','hyperlinks','on'));
+						disp(repmat('@',1,7))
+					end
 					% err
 					% display(repmat('@',1,7))
 					% disp(getReport(err,'extended','hyperlinks','on'));

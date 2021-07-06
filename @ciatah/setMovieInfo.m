@@ -1,5 +1,5 @@
 function obj = setMovieInfo(obj)
-	% DESCRIPTION
+	% Settings for movie and cell extraction inputs and outputs.
 	% Biafra Ahanonu
 	% started: 2014.07.31 - branch from calciumImagingAnalysis 2020.05.07 [15:47:29]
 	% inputs

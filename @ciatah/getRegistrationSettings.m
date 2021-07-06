@@ -21,6 +21,7 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		% 2021.06.21 [14:27:26] - Switch to single page support.
 		% 2021.06.21 [20:52:36] - Multi-column layout since most computers are widescreen now.
 		% 2021.06.29 [12:52:36] - Added regRegionUseBtwnSessions support and made fix for loading prior settings if they do not contain new settings.
+		% 2021.07.06 [09:42:09] - Switch to callbacks to close instead of using pause, allows for more flexibility going forward and use with MATLAB Online.
 	% TODO
 		% DONE: Allow user to input prior settings, indicate those changed from default by orange or similar color.
 
@@ -468,7 +469,13 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 
 			propNoDisp = propNoDisp+1;
 		end
-		pause
+
+		startMethodHandle = uicontrol('style','pushbutton','Units', 'normalized','position',[80 94 20 2]/100,'FontSize',9,'string','Click when done.','BackgroundColor',[153 255 153]/255,'callback',@subfxn_closeOptions);
+		emptyBox = uicontrol('Style','Text','String',[''],'Units','normalized','Position',[1 1 1 1]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold','FontSize',7);
+		set(gcf,'KeyPressFcn', @subfxn_closeOptionsKey);
+		% waitfor(gcf,'Tag');
+		waitfor(emptyBox);
+		% pause
 		uiYOffset = 0.90;
 
 		for propertyNo = propertySubsetList
@@ -565,5 +572,13 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		preprocessingSettingsAll.(gProperty).modified.str = gString{gValue};
 		% preprocessingSettingsAll.(gProperty).modified
 		% preprocessingSettingsAll.(gProperty)
+	end
+	function subfxn_closeOptions(src,event)
+		delete(emptyBox);
+	end
+	function subfxn_closeOptionsKey(src,event)
+		if event.Key=="return"
+			delete(emptyBox)
+		end
 	end
 end

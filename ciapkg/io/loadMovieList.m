@@ -53,6 +53,7 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 		% 2021.06.21 [10:22:32] - Added support for Bio-Formats compatible files, specifically Olympus (OIR) and Zeiss (CZI, LSM).
 		% 2021.06.28 [16:57:27] - Added check that deals with users requesting more frames than are in the movie in the case where "options.largeMovieLoad==1" and a matrix is pre-allocated.
 		% 2021.06.30 [12:26:12] - Added additional checks for frameList to remove if negative or zero along with additional checks during movie loading to prevent loading frames outside movie extent.
+		% 2021.07.03 [08:55:06] - dims.three fix for reading tifs, esp. ImageJ >4GB.
 
 	% TODO
 		% OPEN
@@ -221,7 +222,6 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 				end
 				tiffHandle = Tiff(thisMoviePath, 'r');
 				tmpFrame = tiffHandle.read();
-				tiffHandle.close(); clear tiffHandle
 				xyDims = size(tmpFrame);
 				if options.displayWarnings==0
 					warning on
@@ -240,10 +240,17 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 						numFramesStr = regexp(fileInfo.ImageDescription, 'images=(\d*)', 'tokens');
 						nFrames = str2double(numFramesStr{1}{1});
 					catch
-						nFrames = 1;
+						% Try to grab using TIFF library
+						try
+							nFrames = tiffHandle.numberOfTiles;
+						catch
+							nFrames = 1;
+						end
 					end
 					dims.z(iMovie) = nFrames;
+					dims.three(iMovie) = nFrames;
 				end
+				tiffHandle.close(); clear tiffHandle
 			case 'hdf5'
 
 				% Check if NWB file and alter input dataset name to default NWB if inputDatasetName does not point to a valid NWB dataset.

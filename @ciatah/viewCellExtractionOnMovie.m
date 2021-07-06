@@ -10,6 +10,7 @@ function obj = viewCellExtractionOnMovie(obj,varargin)
 	% changelog
 		% 2019.10.29 [16:31:37] - Added a check for already loaded files
 		% 2021.06.18 [21:41:07] - added modelVarsFromFilesCheck() to check and load signals if user hasn't already.
+		% 2021.07.06 [15:12:04] - Add support for view from disk and cell overlays.
 	% TODO
 		% Give users the option to scroll back and forth by having a horizontal scrollbar
 
@@ -17,6 +18,7 @@ function obj = viewCellExtractionOnMovie(obj,varargin)
 	%========================
 	% DESCRIPTION
 	options.baseOption = '';
+	options.settingsType = '';
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -44,8 +46,19 @@ function obj = viewCellExtractionOnMovie(obj,varargin)
 		modelAddOutsideDependencies('miji');
 	end
 
+	if isempty(options.settingsType)
+		usrIdxChoiceStr = {'Simple settings','Advanced settings'};
+		usrIdxChoiceSetting = {'simple','advanced'};
+		scnsize = get(0,'ScreenSize');
+		[sel, ok] = listdlg('ListString',usrIdxChoiceStr,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','Which settings to load?');
+		if ok==0
+			return;
+		end
+		options.settingsType = usrIdxChoiceSetting{sel};
+	end
+
 	% Load folders to be analyzed.
-	[fileIdxArray idNumIdxArray nFilesToAnalyze nFiles] = obj.getAnalysisSubsetsToAnalyze();
+	[fileIdxArray, idNumIdxArray, nFilesToAnalyze, nFiles] = obj.getAnalysisSubsetsToAnalyze();
 
 	% Check whether preprocessed movie is there by default in 1st folder. Else load standard regexp for raw movie.
 	defaultFileFilterRegexp = obj.fileFilterRegexp;
@@ -68,12 +81,13 @@ function obj = viewCellExtractionOnMovie(obj,varargin)
 	AddOpts.Interpreter='tex';
 
 	% movieSettings = inputdlg({...
-	movieSettings = inputdlgcol({...
+	settingStr = {...
 			'char: Imaging movie regexp (IMPORTANT, make sure matches the movie you want to view):',...
 			'start:end frames (leave blank for all)',...
 			'raw:processed downsample factor: ',...
 			'Create cell extraction outlines on movie (1 = sorted outputs, 2 = all outputs):',...
 			'Cell extraction outlines threshold (float btwn 0 and 1):',...
+			'Play movie from disk (1 = yes, 0 = no):',...
 			'video folder(s), separate multiple folders by a comma:',...
 			'side-by-side save folder:',...
 			'analyze specific folder (leave blank if no) ("same" = input folder)',...
@@ -95,14 +109,14 @@ function obj = viewCellExtractionOnMovie(obj,varargin)
 			'dataset name',...
 			'downsample factor for movie viewing (1 = no downsample):',...
 			'Display raw movie (1 = yes, 0 = no):',...
-		},...
-		'view movie settings',[1 100],...
-		{...
+		};
+		settingDefaults = {...
 			defaultFileFilterRegexp,...
 			'1:500',...
 			num2str(obj.DOWNSAMPLE_FACTOR),...
 			'2',...
 			'0.4',...
+			'0',...
 			videoDir,....
 			obj.videoSaveDir,...
 			'',...
@@ -124,7 +138,74 @@ function obj = viewCellExtractionOnMovie(obj,varargin)
 			obj.inputDatasetName,...
 			'1',...
 			'0'...
-		},AddOpts,2);
+		};
+
+	options.settingsType = 'simple';
+	switch options.settingsType
+		case 'simple'
+			settingsKeepIdx = [1 2 3 4 5 6 11 12 14 15 24 25 26];
+			nCols = 1;
+		otherwise
+			settingsKeepIdx = 1:length(settingStr);
+			nCols = 2;
+			% Do nothing
+	end
+
+	% movieSettings = inputdlg({...
+	movieSettings = inputdlgcol(settingStr(settingsKeepIdx),...
+		'view movie settings',[1 100],...
+		settingDefaults(settingsKeepIdx),...
+		AddOpts,nCols);
+
+	switch options.settingsType
+		case 'simple'
+			% Add new settings to default
+			settingStr{settingsKeepIdx};
+			sN = 1;
+			for ii = 1:length(settingsKeepIdx)
+				settingDefaults{settingsKeepIdx(ii)} = movieSettings{sN};
+				sN=sN+1;
+			end
+			movieSettings = settingDefaults;
+		otherwise
+			% Do nothing
+	end
+	i=1;
+	fileFilterRegexp = movieSettings{i};i=i+1;
+	if processedMovieFlag==1
+		obj.fileFilterRegexp = fileFilterRegexp;
+	end
+	frameList = str2num(movieSettings{i}); i=i+1;
+	DOWNSAMPLE_FACTOR = str2num(movieSettings{i}); i=i+1;
+	createImageOutlineOnMovieSwitch = str2num(movieSettings{i}); i=i+1;
+	thresholdOutline = str2num(movieSettings{i}); i=i+1;
+	playMovieFromDisk = str2num(movieSettings{i}); i=i+1;
+	obj.videoDir = strsplit(movieSettings{i},','); i=i+1;
+		videoDir = obj.videoDir;
+	obj.videoSaveDir = movieSettings{i}; i=i+1;
+		videoSaveDir = obj.videoSaveDir;
+	analyzeSpecificFolder = movieSettings{i}; i=i+1;
+	createMontageVideosSwitch = str2num(movieSettings{i}); i=i+1;
+	createSignalBasedVideosSwitch = str2num(movieSettings{i}); i=i+1;
+	userSignalBasedType = movieSettings{i}; i=i+1;
+	askForMovieList = str2num(movieSettings{i}); i=i+1;
+	saveCopyOfMovie = str2num(movieSettings{i}); i=i+1;
+	rawFileFilterRegexp = movieSettings{i}; i=i+1;
+	recursiveVideoSearch = str2num(movieSettings{i}); i=i+1;
+	viewOptions.useIdentifyText = str2num(movieSettings{i}); i=i+1;
+	normalizeMovieSwitch = str2num(movieSettings{i}); i=i+1;
+	preLoadPrimaryMovie = str2num(movieSettings{i}); i=i+1;
+	loadMovieInEqualParts = str2num(movieSettings{i}); i=i+1;
+	downsampleFactorSave = str2num(movieSettings{i}); i=i+1;
+	videoFilterRegexp = movieSettings{i}; i=i+1;
+		obj.behaviorVideoRegexp = videoFilterRegexp;
+	rotateVideoSwitch = str2num(movieSettings{i}); i=i+1;
+	treatMoviesAsContinuous = str2num(movieSettings{i}); i=i+1;
+	obj.inputDatasetName = movieSettings{i}; i=i+1;
+	downsampleFactorView = str2num(movieSettings{i}); i=i+1;
+	displayRawMovie = str2num(movieSettings{i}); i=i+1;
+	noCrop = 0;
+
 	% movieSettings2 = inputdlg({...
 	% 		'recursively search video directory (0 = no, 1 = yes)',...
 	% 		'add text labels to movie (0 = no, 1 = yes):',...
@@ -155,41 +236,6 @@ function obj = viewCellExtractionOnMovie(obj,varargin)
 	% );
 	% concat the two
 	% movieSettings = cat(1,movieSettings,movieSettings2);
-	i=1;
-	fileFilterRegexp = movieSettings{i};i=i+1;
-	if processedMovieFlag==1
-		obj.fileFilterRegexp = fileFilterRegexp;
-	end
-	frameList = str2num(movieSettings{i}); i=i+1;
-	DOWNSAMPLE_FACTOR = str2num(movieSettings{i}); i=i+1;
-	createImageOutlineOnMovieSwitch = str2num(movieSettings{i}); i=i+1;
-	thresholdOutline = str2num(movieSettings{i}); i=i+1;
-	obj.videoDir = strsplit(movieSettings{i},','); i=i+1;
-		videoDir = obj.videoDir;
-	obj.videoSaveDir = movieSettings{i}; i=i+1;
-		videoSaveDir = obj.videoSaveDir;
-	analyzeSpecificFolder = movieSettings{i}; i=i+1;
-	createMontageVideosSwitch = str2num(movieSettings{i}); i=i+1;
-	createSignalBasedVideosSwitch = str2num(movieSettings{i}); i=i+1;
-	userSignalBasedType = movieSettings{i}; i=i+1;
-	askForMovieList = str2num(movieSettings{i}); i=i+1;
-	saveCopyOfMovie = str2num(movieSettings{i}); i=i+1;
-	rawFileFilterRegexp = movieSettings{i}; i=i+1;
-	recursiveVideoSearch = str2num(movieSettings{i}); i=i+1;
-	viewOptions.useIdentifyText = str2num(movieSettings{i}); i=i+1;
-	normalizeMovieSwitch = str2num(movieSettings{i}); i=i+1;
-	preLoadPrimaryMovie = str2num(movieSettings{i}); i=i+1;
-	loadMovieInEqualParts = str2num(movieSettings{i}); i=i+1;
-	downsampleFactorSave = str2num(movieSettings{i}); i=i+1;
-	videoFilterRegexp = movieSettings{i}; i=i+1;
-		obj.behaviorVideoRegexp = videoFilterRegexp;
-	rotateVideoSwitch = str2num(movieSettings{i}); i=i+1;
-	treatMoviesAsContinuous = str2num(movieSettings{i}); i=i+1;
-	obj.inputDatasetName = movieSettings{i}; i=i+1;
-	downsampleFactorView = str2num(movieSettings{i}); i=i+1;
-	displayRawMovie = str2num(movieSettings{i}); i=i+1;
-	noCrop = 0;
-
 
 	% % =====================
 	% Check files already loaded
@@ -329,6 +375,35 @@ function obj = viewCellExtractionOnMovie(obj,varargin)
 				else
 					movieListTmp2 = movieList{movieMontageIdx(movieNo)};
 				end
+
+				
+				if playMovieFromDisk==1
+					switch options.videoPlayer
+						case 'matlab'
+							if createImageOutlineOnMovieSwitch==1
+								[inputSignals, inputImages, signalPeaks, ~] = modelGetSignalsImages(obj,'returnType','filtered');
+							elseif createImageOutlineOnMovieSwitch==2
+								[inputSignals, inputImages, signalPeaks, ~] = modelGetSignalsImages(obj,'returnType','raw');
+							else
+								continue;
+							end
+							displayStrMovie = [num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) '[' num2str(movieNo) '/' num2str(nMovies) ']' ': ' obj.folderBaseDisplayStr{obj.fileNum}];
+							msgHandle = msgbox('Change contrast by pressing "j"');
+							[exitSignal, movieStruct] = playMovie(movieListTmp2{1},'extraTitleText',displayStrMovie,'primaryPointsOverlay',inputImages,'primaryPointsOverlayThreshold',thresholdOutline);
+
+							% Remove msg box
+							delete(msgHandle);
+							% fileIDNameArray
+							% movieDecision = questdlg('Is the movie good?', ...
+							% 	'Movie decision', ...
+							% 	'yes','motion','other','yes');
+							movieDecision = 'yes';
+							continue;
+						otherwise
+							continue;
+					end
+				end
+
 				if preLoadPrimaryMovie == 1
 					primaryMovie = primaryMoviePreloaded{thisFileNumIdx}{movieNo};
 				else

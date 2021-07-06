@@ -21,6 +21,7 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
 		% 2019.06.02 [22:14:03] - Revert back to slicing the 3D inputImages
 		% 2019.07.17 [00:29:16] - Added support for sparse input images (mainly ndSparse format).
 		% rather than converting to a cell
+		% 2021.07.06 [10:12:33] - Added support for fast thresholding using vectorized form, faster than parfor loop.
 	% TODO
 		%
 
@@ -38,7 +39,7 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
 	% image filter: none, median,
 	options.imageFilterBinary = 'none';
 	% size of neighborhood to use for median filter
-	options.medianFilterNeighborhoodSize = 6;
+	options.medianFilterNeighborhoodSize = 5;
 	% normalize images
 	options.normalizationType = [];
 	% Binary: 1 = normalize each filter with max set to 1
@@ -49,6 +50,8 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
 	options.removeUnconnectedBinary = 1;
 	% Str: 'holes' or 'noholes'
 	options.boundaryHoles = 'holes';
+	% Binary: 1 = fast thresholding (vectorized), 0 = normal thresholding
+	options.fastThresholding = 0;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -121,6 +124,45 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
 	numObjects = [];
 
 	replaceVal = 0;
+
+	if options.fastThresholding==1
+		if options_binary==1
+			inputImages = inputImages>max(inputImages,[],[1 2])*options_threshold;
+			imgFiltHere = options_imageFilterBinary;
+		else
+			rmIdx = inputImages<max(inputImages,[],[1 2])*options_threshold;
+			inputImages(rmIdx) = 0;
+			imgFiltHere = options_imageFilter;
+		end
+		
+		switch imgFiltHere
+			case 'median'
+				% Adjust if user 
+				if mod(options_medianFilterNeighborhoodSize,2)==0
+					if options_medianFilterNeighborhoodSize>=2
+						disp('Median filter neighbor size not odd, adding +1 to make odd');
+						options_medianFilterNeighborhoodSize = options_medianFilterNeighborhoodSize+1;
+					end
+				end
+				% Not ideal, but faster than looping over medFilt2 and produces cleaner outputs.
+				inputImages = medfilt3(inputImages,[options_medianFilterNeighborhoodSize options_medianFilterNeighborhoodSize 1]);
+			otherwise
+				% body
+		end
+		
+		if options_getBoundaryIndex==1
+			parfor(imageNo=1:nImages,nWorkers)
+				thisFilt = inputImages(:,:,imageNo);
+				maxVal = nanmax(thisFilt(:));
+				cutoffVal = maxVal*options_threshold;
+				boundaryIndices{imageNo} = subfxn_getBoundaries(thisFilt,options_binary,options_getBoundaryIndex,options_boundaryHoles,cutoffVal)
+				if ~verLessThan('matlab', '9.2')
+					send(D, imageNo); % Update
+				end
+			end
+		end
+		return;
+	end
 	% startState = ticBytes(gcp);
 	% for imageNo=1:nImages
 	parfor(imageNo=1:nImages,nWorkers)
@@ -211,32 +253,8 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
 			% inputImages(:,:,imageNo)=thisFilt;
 		% end
 
-		if options_binary==1&&options_getBoundaryIndex==1
-			thisFilt = logical(thisFilt);
-			[B,~] = bwboundaries(thisFilt,options_boundaryHoles);
-			for iNo = 1:length(B)
-				boundaryIndices{imageNo} = [boundaryIndices{imageNo} sub2ind(size(thisFilt),B{iNo}(:,1),B{iNo}(:,2))'];
-			end
-			boundaryIndices{imageNo} = boundaryIndices{imageNo}(:)';
-		elseif options_binary==0&&options_getBoundaryIndex==1
-			thisFilt(thisFilt>=cutoffVal)=1;
-			thisFilt = logical(thisFilt);
-			try
-				warning off
-				thisFilt = bwareafilt(thisFilt,1,'largest');
-				warning on
-			catch err
-				disp(repmat('@',1,7))
-				disp(getReport(err,'extended','hyperlinks','on'));
-				disp(repmat('@',1,7))
-			end
+		boundaryIndices{imageNo} = subfxn_getBoundaries(thisFilt,options_binary,options_getBoundaryIndex,options_boundaryHoles,cutoffVal)
 
-			[B,~] = bwboundaries(thisFilt,options_boundaryHoles);
-			for iNo = 1:length(B)
-				boundaryIndices{imageNo} = [boundaryIndices{imageNo} sub2ind(size(thisFilt),B{iNo}(:,1),B{iNo}(:,2))'];
-			end
-			boundaryIndices{imageNo} = boundaryIndices{imageNo}(:)';
-		end
 		% within loop
 		% if (mod(imageNo,20)==0|imageNo==nImages)&options_waitbarOn==1
 			%reverseStr = cmdWaitbar(imageNo,nImages,reverseStr,'inputStr','thresholding images');
@@ -281,6 +299,39 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
 		% reshapeValue = size(inputImages);
 		%Convert array to cell array, allows slicing (not contiguous memory block)
 		inputImages = squeeze(mat2cell(inputImages,inputMovieX,inputMovieY,ones(1,inputMovieZ)));
+	end
+end
+function boundaryIndex = subfxn_getBoundaries(thisFilt,options_binary,options_getBoundaryIndex,options_boundaryHoles,cutoffVal)
+	boundaryIndex = [];
+	if options_binary==1&&options_getBoundaryIndex==1
+		thisFilt = logical(thisFilt);
+		[B,~] = bwboundaries(thisFilt,options_boundaryHoles);
+		for iNo = 1:length(B)
+			% boundaryIndices{imageNo} = [boundaryIndices{imageNo} sub2ind(size(thisFilt),B{iNo}(:,1),B{iNo}(:,2))'];
+			boundaryIndex = [boundaryIndex sub2ind(size(thisFilt),B{iNo}(:,1),B{iNo}(:,2))'];
+		end
+		boundaryIndex = boundaryIndex(:)';
+		% boundaryIndices{imageNo} = boundaryIndices{imageNo}(:)';
+	elseif options_binary==0&&options_getBoundaryIndex==1
+		thisFilt(thisFilt>=cutoffVal)=1;
+		thisFilt = logical(thisFilt);
+		try
+			warning off
+			thisFilt = bwareafilt(thisFilt,1,'largest');
+			warning on
+		catch err
+			disp(repmat('@',1,7))
+			disp(getReport(err,'extended','hyperlinks','on'));
+			disp(repmat('@',1,7))
+		end
+
+		[B,~] = bwboundaries(thisFilt,options_boundaryHoles);
+		for iNo = 1:length(B)
+			boundaryIndex = [boundaryIndex sub2ind(size(thisFilt),B{iNo}(:,1),B{iNo}(:,2))'];
+			% boundaryIndices{imageNo} = [boundaryIndices{imageNo} sub2ind(size(thisFilt),B{iNo}(:,1),B{iNo}(:,2))'];
+		end
+		boundaryIndex = boundaryIndex(:)';
+		% boundaryIndices{imageNo} = boundaryIndices{imageNo}(:)';
 	end
 end
 

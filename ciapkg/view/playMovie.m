@@ -32,6 +32,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		% 2021.01.17 [19:21:12] - Integrated contrast sliders directly into the main GUI so users don't have to open up a separate GUI. Make GUI sliders thinner.
 		% 2021.02.05 [16:25:12] - Added feature to sub-sample movie to make display run faster for larger movies.
 		% 2021.04.23 [13:05:29] - Add support for playing RGB movie of dimension [x y C t] if input directly as matrix.
+		% 2021.07.03 [08:16:32] - Added feature to input line overlays on input movie (e.g. to overlay cell extraction outputs).
 
 	% ========================
 	% options
@@ -76,6 +77,12 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 	options.primaryPoint = [];
 	% Vector: [xpos ypos-] add a point to the secondary movie.
 	options.secondaryPoint = [];
+	% Vector: [xpos ypos], [index], or [x y nCells] add outlines (consisting of points) from inputs.
+	options.primaryPointsOverlay = [];
+	% Float: Between 0 to 1, fraction of max to threshold options.primaryPointsOverlay
+	options.primaryPointsOverlayThreshold = 0.3;
+	% Vector: [xpos ypos-] add a point to the secondary movie.
+	options.secondaryPointsOverlay = [];
 	% Matrix: columns = [xpos ypos angle(degrees) magnitude], rows = frames. Both angle and magnitude are optional.
 	options.primaryTrackingPoint = [];
 	% Str: color of primary pointer tracker
@@ -441,6 +448,39 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 	contrastFrameText = uicontrol('style','edit','Units', 'normalized','position',[1 3 20 2]/100,'FontSize',9,'string',sprintf('Contrast: %0.3f, %0.3f',options.movieMinMax(1), options.movieMinMax(2)));
 
 	% =================================================
+	% If 2D vector, convert x-y points into index for faster manipulation of frames
+	if ~isempty(options.primaryPointsOverlay)
+		% nDims = length(size(options.primaryPointsOverlay));
+		nDims = size(squeeze(options.primaryPointsOverlay),find(size(squeeze(options.primaryPointsOverlay))>1));
+		nDims = length(nDims);
+		switch nDims
+			case 1
+				% Do nothing, already in index form
+				if iscell(options.primaryPointsOverlay)
+					options.primaryPointsOverlay = [options.primaryPointsOverlay{:}];
+				else
+					% Do nothing, already correct format
+				end
+			case 2
+				% Convert to index expression.
+				if iscell(options.primaryPointsOverlay)
+					options.primaryPointsOverlay = [options.primaryPointsOverlay{:}];
+				else
+					options.primaryPointsOverlay = [sub2ind(size(tmpFrame),options.primaryPointsOverlay(:,1),options.primaryPointsOverlay(:,2))'];
+				end
+			case 3
+				% Threshold inputs if images given
+				[inputImages, boundaryIndices, numObjects] = thresholdImages(options.primaryPointsOverlay,'fastThresholding',1,'threshold',options.primaryPointsOverlayThreshold,'getBoundaryIndex',1,'imageFilter','median','medianFilterNeighborhoodSize',3);
+				options.primaryPointsOverlay = [boundaryIndices{:}];
+			otherwise
+				disp('Incorrect primaryPointsOverlay input, ignoring.')
+				options.primaryPointsOverlay = [];
+		end
+	else
+		primaryPointsOverlay = [];
+	end
+
+	% =================================================
 	% =================================================
 	colorbarSwitch = 1;
 	colorbarSwitchTwo = 1;
@@ -493,6 +533,11 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 			% thisFrame = imadjust(I,[0 1],[0 1]);
 			thisFrame(1,1) = maxMovie(1)*maxAdjFactor;
 			thisFrame(1,2) = minMovie(1);
+
+			if ~isempty(options.primaryPointsOverlay)
+				% thisFrame(options.primaryPointsOverlay) = thisFrame(options.primaryPointsOverlay)/10;
+				thisFrame(options.primaryPointsOverlay) = NaN;
+			end
 
 			if options.rgbDisplay==1
 				thisFrameTmp2 = max(thisFrame,[],3);

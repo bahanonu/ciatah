@@ -17,13 +17,16 @@
 
 ## Full documentation at https://bahanonu.github.io/ciatah/.
 
-Below are recordings for users who want to learn more about calcium imaging analysis and the CIAtah pipeline.
+Below are recordings and additional documents for users who want to learn more about calcium imaging analysis/experiments and the CIAtah pipeline.
 
 ### Webinar
 This webinar gives an overview of calcium imaging analysis (with a focus on CIAtah) along with tips for improving experiments and analysis: https://info.inscopix.com/inscopix-inspire-view-webinarbiafra-ahanonu-signal-in-the-noise-distinguishing-relevant-neural-activity-in-calcium-imaging.
 
 ### Workshop tutorial
 This recording gives an overview of setting up and using CIAtah: https://www.youtube.com/watch?v=I6abW3uuJJw.
+
+### GRINjector
+A surgical device to help with implanting gradient-refractive index (GRIN) lens probes into the brain or other regions: https://github.com/bahanonu/GRINjector.
 <!-- <hr> -->
 
 <!-- <img src="https://user-images.githubusercontent.com/5241605/81605697-b9c7c800-9386-11ea-9e9f-569c743b24b9.png" width="42%" align="right" alt="calciumImagingAnalysis_logo"> -->
@@ -176,8 +179,8 @@ Users can quickly visualize movies in any of the supported formats (HDF5, NWB, A
 Using the `ciatah` GUI class, users can select loaded folders and change the regular expression to match the name of the files in the movie, both for the raw data and for any processed movies in the folder. See below:
 
 <p align="center">
-  <a href="https://user-images.githubusercontent.com/5241605/124017037-17f4a780-d99b-11eb-9508-6e61a636d302.png">
-    <img src="https://user-images.githubusercontent.com/5241605/124017037-17f4a780-d99b-11eb-9508-6e61a636d302.png" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="60%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
+  <a href="https://user-images.githubusercontent.com/5241605/124651957-6a790c80-de50-11eb-8a6d-0197a9f484c1.png">
+    <img src="https://user-images.githubusercontent.com/5241605/124651957-6a790c80-de50-11eb-8a6d-0197a9f484c1.png" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="90%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
   </a>
 </p>
 
