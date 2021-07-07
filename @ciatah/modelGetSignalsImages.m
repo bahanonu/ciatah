@@ -12,6 +12,7 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 		% 2020.04.16 [19:59:43] - Small fix to NWB file checking.
 		% 2020.05.12 [18:02:04] - Update to make sure inputSignals2 with NWB.
 		% 2020.12.08 [01:14:09] - Reorganized returnType to be outside raw signals flag, so common filtering mechanism regardless of variables loaded into RAM or not. This fixes if a user loads variables into RAM then uses cross-session alignment, the viewMatchObjBtwnSessions method may not display registered images (cross-session alignment is still fine and valid).
+		% 2021.06.30 [14:52:23] - Updated to allow loading raw files without calling modelVarsFromFiles.
 	% TODO
 		% Give a user a warning() output if there are no or empty cell-extraction outputs
 
@@ -30,6 +31,10 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 		options.medianFilterLength = 50;
 	% decide whether to load algorithm peaks by default
 	options.loadAlgorithmPeaks = 0;
+	% 1 = Load signal peaks
+	options.loadSignalPeaks = 1;
+	% Binary: 1 = loads raw files quickly without additional checks. 0 = normal loading.
+	options.fastFileLoad = 0;
 	% SignalsImages, Images, Signals
 	% which table to read in
 	% options.getSpecificData = 'SignalsImages';
@@ -113,21 +118,21 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 	try
 		obj.validRegionMod{thisFileNum};
 		check.regionMod=1;
-	catch;
+	catch
 		check.regionMod=0;
 	end
 	% CLASSIFIER ANALYSIS
 	try
 		obj.valid{thisFileNum}.(obj.signalExtractionMethod).classifier;
 		check.classifier=1;
-	catch;
+	catch
 		check.classifier=0;
 	end
 	% MANUAL ANALYSIS
 	try
 		obj.valid{thisFileNum}.(obj.signalExtractionMethod).manual;
 		check.manual=1;
-	catch;
+	catch
 		check.manual=0;
 	end
 	% MANUAL ANALYSIS OLD
@@ -137,7 +142,7 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 		else
 			check.manualOld=1;
 		end
-	catch;
+	catch
 		check.manualOld=0;
 		% if isempty(obj.validManual{thisFileNum})
 		% 	check.manualOld=0;
@@ -147,14 +152,20 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 	try
 		obj.valid{thisFileNum}.(obj.signalExtractionMethod).auto;
 		check.auto=1;
-	catch;
+	catch
 		check.auto=0;
 	end
 	% AUTOMATIC ANALYSIS OLD
 	try
 		obj.validAuto{thisFileNum};check.autoOld=1;
-	catch;
+	catch
 		check.autoOld=0;
+	end
+	% AUTOMATIC ANALYSIS OLD
+	try
+		~isempty(obj.rawSignals{thisFileNum});check.raw=1;
+	catch
+		check.raw=0;
 	end
 
 	% Change which sorting is done
@@ -182,7 +193,7 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 		disp('using auto identifications...')
 		valid = obj.validAuto{thisFileNum};
 		validType = 'validAutoOld';
-	elseif ~isempty(obj.rawSignals)
+	elseif check.raw
 		valid = ones([1 size(obj.rawSignals{thisFileNum},1)]);
 	else
 		valid = [];
@@ -204,10 +215,14 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 		return;
 	end
 
-	if length(obj.rawSignals)==0
+	if isempty(obj.rawSignals)
 		rawSignalsEmpty = 1;
 	else
-		rawSignalsEmpty = isempty(obj.rawSignals{thisFileNum});
+		if check.raw==1
+			rawSignalsEmpty = isempty(obj.rawSignals{thisFileNum});
+		else
+			rawSignalsEmpty = 1;
+		end
 	end
 	% rawSignalsEmpty
 	if rawSignalsEmpty==1
@@ -215,7 +230,7 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 		inputImages = [];
 		signalPeaks = [];
 		signalPeaksArray = [];
-		if strmatch('#',obj.dataPath{thisFileNum})
+		if strcmp('#',obj.dataPath{thisFileNum})
 			return;
 		else
 			% display([num2str(fileNum) '/' num2str(nFolders) ': ' obj.dataPath{fileNum}]);
@@ -228,6 +243,31 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 
 		% Flag for whether to load the default calciumImagingAnalysis filetype
 		loadCiaFiles = 1;
+		
+		if options.fastFileLoad==1
+			if obj.nwbLoadFiles==1
+				if isempty(obj.nwbFileRegexp)
+					filesToLoad = getFileList([obj.dataPath{thisFileNum} filesep obj.nwbFileFolder],[obj.extractionMethodSaveStr.(obj.signalExtractionMethod) '*.nwb']);
+				else
+					filesToLoad = getFileList([obj.dataPath{thisFileNum} filesep obj.nwbFileFolder],obj.nwbFileRegexp);
+				end
+			else
+				while isempty(filesToLoad)
+					filesToLoad = getFileList(obj.dataPath{thisFileNum},strrep(regexPairs{fileToLoadNo},'.mat',''));
+					fileToLoadNo = fileToLoadNo+1;
+					if fileToLoadNo>nRegExps
+						break;
+					end
+				end
+			end
+			if isempty(filesToLoad)
+			else			
+				[inputImages,inputSignals,infoStruct,algorithmStr,inputSignals2] = ciapkg.io.loadSignalExtraction(filesToLoad{1});
+			end
+			signalPeaks = [];
+			signalPeaksArray = [];
+			return;
+		end
 
 		if obj.nwbLoadFiles==1
 			% Check whether to use override NWB regular expression, else use calciumImagingAnalysis defaults.
@@ -507,18 +547,29 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 		if isempty(valid)
 			switch options.returnType
 				case 'raw'
-					try obj.signalPeaksArray{thisFileNum};calcPeaks=1; catch; calcPeaks=0; end
-					if calcPeaks==0
-						[signalPeaks, signalPeaksArray] = computeSignalPeaks(inputSignals, 'makePlots', 0,'makeSummaryPlots',0);
+					if options.loadSignalPeaks==1
+						try obj.signalPeaksArray{thisFileNum};obj.nFrames{thisFileNum};calcPeaks=1; catch; calcPeaks=0; end
+						if isempty(obj.signalPeaksArray{thisFileNum})
+							calcPeaks = 1;
+						end
+						if calcPeaks==0
+							[signalPeaks, signalPeaksArray] = computeSignalPeaks(inputSignals, 'makePlots', 0,'makeSummaryPlots',0);
+							obj.signalPeaksArray{thisFileNum} = signalPeaksArray;
+							obj.nSignals{thisFileNum} = length(obj.signalPeaksArray{thisFileNum});
+							obj.nFrames{thisFileNum} = size(signalPeaks,2);
+						else
+							signalPeaksArray = obj.signalPeaksArray{thisFileNum};
+							% obj.signalPeaksArray{thisFileNum}
+							% signalPeaksArray = obj.signalPeaksArray{thisFileNum};
+							signalPeaks = zeros([obj.nSignals{thisFileNum} obj.nFrames{thisFileNum}]);
+						end
+						display('creating signalPeaks...')
+						for signalNo = 1:obj.nSignals{thisFileNum}
+							signalPeaks(signalNo,obj.signalPeaksArray{thisFileNum}{signalNo}) = 1;
+						end
 					else
-						signalPeaksArray = obj.signalPeaksArray{thisFileNum};
-						% obj.signalPeaksArray{thisFileNum}
-					end
-					signalPeaksArray = obj.signalPeaksArray{thisFileNum};
-					signalPeaks = zeros([obj.nSignals{thisFileNum} obj.nFrames{thisFileNum}]);
-					display('creating signalPeaks...')
-					for signalNo = 1:obj.nSignals{thisFileNum}
-						signalPeaks(signalNo,obj.signalPeaksArray{thisFileNum}{signalNo}) = 1;
+						signalPeaks = [];
+						signalPeaksArray = {};
 					end
 					%if isempty(signalPeaks)
 					%	[signalPeaks, signalPeaksArray] = computeSignalPeaks(inputSignals, 'makePlots', 0,'makeSummaryPlots',0);

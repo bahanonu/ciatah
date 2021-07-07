@@ -25,6 +25,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		% 2021.03.20 [19:23:25] - Convert ndSparse outputs to single from cell-extraction algorithms (e.g. for CELLMax/EXTRACT) when saving as NWB. Updated EXTRACT support to include additional options.
 		% 2021.04.08 [16:23:20] - Use filesep in getAlgorithmRootPath to avoid issues in Unix-based systems.
 		% 2021.06.16 [09:07:46] - Fix issue of passing multiple movies to PCA-ICA.
+		% 2021.06.30 [16:41:11] - Update to add fix for CELLMax with ROI.
 	% TODO
 		%
 
@@ -700,11 +701,11 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 					options.ROI.threshold = str2num(movieSettings{setNo});setNo = setNo+1;
 
 					% signalExtractionMethodStr2 = {'PCAICA','EM','EXTRACT','CNMF'};
-					signalExtractionMethodStr2 = {'EM','PCAICA','CNMF','CNMFE','EXTRACT'};
+					signalExtractionMethodStr2 = {'CELLMax','PCAICA','CNMF','CNMFE','EXTRACT','EM'};
 
 					currentIdx = find(strcmp(signalExtractionMethodStr2,obj.signalExtractionMethod));
 					% signalExtractionMethodDisplayStr2 = {'PCAICA','CELLMax (Lacey)','EXTRACT (Hakan)','CNMF (Pnevmatikakis, 2015)'};
-					signalExtractionMethodDisplayStr2 = {'CELLMax (Lacey/Biafra)','PCAICA (Mukamel, 2009)','CNMF (Pnevmatikakis, 2016 or Giovannucci, 2019)','CNMF-E (Zhou, 2018)','EXTRACT (Inan, 2021)'};
+					signalExtractionMethodDisplayStr2 = {'CELLMax (Lacey/Biafra)','PCAICA (Mukamel, 2009)','CNMF (Pnevmatikakis, 2016 or Giovannucci, 2019)','CNMF-E (Zhou, 2018)','EXTRACT (Inan, 2021)', 'CELLMax[EM] (Lacey/Biafra)'};
 					[signalIdxArray2, ~] = listdlg('ListString',signalExtractionMethodDisplayStr2,'ListSize',[scnsize(3)*0.4 scnsize(4)*0.4],'Name','Which signal extraction method for ROI? SELECT ONE','InitialValue',currentIdx);
 					% signalIdxArray
 					options.ROI.signalExtractionMethod = signalExtractionMethodStr2{signalIdxArray2};

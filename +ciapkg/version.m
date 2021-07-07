@@ -12,6 +12,7 @@ function [versionStr, dateTimeStr] = version(varargin)
 		% 2021.01.21 [10:36:30] - Changed to use readtable instead of readcell to increase compatability across MATLAB versions.
 		% 2021.01.21 [17:03:54] - Added fscanf backup to readtable in case of Matlab compatibility issues, also specified more readtable defaults to avoid errors (Matlab 202a+ changed default behavior). Added last step backup of zero version.
 		% 2021.03.21 [17:41:54] - Update VERSION path.
+		% 2021.07.06 [11:33:22] - Updated to trim version string to make sure new line is removed.
 	% TODO
 		%
 
@@ -46,7 +47,9 @@ function [versionStr, dateTimeStr] = version(varargin)
 			fclose(fileID);
 			verStr = strsplit(verStr,'\n');
 			versionStr = strrep(verStr{1},'\n','');
+			versionStr = strtrim(versionStr);
 			dateTimeStr = verStr{2};
+			dateTimeStr = strrep(dateTimeStr,'\n','');
 		catch err
 			versionStr = 'v0.00.0';
 			dateTimeStr = '00000000000000';

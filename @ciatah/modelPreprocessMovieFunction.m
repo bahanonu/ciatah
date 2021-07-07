@@ -256,7 +256,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 
 
 	defaultChoiceIdx = find(ismember(analysisOptionList,defaultChoiceList));
-	defaultSaveIdx = find(ismember(analysisOptionList{end},defaultChoiceList));
+	defaultSaveIdx = find(ismember(analysisOptionList,defaultChoiceList{end}));
 	if isfield(obj.functionSettings,'modelPreprocessMovieFunction')
         if ~isempty(obj.functionSettings.modelPreprocessMovieFunction)
         	try
@@ -1081,7 +1081,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	cd(startDir)
 
 	% Change input HDF5 dataset name to the new output dataset name
-	disp(['Changing calciumImagingAnalysis input HDF5 dataset name "' obj.inputDatasetName '"->"' obj.outputDatasetName '"'])
+	disp(['Changing' ciapkg.pkgName 'input HDF5 dataset name "' obj.inputDatasetName '"->"' obj.outputDatasetName '"'])
 	obj.inputDatasetName = obj.outputDatasetName;
 
 	function mouseWheelChange(hObject, callbackdata, handles)

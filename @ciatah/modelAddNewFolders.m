@@ -9,6 +9,7 @@ function obj = modelAddNewFolders(obj,varargin)
 		% 2020.05.07 [17:22:20] - Adding option to quickly add all the example downloaded folders.
 		% 2021.01.24 [14:03:44] - Added support for direct input of method type, useful for command-line or unit testing.
 		% 2021.02.02 [11:27:21] - 'Add CIAtah example folders.' now adds the absolute path to avoid path errors if user changes Matlab current directory.
+		% 2021.06.01 [??15:43:11] - Add 'next' button to initial menu, in part to add MATLAB Online support.
 	%========================
 	% Cell array of folders to add, particularly for GUI-less operations
 	options.folderCellArray = {};
@@ -36,6 +37,7 @@ function obj = modelAddNewFolders(obj,varargin)
 				try
 					hFig = figure;
 					uicontrol('Style','Text','String',['How to add folders to CIAtah?'],'Units','normalized','Position',[5 89 90 10]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold');
+					exitHandle = uicontrol('style','pushbutton','Units', 'normalized','position',[5 85 50 3]/100,'FontSize',9,'string','Click here to move to next screen','callback',@subfxnNextFig,'HorizontalAlignment','Left');
 					hListbox = uicontrol(hFig, 'style','listbox','Units', 'normalized','position',[5,5,90,80]/100, 'string',usrIdxChoiceStr,'Value',1);
 					set(hListbox,'Max',2,'Min',0);
 					set(hListbox,'KeyPressFcn',@(src,evnt)onKeyPressRelease(evnt,'press',hFig))
@@ -88,6 +90,7 @@ function obj = modelAddNewFolders(obj,varargin)
 						hFig = figure;
 						figure(hFig)
 
+						% finishMethodHandle = uicontrol('style','pushbutton','Units', 'normalized','position',[1 94 38 2]/100,'FontSize',9,'string','Start selected method (or press enter)','BackgroundColor',[153 255 153]/255,'callback',@subfxnCloseFig);
 
 						uicontrol('Style','Text','String',['Adding folders to CIAtah object.'],'Units','normalized','Position',[5 95 90 3]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold');
 						uicontrol('Style','Text','String',['One new line per folder path. Enter folder path WITHOUT any single/double quotation marks around the path.'],'Units','normalized','Position',[5 90 90 6]/100,'BackgroundColor','white','HorizontalAlignment','Left');
@@ -201,6 +204,10 @@ function obj = modelAddNewFolders(obj,varargin)
 	end
 	function subfxnCloseFig(src,event)
 		newFolderList = hListbox.String;
+		close(hFig)
+	end
+	function subfxnNextFig(src,event)
+		sel = hListbox.Value;
 		close(hFig)
 	end
 	function onKeyPressRelease(evnt, pressRelease,hFig)
