@@ -16,6 +16,7 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		% 2021.07.01 [15:38:18] - Added support for folder loading button and some other additional improvements.
 		% 2021.07.06 [11:33:22] - Cell extraction now thresholded for cleaner visuals.
 		% 2021.07.07 [17:26:20] - Add sliders to allow users to quickly scroll through both movies.
+		% 2021.07.13 [13:18:45] - Updated to ensure movie callback playback loop operations only occur if handles to movies are still valid, e.g. if main GUI figure is still open.
 	% TODO
 		%
 
@@ -872,32 +873,36 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 				warning off;
 				while breakMovieLoop==0
 					if movieCheck{1}==1
-						i = round(get(frameSlider,'Value'));
-						[thisFrame,~,~] = ciapkg.io.readFrame(inputMoviePath{1},i,'inputDatasetName',obj.inputDatasetName);
 						if isvalid(movieImgHandle)
+							i = round(get(frameSlider,'Value'));
+							[thisFrame,~,~] = ciapkg.io.readFrame(inputMoviePath{1},i,'inputDatasetName',obj.inputDatasetName);
+
 							set(movieImgHandle,'CData',thisFrame);
 							set(titleHandle,'String',sprintf('%s\nFrame %d/%d',fileName{1},i,nFrames{1}))
+
+							i = i+1;
+							if i>nFrames{1}
+								i = 1;
+							end
+							set(frameSlider,'Value',i);
 						end
-						i = i+1;
-						if i>nFrames{1}
-							i = 1;
-						end
-						set(frameSlider,'Value',i);
 					end
 
 					if movieCheck{2}==1
-						i2 = round(get(frameSliderTwo,'Value'));
-						[thisFrame2,~,~] = ciapkg.io.readFrame(inputMoviePath{2},i2,'inputDatasetName',obj.inputDatasetName);
 						if isvalid(movieImgHandleTwo)
+							i2 = round(get(frameSliderTwo,'Value'));
+							[thisFrame2,~,~] = ciapkg.io.readFrame(inputMoviePath{2},i2,'inputDatasetName',obj.inputDatasetName);
+
 							set(movieImgHandleTwo,'CData',thisFrame2);
 							set(titleHandleTwo,'String',sprintf('%s\nFrame %d/%d',fileName{2},i2,nFrames{2}))
+							
+							set(frameSliderTwo,'Value',i2);
+							i2 = i2+1;
+							if i2>nFrames{2}
+								i2 = 1;
+							end
+							set(frameSliderTwo,'Value',i2);
 						end
-						set(frameSliderTwo,'Value',i2);
-						i2 = i2+1;
-						if i2>nFrames{2}
-							i2 = 1;
-						end
-						set(frameSliderTwo,'Value',i2);
 					end
 					% Force stop loop if axes no longer there.
 					if ~isvalid(movieAxes)&~isvalid(movieAxesTwo)
