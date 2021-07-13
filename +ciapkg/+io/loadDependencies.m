@@ -14,10 +14,11 @@ function loadDependencies(varargin)
 		% 2020.06.28 [14:25:04] - Added ability for users to force update.
 		% 2021.01.22 [13:42:36] - NWB from specific release to reduce compatibility errors.
 		% 2021.02.01 [15:10:41] - Separated into non-class function for use in more functions without needing to load CIAtah class.
-		% 2021.02.01 [‏‎15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
+		% 2021.02.01 [15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
 		% 2021.03.20 [18:12:20] - Added EXTRACT support to list of functions to download.
 		% 2021.06.19 [23:46:58] - Switched to support for original MIJ calling of ImageJ using just jar files, easier compatibility across MATLAB versions and OSes.
 		% 2021.06.21 [16:45:59] - Update order.
+		% 2021.07.13 [08:34:18] - Added backup URL for downloading mij.jar.
 	% TODO
 		% Verify all dependencies download and if not ask user to download again.
 
@@ -25,9 +26,9 @@ function loadDependencies(varargin)
 	% DESCRIPTION
 	options.externalProgramsDir = ciapkg.getDirExternalPrograms();
 	options.guiEnabled = 1;
-	options.dependencyStr = {'downloadImageJ','downloadCnmfGithubRepositories','example_downloadTestData','downloadNeuroDataWithoutBorders','downloadEXTRACT','downloadBioFormats','downloadMiji','loadMiji'};
+	options.dependencyStr = {'downloadImageJ','downloadCnmfGithubRepositories','example_downloadTestData','downloadNeuroDataWithoutBorders','downloadEXTRACT','downloadBioFormats','downloadNoRMCorre','downloadMiji','loadMiji'};
 
-	options.dispStr = {'Download ImageJ','Download CNMF, CNMF-E, and CVX code.','Download test one- and two photon datasets.','Download NWB (NeuroDataWithoutBorders)','Download EXTRACT','Download Bio-Formats','Download Fiji (to run Miji)','Load Fiji/Miji into MATLAB path.'};
+	options.dispStr = {'Download ImageJ','Download CNMF, CNMF-E, and CVX code.','Download test one- and two photon datasets.','Download NWB (NeuroDataWithoutBorders)','Download EXTRACT','Download Bio-Formats','Download NoRMCorre (motion correction)','Download Fiji (to run Miji)','Load Fiji/Miji into MATLAB path.'};
 	% Int vector: index of options.dependencyStr to run by default with no GUI
 	options.depIdxArray = [1 2 3 4 5 6];
 	% Binary: 1 = force update even if already downloaded. 0 = skip if already downloaded
@@ -98,6 +99,16 @@ function loadDependencies(varargin)
 				optionsH.outputDir = optionsH.gitNameDisp;
 				optionsH.gitName = cellfun(@(x) [x '-master'],optionsH.gitNameDisp,'UniformOutput',false);
 				[success] = downloadGithubRepositories('options',optionsH);
+			case 'downloadNoRMCorre'
+				optionsH.forceUpdate = forceUpdate;
+				optionsH.signalExtractionDir = options.externalProgramsDir;
+				optionsH.gitNameDisp = {'normcorre'};
+				optionsH.gitRepos = {'https://github.com/flatironinstitute/NoRMCorre'};
+				optionsH.gitRepos = cellfun(@(x) [x '/archive/master.zip'],optionsH.gitRepos,'UniformOutput',false);
+				optionsH.outputDir = optionsH.gitNameDisp;
+				% optionsH.gitName = cellfun(@(x) [x '-master'],optionsH.gitNameDisp,'UniformOutput',false);
+				optionsH.gitName = {'NoRMCorre-public-master'};
+				[success] = downloadGithubRepositories('options',optionsH);
 			case 'downloadEXTRACT'
 				optionsH.forceUpdate = forceUpdate;
 				optionsH.signalExtractionDir = options.externalProgramsDir;
@@ -135,19 +146,40 @@ function loadDependencies(varargin)
 				optionsH.gitName = {'bfmatlab'};
 				[success] = downloadGithubRepositories('options',optionsH);
 			case 'downloadImageJ'
-				% Download mij.jar and ij.ar.
-				downloadFiles = {'http://bigwww.epfl.ch/sage/soft/mij/mij.jar','http://rsb.info.nih.gov/ij/upgrade/ij.jar'}
-				downloadFileNames = {'mij.jar','ij.jar'};
+				% Download mij.jar and ij.ar with Box backup in case mij.jar site offline.
+				downloadFiles = {'http://bigwww.epfl.ch/sage/soft/mij/mij.jar','http://rsb.info.nih.gov/ij/upgrade/ij.jar','http://tiny.ucsf.edu/3wFyol'};
+				downloadFileNames = {'mij.jar','ij.jar','mij.jar'};
 				imagejPath = [options.externalProgramsDir filesep 'imagej'];
 				ciapkg.io.mkdir(imagejPath);
 				nFiles = length(downloadFiles);
+				downloadSuccess = zeros([1 nFiles],'logical');
 				for i=1:nFiles
 					rawSavePathDownload = [imagejPath filesep downloadFileNames{i}];
 					downloadUrl = downloadFiles{i};
+					if i==3
+						if ~isempty(downloadSuccess)
+							if downloadSuccess(1)==1
+								continue
+							else
+								warning('mij.jar download on EPFL Miji site failed, using Box backup.');
+							end
+						end
+					end
 					if exist(rawSavePathDownload,'file')~=2|forceUpdate==1
 						fprintf('Downloading %s file to %s\n',downloadUrl,rawSavePathDownload)
-						websave(rawSavePathDownload,downloadUrl);
+						wopts = weboptions;
+						wopts.Timeout = 5;
+						try
+							websave(rawSavePathDownload,downloadUrl,wopts);
+							downloadSuccess(i) = 1;
+						catch err
+							downloadSuccess(i) = 0;
+							disp(repmat('@',1,7))
+							disp(getReport(err,'extended','hyperlinks','on'));
+							disp(repmat('@',1,7))
+						end
 					else
+						downloadSuccess(i) = 1;
 						fprintf('Already downloaded %s\n',rawSavePathDownload)
 					end
 				end

@@ -180,7 +180,7 @@ Using the `ciatah` GUI class, users can select loaded folders and change the reg
 
 <p align="center">
   <a href="https://user-images.githubusercontent.com/5241605/124651957-6a790c80-de50-11eb-8a6d-0197a9f484c1.png">
-    <img src="https://user-images.githubusercontent.com/5241605/124651957-6a790c80-de50-11eb-8a6d-0197a9f484c1.png" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="90%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
+    <img src="https://user-images.githubusercontent.com/5241605/124651957-6a790c80-de50-11eb-8a6d-0197a9f484c1.png" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="100%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
   </a>
 </p>
 
