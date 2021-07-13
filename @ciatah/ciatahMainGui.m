@@ -15,6 +15,7 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		% 2021.07.01 [08:04:59] - Updated cell extraction loading and allow a cache for faster loading if user switches between methods in the same GUI load.
 		% 2021.07.01 [15:38:18] - Added support for folder loading button and some other additional improvements.
 		% 2021.07.06 [11:33:22] - Cell extraction now thresholded for cleaner visuals.
+		% 2021.07.07 [17:26:20] - Add sliders to allow users to quickly scroll through both movies.
 	% TODO
 		%
 
@@ -91,10 +92,10 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 			try
 				bName = tmpList2{guiElNo};
 				hListboxS.(bName) = uicontrol(hFig, 'style',selBoxInfo.(bName).uiType,'Units','normalized',...
-                    'position',selBoxInfo.(bName).loc/100,...
-                    'string',selBoxInfo.(bName).string,...
-                    'Value',selBoxInfo.(bName).Value,...
-                    'Tag',selBoxInfo.(bName).Tag);
+					'position',selBoxInfo.(bName).loc/100,...
+					'string',selBoxInfo.(bName).string,...
+					'Value',selBoxInfo.(bName).Value,...
+					'Tag',selBoxInfo.(bName).Tag);
 				if strcmp('methods',bName)==1
 					set(hListboxS.(bName),'background',[0.8 0.9 0.8]);
 				end
@@ -105,10 +106,10 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 
 				hListboxT.(bName) = uicontrol('Style','Text','String',selBoxInfo.(bName).title,'Units','normalized','Position',selBoxInfo.(bName).titleLoc/100,'BackgroundColor',figBackgroundColor,'ForegroundColor',figTextColor,'HorizontalAlignment','Left','FontWeight','Bold');
 				set(hListboxS.(bName),'Max',2,'Min',0);
-            catch err
-                disp(repmat('@',1,7))
-                disp(getReport(err,'extended','hyperlinks','on'));
-                disp(repmat('@',1,7))
+			catch err
+				disp(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				disp(repmat('@',1,7))
 			end
 		end
 		hListbox = hListboxS.methods;
@@ -179,7 +180,7 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 
 		%% ==========================================
 		% CREATE MOVIE INFO
-		[movieAxes, movieAxesTwo, cellExtAxes] = subfxn_movieAxesCreate();
+		[movieAxes, movieAxesTwo, cellExtAxes, frameSlider, frameSliderTwo] = subfxn_movieAxesCreate();
 
 		[runMoviesToggleHandle, fileFilterRegexpHandle, fileFilterRegexpRawHandle, FRAMES_PER_SECONDHandle, inputDatasetNameHandle] = subfxn_movieOptionsCreate();
 
@@ -219,7 +220,7 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		% disp(hListboxStruct)
 		% fxnsToRun{hListboxStruct.Value}
 		if isempty(hListboxStruct)
-			uiwait(msgbox('Please re-select a module then press enter. Do not close figure manually.'))
+			uiwait(ciapkg.overloaded.msgbox('Please re-select a module then press enter. Do not close figure manually.'))
 			idNumIdxArray = 1;
 			ok = 0;
 		else
@@ -399,7 +400,7 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 				dispStr = 'Please enter information for NWB cell-extraction and imaging movie regular expressions (for locating files) and whether cell-extraction files are located in a sub-folder within each folder.';
 				disp(dispStr)
 				disp('If Matlab UI is non-responsive, make sure you have checked for and closed pop-up dialog boxes.')
-				uiwait(msgbox([dispStr 10 10 'Press OK/enter to continue.'],'Note to user','modal'));
+				uiwait(ciapkg.overloaded.msgbox([dispStr 10 10 'Press OK/enter to continue.'],'Note to user','modal'));
 				obj.setMovieInfo;
 				disp(['NWB information set! Remember to select the ' ciapkg.pkgName ' GUI then press Enter to start a module.'])
 				pause(0.1);
@@ -525,7 +526,7 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		subfxn_returnNormal();
 	end
 
-	function [movieAxes, movieAxesTwo, cellExtAxes] = subfxn_movieAxesCreate()
+	function [movieAxes, movieAxesTwo, cellExtAxes, frameSlider, frameSliderTwo] = subfxn_movieAxesCreate()
 		warning off;
 		txtW = 28;
 		txtWy = 33;
@@ -557,7 +558,73 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 			box off;
 			title(cellExtAxes,'Cell extraction','FontSize',7,'Color',figTextColor);
 			% title('Select a single folder to view movie.')
+
+		% GUI ELEMENTS
+		nFramesDummy = 100;
+		if nFramesDummy<11
+			sliderStepF = [1/(nFramesDummy) 0.05];
+		else
+			sliderStepF = [1/(nFramesDummy*0.1) 0.2];
+		end
+		frameSlider = uicontrol('style','slider','Units', 'normalized','position',[bOff+4 0 txtW 1]/100,...
+			'min',1,'max',nFramesDummy,'Value',1,'SliderStep',sliderStepF,'callback',@frameCallback,'Enable','inactive','ButtonDownFcn',@pauseLoopCallback,'Tag','First');
+
+		frameSliderTwo = uicontrol('style','slider','Units', 'normalized','position',[bOff+txtW+spW 0 txtW 1]/100,...
+			'min',1,'max',nFramesDummy,'Value',1,'SliderStep',sliderStepF,'callback',@frameCallback,'Enable','inactive','ButtonDownFcn',@pauseLoopCallback,'Tag','Second');
 		warning on
+	end
+	function pauseLoopCallback(source,eventdata)
+		% disp([num2str(frame) ' - pause loop'])
+		% keyIn = get(gcf,'CurrentCharacter');
+		% disp(keyIn)
+		switchTag = get(source,'Tag');
+		switch switchTag
+			case 'First'
+				set(frameSlider,'Enable','on');
+				% addlistener(frameSlider,'Value','PostSet',@frameCallbackChange);
+			case 'Second'
+				set(frameSliderTwo,'Enable','on');
+				% addlistener(frameSliderTwo,'Value','PostSet',@frameCallbackChange);
+			otherwise
+				return;
+		end
+		% pauseLoop = 1;
+		% pauseLoop = 0;
+		% if pauseLoop==1
+		%     pauseLoop = 0;
+		% else
+		%     pauseLoop = 1;
+		% end
+	end
+	function frameCallbackChange(source,eventdata)
+		switchTag = get(source,'Tag');
+		switch switchTag
+			case 'First'
+				i = max(1,round(get(frameSlider,'value')));
+			case 'Second'
+				i2 = max(1,round(get(frameSliderTwo,'value')));
+			otherwise
+				return;
+		end
+		% set(frameText,'visible','on','string',['Frame ' num2str(frame) '/' num2str(nFrames)])
+	end
+	function frameCallback(source,eventdata)
+		originalPauseState = breakMovieLoop;
+		breakMovieLoop = 1;
+		switchTag = get(source,'Tag');
+		switch switchTag
+			case 'First'
+				i = max(1,round(get(frameSlider,'value')));
+			case 'Second'
+				i2 = max(1,round(get(frameSliderTwo,'value')));
+			otherwise
+				return;
+		end
+		addlistener(frameSlider,'Value','PostSet',@blankCallback);
+		set(frameSlider,'Enable','off')
+		drawnow update;
+		set(frameSlider,'Enable','inactive')
+		breakMovieLoop = originalPauseState;
 	end
 	function [selBoxInfo] = subfxn_guiElementSetupInfo()
 		% set(hFig,'Color',[0,0,0]);
@@ -694,9 +761,11 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 				delete(movieAxes)
 				delete(movieAxesTwo)
 				delete(cellExtAxes)
+				delete(frameSlider)
+				delete(frameSliderTwo)
 			catch
 			end
-			[movieAxes, movieAxesTwo, cellExtAxes] = subfxn_movieAxesCreate();
+			[movieAxes, movieAxesTwo, cellExtAxes, frameSlider, frameSliderTwo] = subfxn_movieAxesCreate();
 			if movieCheck{1}==1
 				% [x0 y0 width height]
 				% movieAxes = axes('units','normalized','position',[50+mt+4, 3, 50, 18]/100); axis off;
@@ -773,6 +842,25 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 					return;
 				end
 
+				for zzz = 1:length(movieCheck)
+					if movieCheck{zzz}==1
+						nFramesDummy = nFrames{zzz};
+						if nFramesDummy<11
+							sliderStepF = [1/(nFramesDummy) 0.05];
+						else
+							sliderStepF = [1/(nFramesDummy*0.1) 0.2];
+						end
+						if zzz==1
+							set(frameSlider,'max',nFrames{zzz});
+							set(frameSlider,'SliderStep',sliderStepF);
+						elseif zzz==2
+							set(frameSliderTwo,'max',nFrames{zzz});
+							set(frameSliderTwo,'SliderStep',sliderStepF);
+						end
+					end
+				end
+				
+
 				% axis equal tight;
 				% colormap(movieAxes,'gray')
 				% colorbar;
@@ -784,6 +872,7 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 				warning off;
 				while breakMovieLoop==0
 					if movieCheck{1}==1
+						i = round(get(frameSlider,'Value'));
 						[thisFrame,~,~] = ciapkg.io.readFrame(inputMoviePath{1},i,'inputDatasetName',obj.inputDatasetName);
 						if isvalid(movieImgHandle)
 							set(movieImgHandle,'CData',thisFrame);
@@ -793,18 +882,22 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 						if i>nFrames{1}
 							i = 1;
 						end
+						set(frameSlider,'Value',i);
 					end
 
 					if movieCheck{2}==1
+						i2 = round(get(frameSliderTwo,'Value'));
 						[thisFrame2,~,~] = ciapkg.io.readFrame(inputMoviePath{2},i2,'inputDatasetName',obj.inputDatasetName);
 						if isvalid(movieImgHandleTwo)
 							set(movieImgHandleTwo,'CData',thisFrame2);
 							set(titleHandleTwo,'String',sprintf('%s\nFrame %d/%d',fileName{2},i2,nFrames{2}))
 						end
+						set(frameSliderTwo,'Value',i2);
 						i2 = i2+1;
 						if i2>nFrames{2}
 							i2 = 1;
 						end
+						set(frameSliderTwo,'Value',i2);
 					end
 					% Force stop loop if axes no longer there.
 					if ~isvalid(movieAxes)&~isvalid(movieAxesTwo)
