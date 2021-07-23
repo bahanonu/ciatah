@@ -407,6 +407,8 @@
 <ul>
 <li class="toctree-l3"><a class="reference internal" href="#algorithm-overview">Algorithm overview</a>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#example-output">Example output</a>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#usage_1">Usage</a>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#algorithm-results">Algorithm results</a>
@@ -2584,6 +2586,17 @@
 </ul>
 </li>
 </ul>
+<ul>
+<li>
+<p>Minian: An open-source miniscope analysis pipeline</p>
+<ul>
+<li><a href="https://www.biorxiv.org/content/10.1101/2021.05.03.442492v1.abstract">https://www.biorxiv.org/content/10.1101/2021.05.03.442492v1.abstract</a></li>
+</ul>
+<ul>
+<li><a href="https://github.com/DeniseCaiLab/minian">https://github.com/DeniseCaiLab/minian</a></li>
+</ul>
+</li>
+</ul>
 <h3 id="standards">Standards<a class="headerlink" href="#standards" title="Permanent link">¶</a></h3>
 <ul>
 <li><a href="https://github.com/NeurodataWithoutBorders/api-matlab">https://github.com/NeurodataWithoutBorders/api-matlab</a></li>
@@ -3183,12 +3196,77 @@
 <p><img alt="drawing" height="auto" src="https://cloud.githubusercontent.com/assets/5241605/11164758/4ea1c02a-8aae-11e5-90bf-b6314eebb53a.png" width="600"/></p>
 <!-- ![image](https://cloud.githubusercontent.com/assets/5241605/11164758/4ea1c02a-8aae-11e5-90bf-b6314eebb53a.png) -->
 <h2 id="cross-day-or-session-cell-alignment-alignment">Cross-day or -session cell alignment alignment<a class="headerlink" href="#cross-day-or-session-cell-alignment-alignment" title="Permanent link">¶</a></h2>
-<p>Find the main function at <a href="https://github.com/bahanonu/calciumImagingAnalysis/blob/master/classification/matchObjBtwnTrials.m">https://github.com/bahanonu/calciumImagingAnalysis/blob/master/classification/matchObjBtwnTrials.m</a></p>
-<h3 id="algorithm-overview">Algorithm overview<a class="headerlink" href="#algorithm-overview" title="Permanent link">¶</a></h3>
-<p>For details, see <strong>Cross-day analysis of BLA neuronal activity</strong> methods section in the associated <em>Science</em> paper: <a href="http://science.sciencemag.org/content/sci/suppl/2019/01/16/363.6424.276.DC1/aap8586_Corder_SM.pdf#page=10">http://science.sciencemag.org/content/sci/suppl/2019/01/16/363.6424.276.DC1/aap8586_Corder_SM.pdf#page=10</a>.</p>
-<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/51709763-21b09e80-1fdc-11e9-9332-1d52c9ed6bd5.png"/></p>
+<p>The main function used to run cross-session analysis that allows users to align cells across sessions/days can be found at:</p>
 <ul>
-<li>Example output on several mPFC animals across multiple sessions. Color is used to indicate a global ID cell (e.g. the same cell matched across multiple days).</li>
+<li><a href="https://github.com/bahanonu/ciatah/blob/master/classification/matchObjBtwnTrials.m">https://github.com/bahanonu/ciatah/blob/master/classification/matchObjBtwnTrials.m</a></li>
+</ul>
+<h3 id="algorithm-overview">Algorithm overview<a class="headerlink" href="#algorithm-overview" title="Permanent link">¶</a></h3>
+<p>For details, see <strong>Cross-day analysis of BLA neuronal activity</strong> methods section in the Corder<em>, Ahanonu</em>, et al. <em>Science</em>, 2019:</p>
+<ul>
+<li><a href="http://science.sciencemag.org/content/sci/suppl/2019/01/16/363.6424.276.DC1/aap8586_Corder_SM.pdf#page=10">http://science.sciencemag.org/content/sci/suppl/2019/01/16/363.6424.276.DC1/aap8586_Corder_SM.pdf#page=10</a>.</li>
+</ul>
+<!-- ![image](https://user-images.githubusercontent.com/5241605/51709763-21b09e80-1fdc-11e9-9332-1d52c9ed6bd5.png) -->
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/126744851-cd6e64ab-9b83-40bf-aa38-2301276f0ccf.png"/></p>
+<p>Below is a general description of the algorithm/method used to match cells across sessions and references the above figure. A reference to the associated book chapter will be added in the future.</p>
+<ol>
+<li>
+<p>Load the cell extraction spatial filters and threshold them by setting to zero any values below 40% the maximum value for each spatial filter and use these thresholded filters to calculate each neuron's centroid location. You can calculate the centroid using the <em>regionprops</em> function in MATLAB. <strong>Do not</strong> round each neuron's centroid coordinates to the nearest pixel value as this would reduce accuracy of cross-day alignment.</p>
+</li>
+<li>
+<p>Next, create simplified spatial filters that contained a 10-pixel-radius circle (this can be varied based on microns-per-pixel of the movie and size of cells) centered on each neuron's centroid location. This allows you to register different days while ignoring any slight day-to-day differences in the cell extraction algorithm's estimate of each neuron's shape even if the centroid locations are similar.</p>
+</li>
+<li>
+<p>For each animal, we recommend that if you have <em>N</em> sessions to align that you choose the <em>N/2</em> session (rounded down to the nearest whole number) to align to (referred to as the <em>align session</em>) to compensate for any drift or other imaging changes that may have occurred during the course of the imaging protocol.</p>
+</li>
+<li>
+<p>For all imaging sessions create two neuron maps based on the thresholded spatial (see fig panel A, step 1, "thresholded neuron maps") and 10-pixel-radius circle (see fig panel A, step 2, "circle neuron maps") filters by taking a maximum projection across all <em>x</em> and <em>y</em> pixels and spatial filters (e.g. a max operation in the 3^rd^ dimension on a <em>x</em> Ã— <em>y</em> Ã— <em>n</em> neuron spatial filter matrix, where <em>n</em> = neuron number).</p>
+</li>
+<li>
+<p>You then need to register these neuron maps to the <em>align session</em> using <em>Turboreg</em> with rotation enabled for all animals and isometric (projective) scaling enabled for a subset of animals in cases where that improves results. The registration steps are as follows (see fig panel A, step 3):</p>
+<ul>
+<li>Register the thresholded neuron map for a given session to the <em>align session</em> threshold neuron map.</li>
+</ul>
+<ul>
+<li>Use the output 2D spatial transformation coordinates to also register the circle neuron maps.</li>
+</ul>
+<ul>
+<li>Then register the circle neuron map with that animal's <em>align session</em> circle neuron map.</li>
+</ul>
+<ul>
+<li>Apply the resulting 2D spatial transformation coordinates to the thresholded neuron map.</li>
+</ul>
+<ul>
+<li>Repeat this procedure at least five times.</li>
+</ul>
+<ul>
+<li>Lastly, use the final registration coordinates to transform all spatial filters from that session so they matched the <em>align session</em>'s spatial filters and repeat this process for all sessions for each animal individually.</li>
+</ul>
+</li>
+<li>
+<p>After registering all sessions to the <em>align session</em>, re-calculate all the centroid locations (see fig panel A, step 4).</p>
+</li>
+<li>
+<p>Set the <em>align session</em> centroids as the initial seed for all <em>global cells</em> (see fig panel A, step 5)<em>.</em> Global cells are a tag to identify neurons that you match across imaging sessions.</p>
+<ul>
+<li>For example, global cell #1 might be associated with neurons that are at index number 1, 22, 300, 42, and 240 within the cell extraction analysis matrices across each of the first five imaging sessions, respectively.</li>
+</ul>
+</li>
+<li>
+<p>Starting with the <em>align session</em> for an animal, calculate the pairwise Euclidean distance between all global cells' and the selected session's (likely 1^st^) neurons' centroids.</p>
+</li>
+<li>
+<p>Then identify any cases in which a global cell is within 5 Î¼m (nominally ~2 pixels in our data, this can be varied by the user) of a selected session's neurons. This distance depends on the density of cells in your imaging sessions, a stricter cut-off should be set for more dense brain areas. When you find a match, then check that the spatial filter is correlated (e.g. with 2-D correlation coefficient, Jaccard distance, or other measure) above a set threshold (e.g. <em>r</em> &gt; 0.4) with all other neurons associated with that global cell (see fig panel A, step 6).</p>
+</li>
+<li>
+<p>If a neuron passes the above criteria, add that neuron to that global cell's pool of neurons then recalculate the global cell's centroid as the mean location between all associated session neurons' centroid locations and annotate any unmatched neurons in that session as new candidate global cells.</p>
+</li>
+<li>
+<p>Repeat this process for all sessions associated with a given animal.</p>
+</li>
+</ol>
+<h3 id="example-output">Example output<a class="headerlink" href="#example-output" title="Permanent link">¶</a></h3>
+<ul>
+<li>Example output of several mPFC animals across multiple sessions. Color is used to indicate a global ID cell (e.g. the same cell matched across multiple days).</li>
 </ul>
 <p><img src="https://user-images.githubusercontent.com/5241605/51710281-7a346b80-1fdd-11e9-8cad-3b3657038375.gif" width="600/"/></p>
 <!-- ![2016_08_22_mpfcfear_allanimals_crossdayalignment](https://user-images.githubusercontent.com/5241605/51710281-7a346b80-1fdd-11e9-8cad-3b3657038375.gif) -->

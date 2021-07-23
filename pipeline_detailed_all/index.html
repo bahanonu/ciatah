@@ -124,6 +124,10 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#cross-session-cell-alignment-with-computematchobjbtwntrials">Cross-session cell alignment with computeMatchObjBtwnTrials</a>
         <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#output-of-computematchobjbtwntrials">Output of computeMatchObjBtwnTrials</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#notes-on-computematchobjbtwntrials-options">Notes on computeMatchObjBtwnTrials options</a>
+    </li>
     <li class="toctree-l3"><a class="reference internal" href="#view-cross-session-cell-alignment-with-viewmatchobjbtwnsessions">View cross-session cell alignment with viewMatchObjBtwnSessions</a>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#save-cross-session-cell-alignment-with-modelsavematchobjbtwntrials">Save cross-session cell alignment with modelSaveMatchObjBtwnTrials</a>
@@ -310,6 +314,9 @@
 <p>After users instantiate an object of the <code>{{ site.name }}</code> class and enter a folder, they can start preprocessing of their calcium imaging data with <code>modelPreprocessMovie</code>.</p>
 <ul>
 <li>See below for a series of windows to get started, the options for motion correction, cropping unneeded regions, Δ_F/F_, and temporal downsampling were selected for use in the study associated with this repository.</li>
+</ul>
+<ul>
+<li>There is also support for various other types of movie corrections, such as detrending a movie using linear or higher-order fits to remove the effects of photobleaching.</li>
 </ul>
 <ul>
 <li>If users have not specified the path to Miji, a window appears asking them to select the path to Miji's <code>scripts</code> folder.</li>
@@ -501,7 +508,7 @@
 <p>title: Cross-session cell alignment.</p>
 <hr />
 <h2 id="cross-session-cell-alignment-with-computematchobjbtwntrials">Cross-session cell alignment with <code>computeMatchObjBtwnTrials</code><a class="headerlink" href="#cross-session-cell-alignment-with-computematchobjbtwntrials" title="Permanent link">&para;</a></h2>
-<p>This step allows users to align cells across imaging sessions (e.g. those taken on different days). See the <code>Cross session cell alignment</code> wiki page for more details and notes on cross-session alignment.</p>
+<p>This step allows users to align cells across imaging sessions (e.g. those taken on different days). See the <a href="../help_cross_session_alignment/">Cross session cell alignment help page</a> for more details and notes on cross-session alignment. See below sections for notes on options.</p>
 <ul>
 <li>Users run <code>computeMatchObjBtwnTrials</code> to do cross-day alignment (first row in pictures below).</li>
 </ul>
@@ -512,13 +519,130 @@
 <li><code>computeCellDistances</code> and <code>computeCrossDayDistancesAlignment</code> allow users to compute the within session pairwise Euclidean centroid distance for all cells and the cross-session pairwise distance for all global matched cells, respectively.</li>
 </ul>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/49835713-eec88900-fd54-11e8-8d24-f7c426802297.png" /></p>
-<p>Users can then get the matrix that gives the session IDs</p>
-<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c">% Global IDs is a matrix of [globalID sessionID]</span>
-<span class="lineno" data-linenos="2 "></span>
-<span class="lineno" data-linenos="3 "></span><span class="c">% Each (globalID, sessionID) pair gives the within session ID for that particular global ID</span>
-<span class="lineno" data-linenos="4 "></span>
-<span class="lineno" data-linenos="5 "></span><span class="n">globalIDs</span> <span class="p">=</span> <span class="n">alignmentStruct</span><span class="p">.</span><span class="n">globalIDs</span><span class="p">;</span>
+<h3 id="output-of-computematchobjbtwntrials">Output of <code>computeMatchObjBtwnTrials</code><a class="headerlink" href="#output-of-computematchobjbtwntrials" title="Permanent link">&para;</a></h3>
+<p>The output for cross-session alignment for each animal is stored in a structure within the current <code>{{ code.mainclass }}</code> object: <code>obj.globalIDStruct.ANIMAL_ID</code> where <code>ANIMAL_ID</code> is the animal identification automatically pulled from folder names (if none is found, defaults to <code>m0</code>). Users can then get the matrix that gives the session IDs from the <code>{{ code.mainclass }}</code> class:</p>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span><span class="c">% Grab the cross session alignment structure from the current `{{ code.mainclass }}` object. </span>
+<span class="lineno" data-linenos=" 2 "></span>
+<span class="lineno" data-linenos=" 3 "></span><span class="n">alignmentStruct</span> <span class="p">=</span> <span class="n">obj</span><span class="p">.</span><span class="n">globalIDStruct</span><span class="p">.</span><span class="n">ANIMAL_ID</span>
+<span class="lineno" data-linenos=" 4 "></span>
+<span class="lineno" data-linenos=" 5 "></span>
+<span class="lineno" data-linenos=" 6 "></span>
+<span class="lineno" data-linenos=" 7 "></span><span class="c">% Global IDs is a matrix of [globalID sessionID].</span>
+<span class="lineno" data-linenos=" 8 "></span>
+<span class="lineno" data-linenos=" 9 "></span><span class="c">% Each (globalID, sessionID) pair gives the within session ID for that particular global ID.</span>
+<span class="lineno" data-linenos="10 "></span>
+<span class="lineno" data-linenos="11 "></span><span class="n">globalIDs</span> <span class="p">=</span> <span class="n">alignmentStruct</span><span class="p">.</span><span class="n">globalIDs</span><span class="p">;</span>
 </code></pre></div>
+<p>Below is an example of what that <code>globalIDs</code> matrix looks like when visualized. Each column is an imaging session and each row is an individual global cell with the color indicating that global cell's within-session number. Any black cells indicate where no match was found for that global cell in that imaging day.</p>
+<p><a href="https://user-images.githubusercontent.com/5241605/126750867-1ea1bcff-b3d1-493f-aac9-b7b7c7292796.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/126750867-1ea1bcff-b3d1-493f-aac9-b7b7c7292796.png" alt="Global cell output" width="70%"/></a></p>
+<h3 id="notes-on-computematchobjbtwntrials-options">Notes on <code>computeMatchObjBtwnTrials</code> options<a class="headerlink" href="#notes-on-computematchobjbtwntrials-options" title="Permanent link">&para;</a></h3>
+<p>After starting <code>computeMatchObjBtwnTrials</code>, the below options screen will appear:   </p>
+<p><a href="https://user-images.githubusercontent.com/5241605/126746771-c0486ab8-aec1-429d-b982-88f638a400a8.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/126746771-c0486ab8-aec1-429d-b982-88f638a400a8.png" alt="Cross session options screen" width="50%"/></a></p>
+<p>An explanation of each option is as follows:</p>
+<ul>
+<li>
+<p><code>Number of rounds to register images (integer)</code></p>
+<ul>
+<li>This determines the number of rounds to register all the sessions to the "base" session used for alignment. Additional rounds of registration (e.g. we at times use up to 5 rounds) can often improve results especially in cases where there might be large lateral displacements across sessions.</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>
+<p><code>Distance threshold to match cells cross-session (in pixels)</code></p>
+<ul>
+<li>This determine the maximum distance that the algorithm should use to match cells across sessions. Ideally this value should be <em>below</em> the within-session distance between cells to minimize false positives (e.g. matching nearby cells across sessions that are actually different cells).</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>
+<p><code>Image binarization threshold (0 to 1, fraction each image''s max value)</code></p>
+<ul>
+<li>This threshold is used to remove parts of the cell filter that are not necessarily useful for cross-session alignment, such as faint dendrites or axons along with noise produced by some algorithms in their filters (e.g. as is the case with PCA-ICA).</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>
+<p><code>Session to align to (leave blank to auto-calculate middle session to use for alignment)</code></p>
+<ul>
+<li>Leaving blank automatically selects the middle session, as this session is often a compromise between changes (e.g. drift in the field of view) that occurred between the 1st and last session.</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>
+<p><code>Registration type (3 = rotation and iso scaling, 2 = rotation no iso scaling)</code></p>
+<ul>
+<li>This is the type of <em>Turboreg</em> registration used to align the sessions during cross-session motion correction. Avoid using iso scaling enabled (e.g. <code>3</code> or projective) unless you know in advance that you have warping in your field of view across days, else this option can lead to less optimal results compared to iso scaling disabled (e.g. <code>2</code> or affine).</li>
+</ul>
+<ul>
+<li>See <a href="https://www.mathworks.com/help/images/matrix-representation-of-geometric-transformations.html">https://www.mathworks.com/help/images/matrix-representation-of-geometric-transformations.html</a>.</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>
+<p><code>Run image correlation threshold? (1 = yes, 0 = no)</code></p>
+<ul>
+<li>This determines whether a secondary measure will be used to match cells across sessions and decreases the probability of false positives. It does this by correlating the putative matched cell to others that have been already matched to be the same cells and adds it to the "global cell" group for that cell if it passes a pre-defined threshold as below. In general this should be enabled unless you know the imaging quality varies across sessions that would lead to a distortion in cell shapes or you are using a cell-extraction algorithm that does not produce high-quality filters.</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>
+<p><code>Image correlation type (e.g. "corr2","jaccard")</code></p>
+<ul>
+<li>This is the type of correlation measure, where <code>corr2</code> is <a href="https://www.mathworks.com/help/images/ref/corr2.html">2-D correlation coefficient</a> and <code>jaccard</code> is the <a href="https://en.wikipedia.org/wiki/Jaccard_index">Jaccard distance</a>. The <a href="https://en.wikipedia.org/wiki/Cosine_similarity">Ochiai similarity</a> is also supported.</li>
+</ul>
+<ul>
+<li>A list of all possible measures can be found at <a href="https://www.mathworks.com/matlabcentral/fileexchange/55190-simbin-mat1-mat2-type-mask">https://www.mathworks.com/matlabcentral/fileexchange/55190-simbin-mat1-mat2-type-mask</a>. Note, some might not be valid and in general the above three should work for most users.</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>
+<p><code>Image correlation threshold for matched cells (0 to 1)</code></p>
+<ul>
+<li>How high the image correlation needs to be for it to be considered a match, e.g. accept the match if it has an image correlation above this amount <em>and</em> a distance below that specified above.</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>
+<p><code>Image correlation binarization threshold (0 to 1, fraction each image''s max value)</code></p>
+<ul>
+<li>This is the threshold used for calculated image correlations. <strong>Note</strong> this is different that the threshold used for cross-session cell alignment as sometimes the cross-session threshold needs to be a different value to improve alignment compared to a more relaxed threshold to improve estimation of cell shape (e.g. too high of a threshold can make all cells look similar depending on the algorithm).</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>
+<p><code>Threshold below which registered image values set to zero</code></p>
+<ul>
+<li>During registration zero values can sometimes take on very small numerical values that can cause problems for downstream analysis. This threshold sets all pixels below this value to zero to correct for this. For the most part do not change this value.</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>
+<p><code>Visually compare image correlation values and matched images (1 = yes, 0 = no)</code></p>
+<ul>
+<li>This will pop-up a GUI after running cross-session alignment to show matches that users can scroll through.</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>
+<p><code>View full results after [viewMatchObjBtwnSessions] (1 = yes, 0 = no)</code></p>
+<ul>
+<li>This will pop-up several figures showing example cells matched across sessions along with graphs that show cross-session matches with each cell colored by its global identification to help determine accuracy of results. If users go to <code>obj.picsSavePath</code> and look under the folders <code>matchObjColorMap</code>, they will find AVI and picture files with outputs related to these figures.</li>
+</ul>
+</li>
+</ul>
+<!-- ### Check within-session -->
+
 <h3 id="view-cross-session-cell-alignment-with-viewmatchobjbtwnsessions">View cross-session cell alignment with <code>viewMatchObjBtwnSessions</code><a class="headerlink" href="#view-cross-session-cell-alignment-with-viewmatchobjbtwnsessions" title="Permanent link">&para;</a></h3>
 <p>To evaluate how well cross-session alignment works, <code>computeMatchObjBtwnTrials</code> will automatically run <code>viewMatchObjBtwnSessions</code> at the end, but users can also run it separately after alignment. The left are raw dorsal striatum cell maps from a single animal. The right shows after cross-session alignment; color is used to indicate a global ID cell (e.g. the same cell matched across multiple days). Thus, same color cell = same cell across sessions.</p>
 <p><a href="https://cloud.githubusercontent.com/assets/5241605/25643108/9bcfccda-2f52-11e7-8514-31968752bd95.gif" target="_blank"><img src="https://cloud.githubusercontent.com/assets/5241605/25643108/9bcfccda-2f52-11e7-8514-31968752bd95.gif" alt="2017_05_02_p545_m121_p215_raw" width="auto" height="400"/></a></p>
