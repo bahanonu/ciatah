@@ -79,7 +79,7 @@ function [success] = updatePkg(varargin)
 			verInfoStr = sprintf('%s\n Local version: %s (%s).\n Online version %s (%s).\n',verInfoStr2,currentVersion,currentDateTimeStr,onlineVersionTmp,onlineDateTimeStr);
 			warning(verInfoStr)
 			if verCompare<1
-				msgbox(verInfoStr,'Note on CIAtah version.')
+				ciapkg.overloaded.msgbox(verInfoStr,'Note on CIAtah version.')
 			end
 			success = 1;
 			return
@@ -87,7 +87,7 @@ function [success] = updatePkg(varargin)
 
 		disp(verInfoStr)
 		if options.showGui==1
-			uiwait(msgbox(verInfoStr));
+			uiwait(ciapkg.overloaded.msgbox(verInfoStr));
 		end
 
 		% If the user is behind, ask if they want to update then initiate download and update from online repository

@@ -84,5 +84,10 @@ Find an overview of calcium imaging analysis methods at https://bahanonu.com/bra
   - https://zenodo.org/record/1119026#.XT9GdxSYVds
   - http://www.itsnetcal.com/
 
+- Minian: An open-source miniscope analysis pipeline
+  - https://www.biorxiv.org/content/10.1101/2021.05.03.442492v1.abstract
+  - https://github.com/DeniseCaiLab/minian
+
+
 ## Standards
 - https://github.com/NeurodataWithoutBorders/api-matlab

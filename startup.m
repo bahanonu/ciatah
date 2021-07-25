@@ -1,12 +1,14 @@
 % Startup commands and graphics defaults
 % Biafra Ahanonu
 % started: 2013.12.07 [17:28:44]
+% changelog
+	% 2021.07.22 [19:55:49] - loadBatchFxns to ciapkg.loadBatchFxns.
 
-% If using startup, then restore default path before running
+% If using startup, then restore default path before running startup operations.
 restoredefaultpath
 
 % Load all needed ciapkg directories
-loadBatchFxns('skipLoadMiji');
+ciapkg.loadBatchFxns('skipLoadMiji');
 
 % set default figure properties
 setFigureDefaults();

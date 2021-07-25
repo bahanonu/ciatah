@@ -1,4 +1,17 @@
 function obj = computeCellDistances(obj)
+	% Calculates within session cell-cell distances.
+	% Biafra Ahanonu
+	% started: 2014.07.31
+		% 2021.07.23 [13:50:08] branched from CIAtah
+		% branch from calciumImagingAnalysis 2020.05.07 [15:16:56]
+	% inputs
+		%
+	% outputs
+		%
+		
+	% changelog
+		% 2021.07.23 [00:22:22] - Added plots that show the distribution of cell-cell distances.
+		
 	obj.sumStats = [];
 	obj.sumStats.cellDistances = [];
 	obj.sumStats.cellPairs = [];
@@ -15,6 +28,8 @@ function obj = computeCellDistances(obj)
 			% disp([num2str(thisFileNum) '/' num2str(nFiles) ': ' obj.fileIDNameArray{obj.fileNum}]);
 
 			% try
+			% obj.modelVarsFromFilesCheck(thisFileNum);
+			
 			methodNum = 2;
 			if methodNum==1
 				disp('Using previously computed centroids...')
@@ -25,7 +40,7 @@ function obj = computeCellDistances(obj)
 				% distanceMatrix = diag(zeros(1,npts))+squareform(distMatrix);
 			else
 			% catch
-				[inputSignals, inputImages, signalPeaks, signalPeaksArray, valid] = modelGetSignalsImages(obj);
+				[inputSignals, inputImages, signalPeaks, signalPeaksArray, valid] = modelGetSignalsImages(obj,'returnType','raw');
 				nIDs = length(obj.stimulusNameArray);
 				nSignals = size(inputSignals,1);
 				if isempty(inputImages);continue;end
@@ -33,11 +48,12 @@ function obj = computeCellDistances(obj)
 				[xCoords, yCoords] = findCentroid(inputImages,'thresholdValue',0.4,'imageThreshold',0.4,'roundCentroidPosition',0);
 				% continue;
 			end
-			distMatrix = pdist([xCoords(:)*obj.MICRON_PER_PIXEL yCoords(:)*obj.	MICRON_PER_PIXEL]);
+			distMatrix = squareform(pdist([xCoords(:)*obj.MICRON_PER_PIXEL yCoords(:)*obj.	MICRON_PER_PIXEL]));
 			distMatrix(logical(eye(size(distMatrix)))) = NaN;
+			% figure;imagesc(distMatrix==0);colorbar;
 
 			distMatrixPairs = distMatrix(:);
-			distMatrixPairs(~isnan(distMatrixPairs));
+			distMatrixPairs = distMatrixPairs(~isnan(distMatrixPairs));
 
 			nPtsAdd = length(distMatrixPairs);
 			obj.sumStats.cellDistances(end+1:end+nPtsAdd,1) = distMatrixPairs;
@@ -49,7 +65,42 @@ function obj = computeCellDistances(obj)
 			disp(repmat('@',1,7))
 		end
 	end
+	
+	% plot outputs
+	figure;
+	clear g;
+	maxVal = ceil(nanmax(obj.sumStats.cellDistances(:)));
+	edgeVals = [-1:(maxVal+1)];
+	g(1,1) = gramm('x',obj.sumStats.cellDistances,'color',obj.sumStats.sessionStr);
+	g(1,2)=copy(g(1));
+	g(2,1)=copy(g(1));
+	g(2,2)=copy(g(1));
+	% g.facet_grid(obj.sumStats.sessionStr,[]);
+	% g.stat_density();	
+	g(1,1).stat_bin('normalization','probability','geom','line','edges',edgeVals); %Default binning (30 bins)
 
+	%Normalization to 'probability'
+	% g(2,1).stat_bin('normalization','probability','geom','overlaid_bar');
+	% g(2,1).set_title('''normalization'',''probability''','FontSize',10);
+	g(2,1).stat_bin('normalization','cumcount','geom','line','edges',edgeVals);
+	g(2,1).set_title('Zoomed','FontSize',10);
+	g(2,1).axe_property('XLim',[0 20],'YLim',[0 200]);
+	% xlim([0 20]);ylim([0 200]);
+
+	%Normalization to cumulative count
+	g(1,2).stat_bin('normalization','cumcount','geom','line','edges',edgeVals);
+	g(1,2).set_title('''normalization'',''cumcount''','FontSize',10);
+
+	%Normalization to cumulative density
+	g(2,2).stat_bin('normalization','cdf','geom','stairs','edges',edgeVals);
+	g(2,2).set_title('''normalization'',''cdf''','FontSize',10);
+	
+	g.set_title('Cell-cell distances within sessions');
+
+	g.draw();
+	
+	% line([5 5],[0 200],'Color','k','LineStyle','--','Parent',g.facet_axes_handles(3));
+		
 	savePath = [obj.dataSavePath obj.protocol{obj.fileNum} '_cellDistanceStats.csv'];
 	disp(['saving data to: ' savePath])
 	writetable(struct2table(obj.sumStats),savePath,'FileType','text','Delimiter',',');

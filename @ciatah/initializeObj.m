@@ -125,7 +125,7 @@ function obj = initializeObj(obj)
 		if javaHeapSpaceSizeGb<javaHeapPrefGb
 			javaErrorStr = @(x) sprintf('Java max heap memory is %0.3f GB. This might cause Miji errors when loading videos due to insufficient memory.%s\n\nOtherwise put "java.opts" (located in "ciapkg" sub-folder) file in the MATLAB start-up path or change MATALB start-up folder to the calciumImagingAnalysis root folder then restart MATLB before continuing.\n',javaHeapSpaceSizeGb,x);
 			warning(javaErrorStr(javaTmpStr));
-			msgbox(javaErrorStr(sprintf('\n\nSee command line for URL to change Java heap memory.')),'Note to user','modal')
+			ciapkg.overloaded.msgbox(javaErrorStr(sprintf('\n\nSee command line for URL to change Java heap memory.')),'Note to user','modal')
 		else
 			fprintf('Java max heap memory is %0.3f Gb, this should be sufficient to run Miji without problems. Please change "java.opts" file to increase heap space if run into Miji memory errors.\n',javaHeapSpaceSizeGb);
 		end

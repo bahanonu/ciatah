@@ -27,7 +27,7 @@ function obj = help(obj)
 
 	disp(helpText);
 	disp(javaTmpStr);
-	uiwait(msgbox(helpText,'Note to user','modal'));
+	uiwait(ciapkg.overloaded.msgbox(helpText,'Note to user','modal'));
 
 	% scnsize = get(0,'ScreenSize');
 	% [idNumIdxArray, ok] = listdlg('ListString',obj.stimulusNameArray,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','stimuli to analyze?');

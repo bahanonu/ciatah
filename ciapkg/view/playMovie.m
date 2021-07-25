@@ -470,8 +470,8 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 				end
 			case 3
 				% Threshold inputs if images given
-				[inputImages, boundaryIndices, numObjects] = thresholdImages(options.primaryPointsOverlay,'fastThresholding',1,'threshold',options.primaryPointsOverlayThreshold,'getBoundaryIndex',1,'imageFilter','median','medianFilterNeighborhoodSize',3);
-				options.primaryPointsOverlay = [boundaryIndices{:}];
+				[inputImages, boundaryIndices, numObjects] = thresholdImages(options.primaryPointsOverlay,'fastThresholding',1,'threshold',options.primaryPointsOverlayThreshold,'getBoundaryIndex',1,'imageFilter','median','medianFilterNeighborhoodSize',7);
+				options.primaryPointsOverlay = [boundaryIndices{:}]
 			otherwise
 				disp('Incorrect primaryPointsOverlay input, ignoring.')
 				options.primaryPointsOverlay = [];
@@ -1229,7 +1229,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 
 
 							warning on
-							uiwait(msgbox('Adjust the contrast then hit OK','Contrast'));
+							uiwait(ciapkg.overloaded.msgbox('Adjust the contrast then hit OK','Contrast'));
 							maxMovie(usrIdxChoice) = str2num(htool.Children(1).Children(3).Children.Children(2).Children.Children(2).Children(2).String)/fixMultiplier;
 							minMovie(usrIdxChoice) = str2num(htool.Children(1).Children(3).Children.Children(2).Children.Children(2).Children(5).String)/fixMultiplier;
 							disp(['New max: ' num2str(maxMovie(usrIdxChoice)) ' and min: ' num2str(minMovie(usrIdxChoice))])
@@ -1524,8 +1524,8 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 			supTitleStr = [supTitleStr 10];
 		end
 		disp(strrep(supTitleStr,titleSep, 10))
-		% suptitleHandle = suptitle(strrep(strrep('/','\',supTitleStr),'_','\_'));
-		suptitleHandle = suptitle(supTitleStr,'titleypos',0.93);
+		% suptitleHandle = ciapkg.overloaded.suptitle(strrep(strrep('/','\',supTitleStr),'_','\_'));
+		suptitleHandle = ciapkg.overloaded.suptitle(supTitleStr,'titleypos',0.93);
 		set(suptitleHandle,'FontName',get(0,'DefaultAxesFontName'));
 		set(suptitleHandle,'FontSize',12,'FontWeight','normal')
 		hold off;
@@ -1567,7 +1567,7 @@ function subfxn_imageJ(inputMovie)
 
 	MIJ.createImage('result', inputMovie, true);
 
-	uiwait(msgbox('press OK to move onto next movie','Success','modal'));
+	uiwait(ciapkg.overloaded.msgbox('press OK to move onto next movie','Success','modal'));
 	MIJ.run('Close');
 
 	manageMiji('startStop','exit');

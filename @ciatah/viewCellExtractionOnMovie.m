@@ -388,7 +388,7 @@ function obj = viewCellExtractionOnMovie(obj,varargin)
 								continue;
 							end
 							displayStrMovie = [num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) '[' num2str(movieNo) '/' num2str(nMovies) ']' ': ' obj.folderBaseDisplayStr{obj.fileNum}];
-							msgHandle = msgbox('Change contrast by pressing "j"');
+							msgHandle = ciapkg.overloaded.msgbox('Change contrast by pressing "j"');
 							[exitSignal, movieStruct] = playMovie(movieListTmp2{1},'extraTitleText',displayStrMovie,'primaryPointsOverlay',inputImages,'primaryPointsOverlayThreshold',thresholdOutline);
 
 							% Remove msg box
@@ -560,7 +560,7 @@ function obj = viewCellExtractionOnMovie(obj,varargin)
 		displayStrMovie = [num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) '[' num2str(movieNo) '/' num2str(nMovies) ']' ': ' obj.folderBaseDisplayStr{obj.fileNum}];
 		switch options.videoPlayer
 			case 'matlab'
-				msgHandle = msgbox('Change contrast by pressing "j"');
+				msgHandle = ciapkg.overloaded.msgbox('Change contrast by pressing "j"');
 				[exitSignal movieStruct] = playMovie(primaryMovie,'extraTitleText',displayStrMovie);
 
 				% Remove msg box
@@ -571,7 +571,7 @@ function obj = viewCellExtractionOnMovie(obj,varargin)
 				% 	'yes','motion','other','yes');
 				movieDecision = 'yes';
 			case 'imagej'
-				msgHandle = msgbox('Change contrast by pressing ctrl+shift+c');
+				msgHandle = ciapkg.overloaded.msgbox('Change contrast by pressing ctrl+shift+c');
 				try
 					% Miji;
 					% MIJ.createImage([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) '[' num2str(movieNo) '/' num2str(nMovies) ']' ': ' obj.folderBaseSaveStr{obj.fileNum}], primaryMovie, true);
@@ -582,7 +582,7 @@ function obj = viewCellExtractionOnMovie(obj,varargin)
 					for foobar=1:2; MIJ.run('Enhance Contrast','saturated=0.35'); end
 					MIJ.run('Start Animation [\]');
 					clear primaryMovie;
-					uiwait(msgbox('press OK to move onto next movie','Success','modal'));
+					uiwait(ciapkg.overloaded.msgbox('press OK to move onto next movie','Success','modal'));
 					% movieDecision = questdlg('Is the movie good?', ...
 					% 	'Movie decision', ...
 					% 	'yes','motion','other','yes');

@@ -79,7 +79,7 @@ function obj = viewSubjectMovieFrames(obj)
 				MIJ.createImage(thisSubjectStr{1}, subjectMovieFrames, true);
 				% pause
 			end
-			uiwait(msgbox('press OK to finish','Success','modal'));
+			uiwait(ciapkg.overloaded.msgbox('press OK to finish','Success','modal'));
 			% MIJ.run('Close All Without Saving');
 			manageMiji('startStop','closeAllWindows');
 		case 2
@@ -125,7 +125,7 @@ function obj = viewSubjectMovieFrames(obj)
 				end
 				% pause
 			end
-			uiwait(msgbox('press OK to finish','Success','modal'));
+			uiwait(ciapkg.overloaded.msgbox('press OK to finish','Success','modal'));
 			% MIJ.run('Close All Without Saving');
 			manageMiji('startStop','closeAllWindows');
 		case 3
@@ -157,7 +157,7 @@ function obj = viewSubjectMovieFrames(obj)
 			disp(identifyingText)
 			MIJ.createImage('Montage', primaryMovie, true);
 			% for foobar=1:3; MIJ.run('In [+]'); end
-			uiwait(msgbox('press OK to finish','Success','modal'));
+			uiwait(ciapkg.overloaded.msgbox('press OK to finish','Success','modal'));
 			% MIJ.run('Close All Without Saving');
 			manageMiji('startStop','closeAllWindows');
 		case 4
@@ -248,7 +248,7 @@ function obj = viewSubjectMovieFrames(obj)
 					display(repmat('@',1,7))
 				end
 			end
-			uiwait(msgbox('press OK to finish','Success','modal'));
+			uiwait(ciapkg.overloaded.msgbox('press OK to finish','Success','modal'));
 			% MIJ.run('Close All Without Saving');
 			manageMiji('startStop','closeAllWindows');
 		otherwise

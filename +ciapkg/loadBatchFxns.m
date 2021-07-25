@@ -22,6 +22,8 @@ function loadBatchFxns(varargin)
 		% 2020.07.21 [14:11:42] - Fix to make sure all sub-folders (not just the root) are also removed in the case of certain external_programs.
 		% 2021.02.01 [‏‎15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
 		% 2021.06.20 [00:22:38] - Added manageMiji('startStop','closeAllWindows'); support.
+		% 2021.07.16 [13:38:55] - Remove redundant loading and unloading of external programs via additional checks.
+		% 2021.07.22 [19:51:50] - Moved loadBatchFxns into ciapkg package. Use ciapkg.getDir to get directory as standard IO.
 	% TODO
 		%
 
@@ -30,10 +32,14 @@ function loadBatchFxns(varargin)
 
 	externalProgramsDir = ciapkg.getDirExternalPrograms();
 
+	removeDirFxnToFind = {'runCELLMax.m','extractor.m','normcorre.m'};
+	% 'cellmax.runCELLMax', 'CELLMax_Wrapper.m'
+
 	% Add calciumImagingAnalysis directory and subdirectories to path, use dbstack to ensure only add in the root directory regardless of where user has current MATLAB folder.
-	functionLocation = dbstack('-completenames');
-	functionLocation = functionLocation(1).file;
-	[functionDir,~,~] = fileparts(functionLocation);
+	% functionLocation = dbstack('-completenames');
+	% functionLocation = functionLocation(1).file;
+	% [functionDir,~,~] = fileparts(functionLocation);
+	functionDir = ciapkg.getDir;
 	pathList = genpath(functionDir);
 	% pathList = genpath(pwd);
 	pathListArray = strsplit(pathList,pathsep);
@@ -66,8 +72,16 @@ function loadBatchFxns(varargin)
 	pathListArray = pathListArray(~pathFilter);
 	pathFilter = ismember(pathListArray,strsplit(path,pathsep));
 	pathListArray = pathListArray(~pathFilter);
+
+	% If going to remove directories in removeDirFxnToFind then do so now to prevent redundant calls to addpath, etc.
+	if isempty(varargin)
+		[pathListArray] = subfxnRemoveDirs(0,pathListArray);
+	end
+
+	skipRemovePath = 0;
 	if isempty(pathListArray)
 		fprintf('MATALB path already has all needed non-private folders under: %s\n',functionDir);
+		skipRemovePath = 1;
 	else
 		fprintf('Adding all non-private folders under: %s\n',functionDir);
 		pathList = strjoin(pathListArray,pathsep);
@@ -84,7 +98,9 @@ function loadBatchFxns(varargin)
 		matchIdx2 = contains(pathListArray,externalProgramsDir);
 		pathListArray = pathListArray(~matchIdx2);
 	else
-		pathListArray = subfxnRemoveDirs(1,pathListArrayOriginal);
+		if skipRemovePath==0
+			pathListArray = subfxnRemoveDirs(1,pathListArrayOriginal);
+		end
 	end
 
 	% =================================================
@@ -203,23 +219,27 @@ function loadBatchFxns(varargin)
 		% =================================================
 		% List of functions in root of external program directories that should not be included by default.
 		try
-			fxnRootFolder = {'CELLMax_Wrapper.m','cellmax.runCELLMax','extractor.m','normcorre.m'};
+			fxnRootFolder = removeDirFxnToFind;
 			pathToRmCell = {};
 			for iNo = 1:length(fxnRootFolder)
 				thisFxn = fxnRootFolder{iNo};
 				if rmPathFlag==1
 					[pathToRm,~,~] = fileparts(which(thisFxn));
 				else
-					extDir = dir([functionDir filesep externalProgramsDir]);
+					% extDir = dir([functionDir filesep externalProgramsDir]);
+					extDir = dir([externalProgramsDir]);
 					extDir = extDir([extDir.isdir]);
 					if length(extDir)<3
 						disp('No external programs!')
 						return;
 					end
 					extDir = extDir(3:end);
-
-					foundFiles = dir(fullfile([functionDir filesep externalProgramsDir], ['**\' thisFxn '']));
-					pathToRm = foundFiles.folder;
+					foundFiles = dir(fullfile([externalProgramsDir], ['**\' thisFxn '']));
+					if isempty(foundFiles)
+						pathToRm = [];
+					else
+						pathToRm = foundFiles.folder;
+					end
 				end
 				if ~isempty(pathToRm)
 					if strcmp(thisFxn,'CELLMax_Wrapper.m')|strcmp(thisFxn,'cellmax.runCELLMax')
@@ -246,8 +266,10 @@ function loadBatchFxns(varargin)
 				end
 			end
 
-			%
-			rmpath(strjoin(pathToRmCell,pathsep));
+			% Only remove path if user requests
+			if rmPathFlag==1
+				rmpath(strjoin(pathToRmCell,pathsep));
+			end
 		catch err
 			disp(repmat('@',1,7))
 			disp(getReport(err,'extended','hyperlinks','on'));

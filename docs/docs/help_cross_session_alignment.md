@@ -1,14 +1,51 @@
 # Cross-day or -session cell alignment alignment
 
-Find the main function at https://github.com/bahanonu/calciumImagingAnalysis/blob/master/classification/matchObjBtwnTrials.m
+The main function used to run cross-session analysis that allows users to align cells across sessions/days can be found at:
+- https://github.com/bahanonu/ciatah/blob/master/classification/matchObjBtwnTrials.m
 
 ## Algorithm overview
 
-For details, see __Cross-day analysis of BLA neuronal activity__ methods section in the associated _Science_ paper: http://science.sciencemag.org/content/sci/suppl/2019/01/16/363.6424.276.DC1/aap8586_Corder_SM.pdf#page=10.
+For details, see __Cross-day analysis of BLA neuronal activity__ methods section in the Corder*, Ahanonu*, et al. _Science_, 2019:
 
-![image](https://user-images.githubusercontent.com/5241605/51709763-21b09e80-1fdc-11e9-9332-1d52c9ed6bd5.png)
+- http://science.sciencemag.org/content/sci/suppl/2019/01/16/363.6424.276.DC1/aap8586_Corder_SM.pdf#page=10.
 
-- Example output on several mPFC animals across multiple sessions. Color is used to indicate a global ID cell (e.g. the same cell matched across multiple days).
+<!-- ![image](https://user-images.githubusercontent.com/5241605/51709763-21b09e80-1fdc-11e9-9332-1d52c9ed6bd5.png) -->
+![image](https://user-images.githubusercontent.com/5241605/126744851-cd6e64ab-9b83-40bf-aa38-2301276f0ccf.png)
+
+Below is a general description of the algorithm/method used to match cells across sessions and references the above figure. A reference to the associated book chapter will be added in the future.
+
+1. Load the cell extraction spatial filters and threshold them by setting to zero any values below 40% the maximum value for each spatial filter and use these thresholded filters to calculate each neuron's centroid location. You can calculate the centroid using the *regionprops* function in MATLAB. **Do not** round each neuron's centroid coordinates to the nearest pixel value as this would reduce accuracy of cross-day alignment.
+
+2. Next, create simplified spatial filters that contained a 10-pixel-radius circle (this can be varied based on microns-per-pixel of the movie and size of cells) centered on each neuron's centroid location. This allows you to register different days while ignoring any slight day-to-day differences in the cell extraction algorithm's estimate of each neuron's shape even if the centroid locations are similar.
+
+3. For each animal, we recommend that if you have *N* sessions to align that you choose the *N/2* session (rounded down to the nearest whole number) to align to (referred to as the *align session*) to compensate for any drift or other imaging changes that may have occurred during the course of the imaging protocol.
+
+4. For all imaging sessions create two neuron maps based on the thresholded spatial (see fig panel A, step 1, "thresholded neuron maps") and 10-pixel-radius circle (see fig panel A, step 2, "circle neuron maps") filters by taking a maximum projection across all *x* and *y* pixels and spatial filters (e.g. a max operation in the 3^rd^ dimension on a *x* × *y* × *n* neuron spatial filter matrix, where *n* = neuron number).
+
+5. You then need to register these neuron maps to the *align session* using *Turboreg* with rotation enabled for all animals and isometric (projective) scaling enabled for a subset of animals in cases where that improves results. The registration steps are as follows (see fig panel A, step 3):
+  - Register the thresholded neuron map for a given session to the *align session* threshold neuron map.
+  - Use the output 2D spatial transformation coordinates to also register the circle neuron maps.
+  - Then register the circle neuron map with that animal's *align session* circle neuron map.
+  - Apply the resulting 2D spatial transformation coordinates to the thresholded neuron map.
+  - Repeat this procedure at least five times.
+  - Lastly, use the final registration coordinates to transform all spatial filters from that session so they matched the *align session*'s spatial filters and repeat this process for all sessions for each animal individually.
+
+6. After registering all sessions to the *align session*, re-calculate all the centroid locations (see fig panel A, step 4).
+
+7. Set the *align session* centroids as the initial seed for all *global cells* (see fig panel A, step 5)*.* Global cells are a tag to identify neurons that you match across imaging sessions.
+  - For example, global cell #1 might be associated with neurons that are at index number 1, 22, 300, 42, and 240 within the cell extraction analysis matrices across each of the first five imaging sessions, respectively.
+
+8. Starting with the *align session* for an animal, calculate the pairwise Euclidean distance between all global cells' and the selected session's (likely 1^st^) neurons' centroids.
+
+9. Then identify any cases in which a global cell is within 5 μm (nominally ~2 pixels in our data, this can be varied by the user) of a selected session's neurons. This distance depends on the density of cells in your imaging sessions, a stricter cut-off should be set for more dense brain areas. When you find a match, then check that the spatial filter is correlated (e.g. with 2-D correlation coefficient, Jaccard distance, or other measure) above a set threshold (e.g. *r* > 0.4) with all other neurons associated with that global cell (see fig panel A, step 6).
+
+10. If a neuron passes the above criteria, add that neuron to that global cell's pool of neurons then recalculate the global cell's centroid as the mean location between all associated session neurons' centroid locations and annotate any unmatched neurons in that session as new candidate global cells.
+
+11. Repeat this process for all sessions associated with a given animal.
+
+
+## Example output 
+- Example output of several mPFC animals across multiple sessions. Color is used to indicate a global ID cell (e.g. the same cell matched across multiple days).
 <img src="https://user-images.githubusercontent.com/5241605/51710281-7a346b80-1fdd-11e9-8cad-3b3657038375.gif" width=600/>
 <!-- ![2016_08_22_mpfcfear_allanimals_crossdayalignment](https://user-images.githubusercontent.com/5241605/51710281-7a346b80-1fdd-11e9-8cad-3b3657038375.gif) -->
 

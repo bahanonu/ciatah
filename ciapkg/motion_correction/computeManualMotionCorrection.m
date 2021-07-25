@@ -21,6 +21,8 @@ function [inputImagesTranslated, outputStruct] = computeManualMotionCorrection(i
 	% TODO
 		% Add ability to auto-crop if inputs are not of the right size them convert back to correct size after manual correction
 		% inputRegisterImage - [x y nCells] - Image to register to.
+		% Add second window that shows the differences between the two images
+		% Add a plot that shows the sum(diff(imgA-imgB)) to give users a metric.
 
 	%========================
 	% Int: frame to use in inputImages for register in default mode

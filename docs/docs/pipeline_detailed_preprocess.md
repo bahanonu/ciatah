@@ -7,6 +7,7 @@ title: Preprocessing calcium imaging movies
 After users instantiate an object of the `{{ site.name }}` class and enter a folder, they can start preprocessing of their calcium imaging data with `modelPreprocessMovie`.
 
 - See below for a series of windows to get started, the options for motion correction, cropping unneeded regions, Δ_F/F_, and temporal downsampling were selected for use in the study associated with this repository.
+- There is also support for various other types of movie corrections, such as detrending a movie using linear or higher-order fits to remove the effects of photobleaching.
 - If users have not specified the path to Miji, a window appears asking them to select the path to Miji's `scripts` folder.
 - If users are using the test dataset, it is recommended that they do not use temporal downsampling.
 - Vertical and horizontal stripes in movies (e.g. CMOS camera artifacts) can be removed via `stripeRemoval` step. Remember to select correct `stripOrientationRemove`,`stripSize`, and `stripfreqLowExclude` options in the preprocessing options menu.

@@ -799,7 +799,7 @@ function obj = modelVerifyDataIntegrity(obj)
 					ylabel('variance');xlabel('minutes'); box off;
 					axis tight;
 					set(gca,'xlim',[0 lengthMovie]);
-					% suptitle(thisDirSaveStr);
+					% ciapkg.overloaded.suptitle(thisDirSaveStr);
 					supHandle = suptitle([strrep(obj.folderBaseSaveStr{obj.fileNum},'_',' ') ' | ' fileFilterRegexp]);
 					set(supHandle, 'Interpreter', 'none');
 

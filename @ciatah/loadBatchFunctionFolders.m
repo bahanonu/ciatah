@@ -14,7 +14,7 @@ function obj = loadBatchFunctionFolders(obj)
 
 	loadRepoMethod = 1;
 	if loadRepoMethod==1
-		loadBatchFxns();
+		ciapkg.loadBatchFxns();
 	else
 		subfxnLoadFxns();
 	end

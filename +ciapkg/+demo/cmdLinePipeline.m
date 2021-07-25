@@ -27,7 +27,7 @@ nwbFilePath = [analysisFolderPath filesep 'nwbFiles' filesep folderName];
 nwbFileFolderPath = [analysisFolderPath filesep 'nwbFiles'];
 
 % Load CIAtah functions
-loadBatchFxns();
+ciapkg.loadBatchFxns();
 
 % =================================================
 %% Download test data, only a single session
@@ -166,7 +166,7 @@ end
 % =================================================
 %% Run EXTRACT cell extraction. Check each function with "edit" for options.
 % Load default configuration
-loadBatchFxns('loadEverything');
+ciapkg.loadBatchFxns('loadEverything');
 extractConfig = get_defaults([]);
 
 % See https://github.com/schnitzer-lab/EXTRACT-public#configurations.
@@ -196,7 +196,7 @@ if saveAnalysis==1
 end
 
 % Remove EXTRACT from the path.
-loadBatchFxns();
+ciapkg.loadBatchFxns();
 
 % =================================================
 %% USER INTERFACE Run cell sorting using matrix outputs from cell extraction.

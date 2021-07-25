@@ -4,6 +4,6 @@ function obj = update(obj)
 
 	% Notify user if they are behind version-wise.
 	ciapkg.io.updatePkg;
-	uiwait(msgbox('The CIAtah GitHub website will open. Click "Clone or download" button to download most recent version of CIAtah.'))
+	uiwait(ciapkg.overloaded.msgbox('The CIAtah GitHub website will open. Click "Clone or download" button to download most recent version of CIAtah.'))
 	web(obj.githubUrl);
 end

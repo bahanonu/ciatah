@@ -5,7 +5,7 @@ function obj = modelPreprocessMovie(obj)
 
 	% verify that there are folders present
 	if isempty(obj.inputFolders)
-		uiwait(msgbox('Please run modelAddNewFolders to add folders to the object','Success','modal'));
+		uiwait(ciapkg.overloaded.msgbox('Please run modelAddNewFolders to add folders to the object','Success','modal'));
 		return
 	end
 	% check that Miji exists, if not, have user enter information

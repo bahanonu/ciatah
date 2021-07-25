@@ -35,7 +35,10 @@ function obj = modelVarsFromFilesCheck(obj,folderNo,varargin)
 		catch
 			obj.guiEnabled = 0;
 			% originalFileNum = 
+            oldTmp = obj.foldersToAnalyze;
+            obj.foldersToAnalyze = folderNo;
 			obj.modelVarsFromFiles();
+            obj.foldersToAnalyze = oldTmp;
 			obj.fileNum = folderNo;
 			obj.guiEnabled = 1;
 			skipReload = 0;

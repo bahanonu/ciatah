@@ -72,6 +72,8 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 		% 2020.10.13 [22:31:23] - Users can now scroll through cells using mouse scroll wheel.
 		% 2021.03.10 [16:33:23] - User can now input just NWB path without a blank variable for inputSignals. Also added support for CIAtah mat files.
 		% 2021.05.09 [15:20:18] - Since ciapkg.io.loadSignalExtraction already supports loading NWB or CIAtah MAT-file cell extraction files, remove remove redundancy and only call ciapkg.io.loadSignalExtraction rather than loadNeurodataWithoutBorders. Added support for progress bar when movie not input.
+		% 2021.07.12 [10:14:21] - Changed call to overloaded functions to `ciapkg.overloaded` to avoid altering users Matlab workspace native functions.
+		% 2021.07.12 [11:15:06] - Change selection of cell on the maps to be instantaneous for where the mouse location is, much faster, don't have to wait for ginputCustom cross-hairs to show. Users can still show crosshairs with 'V'.
 	% TODO
 		% DONE: New GUI interface to allow users to scroll through video and see cell activity at that point
 		% DONE: allow option to mark rest as bad signals
@@ -707,6 +709,13 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 	if ~exist(tmpDir,'file')
 		mkdir(tmpDir);
 	end
+
+	% ==========================================
+	% Set constants
+	% Binary: 1 = show ciapkg.overloaded.ginputCustom
+	showCrossHairs = 0;
+	% ==========================================
+
 
 	subplotCustom = @(x,y,z) subaxis(x,y,z, 'Spacing', 0.07, 'Padding', 0, 'MarginTop', 0.1,'MarginBottom', 0.07,'MarginLeft', 0.03,'MarginRight', 0.07); % ,'Holdaxis',1
 
@@ -1704,7 +1713,9 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 			i = lastSortedSignal;
 		% 'V' Allow user to select and go to cell on cellmap
 		elseif isequal(reply, 118)
+			showCrossHairs = 1;
 			subfxnSelectCellOnCellmap();
+			showCrossHairs = 0;
 		% 'B' toggle movie frame montage and frame select
 		elseif isequal(reply, 98)
 			if options.peakTrigMovieMontage==1
@@ -1916,7 +1927,7 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 					caxis(thisHandle,[minCurr maxCurr]);
 
 					warning on
-					uiwait(msgbox('Adjust the contrast then hit OK','Contrast'));
+					uiwait(ciapkg.overloaded.msgbox('Adjust the contrast then hit OK','Contrast'));
 					% Grab from the UI llabels for Window Minimum and Maximum
 					options.movieMax = str2num(htool.Children(1).Children(3).Children.Children(2).Children.Children(2).Children(2).String)/fixMultiplier;
 					options.movieMin = str2num(htool.Children(1).Children(3).Children.Children(2).Children.Children(2).Children(5).String)/fixMultiplier;
@@ -2081,7 +2092,13 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 		set(gcf,'uicontextmenu',conMenu);
 	end
 	function subfxnSelectCellOnCellmap(source,eventdata)
-		[xUser,yUser,~] = ginputCustom(1);
+		if showCrossHairs==1
+			[xUser,yUser,~] = ciapkg.overloaded.ginputCustom(1);
+		else
+			mouseLoc = get(gca, 'CurrentPoint');
+			xUser = mouseLoc(1,1);
+			yUser = mouseLoc(1,2);
+		end
 		mapTags = {'objMapPlotLocHandle','objMapZoomPlotLocHandle'};
 		thisPlotTag = find(ismember(mapTags, get(gca,'tag')));
 		if isempty(thisPlotTag)
@@ -2130,6 +2147,7 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 		end
 		% Force exit current display loop and display chosen cell since callback.
 		keyIn = 1e7;
+		showCrossHairs = 0;
 	end
 	function sliderZoomCallback(source,eventdata)
 		% When user zooms in on the activity trace, adjust the slider range accordingly
@@ -2322,7 +2340,7 @@ function instructionStr = subfxnCreateLegend()
 	'EquivDiameter>3,<30',sepStrNum,...
 	'signalSnr>1.45',sepStrNum,...
 	'slopeRatio>0.02',sepStrNum,sepStrNum];
-	% msgbox(instructionStr)
+	% ciapkg.overloaded.msgbox(instructionStr)
 
 	tmpHandle = figure(2);
 	close(tmpHandle);

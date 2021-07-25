@@ -16,6 +16,8 @@ Created by __Biafra Ahanonu, PhD__.
 
 `{{ site.name }}` (pronounced cheetah, formerly `calciumImagingAnalysis` [`CIAPKG`]) is a software package for analysis of one- and two-photon calcium imaging datasets.
 
+Currently requires `MATLAB` and runs on all major operating systems (Windows, Linux [e.g. Ubuntu], and macOS).
+
 __Download the software at [https://github.com/bahanonu/ciatah](https://github.com/bahanonu/ciatah).__
 
 <img src="https://user-images.githubusercontent.com/5241605/99499485-d6dce500-292d-11eb-8c68-b089fe1985c8.png" width="42%" align="center" alt="CIAtah_logo" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">

@@ -36,7 +36,7 @@ function [status] = updatePathCleanup(inputDirectory,varargin)
 
 		% Remove references to MEX files
 		clear mex
-		loadBatchFxns('excludeExternalPrograms');
+		ciapkg.loadBatchFxns('excludeExternalPrograms');
 
 		pathCell = regexp(path, pathsep, 'split');
 		if verLessThan('matlab','9.1')

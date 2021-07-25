@@ -570,14 +570,14 @@ function obj = viewCreateObjmaps(obj,varargin)
 				linkImgAxes(end+1) = subplotTmp(2,3,3)
 					imagesc(emImages2); axis equal tight; box off;
 					title('colored cell map')
-					suptitle(sprintf('%s | # cells = %d',obj.folderBaseDisplayStr{obj.fileNum},sum(validRegion)))
+					ciapkg.overloaded.suptitle(sprintf('%s | # cells = %d',obj.folderBaseDisplayStr{obj.fileNum},sum(validRegion)))
 					drawnow
 
 				linkaxes(linkImgAxes);
 
 				[figHandle figNo] = openFigure(options.mapTraceGraphNo, '');
 				set(figHandle,'PaperUnits','inches','PaperPosition',[0 0 15 10])
-				suptitle(sprintf('%s | # cells = %d',obj.folderBaseDisplayStr{obj.fileNum},sum(validRegion)))
+				ciapkg.overloaded.suptitle(sprintf('%s | # cells = %d',obj.folderBaseDisplayStr{obj.fileNum},sum(validRegion)))
 				binOld = obj.binDownsampleAmount; obj.binDownsampleAmount = [];
 				% obj.modelSaveImgToFile([],['objMapLabeled' filesep obj.subjectStr{obj.fileNum}],'current',[]);
 				obj.modelSaveImgToFile([],'objMapLabeled','current',[]);
@@ -632,7 +632,7 @@ function obj = viewCreateObjmaps(obj,varargin)
 				% 	subplotTmp(2,3,3)
 				% 	imagesc(emImages2); axis equal tight; box off;
 				% 	title('colored cell map')
-				% 	suptitle(sprintf('%s | # cells = %d',obj.folderBaseDisplayStr{obj.fileNum},sum(validRegion)))
+				% 	ciapkg.overloaded.suptitle(sprintf('%s | # cells = %d',obj.folderBaseDisplayStr{obj.fileNum},sum(validRegion)))
 				% 	drawnow
 
 				% if options.onlyShowMapTraceGraph==1
