@@ -19,7 +19,7 @@ function loadDependencies(varargin)
 		% 2021.06.19 [23:46:58] - Switched to support for original MIJ calling of ImageJ using just jar files, easier compatibility across MATLAB versions and OSes.
 		% 2021.06.21 [16:45:59] - Update order.
 		% 2021.07.13 [08:34:18] - Added backup URL for downloading mij.jar.
-		% 2021.07.23 [00:22:22] - Added gramm.
+		% 2021.07.23 [00:22:22] - Added gramm (https://github.com/piermorel/gramm) support/downloading for graphics plotting.
 	% TODO
 		% Verify all dependencies download and if not ask user to download again.
 
