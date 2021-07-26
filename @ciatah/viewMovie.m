@@ -699,7 +699,7 @@ function obj = viewMovie(obj)
 					% MIJ.createImage([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) '[' num2str(movieNo) '/' num2str(nMovies) ']' ': ' obj.folderBaseSaveStr{obj.fileNum}], primaryMovie, true);
 					s.Interpreter = 'tex';
 					s.WindowStyle = 'replace';
-					msgbox('Click movie to open next dialog box.','Success','normal',s)
+					ciapkg.overloaded.msgbox('Click movie to open next dialog box.','Success','normal',s)
 					MIJ.createImage(displayStrMovie, primaryMovie, true);
 					% if size(primaryMovie,1)<300
 					% 	for foobar=1:3; MIJ.run('In [+]'); end
@@ -707,7 +707,7 @@ function obj = viewMovie(obj)
 					for foobar=1:2; MIJ.run('Enhance Contrast','saturated=0.35'); end
 					MIJ.run('Start Animation [\]');
 					clear primaryMovie;
-					% uiwait(msgbox('press OK to move onto next movie','Success','modal'));
+					% uiwait(ciapkg.overloaded.msgbox('press OK to move onto next movie','Success','modal'));
 					movieDecision = questdlg('Is the movie good?', ...
 						'Movie decision', ...
 						'yes','motion','other','yes');

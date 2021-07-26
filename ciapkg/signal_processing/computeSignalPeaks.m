@@ -362,7 +362,7 @@ function [inputSignal] = viewComputePeaksPlot(inputSignal,testpeaks,dotColor,mak
 			hold(holdVal);
 			title(sprintf('%d peaks | Zoom is enabled for closer look at peaks',length(testpeaks)))
 		zoom on
-		suptitle(sprintf('Right arrow key to move to next signal | press ''e'' to exit | threshold = %0.2f | signal %d/%d',numStdsForThresh,signalNum,nSignals))
+		ciapkg.overloaded.suptitle(sprintf('Right arrow key to move to next signal | press ''e'' to exit | threshold = %0.2f | signal %d/%d',numStdsForThresh,signalNum,nSignals))
 	end
 end
 function [Nhat] = computePeakForSignalOopsi(inputSignal,testpeaks, options, varargin)

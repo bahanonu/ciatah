@@ -276,7 +276,7 @@ function obj = viewObjmaps(obj,varargin)
 			% suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType])
 
 			titleStr = sprintf('%d/%d: %s | %s | %s\n %s | %d cells, %d total | Zoom enabled',thisFileNumIdx,nFilesToAnalyze,obj.folderBaseDisplayStr{obj.fileNum},strrep(foldername,'_','\_'),validType,obj.signalExtractionMethod,sum(valid==1),length(valid));
-			suptitle(titleStr)
+			ciapkg.overloaded.suptitle(titleStr)
 
 				% s2Pos = get(gca,'position');
 				s2Pos = plotboxpos(gca);
@@ -339,7 +339,7 @@ function obj = viewObjmaps(obj,varargin)
 					suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType 10  'Zoom enabled.'])
 
 					titleStr = sprintf('%d/%d: %s | %s | %s\n %s | %d cells, %d total | Zoom enabled',thisFileNumIdx,nFilesToAnalyze,obj.folderBaseDisplayStr{obj.fileNum},strrep(foldername,'_','\_'),validType,obj.signalExtractionMethod,sum(valid==1),length(valid));
-					suptitle(titleStr)
+					ciapkg.overloaded.suptitle(titleStr)
 			end
 
 			% =======
@@ -354,7 +354,7 @@ function obj = viewObjmaps(obj,varargin)
 				cbh = colorbar;
 				ylabel(cbh,'# cells at that pixel location','FontSize',10);
 				titleStr = sprintf('Cell overlap | %d/%d: %s | %s | %s\n %s | %d cells, %d total | Zoom enabled',thisFileNumIdx,nFilesToAnalyze,obj.folderBaseDisplayStr{obj.fileNum},strrep(foldername,'_','\_'),validType,obj.signalExtractionMethod,sum(valid==1),length(valid));
-				suptitle(titleStr)
+				ciapkg.overloaded.suptitle(titleStr)
 
 		catch err
 			disp(repmat('@',1,7))

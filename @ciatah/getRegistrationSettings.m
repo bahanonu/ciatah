@@ -22,6 +22,8 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		% 2021.06.21 [20:52:36] - Multi-column layout since most computers are widescreen now.
 		% 2021.06.29 [12:52:36] - Added regRegionUseBtwnSessions support and made fix for loading prior settings if they do not contain new settings.
 		% 2021.07.06 [09:42:09] - Switch to callbacks to close instead of using pause, allows for more flexibility going forward and use with MATLAB Online.
+		% 2021.07.13 [17:55:30] - Added support for certain options (e.g. motion correction) to give a vector 
+		% 2021.07.22 [12:10:10] - Added movie detrend options.
 	% TODO
 		% DONE: Allow user to input prior settings, indicate those changed from default by orange or similar color.
 
@@ -48,6 +50,8 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 	userSelectStr = 'User selects specific value.';
 	userSelectVal = 0;
 	defaultTooltips = 'NO TIPS FOR YOU';
+    
+    vectorAllowList = {'motionCorrectionRefFrame'};
 
 	% Options that allow users to manually set the value
 	userOptionsAllowManualSelect = {...
@@ -227,6 +231,16 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		tS.medianFilterSize.val = {{3,userSelectVal,5,7,9,11,13,15}};
 		tS.medianFilterSize.str = {{3,userSelectStr,5,7,9,11,13,15}};
 		tS.medianFilterSize.tooltip = {{['The size in pixels of the median filter.' 10 'If "medianFilter" is selected for preprocessing.']}};
+
+	% ===================================
+	tS.MOVIE_DETREND______________ = [];
+		tS.MOVIE_DETREND______________.val = {{'====================='}};
+		tS.MOVIE_DETREND______________.str = {{'====================='}};
+		tS.MOVIE_DETREND______________.tooltip =  {{'====================='}};
+	tS.detrendDegree = [];
+		tS.detrendDegree.val = {{1,userSelectVal,2,3,4,5,6}};
+		tS.detrendDegree.str = {{1,userSelectStr,2,3,4,5,6}};
+		tS.detrendDegree.tooltip = {{'For "detrend" function to compensate for photobleaching, the nth-degree polynomial trend to fit. Usually 1 (linear fit) if sufficient.'}};
 		
 	% ===================================
 	tS.MOVIE_DOWNSAMPLING______________ = [];
@@ -531,7 +545,9 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 			end
 			if strcmp(gString{gValue},userSelectStr)==1
 				inputCheck = 'Americans love a winner.';
-				while isnan(str2double(inputCheck))==1|length(str2num(inputCheck))~=1
+                lengthTooLongFlag = 1;
+                nanCheckFlag = 1;
+				while nanCheckFlag==1||lengthTooLongFlag==1
 					movieSettings = inputdlg({...
 							gTooltip...
 						},...
@@ -543,14 +559,28 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 
 					if isempty(movieSettings)
 						inputCheck = [];
-						uiwait(msgbox('Re-enter a value, do not CANCEL the input dialog.'));
+						uiwait(ciapkg.overloaded.msgbox('Re-enter a value, do not CANCEL the input dialog.'));
 					else
 						inputCheck = movieSettings{1};
 						% Check users has input correct, else ask again.
-						if isnan(str2double(inputCheck))==1|length(str2num(inputCheck))~=1
-							uiwait(msgbox('Please input a SINGLE numeric value (no strings or vectors).'));
+                        if length(str2num(inputCheck))~=1
+                            lengthTooLongFlag = 1;
+                        end
+                        if isnan(str2num(inputCheck))
+                            nanCheckFlag = 1;
+                        end
+						if nanCheckFlag==1||lengthTooLongFlag==1
+                            if any(ismember(thisProperty,vectorAllowList))
+                                nanCheckFlag = 0;
+                                lengthTooLongFlag = 0;
+                            else
+                                uiwait(ciapkg.overloaded.msgbox('Please input a SINGLE numeric value (no strings or vectors).'));
+                            end
+                        else
+                            nanCheckFlag = 0;
+                            lengthTooLongFlag = 0;
 						end
-					end
+                    end
 				end
 				gStringNew = [movieSettings{1};gString];
 				set(hObject,'String',gStringNew);

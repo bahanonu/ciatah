@@ -1188,7 +1188,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	function [emOptions] = runCELLMaxSignalFinder() % runEMSignalFinder()
 		% emOptions.dsMovieDatasetName = options.datasetName;
 		% emOptions.movieDatasetName = options.datasetName;
-		loadBatchFxns('loadEverything');
+		ciapkg.loadBatchFxns('loadEverything');
 		movieList = getFileList(obj.inputFolders{obj.fileNum}, fileFilterRegexp);
 
 		% The second upsampled movie if there is one
@@ -1369,7 +1369,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		% Save output in NWB format if requested by user.
 		subfxnSaveNwbFiles(emAnalysisOutput.cellImages,{emAnalysisOutput.scaledProbability,emAnalysisOutput.cellTraces});
 
-		loadBatchFxns();
+		ciapkg.loadBatchFxns();
 	end
 	function [extractAnalysisOutput] = runEXTRACTSignalFinder()
 		movieList = getFileList(obj.inputFolders{obj.fileNum}, fileFilterRegexp);

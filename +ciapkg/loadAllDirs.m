@@ -26,7 +26,7 @@ function loadAllDirs()
 	%========================
 
 	try
-		loadBatchFxns('loadEverything');
+		ciapkg.loadBatchFxns('loadEverything');
 	catch err
 		disp(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));

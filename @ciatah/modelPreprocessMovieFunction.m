@@ -35,6 +35,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% 2021.06.09 [00:40:35] - Updated checking of options. Also save ordering of options selected.
 		% 2021.06.20 [00:22:38] - Added manageMiji('startStop','closeAllWindows'); support.
 		% 2021.06.29 [12:09:40] - Added support for dF/F where F0 is calculated using the minimum (or a soft minimum to reduce probability that one outlier throws off the calculation). Also changed turboregCropSelection so dialog box is now part of getRegistrationSettings.
+		% 2021.07.13 [17:55:30] - Add support for multiple reference frames, the mean is taken before input to motion correction.
+		% 2021.07.22 [12:11:44] - Added support for detrending movies.
 	% TODO
 		% Allow users to save out analysis options order and load it back in.
 		% Insert NaNs or mean of the movie into dropped frame location, see line 260
@@ -190,6 +192,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	% List of analysis options
 	analysisOptionList = {...
 		'medianFilter',...
+		'detrend',...
 		'downsampleSpace',...
 		'spatialFilter',...
 		'stripeRemoval',...
@@ -216,6 +219,9 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		'medianFilter',struct(...
 			'save','medFlt',...
 			'str','Median filter (reduce high value noise or dead pixels).'),...
+		'detrend',struct(...
+			'save','detrend',...
+			'str','Detrend movie (e.g. to compensate for photobleaching).'),...
 		'spatialFilter',struct(...
 			'save','spFlt',...
 			'str','Spatial filter (ignore if motion correcting).'),...
@@ -289,6 +295,9 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		instructTextPos = [1 80 70 20]/100;
 		listTextPos = [1 40 98 28]/100;
 		listTextPos2 = [1 1 98 28]/100;
+
+		figNoList = struct;
+		figNoList.detrend = 102030;
 
 		shortcutMenuHandle = uicontrol('style','pushbutton','Units','normalized','position',[1 75 30 3]/100,'FontSize',9,'string','Reset to default list order','callback',@subfxn_resetSetpsMenu);
 		shortcutMenuHandle2 = uicontrol('style','pushbutton','Units','normalized','position',[32 75 30 3]/100,'FontSize',9,'string','Select default options (e.g. post-dragging)','callback',@subfxn_highlightDefault);
@@ -459,7 +468,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	if obj.saveLoadPreprocessingSettings==1
 		currentDateTimeStr = datestr(now,'yyyymmdd_HHMMSS','local');
 		settingsSaveStr = [obj.settingsSavePath filesep currentDateTimeStr '_modelPreprocessMovieFunction_settings.mat'];
-		% uiwait(msgbox(['Settings saved to obj.preprocessSettings and MAT-file: ' settingsSaveStr]))
+		% uiwait(ciapkg.overloaded.msgbox(['Settings saved to obj.preprocessSettings and MAT-file: ' settingsSaveStr]))
 	end
 	% '[options, if motion correcting] Motion correction reference frame: '...
 	% num2str(obj.motionCorrectionRefFrame)...
@@ -627,6 +636,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				end
 			end
 
+			thisDirDispStr = strrep(strrep(thisDir,'\','/'),'_','\_');
+
 			% start logging for this file
 			display(['cd to: ' obj.defaultObjDir]);
 			cd(obj.defaultObjDir);
@@ -727,7 +738,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				[~, ~] = openFigure(4242, '');
 					imagesc(squeeze(thisMovie(:,:,1)))
 					box off;
-					dispStr = [num2str(fileNumToRun) '/' num2str(nFilesToRun) ': ' 10 strrep(strrep(thisDir,'\','/'),'_','\_')];
+					dispStr = [num2str(fileNumToRun) '/' num2str(nFilesToRun) ': ' 10 thisDirDispStr];
 					axis image; colormap gray;
 					set(0,'DefaultTextInterpreter','none');
 					% suptitle([num2str(fileNumIdx) '\' num2str(nFilesToRun) ': ' 10 strrep(thisDir,'\','/')],'fontSize',12,'plotregion',0.9,'titleypos',0.95);
@@ -897,6 +908,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 								end
 							case 'medianFilter'
 								medianFilterInputMovie();
+							case 'detrend'
+								detrendInputMovie();
 							case 'spatialFilter'
 								spatialFilterInputMovie();
 							case 'stripeRemoval'
@@ -1485,7 +1498,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% 	plot(squeeze(nanvar(nanvar(thisMovie,[],1),[],2)))
 		% 	% title('variance');
 		% 	ylabel('variance');xlabel('frame'); box off;
-		% 	suptitle(thisDirSaveStr)
+		% 	ciapkg.overloaded.suptitle(thisDirSaveStr)
 		% =====================
 		% get the movie F0
 		% thisMovie = single(thisMovie);
@@ -1669,7 +1682,9 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
 		% thisMovie = single(thisMovie);
 		% get reference frame before subsetting, so won't change
-		thisMovieRefFrame = squeeze(thisMovie(:,:,options.refCropFrame));
+		% thisMovieRefFrame = squeeze(thisMovie(:,:,options.refCropFrame));
+		% Take the mean of the reference frame or frames (if a single frame will produce the same output)
+		thisMovieRefFrame = squeeze(nanmean(thisMovie(:,:,options.refCropFrame),3));
 		nSubsets = (length(subsetList)-1);
 		% turboregThisMovie = single(zeros([size(thisMovie,1) size(thisMovie,2) 1]));
 
@@ -1732,7 +1747,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			%
 			ioptions.cropCoords = turboRegCoords{fileNum}{movieNo};
 			ioptions.closeMatlabPool = 0;
-			ioptions.refFrame = options.refCropFrame;
+			% If multiple frames requested, only use the 1st
+			ioptions.refFrame = options.refCropFrame(1);
 			ioptions.refFrameMatrix = thisMovieRefFrame;
 			% for frameDftNo = movieSubset
 			% 	refFftFrame = fft2(thisMovieRefFrame);
@@ -1892,7 +1908,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		end
 		% [figHandle figNo] = openFigure(79854+fileNum, '');
 		% imagesc(thisMovieMinMask); colormap gray;
-		% suptitle(thisDirSaveStr);
+		% ciapkg.overloaded.suptitle(thisDirSaveStr);
 		% thisMovieMinMask(thisMovieMinMask==0) = NaN;
 		% thisMovie = bsxfun(@times,thisMovieMinMask,thisMovie);
 		topVal = sum(thisMovieMinMask(1:floor(end/4),floor(end/2)));
@@ -1993,6 +2009,38 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			toc(subsetStartTime)
 		end
 		% thisMovie = normalizeMovie(thisMovie,'normalizationType','medianFilter');
+	end
+	function detrendInputMovie()
+		% Plot trend before and after
+
+		openFigure(figNoList.detrend);
+		try
+			subplot(1,nMovies,1)
+			plot(squeeze(nanmean(thisMovie,[1 2])),'r-')
+			box off;
+			xlabel('Frames'); ylabel('Mean frame pixel intensity');
+		catch err
+			disp(repmat('@',1,7))
+			disp(getReport(err,'extended','hyperlinks','on'));
+			disp(repmat('@',1,7))
+		end
+
+		% Takes an input movie and removes an underlying change in mean frame fluorescence.
+		thisMovie = normalizeMovie(thisMovie,'normalizationType','detrend','detrendDegree',options.turboreg.detrendDegree);
+
+		openFigure(figNoList.detrend);
+			try
+				subplot(1,nMovies,1)
+				hold on;
+				plot(squeeze(nanmean(thisMovie,[1 2])),'b-')
+				legend({'Raw movie signal','Detrended movie signal'})
+				title(sprintf('%s | %d-degree fit detrend',fileInfoSaveStr,options.turboreg.detrendDegree))
+				drawnow
+			catch err
+				disp(repmat('@',1,7))
+				disp(getReport(err,'extended','hyperlinks','on'));
+				disp(repmat('@',1,7))
+			end
 	end
 	function spatialFilterInputMovie()
 		% number of frames to subset
@@ -2214,7 +2262,8 @@ function [turboRegCoords] = turboregCropSelection(options,folderList)
                     
                     if size(thisFrame,3)>1
                        % thisFrame = max(thisFrame,[],3);
-                       thisFrame = squeeze(thisFrame(:,:,1)); 
+                       % thisFrame = squeeze(thisFrame(:,:,1)); 
+                       thisFrame = squeeze(nanmean(thisFrame(:,:,1),3)); 
                     end
 
 					[figHandle, figNo] = openFigure(9, '');
@@ -2380,7 +2429,7 @@ function [ostruct options] = playOutputMovies(ostruct,options)
 	% Miji;
 	% MIJ.start
 	manageMiji('startStop','start');
-	uiwait(msgbox('press OK to view a snippet of analyzed movies','Success','modal'));
+	uiwait(ciapkg.overloaded.msgbox('press OK to view a snippet of analyzed movies','Success','modal'));
 	% ask user for estimate of nPCs and nICs
 	for fileNum = 1:nFiles
 		try
@@ -2416,7 +2465,7 @@ function [ostruct options] = playOutputMovies(ostruct,options)
 				% MIJ.createImage([num2str(fileNum) '/' num2str(length(ostruct.folderList)) ': ' ostruct.folderList{fileNum}],thisMovie, true);
 				% [num2str(trueFileNum) '/' num2str(length(ostruct.folderList)) ': ' ostruct.folderList{trueFileNum}]
 				titleStr = sprintf('%d/%d (%d/%d): %s',trueFileNum,length(ostruct.folderList),fileNum,nFiles,ostruct.folderList{trueFileNum});
-				msgbox('Click movie to open next dialog box.','Success','normal')
+				ciapkg.overloaded.msgbox('Click movie to open next dialog box.','Success','normal')
 				MIJ.createImage(titleStr,thisMovie, true);
 				if size(thisMovie,1)<300
 					% for foobar=1:2; MIJ.run('In [+]'); end
@@ -2424,14 +2473,14 @@ function [ostruct options] = playOutputMovies(ostruct,options)
 				end
 				for foobar=1:2; MIJ.run('Enhance Contrast','saturated=0.35'); end
 				MIJ.run('Start Animation [\]');
-				uiwait(msgbox('press OK to move onto next movie','Success','modal'));
+				uiwait(ciapkg.overloaded.msgbox('press OK to move onto next movie','Success','modal'));
 				% MIJ.run('Close All Without Saving');
 				manageMiji('startStop','closeAllWindows');
 			catch err
 				disp(repmat('@',1,7))
 				disp(getReport(err,'extended','hyperlinks','on'));
 				disp(repmat('@',1,7))
-				msgbox('Press E in movie GUI to move onto next movie, close this box to continue','Success','modal')
+				ciapkg.overloaded.msgbox('Press E in movie GUI to move onto next movie, close this box to continue','Success','modal')
 				playMovie(thisMovie);
 			end
 

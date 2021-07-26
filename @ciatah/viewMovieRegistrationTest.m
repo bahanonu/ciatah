@@ -242,14 +242,14 @@ function obj = viewMovieRegistrationTest(obj)
 					case 'imagej'
 						try
 							MIJ.createImage([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ', ' num2str(testNo) '/' num2str(nTestToRun) ': ' obj.folderBaseSaveStr{obj.fileNum}],inputMovieRegAll{thisFileNumIdx}{testNo}, true);
-							msgbox('Goto Image->Adjust->Brightness/Contrast and then select different boxes to adjust contrast for easier viewing. Click on movie to open next dialog.','Note to user','modal')
+							ciapkg.overloaded.msgbox('Goto Image->Adjust->Brightness/Contrast and then select different boxes to adjust contrast for easier viewing. Click on movie to open next dialog.','Note to user','modal')
 							% MIJ.run('In [+]');
 							% MIJ.run('In [+]');
 							MIJ.run('Start Animation [\]');
 							if testNo==1
-								uiwait(msgbox('Press OK to move onto dfof version of the movie','Success','modal'));
+								uiwait(ciapkg.overloaded.msgbox('Press OK to move onto dfof version of the movie','Success','modal'));
 							else
-								uiwait(msgbox('Press OK to move onto next movie','Success','modal'));
+								uiwait(ciapkg.overloaded.msgbox('Press OK to move onto next movie','Success','modal'));
 							end
 							% MIJ.run('Close All Without Saving');
 							manageMiji('startStop','closeAllWindows');
@@ -275,7 +275,7 @@ function obj = viewMovieRegistrationTest(obj)
 			manageMiji('startStop','exit');
 		end
 
-		uiwait(msgbox('Users can load settings saved to "settings.mat", in each "preprocRun" sub-folder inside "preprocRunTest" folder within each folder that was just tested, in "modelPreprocessMovie" to re-use those same settings for actual movie processing.'))
+		uiwait(ciapkg.overloaded.msgbox('Users can load settings saved to "settings.mat", in each "preprocRun" sub-folder inside "preprocRunTest" folder within each folder that was just tested, in "modelPreprocessMovie" to re-use those same settings for actual movie processing.'))
 	catch err
 		display(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));

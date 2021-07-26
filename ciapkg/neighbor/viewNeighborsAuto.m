@@ -173,7 +173,7 @@ function viewNeighborsAuto(inputImages, inputSignals, neighborsCell, varargin)
 			ylabel('Cell activity')
 			title('Activity traces for selected and neighboring cells (Zoom enabled)')
 			legend(strsplit(num2str(nList),' '),'Location','southoutside','Orientation','horizontal')
-			% suptitle(instructionStr);
+			% ciapkg.overloaded.suptitle(instructionStr);
 			zoom on
 
 		% plot temporal correlations

@@ -148,8 +148,10 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 
 	% Remove any frames that are zero or negative, not valid.
 	if ~isempty(options.frameList)
-		subfxnDisplay(['Removing invalid frames from user input frame list (negative or zero).'],options);
-		options.frameList(options.frameList<1) = [];
+        if any(options.frameList<1)
+            subfxnDisplay(['Removing invalid frames from user input frame list (negative or zero).'],options);
+            options.frameList(options.frameList<1) = [];
+        end
 	end
 
 	% ========================

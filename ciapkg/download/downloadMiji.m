@@ -95,7 +95,7 @@ function [success] = downloadMiji(varargin)
 
 			unzipPath = [signalExtractionDir filesep outputDir{gitNo}];
 			if ismac
-				uiwait(msgbox(['Congrats! You are special and on a Mac. Please go to "' signalExtractionDir '" folder, install Fiji there (drag icon into folder), *then* click OK!']));
+				uiwait(ciapkg.overloaded.msgbox(['Congrats! You are special and on a Mac. Please go to "' signalExtractionDir '" folder, install Fiji there (drag icon into folder), *then* click OK!']));
 				modelAddOutsideDependencies('miji');
 			elseif exist(unzipPath,'dir')~=7
 				% Unzip the repo file

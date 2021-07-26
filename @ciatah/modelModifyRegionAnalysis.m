@@ -134,7 +134,7 @@ function obj = modelModifyRegionAnalysis(obj,varargin)
 					% imagesc(obj.rawImagesFiltered{obj.fileNum}+0.1);
 					title('draw selection on this image')
 					% colormap(obj.colormap)
-					suptitle(strrep(obj.folderBaseSaveStr{obj.fileNum},'_',' | '))
+					ciapkg.overloaded.suptitle(strrep(obj.folderBaseSaveStr{obj.fileNum},'_',' | '))
 					if ~sum(strcmp(analysisToRun,{'runAlreadySelectedRegions','loadPreviousSelections'}))
 						% [polyCoords] = obj.validRegionModPoly{obj.fileNum};
 						if strcmp(analysisToRun,'modifyExistingRegions')
@@ -193,7 +193,7 @@ function obj = modelModifyRegionAnalysis(obj,varargin)
 
 			if sum(strcmp(analysisToRun,{'runAlreadySelectedRegions','loadPreviousSelections'}))
 			else
-				uiwait(msgbox('press OK to move onto next folder','Success','modal'));
+				uiwait(ciapkg.overloaded.msgbox('press OK to move onto next folder','Success','modal'));
 			end
 
 		catch err

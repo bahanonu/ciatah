@@ -292,8 +292,8 @@ function [trackingTableFilteredCell] = removeIncorrectObjs(tablePath,varargin)
                 % figure(pathNo+100)
                 % plot(trackingTableFiltered.XM_cm,trackingTableFiltered.YM_cm)
             fileInfoSaveStr = [strrep(strrep(fileInfo.date,'\','/'),'_','.') ' ' fileInfo.protocol ' ' fileInfo.subject ' ' fileInfo.assay];
-            suptitle(fileInfoSaveStr);
-            % suptitle(strrep(strrep(tablePath,'\','/'),'_','.'))
+            ciapkg.overloaded.suptitle(fileInfoSaveStr);
+            % ciapkg.overloaded.suptitle(strrep(strrep(tablePath,'\','/'),'_','.'))
 
             % ===============
             % save file

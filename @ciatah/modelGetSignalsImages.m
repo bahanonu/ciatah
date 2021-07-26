@@ -712,6 +712,13 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 
 					if ~isempty(globalRegCoords)
 						% inputImages = permute(inputImages,[2 3 1]);
+
+						% (R3'*S3'*T3'*R2'*S2'*T2'*R1'*S1'*T1')'
+						% T1*S1*R1*T3*S3*R2*T3*S3*R3
+						% Where 1, 2, ... indicate matrix for iterations 1,2,... and R, S, T are rotation, skew (shear + scale) and translation matrices, respectively.
+						% Translation
+						% Rotation
+						% Skew
 						for iterationNo = 1:length(globalRegCoords)
 							fn=fieldnames(globalRegCoords{iterationNo});
 							for i=1:length(fn)

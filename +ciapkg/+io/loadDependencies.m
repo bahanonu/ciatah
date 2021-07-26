@@ -19,6 +19,7 @@ function loadDependencies(varargin)
 		% 2021.06.19 [23:46:58] - Switched to support for original MIJ calling of ImageJ using just jar files, easier compatibility across MATLAB versions and OSes.
 		% 2021.06.21 [16:45:59] - Update order.
 		% 2021.07.13 [08:34:18] - Added backup URL for downloading mij.jar.
+		% 2021.07.23 [00:22:22] - Added gramm (https://github.com/piermorel/gramm) support/downloading for graphics plotting.
 	% TODO
 		% Verify all dependencies download and if not ask user to download again.
 
@@ -26,11 +27,11 @@ function loadDependencies(varargin)
 	% DESCRIPTION
 	options.externalProgramsDir = ciapkg.getDirExternalPrograms();
 	options.guiEnabled = 1;
-	options.dependencyStr = {'downloadImageJ','downloadCnmfGithubRepositories','example_downloadTestData','downloadNeuroDataWithoutBorders','downloadEXTRACT','downloadBioFormats','downloadNoRMCorre','downloadMiji','loadMiji'};
+	options.dependencyStr = {'downloadImageJ','downloadCnmfGithubRepositories','example_downloadTestData','downloadNeuroDataWithoutBorders','downloadEXTRACT','downloadBioFormats','downloadGramm','downloadNoRMCorre','downloadMiji','loadMiji'};
 
-	options.dispStr = {'Download ImageJ','Download CNMF, CNMF-E, and CVX code.','Download test one- and two photon datasets.','Download NWB (NeuroDataWithoutBorders)','Download EXTRACT','Download Bio-Formats','Download NoRMCorre (motion correction)','Download Fiji (to run Miji)','Load Fiji/Miji into MATLAB path.'};
+	options.dispStr = {'Download ImageJ','Download CNMF, CNMF-E, and CVX code.','Download test one- and two photon datasets.','Download NWB (NeuroDataWithoutBorders)','Download EXTRACT','Download Bio-Formats','Download gramm (GRAMmar of graphics for Matlab, e.g. ggplot2-like)','Download NoRMCorre (motion correction)','Download Fiji (to run Miji)','Load Fiji/Miji into MATLAB path.'};
 	% Int vector: index of options.dependencyStr to run by default with no GUI
-	options.depIdxArray = [1 2 3 4 5 6];
+	options.depIdxArray = [1 2 3 4 5 6 7];
 	% Binary: 1 = force update even if already downloaded. 0 = skip if already downloaded
 	options.forceUpdate = 0;
 	% get options
@@ -108,6 +109,16 @@ function loadDependencies(varargin)
 				optionsH.outputDir = optionsH.gitNameDisp;
 				% optionsH.gitName = cellfun(@(x) [x '-master'],optionsH.gitNameDisp,'UniformOutput',false);
 				optionsH.gitName = {'NoRMCorre-public-master'};
+				[success] = downloadGithubRepositories('options',optionsH);
+			case 'downloadGramm'
+				optionsH.forceUpdate = forceUpdate;
+				optionsH.signalExtractionDir = options.externalProgramsDir;
+				optionsH.gitNameDisp = {'gramm'};
+				optionsH.gitRepos = {'https://github.com/piermorel/gramm'};
+				optionsH.gitRepos = cellfun(@(x) [x '/archive/master.zip'],optionsH.gitRepos,'UniformOutput',false);
+				optionsH.outputDir = optionsH.gitNameDisp;
+				% optionsH.gitName = cellfun(@(x) [x '-master'],optionsH.gitNameDisp,'UniformOutput',false);
+				optionsH.gitName = {'gramm-master'};
 				[success] = downloadGithubRepositories('options',optionsH);
 			case 'downloadEXTRACT'
 				optionsH.forceUpdate = forceUpdate;

@@ -17,6 +17,7 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		% 2021.07.06 [11:33:22] - Cell extraction now thresholded for cleaner visuals.
 		% 2021.07.07 [17:26:20] - Add sliders to allow users to quickly scroll through both movies.
 		% 2021.07.13 [13:18:45] - Updated to ensure movie callback playback loop operations only occur if handles to movies are still valid, e.g. if main GUI figure is still open.
+		% 2021.07.20 [13:43:50] - Update to improve handling of output variables when figure closes to avoid calling invalid handles.
 	% TODO
 		%
 
@@ -41,9 +42,13 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		% Binary: 1 = run method, 0 = skip running methods
 		startMethodFlag = 0;
 
+		% Output structure
+		hListboxStruct = [];
+
 		% Use to stop the current movie looping
 		breakMovieLoop = 0;
-		enableMoviePreview = 1;
+        % Binary: 1 = enable preview of movies, 0 = do not preview movies
+		enableMoviePreview = 0;
 		movieImgHandle = plot([],[],'-');
 		movieAxes = plot([],[],'-');
 		titleHandle = plot([],[],'-');
@@ -185,18 +190,12 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 
 		[runMoviesToggleHandle, fileFilterRegexpHandle, fileFilterRegexpRawHandle, FRAMES_PER_SECONDHandle, inputDatasetNameHandle] = subfxn_movieOptionsCreate();
 
-
 		%% ==========================================
 		% FINAL SETUP
 		figure(hFig)
 		uicontrol(hListbox)
 		% set(hFig, 'KeyPressFcn', @(src,event) onFigKeyPress(src,event,hListboxS));
-		hListboxStruct = [];
-		hListboxStruct.ValueFolder = get(hListboxS.folders,'Value');
-		hListboxStruct.Value = hListbox.Value;
-		hListboxStruct.guiIdx = get(hListboxS.guiEnabled,'Value');
-		hListboxStruct.nwbLoadFiles = get(hListboxS.cellExtractFiletype,'Value');
-		if hListboxStruct.nwbLoadFiles==1;hListboxStruct.nwbLoadFiles=0;else;hListboxStruct.nwbLoadFiles=1;end
+		subfxn_setOutputVars();
 		% Make sure GUI is up-to-date on first display.
 		onKeyPressRelease([],[],'press',hFig);
 
@@ -213,6 +212,7 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 			% idNumIdxArray = 1;
 			ok = 0;
 			if isvalid(hFig)
+				subfxn_setOutputVars()
 				close(hFig)
 			end
 			commandwindow
@@ -233,6 +233,7 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 			ok = 1;
 		end
 		if isvalid(hFig)
+			subfxn_setOutputVars()
 			close(hFig)
 		end
 		return;
@@ -495,8 +496,16 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 	function exitCallback(source,eventdata)
 		breakMovieLoop = 1;
 		exitFlag = 1;
+		subfxn_setOutputVars()
 		close(hFig)
 		% uiresume(hFig);
+	end
+	function subfxn_setOutputVars()
+		hListboxStruct.ValueFolder = get(hListboxS.folders,'Value');
+		hListboxStruct.Value = hListbox.Value;
+		hListboxStruct.guiIdx = get(hListboxS.guiEnabled,'Value');
+		hListboxStruct.nwbLoadFiles = get(hListboxS.cellExtractFiletype,'Value');
+		if hListboxStruct.nwbLoadFiles==1;hListboxStruct.nwbLoadFiles=0;else;hListboxStruct.nwbLoadFiles=1;end
 	end
 	function startMethodCallback(source,eventdata)
 		breakMovieLoop = 1;
@@ -508,15 +517,22 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		if enableMoviePreview==1
 			breakMovieLoop = 1;
 			enableMoviePreview = 0;
-			set(runMoviesToggleHandle,'String','Do not preview movies (click to enable)');
+			set(runMoviesToggleHandle,'String',subfxn_previewMovieState());
 		elseif enableMoviePreview==0
 			enableMoviePreview = 1;
 			breakMovieLoop = 0;
-			set(runMoviesToggleHandle,'String','Preview movies by selecting one folder (click to disable).');
+			set(runMoviesToggleHandle,'String',subfxn_previewMovieState());
 			movieCallback();
 		end
 		% breakLoop = ~breakLoop;
-	end
+    end
+    function returnStr = subfxn_previewMovieState()
+        if enableMoviePreview==0
+            returnStr = 'Do not preview movies (click to enable previews)';
+        elseif enableMoviePreview==1
+            returnStr = 'Preview movies by selecting one folder in "Loaded folders" (click to disable).';
+        end
+    end
 	function callback_addFolders(source,eventdata)
 		% Set current method to modelAddNewFolders and start method.
 		hListbox.Value = 2;
@@ -699,7 +715,7 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		bOff = 1;
 		fontSizeH = 11;
 
-		runMoviesToggleHandle = uicontrol('style','pushbutton','Units', 'normalized','position',[bOff 45 98 2]/100,'FontSize',fontSizeH,'string','Preview movies by selecting one folder in "Loaded folders" (click this button to disable).','BackgroundColor',buttonBackgroundColor,'callback',@runMoviesToggleCallback);
+		runMoviesToggleHandle = uicontrol('style','pushbutton','Units', 'normalized','position',[bOff 45 98 2]/100,'FontSize',fontSizeH,'string',subfxn_previewMovieState(),'BackgroundColor',buttonBackgroundColor,'callback',@runMoviesToggleCallback);
 		
 		fileFilterRegexpHandle = uicontrol('style','edit','Units', 'normalized','position',[bOff dy txtW 2]/100,'FontSize',fontSizeH,'string',obj.fileFilterRegexp,'callback',@movieSettingsCallback,'KeyReleaseFcn',@movieSettingsCallback);
 			uicontrol('Style','text','String','Processed movie regular expression:','Units','normalized','Position',[bOff dy+dz txtW dz]/100,'BackgroundColor',figBackgroundColor,'ForegroundColor',figTextColor,'HorizontalAlignment','Left','FontWeight','normal','FontSize',fontSizeH);
@@ -733,6 +749,7 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 			movieCheck = cell([1 nFiles]);
 			inputMovieDims = cell([1 nFiles]);
 			inputMoviePath = cell([1 nFiles]);
+			inputMovieMinMax = cell([1 nFiles]);
 			for zz = 1:nFiles
 				fileList{zz} = getFileList(thisFolderPath,expCheck{zz});
 				if isempty(fileList{zz})
@@ -757,6 +774,9 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 				[~,fileName{zz},fileExt] = fileparts(inputMoviePath{zz});
 				fileName{zz} = [fileName{zz} fileExt];
 				fileName{zz} = strrep(fileName{zz},'_','\_');
+
+				inputMovieMinMax{zz}(1) = prctile(thisFrame{zz}(:),0.1);
+				inputMovieMinMax{zz}(2) = prctile(thisFrame{zz}(:),99.9);
 			end
 			try
 				delete(movieAxes)
@@ -804,6 +824,7 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 					[thisFrame,~,~] = ciapkg.io.readFrame(inputMoviePath{1},i,'inputDatasetName',obj.inputDatasetName);
 					set(movieImgHandle,'CData',thisFrame);
 					set(movieAxes,'xcolor',figTextColor);set(movieAxes,'ycolor',figTextColor);
+					caxis(movieAxes,[inputMovieMinMax{1}(1) inputMovieMinMax{1}(2)])
 				end
 
 				if movieCheck{2}==1
@@ -811,6 +832,12 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 					[thisFrame2,~,~] = ciapkg.io.readFrame(inputMoviePath{2},i,'inputDatasetName',obj.inputDatasetName);
 					set(movieImgHandleTwo,'CData',thisFrame2);
 					set(movieAxesTwo,'xcolor',figTextColor);set(movieAxesTwo,'ycolor',figTextColor);
+					caxis(movieAxesTwo,[inputMovieMinMax{2}(1) inputMovieMinMax{2}(2)])
+                end
+                
+				% If so, only display a frame and then exit.
+				if enableMoviePreview==0||isempty(obj.inputFolders)
+					return;
 				end
 
 				try
@@ -836,12 +863,7 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 					disp(repmat('@',1,7))
 					disp(getReport(err,'extended','hyperlinks','on'));
 					disp(repmat('@',1,7))
-				end
-
-				% If so, only display a frame and then exit.
-				if enableMoviePreview==0||isempty(obj.inputFolders)
-					return;
-				end
+                end
 
 				for zzz = 1:length(movieCheck)
 					if movieCheck{zzz}==1

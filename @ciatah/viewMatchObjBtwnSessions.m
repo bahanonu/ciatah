@@ -339,7 +339,7 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 								plot(globalCoordHere(:,1),globalCoordHere(:,2),'k.');
 							end
 							linkaxes(linkAx); zoom on;
-							suptitle(num2str(globalNo))
+							ciapkg.overloaded.suptitle(num2str(globalNo))
 							% montage()
 							% globalNo
 							% globalNo

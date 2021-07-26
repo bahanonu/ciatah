@@ -49,7 +49,7 @@ function [idNumIdxArray, ok] = pipelineListBox(obj,fxnsToRun,inputTxt,currentIdx
 		% disp(hListboxStruct)
 		% fxnsToRun{hListboxStruct.Value}
 		if isempty(hListboxStruct)
-			uiwait(msgbox('Please re-select a module then press enter. Do not close figure manually.'))
+			uiwait(ciapkg.overloaded.msgbox('Please re-select a module then press enter. Do not close figure manually.'))
 			idNumIdxArray = 1;
 			ok = 0;
 		else

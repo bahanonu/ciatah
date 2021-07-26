@@ -22,6 +22,7 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
 		% 2019.07.17 [00:29:16] - Added support for sparse input images (mainly ndSparse format).
 		% rather than converting to a cell
 		% 2021.07.06 [10:12:33] - Added support for fast thresholding using vectorized form, faster than parfor loop.
+		% 2021.07.06 [18:57:02] - Fast border calculation using convn for options.fastThresholding==1, less precise than bwboundaries or bwareafilt but works for fast display purposes.
 	% TODO
 		%
 
@@ -151,15 +152,31 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
 		end
 		
 		if options_getBoundaryIndex==1
-			parfor(imageNo=1:nImages,nWorkers)
-				thisFilt = inputImages(:,:,imageNo);
-				maxVal = nanmax(thisFilt(:));
-				cutoffVal = maxVal*options_threshold;
-				boundaryIndices{imageNo} = subfxn_getBoundaries(thisFilt,options_binary,options_getBoundaryIndex,options_boundaryHoles,cutoffVal)
-				if ~verLessThan('matlab', '9.2')
-					send(D, imageNo); % Update
-				end
+			% inputImagesTmp = diff(inputImages>0,[],1);
+			% inputImagesTmp = convn(inputImages>0,[-1 -1 -1; -1 1 -1; -1 -1 -1;]);
+
+			% tic
+			% inputImagesTmp = convn(inputImages>0,[0 1 0; 1 0 1; 0 1 0;],'same');
+			inputImagesTmp = convn(inputImages>0,[-1 -1 -1; -1 8 -1; -1 -1 -1;],'same');
+			% figure
+			for imageNo = 1:nImages
+				% imagesc(inputImagesTmp(:,:,imageNo)+inputImages(:,:,imageNo));colorbar;pause
+				iFilt = inputImagesTmp(:,:,imageNo);
+				boundaryIndices{imageNo} = find(iFilt==2|iFilt==3|iFilt==1)';
 			end
+			% toc
+
+			% tic
+			% parfor(imageNo=1:nImages,nWorkers)
+			% 	thisFilt = inputImages(:,:,imageNo);
+			% 	maxVal = nanmax(thisFilt(:));
+			% 	cutoffVal = maxVal*options_threshold;
+			% 	boundaryIndices{imageNo} = subfxn_getBoundaries(thisFilt,options_binary,options_getBoundaryIndex,options_boundaryHoles,cutoffVal)
+			% 	if ~verLessThan('matlab', '9.2')
+			% 		send(D, imageNo); % Update
+			% 	end
+			% end
+			% toc
 		end
 		return;
 	end

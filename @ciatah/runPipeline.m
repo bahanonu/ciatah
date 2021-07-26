@@ -210,7 +210,7 @@ function obj = runPipeline(obj,varargin)
 			if strcmp(obj.defaultObjDir,pwd)~=1
 				restoredefaultpath;
 				cd(obj.defaultObjDir);
-				loadBatchFxns();
+				ciapkg.loadBatchFxns();
 				% cnmfVersionDirLoad('current','displayOutput',0);
 			end
 		end
@@ -237,6 +237,6 @@ function subfxnCheckDirs()
 	% Re-run load folders if certain functions are still present in the path
 	fxnCheckList = {'CELLMax_Wrapper.m','extractor.m','normcorre.m'};
 	if any(cellfun(@(x) ~isempty(which(x)),fxnCheckList))==1
-		loadBatchFxns;
+		ciapkg.loadBatchFxns;
 	end
 end

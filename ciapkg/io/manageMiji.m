@@ -9,6 +9,7 @@ function manageMiji(varargin)
 
 	% changelog
 		% 2021.06.20 [00:20:38] - Add support for setting up ImageJ along with closing all windows to future proof any changes to those calls.
+        % 2021.07.16 [13:34:57] - Check that ImageJ already in java path to prevent duplicate loading and wasting time.
 	% TODO
 		%
 
@@ -94,12 +95,28 @@ function manageMiji(varargin)
 				imagejPath = [ciapkg.getDirExternalPrograms filesep 'imagej'];
 				pathsToAdd = {[imagejPath filesep 'mij.jar'],[imagejPath filesep 'ij.jar']};
 				nPaths = length(pathsToAdd);
-				for i = 1:nPaths
-					thisPath = pathsToAdd{i};
-					disp('Loading MIJI + ImageJ.')
-					fprintf('Adding to Java path: %s\n',thisPath);
-					javaaddpath(thisPath);
-				end
+                
+                javaDyna = javaclasspath('-dynamic');
+                % matchIdx = cellfun(@isempty,regexpi(javaDyna,pathsToAdd));
+                matchIdx = ismember(pathsToAdd,javaDyna);
+                % cellfun(@(x) javarmpath(x),javaDyna(matchIdx));
+                % javaDynaPathStr = join(javaDyna(matchIdx),''',''');
+                if any(~matchIdx)
+                    for i = 1:nPaths
+                        if matchIdx(i)==1
+                            continue;
+                        end
+                        thisPath = pathsToAdd{i};
+                        disp('Loading MIJI + ImageJ.')
+                        fprintf('Adding to Java path: %s\n',thisPath);
+                        javaaddpath(thisPath);
+                    end
+                    % eval(sprintf('javarmpath(''%s'');',javaDynaPathStr{1}))
+                else
+                    disp('ImageJ already loaded!')
+                end
+                
+				
 			case 'closeAllWindows'
 				% Closes all open windows but leaves ImageJ running.
 
