@@ -12,6 +12,7 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 		% 2019.04.23 [19:53:21] - a couple Windows specific path separators, switch to filesep
 		% 2019.07.03 [16:35:10] - Updated to allow GUI-less option so computeMatchObjBtwnTrials can run after cross-session alignment.
 		% 2020.12.08 [00:53:20] - Take out parfor in one loop that calls obj functions to eliminate serialization issues. Also change color mapping of cross session maps so that it covers the full range using the actual global IDs matched across sessions rather than diluting the range by including global IDs that don't meet the criteria. Makes the maps more colorful.
+		% 2021.08.24 [14:10:02] - Convert all suptitle to ciapkg.overloaded.suptitle.
 	% TODO
 		%
 
@@ -35,6 +36,7 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 	options.runGui = 1;
 	options.cellmapZoomPx = 10;
 	options.maxDistAccept = 10;
+	options.showFigures = 1;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -80,6 +82,14 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 		viewMatchSessionsStr = {'make cross session color cellmaps'};
 		dispMisMatchPairs = 1;
 		pctSessionMatchChoices = [1 2 3];
+	end
+
+	if options.showFigures==1
+		for figNoFake = [342 343 344 9019 59857 65 66 42 1110+[0:6] 1 2 3]
+			[~, ~] = openFigure(figNoFake, '');
+			% clf
+		end
+		drawnow
 	end
 
 
@@ -268,6 +278,7 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 						end
 						% disp([globalNo sessionIdx nMatchGlobalIDs(globalNo)>=2 NaN size(globalIDsImageList) NaN size(tmpSessionImgs)])
 						if sessionIdx~=0&nMatchGlobalIDs(globalNo)>=2
+                            % [sessionIdx size(tmpSessionImgs)]
 							tmpImg = tmpSessionImgs(:,:,sessionIdx);
 							globalIDsImageList{globalNo} = cat(3,globalIDsImageList{globalNo},tmpImg);
 							% globalToSessionIDs{sessionNo}(sessionIdx) = globalNo;
@@ -454,7 +465,7 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 			end
 			drawnow
 			openFigure(1112);
-				suptitle('Errors in cell alignment to "global" match cell centroid')
+				ciapkg.overloaded.suptitle('Errors in cell alignment to "global" match cell centroid')
 				subplot(1,2,1)
 					xlabel('X (px)')
 					ylabel('Y (px)')
@@ -466,9 +477,9 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 					title('Heat plot')
 					axis equal tight
 			openFigure(1110);
-				suptitle('Overlap of matched cells detected across at least (nSessions-1) sessions')
+				ciapkg.overloaded.suptitle('Overlap of matched cells detected across at least (nSessions-1) sessions')
 			openFigure(1114);
-				suptitle('Example cells matched across sessions')
+				ciapkg.overloaded.suptitle('Example cells matched across sessions')
 
 			newSubjStr = sprintf('%s_%d',thisSubjectStr,options.alignmentSetNum);
 			obj.globalIDs.matchCoords.(newSubjStr) = allCentroids;
@@ -476,14 +487,6 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 			% return;
 			% pause
 
-			try
-				figure;
-					imagesc(nanmean(cat(3,obj_p435_p700.detailStats.outputCutMovie{:}),3));
-					colorbar;
-					axis equal tight;
-					title('m597 aligned sessions match cells');
-			catch
-			end
 			try
 				obj.detailStats.matchedGlobalCellsOverlap{subjectNo} = outputCutMovie;
 			catch
