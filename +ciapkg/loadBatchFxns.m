@@ -20,13 +20,15 @@ function loadBatchFxns(varargin)
 		% 2020.05.09 [16:40:13] - Updates to remove additional specific repositories that should not be loaded by default. Add support for overriding this feature.
 		% 2020.06.05 [23:35:43] - If user doesn't have Parallel Toolbox, still works
 		% 2020.07.21 [14:11:42] - Fix to make sure all sub-folders (not just the root) are also removed in the case of certain external_programs.
-		% 2021.02.01 [‏‎15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
+		% 2021.02.01 [??‎15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
 		% 2021.06.20 [00:22:38] - Added manageMiji('startStop','closeAllWindows'); support.
 		% 2021.07.16 [13:38:55] - Remove redundant loading and unloading of external programs via additional checks.
 		% 2021.07.22 [19:51:50] - Moved loadBatchFxns into ciapkg package. Use ciapkg.getDir to get directory as standard IO.
+		% 2021.08.09 [12:06:32] - Do not add docs and data folders or sub-folders to the path.
+		% 2021.08.24 [13:46:13] - Update to fullfile call using filesep to make platform neutral.
 	% TODO
 		%
-
+	
 	% Disable the handle graphics warning "The DrawMode property will be removed in a future release. Use the SortMethod property instead." from being displayed. Comment out this line for debugging purposes as needed.
 	warning('off','MATLAB:hg:WillBeRemovedReplaceWith')
 
@@ -78,6 +80,13 @@ function loadBatchFxns(varargin)
 		[pathListArray] = subfxnRemoveDirs(0,pathListArray);
 	end
 
+	% Remove 'docs' and 'data', don't need to be in the path.
+	matchIdxD = contains(pathListArray,[functionDir filesep 'docs']);
+	pathListArray = pathListArray(~matchIdxD);
+
+	matchIdxD = contains(pathListArray,[functionDir filesep 'data']);
+	pathListArray = pathListArray(~matchIdxD);
+
 	skipRemovePath = 0;
 	if isempty(pathListArray)
 		fprintf('MATALB path already has all needed non-private folders under: %s\n',functionDir);
@@ -112,7 +121,7 @@ function loadBatchFxns(varargin)
 	elseif ispc
 		baseInscopixPath = 'C:\Program Files\Inscopix\Data Processing';
 	else
-		disp('Platform not supported')
+		disp('Platform not supported for Inscopix Data Processing Software.')
 	end
 
 	pathFilter = ismember(baseInscopixPath,strsplit(path,pathsep));
@@ -234,7 +243,7 @@ function loadBatchFxns(varargin)
 						return;
 					end
 					extDir = extDir(3:end);
-					foundFiles = dir(fullfile([externalProgramsDir], ['**\' thisFxn '']));
+					foundFiles = dir(fullfile([externalProgramsDir], ['**' filesep thisFxn '']));
 					if isempty(foundFiles)
 						pathToRm = [];
 					else
