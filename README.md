@@ -13,23 +13,25 @@
 <img src="https://user-images.githubusercontent.com/5241605/117930569-03593480-b2b3-11eb-87f2-314e8ed77e94.png" align="center" onerror="this.style.display='none'" alt=''>
 <br>
 
-`CIAtah` (pronounced cheetah; formerly <ins>c</ins>alcium<ins>I</ins>maging<ins>A</ins>nalysis [ciapkg]) is a software package for analyzing one- and two-photon calcium imaging datasets. 
+<p>
+`CIAtah` (pronounced cheetah; formerly <ins>c</ins>alcium<ins>I</ins>maging<ins>A</ins>nalysis [ciapkg]) is a software package for analyzing one- and two-photon calcium imaging datasets.
+</p>
 
-Currently requires `MATLAB` and runs on all major operating systems (Windows, Linux [e.g. Ubuntu], and macOS).
-- Note: `CIAtah` version `4` (v4) moves all CIAtah functions into the `ciapkg` package to improve namespace handling and requires MATLAB R2019b or above ([due to package import changes](https://www.mathworks.com/help/matlab/matlab_prog/upgrade-code-for-r2019b-changes-to-function-precedence-order.html#mw_2934c766-e115-4d22-9abf-eb46a1415f2c)). Else download `CIAtah` v3 (see [Releases](https://github.com/bahanonu/ciatah/releases)) until pre-R2019b MATLAB support added to v4.
+<img src="https://user-images.githubusercontent.com/5241605/99499485-d6dce500-292d-11eb-8c68-b089fe1985c8.png" width="42%" align="right" alt="ciatah_logo">
+
+`CIAtah` currently requires `MATLAB` and runs on all major operating systems (Windows, Linux [e.g. Ubuntu], and macOS).
+- Note: `CIAtah` version `v4` moves the remaining (i.e. all except external packages/software) CIAtah functions into the `ciapkg` package to improve namespace handling and requires MATLAB R2019b or above ([due to package import changes](https://www.mathworks.com/help/matlab/matlab_prog/upgrade-code-for-r2019b-changes-to-function-precedence-order.html#mw_2934c766-e115-4d22-9abf-eb46a1415f2c)). Users with earlier versions of MATLAB can download `CIAtah` version `v3` (see [Releases](https://github.com/bahanonu/ciatah/releases)) until pre-R2019b MATLAB support is fully integrated into v4.
+
 
 ## Full documentation at https://bahanonu.github.io/ciatah/.
 
 Below are recordings and additional documents for users who want to learn more about calcium imaging analysis/experiments and the CIAtah pipeline.
 
-### Webinar
-This webinar gives an overview of calcium imaging analysis (with a focus on CIAtah) along with tips for improving experiments and analysis: https://info.inscopix.com/inscopix-inspire-view-webinarbiafra-ahanonu-signal-in-the-noise-distinguishing-relevant-neural-activity-in-calcium-imaging.
+<ins>__Webinar__</ins> — This webinar gives an overview of calcium imaging analysis (with a focus on CIAtah) along with tips for improving experiments and analysis: https://info.inscopix.com/inscopix-inspire-view-webinarbiafra-ahanonu-signal-in-the-noise-distinguishing-relevant-neural-activity-in-calcium-imaging.
 
-### Workshop tutorial
-This recording gives an overview of setting up and using CIAtah: https://www.youtube.com/watch?v=I6abW3uuJJw.
+<ins>__Workshop tutorial__</ins> — This recording gives an overview of setting up and using CIAtah: https://www.youtube.com/watch?v=I6abW3uuJJw.
 
-### GRINjector
-A surgical device to help with implanting gradient-refractive index (GRIN) lens probes into the brain or other regions: https://github.com/bahanonu/GRINjector.
+<ins>__GRINjector__</ins> — A surgical device to help with implanting gradient-refractive index (GRIN) lens probes into the brain or other regions: https://github.com/bahanonu/GRINjector.
 <!-- <hr> -->
 
 <!-- <img src="https://user-images.githubusercontent.com/5241605/81605697-b9c7c800-9386-11ea-9e9f-569c743b24b9.png" width="42%" align="right" alt="calciumImagingAnalysis_logo"> -->
@@ -37,11 +39,12 @@ A surgical device to help with implanting gradient-refractive index (GRIN) lens 
 <!-- https://user-images.githubusercontent.com/5241605/99237853-e2a19d80-27ad-11eb-996f-3869db0c2238.png -->
 <!-- https://user-images.githubusercontent.com/5241605/99477838-332d0e00-2908-11eb-887b-9205a305cf5d.png -->
 <!-- <p align="center"> -->
-  <img src="https://user-images.githubusercontent.com/5241605/99499485-d6dce500-292d-11eb-8c68-b089fe1985c8.png" width="42%" align="right" alt="ciatah_logo">
+  
 <!-- </p> -->
 
 ## Contents
 
+- [CIAtah features](#ciatah-features)
 - [CIAtah example features](#ciatah-example-features)
 - [Quick start guide](#quick-start-guide)
 - [Quick start (command-line)](#quick-start-command-line)
@@ -57,20 +60,20 @@ Made in USA.<br>
 <img src="https://user-images.githubusercontent.com/5241605/71493809-322a5400-27ff-11ea-9b2d-52ff20b5f332.png" align="center" title="USA" alt="USA" width="auto" height="50">
 
 ***
-`CIAtah` features:
-- `CIAtah` package-enclosed functions (in `+ciapkg` folders) can be used to create GUI-less, command line-ready analysis pipelines. As all functions are within the `ciapkg` package, namespace is clean to allow incorporating into other programs.
-- A GUI with different modules for large-scale batch analysis.
+## CIAtah features
+- `CIAtah` package-enclosed functions (in `+ciapkg` folders) can be used to create GUI-less, command line-ready analysis pipelines. As all functions are within the `ciapkg` package for improve namespace handling to allow incorporating into other programs.
+- A GUI, via `ciatah` class, with different modules for large-scale batch analysis.
 - Includes all major calcium imaging analysis steps:
-  - movie visualization (including reading from disk, for fast viewing of large movies)
-  - pre-processing (motion correction, spatiotemporal downsampling, spatial filtering, relative fluorescence calculation, etc.)
-  - support for multiple cell-extraction methods (CELLMax, PCA-ICA, <a href='https://github.com/flatironinstitute/CaImAn-MATLAB' target='_blank'>CNMF</a>, CNMF-E, <a href='https://github.com/schnitzer-lab/EXTRACT-public' target='_blank'>EXTRACT</a>, etc.)
-  - manual classification of cells via GUIs,
-  - automated cell classification (i.e. CLEAN algorithm, coming soon!),
+  - Movie visualization (including reading from disk, for fast viewing of large movies);
+  - pre-processing (motion correction, spatiotemporal downsampling, spatial filtering, relative fluorescence calculation, etc.);
+  - support for multiple cell-extraction methods (CELLMax, PCA-ICA, <a href='https://github.com/flatironinstitute/CaImAn-MATLAB' target='_blank'>CNMF</a>, CNMF-E, <a href='https://github.com/schnitzer-lab/EXTRACT-public' target='_blank'>EXTRACT</a>, etc.);
+  - manual classification of cells via GUIs;
+  - automated cell classification (i.e. CLEAN algorithm, coming soon!);
   - cross-session cell alignment, and more.
-- Includes example one- and two-photon calcium imaging datasets for testing `ciatah`.
+- Includes example one- and two-photon calcium imaging datasets for testing `CIAtah`.
 - Supports a plethora of major imaging movie file formats: HDF5, NWB, AVI, ISXD [Inscopix], TIFF, and [Bio-Formats](https://www.openmicroscopy.org/bio-formats/) compatible formats (Olympus [OIR] and Zeiss [CZI and LSM] currently, additional support to be added or upon request).
 - Supports [Neurodata Without Borders](https://www.nwb.org/) data standard (see [calcium imaging tutorial](https://neurodatawithoutborders.github.io/matnwb/tutorials/html/ophys.html)) for reading/writing cell-extraction and imaging movie files.
-- Animal position tracking (e.g. in open-field assay).
+- Animal position tracking (e.g. in open-field assay) via ImageJ plugin.
 - Requires `MATLAB` and runs on all major operating systems (Windows, Linux [e.g. Ubuntu], and macOS).
 <!-- <hr> -->
 
@@ -81,9 +84,6 @@ Made in USA.<br>
 </p>
 <!-- ![ciapkg_pipeline](https://user-images.githubusercontent.com/5241605/105438231-6c8b3e00-5c17-11eb-8dd0-8510fa204fa2.png) -->
 
-<p align="center">
-  <strong>Movie processing, cell extraction, and analysis validation.</strong>
-</p>
 <p align="center">
   <a href="https://user-images.githubusercontent.com/5241605/105438231-6c8b3e00-5c17-11eb-8dd0-8510fa204fa2.png">
     <img src="https://user-images.githubusercontent.com/5241605/105438231-6c8b3e00-5c17-11eb-8dd0-8510fa204fa2.png" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="100%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
@@ -100,12 +100,18 @@ Made in USA.<br>
 </p>
 
 <p align="center">
-  <strong>Cell sorting GUI and stable cell alignment across imaging sessions.</strong>
+  <strong>Cell sorting GUI.</strong>
 </p>
 <p align="center">
   <a href="https://user-images.githubusercontent.com/5241605/100851700-64dec280-343a-11eb-974c-d6d29faf9eb2.gif">
     <img src="https://user-images.githubusercontent.com/5241605/100851700-64dec280-343a-11eb-974c-d6d29faf9eb2.gif" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="60%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
   </a>
+</p>
+
+<p align="center">
+  <strong>Stable cell alignment across imaging sessions.</strong>
+</p>
+<p align="center">
   <a href="https://user-images.githubusercontent.com/5241605/105437652-4ca74a80-5c16-11eb-893a-87ea6d53e964.gif">
     <img src="https://user-images.githubusercontent.com/5241605/105437652-4ca74a80-5c16-11eb-893a-87ea6d53e964.gif" align="center" title="m121_matchedCells" alt="m121_matchedCells" width="20%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
   </a>
@@ -150,7 +156,7 @@ Below are steps needed to quickly get started using the `CIAtah` software packag
 `CIAtah` depends on several MATLAB toolboxes to run properly. Run the below command to have `CIAtah` check whether dependencies have been installed properly. If not use the `Add-Ons` (https://www.mathworks.com/help/matlab/matlab_env/get-add-ons.html) explorer to install each toolbox.
 
 ```Matlab
-ciapkg.io.matlabToolboxCheck;
+ciapkg.io.matlabToolboxCheck();
 ```
 
 ### Setup `CIAtah`
@@ -159,10 +165,10 @@ ciapkg.io.matlabToolboxCheck;
 
 ```MATLAB
 % Loads the class into an object for use in this session
-obj = ciatah;
+obj = ciatah();
 
 % Runs routines to check dependencies and help user get setup.
-obj.setup;
+obj.setup();
 
 % Open the class menu (always type `obj` then enter load the class/modules menu)
 obj % then hit enter, no semicolon!
@@ -179,7 +185,19 @@ obj % then hit enter, no semicolon!
 
 Users can quickly visualize movies in any of the supported formats (HDF5, NWB, AVI, TIFF, and ISXD) using the `playMovie` function. This will read directly from disk, allowing users to scroll through frames to visually check movies before or after processing. 
 
-Using the `ciatah` GUI class, users can select loaded folders and change the regular expression to match the name of the files in the movie, both for the raw data and for any processed movies in the folder. See below:
+Users can run via the command-line:
+
+```MATLAB
+% Use the absolute path to the movie file or a valid relative path.
+ciapkg.api.playMovie('ABSOLUTE\PATH\TO\MOVIE');
+```
+
+When using HDF5 files, check the dataset name containing movie with `h5disp` then input the full dataset name (e.g. below is for a standard NWB-formatted HDF5 file):
+```MATLAB
+ciapkg.api.playMovie('ABSOLUTE\PATH\TO\MOVIE','inputDatasetName','/acquisition/TwoPhotonSeries/data');
+```
+
+Alternatively, using the `ciatah` GUI class, users can select loaded folders and change the regular expression to match the name of the files in the movie, both for the raw data and for any processed movies in the folder. See below:
 
 <p align="center">
   <a href="https://user-images.githubusercontent.com/5241605/126923628-19d2cb1a-e12d-4d98-9c0a-bcc6c87a2ca2.png">
@@ -188,17 +206,6 @@ Using the `ciatah` GUI class, users can select loaded folders and change the reg
 </p>
 <!-- https://user-images.githubusercontent.com/5241605/124651957-6a790c80-de50-11eb-8a6d-0197a9f484c1.png -->
 
-Alternatively, users can run via the command-line:
-
-```MATLAB
-% Use the absolute path to the movie file or a valid relative path.
-playMovie('ABSOLUTE\PATH\TO\MOVIE');
-```
-
-When using HDF5 files, check the dataset name containing movie with `h5disp` then input the full dataset name (e.g. below is for a standard NWB-formatted HDF5 file):
-```MATLAB
-playMovie('ABSOLUTE\PATH\TO\MOVIE','inputDatasetName','/acquisition/TwoPhotonSeries/data');
-```
 
 ## Quick start (command line or GUI-less batch analysis)
 
@@ -225,7 +232,7 @@ Additional thanks to Drs. Jesse Marshall, Jérôme Lecoq, Tony H. Kim, Hakan Ina
 
 Please cite [Corder*, Ahanonu*, et al. 2019](http://science.sciencemag.org/content/363/6424/276.full) _Science_ publication or the [Ahanonu, 2018](https://doi.org/10.5281/zenodo.2222294) _Zenodo_ release if you used the software package or code from this repository to advance/help your research:
 
-```Latex
+```bibtex
 @article{corderahanonu2019amygdalar,
   title={An amygdalar neural ensemble that encodes the unpleasantness of pain},
   author={Corder, Gregory and Ahanonu, Biafra and Grewe, Benjamin F and Wang, Dong and Schnitzer, Mark J and Scherrer, Gr{\'e}gory},
