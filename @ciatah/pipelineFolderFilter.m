@@ -8,9 +8,11 @@ function [validFoldersIdx] = pipelineFolderFilter(obj,useAltValid,validFoldersId
 		%
 
 	% changelog
-		%
+		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	switch useAltValid
 		case 'manual index entry'

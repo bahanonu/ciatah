@@ -13,8 +13,11 @@ function [success] = updatePkg(varargin)
 		% 2021.03.09 [21:34:52] - Option on whether to update package (only 0 for now). Also alert user if behind a version.
 		% 2021.06.21 [16:18:07] - Updated to ciatah from calciumImagingAnalysis URLs.
 		% 2021.07.06 [11:33:22] - Updated comparison to ensure ignoring of lower level versions after higher level versions are found to differ.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		% Only check once every couple of days to warn user instead of every time.
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% Char cell array: list of directories to remove then update, lead private, _external_programs, and data directories intact.

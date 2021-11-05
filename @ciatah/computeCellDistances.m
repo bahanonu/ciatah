@@ -11,6 +11,9 @@ function obj = computeCellDistances(obj)
 		
 	% changelog
 		% 2021.07.23 [00:22:22] - Added plots that show the distribution of cell-cell distances.
+		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 		
 	obj.sumStats = [];
 	obj.sumStats.cellDistances = [];
@@ -29,7 +32,7 @@ function obj = computeCellDistances(obj)
 
 			% try
 			% obj.modelVarsFromFilesCheck(thisFileNum);
-			
+			 obj.modelVarsFromFilesCheck(thisFileNum);
 			methodNum = 2;
 			if methodNum==1
 				disp('Using previously computed centroids...')
@@ -75,16 +78,22 @@ function obj = computeCellDistances(obj)
 	g(1,2)=copy(g(1));
 	g(2,1)=copy(g(1));
 	g(2,2)=copy(g(1));
+	g(3,1)=copy(g(1));
+	g(3,2)=copy(g(1));
 	% g.facet_grid(obj.sumStats.sessionStr,[]);
 	% g.stat_density();	
-	g(1,1).stat_bin('normalization','probability','geom','line','edges',edgeVals); %Default binning (30 bins)
+	g(1,1).stat_bin('geom','line','edges',edgeVals); %Default binning (30 bins)
+    g(1,1).set_title('Histogram raw counts','FontSize',10);
 
+	g(2,1).stat_bin('normalization','probability','geom','line','edges',edgeVals); %Default binning (30 bins)
+    g(2,1).set_title('Histogram counts (probability)','FontSize',10);
+    
 	%Normalization to 'probability'
 	% g(2,1).stat_bin('normalization','probability','geom','overlaid_bar');
 	% g(2,1).set_title('''normalization'',''probability''','FontSize',10);
-	g(2,1).stat_bin('normalization','cumcount','geom','line','edges',edgeVals);
-	g(2,1).set_title('Zoomed','FontSize',10);
-	g(2,1).axe_property('XLim',[0 20],'YLim',[0 200]);
+	g(3,1).stat_bin('normalization','cumcount','geom','line','edges',edgeVals);
+	g(3,1).set_title('Zoomed','FontSize',10);
+	g(3,1).axe_property('XLim',[0 20],'YLim',[0 200]);
 	% xlim([0 20]);ylim([0 200]);
 
 	%Normalization to cumulative count
@@ -94,7 +103,20 @@ function obj = computeCellDistances(obj)
 	%Normalization to cumulative density
 	g(2,2).stat_bin('normalization','cdf','geom','stairs','edges',edgeVals);
 	g(2,2).set_title('''normalization'',''cdf''','FontSize',10);
+    
+    % Holder
+    g(3,2).stat_bin('normalization','cumcount','geom','line','edges',edgeVals);
+	g(3,2).set_title('Zoomed','FontSize',10);
+	g(3,2).axe_property('XLim',[0 1],'YLim',[0 1]);
+    g(3,2).set_title('Legend','FontSize',10);
+    
+    g(1,1).no_legend();
+    g(1,2).no_legend();
+    g(2,1).no_legend();
+    g(2,2).no_legend();
+    g(3,1).no_legend();
 	
+    g.set_names('color','Animal-session','x','Cell-cell distance (px)');
 	g.set_title('Cell-cell distances within sessions');
 
 	g.draw();

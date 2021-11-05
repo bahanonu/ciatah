@@ -1,6 +1,18 @@
 function obj = changeFont(obj,varargin)
+	% Change figure font size
 	% Biafra Ahanonu
 	% Started: 2021.03.25 [22:11:25] (branched from ciatah.m)
+	% inputs
+		%
+	% outputs
+		%
+
+	% changelog
+		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+	% TODO
+		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% DESCRIPTION

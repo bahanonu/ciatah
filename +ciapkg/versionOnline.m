@@ -11,8 +11,11 @@ function [onlineVersion, dateTimeStr] = versionOnline(varargin)
 		% 2021.02.02 [13:42:19] - Updated to handle new VERSION file that includes datestamp on 2nd line.
 		% 2021.03.21 [17:41:54] - Update VERSION path.
 		% 2021.03.25 [23:18:06] - Now checks multiple location of VERSION file to future proof in case it is moved.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% Char: GitHub API URL to VERSION file on CIAPKG repository.

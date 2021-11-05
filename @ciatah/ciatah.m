@@ -43,6 +43,9 @@ classdef ciatah < dynamicprops
 		% Int: set the default UI font size
 		fontSizeGui = 10;
 
+		% Float: allows font size in GUI to be scaled
+		fontSizeGuiScale = 1;
+
 		defaultObjDir = pwd;
 		classVersion = ciapkg.version();
 		serverPath = '';
@@ -670,7 +673,7 @@ classdef ciatah < dynamicprops
 			%========================
 			% obj.exampleOption = '';
 			% get options
-			obj = getOptions(obj,varargin);
+			obj = ciapkg.io.getOptions(obj,varargin);
 			% disp(options)
 			% unpack options into current workspace
 			% fn=fieldnames(options);

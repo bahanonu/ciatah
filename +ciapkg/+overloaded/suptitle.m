@@ -29,7 +29,7 @@ function hout=suptitle(str,varargin)
 	% Str: interpreter, latex or tex
 	options.Interpreter = 'latex';
     % get options
-    options = getOptions(options,varargin);
+    options = ciapkg.io.getOptions(options,varargin);
     % display(options)
     % unpack options into current workspace
     % fn=fieldnames(options);

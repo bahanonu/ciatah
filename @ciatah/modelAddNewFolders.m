@@ -10,6 +10,10 @@ function obj = modelAddNewFolders(obj,varargin)
 		% 2021.01.24 [14:03:44] - Added support for direct input of method type, useful for command-line or unit testing.
 		% 2021.02.02 [11:27:21] - 'Add CIAtah example folders.' now adds the absolute path to avoid path errors if user changes Matlab current directory.
 		% 2021.06.01 [??15:43:11] - Add 'next' button to initial menu, in part to add MATLAB Online support.
+		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	%========================
 	% Cell array of folders to add, particularly for GUI-less operations
 	options.folderCellArray = {};

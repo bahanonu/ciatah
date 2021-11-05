@@ -13,6 +13,7 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 		% 2019.07.03 [16:35:10] - Updated to allow GUI-less option so computeMatchObjBtwnTrials can run after cross-session alignment.
 		% 2020.12.08 [00:53:20] - Take out parfor in one loop that calls obj functions to eliminate serialization issues. Also change color mapping of cross session maps so that it covers the full range using the actual global IDs matched across sessions rather than diluting the range by including global IDs that don't meet the criteria. Makes the maps more colorful.
 		% 2021.08.24 [14:10:02] - Convert all suptitle to ciapkg.overloaded.suptitle.
+		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
 
@@ -27,6 +28,8 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 		% 	end
 		% end
 		% return
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% DESCRIPTION

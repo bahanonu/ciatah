@@ -9,8 +9,11 @@ function obj = initializeObj(obj)
 
 	% changelog
 		% 2020.06.05 [11:29:24] - Improved toolbox check.
+		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	% load dependencies.
 	% loadBatchFxns();

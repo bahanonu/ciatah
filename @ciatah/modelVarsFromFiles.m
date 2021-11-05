@@ -9,8 +9,11 @@ function obj = modelVarsFromFiles(obj)
 
 	% changelog
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
+		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		% ADD SUPPORT FOR EM ANALYSIS
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% options.populationDistanceType = 'mahal';

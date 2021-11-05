@@ -37,12 +37,16 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% 2021.06.29 [12:09:40] - Added support for dF/F where F0 is calculated using the minimum (or a soft minimum to reduce probability that one outlier throws off the calculation). Also changed turboregCropSelection so dialog box is now part of getRegistrationSettings.
 		% 2021.07.13 [17:55:30] - Add support for multiple reference frames, the mean is taken before input to motion correction.
 		% 2021.07.22 [12:11:44] - Added support for detrending movies.
+		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2021.09.10 [10:14:04] - Fix to handle folders with no files.
 	% TODO
 		% Allow users to save out analysis options order and load it back in.
 		% Insert NaNs or mean of the movie into dropped frame location, see line 260
 		% Allow easy switching between analyzing all files in a folder together and each file in a folder individually
 		% FML, make this object oriented...
 		% Allow reading in of subset of movie for turboreg analysis, e.g. if we have super large movies
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	% remove pre-compiled functions
 	% clear FUNCTIONS;
@@ -659,6 +663,11 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			% Get the list of movies
 			movieList = getFileList(thisDir, options.fileFilterRegexp);
 			[movieList] = removeUnsupportedFiles(movieList,options);
+
+			% If there are no files in this folder to analyze, skip to the next folder.
+			if isempty(movieList)
+				continue
+			end
 
 			% get information from directory
 			fileInfo = getFileInfo(movieList{1});
@@ -2194,6 +2203,8 @@ function [turboRegCoords] = turboregCropSelection(options,folderList)
 	% Biafra Ahanonu
 	% 2013.11.10 [19:28:53]
 
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	useOldGui = 0;
 	usrIdxChoiceList = {-1,0,-2,0};
 	if useOldGui==1
@@ -2225,6 +2236,9 @@ function [turboRegCoords] = turboregCropSelection(options,folderList)
 		% movieList = movieList{1};
 		movieList = getFileList(movieList, options.fileFilterRegexp);
 		[movieList] = removeUnsupportedFiles(movieList,options);
+		if isempty(movieList)
+			continue;
+		end
 		if options.processMoviesSeparately==1
 			nMovies = length(movieList);
 		else
@@ -2379,6 +2393,8 @@ function h = subfxn_getImRect(titleStr)
 end
 % function [ostruct options] = getPcaIcaParams(ostruct,options)
 function [ostruct options] = playOutputMovies(ostruct,options)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	nFiles = length(ostruct.savedFilePaths);
 	maxFrames = 500;
 	movieFrameList = {};
@@ -2429,7 +2445,12 @@ function [ostruct options] = playOutputMovies(ostruct,options)
 	% Miji;
 	% MIJ.start
 	manageMiji('startStop','start');
-	uiwait(ciapkg.overloaded.msgbox('press OK to view a snippet of analyzed movies','Success','modal'));
+
+	if isempty(thisMovieArray)|all(~cellfun(@isempty,thisMovieArray))
+		uiwait(ciapkg.overloaded.msgbox('No movies, check that processing ran successfully.','Success','modal'));
+	else
+		uiwait(ciapkg.overloaded.msgbox('Press OK to view a snippet of analyzed movies','Success','modal'));
+	end
 	% ask user for estimate of nPCs and nICs
 	for fileNum = 1:nFiles
 		try
@@ -2508,6 +2529,8 @@ function [ostruct options] = playOutputMovies(ostruct,options)
 	manageMiji('startStop','exit');
 end
 function inputMovie = cropInputMovieSlice(inputMovie,options,ResultsOutOriginal)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	% turboreg outputs 0s where movement goes off the screen
 	thisMovieMinMask = zeros([size(inputMovie,1) size(inputMovie,2)]);
 	options.turboreg.registrationFxn
@@ -2571,9 +2594,12 @@ function inputMovie = cropInputMovieSlice(inputMovie,options,ResultsOutOriginal)
 	inputMovie(bottomRowCrop:end,1:end,:) = NaN;
 end
 function [movieList] = removeUnsupportedFiles(movieList,options)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	% Reject anything not HDF5, TIF, AVI, or ISXD
 	movieNo = 1;
 	movieTypeList = cell([1 length(movieList)]);
+	tmpMovieList = {};
 	for iMovie = 1:length(movieList)
 		thisMoviePath = movieList{iMovie};
 		[options.movieType, supported] = getMovieFileType(thisMoviePath);

@@ -8,12 +8,14 @@ function [idNumIdxArray, ok] = pipelineListBox(obj,fxnsToRun,inputTxt,currentIdx
 		%
 
 	% changelog
-		%
+		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
 
 	% Part of this function is based on http://undocumentedmatlab.com/articles/setting-listbox-mouse-actions/.
 
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+	
 	try
 		ok = 0;
 		tooltipStruct = obj.tts;

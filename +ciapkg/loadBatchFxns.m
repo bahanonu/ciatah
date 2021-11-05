@@ -24,11 +24,14 @@ function loadBatchFxns(varargin)
 		% 2021.06.20 [00:22:38] - Added manageMiji('startStop','closeAllWindows'); support.
 		% 2021.07.16 [13:38:55] - Remove redundant loading and unloading of external programs via additional checks.
 		% 2021.07.22 [19:51:50] - Moved loadBatchFxns into ciapkg package. Use ciapkg.getDir to get directory as standard IO.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2021.08.09 [12:06:32] - Do not add docs and data folders or sub-folders to the path.
 		% 2021.08.24 [13:46:13] - Update to fullfile call using filesep to make platform neutral.
 	% TODO
 		%
 	
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	% Disable the handle graphics warning "The DrawMode property will be removed in a future release. Use the SortMethod property instead." from being displayed. Comment out this line for debugging purposes as needed.
 	warning('off','MATLAB:hg:WillBeRemovedReplaceWith')
 

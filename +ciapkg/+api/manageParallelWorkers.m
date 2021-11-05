@@ -3,5 +3,5 @@ function [success] = manageParallelWorkers(varargin)
 	% Biafra Ahanonu
 	% started: 2015.12.01
 	
-	[success] = manageParallelWorkers('passArgs', varargin);
+	[success] = ciapkg.io.manageParallelWorkers('passArgs', varargin);
 end

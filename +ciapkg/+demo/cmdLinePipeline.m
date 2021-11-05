@@ -11,6 +11,7 @@
 	% 2021.01.17 [21:38:55] - Updated to show detrend example
 	% 2021.06.20 [16:04:42] - Added CNMF/CNMF-e and EXTRACT to cell extraction examples.
 	% 2021.06.22 [09:20:06] - Updated to make NWB saving, etc. smoother.
+	% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 
 % =================================================
 %% Initialize
@@ -31,34 +32,35 @@ ciapkg.loadBatchFxns();
 
 % =================================================
 %% Download test data, only a single session
-example_downloadTestData('downloadExtraFiles',0);
+ciapkg.api.example_downloadTestData('downloadExtraFiles',0);
 
 % =================================================
 %% Load movie to analyze
-inputMoviePath = getFileList(analysisFolderPath,rawFileRegexp,'sortMethod','natural');
+inputMoviePath = ciapkg.api.getFileList(analysisFolderPath,rawFileRegexp,'sortMethod','natural');
 % inputMoviePath = [analysisFolderPath filesep 'concat_recording_20140401_180333.h5'];
-inputMovie = loadMovieList(inputMoviePath,'inputDatasetName',inputDatasetName);
+inputMovie = ciapkg.api.loadMovieList(inputMoviePath,'inputDatasetName',inputDatasetName);
 
 % =================================================
 %% USER INTERFACE Visualize slice of the movie
 if guiEnabled==1
-	playMovie(inputMovie(:,:,1:500),'extraTitleText','Raw movie');
+	ciapkg.api.playMovie(inputMovie(:,:,1:500),'extraTitleText','Raw movie');
 	% Alternatively, visualize by entering the file path
-	playMovie(inputMoviePath,'extraTitleText','Raw movie directly from file');
+	ciapkg.api.playMovie(inputMoviePath,'extraTitleText','Raw movie directly from file');
 end
 
 % =================================================
 %% USER INTERFACE Downsample input movie if need to
 if guiEnabled==1
-	inputMovieD = downsampleMovie(inputMovie,'downsampleDimension','space','downsampleFactor',4);
-	playMovie(inputMovie,'extraMovie',inputMovieD,'extraTitleText','Raw movie vs. down-sampled movie');
+	inputMovieD = ciapkg.api.downsampleMovie(inputMovie,'downsampleDimension','space','downsampleFactor',4);
+	ciapkg.api.playMovie(inputMovie,'extraMovie',inputMovieD,'extraTitleText','Raw movie vs. down-sampled movie');
 end
 
-% Alternatively, if you have Inscopix ISXD files, downsample by reading segments from disk using.
+% =================================================
+%% Alternatively, if you have Inscopix ISXD files, downsample by reading segments from disk using.
 moviePath = 'PATH_TO_ISXD';
 opts.maxChunkSize = 5000; % Max chunk size in Mb to load into RAM.
 opts.downsampleFactor = 4; % How much to downsample original movie, set to 1 for no downsampling.
-convertInscopixIsxdToHdf5(moviePath,'options',opts);
+ciapkg.api.convertInscopixIsxdToHdf5(moviePath,'options',opts);
 
 % =================================================
 %% Remove stripes from movie if needed
@@ -68,20 +70,21 @@ if guiEnabled==1
 	sopts.meanFilterSize = 1;
 	sopts.freqLowExclude = 10;
 	sopts.bandpassType = 'highpass';
-	removeStripsFromMovie(inputMovie(:,:,1),'options',sopts,'showImages',1);
+	ciapkg.api.removeStripsFromMovie(inputMovie(:,:,1),'options',sopts,'showImages',1);
 	drawnow
-	% Run on the entire movie
-	inputMovie = removeStripsFromMovie(inputMovie,'options',sopts);
 end
+
+% Run on the entire movie
+inputMovie = ciapkg.api.removeStripsFromMovie(inputMovie,'options',sopts,'showImages',0);
 
 % =================================================
 %% Detrend movie if needed (default linear trend), e.g. to compensate for bleaching over time.
-inputMovie = normalizeMovie(inputMovie,'normalizationType','detrend','detrendDegree',1);
+inputMovie = ciapkg.api.normalizeMovie(inputMovie,'normalizationType','detrend','detrendDegree',1);
 
 % =================================================
 %% USER INTERFACE Get coordinates to crop from the user separately
 if guiEnabled==1
-	[cropCoords] = getCropCoords(squeeze(inputMovie(:,:,1)));
+	[cropCoords] = ciapkg.api.getCropCoords(squeeze(inputMovie(:,:,1)));
 	toptions.cropCoords = cropCoords;
 	% Or have turboreg function itself directly ask the user for manual area from which to obtain correction coordinates
 	% toptions.cropCoords = 'manual';
@@ -104,26 +107,26 @@ toptions.pxToCrop = 10;
 	toptions.normalizeBeforeRegister = 'divideByLowpass';
 	toptions.freqLow = 0;
 	toptions.freqHigh = 7;
-[inputMovie2, ~] = turboregMovie(inputMovie,'options',toptions);
+[inputMovie2, ~] = ciapkg.api.turboregMovie(inputMovie,'options',toptions);
 
 %% Compare raw and motion corrected movies
 if guiEnabled==1
-	playMovie(inputMovie,'extraMovie',inputMovie2,'extraTitleText','Raw movie vs. motion-corrected movie');
+	ciapkg.api.playMovie(inputMovie,'extraMovie',inputMovie2,'extraTitleText','Raw movie vs. motion-corrected movie');
 end
 
 %% Run dF/F
-inputMovie3 = dfofMovie(single(inputMovie2),'dfofType','dfof');
+inputMovie3 = ciapkg.api.dfofMovie(single(inputMovie2),'dfofType','dfof');
 
 %% Run temporal downsampling
-inputMovie3 = downsampleMovie(inputMovie3,'downsampleDimension','time','downsampleFactor',4);
+inputMovie3 = ciapkg.api.downsampleMovie(inputMovie3,'downsampleDimension','time','downsampleFactor',4);
 
 %% USER INTERFACE Final check of movie before cell extraction
 if guiEnabled==1
-	playMovie(inputMovie3,'extraTitleText','Processed movie for cell extraction');
+	ciapkg.api.playMovie(inputMovie3,'extraTitleText','Processed movie for cell extraction');
 end
 
 outputMoviePath = [analysisFolderPath filesep folderName '_spatialFiltBfReg_turboreg_crop_dfof_downsampleTime.h5'];
-saveMatrixToFile(inputMovie3,outputMoviePath);
+ciapkg.api.saveMatrixToFile(inputMovie3,outputMoviePath);
 
 % =================================================
 %% Run PCA-ICA cell extraction
@@ -134,7 +137,7 @@ pcaicaStruct = ciapkg.signal_extraction.runPcaIca(inputMovie3,nPCs,nICs,'version
 %% Save outputs to NWB format
 % mkdir([analysisFolderPath filesep 'nwbFiles']);
 if saveAnalysis==1
-	saveNeurodataWithoutBorders(pcaicaStruct.IcaFilters,{pcaicaStruct.IcaTraces},'pcaica',[nwbFilePath '_pcaicaAnalysis.nwb']);
+	ciapkg.api.saveNeurodataWithoutBorders(pcaicaStruct.IcaFilters,{pcaicaStruct.IcaTraces},'pcaica',[nwbFilePath '_pcaicaAnalysis.nwb']);
 end
 
 % =================================================
@@ -144,24 +147,26 @@ cellWidth = 10;
 cnmfOptions.otherCNMF.tau = cellWidth/2; % expected width of cells
 
 % Run CNMF
-[success] = cnmfVersionDirLoad('current');
-[cnmfAnalysisOutput] = computeCnmfSignalExtractionClass(inputMovie3,numExpectedComponents,'options',cnmfOptions);
+[success] = ciapkg.api.cnmfVersionDirLoad('current');
+[cnmfAnalysisOutput] = ciapkg.api.computeCnmfSignalExtractionClass(inputMovie3,numExpectedComponents,'options',cnmfOptions);
 
 % Run CNMF-e
-[success] = cnmfVersionDirLoad('cnmfe');
+[success] = ciapkg.api.cnmfVersionDirLoad('cnmfe');
 cnmfeOptions.gSiz = cellWidth;
 cnmfeOptions.gSig = ceil(cellWidth/4);
-[cnmfeAnalysisOutput] = computeCnmfeSignalExtraction_batch(outputMoviePath,'options',cnmfeOptions);
+[cnmfeAnalysisOutput] = ciapkg.api.computeCnmfeSignalExtraction_batch(outputMoviePath,'options',cnmfeOptions);
 
 % Save outputs to NWB format
 if saveAnalysis==1
 	% Save CNMF
-	saveNeurodataWithoutBorders(cnmfAnalysisOutput.extractedImages,{cnmfAnalysisOutput.extractedSignals,cnmfAnalysisOutput.extractedSignalsEst},'cnmf',[nwbFilePath '_cnmf.nwb']);
+	ciapkg.api.saveNeurodataWithoutBorders(cnmfAnalysisOutput.extractedImages,{cnmfAnalysisOutput.extractedSignals,cnmfAnalysisOutput.extractedSignalsEst},'cnmf',[nwbFilePath '_cnmf.nwb']);
 
 	% Save CNMF-E
-	saveNeurodataWithoutBorders(cnmfeAnalysisOutput.extractedImages,{cnmfeAnalysisOutput.extractedSignals,cnmfeAnalysisOutput.extractedSignalsEst},'cnmfe',[nwbFilePath '_cnmfe.nwb']);
+	ciapkg.api.saveNeurodataWithoutBorders(cnmfeAnalysisOutput.extractedImages,{cnmfeAnalysisOutput.extractedSignals,cnmfeAnalysisOutput.extractedSignalsEst},'cnmfe',[nwbFilePath '_cnmfe.nwb']);
 end
-[success] = cnmfVersionDirLoad('none');
+
+% Unload CNMF(-E) directories to keep namespace clean
+[success] = ciapkg.api.cnmfVersionDirLoad('none');
 
 % =================================================
 %% Run EXTRACT cell extraction. Check each function with "edit" for options.
@@ -192,7 +197,7 @@ extractAnalysisOutput.opts = outStruct.config;
 
 % Save outputs to NWB format
 if saveAnalysis==1
-	saveNeurodataWithoutBorders(extractAnalysisOutput.filters,{extractAnalysisOutput.traces},'extract',[nwbFilePath '_extract.nwb']);
+	ciapkg.api.saveNeurodataWithoutBorders(extractAnalysisOutput.filters,{extractAnalysisOutput.traces},'extract',[nwbFilePath '_extract.nwb']);
 end
 
 % Remove EXTRACT from the path.
@@ -201,7 +206,7 @@ ciapkg.loadBatchFxns();
 % =================================================
 %% USER INTERFACE Run cell sorting using matrix outputs from cell extraction.
 if guiEnabled==1
-	[outImages, outSignals, choices] = signalSorter(pcaicaStruct.IcaFilters,pcaicaStruct.IcaTraces,'inputMovie',inputMovie3);
+	[outImages, outSignals, choices] = ciapkg.api.signalSorter(pcaicaStruct.IcaFilters,pcaicaStruct.IcaTraces,'inputMovie',inputMovie3);
 
 	% Plot results of sorting
 	figure;
@@ -209,26 +214,27 @@ if guiEnabled==1
 	subplot(1,2,2);imagesc(max(outImages,[],3));axis equal tight; title('Sorted filters')
 end
 
+% =================================================
 %% Run signal sorting using NWB
-[outImages, outSignals, choices] = signalSorter([nwbFilePath '_pcaicaAnalysis.nwb'],[],'inputMovie',inputMovie3);
+[outImages, outSignals, choices] = ciapkg.api.signalSorter([nwbFilePath '_pcaicaAnalysis.nwb'],[],'inputMovie',inputMovie3);
 
-%% USER INTERFACE Run signal sorting using NWB files from cell extraction.
+%% USER INTERFACE Run signal sorting using multiple NWB files from cell extraction.
 if saveAnalysis==1&guiEnabled==1
 	disp(repmat('=',1,21));disp('Running signalSorter using NWB file input.')
-	nwbFileList = getFileList(nwbFileFolderPath,'.nwb');
+	nwbFileList = ciapkg.api.getFileList(nwbFileFolderPath,'.nwb');
 	if ~isempty(nwbFileList)
 		nFiles = length(nwbFileList);
 		outImages = {};
 		outSignals = {};
 		choices = {};
 		for fileNo = 1:nFiles
-			[outImages{fileNo}, outSignals{fileNo}, choices{fileNo}] = signalSorter(nwbFileList{fileNo},[],'inputMovie',inputMovie3);
+			[outImages{fileNo}, outSignals{fileNo}, choices{fileNo}] = ciapkg.api.signalSorter(nwbFileList{fileNo},[],'inputMovie',inputMovie3);
 		end
 
 		% Plot results of sorting
 		for fileNo = 1:nFiles
 			try
-				[inputImagesTmp,inputSignalsTmp,infoStructTmp,algorithmStrTmp,inputSignals2Tmp] = ciapkg.io.loadSignalExtraction(nwbFileList{fileNo});
+				[inputImagesTmp,inputSignalsTmp,infoStructTmp,algorithmStrTmp,inputSignals2Tmp] = ciapkg.api.loadSignalExtraction(nwbFileList{fileNo});
 				figure;
 				subplot(1,2,1); 
 					imagesc(max(inputImagesTmp,[],3));
@@ -249,18 +255,18 @@ end
 
 % =================================================
 %% USER INTERFACE Create an overlay of extraction outputs on the movie and signal-based movie
-[inputMovieO] = createImageOutlineOnMovie(inputMovie3,IcaFilters,'dilateOutlinesFactor',0);
+[inputMovieO] = ciapkg.api.createImageOutlineOnMovie(inputMovie3,IcaFilters,'dilateOutlinesFactor',0);
 if guiEnabled==1
-	playMovie(inputMovieO,'extraMovie',inputMovie3,'extraTitleText','Overlay of cell outlines on processed movie');
+	ciapkg.api.playMovie(inputMovieO,'extraMovie',inputMovie3,'extraTitleText','Overlay of cell outlines on processed movie');
 end
 
-[signalMovie] = createSignalBasedMovie(IcaTraces,IcaFilters,'signalType','peak');
+[signalMovie] = ciapkg.api.createSignalBasedMovie(IcaTraces,IcaFilters,'signalType','peak');
 if guiEnabled==1
-	playMovie(signalMovie,'extraMovie',inputMovie3,'extraTitleText','Cell activity-based movie');
+	ciapkg.api.playMovie(signalMovie,'extraMovie',inputMovie3,'extraTitleText','Cell activity-based movie');
 end
 
-movieM = cellfun(@(x) normalizeVector(x,'normRange','zeroToOne'),{inputMovie3,inputMovieO,signalMovie},'UniformOutput',false);
-playMovie(cat(2,movieM{:}));
+movieM = cellfun(@(x) ciapkg.api.normalizeVector(x,'normRange','zeroToOne'),{inputMovie3,inputMovieO,signalMovie},'UniformOutput',false);
+ciapkg.api.playMovie(cat(2,movieM{:}));
 
 % =================================================
 %% Run pre-processing on 3 batch movies then do cross-session alignment
@@ -275,11 +281,11 @@ cropCoordsCell = {};
 nFolders = length(batchMovieList);
 for folderNo = 1:nFolders
 	analysisFolderPath = batchMovieList{folderNo};
-	inputMoviePath = getFileList(analysisFolderPath,rawFileRegexp,'sortMethod','natural');
+	inputMoviePath = ciapkg.api.getFileList(analysisFolderPath,rawFileRegexp,'sortMethod','natural');
 	% inputMoviePath = [analysisFolderPath filesep 'concat_recording_20140401_180333.h5'];
-	inputMovie = loadMovieList(inputMoviePath,'inputDatasetName',inputDatasetName,'frameList',1:2);
+	inputMovie = ciapkg.api.loadMovieList(inputMoviePath,'inputDatasetName',inputDatasetName,'frameList',1:2);
 
-	[cropCoords] = getCropCoords(squeeze(inputMovie(:,:,1)));
+	[cropCoords] = ciapkg.api.getCropCoords(squeeze(inputMovie(:,:,1)));
 	% toptions.cropCoords = cropCoords;
 	cropCoordsCell{folderNo} = cropCoords;
 end
@@ -287,8 +293,8 @@ end
 %% Run pre-processing on each of the movies.
 procMovieCell = cell([1 nFolders]);
 for folderNo = 1:nFolders
-	inputMoviePath = getFileList(analysisFolderPath,rawFileRegexp,'sortMethod','natural');
-	inputMovie = loadMovieList(inputMoviePath,'inputDatasetName',inputDatasetName,'frameList',[]);
+	inputMoviePath = ciapkg.api.getFileList(analysisFolderPath,rawFileRegexp,'sortMethod','natural');
+	inputMovie = ciapkg.api.loadMovieList(inputMoviePath,'inputDatasetName',inputDatasetName,'frameList',[]);
 	procOpts.motionCorrectionCropCoords = cropCoordsCell{folderNo};
 	procOpts.dfofMovie = 1;
 	procOpts.motionCorrectionFlag = 1;
@@ -306,7 +312,7 @@ pcaicaStructCell = cell([1 nFolders]);
 nPCs = 300;
 nICs = 225;
 for folderNo = 1:nFolders
-	inputMoviePath = getFileList(analysisFolderPath,rawFileRegexp,'sortMethod','natural');
+	inputMoviePath = ciapkg.api.getFileList(analysisFolderPath,rawFileRegexp,'sortMethod','natural');
 	pcaicaStruct{folderNo} = ciapkg.signal_extraction.runPcaIca(procMovieCell{folderNo},nPCs,nICs,'version',2,'outputUnits','fl','mu',0.1,'term_tol',5e-6,'max_iter',1e3);
 end
 disp('Done with PCA-ICA analysis pre-processing!')
@@ -322,17 +328,17 @@ opts.nCorrections = 1; %number of rounds to register session cell maps.
 opts.RegisTypeFinal = 2; % 3 = rotation/translation and iso scaling; 2 = rotation/translation, no iso scaling
 
 % Run alignment code
-[alignmentStruct] = matchObjBtwnTrials(inputImages,'options',opts);
+[alignmentStruct] = ciapkg.api.matchObjBtwnTrials(inputImages,'options',opts);
 
 % Global IDs is a matrix of [globalID sessionID]
 % Each (globalID, sessionID) pair gives the within session ID for that particular global ID
 globalIDs = alignmentStruct.globalIDs;
 
 % View the cross-session matched cells, saved to `private\_tmpFiles` sub-folder.
-[success] = createMatchObjBtwnTrialsMaps(inputImages,alignmentStruct);
+[success] = ciapkg.api.createMatchObjBtwnTrialsMaps(inputImages,alignmentStruct);
 
 %% Display cross-session matching movies
 disp('Playing movie frames')
 crossSessionMovie1 = [ciapkg.getDir filesep 'private' filesep '_tmpFiles' filesep 'matchObjColorMap50percentMatchedSession_matchedCells.avi'];
 crossSessionMovie2 = [ciapkg.getDir filesep 'private' filesep '_tmpFiles' filesep 'matchObjColorMapAllMatchedSession_matchedCells.avi'];
-playMovie(crossSessionMovie1,'extraMovie',crossSessionMovie2,'rgbDisplay',1);
+ciapkg.api.playMovie(crossSessionMovie1,'extraMovie',crossSessionMovie2,'rgbDisplay',1);
