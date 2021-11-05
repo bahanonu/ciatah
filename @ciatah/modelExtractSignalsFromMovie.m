@@ -40,7 +40,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	% Str: save to this sub-folder of analyzed folder, leave blank to save in root folder.
 	options.nwbSaveFolder = obj.nwbFileFolder;
 	% Str: Folder where settings files are stored
-	options.settingsFolder = [ciapkg.getDir() filesep 'ciapkg' filesep 'settings'];
+	options.settingsFolder = [ciapkg.getDir() filesep '+ciapkg' filesep '+settings'];
 	% Str: folder where private settings are stored
 	options.settingsPrivateSaveFolder = [obj.settingsSavePath filesep 'signal_extraction'];
 	% options.settingsPrivateSaveFolder = ['private' filesep 'settings' filesep 'cellExtraction'];

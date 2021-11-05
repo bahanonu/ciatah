@@ -162,7 +162,7 @@ function obj = computeMatchObjBtwnTrials(obj,varargin)
 			display(['rawSignals: ' num2str(size(rawSignals))])
 			display(['rawImages: ' num2str(size(rawImages))])
 
-			[rawImages, outputStruct] = computeManualMotionCorrection(rawImages,'registerUseOutlines',0,'cellCombineType','mean','gammaCorrection',1.6);
+			% [rawImages, outputStruct] = computeManualMotionCorrection(rawImages,'registerUseOutlines',0,'cellCombineType','mean','gammaCorrection',1.6);
 
 			if isempty(trialToAlignUserOption)
 				trialToAlign = floor(quantile(1:length(validFoldersIdx),0.5));

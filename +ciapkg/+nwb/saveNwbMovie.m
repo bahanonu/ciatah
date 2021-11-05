@@ -8,11 +8,9 @@ function [output1,output2] = saveNwbMovie(inputData,fileSavePath,varargin)
 		%
 
 	% changelog
-		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		%
 	% TODO
 		% Add structure that allows users to modify defaults for all the NWB settings
-
-	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% old way of saving, only temporary until full switch

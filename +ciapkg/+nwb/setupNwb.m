@@ -10,11 +10,8 @@ function [success] = setupNwb(varargin)
 	% changelog
 		% 2021.02.01 [‏‎15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
 		% 2021.03.26 [06:27:48] - Fix for options.defaultObjDir leading to incorrect NWB folder and cores not being generated.
-		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
-
-	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	% ========================
 	% Str: default path for CIAtah

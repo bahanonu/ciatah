@@ -10,8 +10,11 @@ function [inputMoviePathProcessed,inputMoviePathProcessedDownsample] = runPrepro
 	% changelog
 		% 2020.05.13 [08:03:08] - Change normalization frequency.
 		% 2020.10.14 [13:30:04] - Additional updates to deal with various user inputs.
+		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% Str: hierarchy name in hdf5 where movie data is located
