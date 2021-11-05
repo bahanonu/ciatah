@@ -6,5 +6,5 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 	% Biafra Ahanonu
 	% started: 2013.11.01
 	
-	[outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, 'passArgs', varargin);
+	[outputMovie, movieDims, nPixels, nFrames] = ciapkg.io.loadMovieList(movieList, 'passArgs', varargin);
 end

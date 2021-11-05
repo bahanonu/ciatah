@@ -43,6 +43,9 @@ classdef ciatah < dynamicprops
 		% Int: set the default UI font size
 		fontSizeGui = 10;
 
+		% Float: allows font size in GUI to be scaled
+		fontSizeGuiScale = 1;
+
 		defaultObjDir = pwd;
 		classVersion = ciapkg.version();
 		serverPath = '';
