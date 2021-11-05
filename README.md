@@ -200,8 +200,8 @@ ciapkg.api.playMovie('ABSOLUTE\PATH\TO\MOVIE','inputDatasetName','/acquisition/T
 Alternatively, using the `ciatah` GUI class, users can select loaded folders and change the regular expression to match the name of the files in the movie, both for the raw data and for any processed movies in the folder. See below:
 
 <p align="center">
-  <a href="https://user-images.githubusercontent.com/5241605/126923628-19d2cb1a-e12d-4d98-9c0a-bcc6c87a2ca2.png">
-    <img src="https://user-images.githubusercontent.com/5241605/126923628-19d2cb1a-e12d-4d98-9c0a-bcc6c87a2ca2.png" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="100%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
+  <a href="https://user-images.githubusercontent.com/5241605/140582378-d7c797e8-9099-43a7-b1cd-29ae04a36056.png">
+    <img src="https://user-images.githubusercontent.com/5241605/140582378-d7c797e8-9099-43a7-b1cd-29ae04a36056.png" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="100%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
   </a>
 </p>
 <!-- https://user-images.githubusercontent.com/5241605/124651957-6a790c80-de50-11eb-8a6d-0197a9f484c1.png -->
