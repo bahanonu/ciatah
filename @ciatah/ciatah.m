@@ -673,7 +673,7 @@ classdef ciatah < dynamicprops
 			%========================
 			% obj.exampleOption = '';
 			% get options
-			obj = getOptions(obj,varargin);
+			obj = ciapkg.io.getOptions(obj,varargin);
 			% disp(options)
 			% unpack options into current workspace
 			% fn=fieldnames(options);
