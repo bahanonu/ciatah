@@ -16,6 +16,7 @@
 `CIAtah` (pronounced cheetah; formerly <ins>c</ins>alcium<ins>I</ins>maging<ins>A</ins>nalysis [ciapkg]) is a software package for analyzing one- and two-photon calcium imaging datasets. 
 
 Currently requires `MATLAB` and runs on all major operating systems (Windows, Linux [e.g. Ubuntu], and macOS).
+- Note: `CIAtah` version `4` (v4) moves all CIAtah functions into the `ciapkg` package to improve namespace handling and requires MATLAB R2019b or above ([due to package import changes](https://www.mathworks.com/help/matlab/matlab_prog/upgrade-code-for-r2019b-changes-to-function-precedence-order.html#mw_2934c766-e115-4d22-9abf-eb46a1415f2c)). Else download `CIAtah` v3 (see [Releases](https://github.com/bahanonu/ciatah/releases)) until pre-R2019b MATLAB support added to v4.
 
 ## Full documentation at https://bahanonu.github.io/ciatah/.
 
@@ -57,8 +58,8 @@ Made in USA.<br>
 
 ***
 `CIAtah` features:
+- `CIAtah` package-enclosed functions (in `+ciapkg` folders) can be used to create GUI-less, command line-ready analysis pipelines. As all functions are within the `ciapkg` package, namespace is clean to allow incorporating into other programs.
 - A GUI with different modules for large-scale batch analysis.
-- `CIAtah` functions (in `ciapkg`/`+ciapkg` folders) can be used to create GUI-less, command line-ready analysis pipelines.
 - Includes all major calcium imaging analysis steps:
   - movie visualization (including reading from disk, for fast viewing of large movies)
   - pre-processing (motion correction, spatiotemporal downsampling, spatial filtering, relative fluorescence calculation, etc.)
@@ -181,10 +182,11 @@ Users can quickly visualize movies in any of the supported formats (HDF5, NWB, A
 Using the `ciatah` GUI class, users can select loaded folders and change the regular expression to match the name of the files in the movie, both for the raw data and for any processed movies in the folder. See below:
 
 <p align="center">
-  <a href="https://user-images.githubusercontent.com/5241605/124651957-6a790c80-de50-11eb-8a6d-0197a9f484c1.png">
-    <img src="https://user-images.githubusercontent.com/5241605/124651957-6a790c80-de50-11eb-8a6d-0197a9f484c1.png" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="100%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
+  <a href="https://user-images.githubusercontent.com/5241605/126923628-19d2cb1a-e12d-4d98-9c0a-bcc6c87a2ca2.png">
+    <img src="https://user-images.githubusercontent.com/5241605/126923628-19d2cb1a-e12d-4d98-9c0a-bcc6c87a2ca2.png" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="100%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
   </a>
 </p>
+<!-- https://user-images.githubusercontent.com/5241605/124651957-6a790c80-de50-11eb-8a6d-0197a9f484c1.png -->
 
 Alternatively, users can run via the command-line:
 
@@ -203,6 +205,12 @@ playMovie('ABSOLUTE\PATH\TO\MOVIE','inputDatasetName','/acquisition/TwoPhotonSer
 After downloading `CIAtah` and running the setup as above, users interested in command-line processing can open up the example M-file by running the below command. By running individual code-block cells, users are guided from pre-processing through cell-extraction to cross-session analysis.
 ```MATLAB
 edit ciapkg.demo.cmdLinePipeline
+```
+
+Users can import the CIAtah `ciapkg` that contains the command-line functions using the below command at the beginning of their functions. This will import all `ciapkg` functions into the functions workspace such that `ciapkg.api.loadMovieList()` (an alias for `ciapkg.io.loadMovieList()`) can be called as `loadMovieList()`.
+```MATLAB
+import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 ```
 
 ***
@@ -230,6 +238,8 @@ Please cite [Corder*, Ahanonu*, et al. 2019](http://science.sciencemag.org/conte
 }
 ```
 
+Please see https://bahanonu.github.io/ciatah/references/ for additional references depending on processing steps undertaken.
+
 <!-- 
 ```Latex
 @misc{biafra_ahanonu_2018_2222295,
@@ -252,7 +262,7 @@ Please email any additional questions not covered in the repository to `github [
 
 Copyright (C) 2013-2021 Biafra Ahanonu
 
-This project is licensed under the terms of the MIT license.
+This project is licensed under the terms of the MIT license. See LICENSE file for details.
 
 ## Repository stats
 - ![visitors](https://visitor-badge.glitch.me/badge?page_id=bahanonu.calciumImagingAnalysis) (starting 2020.09.22)

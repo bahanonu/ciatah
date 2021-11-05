@@ -14,8 +14,11 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		% 2019.10.29 [13:51:04] - Added support for parallel.pool.Constant when PCT auto-start parallel pool disabled.
 		% 2021.01.15 [21:09:55] - Moved detrend support into normalizeMovie.
 		% 2021.06.02 [20:04:49] - Detrend movie now uses nanmean to get around issues in motion corrected videos.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% Str: Use one of the below inputs depending on the normalization or filtering required.

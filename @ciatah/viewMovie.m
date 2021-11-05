@@ -14,8 +14,12 @@ function obj = viewMovie(obj)
 		% 2021.02.24 [09:04:24] - Fix treatMoviesAsContinuous=0 + playMovieFromDisk=1 issue.
 		% 2021.06.18 [21:41:07] - added modelVarsFromFilesCheck() to check and load signals if user hasn't already.
 		% 2021.06.20 [‏‎00:14:59] - Added support for simple and advanced settings.
+		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+	
 	% =====================
 	% fileFilterRegexp = obj.fileFilterRegexp;
 	FRAMES_PER_SECOND = obj.FRAMES_PER_SECOND;

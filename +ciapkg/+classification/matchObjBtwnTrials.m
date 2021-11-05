@@ -25,11 +25,14 @@ function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
 		% 2019.07.11 [20:46:23] - Add support for additional image correlation comparison metrics.
 		% 2019.10.29 [13:07:18] - Added support for sparse (ndSparse) array inputs.
 		% 2019.12.05 [10:37:17] - Fix for cases in which cells are lost when cropping all movies to the same size before starting cross-session alignment.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% notes
 		% the cell array of traces allows us to have arbitrary numbers of trials to align automatically,
 	% TODO
 		% Detect if the input images are not all of the same size, if that is the case, ask the user to specify a crop area equal to the dimensions of the smallest input image. - DONE
 		% Try to crop input images in a way that makes sure all cells are in the resulting crop area for all the sessions, else use the traditional cropping.
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% 'pairwise' or 'clustering'
@@ -374,6 +377,8 @@ end
 function [OutStruct] = computeGlobalIdsClustering(OutStruct,coords,options,nSessions)
 		% computes the global ids via clustering, avoid some of the pairwise analysis problems
 
+		import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 		% initialize the global centroid
 		coordsGlobal = coords{options.trialToAlign};
 		listOfTrialLengths(1) = size(coordsGlobal,1);
@@ -464,6 +469,8 @@ end
 
 function [OutStruct] = computeGlobalIdsPairwise(OutStruct,coords,options,nSessions,inputImages,inputImagesOriginal)
 	% matches obj coordinates across trials, assigns them a global ID or creates a new one if no global ID is found
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	% Make binary masts
 
@@ -682,6 +689,8 @@ function [OutStruct] = computeGlobalIdsPairwise(OutStruct,coords,options,nSessio
 end
 
 function plotCoords(coords,figNo,specialID)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	[~, ~] = openFigure(figNo, '');clf
 	zoom on
 	nCoords = length(coords);
@@ -708,6 +717,8 @@ function plotCoords(coords,figNo,specialID)
 end
 
 function plotObjectMap(objectMap,figNo)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	[~, ~] = openFigure(figNo, '');colormap jet;
 	zoom on
 	nSessions = length(objectMap);
@@ -721,6 +732,8 @@ end
 
 %% functionname: function description
 function [inputImages] = checkImageDimensions(inputImages)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+	
 	nSessions = length(inputImages);
 	dimsList = reshape(cell2mat(arrayfun(@(x){size(x{1})},inputImages))',3,length(inputImages))'
 	minY = min(dimsList(:,1));

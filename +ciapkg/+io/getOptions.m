@@ -57,6 +57,7 @@ function [options] = getOptions(options,inputArgs,varargin)
 		% 2020.05.10 [18:00:23] - Updates to comments in getOptions and other minor changes. Make warnings output as actual warnings instead of just displaying as normal text on command line.
 		% 2020.06.29 [18:54:56] - Support case where calling getOptions from command line or where there is no stack.
 		% 2020.09.29 [13:21:09] - Added passArgs option, this mimics the ... construct in R, so users can pass along arguments without having to define them in the calling function (e.g. in the case of wrapper functions).
+		% 2021.10.07 [10:44:30] - Ensure no warnings are shown. Added fix to handle users calling API version of getOptions with getOptions variable input arguments.
 
 	% TODO
 		% Allow input of an option structure - DONE!
@@ -76,6 +77,18 @@ function [options] = getOptions(options,inputArgs,varargin)
 	% Binary: 1 = get defaults for a function from getSettings.
 	goptions.getFunctionDefaults = 0;
 	% Update getOptions's options based on user input.
+
+	try
+		% To handle users calling ciapkg.api.getOptions with getOptions variable input arguments.
+		if ~isempty(varargin)&&strcmp('passArgs',varargin{1})
+			varargin = varargin{2};
+		end
+	catch err
+		disp(repmat('@',1,7))
+		disp(getReport(err,'extended','hyperlinks','on'));
+		disp(repmat('@',1,7))
+	end
+
 	try
 		for i = 1:2:length(varargin)
 			inputField = varargin{i};
@@ -91,6 +104,7 @@ function [options] = getOptions(options,inputArgs,varargin)
 	% Don't do this! Recursion with no base case waiting to happen...
 	% goptions = getOptions(goptions,varargin);
 	%========================
+	% goptions
 
 	% Get default options for a function
 	if goptions.getFunctionDefaults==1
@@ -98,7 +112,7 @@ function [options] = getOptions(options,inputArgs,varargin)
 		% fieldnames(ST)
 		parentFunctionName = {ST.name};
 		parentFunctionName = parentFunctionName{2};
-		[optionsTmp] = getSettings(parentFunctionName);
+		[optionsTmp] = ciapkg.settings.getSettings(parentFunctionName);
 		if isempty(optionsTmp)
 			% Do nothing, don't use defaults if not present
 		else
@@ -123,7 +137,7 @@ function [options] = getOptions(options,inputArgs,varargin)
 			elseif strcmp('passArgs',val)
 				% Special argument to pass all these arguments directly through parent function to child function.
 				inputOptions = inputArgs{i+1};
-				options = getOptions(options,inputOptions);
+				options = ciapkg.io.getOptions(options,inputOptions);
 			elseif sum(strcmp(val,validOptions))>0&isstruct(options.(val))&goptions.recursiveStructs==1
 				% If struct name-value, add users field name changes only, keep all original field names in the struct intact, struct-recursion ON
 				inputOptions = inputArgs{i+1};
@@ -162,7 +176,9 @@ function [toStruct] = mirrorRightStruct(fromStruct,toStruct,goptions,toStructNam
 				if isstruct(toStruct.(fromField))
 					toStruct.(fromField) = mirrorRightStruct(fromStruct.(fromField),toStruct.(fromField),goptions,[toStructName '.' fromField]);
 				else
-					localShowWarnings(3,'notstruct',toStructName,fromField,'',goptions.nParentStacks);
+					if goptions.showWarnings==1
+						localShowWarnings(3,'notstruct',toStructName,fromField,'',goptions.nParentStacks);
+					end
 				end
 			else
 				toStruct.(fromField) = fromStruct.(fromField);

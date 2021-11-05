@@ -11,7 +11,10 @@ function obj = modelDownsampleRawMovies(obj)
 		% 2017.02.18 - slight change in how determination of already existing movies is performed
 		% 2019.07.11 [19:53:47] - Added support for ISXD Inscopix files via Inscopix Data Processing Software. Also changed way program is run to loop over files and check for each extension in the case a folder as multiple types of files that need to be downsampled (e.g. HDF5, TIF, ISXD).
 		% 2019.11.18 [17:28:48] - Input dialog for folder list or GUI to manually entering multiple folders to downsample. Easier for users than current purely comma separated single line list.
+		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+	
 	try
 		[newFolderListCell] = subfxnSelectFolders();
 		if ~isempty(newFolderListCell)

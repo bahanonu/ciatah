@@ -14,8 +14,11 @@ function out = load_tif_movie(filename,downsample_xy,varargin)
 		% 2015.11.12 Added reading of TIFFs from ImageJ bigger than 4GB.
 		% 2019.03.10 [20:17:09] Allow user to pre-input TIF temporary file to speed-up load times, esp. with individual files, see options.tmpImage and options.fileInfo
 		% 2020.09.01 [14:27:12] - Suppress warning at user request and remove unecessary file handle call.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	options.exampleOption = 'doSomething';

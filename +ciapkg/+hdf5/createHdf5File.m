@@ -11,8 +11,12 @@ function createHdf5File(filename, datasetName, inputData, varargin)
 		% 2019.03.25 [17:17:49] - Add support for custom user HDF5 chunking as opposed to previous automatic chunking
 		% 2019.08.20 [11:38:54] - Added additional support for more data types.
         % 2021.02.02 [13:15:11] - Close space_id, dset_id, and fid with low-level HDF5 functions before appending data with hdf5write to avoid read/write issues.
+        % 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	%========================
 	% Int: Defines gzip compression level (0-9). 0 = no compression, 9 = most compression.
 	options.deflateLevel = 1;

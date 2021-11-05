@@ -13,8 +13,11 @@ function [inputImages,inputSignals,infoStruct,algorithmStr,inputSignals2] = load
 
 	% changelog
 		% 2021.03.10 [18:50:48] - Updated to add support for initial set of cell-extraction algorithms.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	% ========================
 	% Struct: name of structures for CIAtah-style outputs.
@@ -201,8 +204,8 @@ function [inputImages,inputSignals,infoStruct,inputSignals2] = subfxnCELLMax(inp
 		end
 
 		% Convert to dF/F values
-		inputSignals = normalizeSignalExtractionActivityTraces(inputSignals,inputImages);
-		inputSignals2 = normalizeSignalExtractionActivityTraces(inputSignals2,inputImages);
+		inputSignals = ciapkg.api.normalizeSignalExtractionActivityTraces(inputSignals,inputImages);
+		inputSignals2 = ciapkg.api.normalizeSignalExtractionActivityTraces(inputSignals2,inputImages);
 
 	end
 end
@@ -241,8 +244,8 @@ function [inputImages,inputSignals,infoStruct,inputSignals2] = subfxnCNMF(inputF
 		end
 
 		% Convert units to relative dF/F for later analysis
-		inputSignals = normalizeSignalExtractionActivityTraces(inputSignals,inputImages);
-		inputSignals2 = normalizeSignalExtractionActivityTraces(inputSignals2,inputImages);
+		inputSignals = ciapkg.api.normalizeSignalExtractionActivityTraces(inputSignals,inputImages);
+		inputSignals2 = ciapkg.api.normalizeSignalExtractionActivityTraces(inputSignals2,inputImages);
 	end
 end
 function [inputImages,inputSignals,infoStruct,inputSignals2] = subfxnCNMFE(inputFilePath,options)
@@ -265,8 +268,8 @@ function [inputImages,inputSignals,infoStruct,inputSignals2] = subfxnCNMFE(input
 		end
 
 		% Convert units to relative dF/F for later analysis
-		inputSignals = normalizeSignalExtractionActivityTraces(inputSignals,inputImages);
-		inputSignals2 = normalizeSignalExtractionActivityTraces(inputSignals2,inputImages);
+		inputSignals = ciapkg.api.normalizeSignalExtractionActivityTraces(inputSignals,inputImages);
+		inputSignals2 = ciapkg.api.normalizeSignalExtractionActivityTraces(inputSignals2,inputImages);
 	end
 end
 function [inputImages,inputSignals,infoStruct] = subfxnROI(inputFilePath,options)

@@ -12,8 +12,11 @@ function [success] = cnmfVersionDirLoad(cnmfVersion,varargin)
 		% 2019.03.03 [20:58:33] - Added removal of cvx from path since they overload `narginchk` which can cause warnings.
 		% 2019.11.13 [18:05:12] - Updated to make contains not include less than 9.1.
 		% 2021.02.01 [‏‎15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% Relative path assumed for batch_processing package

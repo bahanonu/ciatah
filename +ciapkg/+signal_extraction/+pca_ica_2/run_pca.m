@@ -15,6 +15,9 @@ function [PcaOutputSpatial PcaOutputTemporal PcaOutputSingularValues PcaInfo] = 
     % changelog
     	% 2019.11.10 [18:35:33] - Make sure M and mean_M are of the same class. - Biafra
         % 2020.10.17 [19:13:10] - 
+        % 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+
+    import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
     %========================
     options.frameList = [];
@@ -66,7 +69,7 @@ function [PcaOutputSpatial PcaOutputTemporal PcaOutputSingularValues PcaInfo] = 
 
     % PCA
     %------------------------------------------------------------
-    [PcaOutputSpatial, PcaOutputTemporal, PcaOutputSingularValues] = compute_pca(M, num_PCs); %#ok<*NASGU,*ASGLU>
+    [PcaOutputSpatial, PcaOutputTemporal, PcaOutputSingularValues] = ciapkg.signal_extraction.pca_ica_2.compute_pca(M, num_PCs); %#ok<*NASGU,*ASGLU>
     PcaOutputSingularValues = diag(PcaOutputSingularValues); % Save only the diagonal of S
 
     % savename = sprintf('pca_n%d.mat', num_PCs);

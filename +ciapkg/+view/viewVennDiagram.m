@@ -7,15 +7,18 @@ function viewVennDiagram(circleAreas,overlapAreas,totalArea,varargin)
 		% circleAreas
 			% A [c1 c2 c3] integer or float vector containing the areas for each of the three circles, leave c3 blank if only two circles.
 		% overlapAreas
-			 % [i12 i13 i23 i123] integer or float containing intersect area of indicated circles, e.g. i12 is interspect of circles 1 and 2 or i123 is the insersect of circles 1, 2, and 3. Only input i12 if only two circles are used for circleAreas.
+			 % [i12 i13 i23 i123] integer or float containing intersect area of indicated circles, e.g. i12 is intersect of circles 1 and 2 or i123 is the intersect of circles 1, 2, and 3. Only input i12 if only two circles are used for circleAreas.
 	% outputs
 		% None, only plotting.
 
 	% changelog
 		% 2017.08.14 [11:09:32] - modified to use circles created by viscircles, which are better for editing in Adobe Illustrator.
 		% 2020.09.15 [12:19:06] - Added support for colors on the overlap area text and adjustment of the location.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% Binary: 1 = display text on diagrams, 0 = no display.
@@ -67,8 +70,8 @@ function viewVennDiagram(circleAreas,overlapAreas,totalArea,varargin)
 		[H, S] = venn(circleAreas,overlapAreas,'ErrMinMode','None');
 	catch
 		tmpInput = overlapAreas;
-		tmpInput = tmpInput-1;
-		tmpInput(tmpInput<1) = 1;
+		%tmpInput = tmpInput-1;
+		%tmpInput(tmpInput<1) = 1;
 		try
 			[H, S] = venn(circleAreas,tmpInput,'ErrMinMode','TotalError');
 		catch

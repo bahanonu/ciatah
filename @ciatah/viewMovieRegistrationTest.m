@@ -14,8 +14,11 @@ function obj = viewMovieRegistrationTest(obj)
 		% 2020.05.13 [07:57:06] - Added a warning and check that the reference frame requested is outside bounds of input movie.
 		% 2020.06.18 [12:38:34] - Add support for stripe removal same as modelPreprocessMovie
 		% 2021.06.18 [21:41:07] - Added modelVarsFromFilesCheck() to check and load signals if user hasn't already.
+		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	try
 		[fileIdxArray idNumIdxArray nFilesToAnalyze nFiles] = obj.getAnalysisSubsetsToAnalyze();

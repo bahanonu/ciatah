@@ -10,8 +10,11 @@ function [cellmap] = createObjMap(inputImages,varargin)
 		% 2013.12.15 [22:43:23] converted to a matrix operation, much faster...
 		% 2016.09.06 [01:37:12] add option to do max or add object map creation
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% max, sum

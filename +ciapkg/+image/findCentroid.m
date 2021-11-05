@@ -11,8 +11,11 @@ function [xCoords yCoords allCoords] = findCentroid(inputMatrix,varargin)
 		% 2016.01.02 [21:22:13] - added comments and refactored so that accepts inputImages as [x y nSignals] instead of [nSignals x y]
 		% 2016.08.06 - some changes to speed up algorithm by using thresholded rather than weighted sum of image.
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	options.waitbarOn = 1;

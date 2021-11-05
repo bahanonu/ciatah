@@ -29,8 +29,11 @@ function [inputImageFiltered, additionalOutput] = fftImage(inputImage,varargin)
 		% 2014.06.26 - update gaussian filter, using fspecial now and removed fft2 padding from original function
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
 		% 2018.09.04 [17:31:47] - option to have padding optimized for power of 2, increasing fft speed by about 4.5x.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		% something...
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% binary or gaussian

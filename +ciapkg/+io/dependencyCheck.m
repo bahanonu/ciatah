@@ -11,8 +11,11 @@ function [outputTable] = dependencyCheck(varargin)
 
 	% changelog
 		% 2020.06.23 [15:46:04] - Updated for GitHub repository and added ability to check for all possible toolboxes.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	try
 		outputTable = ciapkg.io.matlabToolboxCheck('passArgs',varargin);

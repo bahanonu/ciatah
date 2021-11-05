@@ -11,13 +11,16 @@ function [reverseStr] = cmdWaitbar(i,nItems,reverseStr,varargin)
 			%
 
 	% changelog
-			% 2014.02.14 [16:35:55] now is mostly
+		% 2014.02.14 [16:35:55] now is mostly
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
-			% Should reverseStr be made global so function is entirely self-contained? - NO, globals are evil.
-			% change so waitbarOn = 0 can short circuit getOptions to save speed execution time
+		% Should reverseStr be made global so function is entirely self-contained? - NO, globals are evil.
+		% change so waitbarOn = 0 can short circuit getOptions to save speed execution time
 	% example
 		% before loop = reverseStr
 		% reverseStr = cmdWaitbar(i,nItems,reverseStr,'inputStr','loading hdf5','waitbarOn',options.waitbarOn,'displayEvery',50);
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	options.inputStr = 'progress';

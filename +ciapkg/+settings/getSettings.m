@@ -4,13 +4,15 @@ function [options] = getSettings(functionName)
     % started: 2014.12.10
     %
     % inputs
-    %   functionName - name of function whose option should be loaded
+      % functionName - name of function whose option should be loaded
     %
     % note
-    %   don't let this function call getOptions! Else you'll potentially get into an infinite loop.
+      % don't let this function call getOptions! Else you'll potentially get into an infinite loop.
 
     % changelog
-    %
+        % 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+
+    import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
     try
         switch functionName

@@ -9,8 +9,11 @@ function appendDataToHdf5(filename, datasetName, inputData, varargin)
 
 	% changelog
 		% 2014.07.22
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	display(['appending data to: ' filename])
 	% open the dataset and append data to the unlimited dimension which in this case is the second dimension as seen from matlab.

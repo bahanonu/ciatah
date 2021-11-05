@@ -10,8 +10,11 @@ function obj = computeMatchObjBtwnTrials(obj,varargin)
 	% changelog
 		% 2019.07.03 [16:36:32] - Updated to call viewMatchObjBtwnSessions afterwards as an option
 		% 2021.06.18 [21:41:07] - added modelVarsFromFilesCheck() to check and load signals if user hasn't already.
+		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% DESCRIPTION
@@ -52,7 +55,7 @@ function obj = computeMatchObjBtwnTrials(obj,varargin)
 	% 	usrIdxChoice = userDefaults;
 	% end
 	scnsize = get(0,'ScreenSize');
-	userDefaults = {'1','5','0.4','','2','1','corr2','0.6','0.3','1e-6','0','1'};
+	userDefaults = {'1','5','0.4','','2','1','corr2','0.6','0.3','1e-6','0','1','filtered'};
 	usrIdxChoice = inputdlg({...
 		'Number of rounds to register images (integer)',...
 		'Distance threshold to match cells cross-session (in pixels)',...
@@ -66,6 +69,7 @@ function obj = computeMatchObjBtwnTrials(obj,varargin)
 		'Threshold below which registered image values set to zero',...
 		'Visually compare image correlation values and matched images (1 = yes, 0 = no)',...
 		'View full results after [viewMatchObjBtwnSessions] (1 = yes, 0 = no)',...
+		'Type of image to use for cross-session alignment? (filtered, raw)',...
 		},'Cross-session cell alignment options',1,...
 		userDefaults);
 
@@ -83,6 +87,7 @@ function obj = computeMatchObjBtwnTrials(obj,varargin)
 	checkImageCorr = str2num(usrIdxChoice{s1});s1=s1+1;
 	turboregZeroThres = str2num(usrIdxChoice{s1});s1=s1+1;
 	runViewMatchObjBtwnSessions = str2num(usrIdxChoice{s1});s1=s1+1;
+	imagesType = usrIdxChoice{s1};s1=s1+1;
 
 	for thisSubjectStr=subjectList
 		try
@@ -108,7 +113,7 @@ function obj = computeMatchObjBtwnTrials(obj,varargin)
 
 				% obj.folderBaseSaveStr{obj.fileNum}
 				% [rawSignalsTmp rawImagesTmp signalPeaks signalPeaksArray] = modelGetSignalsImages(obj,'returnType','raw');
-				[rawSignalsTmp, rawImagesTmp, signalPeaks, signalPeaksArray] = modelGetSignalsImages(obj,'returnType','filtered');
+				[rawSignalsTmp, rawImagesTmp, signalPeaks, signalPeaksArray] = modelGetSignalsImages(obj,'returnType',imagesType);
 				if ~isempty(rawSignalsTmp)
 					display('adding to alignment...')
 					rawSignals{end+1} = rawSignalsTmp;
@@ -156,6 +161,8 @@ function obj = computeMatchObjBtwnTrials(obj,varargin)
 			display(['validFoldersIdx: ' num2str(size(validFoldersIdx))])
 			display(['rawSignals: ' num2str(size(rawSignals))])
 			display(['rawImages: ' num2str(size(rawImages))])
+
+			[rawImages, outputStruct] = computeManualMotionCorrection(rawImages,'registerUseOutlines',0,'cellCombineType','mean','gammaCorrection',1.6);
 
 			if isempty(trialToAlignUserOption)
 				trialToAlign = floor(quantile(1:length(validFoldersIdx),0.5));

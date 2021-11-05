@@ -21,7 +21,10 @@ function [IcaOutputSpatial, IcaOutputTemporal, IcaOutputInfo] = run_ica(spatial,
 
     % changelog
         % ‎15 ‎December, ‎2017, ‏‎11:36:50
+        % 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
         % 
+
+    import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
     %========================
     options.output_units = 'std';
@@ -46,11 +49,11 @@ function [IcaOutputSpatial, IcaOutputTemporal, IcaOutputInfo] = run_ica(spatial,
     %------------------------------------------------------------
     fprintf('%s: Computing ICA weights...\n', datestr(now));
 
-    ica_mixed = compute_spatiotemporal_ica_input(spatial, temporal, mu);
+    ica_mixed = ciapkg.signal_extraction.pca_ica_2.compute_spatiotemporal_ica_input(spatial, temporal, mu);
 
     term_tol = options.term_tol; % Termination tolerance
     max_iter = options.max_iter;  % Max iterations of FastICA
-    ica_W = compute_ica_weights(ica_mixed, num_ICs, term_tol, max_iter)'; %#ok<*NASGU>
+    ica_W = ciapkg.signal_extraction.pca_ica_2.compute_ica_weights(ica_mixed, num_ICs, term_tol, max_iter)'; %#ok<*NASGU>
 
     IcaOutputInfo.type = 'ica';
     % IcaOutputInfo.pca_source = pca_source;
@@ -69,7 +72,7 @@ function [IcaOutputSpatial, IcaOutputTemporal, IcaOutputInfo] = run_ica(spatial,
 
     fprintf('%s: Computing ICA pairs (filters, traces) from weights...\n', datestr(now));
 
-    [filters, traces] = compute_ica_pairs(spatial, temporal, S, movie_height, movie_width, ica_W);
+    [filters, traces] = ciapkg.signal_extraction.pca_ica_2.compute_ica_pairs(spatial, temporal, S, movie_height, movie_width, ica_W);
     % [filters, traces] = compute_ica_pairs(pca_source, icaw_savename);  %#ok<*ASGLU>
 
     % Output normalization or lack-thereof

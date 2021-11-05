@@ -21,8 +21,11 @@ function [PcaFilters PcaTraces] = runPCA(inputMatrix, inputID, numberPCs, fileRe
         % 2014.06.08 [13:06:33]
         % 2015.03.20 [13:28:20] - moved calculatePCA function to make a nested, saves memory and allows processing of larger matrices. also moved cov() into the function as well to save memory. now REQUIRES that inputMatrix is a path to a file, will change this behavior in the future.
         % 2020.10.17 [19:00:49] - Compatibility fixes for matrix inputs.
+        % 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
     % TODO
         %
+
+    import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
     %========================
     options.numberPCs = numberPCs;

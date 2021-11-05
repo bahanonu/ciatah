@@ -15,9 +15,12 @@ function obj = computeManualSortSignals(obj)
 		% 2021.03.17 [16:34:59] - If user hasn't called modelVarsFromFiles, computeManualSortSignals called the function. However, this lead to a mismatch between computeManualSortSignals fileNum and obj.fileNum, leading to mismatch between xcoords, etc. and input signals/images.
 		% 2021.06.18 [21:41:07] - added modelVarsFromFilesCheck() to check and load signals if user hasn't already.
 		% 2021.06.21 [21:03:25] - Fix check to make sure variables are loaded.
+		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% ADDED
 		% ADD PERSONS NAME TO THE FILE - DONE.
 	% TODO
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	% =======
 	options.emSaveRaw = '_emAnalysis.mat';
@@ -417,6 +420,7 @@ function obj = computeManualSortSignals(obj)
 	end
 end
 function [settingStruct] = subfxnGetSettings(inputTitleStr,fileFilterRegexp,inputDatasetName)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	regSettingDefaults = struct(...
 		'usrIdxChoiceSortType', {{'sorting','viewing'}},...

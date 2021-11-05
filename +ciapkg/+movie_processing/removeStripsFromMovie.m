@@ -11,8 +11,11 @@ function [inputMovie] = removeStripsFromMovie(inputMovie,varargin)
 		% 2019.06.30 [21:16:15]
 		% 2019.12.07 [17:22:29] - Added option to see stripe FFT cutoff filter and updated some text.
 		% 2020.04.19 [16:15:50] - Added parfor and progress support.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% Str: orientation of stripes to remove, 'vertical', 'horizontal', or 'both'.

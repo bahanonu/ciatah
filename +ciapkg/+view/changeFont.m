@@ -11,8 +11,11 @@ function [success] = changeFont(FontSize,varargin)
 		% 2020.04.28 [19:17:49] - Added ability to change all the font colors at the same time, useful for making presentations on non-white backgrounds.
 		% 2020.10.01 [09:39:33] - Added support for changing font type.
         % 2021.03.07 [16:35:55] - Add font name support.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		% Add support for changing other font aspects, e.g. figure Font family, command window font, etc.
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% DESCRIPTION

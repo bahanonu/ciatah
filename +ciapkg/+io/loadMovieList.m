@@ -54,7 +54,10 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 		% 2021.06.28 [16:57:27] - Added check that deals with users requesting more frames than are in the movie in the case where "options.largeMovieLoad==1" and a matrix is pre-allocated.
 		% 2021.06.30 [12:26:12] - Added additional checks for frameList to remove if negative or zero along with additional checks during movie loading to prevent loading frames outside movie extent.
 		% 2021.07.03 [08:55:06] - dims.three fix for reading tifs, esp. ImageJ >4GB.
-
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2021.08.13 [02:31:48] - Added HDF5 capitalized file extension.
+        % 2021.08.26 [16:15:37] - Ensure that loadMovieList has all output arguments set no matter return conditions.
+		
 	% TODO
 		% OPEN
 			% Bio-Formats
@@ -68,6 +71,8 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 			% verify movies are of supported load types, remove from list if not and alert user, should be an option (e.g. return instead) - DONE
 			% MAKE tiff loading recognize frameList input. - DONE
 			% Add preallocation by pre-reading each movie's dimensions - DONE
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	% ========================
 	% Cell array of str: list of supported file types, in general DO NOT change.
@@ -130,6 +135,13 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 	% end
 
 	startTime = tic;
+    
+    % Ensure all output arguments set
+    outputMovie = NaN;
+    movieDims = NaN;
+    nPixels = NaN;
+    nFrames = NaN;
+        
 	if options.displayInfo==1
 		display(repmat('#',1,3))
 	end
@@ -173,10 +185,6 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 	if exist('tmpMovieList','var')
 		movieList = tmpMovieList;
 	else
-		outputMovie = NaN;
-		movieDims = NaN;
-		nPixels = NaN;
-		nFrames = NaN;
 		if options.displayInfo==1
 			toc(startTime);
 			display(repmat('#',1,3))
@@ -979,7 +987,7 @@ function [movieType, supported] = getMovieFileType(thisMoviePath)
 		return;
 	end
 	% files are assumed to be named correctly (lying does no one any good)
-	if any(strcmp(ext,{'.h5','.hdf5'}))		
+	if any(strcmp(ext,{'.h5','.hdf5','.HDF5'}))		
 		movieType = 'hdf5';
 	elseif strcmp(ext,'.nwb')
 		movieType = 'hdf5';
@@ -1005,6 +1013,8 @@ function subfxnDisplay(str,options)
 end
 
 function frameListTmp = subfxnLoadEqualParts(movieList,options)
+    import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+    
 	movieDims = loadMovieList(movieList,'convertToDouble',options.convertToDouble,'frameList',[],'inputDatasetName',options.inputDatasetName,'treatMoviesAsContinuous',options.treatMoviesAsContinuous,'loadSpecificImgClass',options.loadSpecificImgClass,'getMovieDims',1);
 
 	loadMovieInEqualParts = options.loadMovieInEqualParts(1);

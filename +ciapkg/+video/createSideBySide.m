@@ -9,9 +9,12 @@ function [outputMovie] = createSideBySide(primaryMovie,secondaryMovie,varargin)
 		% outputMovie - horizontally concatenated movie
 	% changelog
 		% 2014.01.27 [22:57:19] - changed to allow input of either a path or a matrix, more generalized
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		% allow option for vertical concat?
 		% spatio-temporal should be one abstracted for-loop, no? - DONE 2014.01.27 [21:52:37]
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	% ========================
 	% number of frames in each movie to load, [] = all, 1:500 would be 1st to 500th frame.

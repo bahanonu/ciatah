@@ -9,8 +9,11 @@ function [inputSignalspread] = spreadSignal(inputSignal,varargin)
 
 	% changelog
 		% 2014.05.09 - remove signals outside the matrix range, e.g. if you have a spike at the very end of the signal.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% # of frames forward/back to look at

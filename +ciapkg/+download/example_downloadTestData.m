@@ -11,8 +11,11 @@ function [success] = example_downloadTestData(varargin)
 		% 2019.09.16 [13:03:33] - Added three new imaging sessions to use for cross-day alignment and made downloading more generalized.
 		% 2020.09.14 [13:17:57] - Added example two-photon dataset.
 		% 2021.02.02 [11:25:34] - Function now calls data directory via standardized ciapkg.getDirPkg('data') to avoid placing data in incorrect folder.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	options.downloadPreprocessed = 0;

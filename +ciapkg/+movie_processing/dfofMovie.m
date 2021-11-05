@@ -9,8 +9,11 @@ function [dfofMatrix, inputMovieF0, inputMovieStd] = dfofMovie(inputMovie, varar
 	% changelog
 		% 2013.11.22 [17:49:34]
 		% 2021.06.29 [12:11:43] - Add support for minimum and soft minimum dF/F calculation.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% Char: hierarchy name in hdf5 where movie is

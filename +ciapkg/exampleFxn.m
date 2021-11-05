@@ -16,7 +16,7 @@ function [output1,output2] = exampleFxn(input1,input2,varargin)
 	% DESCRIPTION
 	options.exampleOption = '';
 	% get options
-	options = getOptions(options,varargin);
+	options = ciapkg.io.getOptions(options,varargin);
 	% display(options)
 	% unpack options into current workspace
 	% fn=fieldnames(options);

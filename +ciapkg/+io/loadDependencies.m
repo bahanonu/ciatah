@@ -20,16 +20,20 @@ function loadDependencies(varargin)
 		% 2021.06.21 [16:45:59] - Update order.
 		% 2021.07.13 [08:34:18] - Added backup URL for downloading mij.jar.
 		% 2021.07.23 [00:22:22] - Added gramm (https://github.com/piermorel/gramm) support/downloading for graphics plotting.
+		% 2021.07.26 [13:16:37] - Added Turboreg (moved from within ciapkg) to make explicit that this is an external program.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		% Verify all dependencies download and if not ask user to download again.
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% DESCRIPTION
 	options.externalProgramsDir = ciapkg.getDirExternalPrograms();
 	options.guiEnabled = 1;
-	options.dependencyStr = {'downloadImageJ','downloadCnmfGithubRepositories','example_downloadTestData','downloadNeuroDataWithoutBorders','downloadEXTRACT','downloadBioFormats','downloadGramm','downloadNoRMCorre','downloadMiji','loadMiji'};
+	options.dependencyStr = {'downloadTurboreg','downloadImageJ','downloadCnmfGithubRepositories','example_downloadTestData','downloadNeuroDataWithoutBorders','downloadEXTRACT','downloadBioFormats','downloadGramm','downloadNoRMCorre','downloadMiji','loadMiji'};
 
-	options.dispStr = {'Download ImageJ','Download CNMF, CNMF-E, and CVX code.','Download test one- and two photon datasets.','Download NWB (NeuroDataWithoutBorders)','Download EXTRACT','Download Bio-Formats','Download gramm (GRAMmar of graphics for Matlab, e.g. ggplot2-like)','Download NoRMCorre (motion correction)','Download Fiji (to run Miji)','Load Fiji/Miji into MATLAB path.'};
+	options.dispStr = {'Download Turboreg (motion correction)','Download ImageJ','Download CNMF, CNMF-E, and CVX code.','Download test one- and two photon datasets.','Download NWB (NeuroDataWithoutBorders)','Download EXTRACT','Download Bio-Formats','Download gramm (GRAMmar of graphics for Matlab, e.g. ggplot2-like)','Download NoRMCorre (motion correction)','Download Fiji (to run Miji)','Load Fiji/Miji into MATLAB path.'};
 	% Int vector: index of options.dependencyStr to run by default with no GUI
 	options.depIdxArray = [1 2 3 4 5 6 7];
 	% Binary: 1 = force update even if already downloaded. 0 = skip if already downloaded
@@ -91,6 +95,15 @@ function loadDependencies(varargin)
 				modelAddOutsideDependencies('miji');
 			case 'example_downloadTestData'
 				example_downloadTestData();
+			case 'downloadTurboreg'
+				optionsH.forceUpdate = forceUpdate;
+				optionsH.signalExtractionDir = options.externalProgramsDir;
+				optionsH.gitNameDisp = {'turboreg'};
+				optionsH.gitRepos = {'http://tiny.ucsf.edu/ciatahTurboreg'};
+				optionsH.outputDir = optionsH.gitNameDisp;
+				% optionsH.gitName = cellfun(@(x) [x '-master'],optionsH.gitNameDisp,'UniformOutput',false);
+				optionsH.gitName = {'Motion_Correction_Turboreg'};
+				[success] = downloadGithubRepositories('options',optionsH);
 			case 'downloadCellExtraction'
 				optionsH.forceUpdate = forceUpdate;
 				optionsH.signalExtractionDir = options.externalProgramsDir;

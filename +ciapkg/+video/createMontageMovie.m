@@ -5,6 +5,10 @@ function [inputMovies] = createMontageMovie(inputMovies,varargin)
 	% started: 2015.04.09
 	% changelog
 		% 2019.09.05 [16:42:29]
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	%========================
 	% Cell array of strings: each cell contains text to overlay on each movie.
 	options.identifyingText = [];

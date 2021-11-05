@@ -11,10 +11,12 @@ function [success] = manageParallelWorkers(varargin)
 		% 2016.11.29 - change to use java.lang to query directly the number of logical cores available to make compatible with hyperthreaded and non-hyperthreaded CPUs.
 		% 2019.10.18 [11:26:41] - Added ability to disable automatic loading of parallel pool when parfor is called combined with option for user to disable loading of parallel pool.
 		% 2019.10.29 [13:33:20] - Added check for user setting to auto-load parallel pool, if they have disabled then do not load pool using manageParallelWorkers.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
 
-	success = 0;
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	%========================
 	% Str: options to open/close parpool: 'open' or 'close'
 	options.openCloseParallelPool = 'open';
@@ -43,6 +45,7 @@ function [success] = manageParallelWorkers(varargin)
 
 	try
 
+		success = 0;
 		% Check if already inside a parallel loop, exit since can't open parpool on workers
 		if ~isempty(getCurrentTask())==1
 			% display('Already inside parfor loop')
@@ -73,6 +76,7 @@ function [success] = manageParallelWorkers(varargin)
 				if options.setNumCores==0
 					return;
 				end
+				disp('Opening new parallel worker pool...')
 				% check maximum number of LOGICAL cores available
 				numPhysicalCores = feature('numCores');
 				numLogicalCores = java.lang.Runtime.getRuntime().availableProcessors;

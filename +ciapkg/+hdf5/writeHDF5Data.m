@@ -17,8 +17,11 @@ function [success] = writeHDF5Data(inputData,fileSavePath,varargin)
 		% 2015.06.19 - added automatic creation of file's directory if it doesn't already exist.
 		% 2019.03.19 [17:37:38] User option to customize chunking instead of using whole x-y, useful for very large FOV movies
 		% 2020.07.07 [00:08:45] - Update addInfo to use h5write.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		% Add option to overwrite existing HDF5 file ()
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% old way of saving, only temporary until full switch

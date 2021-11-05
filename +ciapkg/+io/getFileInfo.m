@@ -12,8 +12,11 @@ function [fileInfo] = getFileInfo(fileStr, varargin)
 	% changelog
 		% 2015.12.11 - Noting modifications to allow a second type of file format to be supported, mostly for antipsychotic analysis
 		% 2017.04.15 - added multiplane support
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% |D
@@ -29,7 +32,7 @@ function [fileInfo] = getFileInfo(fileStr, varargin)
 	'|habita|habitb|fc|contextrecall|recall|renewal',...
 	'|unc9975|unc|ari|hal|ketamine|unca\d+_unca|prePD|postPD|activeAvoidance|passiveAvoidance|baseline',...
 	'|sncEighty|ram|sl|set|D',...
-	'|epi|2p'};
+	'|epi|2p|mini'};
 	% second list of assays to search for
 	% options.assayListPre = {...
 	% 'veh(|icle)_unc\d+_amph|veh(|icle)_ari\d+_amph|veh(|icle)_hal\d+_amph',...

@@ -20,8 +20,11 @@ function [dataSubset fid] = readHDF5Subset(inputFilePath, offset, block, varargi
 		% 2019.05.03 [15:42:08] - Additional 4D support in cases where a 3D offset/block request is made.
 		% 2019.10.10 [12:52:54] - Add correction for frame order. Select hyperslab in HDF5 makes blocks in sorted order, so after reading the explicit offset ordering is not the original unsorted order.
 		% 2021.02.15 [12:02:36] - Updated support for files with datasets that contain 2D matrices.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		% DONE: Make support for duplicate frames more robust so minimize the number of file reads.
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% old way of saving, only temporary until full switch

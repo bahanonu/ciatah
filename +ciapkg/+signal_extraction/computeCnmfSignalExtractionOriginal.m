@@ -17,8 +17,11 @@ function [cnmfAnalysisOutput] = computeCnmfSignalExtractionOriginal(inputMovie,n
 	% changelog
 		% 2016.06.20 - updated to keep in line with recent changes to CNMF functions
 		% 2016.09.xx - force update of
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% for loading movie

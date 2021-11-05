@@ -26,8 +26,11 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		% 2021.04.08 [16:23:20] - Use filesep in getAlgorithmRootPath to avoid issues in Unix-based systems.
 		% 2021.06.16 [09:07:46] - Fix issue of passing multiple movies to PCA-ICA.
 		% 2021.06.30 [16:41:11] - Update to add fix for CELLMax with ROI.
+		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% Root path for external signal-extraction algorithm folders.
@@ -451,6 +454,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			repmat('=',1,21) 10])
 	end
 	function subfxnSaveNwbFiles(inputImages,inputTraces)
+		import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 		% Check NWB directories loaded
 		if exist('add_processed_ophys.m')~=2
 			obj.loadBatchFunctionFolders;
@@ -475,6 +480,9 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	end
 	function getAlgorithmRootPath(algorithmFile,algorithmName,obj,rootFlag)
 		% First try to automatically add the folder
+
+		import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 		try
 			% foundFiles = dir(fullfile([obj.defaultObjDir filesep obj.externalProgramsDir], ['**\' algorithmFile '']));
 			foundFiles = dir(fullfile([obj.externalProgramsDir], ['**' filesep algorithmFile '']));
@@ -525,6 +533,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	end
 	function saveRunTimes(algorithm)
 		% save algorithm runtimes to a CSV for later comparison
+
+		import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 		% don't use tables if not at least Matlab R2014b
 		if verLessThan('matlab', '8.4.0')
@@ -684,8 +694,10 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	end
 	function getAlgorithmOptions()
 		% ==========================================
-		% ==========================================
-		% get options for each
+		% get options for each algorithm
+
+		import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 		for signalExtractNo = 1:nSignalExtractMethods
 			dlgStr = [signalExtractionMethod{signalExtractNo} ' cell extraction parameters'];
 			switch signalExtractionMethod{signalExtractNo}
@@ -1043,6 +1055,9 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	end
 	function runROISignalFinder()
 		% Use other algorithms to get an extracted ROI trace
+
+		import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 		movieList = getFileList(obj.inputFolders{obj.fileNum}, fileFilterRegexp);
 		[inputMovie thisMovieSize Npixels Ntime] = loadMovieList(movieList,'convertToDouble',0,'inputDatasetName',obj.inputDatasetName,'treatMoviesAsContinuous',1);
 		obj.signalExtractionMethod = options.ROI.signalExtractionMethod;
@@ -1087,6 +1102,9 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		subfxnSaveNwbFiles(roiAnalysisOutput.filters,{roiAnalysisOutput.traces});
 	end
 	function runPCAICASignalFinder()
+
+		import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 		switch pcaicaPCsICsSwitchStr
 			case 'Subject'
 				nPCsnICs = obj.numExpectedSignals.(obj.signalExtractionMethod).(obj.subjectStr{obj.fileNum})
@@ -1112,12 +1130,13 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 
 		if oldPCAICA==1
 			display('running PCA-ICA, old version...')
-			[PcaFilters PcaTraces] = runPCA(movieList, '', nPCs, fileFilterRegexp,'inputDatasetName',obj.inputDatasetName);
+			[PcaFilters PcaTraces] = ciapkg.signal_extraction.pca_ica.runPCA(movieList, '', nPCs, fileFilterRegexp,'inputDatasetName',obj.inputDatasetName);
 			if isempty(PcaFilters)
 				display('PCs are empty, skipping...')
 				return;
 			end
-			[IcaFilters IcaTraces] = runICA(PcaFilters, PcaTraces, '', nICs, '');
+
+			[IcaFilters IcaTraces] = ciapkg.signal_extraction.pca_ica.runICA(PcaFilters, PcaTraces, '', nICs, '');
 			traceSaveDimOrder = '[nComponents frames]';
 			% reorder if needed
 			options.IcaSaveDimOrder = 'xyz';
@@ -1129,7 +1148,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			end
 		else
 			disp('running PCA-ICA, new version...')
-			[PcaOutputSpatial, PcaOutputTemporal, PcaOutputSingularValues, PcaInfo] = run_pca(movieList, nPCs, 'movie_dataset_name',obj.inputDatasetName);
+			[PcaOutputSpatial, PcaOutputTemporal, PcaOutputSingularValues, PcaInfo] = ciapkg.signal_extraction.pca_ica_2.run_pca(movieList, nPCs, 'movie_dataset_name',obj.inputDatasetName);
 			disp(['PcaOutputSpatial: ' num2str(size(PcaOutputSpatial))]);
 			disp(['PcaOutputTemporal: ' num2str(size(PcaOutputTemporal))]);
 			disp(['PcaOutputSingularValues: ' num2str(size(PcaOutputSingularValues))]);
@@ -1145,7 +1164,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			% output_units = 'std';
 			% options.PCAICA.term_tol = 5e-6;
 			% options.PCAICA.max_iter = 1e3;
-			[IcaFilters, IcaTraces, IcaInfo] = run_ica(PcaOutputSpatial, PcaOutputTemporal, PcaOutputSingularValues, movieDims.x, movieDims.y, nICs, 'output_units',options.PCAICA.outputUnits,'mu',options.PCAICA.mu,'term_tol',options.PCAICA.term_tol,'max_iter',options.PCAICA.max_iter);
+			[IcaFilters, IcaTraces, IcaInfo] = ciapkg.signal_extraction.pca_ica_2.run_ica(PcaOutputSpatial, PcaOutputTemporal, PcaOutputSingularValues, movieDims.x, movieDims.y, nICs, 'output_units',options.PCAICA.outputUnits,'mu',options.PCAICA.mu,'term_tol',options.PCAICA.term_tol,'max_iter',options.PCAICA.max_iter);
 			IcaTraces = permute(IcaTraces,[2 1]);
 			traceSaveDimOrder = '[nComponents frames]';
 			% reorder if needed
@@ -1186,6 +1205,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		subfxnSaveNwbFiles(IcaFilters,{IcaTraces});
 	end
 	function [emOptions] = runCELLMaxSignalFinder() % runEMSignalFinder()
+		import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 		% emOptions.dsMovieDatasetName = options.datasetName;
 		% emOptions.movieDatasetName = options.datasetName;
 		ciapkg.loadBatchFxns('loadEverything');
@@ -1372,6 +1393,10 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		ciapkg.loadBatchFxns();
 	end
 	function [extractAnalysisOutput] = runEXTRACTSignalFinder()
+		% Run EXTRACT cell extraction
+
+		import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 		movieList = getFileList(obj.inputFolders{obj.fileNum}, fileFilterRegexp);
 		[inputMovie thisMovieSize Npixels Ntime] = loadMovieList(movieList,'convertToDouble',0,'inputDatasetName',obj.inputDatasetName,'treatMoviesAsContinuous',1);
 		inputMovie(isnan(inputMovie)) = 0;
@@ -1493,7 +1518,6 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		% extractConfig.thresholds.low_ST_index_thresh = 1e-2;
 		% extractConfig.thresholds.high_ST_index_thresh = 0.8;
 
-
 		startTime = tic;
 		outStruct = extractor(inputMovie,extractConfig);
 		outStruct
@@ -1538,6 +1562,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		subfxnSaveNwbFiles(extractAnalysisOutput.filters,{extractAnalysisOutput.traces});
 	end
 	function [cnmfOptions] = runCNMFSignalFinder()
+
+		import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 		% Check CVX is installed and if not, setup.
 		runCvxSetup();
@@ -2132,6 +2158,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	end
 end
 function [turboregSettingStruct] = getFxnSettings()
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	% propertySettings = turboregSettingDefaults;
 

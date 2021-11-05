@@ -10,8 +10,11 @@ function [success] = convertInscopixIsxdToHdf5(inputFilePath,varargin)
 
 	% changelog
 		% 2019.07.11 [19:55:24] - Added support for JSON file information to metadata file.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% Char: alternative file path
@@ -327,6 +330,8 @@ function [success] = convertInscopixIsxdToHdf5(inputFilePath,varargin)
 end
 
 function [subsets dataDim] = getSubsetOfDataToAnalyze(inputFilePath, options, varargin)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	% get HDF5 info
 	% hinfo = hdf5info(inputFilePath);
 	% hinfo.GroupHierarchy.Datasets;
@@ -355,6 +360,8 @@ function [subsets dataDim] = getSubsetOfDataToAnalyze(inputFilePath, options, va
 end
 
 function [subsets dataDim] = getSubsetOfDataToAnalyzeHDF5(inputFilePath, options, varargin)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	% get HDF5 info
 	hinfo = hdf5info(inputFilePath);
 	hinfo.GroupHierarchy.Datasets;
@@ -375,6 +382,8 @@ function [subsets dataDim] = getSubsetOfDataToAnalyzeHDF5(inputFilePath, options
 	subsets = floor(linspace(1,dataDim.z,numSubsets));
 end
 function hReadInfo = getHdf5Info(hinfo,options)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+	
 	try
 		datasetNames = {hinfo.GroupHierarchy.Datasets.Name};
 		thisDatasetName = strmatch(options.inputDatasetName,datasetNames);

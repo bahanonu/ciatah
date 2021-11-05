@@ -13,8 +13,11 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 		% 2020.05.12 [18:02:04] - Update to make sure inputSignals2 with NWB.
 		% 2020.12.08 [01:14:09] - Reorganized returnType to be outside raw signals flag, so common filtering mechanism regardless of variables loaded into RAM or not. This fixes if a user loads variables into RAM then uses cross-session alignment, the viewMatchObjBtwnSessions method may not display registered images (cross-session alignment is still fine and valid).
 		% 2021.06.30 [14:52:23] - Updated to allow loading raw files without calling modelVarsFromFiles.
+		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		% Give a user a warning() output if there are no or empty cell-extraction outputs
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% Type of file to return: 'filtered' or 'raw'
@@ -708,8 +711,8 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 					% globalRegCoords = globalRegCoords{strcmp(obj.assay{thisFileNum},obj.globalIDFolders.(obj.subjectStr{thisFileNum}))};
 					% globalRegCoords = globalRegCoords{strcmp(obj.date{thisFileNum},obj.globalIDFolders.(obj.subjectStr{thisFileNum}))};
 					% globalRegCoords = globalRegCoords{strcmp(obj.folderBaseSaveStr{thisFileNum},obj.globalIDFolders.(obj.subjectStr{thisFileNum}))};
-					globalRegCoords = globalRegCoords{strcmp(obj.folderBaseSaveStrUnique{thisFileNum},obj.globalIDFolders.(obj.subjectStr{thisFileNum}))};
-
+                    globalSubjectNo = strcmp(obj.folderBaseSaveStrUnique{thisFileNum},obj.globalIDFolders.(obj.subjectStr{thisFileNum}));
+					globalRegCoords = globalRegCoords{globalSubjectNo};
 					if ~isempty(globalRegCoords)
 						% inputImages = permute(inputImages,[2 3 1]);
 
@@ -729,7 +732,9 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 						end
 						% inputImages = permute(inputImages,[3 1 2]);
 					end
-				end
+                end
+                globalSubjectNo = strcmp(obj.folderBaseSaveStrUnique{thisFileNum},obj.globalIDFolders.(obj.subjectStr{thisFileNum}));
+                inputImages = obj.globalIDStruct.(obj.subjectStr{thisFileNum}).inputImages{globalSubjectNo};
 			otherwise
 				% body
 		end

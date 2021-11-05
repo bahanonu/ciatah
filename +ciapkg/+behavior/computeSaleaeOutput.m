@@ -12,8 +12,11 @@ function [outputData] = computeSaleaeOutput(matfile,varargin)
 		% 2018.06.04 [14:50:06] - updated to filter the sync digital channel to filter out voltage spikes there as well
 		% 2018.07.06 [16:26:16] - Addition to deal with sync TTLs that occur way after trial has ended
 		% 2020.09.30 [23:42:16] - Updated to make more easily usable with other miniscope sync signals. Remove eval call.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% Str: 'digitial' or 'analog'

@@ -23,8 +23,13 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		% 2019.01.15 [15:59:21] - Remove NaNs from inputMovie when using precomputedRegistrationCooords.
 		% 2020.04.18 [19:04:13] - Update creation of xform to by default include rotation along with translation and skew.
 		% 2020.08.18 [12:56:10] - Remove references to parfor_progress.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2021.09.11 [10:40:05] - Additional matlab disk normalizeType options.
+		% 2021.11.01 [12:15:10] - Additional display of information
 	% TO-DO
 		% Add support for "imregtform" based registration.
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	% ========================
 	% Using a compiled version of the ANSI C code developed by Philippe Thevenaz.
@@ -125,20 +130,24 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	options.altMovieRegisterNum = 2;
 	% should a complement (inversion) of each frame be made?
 	options.complementMatrix = 1;
-	% run normalize movie methods
+	% Binary: 1 = run normalize movie methods
 	options.meanSubtract = 0;
-	% subtract the mean from each frame?
+	% Binary: 1 = subtract the mean from each frame.
 	options.meanSubtractNormalize = 0;
 	% String: imagejFFT,matlabDisk,divideByLowpass,highpass,bandpass
 	options.normalizeType = 'divideByLowpass';
-	% bandpass after turboreg but before registering
+	% Int: normalizeType=matlabDisk, size of disk to substract from frame (min dimension size/this parameter) so smaller = larger spatial filter.
+	options.matlabdiskR1 = 10;
+	% Int: normalizeType=matlabDisk, size of disk to blur frame.
+	options.matlabdiskR2 = 3;
+	% =======
+	% Binary: 1 = bandpass after turboreg but before registering
 	options.bandpassBeforeRegister = 0;
-	% normalize movie (highpass, etc.) before registering
+	% String: imagejFFT, divideByLowpass, bandpass. Normalize movie (highpass, etc.) before registering
 	options.normalizeBeforeRegister = [];
 	% imageJ normalization options
 	options.imagejFFTLarge = 10000;
 	options.imagejFFTSmall = 80;
-
 	% for preprocessing matlab filtering
 	options.normalizeFreqLow = 40;
 	options.normalizeFreqHigh = 100;
@@ -151,12 +160,12 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	% for options.bandpassBeforeRegister
 	options.freqLow = 1;
 	options.freqHigh = 4;
-
+	% =======
 	% 1 = show figures during processing
 	options.showFigs = 1;
 	% cmd line waitbar on?
 	options.waitbarOn = 1;
-
+	% =======
 	% Binary: 1 = return the movie after normalizing, mean subtract, etc.
 	options.returnNormalizedMovie = 0;
 	% Binary: 1 = run correlation before spatial filtering, 0 = do not run correlation.
@@ -387,6 +396,9 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	%Convert cell array back to 3D matrix
 	inputMovie = cat(3,inputMovie{:});
 	inputMovie = single(inputMovie);
+
+
+	subfxn_dispMovieFrames(inputMovie,'Registration==1');
 
 	% ========================
 	if options.removeEdges==1
@@ -910,8 +922,8 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 
 					imageNow = squeeze(inputMovieCropped{1});
 					[rows,cols] = size(imageNow);
-					r1 = min(rows,cols)/10;
-					r2 = 3;
+					r1 = min(rows,cols)/options.matlabdiskR1;
+					r2 = options.matlabdiskR2;
 					hDisk  = fspecial('disk', r1);
 					hDisk2 = fspecial('disk', r2);
 					transform = @(A) transform_2(A,hDisk,hDisk2);
@@ -968,7 +980,7 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 			end
 		end
 		if options.showFigs==1
-			openFigure(9019, '');colormap gray;imagesc(squeeze(inputMovieCropped(:,:,1)));
+			subfxn_dispMovieFrames(inputMovieCropped,'Registration==0');
 		end
 		% title('normalized movie');
 		% GammaValue = 2.95
@@ -978,7 +990,26 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	end
 	disp('=======')
 end
+function subfxn_dispMovieFrames(inputMovieCropped,titleStr)
+	ciapkg.api.openFigure(9019, '');
+	colormap gray;
+	subplot(2,2,1)
+		imagesc(squeeze(inputMovieCropped(:,:,1)));
+		axis image; box off;
+		title('Images to use to get registration coordinates');
+	subplot(2,2,2)
+		imagesc(squeeze(inputMovieCropped(:,:,end)));
+		axis image; box off;
+		title('Last frame in movie')
+	subplot(2,2,3)
+		imagesc(squeeze(inputMovieCropped(:,:,1))-squeeze(inputMovieCropped(:,:,end)));
+		axis image; box off;
+		title('Diff image #1 and #2')
+	suptitle(titleStr)
+end
 function cropCoords = getCropSelection(thisFrame)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	% get a crop of the input region
 	[~,~] = openFigure(9, '');
 	subplot(1,2,1);imagesc(thisFrame); axis image; colormap gray; title('select region')

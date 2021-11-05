@@ -9,9 +9,11 @@ function [success] = createMatchObjBtwnTrialsMaps(inputImages,matchStruct,vararg
 		%
 
 	% changelog
-		%
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		% Allow user to interactively switch between maps via a callback figure
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% Str: path to save output AVI and related files.

@@ -9,8 +9,11 @@ function obj = viewOverlayTrackingToVideo(obj)
 
 	% changelog
 		% 2017.01.15 [00:54:35] - updated naming scheme inputImages/inputSignals
+		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% continuous variables to analyze

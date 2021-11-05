@@ -8,9 +8,11 @@ function [movieTmp] = viewAddTextToMovie(movieTmp,inputText,fontSize)
 
 	% changelog
 		% 2016.07.01 [15:05:03] - improved
-		%
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	nFrames = size(movieTmp,3);
 	maxVal = nanmax(movieTmp(:));

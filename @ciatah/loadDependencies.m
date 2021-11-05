@@ -13,8 +13,11 @@ function obj = loadDependencies(obj,varargin)
 		% 2021.01.22 [13:42:36] - NWB from specific release to reduce compatibility errors.
 		% 2021.02.01 [15:10:41] - Calls non-class function for use in more functions without needing to load CIAtah class.
 		% 2021.03.20 [18:12:20] - Added EXTRACT support to list of functions to download.
+		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		% Verify all dependencies download and if not ask user to download again.
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% DESCRIPTION

@@ -8,9 +8,11 @@ function obj = setMainSettings(obj)
 		%
 
 	% changelog
-		%
+		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	% h= uicontrol('Style','Text','String','hello: ','Position',[20 40 100 50],'BackgroundColor','white') ;
 	% k = uicontrol('Style', 'popup','String', {'jet','hsv'},'Position', [100 40 200 50]);

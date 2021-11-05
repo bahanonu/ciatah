@@ -13,8 +13,11 @@ function neighborsCell = identifyNeighborsAuto(inputImages, inputSignals, vararg
 	% changelog
 		% 2013.11.01 refactored so accepts ICA filters and traces as input, also changed display to it matches ICAchooser, e.g. it applies a cellmap along with the identified and new cells
 		% 2017.06.29 - change to using centroids since faster than imdilate and more accurate.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	options.plottingOn = 0;

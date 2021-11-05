@@ -14,8 +14,11 @@ function [inputImages, inputSignals, valid, imageSizes, imgFeatures] = filterIma
 		% 2016.08.20 [21:54:11] added some more options for better control of filtering
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
 		% 2019.07.17 [00:29:16] - Added support for sparse input images (mainly ndSparse format).
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% get options

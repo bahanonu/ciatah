@@ -29,3 +29,23 @@ Please cite [Corder*, Ahanonu*, et al. 2019](http://science.sciencemag.org/conte
 }
 ```
 {% endraw %}
+
+## Turboreg (motion correction)
+If you used _Turboreg_ to conduct motion correction of your movies, please cite as below.
+
+P. Thévenaz, U.E. Ruttimann, M. Unser, "A Pyramid Approach to Subpixel Registration Based on Intensity," IEEE Transactions on Image Processing, vol. 7, no. 1, pp. 27-41, January 1998. Other relevant on-line publications are available at http://bigwww.epfl.ch/publications/.
+
+```Latex
+@ARTICLE(http://bigwww.epfl.ch/publications/thevenaz9801.html,
+  AUTHOR="Th{\'{e}}venaz, P. and Ruttimann, U.E. and Unser, M.",
+  TITLE="A Pyramid Approach to Subpixel Registration Based on
+          Intensity",
+  JOURNAL="{IEEE} Transactions on Image Processing",
+  YEAR="1998",
+  volume="7",
+  number="1",
+  pages="27--41",
+  month="January",
+  note=""
+)
+```

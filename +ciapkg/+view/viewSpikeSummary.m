@@ -9,9 +9,11 @@ function [signalMatrix signalSpikes] = viewSpikeSummary(signalMatrix,signalSpike
 		% signalMatrix - 2D matrix of [signals frames] that contains the raw analog signal
 		% signalSpikes - 2D matrix of [signals frames] that contains 0/1 indicating whether a peak occurred at that point
 	% changelog
-		%
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	options.figStart = 100;

@@ -12,8 +12,11 @@ function [success] = downsampleHdf5Movie(inputFilePath, varargin)
 	% changelog
 		% 2014.01.18 - improved method of obtaining the newFilename
 		% 2014.06.16 - updated output notifications to user
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		% Use handles to reduce memory load when doing computations.
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% name of the input hierarchy in the HDF5 files
@@ -244,6 +247,8 @@ function [success] = downsampleHdf5Movie(inputFilePath, varargin)
 end
 
 function [subsets dataDim] = getSubsetOfDataToAnalyze(inputFilePath, options, varargin)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	% get HDF5 info
 	hinfo = hdf5info(inputFilePath);
 	hinfo.GroupHierarchy.Datasets;
@@ -264,6 +269,8 @@ function [subsets dataDim] = getSubsetOfDataToAnalyze(inputFilePath, options, va
 	subsets = floor(linspace(1,dataDim.z,numSubsets));
 end
 function hReadInfo = getHdf5Info(hinfo,options)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+	
 	try
 		datasetNames = {hinfo.GroupHierarchy.Datasets.Name};
 		thisDatasetName = strmatch(options.inputDatasetName,datasetNames);

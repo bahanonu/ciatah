@@ -14,8 +14,11 @@ function [croppedPeakImages] = compareSignalToMovie(inputMovie, inputImages, inp
 		% 2017.02.14 - updated to support extended crosshairs and outlines.
 		% 2019.02.13 [14:52:33] - Update to add support to loading from disk and other speed improvements.
 		% 2019.07.17 [00:29:16] - Added support for sparse input images (mainly ndSparse format).
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% Vector: 3 element vector indicating [x y frames]

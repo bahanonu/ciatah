@@ -7,6 +7,9 @@ function [success] = downloadCnmfGithubRepositories(varargin)
 		% 2020.06.28 [13:08:16] - Final implementation of force update, to bring to most current version of all git directories.
 		% 2020.06.28 [14:01:17] - Switch to calling downloadGithubRepositories for downloads to prevent bugs introduced by similar code between two functions.
 		% 2021.02.01 [‏‎15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	options.defaultExternalProgramDir = ciapkg.getDirExternalPrograms();

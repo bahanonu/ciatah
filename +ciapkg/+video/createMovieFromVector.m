@@ -10,8 +10,11 @@ function [vectorMovie] = createMovieFromVector(inputVector,movieDim,varargin)
 
 	% changelog
 		% 2021.05.04 [09:29:19] - Users can now manually change value assigned to center line or signal.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% Different normalization types'oneToNegativeOne' 'oneToOne' 'zeroToOne' 'zeroCentered' 'zeroCenteredCorrect' 'dfof'
@@ -77,7 +80,7 @@ function [vectorMovie] = createMovieFromVector(inputVector,movieDim,varargin)
 			vectorMovie(:,:,frameNo) = imresize(vectorMovie(:,1:length(frameVectorIdx),frameNo),[movieDimY movieDim(2)],'bilinear');
 			vectorMovie(:,round(end/2),frameNo) = options.centerLineValue;
 
-			reverseStr = cmdWaitbar(frameNo,nFrames,reverseStr,'inputStr','creating matrix: ','waitbarOn',1,'displayEvery',5);
+			reverseStr = cmdWaitbar(frameNo,nFrames,reverseStr,'inputStr','creating matrix: ','waitbarOn',1,'displayEvery',50);
 		end
 
 		vectorMovie = flipdim(vectorMovie,1);

@@ -11,9 +11,12 @@ function obj = modelModifyMovies(obj)
 		% 2019.06.10 [11:01:55] - Added support for non-Miji based masking.
 		% 2019.10.28 [15:58:45] - Cast the movie mask to be same type as the movie to deal with integer movie inputs.
 		% 2021.06.20 [00:21:33] - manageMiji('startStop','closeAllWindows'); added to improve support for ImageJ over Fiji implementation of Miji.
+		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
 
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+		
 	try
 		options.videoPlayer = [];
 		if isempty(options.videoPlayer)
@@ -308,6 +311,8 @@ function obj = modelModifyMovies(obj)
 
 end
 function subfxnEditMovies(inputFolderHere,fileFilterRegexp,replaceFileFilterRegexp,frameListSave,inputDatasetName,outputDatasetName,loadMovieInEqualParts,movieMask,folderBaseDisplayStr,subplotNo)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	% load entire movie and crop
 	movieList = getFileList(inputFolderHere, fileFilterRegexp);
 	if isempty(movieList)
@@ -332,6 +337,8 @@ function subfxnEditMovies(inputFolderHere,fileFilterRegexp,replaceFileFilterRege
 	[output] = writeHDF5Data(primaryMovie,newPathFile,'datasetname',outputDatasetName,'writeMode','append');
 end
 function [frameListTmp] = subfxnVerifyFrameList(frameList,moviePath,inputDatasetName,loadMovieInEqualParts)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+	
 	if isempty(frameList)
 		frameListTmp = frameList;
 	else

@@ -16,8 +16,11 @@ function [thisFrame,movieFileID,inputMovieDims] = readFrame(inputMoviePath,frame
 	% changelog
 		% 2021.06.30 [01:26:29] - Updated handling of no file path character input.
 		% 2021.07.03 [09:02:14] - Updated to have backup read method for different tiff styles.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	% ========================
 	% Str: hierarchy name in hdf5 where movie data is located

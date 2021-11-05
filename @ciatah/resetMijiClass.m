@@ -12,7 +12,7 @@ function obj = resetMijiClass(obj)
 	% TODO
 		%
 
-	resetMiji
+	ciapkg.api.resetMiji;
 	% success = 0;
 
 	% for i = 1:2

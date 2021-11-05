@@ -9,9 +9,11 @@ function [success destFolders] = moveFilesToFolders(pathToSrc,pathToDest,varargi
         %
 
     % changelog
-        %
+        % 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
     % TODO
         %
+
+    import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
     %========================
     % used to determine which folders to copy from src to dest

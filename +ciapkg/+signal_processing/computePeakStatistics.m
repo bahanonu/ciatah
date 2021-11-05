@@ -17,6 +17,9 @@ function [peakOutputStat] = computePeakStatistics(inputSignals,varargin)
 	% changelog
 		% 2013.12.24 - changed output so that it is a structure, allows more flexibility when adding new statistics.
 		% 2019.09.10 [11:30:07] - Added fano factor, trace frame lagged auto-correlation, parallelization, and misc improvements.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	%

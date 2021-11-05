@@ -74,6 +74,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 		% 2021.05.09 [15:20:18] - Since ciapkg.io.loadSignalExtraction already supports loading NWB or CIAtah MAT-file cell extraction files, remove remove redundancy and only call ciapkg.io.loadSignalExtraction rather than loadNeurodataWithoutBorders. Added support for progress bar when movie not input.
 		% 2021.07.12 [10:14:21] - Changed call to overloaded functions to `ciapkg.overloaded` to avoid altering users Matlab workspace native functions.
 		% 2021.07.12 [11:15:06] - Change selection of cell on the maps to be instantaneous for where the mouse location is, much faster, don't have to wait for ginputCustom cross-hairs to show. Users can still show crosshairs with 'V'.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		% DONE: New GUI interface to allow users to scroll through video and see cell activity at that point
 		% DONE: allow option to mark rest as bad signals
@@ -81,6 +82,8 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 		% c should make an obj cut movie for 10 or so signals
 		% set viewMontageso it uses minValTraces maxValTraces
 		% DONE: Allow asynchronous loading of cell information from disk, e.g. do the first 20 cells then load in background while person goes through the rest of the cells.
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%% ============================
 	% ===ADDITIONAL DATA===
@@ -660,6 +663,8 @@ function plotSignalStatisticsWrapper(inputSignals,inputImages,validChoices,input
 	end
 end
 function plotSignalStatistics(inputSignals,inputImageSizes,inputStr,pointColor, holdState,signalSnr,slopeRatio)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	% plot statistics for input signal
 	warning off;
 	% get best fit line SNR v slopeRatio
@@ -701,6 +706,8 @@ function plotSignalStatistics(inputSignals,inputImageSizes,inputStr,pointColor, 
 	warning on;
 end
 function [valid, safeExit] = chooseSignals(options,signalList, inputImages,inputSignals,objMap, valid, inputStr,tmpDir,sessionID,signalPeakIdx,signalSnr,inputImagesThres,inputImageSizes,peakOutputStat,ROItraces,imgStats,inputSignalSignal,inputSignalNoise,inputImagesBoundaryIndices,signalPeakIdxOriginal,signalPeaksOriginal,instructionStr)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	% manually decide which signals are good or bad, pre-computed values input to speed up movement through signals
 
 	warning('off','all')
@@ -2226,6 +2233,8 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 	end
 end
 function [axValid, axValidAll] = subfxnSignalSorterProgressBars(i,valid,inputMoviePlotLocHandle,inputMoviePlotLoc2Handle,options,mainFig,axValid,axValidAll,cellIDStr)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	validData = cat(3,...
 		double(valid(:)'==0|valid(:)'>1),...% Red
 		double(valid(:)'==1|valid(:)'>1),...% Green
@@ -2298,6 +2307,8 @@ function subfxnLostFocusMainFig(jAxis, jEventData, hFig)
 end
 
 function instructionStr = subfxnCreateLegend()
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	sepStrNum = 10;
 	instructionStr =  [...
 	'signalSorter',sepStrNum,...
@@ -2361,6 +2372,8 @@ function instructionStr = subfxnCreateLegend()
 end
 
 function [objCutMovie] = createObjCutMovieSignalSorter(options,testpeaks,thisTrace,inputImages,i,cropSizeLength,maxValMovie)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	usePadding = 1;
 	preOffset = options.nMovieFrames;
 	postOffset = options.nMovieFrames;
@@ -2475,6 +2488,8 @@ function [objCutMovie] = createObjCutMovieSignalSorter(options,testpeaks,thisTra
 	[objCutMovie] = createStimCutMovieMontage(objCutMovie,nAlignPts,timeVector,'squareMontage',1,'addStimMovie',0);
 end
 function [croppedPeakImages2, croppedPeakImages] = viewMontage(inputMovie,inputImage,options,thisTrace,signalPeakArray,minValMovie,maxValMovie,cropSizeLength,i,dispImgFinal)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	displayImg = 1;
 	if isempty(signalPeakArray)
 		if displayImg==1
@@ -2590,6 +2605,7 @@ end
 
 function [slopeRatio] = plotPeakSignal(thisTrace,testpeaks,cellIDStr,instructionStr,minValTraces,maxValTraces,peakROI,avgSpikeTrace,slopeRatio,spikeCenterTrace,valid)
 	% display plots of the signal around peaks in the signal
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	try
 		[peakSignalAmplitude, peakIdx] = sort(spikeCenterTrace(:,round(end/2)+1),'descend');
@@ -2627,6 +2643,8 @@ function [slopeRatio] = plotPeakSignal(thisTrace,testpeaks,cellIDStr,instruction
 end
 
 function plotSignal(thisTrace,testpeaks,cellIDStr,instructionStr,minValTraces,maxValTraces,options,inputSignalSignal,inputSignalNoise)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	peakSignalAmplitude = thisTrace(testpeaks(:));
 	[peakSignalAmplitude, peakIdx] = sort(peakSignalAmplitude,'descend');
 	testpeaks = testpeaks(peakIdx);
@@ -2658,6 +2676,8 @@ function plotSignal(thisTrace,testpeaks,cellIDStr,instructionStr,minValTraces,ma
 	hold off;
 end
 function [valid, directionOfNextChoice, saveData, i, lastSortedSignal] = respondToUserInput(reply,i,valid,directionOfNextChoice,saveData,nFilters,lastSortedSignal)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	% decide what to do based on input (not a switch due to multiple comparisons)
 	if isequal(reply, 3)||isequal(reply, 110)||isequal(reply, 31)
 		% 'N' key or right click
@@ -2733,6 +2753,8 @@ function [valid, directionOfNextChoice, saveData, i, lastSortedSignal] = respond
 	end
 end
 function [outputImage] = subfxnCropImages(inputImages)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	signalNo = 1;
 	cropSize = 15;
 	movieDims = size(inputImages);

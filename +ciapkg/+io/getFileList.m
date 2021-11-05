@@ -12,21 +12,27 @@ function [fileList] = getFileList(inputDir, filterExp,varargin)
 		% 2014.03.21 - added feature to input cell array of filters
 		% 2016.03.20 - added exclusion filter to function
 		% 2019.03.08 [13:12:59] - added support for natural sorting of files
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2021.09.10 [03:17:56] - Added support to exclude adding the input directory to each file path.
 	% TODO
 		% Fix recusive to recursive in a backwards compatible way
 
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	%========================
-	%
-	options.recusive = 0;
-	%
+	% Binary: 1 = recursively find files in all sub-directories. 0 = only find files in inputDir directory.
 	options.recursive = '';
-	%
+	% Append 
 	options.regexpWithFolder = 0;
-	%
+	% String: filter to exclude.
 	options.excludeFilter = '';
+	% Binary: 1 = add inputDir to file paths, 0 = do not add input directory.
+	options.addInputDirToPath = 1;
 	% Char: lexicographic (e.g. 1 10 11 2 21 22 unless have 01 02 10 11 21 22) or numeric (e.g. 1 2 10 11 21 22) or natural (e.g. 1 2 10 11 21 22)
 	% options.sortMethod = 'lexicographic';
 	options.sortMethod = 'natural';
+	% DEPRECIATED 1 = recursively find files in all sub-directories. 0 = only find files in inputDir directory.
+	options.recusive = 0;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -64,13 +70,25 @@ function [fileList] = getFileList(inputDir, filterExp,varargin)
 				end
 
 				if(~isempty(cell2mat(regexpi(filename, filterExp))))
-					fileList{end+1} = [thisDirHere filesep filename];
+					if options.addInputDirToPath==1
+						fileList{end+1} = [thisDirHere filesep filename];
+					else
+						[~,filename,filenameExt] = fileparts(filename);
+						filename = [filename filenameExt];
+						fileList{end+1} = [filename];
+					end
 				end
 			else
 				filename = files(file,:);
 				filename = filename{1};
 				if(~isempty(cell2mat(regexpi(filename, filterExp))))
-					fileList{end+1} = [filename];
+					if options.addInputDirToPath==1
+						fileList{end+1} = [filename];
+					else
+						[~,filename,filenameExt] = fileparts(filename);
+						filename = [filename filenameExt];
+						fileList{end+1} = [filename];
+					end
 				end
 			end
 		end

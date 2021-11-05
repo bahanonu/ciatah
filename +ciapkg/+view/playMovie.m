@@ -33,6 +33,10 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		% 2021.02.05 [16:25:12] - Added feature to sub-sample movie to make display run faster for larger movies.
 		% 2021.04.23 [13:05:29] - Add support for playing RGB movie of dimension [x y C t] if input directly as matrix.
 		% 2021.07.03 [08:16:32] - Added feature to input line overlays on input movie (e.g. to overlay cell extraction outputs).
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2021.10.07 [15:05:52] - Update to avoid caxis with rgb movies, making them hard to view.
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	% ========================
 	% options
@@ -125,6 +129,8 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		% options.fpsMax = 30;
 	% end
 
+	rgbMovieFlag = 0;
+
 	% Obtain movie information and connect to file if user gives a path to a movie.
 	if ischar(inputMovie)==1
 		inputMovieIsChar = 1;
@@ -172,6 +178,10 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		sparseInputMovie = 1;
 	else
 		sparseInputMovie = 0;
+	end
+
+	if length(inputMovieDims)==4
+		rgbMovieFlag = 1;
 	end
 
 	% ==========================================
@@ -531,8 +541,10 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 
 			% keep contrast stable across frames.
 			% thisFrame = imadjust(I,[0 1],[0 1]);
-			thisFrame(1,1) = maxMovie(1)*maxAdjFactor;
-			thisFrame(1,2) = minMovie(1);
+			if rgbMovieFlag==0
+				thisFrame(1,1) = maxMovie(1)*maxAdjFactor;
+				thisFrame(1,2) = minMovie(1);
+			end
 
 			if ~isempty(options.primaryPointsOverlay)
 				% thisFrame(options.primaryPointsOverlay) = thisFrame(options.primaryPointsOverlay)/10;
@@ -542,7 +554,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 			if options.rgbDisplay==1
 				thisFrameTmp2 = max(thisFrame,[],3);
 				imAlpha = ones(size(thisFrameTmp2));
-				imAlpha(isnan(thisFrameTmp2))=0;
+				imAlpha(isnan(thisFrameTmp2)) = 0;
 			else
 				imAlpha = ones(size(thisFrame));
 				imAlpha(isnan(thisFrame))=0;
@@ -589,14 +601,17 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 			else
 				if length(size(thisFrame))==3
 					% set(montageHandle,'Cdata',squeeze(thisFrame(:,:,1)),'AlphaData',imAlpha);
+					set(montageHandle,'Cdata',thisFrame);
 				else
 					set(montageHandle,'Cdata',thisFrame,'AlphaData',imAlpha);
 				end
 			end
-			if strcmp(options.colormapColor,'gray')
-				set(axHandle,'color',[1 0 0]);
-			else
-				set(axHandle,'color',[0 0 0]);
+			if rgbMovieFlag==0
+				if strcmp(options.colormapColor,'gray')
+					set(axHandle,'color',[1 0 0]);
+				else
+					set(axHandle,'color',[0 0 0]);
+				end
 			end
 
 			if ~isempty(options.extraMovie)
@@ -605,7 +620,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 				set(axHandle2,'color',[0 0 0]);
 			end
 
-			if frame==1
+			if frame==1&&rgbMovieFlag==0
 				try
 					caxis(axHandle,[minMovie(1) maxMovie(1)]);
 				catch
@@ -707,7 +722,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 				% axis square;
 				% axis equal tight;
 
-				if frame==1
+				if frame==1&&rgbMovieFlag==1
 					try
 						caxis(axHandle2,[minMovie(2) maxMovie(2)]);
 					catch
@@ -1561,6 +1576,8 @@ function [usrIdxChoice, ok] = getUserMovieChoice(usrIdxChoiceStr)
 	usrIdxChoice = usrIdxChoiceList(sel);
 end
 function subfxn_imageJ(inputMovie)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	modelAddOutsideDependencies('miji');
 
 	manageMiji('startStop','start');
@@ -1590,6 +1607,8 @@ function resizeui(hObject,event,axHandle,colorbarsOn)
 	warning on;
 end
 function colormapColorList = subfxn_colormapCreate(options)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	% clc
 	% add custom colormap
 	t = [255, 0, 0]./255;

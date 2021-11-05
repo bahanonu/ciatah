@@ -15,8 +15,11 @@ function [signalMovie] = createSignalBasedMovie(inputSignals,inputImages,varargi
 	% changelog
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
         % 2019.08.26 [10:45:29] - Additional threshold, peak support
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% should the input images be automatically filtered to remove large or low SNR signals?

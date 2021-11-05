@@ -18,8 +18,11 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 		% 2019.09.10 [20:46:03] - Switched back to NOT converting to cell array, incurred unnecessary overhead and not needed since images/signals sliced properly. Also fix to reduce inputMovie being transferred to all workers in some cases.
 		% 2019.10.29 [13:51:04] - Added support for parallel.pool.Constant when PCT auto-start parallel pool disabled.
 		% 2020.05.06 [16:24:00] - Fix for hdf5FileWorkerConstant when gcp empty.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		% Take 2 frames after peak and average to improve SNR
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% Int: size in pixels to crop in the movie around cell centroid

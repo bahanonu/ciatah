@@ -8,6 +8,9 @@ function [success] = downloadGithubRepositories(varargin)
 		% 2020.06.28 [13:08:16] - Final implementation of force update, to bring to most current version of all git directories.
 		% 2021.01.22 [13:18:25] - Update to allow regexp backup to find name of downloaded Github repo folder after unzipping, e.g. in cases where a release or non-master branch is downloaded. - IGNORE
 		% 2021.02.01 [‏‎15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% 1 = force update of the git repository, 0 = skip if already downloaded
@@ -49,6 +52,17 @@ function [success] = downloadGithubRepositories(varargin)
 			fprintf('%s\n',gitNameDisp{gitNo});
 
 			outDirPath = [signalExtractionDir filesep outputDir{gitNo}];
+
+			oldDir = [signalExtractionDir filesep gitName{gitNo}];
+			newDir = [signalExtractionDir filesep outputDir{gitNo}];
+
+			% If the new directory exist
+			if exist(newDir,'dir')&options.forceUpdate==0
+				fprintf('Package already exists (and no forced update), skipping: %s.\n',newDir)
+				success = 1;
+				return;
+			end
+
 			% Make download directory
 			rawSavePathDownload = [signalExtractionDir filesep '_downloads'];
 			if ~exist(rawSavePathDownload,'dir');mkdir(rawSavePathDownload);fprintf('Made folder: %s',rawSavePathDownload);end
@@ -104,8 +118,6 @@ function [success] = downloadGithubRepositories(varargin)
 
 			% Rename to proper folder for calciumImagingAnalysis
 			fprintf('Renaming %s to %s \n',[signalExtractionDir filesep gitName{gitNo}],[signalExtractionDir filesep outputDir{gitNo}])
-			oldDir = [signalExtractionDir filesep gitName{gitNo}];
-			newDir = [signalExtractionDir filesep outputDir{gitNo}];
 			if strcmp(oldDir,newDir)==1
 				disp('Same directory, ignore name change!')
 			else

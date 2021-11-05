@@ -10,8 +10,11 @@ function [success] = saveMatrixToFile(inputMatrix,savePath,varargin)
 
 	% changelog
 		% 2021.04.24 [16:00:01] - updated TIFF saving to add support for export of multi-channel color timeseries TIFF stack if in format [x y C t] where x,y = width/height, C = RGB channels, t = frames
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		% Add checking of data size so tiff can be automatically switched
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% default or force a save type

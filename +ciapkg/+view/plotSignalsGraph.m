@@ -11,8 +11,11 @@ function [tmpTrace] = plotSignalsGraph(IcaTraces,varargin)
 		% 2019.12.24 [11:20:14] - Allow
 		% 2021.01.24 [10:08:13] - Function outputs the modified traces for parent functions to use for additional plotting behavior.
         % 2021.03.25 [16:20:00] - Fix minIncrementAmount issue.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		% add options for how much to offset
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% options.minAdd = 0.05;

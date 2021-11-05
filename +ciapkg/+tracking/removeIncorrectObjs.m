@@ -11,9 +11,12 @@ function [trackingTableFilteredCell] = removeIncorrectObjs(tablePath,varargin)
         % updated: 2014.05.01 - improved speed by switching to more matrix operations-based filtering
 		% 2020.01.27 [17:10:43] - Code clean-up and changed default cut-off values to Inf deal with NaNs rows when they should not be marked as NaNs on some datasets.
 		% 2020.02.24 [20:41:44] - Updated plots to make clearer to users.
+        % 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
     % TODO
         % make assumption of columns NOT hardcoded as is currently
         % add parallel support
+
+    import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
     % ========================
     % grouping row

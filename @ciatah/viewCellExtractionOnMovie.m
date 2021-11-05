@@ -11,9 +11,11 @@ function obj = viewCellExtractionOnMovie(obj,varargin)
 		% 2019.10.29 [16:31:37] - Added a check for already loaded files
 		% 2021.06.18 [21:41:07] - added modelVarsFromFilesCheck() to check and load signals if user hasn't already.
 		% 2021.07.06 [15:12:04] - Add support for view from disk and cell overlays.
+		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		% Give users the option to scroll back and forth by having a horizontal scrollbar
 
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% DESCRIPTION

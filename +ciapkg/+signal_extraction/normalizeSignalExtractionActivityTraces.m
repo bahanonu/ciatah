@@ -1,4 +1,4 @@
-function inputSignals = normalizeSignalExtractionActivityTraces(inputSignals,inputImages)
+function inputSignals = normalizeSignalExtractionActivityTraces(inputSignals,inputImages,varargin)
 	% Normalizes cell activity traces by the max value in the associated image, normally to produce dF/F equivalent activity traces
 	% started: 2019.08.25 [18:19:34]
 	% Biafra Ahanonu
@@ -10,9 +10,11 @@ function inputSignals = normalizeSignalExtractionActivityTraces(inputSignals,inp
 		% inputSignals - [N time] matrix where N = number of signals (traces) and time = frames. These are the modified signals
 
 	% changelog
-		%
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% options.exampleOption = '';

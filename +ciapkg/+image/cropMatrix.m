@@ -9,8 +9,12 @@ function [inputMatrix, coords] = cropMatrix(inputMatrix,varargin)
 	% changelog
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals].
 		% 2021.04.18 [14:42:53] - Updated to make imrect the default method of selecting the coordinates.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2021.09.28 [10:37:12] - Updated to allow specifying the size of the rectangle.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	options.cropOrNaN = 'NaN';
@@ -18,6 +22,11 @@ function [inputMatrix, coords] = cropMatrix(inputMatrix,varargin)
 	options.inputCoords = [];
 	% amount of pixels around the border to crop in primary movie
 	options.pxToCrop = 0;
+    % Str: title to add.
+    options.title = 'Select a region';
+    options.figNo = 142568;
+    % Vector: [xmin ymin xmax ymax]
+    options.rectPos = [];
 
 	% get options
 	options = getOptions(options,varargin);
@@ -44,9 +53,9 @@ function [inputMatrix, coords] = cropMatrix(inputMatrix,varargin)
 	elseif isempty(options.inputCoords)
         %figure(102020); colormap gray;
 		thisFrame = squeeze(inputMatrix(:,:,round(end/2)));
-		% [coords] = getCropCoords(thisFrame)
+		% [coords] = getCropCoords(thisFrame,options)
 
-		h = subfxn_getImRect(thisFrame,'Select a region');
+		h = subfxn_getImRect(thisFrame,options.title,options);
 		p = round(wait(h));
 
 		% Get the x and y corner coordinates as integers
@@ -79,8 +88,10 @@ function [inputMatrix, coords] = cropMatrix(inputMatrix,varargin)
 			return
 	end
 end
-function [coords] = getCropCoords(thisFrame)
-	figure(9);
+function [coords] = getCropCoords(thisFrame,options)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
+	figure(options.figNo);
 	subplot(1,2,1);
 	imagesc(thisFrame);
     axis image;
@@ -104,17 +115,26 @@ function [coords] = getCropCoords(thisFrame)
 	% Display the subsetted image with appropriate axis ratio
 	figure(9);subplot(1,2,2);imagesc(thisFrameCropped); axis image; colormap gray; title('cropped region');drawnow;
 end
-function h = subfxn_getImRect(thisFrame,titleStr)
+function h = subfxn_getImRect(thisFrame,titleStr,options)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+	
 	% close(142568)
-	figure(9);
+	figure(options.figNo);
 	clf
 	subplot(1,2,1);
 		imagesc(thisFrame);
 		axis image;
 		% colormap parula;
-		title('select region')
+		title(titleStr)
+        box off;
 
-	h = imrect(gca);
+	if isempty(options.rectPos)
+		h = imrect(gca);
+	else
+		% [xmin ymin width height]
+		pos = options.rectPos;
+		h= imrect(gca,[pos(1) pos(2) pos(3)-pos(1) pos(4)-pos(2)]);
+	end
 	addNewPositionCallback(h,@(p) title([titleStr 10 mat2str(p,3)]));
 	fcn = makeConstrainToRectFcn('imrect',get(gca,'XLim'),get(gca,'YLim'));
 	setPositionConstraintFcn(h,fcn);

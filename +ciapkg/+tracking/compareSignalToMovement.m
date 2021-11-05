@@ -9,8 +9,11 @@ function [outputData] = compareSignalToMovement(inputSignals,inputMovement,varar
 		% outputData
 	% changelog
 		% 2014.12.15 [12:03:55] - using smooth instead of filtfilt since it handles NaNs better
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% number of points over which to apply the moving average

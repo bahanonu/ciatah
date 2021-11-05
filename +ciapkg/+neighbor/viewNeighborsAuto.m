@@ -13,8 +13,11 @@ function viewNeighborsAuto(inputImages, inputSignals, neighborsCell, varargin)
 		% 2019.05.28 [13:49:31] - No longer use montage to create montage, use loops plus cat and cell arrays to improve speed, reduce use of montage(), and make outlines crisp (on 2018b they would become expanded with montage).
 		% 2019.05.28 [15:15:43] - General improvements to GUI clarity.
 		% 2019.06.18 [14:54:34] - Added support for spatial correlations
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	options.plottingOn = 0;
@@ -277,7 +280,7 @@ function viewNeighborsAuto(inputImages, inputSignals, neighborsCell, varargin)
 			% datacursormode on
 			caxis([0 1])
 
-		suptitle([sprintf('cell # %d/%d',cellnum,nCells) 10 instructionStr],'plotregion',0.9);
+		ciapkg.overloaded.suptitle([sprintf('cell # %d/%d',cellnum,nCells) 10 instructionStr],'plotregion',0.9);
 		set(findall(gcf,'-property','FontSize'),'FontSize',13);
 		% [x,y,reply]=ginput(1);
 

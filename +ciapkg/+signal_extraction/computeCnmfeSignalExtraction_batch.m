@@ -20,8 +20,11 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction_batch(inputMovie,v
 		% 2016.06.20 - updated to keep in line with recent changes to CNMF functions
 		% 2021.01.24 [14:29:06] - Added trace origin type to output structure.
 		% 2021.03.20 [20:20:27] - extractedSignalsType, extractedSignalsEstType struct update.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	% ========================
 	% OVERALL

@@ -3,6 +3,11 @@ function obj = modelPreprocessMovie(obj)
 	% Biafra Ahanonu
 	% started 2013.11.09 [10:46:23]
 
+	% changelog
+		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	% verify that there are folders present
 	if isempty(obj.inputFolders)
 		uiwait(ciapkg.overloaded.msgbox('Please run modelAddNewFolders to add folders to the object','Success','modal'));

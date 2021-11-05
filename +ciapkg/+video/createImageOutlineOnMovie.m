@@ -10,8 +10,11 @@ function [inputMovie] = createImageOutlineOnMovie(inputMovie,inputImages,varargi
 
 	% changelog
 		% 2020.05.08 [20:56:35] - Added dilation support
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% Int: list of frames to load if loading movie inside function.

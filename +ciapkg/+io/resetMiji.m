@@ -16,8 +16,11 @@ function [success] = resetMiji(varargin)
 	% changelog
 		% 2019.09.09 [18:04:10] - Updated to add fallback to modelAddOutsideDependencies to ask for path to Fiji/Miji in case it is not properly in the path or has been moved.
 		% 2019.10.15 [12:29:30] - Added flag to prevent recursive loop between resetMiji and modelAddOutsideDependencies.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% DESCRIPTION

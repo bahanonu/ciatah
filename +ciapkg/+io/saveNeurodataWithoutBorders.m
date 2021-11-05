@@ -18,8 +18,11 @@ function [success] = saveNeurodataWithoutBorders(image_masks,roi_response_data,a
 		% 2021.02.01 [15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
 		% 2021.02.03 [12:34:06] - Added a check for inputs with a single signal and function returns as it is not supported.
 		% 2021.03.20 [19:35:28] - Update to checking if only a single signal input.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% DESCRIPTION

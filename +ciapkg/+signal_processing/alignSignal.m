@@ -17,6 +17,9 @@ function [alignedSignal] = alignSignal(responseSignal, alignmentSignal,timeSeq,v
 		% 2013.11.14 [00:45:17] initial unit tests show that it's complete, sick
 		% 2013.11.14 - finished bsxfun-ing the loop over the signal, haven't speed-tested to see if it is faster...should be. Keeping for-loop code in case need to add some sort of processing there later.
 		% 2014.01.11 [19:49:33] now pad the end of responseSignal with NaNs and idx these if the alignment idx falls outside the responseSignal range, more elegant than previous solution.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% sum alignment over all signals

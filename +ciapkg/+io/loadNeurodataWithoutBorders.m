@@ -12,8 +12,11 @@ function [inputImages,inputTraces,infoStruct, algorithmStr] = loadNeurodataWitho
 
 	% changelog
 		% 2021.02.05 [19:02:44] - Parse the algorithm associated with the NWB signal extraction data.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% DESCRIPTION

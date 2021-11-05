@@ -18,8 +18,11 @@ function [imgStats] = computeImageFeatures(inputImages, varargin)
 		% 2019.07.17 [00:29:16] - Added support for sparse input images (mainly ndSparse format).
 		% 2019.09.10 [20:51:00] - Converted to parfor and removed unpacking options, bad practice.
         % 2019.10.02 [21:25:36] - Updated addedFeatures support for parfor and allowed this feature to be properly accessed by users.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% get options

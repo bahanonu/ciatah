@@ -11,8 +11,11 @@ function [success] = viewLineFilledError(inputMean,inputStd,varargin)
 	% Changelog
 		% 2019.11.04 [21:55:39] - Check and remove NaNs so fill does not run into errors.
 		% 2020.07.03 [01:00:56] - Added ability to do line alpha.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% Same size as inputMean vector, but gives the actual x values, else function just plots 1:timePoints on the x axis.

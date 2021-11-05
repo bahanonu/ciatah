@@ -10,8 +10,11 @@ function manageMiji(varargin)
 	% changelog
 		% 2021.06.20 [00:20:38] - Add support for setting up ImageJ along with closing all windows to future proof any changes to those calls.
         % 2021.07.16 [13:34:57] - Check that ImageJ already in java path to prevent duplicate loading and wasting time.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% DESCRIPTION

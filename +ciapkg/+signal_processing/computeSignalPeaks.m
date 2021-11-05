@@ -28,6 +28,7 @@ function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(sign
 	% changelog
 		% 2015.10.06 [00:14:09] Changed computePeakForSignal to shift the signal to the actual nearby peak since findpeak is sometimes off by a frame or two, should also improve the S-ratio.
 		% 2016.07.05 [14:52:43] Made changes to computePeakForSignal to improve diff based peak detection.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO:
 		% allow input of options file (e.g. for different GCaMP variants, brain regions, etc.)
 		% integrate nearest neighbor into analysis if there is a lot of cross-talk
@@ -36,6 +37,8 @@ function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(sign
 
 	% add controller directory and subdirectories to path
 	% addpath(genpath(pwd));
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	%========================
 	% Binary: 1 = show plots with found events and other information for each signal. 0 = do not show signal plot GUI.
 	options.makePlots = 0;
@@ -288,6 +291,8 @@ function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(sign
 	end
 end
 function [inputSignal] = viewComputePeaksPlot(inputSignal,testpeaks,dotColor,makePlots,markersize,linewidth,holdVal,options,signalNum,nSignals,numStdsForThresh)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	% decide whether to plot the peaks with points indicating location of
 	% chosen peaks
 	if makePlots==1
@@ -367,6 +372,7 @@ function [inputSignal] = viewComputePeaksPlot(inputSignal,testpeaks,dotColor,mak
 end
 function [Nhat] = computePeakForSignalOopsi(inputSignal,testpeaks, options, varargin)
 	% clear, clc,
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	switch options.oopsiSimulated
 		case 1
@@ -447,6 +453,8 @@ function [Nhat] = computePeakForSignalOopsi(inputSignal,testpeaks, options, vara
 	linkaxes(h,'x')
 end
 function [optionsOut] = computePeakForSignalOptions(varargin)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	%========================
 	% number of standard deviations above the threshold to count as spike
 	options.numStdsForThresh = 3;
@@ -475,6 +483,8 @@ function [optionsOut] = computePeakForSignalOptions(varargin)
 	optionsOut = getOptions(options,varargin,'showWarnings',0);
 end
 function [testpeaks] = computePeakForSignal(inputSignal, options)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	% identifies peaks in an input signal given a particular threshold and other parameters.
 	% biafra ahanonu
 	% started: 2013.10.28
@@ -608,6 +618,8 @@ function [testpeaks] = computePeakForSignal(inputSignal, options)
 end
 
 function [peakIdx] = subfxnCalcSignalNew(noiseSigmaThreshold,noiseSignal,loopSignal,tmpTestPeak)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	noiseStd = nanstd(noiseSignal(:));
 	% noiseStd
 	nPeaks = length(tmpTestPeak);

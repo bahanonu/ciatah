@@ -20,7 +20,9 @@ function [inputSnr, inputMse, inputSnrSignal, inputSnrNoise, outputSignal, outpu
 	% changelog
 		% 2013.12.08 now uses RMS to calculate the SNR after removing the signal to get an estimated noise trace.
 		% 2018.03.25 - Added iterative method to determine when signal ends. also added mean centering of trace to correct for offset traces causing problems.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% type of SNR to calculate

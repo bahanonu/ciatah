@@ -33,6 +33,9 @@ function [IcaFilters, IcaTraces, IcaOutputInfo] = runICA(PcaFilters, PcaTraces, 
             % removed all references to days and dayInd, they were compatibility headaches. That can be abstracted to a controller function.
         % 2014.01.20 [11:28:02] standardized i/o options to be like other functions, replaced waitbar with cmdWaitbar.
         % 2020.10.17 [19:18:10] - added IcaOutputInfo output.
+        % 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+
+    import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
     %========================
     options.Mu = 0.1;

@@ -24,9 +24,12 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		% 2021.07.06 [09:42:09] - Switch to callbacks to close instead of using pause, allows for more flexibility going forward and use with MATLAB Online.
 		% 2021.07.13 [17:55:30] - Added support for certain options (e.g. motion correction) to give a vector 
 		% 2021.07.22 [12:10:10] - Added movie detrend options.
+		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		% DONE: Allow user to input prior settings, indicate those changed from default by orange or similar color.
 
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+	
 	%========================
 	% Struct: Empty = no previous settings, else a structure of preprocessingSettingsAll from previous run.
 	options.inputSettings = [];

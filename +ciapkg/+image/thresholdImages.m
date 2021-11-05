@@ -23,8 +23,11 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
 		% rather than converting to a cell
 		% 2021.07.06 [10:12:33] - Added support for fast thresholding using vectorized form, faster than parfor loop.
 		% 2021.07.06 [18:57:02] - Fast border calculation using convn for options.fastThresholding==1, less precise than bwboundaries or bwareafilt but works for fast display purposes.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% Float: fraction of image maximum value below which all pixels set to zero (range 0:1)
@@ -154,29 +157,32 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
 		if options_getBoundaryIndex==1
 			% inputImagesTmp = diff(inputImages>0,[],1);
 			% inputImagesTmp = convn(inputImages>0,[-1 -1 -1; -1 1 -1; -1 -1 -1;]);
-
-			% tic
-			% inputImagesTmp = convn(inputImages>0,[0 1 0; 1 0 1; 0 1 0;],'same');
-			inputImagesTmp = convn(inputImages>0,[-1 -1 -1; -1 8 -1; -1 -1 -1;],'same');
-			% figure
-			for imageNo = 1:nImages
-				% imagesc(inputImagesTmp(:,:,imageNo)+inputImages(:,:,imageNo));colorbar;pause
-				iFilt = inputImagesTmp(:,:,imageNo);
-				boundaryIndices{imageNo} = find(iFilt==2|iFilt==3|iFilt==1)';
+			% figure;imagesc(max(inputImages,[],3))
+			oldMethod = 0;
+			if oldMethod==0
+				% tic
+				% inputImagesTmp = convn(inputImages>0,[0 1 0; 1 0 1; 0 1 0;],'same');
+				inputImagesTmp = convn(inputImages>0,[-1 -1 -1; -1 8 -1; -1 -1 -1;],'same');
+				% figure
+				for imageNo = 1:nImages
+					% imagesc(inputImagesTmp(:,:,imageNo)+inputImages(:,:,imageNo));colorbar;pause
+					iFilt = inputImagesTmp(:,:,imageNo);
+					boundaryIndices{imageNo} = find(iFilt==2|iFilt==3|iFilt==1)';
+				end
+				% toc
+			else
+				% tic
+				parfor(imageNo=1:nImages,nWorkers)
+					thisFilt = inputImages(:,:,imageNo);
+					maxVal = nanmax(thisFilt(:));
+					cutoffVal = maxVal*options_threshold;
+					boundaryIndices{imageNo} = subfxn_getBoundaries(thisFilt,options_binary,options_getBoundaryIndex,options_boundaryHoles,cutoffVal)
+					if ~verLessThan('matlab', '9.2')
+						send(D, imageNo); % Update
+					end
+				end
+				% toc
 			end
-			% toc
-
-			% tic
-			% parfor(imageNo=1:nImages,nWorkers)
-			% 	thisFilt = inputImages(:,:,imageNo);
-			% 	maxVal = nanmax(thisFilt(:));
-			% 	cutoffVal = maxVal*options_threshold;
-			% 	boundaryIndices{imageNo} = subfxn_getBoundaries(thisFilt,options_binary,options_getBoundaryIndex,options_boundaryHoles,cutoffVal)
-			% 	if ~verLessThan('matlab', '9.2')
-			% 		send(D, imageNo); % Update
-			% 	end
-			% end
-			% toc
 		end
 		return;
 	end
@@ -319,6 +325,8 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
 	end
 end
 function boundaryIndex = subfxn_getBoundaries(thisFilt,options_binary,options_getBoundaryIndex,options_boundaryHoles,cutoffVal)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	boundaryIndex = [];
 	if options_binary==1&&options_getBoundaryIndex==1
 		thisFilt = logical(thisFilt);

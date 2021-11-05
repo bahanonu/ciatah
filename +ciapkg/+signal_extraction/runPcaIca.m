@@ -17,6 +17,8 @@ function [pcaicaAnalysisOutput] = runPcaIca(inputMovie,nPCs,nICs,varargin)
 	% TODO
 		%
 
+	import ciapkg.api.* % Import CIAtah package API
+
 	%========================
 	% Int:
 		% 2 = Hakan/Tony version. (Preferred)
