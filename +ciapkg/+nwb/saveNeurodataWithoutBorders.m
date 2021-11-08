@@ -39,35 +39,8 @@ function [success] = saveNeurodataWithoutBorders(image_masks,roi_response_data,a
 
 	success = 0;
 
-	try
-		% Check that all necessary files are loaded
-		loadDependenciesFlag = 0;
-		if length(which('yaml.ReadYaml'))==0
-			disp('yaml not loaded, loading now...')
-			loadDependenciesFlag = 1;
-		end
-		if length(which('get_input_args'))==0
-			disp('matnwb not loaded, loading now...')
-			loadDependenciesFlag = 1;
-		end
-		if length(which('add_processed_ophys'))==0
-			disp('nwb_schnitzer_lab not loaded, loading now...')
-			loadDependenciesFlag = 1;
-		end
-		if loadDependenciesFlag==1
-			ciapkg.io.loadDependencies(...
-				'guiEnabled',0,...
-				'depIdxArray',5,...
-				'forceUpdate',0);
-				% 'dependencyStr','downloadNeuroDataWithoutBorders',...
-				% 'dispStr','Download NWB (NeuroDataWithoutBorders)',...
-			ciapkg.loadDirs;
-		end
-	catch err
-		disp(repmat('@',1,7))
-		disp(getReport(err,'extended','hyperlinks','on'));
-		disp(repmat('@',1,7))
-	end
+	% Check that NWB code is downloaded and setup.
+	ciapkg.api.setupNwb();
 
 	try
 		metadata = yaml.ReadYaml(options.fpathYML);

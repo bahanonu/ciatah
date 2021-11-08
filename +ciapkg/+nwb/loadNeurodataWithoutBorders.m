@@ -1,5 +1,5 @@
 function [inputImages,inputTraces,infoStruct, algorithmStr] = loadNeurodataWithoutBorders(inputFilePath,varargin)
-	% DESCRIPTION.
+	% Load NWB file containing cell-extraction data.
 	% Biafra Ahanonu
 	% started: 2020.04.04 [15:02:22]
 	% inputs
@@ -47,6 +47,9 @@ function [inputImages,inputTraces,infoStruct, algorithmStr] = loadNeurodataWitho
 	%========================
 
 	try
+		% Check that NWB code is downloaded and setup.
+		ciapkg.api.setupNwb();
+		
 		inputImages = [];
 		inputTraces = [];
 		infoStruct = struct;
