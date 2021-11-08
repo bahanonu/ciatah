@@ -47,7 +47,7 @@ function [success] = saveNwbMovie(inputData,fileSavePath,varargin)
 		success = 0;
 
 		% Check that NWB code is downloaded and setup.
-		ciapkg.api.setupNwb();
+		ciapkg.api.setupNwb('checkDependencies',1);
 
 		if strcmp(options.writeMode,'new')
 			if exist(fileSavePath,'file')==2

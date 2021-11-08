@@ -21,6 +21,8 @@ function [success] = setupNwb(varargin)
 	options.externalProgramsDir = ciapkg.getDirExternalPrograms();
 	% Str: default path for MatNWB Matlab code
 	options.matnwbDir = 'matnwb';
+	% Binary: 0 = skip the first check to prevent infinite loop during initial package setup
+	options.checkDependencies = 0;
 	% get options
 	options = ciapkg.api.getOptions(options,varargin);
 	% display(options)
@@ -34,30 +36,32 @@ function [success] = setupNwb(varargin)
 	try
 		success = 0;
 		try
-			% Check that all necessary files are loaded
-			loadDependenciesFlag = 0;
-			if length(which('yaml.ReadYaml'))==0
-				disp('yaml not loaded, loading now...')
-				loadDependenciesFlag = 1;
-			end
-			if length(which('get_input_args'))==0
-				disp('matnwb not loaded, loading now...')
-				loadDependenciesFlag = 1;
-			end
-			if length(which('add_processed_ophys'))==0
-				disp('nwb_schnitzer_lab not loaded, loading now...')
-				loadDependenciesFlag = 1;
-			end
-			if loadDependenciesFlag==1
-				ciapkg.io.loadDependencies(...
-					'guiEnabled',0,...
-					'depIdxArray',5,...
-					'forceUpdate',0);
-					% 'dependencyStr','downloadNeuroDataWithoutBorders',...
-					% 'dispStr','Download NWB (NeuroDataWithoutBorders)',...
-				ciapkg.loadDirs;
-			else
-				disp('NWB dependencies loaded.')
+			if options.checkDependencies==1
+				% Check that all necessary files are loaded
+				loadDependenciesFlag = 0;
+				if length(which('yaml.ReadYaml'))==0
+					disp('yaml not loaded, loading now...')
+					loadDependenciesFlag = 1;
+				end
+				if length(which('get_input_args'))==0
+					disp('matnwb not loaded, loading now...')
+					loadDependenciesFlag = 1;
+				end
+				if length(which('add_processed_ophys'))==0
+					disp('nwb_schnitzer_lab not loaded, loading now...')
+					loadDependenciesFlag = 1;
+				end
+				if loadDependenciesFlag==1&options.checkDependencies==1
+					ciapkg.io.loadDependencies(...
+						'guiEnabled',0,...
+						'depIdxArray',5,...
+						'forceUpdate',0);
+						% 'dependencyStr','downloadNeuroDataWithoutBorders',...
+						% 'dispStr','Download NWB (NeuroDataWithoutBorders)',...
+					ciapkg.loadDirs;
+				else
+					disp('NWB dependencies loaded.')
+				end
 			end
 		catch err
 			disp(repmat('@',1,7))

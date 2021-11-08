@@ -158,7 +158,7 @@ function loadDependencies(varargin)
 				[success] = downloadGithubRepositories('options',optionsH);
 
 				% Add NWB folders to path.
-				ciapkg.nwb.setupNwb;
+				ciapkg.nwb.setupNwb('checkDependencies',0);
 				% obj.loadBatchFunctionFolders;
 			case 'downloadBioFormats'
 				optionsH.forceUpdate = forceUpdate;

@@ -48,7 +48,7 @@ function [inputImages,inputTraces,infoStruct, algorithmStr] = loadNeurodataWitho
 
 	try
 		% Check that NWB code is downloaded and setup.
-		ciapkg.api.setupNwb();
+		ciapkg.api.setupNwb('checkDependencies',1);
 		
 		inputImages = [];
 		inputTraces = [];

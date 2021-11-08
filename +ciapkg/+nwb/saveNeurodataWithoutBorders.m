@@ -39,10 +39,11 @@ function [success] = saveNeurodataWithoutBorders(image_masks,roi_response_data,a
 
 	success = 0;
 
-	% Check that NWB code is downloaded and setup.
-	ciapkg.api.setupNwb();
 
 	try
+		% Check that NWB code is downloaded and setup.
+		ciapkg.api.setupNwb('checkDependencies',1);
+		
 		metadata = yaml.ReadYaml(options.fpathYML);
 		data_path = outputFilePath;
 
