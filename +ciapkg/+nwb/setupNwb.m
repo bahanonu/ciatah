@@ -21,7 +21,7 @@ function [success] = setupNwb(varargin)
 	% Str: default path for MatNWB Matlab code
 	options.matnwbDir = 'matnwb';
 	% get options
-	options = getOptions(options,varargin);
+	options = ciapkg.api.getOptions(options,varargin);
 	% display(options)
 	% unpack options into current workspace
 	% fn=fieldnames(options);

@@ -32,7 +32,7 @@ function [output1,output2] = saveNwbMovie(inputData,fileSavePath,varargin)
 	% Str: description of imaging plane
 	options.descriptionImagingPlane = 'NA';
 	% get options
-	options = getOptions(options,varargin);
+	options = ciapkg.api.getOptions(options,varargin);
 	% display(options)
 	% unpack options into current workspace
 	% fn=fieldnames(options);
