@@ -27,6 +27,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		% 2021.06.16 [09:07:46] - Fix issue of passing multiple movies to PCA-ICA.
 		% 2021.06.30 [16:41:11] - Update to add fix for CELLMax with ROI.
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2021.11.08 [12:42:12] - Add nwbpkg support.
 	% TODO
 		%
 
@@ -43,6 +44,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 	options.settingsFolder = [ciapkg.getDir() filesep '+ciapkg' filesep '+settings'];
 	% Str: folder where private settings are stored
 	options.settingsPrivateSaveFolder = [obj.settingsSavePath filesep 'signal_extraction'];
+	% Str: path to ExampleMetadata.yml
+	options.nwbYmlPath = [obj.externalProgramsDir filesep 'nwbpkg' filesep '+nwbpkg' filesep 'ExampleMetadata.yml']
 	% options.settingsPrivateSaveFolder = ['private' filesep 'settings' filesep 'cellExtraction'];
 	% get options
 	options = getOptions(options,varargin);
@@ -457,7 +460,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 		% Check NWB directories loaded
-		if exist('add_processed_ophys.m')~=2
+		if exist('nwbpkg.add_processed_ophys.m')~=2
 			obj.loadBatchFunctionFolders;
 		end
 
@@ -470,7 +473,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 				if (~exist(tmpDirHere,'dir')) mkdir(tmpDirHere); end;
 				nwbSavePath = [tmpDirHere filesep thisDirSaveStrFile obj.extractionMethodSaveStr.(obj.signalExtractionMethod) '.nwb'];
 			end
-			nwbOpts.fpathYML = [obj.externalProgramsDir filesep 'nwb_schnitzer_lab' filesep 'ExampleMetadata.yml'];
+			nwbOpts.fpathYML = options.nwbYmlPath;
 			if issparse(inputImages)
 				[success] = saveNeurodataWithoutBorders(single(full(inputImages)),inputTraces,obj.signalExtractionMethod,nwbSavePath,'options',nwbOpts);
 			else

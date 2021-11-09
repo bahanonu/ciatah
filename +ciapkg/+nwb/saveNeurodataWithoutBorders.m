@@ -19,6 +19,7 @@ function [success] = saveNeurodataWithoutBorders(image_masks,roi_response_data,a
 		% 2021.02.03 [12:34:06] - Added a check for inputs with a single signal and function returns as it is not supported.
 		% 2021.03.20 [19:35:28] - Update to checking if only a single signal input.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2021.11.08 [11:52:13] - Added nwbpkg support.
 	% TODO
 		%
 
@@ -26,7 +27,7 @@ function [success] = saveNeurodataWithoutBorders(image_masks,roi_response_data,a
 
 	%========================
 	% DESCRIPTION
-	options.fpathYML = [ciapkg.getDirExternalPrograms() filesep 'nwb_schnitzer_lab' filesep 'ExampleMetadata.yml'];
+	options.fpathYML = [ciapkg.getDirExternalPrograms() filesep 'nwbpkg' filesep '+nwbpkg' filesep 'ExampleMetadata.yml'];
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -43,7 +44,7 @@ function [success] = saveNeurodataWithoutBorders(image_masks,roi_response_data,a
 	try
 		% Check that NWB code is downloaded and setup.
 		ciapkg.api.setupNwb('checkDependencies',1);
-		
+
 		metadata = yaml.ReadYaml(options.fpathYML);
 		data_path = outputFilePath;
 
@@ -93,15 +94,15 @@ function [success] = saveNeurodataWithoutBorders(image_masks,roi_response_data,a
 		    roi_response_data.(['ROI_' num2str(i)]) = tmpData{i};
 		end
 
-		nwbfile_input_args = get_input_args(metadata, 'NWBFile');
+		nwbfile_input_args = nwbpkg.get_input_args(metadata, 'NWBFile');
 		% Convert to ISO 8601 format
 		nwbfile_input_args{4} = datestr(nwbfile_input_args{4}, 'yyyy-mm-dd HH:MM:SS');
 		nwb = NwbFile(nwbfile_input_args{:});
 
-		subject_input_args = get_input_args(metadata, 'Subject');
+		subject_input_args = nwbpkg.get_input_args(metadata, 'Subject');
 		nwb.general_subject = types.core.Subject(subject_input_args{:});
 
-		nwb = add_processed_ophys(nwb, metadata, image_masks, roi_response_data,data_type);
+		nwb = nwbpkg.add_processed_ophys(nwb, metadata, image_masks, roi_response_data,data_type);
 
 		% Remove previous file if it already exists
 		if exist(outputFilePath,'file')==2

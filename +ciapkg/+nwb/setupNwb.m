@@ -11,6 +11,7 @@ function [success] = setupNwb(varargin)
 		% 2021.02.01 [‏‎15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
 		% 2021.03.26 [06:27:48] - Fix for options.defaultObjDir leading to incorrect NWB folder and cores not being generated.
 		% 2021.11.07 [16:13:44] - Update to include check for each of the NWB dependencies taken from saveNeurodataWithoutBorders.
+		% 2021.11.08 [11:52:13] - Added nwbpkg support.
 	% TODO
 		%
 
@@ -43,11 +44,11 @@ function [success] = setupNwb(varargin)
 					disp('yaml not loaded, loading now...')
 					loadDependenciesFlag = 1;
 				end
-				if length(which('get_input_args'))==0
+				if length(which('NwbFile'))==0
 					disp('matnwb not loaded, loading now...')
 					loadDependenciesFlag = 1;
 				end
-				if length(which('add_processed_ophys'))==0
+				if length(which('nwbpkg.add_processed_ophys'))==0
 					disp('nwb_schnitzer_lab not loaded, loading now...')
 					loadDependenciesFlag = 1;
 				end

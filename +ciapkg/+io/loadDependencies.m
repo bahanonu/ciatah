@@ -146,15 +146,17 @@ function loadDependencies(varargin)
 			case 'downloadNeuroDataWithoutBorders'
 				optionsH.forceUpdate = forceUpdate;
 				optionsH.signalExtractionDir = options.externalProgramsDir;
-				optionsH.gitNameDisp = {'nwb_schnitzer_lab','yamlmatlab','matnwb'};
-				optionsH.gitRepos = {'https://github.com/schnitzer-lab/nwb_schnitzer_lab','https://github.com/ewiger/yamlmatlab'};
-
+				optionsH.gitNameDisp = {'nwbpkg','yamlmatlab','matnwb'};
+				optionsH.gitRepos = {'https://github.com/schnitzer-lab/nwbpkg','https://github.com/ewiger/yamlmatlab'};
 				% 'https://github.com/NeurodataWithoutBorders/matnwb'
 				optionsH.gitRepos = cellfun(@(x) [x '/archive/master.zip'],optionsH.gitRepos,'UniformOutput',false);
+                
+                % Add matnwb
 				optionsH.gitRepos = [optionsH.gitRepos 'https://github.com/NeurodataWithoutBorders/matnwb/archive/v2.2.5.3.zip'];
 				optionsH.outputDir = optionsH.gitNameDisp;
 				optionsH.gitName = cellfun(@(x) [x '-master'],optionsH.gitNameDisp,'UniformOutput',false);
 				optionsH.gitName{end} = 'matnwb-2.2.5.3';
+                
 				[success] = downloadGithubRepositories('options',optionsH);
 
 				% Add NWB folders to path.
