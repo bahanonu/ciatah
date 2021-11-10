@@ -1405,6 +1405,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 
 		import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
+		ciapkg.loadBatchFxns('loadEverything');
+
 		movieList = getFileList(obj.inputFolders{obj.fileNum}, fileFilterRegexp);
 		[inputMovie thisMovieSize Npixels Ntime] = loadMovieList(movieList,'convertToDouble',0,'inputDatasetName',obj.inputDatasetName,'treatMoviesAsContinuous',1);
 		inputMovie(isnan(inputMovie)) = 0;
