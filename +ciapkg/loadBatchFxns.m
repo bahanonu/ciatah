@@ -322,7 +322,7 @@ function loadBatchFxns(varargin)
 				rmpath(strjoin(pathToRmCell,pathsep));
 			elseif rmPathFlag==0&~isempty(matchIdxAll)
 				% Remove from list of folders to add to path
-				pathListArray = pathListArray(~matchIdxAll);
+				pathListArray = pathListArray(matchIdxAll);
 			end
 		catch err
 			disp(repmat('@',1,7))
