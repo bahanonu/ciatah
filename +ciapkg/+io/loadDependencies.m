@@ -35,7 +35,7 @@ function loadDependencies(varargin)
 
 	options.dispStr = {'Download Turboreg (motion correction)','Download ImageJ','Download CNMF, CNMF-E, and CVX code.','Download test one- and two photon datasets.','Download NWB (NeuroDataWithoutBorders)','Download EXTRACT','Download Bio-Formats','Download gramm (GRAMmar of graphics for Matlab, e.g. ggplot2-like)','Download NoRMCorre (motion correction)','Download Fiji (to run Miji)','Load Fiji/Miji into MATLAB path.'};
 	% Int vector: index of options.dependencyStr to run by default with no GUI
-	options.depIdxArray = [1 2 3 4 5 6 7];
+	options.depIdxArray = [1 2 3 4 5 6 7 8];
 	% Binary: 1 = force update even if already downloaded. 0 = skip if already downloaded
 	options.forceUpdate = 0;
 	% get options
