@@ -252,6 +252,7 @@ function loadBatchFxns(varargin)
 			fxnRootFolder = removeDirFxnToFind;
 			pathToRmCell = {};
 			findListFlag = [];
+			matchIdxAll = [];
 			for iNo = 1:length(fxnRootFolder)
 				thisFxn = fxnRootFolder{iNo};
 
@@ -279,7 +280,7 @@ function loadBatchFxns(varargin)
 						pathToRm = foundFiles.folder;
 					end
 				end
-				
+
 				if ~isempty(pathToRm)
 					% extractor now in sub-directory
 					if strcmp(thisFxn,'extractor.m')
@@ -319,7 +320,7 @@ function loadBatchFxns(varargin)
 			if rmPathFlag==1
 				% Only remove path if user requests
 				rmpath(strjoin(pathToRmCell,pathsep));
-			elseif rmPathFlag==0
+			elseif rmPathFlag==0&~isempty(matchIdxAll)
 				% Remove from list of folders to add to path
 				pathListArray = pathListArray(~matchIdxAll);
 			end
