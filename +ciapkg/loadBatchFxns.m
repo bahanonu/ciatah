@@ -304,9 +304,9 @@ function loadBatchFxns(varargin)
 					elseif rmPathFlag==0
 						fprintf('Removing unneeded directory from "to add" path list: %s.\n',thisFxnStr);
 						% pathListArray = pathListArray(~matchIdx);
-						if iNo==1
+						if isempty(matchIdxAll)
 							matchIdxAll = ~matchIdx;
-						else
+						elseif ~isempty(matchIdx)
 							matchIdxAll = matchIdxAll|~matchIdx;
 						end
 					end
