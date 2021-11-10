@@ -279,12 +279,13 @@ function loadBatchFxns(varargin)
 						pathToRm = foundFiles.folder;
 					end
 				end
-				% extractor now in sub-directory
-				if strcmp(thisFxn,'extractor.m')
-					[pathToRm,~,~] = fileparts(pathToRm);
-				end
-
+				
 				if ~isempty(pathToRm)
+					% extractor now in sub-directory
+					if strcmp(thisFxn,'extractor.m')
+						[pathToRm,~,~] = fileparts(pathToRm);
+					end
+
 					if strcmp(thisFxn,'CELLMax_Wrapper.m')|strcmp(thisFxn,'cellmax.runCELLMax')
 						thisFxnStr = thisFxn;
 						% pathToRm = [pathToRm filesep 'calciumImagingAnalysis'];
