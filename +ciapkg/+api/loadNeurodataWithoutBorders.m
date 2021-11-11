@@ -10,5 +10,5 @@ function [inputImages,inputTraces,infoStruct, algorithmStr] = loadNeurodataWitho
 		% infoStruct - contains information about the file, e.g. the 'description' property that can contain information about the algorithm.
 		% algorithmStr - String of the algorithm name.
 
-	[inputImages,inputTraces,infoStruct, algorithmStr] = ciapkg.io.loadNeurodataWithoutBorders(inputFilePath,'passArgs', varargin);
+	[inputImages,inputTraces,infoStruct, algorithmStr] = ciapkg.nwb.loadNeurodataWithoutBorders(inputFilePath,'passArgs', varargin);
 end

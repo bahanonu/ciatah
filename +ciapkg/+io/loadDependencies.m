@@ -35,7 +35,7 @@ function loadDependencies(varargin)
 
 	options.dispStr = {'Download Turboreg (motion correction)','Download ImageJ','Download CNMF, CNMF-E, and CVX code.','Download test one- and two photon datasets.','Download NWB (NeuroDataWithoutBorders)','Download EXTRACT','Download Bio-Formats','Download gramm (GRAMmar of graphics for Matlab, e.g. ggplot2-like)','Download NoRMCorre (motion correction)','Download Fiji (to run Miji)','Load Fiji/Miji into MATLAB path.'};
 	% Int vector: index of options.dependencyStr to run by default with no GUI
-	options.depIdxArray = [1 2 3 4 5 6 7];
+	options.depIdxArray = [1 2 3 4 5 6 7 8];
 	% Binary: 1 = force update even if already downloaded. 0 = skip if already downloaded
 	options.forceUpdate = 0;
 	% get options
@@ -146,19 +146,21 @@ function loadDependencies(varargin)
 			case 'downloadNeuroDataWithoutBorders'
 				optionsH.forceUpdate = forceUpdate;
 				optionsH.signalExtractionDir = options.externalProgramsDir;
-				optionsH.gitNameDisp = {'nwb_schnitzer_lab','yamlmatlab','matnwb'};
-				optionsH.gitRepos = {'https://github.com/schnitzer-lab/nwb_schnitzer_lab','https://github.com/ewiger/yamlmatlab'};
-
+				optionsH.gitNameDisp = {'nwbpkg','yamlmatlab','matnwb'};
+				optionsH.gitRepos = {'https://github.com/schnitzer-lab/nwbpkg','https://github.com/ewiger/yamlmatlab'};
 				% 'https://github.com/NeurodataWithoutBorders/matnwb'
 				optionsH.gitRepos = cellfun(@(x) [x '/archive/master.zip'],optionsH.gitRepos,'UniformOutput',false);
+                
+                % Add matnwb
 				optionsH.gitRepos = [optionsH.gitRepos 'https://github.com/NeurodataWithoutBorders/matnwb/archive/v2.2.5.3.zip'];
 				optionsH.outputDir = optionsH.gitNameDisp;
 				optionsH.gitName = cellfun(@(x) [x '-master'],optionsH.gitNameDisp,'UniformOutput',false);
 				optionsH.gitName{end} = 'matnwb-2.2.5.3';
+                
 				[success] = downloadGithubRepositories('options',optionsH);
 
 				% Add NWB folders to path.
-				ciapkg.nwb.setupNwb;
+				ciapkg.nwb.setupNwb('checkDependencies',0);
 				% obj.loadBatchFunctionFolders;
 			case 'downloadBioFormats'
 				optionsH.forceUpdate = forceUpdate;

@@ -2401,6 +2401,7 @@ function [ostruct options] = playOutputMovies(ostruct,options)
 	numFramesPerPart = 50;
 	numParts = 10;
 	display('pre-allocating movies to display...')
+	thisMovieArray = {};
 	for fileNum=1:nFiles
 		try
 			display('+++++++')

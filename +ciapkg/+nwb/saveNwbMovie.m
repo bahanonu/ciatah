@@ -1,5 +1,5 @@
-function [output1,output2] = saveNwbMovie(inputData,fileSavePath,varargin)
-	% Saves input matrix into NWB format
+function [success] = saveNwbMovie(inputData,fileSavePath,varargin)
+	% Saves input matrix into NWB format output file.
 	% Biafra Ahanonu
 	% started: 2020.05.28 [09:51:52]
 	% inputs
@@ -8,9 +8,11 @@ function [output1,output2] = saveNwbMovie(inputData,fileSavePath,varargin)
 		%
 
 	% changelog
-		%
+		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		% Add structure that allows users to modify defaults for all the NWB settings
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% old way of saving, only temporary until full switch
@@ -42,6 +44,11 @@ function [output1,output2] = saveNwbMovie(inputData,fileSavePath,varargin)
 	%========================
 
 	try
+		success = 0;
+
+		% Check that NWB code is downloaded and setup.
+		ciapkg.api.setupNwb('checkDependencies',1);
+
 		if strcmp(options.writeMode,'new')
 			if exist(fileSavePath,'file')==2
 				fprintf('Deleting: %s.\n',fileSavePath)
@@ -150,6 +157,8 @@ function [output1,output2] = saveNwbMovie(inputData,fileSavePath,varargin)
 				end
 			end
 		end
+
+		success = 1;
 
 	catch err
 		disp(repmat('@',1,7))

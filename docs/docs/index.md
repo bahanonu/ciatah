@@ -22,6 +22,8 @@ __Download the software at [https://github.com/bahanonu/ciatah](https://github.c
 
 <img src="https://user-images.githubusercontent.com/5241605/99499485-d6dce500-292d-11eb-8c68-b089fe1985c8.png" width="42%" align="center" alt="CIAtah_logo" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
 
+- Note: `CIAtah` version `v4` moves the remaining (i.e. all except external packages/software) CIAtah functions into the `ciapkg` package to improve namespace handling and requires MATLAB R2019b or above ([due to package import changes](https://www.mathworks.com/help/matlab/matlab_prog/upgrade-code-for-r2019b-changes-to-function-precedence-order.html#mw_2934c766-e115-4d22-9abf-eb46a1415f2c)). Users with earlier versions of MATLAB can download `CIAtah` version `v3` (see [Releases](https://github.com/bahanonu/ciatah/releases)) until pre-R2019b MATLAB support is fully integrated into v4.
+
 - This user guide contains instructions to setup, run, and troubleshoot `{{ site.name }}`.
 - Note: `{{ site.name }}` is a class (`{{ site.namelow }}` within MATLAB) with various GUIs to allow processing of calcium imaging data. In addition, users can access the underlying `{{ site.name }}` functions to make custom workflows. See [Custom command-line pipelines](api_example_pipeline.md).
 

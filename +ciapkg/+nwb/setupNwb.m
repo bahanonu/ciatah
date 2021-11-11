@@ -1,7 +1,7 @@
 function [success] = setupNwb(varargin)
-	% DESCRIPTION.
+	% Checks that NWB code is present and setup correctly.
 	% Biafra Ahanonu
-	% started: INSERT_DATE
+	% started: 2021.01.24 [14:31:24]
 	% inputs
 		%
 	% outputs
@@ -10,6 +10,8 @@ function [success] = setupNwb(varargin)
 	% changelog
 		% 2021.02.01 [‏‎15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
 		% 2021.03.26 [06:27:48] - Fix for options.defaultObjDir leading to incorrect NWB folder and cores not being generated.
+		% 2021.11.07 [16:13:44] - Update to include check for each of the NWB dependencies taken from saveNeurodataWithoutBorders.
+		% 2021.11.08 [11:52:13] - Added nwbpkg support.
 	% TODO
 		%
 
@@ -20,8 +22,10 @@ function [success] = setupNwb(varargin)
 	options.externalProgramsDir = ciapkg.getDirExternalPrograms();
 	% Str: default path for MatNWB Matlab code
 	options.matnwbDir = 'matnwb';
+	% Binary: 0 = skip the first check to prevent infinite loop during initial package setup
+	options.checkDependencies = 0;
 	% get options
-	options = getOptions(options,varargin);
+	options = ciapkg.api.getOptions(options,varargin);
 	% display(options)
 	% unpack options into current workspace
 	% fn=fieldnames(options);
@@ -32,6 +36,40 @@ function [success] = setupNwb(varargin)
 
 	try
 		success = 0;
+		try
+			if options.checkDependencies==1
+				% Check that all necessary files are loaded
+				loadDependenciesFlag = 0;
+				if length(which('yaml.ReadYaml'))==0
+					disp('yaml not loaded, loading now...')
+					loadDependenciesFlag = 1;
+				end
+				if length(which('NwbFile'))==0
+					disp('matnwb not loaded, loading now...')
+					loadDependenciesFlag = 1;
+				end
+				if length(which('nwbpkg.add_processed_ophys'))==0
+					disp('nwb_schnitzer_lab not loaded, loading now...')
+					loadDependenciesFlag = 1;
+				end
+				if loadDependenciesFlag==1&options.checkDependencies==1
+					ciapkg.io.loadDependencies(...
+						'guiEnabled',0,...
+						'depIdxArray',5,...
+						'forceUpdate',0);
+						% 'dependencyStr','downloadNeuroDataWithoutBorders',...
+						% 'dispStr','Download NWB (NeuroDataWithoutBorders)',...
+					ciapkg.loadDirs;
+				else
+					disp('NWB dependencies loaded.')
+				end
+			end
+		catch err
+			disp(repmat('@',1,7))
+			disp(getReport(err,'extended','hyperlinks','on'));
+			disp(repmat('@',1,7))
+		end
+
 		% Load NWB Schema as needed
 		if exist('types.core.Image')==0
 			try

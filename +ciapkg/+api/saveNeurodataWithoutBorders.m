@@ -21,5 +21,5 @@ function [success] = saveNeurodataWithoutBorders(image_masks,roi_response_data,a
 	% TODO
 		%
 
-	[success] = ciapkg.io.saveNeurodataWithoutBorders(image_masks,roi_response_data,algorithm,outputFilePath,'passArgs', varargin);
+	[success] = ciapkg.nwb.saveNeurodataWithoutBorders(image_masks,roi_response_data,algorithm,outputFilePath,'passArgs', varargin);
 end
