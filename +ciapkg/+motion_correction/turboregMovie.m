@@ -25,7 +25,8 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		% 2020.08.18 [12:56:10] - Remove references to parfor_progress.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2021.09.11 [10:40:05] - Additional matlab disk normalizeType options.
-		% 2021.11.01 [12:15:10] - Additional display of information
+		% 2021.11.01 [12:15:10] - Additional display of information.
+		% 2021.11.16 [11:58:14] - Added verification that turboreg MEX function is in the path.
 	% TO-DO
 		% Add support for "imregtform" based registration.
 
@@ -181,6 +182,12 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	% end
 	if options.displayOptions==1
 		options
+	end
+
+	% ========================
+	% Verify that turboreg MEX function is in the path.
+	if isempty(which('turboreg'))==1
+		ciapkg.loadBatchFxns();
 	end
 	% ========================
 	% check that Miji is present
@@ -1005,7 +1012,7 @@ function subfxn_dispMovieFrames(inputMovieCropped,titleStr)
 		imagesc(squeeze(inputMovieCropped(:,:,1))-squeeze(inputMovieCropped(:,:,end)));
 		axis image; box off;
 		title('Diff image #1 and #2')
-	suptitle(titleStr)
+	ciapkg.overloaded.suptitle(titleStr)
 end
 function cropCoords = getCropSelection(thisFrame)
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.

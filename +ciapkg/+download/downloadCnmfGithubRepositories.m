@@ -8,6 +8,7 @@ function [success] = downloadCnmfGithubRepositories(varargin)
 		% 2020.06.28 [14:01:17] - Switch to calling downloadGithubRepositories for downloads to prevent bugs introduced by similar code between two functions.
 		% 2021.02.01 [‏‎15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2021.12.01 [20:09:10] - Update display of information if CVX is not automatically found.
 
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
@@ -50,8 +51,8 @@ function [success] = downloadCnmfGithubRepositories(varargin)
 				mfileToRun = [options.defaultExternalProgramDir filesep 'cvx_rd' filesep 'cvx_setup.m'];
 				fprintf('AUTOMATICALLY running cvx_setup.m: %s\n',mfileToRun)
 			else
-				display('Dialog box: Select cvx_setup.m (likely `calciumImagingAnalysis/_external_programs/cvx_rd`')
-				[filePath,folderPath,~] = uigetfile(['*.*'],'Select cvx_setup.m (likely `calciumImagingAnalysis/_external_programs/cvx_rd`');
+				display(['Dialog box: Select cvx_setup.m (likely `' ciapkg.getDirExternalPrograms() filesep 'cvx_rd`'])
+				[filePath,folderPath,~] = uigetfile(['*.*'],['Select cvx_setup.m (likely `' ciapkg.getDirExternalPrograms() filesep 'cvx_rd`']);
 				mfileToRun = [folderPath filesep filePath];
 			end
 			run(mfileToRun);

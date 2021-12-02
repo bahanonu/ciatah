@@ -31,6 +31,8 @@ Below are recordings and additional documents for users who want to learn more a
 
 <ins>__Workshop tutorial__</ins> — This recording gives an overview of setting up and using CIAtah: https://www.youtube.com/watch?v=I6abW3uuJJw.
 
+<ins>__Imaging analysis tools__</ins> My table with many current imaging analysis tools: https://github.com/bahanonu/imaging_tools.
+
 <ins>__GRINjector__</ins> — A surgical device to help with implanting gradient-refractive index (GRIN) lens probes into the brain or other regions: https://github.com/bahanonu/GRINjector.
 <!-- <hr> -->
 
@@ -138,7 +140,7 @@ Below are steps needed to quickly get started using the `CIAtah` software packag
 - Clone the `CIAtah` repository (using [GitHub desktop](https://desktop.github.com/) or command line) or download the repository zip and unzip (e.g. run below MATLAB command).
   - Point the MATLAB path to the `CIAtah` root folder (*NOT* `@CIAtah` sub-folder in the repository).
   - Alternatively (not recommended since lags GitHub repository), download the package from `File Exchange` using the Add-Ons explorer in MATLAB. See `CIAtah` entry at:
- [![View CIAtah on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis) or https://www.mathworks.com/matlabcentral/fileexchange/75466-calciumimaginganalysis.
+ [![View CIAtah on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/75466-ciatah) or https://www.mathworks.com/matlabcentral/fileexchange/75466-ciatah.
 
  ```Matlab
  % Optional: this will set MATLAB working folder to the default user path. Make sure you have read/write permissions.

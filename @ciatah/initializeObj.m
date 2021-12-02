@@ -10,6 +10,7 @@ function obj = initializeObj(obj)
 	% changelog
 		% 2020.06.05 [11:29:24] - Improved toolbox check.
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2021.11.16 [11:13:07] - Wrap calls to diverging_map to avoid potential ciatah initialization errors on macOS.
 	% TODO
 		%
 
@@ -31,7 +32,14 @@ function obj = initializeObj(obj)
 	% Load colormaps
 	obj.colormap = customColormap({[0 0 1],[1 1 1],[0.5 0 0],[1 0 0]});
 	obj.colormapAlt = customColormap({[0 0 0.7],[1 1 1],[0.7 0 0]});
-	obj.colormapAlt2 = diverging_map(linspace(0,1,100),[0 0 0.7],[0.7 0 0]);
+	% obj.colormapAlt2 = diverging_map(linspace(0,1,100),[0 0 0.7],[0.7 0 0]);
+
+	% try-catch to handle cases in which diverging_map is not in the path.
+	try
+		obj.colormapAlt2 = diverging_map(linspace(0,1,100),[0 0 0.7],[0.7 0 0]);
+	catch
+		obj.colormapAlt2 = customColormap({[0 0.1 0.7],[1 1 1],[0.7 0.1 0]});
+	end
 
 	% Check required toolboxes are available, warn if not
 	disp(repmat('*',1,42))
