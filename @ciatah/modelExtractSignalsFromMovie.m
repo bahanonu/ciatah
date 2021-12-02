@@ -1570,6 +1570,9 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 
 		% Save output in NWB format if requested by user.
 		subfxnSaveNwbFiles(extractAnalysisOutput.filters,{extractAnalysisOutput.traces});
+
+		% Unload EXTRACT from path
+		ciapkg.loadBatchFxns();
 	end
 	function [cnmfOptions] = runCNMFSignalFinder()
 

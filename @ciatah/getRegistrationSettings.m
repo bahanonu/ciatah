@@ -25,6 +25,7 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		% 2021.07.13 [17:55:30] - Added support for certain options (e.g. motion correction) to give a vector 
 		% 2021.07.22 [12:10:10] - Added movie detrend options.
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2021.12.01 [19:21:00] - Handle "User selects specific value" going into infinite loop. Allow cancel option to prevent loop.
 	% TODO
 		% DONE: Allow user to input prior settings, indicate those changed from default by orange or similar color.
 
@@ -53,8 +54,8 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 	userSelectStr = 'User selects specific value.';
 	userSelectVal = 0;
 	defaultTooltips = 'NO TIPS FOR YOU';
-    
-    vectorAllowList = {'motionCorrectionRefFrame'};
+	
+	vectorAllowList = {'motionCorrectionRefFrame'};
 
 	% Options that allow users to manually set the value
 	userOptionsAllowManualSelect = {...
@@ -548,9 +549,12 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 			end
 			if strcmp(gString{gValue},userSelectStr)==1
 				inputCheck = 'Americans love a winner.';
-                lengthTooLongFlag = 1;
-                nanCheckFlag = 1;
-				while nanCheckFlag==1||lengthTooLongFlag==1
+				lengthTooLongFlag = 1;
+				numericCheckFlag = 1;
+				nanCheckFlag = 0;
+				updateValueFlag = 0;
+				loopBreak = 0;
+				while (nanCheckFlag==1||lengthTooLongFlag==1)&loopBreak==0
 					movieSettings = inputdlg({...
 							gTooltip...
 						},...
@@ -562,37 +566,57 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 
 					if isempty(movieSettings)
 						inputCheck = [];
-						uiwait(ciapkg.overloaded.msgbox('Re-enter a value, do not CANCEL the input dialog.'));
+						updateValueFlag = 0;
+						loopBreak = 1;
+						% uiwait(ciapkg.overloaded.msgbox('Re-enter a value, do not CANCEL the input dialog.'));
 					else
-						inputCheck = movieSettings{1};
-						% Check users has input correct, else ask again.
-                        if length(str2num(inputCheck))~=1
-                            lengthTooLongFlag = 1;
-                        end
-                        if isnan(str2num(inputCheck))
-                            nanCheckFlag = 1;
-                        end
-						if nanCheckFlag==1||lengthTooLongFlag==1
-                            if any(ismember(thisProperty,vectorAllowList))
-                                nanCheckFlag = 0;
-                                lengthTooLongFlag = 0;
-                            else
-                                uiwait(ciapkg.overloaded.msgbox('Please input a SINGLE numeric value (no strings or vectors).'));
-                            end
-                        else
-                            nanCheckFlag = 0;
-                            lengthTooLongFlag = 0;
+						movieSettings = movieSettings{1};
+						inputCheck = movieSettings;
+
+						% Check users has input correct (no str or NaN), else ask again.
+						if length(str2num(inputCheck))~=1
+						    lengthTooLongFlag = 1;
+						else
+							lengthTooLongFlag = 0;
 						end
-                    end
+						if isempty(str2num(inputCheck))
+							numericCheckFlag = 0;
+						else
+							numericCheckFlag = 1;
+						end
+						if isnan(str2num(inputCheck))
+							nanCheckFlag = 1;
+						else
+							nanCheckFlag = 0;
+						end
+						if nanCheckFlag==1||numericCheckFlag==0||lengthTooLongFlag==1
+							if any(ismember(thisProperty,vectorAllowList))
+								loopBreak = 1;
+								updateValueFlag = 1;
+							else
+								uiwait(ciapkg.overloaded.msgbox('Please input a SINGLE numeric value (no strings or vectors).'));
+							end
+						else
+							loopBreak = 1;
+							updateValueFlag = 1;
+						end
+					end
 				end
-				gStringNew = [movieSettings{1};gString];
-				set(hObject,'String',gStringNew);
-				set(hObject,'Value',1);
-				% preprocessingSettingsAll.(gProperty).val = [str2num(movieSettings{1}),preprocessingSettingsAll.(gProperty).val];
-				preprocessingSettingsAll.(gProperty).val = {[str2num(movieSettings{1}),preprocessingSettingsAll.(gProperty).val{1}]};
-				preprocessingSettingsAll.(gProperty).str = {gStringNew};
-				% turboregSettingDefaults.(thisProperty) = [str2num(movieSettings{1}),turboregSettingDefaults.(thisProperty)];
-				% turboregSettingStr.(thisProperty) = gStringNew;
+				% Reset to default value if user cancels
+				if updateValueFlag==0
+					movieSettings = defVal;
+					updateValueFlag = 1;
+				end
+				if updateValueFlag==1
+					gStringNew = [movieSettings;gString];
+					set(hObject,'String',gStringNew);
+					set(hObject,'Value',1);
+					% preprocessingSettingsAll.(gProperty).val = [str2num(movieSettings{1}),preprocessingSettingsAll.(gProperty).val];
+					preprocessingSettingsAll.(gProperty).val = {[str2num(movieSettings),preprocessingSettingsAll.(gProperty).val{1}]};
+					preprocessingSettingsAll.(gProperty).str = {gStringNew};
+					% turboregSettingDefaults.(thisProperty) = [str2num(movieSettings{1}),turboregSettingDefaults.(thisProperty)];
+					% turboregSettingStr.(thisProperty) = gStringNew;
+				end
 			end
 		end
 

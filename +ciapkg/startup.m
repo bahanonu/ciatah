@@ -3,6 +3,7 @@
 % started: 2013.12.07 [17:28:44]
 % changelog
 	% 2021.07.22 [19:55:49] - loadBatchFxns to ciapkg.loadBatchFxns.
+	% 2021.11.15 [18:18:04] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 
 % If using startup, then restore default path before running startup operations.
 restoredefaultpath
@@ -11,7 +12,7 @@ restoredefaultpath
 ciapkg.loadBatchFxns('skipLoadMiji');
 
 % set default figure properties
-setFigureDefaults();
+ciapkg.view.setFigureDefaults();
 
 % % set(0,'DefaultFigureWindowStyle','docked');
 % % set defaults for graphics

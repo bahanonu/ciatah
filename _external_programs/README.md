@@ -20,3 +20,21 @@ The following programs will be found in this folder after downloading (e.g. afte
 - Motion correction
 	- `Turboreg` - C and MEX function implementation of http://bigwww.epfl.ch/thevenaz/turboreg/.
 	- `NoRMCorre` - https://github.com/flatironinstitute/NoRMCorre.
+
+
+## Direct download
+Direct download links for cases in which users are having connectivity issues. Extract and place contents in folder in the `_external_programs` named as indicated:
+- `cnmfe` - https://github.com/bahanonu/CNMF_E/archive/master.zip
+- `cnmf_current` - https://github.com/flatironinstitute/CaImAn-MATLAB/archive/master.zip
+- `extract` - https://github.com/schnitzer-lab/EXTRACT-public/archive/master.zip
+- `cvx_rd` - http://web.cvxr.com/cvx/cvx-rd.zip
+- `imagej`
+  - http://bigwww.epfl.ch/sage/soft/mij/mij.jar
+    - Backup URL: http://tiny.ucsf.edu/3wFyol
+  - http://rsb.info.nih.gov/ij/upgrade/ij.jar
+- `bfmatlab` - https://downloads.openmicroscopy.org/bio-formats/6.6.1/artifacts/bfmatlab.zip
+- `nwbpkg` - https://github.com/schnitzer-lab/nwbpkg/archive/master.zip
+- `yamlmatlab` - https://github.com/ewiger/yamlmatlab/archive/master.zip
+- `matnwb` - https://github.com/NeurodataWithoutBorders/matnwb/archive/v2.2.5.3.zip
+- `gramm` - https://github.com/piermorel/gramm/archive/master.zip
+- `turboreg` - http://tiny.ucsf.edu/ciatahTurboreg

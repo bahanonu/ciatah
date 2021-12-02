@@ -39,6 +39,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% 2021.07.22 [12:11:44] - Added support for detrending movies.
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2021.09.10 [10:14:04] - Fix to handle folders with no files.
+		% 2021.11.16 [11:52:36] - Add verification that turboreg MEX function is in the path.
 	% TODO
 		% Allow users to save out analysis options order and load it back in.
 		% Insert NaNs or mean of the movie into dropped frame location, see line 260
@@ -1791,6 +1792,12 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 
 				tmpMovieNoFilter = thisMovie(:,:,movieSubset);
 				ioptions.precomputedRegistrationCooordsFullMovie = ResultsOutOriginal{iterationNo}{thisSet};
+
+				% Verify that turboreg MEX function is in the path
+				if isempty(which('turboreg'))==1
+					ciapkg.loadBatchFxns();
+				end
+
 				[tmpMovieNoFilter, ~] = turboregMovie(tmpMovieNoFilter,'options',ioptions);
 
 				% for iterationNo2 = 1:options.turboreg.numTurboregIterations
@@ -2504,6 +2511,9 @@ function [ostruct options] = playOutputMovies(ostruct,options)
 				disp(repmat('@',1,7))
 				ciapkg.overloaded.msgbox('Press E in movie GUI to move onto next movie, close this box to continue','Success','modal')
 				playMovie(thisMovie);
+
+				% Play the movie from disk, better preview.
+				playMovie(ostruct.savedFilePaths{fileNum});
 			end
 
 			if options.askForPCICs==1

@@ -12,6 +12,7 @@ function [success] = changeFont(FontSize,varargin)
 		% 2020.10.01 [09:39:33] - Added support for changing font type.
         % 2021.03.07 [16:35:55] - Add font name support.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+        % 2021.11.18 [09:00:28] - Updated so can update font size, name, color more independent of one another.
 	% TODO
 		% Add support for changing other font aspects, e.g. figure Font family, command window font, etc.
 
@@ -38,7 +39,11 @@ function [success] = changeFont(FontSize,varargin)
 	try
 		success = 0;
 		if ischar(FontSize)
-			set(findall(gcf,'-property','FontName'),'FontName',FontSize);
+            if strcmp(FontSize,'none')
+                
+            else
+                set(findall(gcf,'-property','FontName'),'FontName',FontSize);
+            end
 		else
 			options.FontSize = FontSize;
 			if isempty(options.FontSize)
@@ -48,20 +53,19 @@ function [success] = changeFont(FontSize,varargin)
 				userInput = options.FontSize;
 			end
 			set(findall(gcf,'-property','FontSize'),'FontSize',userInput);
-			if ~isempty(options.fontColor)
-				try
-					set(findall(gcf,'-property','FontSize'),'Color',options.fontColor);
-					set(findall(gcf,'-property','YColor'),'YColor',options.fontColor);
-					set(findall(gcf,'-property','XColor'),'XColor',options.fontColor);
-				catch
+        end
+        if ~isempty(options.fontColor)
+            try
+                set(findall(gcf,'-property','FontSize'),'Color',options.fontColor);
+                set(findall(gcf,'-property','YColor'),'YColor',options.fontColor);
+                set(findall(gcf,'-property','XColor'),'XColor',options.fontColor);
+            catch
 
-				end
             end
-            if ~isempty(options.fontName)
-                set(findall(gcf,'-property','FontName'),'FontName',options.fontName);
-            end
-            
-		end
+        end
+        if ~isempty(options.fontName)
+            set(findall(gcf,'-property','FontName'),'FontName',options.fontName);
+        end
 		success = 1;
 	catch err
 		disp(repmat('@',1,7))

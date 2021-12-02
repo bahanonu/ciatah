@@ -23,8 +23,9 @@ function [inputImagesTranslated, outputStruct] = computeManualMotionCorrection(i
 		% 2021.08.06 [09:43:53] - Added acceleration based on rapid user clicks or holding down direction keys
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2021.10.13 [21:20:04] - Add support for 90 degree quick rotation, fix passing of flip dims.
-        % 2021.10.29 [12:45:48] - Change number of pixels to translate per click and UI impovements.
-        % 2021.11.01 [11:44:01] - Improved pre-allocation.
+        % 2021.10.29 [12:45:48] - Change number of pixels to translate per click and UI improvements.
+        % 2021.11.01 [11:44:01] - Improved pre-allocation, minimize GUI slowdown for large inputs over time.
+        % 2021.11.17 [02:30:23] - Improve speed of GUI and responsiveness.
 	% TODO
 		% Add ability to auto-crop if inputs are not of the right size them convert back to correct size after manual correction
 		% inputRegisterImage - [x y nCells] - Image to register to.
@@ -202,13 +203,16 @@ function [outputStruct] = subfxnRegisterImage(inputImages,inputRegisterImage,opt
 	[figHandle, figNo] = openFigure(options.translationFigNo, '');
     colormap(ciapkg.api.customColormap());
 	% Force current character to be a new figure.
-	set(gcf,'currentch','3');
+	set(gcf,'currentch','0');
 	if imgNo==1
 		clf
 	end
 	% normalize input marker image
 	inputImages = normalizeVector(single(inputImages),'normRange','zeroToOne');
 	inputImagesOriginal = inputImages;
+    
+    % rgbImage = cat(3,inputRegisterImageOutlines,inputImages,inputRegisterImageOutlines);
+    
 	gammaCorrection = options.gammaCorrection;
 	gammaCorrectionRef = options.gammaCorrection;
     try
@@ -229,7 +233,9 @@ function [outputStruct] = subfxnRegisterImage(inputImages,inputRegisterImage,opt
 	% set(figHandle, 'KeyPressFcn', @(source,eventdata) figure(figHandle));
 	set(figHandle, 'KeyPressFcn', @(source,eventdata) subfxnRespondUser(source,eventdata));
 	figure(figHandle)
+    
 	rgbImage = subfxncreateRgbImg();
+    
 	imgTitleFxn = @(imgNo,imgN,gammaCorrection,gammaCorrectionRef,translationVector,rotationVector,translationAmt) sprintf('Image %d/%d\nup/down/left/right arrows for translation | A/S = rotate +1 left/right, Q/W = rotate +90 left/right  | 5/6 = flip x/y | f to finish\n1/2 keys for image gamma down/up | gamma = %0.3f |  gamma(ref) = %0.3f | translation %d %d | rotation %d\npurple = reference image, green = image to manually translate | %d px/click',imgNo,imgN,gammaCorrection,gammaCorrectionRef,translationVector,rotationVector,translationAmt);
 	
 	imgTitle = imgTitleFxn(imgNo,imgN,gammaCorrection,gammaCorrectionRef,translationVector,rotationVector,options.translationAmt);
@@ -281,14 +287,17 @@ function [outputStruct] = subfxnRegisterImage(inputImages,inputRegisterImage,opt
 	outputStruct.inputImagesCorrected{imgNo} = inputImages;
 	outputStruct.inputImagesOriginal{imgNo} = inputImagesOriginal;
 
-	function rgbImage = subfxncreateRgbImg()
-		rgbImage(:,:,1) = inputRegisterImageOutlines; %red
-		rgbImage(:,:,2) = inputImages; %green
-		if options.registerUseOutlines==1
-		else
-		end
+	% function rgbImage = subfxncreateRgbImg()
+    function rgbImage = subfxncreateRgbImg()
+        rgbImage = cat(3,inputRegisterImageOutlines,inputImages,inputRegisterImageOutlines);
+        
+		% rgbImage(:,:,1) = inputRegisterImageOutlines; %red
+		% rgbImage(:,:,2) = inputImages; %green
+		% if options.registerUseOutlines==1
+		% else
+		% end
 		% rgbImage(:,:,3) = zeros([size(rgbImage(:,:,2))]); %blue
-		rgbImage(:,:,3) = inputRegisterImageOutlines; %blue
+		% rgbImage(:,:,3) = inputRegisterImageOutlines; %blue
 	end
 
 	function subfxnRespondUser(src,event)
@@ -326,6 +335,7 @@ function [outputStruct] = subfxnRegisterImage(inputImages,inputRegisterImage,opt
 		flipDimVector = [flipDimVector flipDimHere];
 		
 		gammaCorrection = subfxnGammaUpdate(gammaCorrection,gDelta);
+        % gDeltaRef
 		gammaCorrectionRef = subfxnGammaUpdate(gammaCorrectionRef,gDeltaRef);
 
 		inputImages = imtranslate(inputImagesOriginal,translationVector);
@@ -363,7 +373,7 @@ function [outputStruct] = subfxnRegisterImage(inputImages,inputRegisterImage,opt
 		set(imgHandle2,'Cdata',rgbImage(:,:,1));
 		set(imgHandle3,'Cdata',rgbImage(:,:,2));
 
-		drawnow
+		% drawnow
 	end
 end
 function gammaCorrection = subfxnGammaUpdate(gammaCorrection,gDelta)
