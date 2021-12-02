@@ -22,6 +22,7 @@ The following programs will be found in this folder after downloading (e.g. afte
 	- `NoRMCorre` - https://github.com/flatironinstitute/NoRMCorre.
 
 
+## Direct download
 Direct download links for cases in which users are having connectivity issues. Extract and place contents in folder in the `_external_programs` named as indicated:
 - `cnmfe` - https://github.com/bahanonu/CNMF_E/archive/master.zip
 - `cnmf_current` - https://github.com/flatironinstitute/CaImAn-MATLAB/archive/master.zip
