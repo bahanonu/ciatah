@@ -15,6 +15,7 @@ function obj = viewMovieRegistrationTest(obj)
 		% 2020.06.18 [12:38:34] - Add support for stripe removal same as modelPreprocessMovie
 		% 2021.06.18 [21:41:07] - Added modelVarsFromFilesCheck() to check and load signals if user hasn't already.
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2021.12.08 [22:11:00] - Additional updates to handle CIAtah v4.0 API switch.
 	% TODO
 		%
 
@@ -287,6 +288,8 @@ function obj = viewMovieRegistrationTest(obj)
 
 end
 function [inputMovie] = subfxnSpatialFilterInputMovie(regSettings,movieList,inputDatasetName,cropCoords,frameListTmp)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	% get movie, normalize, and display
 	[inputMovie] = loadMovieList(movieList,'convertToDouble',0,'frameList',frameListTmp(:),'inputDatasetName',inputDatasetName,'treatMoviesAsContinuous',1);
 	inputMovie = single(inputMovie);
@@ -376,6 +379,8 @@ end
 % 	% thisMovie = normalizeMovie(thisMovie,'normalizationType','medianFilter');
 % end
 function [inputMovie] = subfxnRunTurboreg(regSettings,movieList,inputDatasetName,cropCoords,frameListTmp)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	% get movie, normalize, and display
 	[inputMovie] = loadMovieList(movieList,'convertToDouble',0,'frameList',frameListTmp(:),'inputDatasetName',inputDatasetName,'treatMoviesAsContinuous',1);
 	inputMovie = single(inputMovie);
@@ -421,6 +426,8 @@ function [inputMovie] = subfxnRunTurboreg(regSettings,movieList,inputDatasetName
 	[inputMovie] = turboregMovie(inputMovie,'options',ioptions);
 end
 function [regCoords] = subfxnCropSelection(options,folderList)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	% Biafra Ahanonu
 	% 2013.11.10 [19:28:53]
 	usrIdxChoiceStr = {'NO | do not duplicate coords across multiple folders','YES | duplicate coords across multiple folders','YES | duplicate coords if subject the same'};
@@ -550,6 +557,8 @@ function [regCoords] = subfxnCropSelection(options,folderList)
 	end
 end
 function [thisMovie] = cropInputMovie(thisMovie)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	% turboreg outputs 0s where movement goes off the screen
 	thisMovieMinMask = zeros([size(thisMovie,1) size(thisMovie,2)]);
 	options.turboreg.registrationFxn
