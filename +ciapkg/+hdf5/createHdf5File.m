@@ -12,6 +12,7 @@ function createHdf5File(filename, datasetName, inputData, varargin)
 		% 2019.08.20 [11:38:54] - Added additional support for more data types.
         % 2021.02.02 [13:15:11] - Close space_id, dset_id, and fid with low-level HDF5 functions before appending data with hdf5write to avoid read/write issues.
         % 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+        % 2021.12.08 [22:34:26] - Handle cases in which dataDimsChunkCopy that is input is too large for given matrix being saved to an HDF5 file.
 	% TODO
 		%
 
@@ -58,6 +59,13 @@ function createHdf5File(filename, datasetName, inputData, varargin)
 	else
 		chunkSize = options.dataDimsChunkCopy;
 	end
+
+	% If chunk size is larger than the movie, reduce to size of the chunk.
+	if any([chunkSize(1)>initDims(1), chunkSize(2)>initDims(2)])
+		disp('Chunk size too large, using movie dimensions for H5 chunk size.')
+		chunkSize = [initDims(1) initDims(2) 1];
+	end
+
 	h5_chunkSize = fliplr(chunkSize);
 
 	H5P.set_chunk(dcpl_id, h5_chunkSize);

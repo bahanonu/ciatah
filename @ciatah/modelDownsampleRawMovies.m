@@ -12,6 +12,7 @@ function obj = modelDownsampleRawMovies(obj)
 		% 2019.07.11 [19:53:47] - Added support for ISXD Inscopix files via Inscopix Data Processing Software. Also changed way program is run to loop over files and check for each extension in the case a folder as multiple types of files that need to be downsampled (e.g. HDF5, TIF, ISXD).
 		% 2019.11.18 [17:28:48] - Input dialog for folder list or GUI to manually entering multiple folders to downsample. Easier for users than current purely comma separated single line list.
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2021.12.08 [22:11:00] - Additional updates to handle CIAtah v4.0 API switch.
 
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 	
@@ -241,6 +242,9 @@ function obj = modelDownsampleRawMovies(obj)
 	end
 end
 function downsampleTiffMovieFxnObj(folderPath,options)
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	options.deflateLevel = 1;
 
 	% get list of regular expressions
@@ -303,6 +307,8 @@ function downsampleTiffMovieFxnObj(folderPath,options)
 end
 function downsampleHDFMovieFxnObj(movieList,options)
 	% downsamples an HDF5 movie, normally the raw recording files
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	% display(movieList)
 	cellfun(@display,movieList);
@@ -386,6 +392,8 @@ function downsampleHDFMovieFxnObj(movieList,options)
 end
 function [downsampleSaveFolderMod, downsampleSaveFolderTwoMod] = downsampleIsxdMovieFxnObj(movieList,options)
 	% downsamples an HDF5 movie, normally the raw recording files
+
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	% display(movieList)
 	cellfun(@display,movieList);
@@ -506,6 +514,8 @@ function [downsampleSaveFolderMod, downsampleSaveFolderTwoMod] = downsampleIsxdM
 end
 
 function [newFolderListCell] = subfxnSelectFolders()
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	nExistingFolders = 0;
 	usrIdxChoiceStr = {'manually enter folders to list','GUI select folders','Use existing folder list'};
 	scnsize = get(0,'ScreenSize');
