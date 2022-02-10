@@ -131,16 +131,16 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		tS.numTurboregIterations.str = {{1,userSelectStr,2,3,4,5}};
 		tS.numTurboregIterations.tooltip =  {{defaultTooltips}};
 	tS.turboregNumFramesSubset = [];
-		tS.turboregNumFramesSubset.val = {{5000,userSelectVal,1,5,10,50,100,250,500,1000,2000,3000,5000,10000,15000}};
-		tS.turboregNumFramesSubset.str = {{5000,userSelectStr,1,5,10,50,100,250,500,1000,2000,3000,5000,10000,15000}};
+		tS.turboregNumFramesSubset.val = {{5000,userSelectVal,1,5,10,50,100,250,500,1000,2000,3000,5000,10000,15000,20000,25000,30000,40000}};
+		tS.turboregNumFramesSubset.str = {{5000,userSelectStr,1,5,10,50,100,250,500,1000,2000,3000,5000,10000,15000,20000,25000,30000,40000}};
 		tS.turboregNumFramesSubset.tooltip =  {{'To save memory, motion correction is run on the indicated # of frames from the data.'}};
 	tS.pxToCrop = [];
 		tS.pxToCrop.val = {{14,userSelectVal,15,16,17,18,19,20,21,22,23,24,25}};
 		tS.pxToCrop.str = {{14,userSelectStr,15,16,17,18,19,20,21,22,23,24,25}};
 		tS.pxToCrop.tooltip =  {{'Maximum # of pixels to convert to NaNs around the border after motion correction.'}};
 	tS.motionCorrectionRefFrame = [];
-		tS.motionCorrectionRefFrame.val = {{100,userSelectVal,1,10,100,1000}};
-		tS.motionCorrectionRefFrame.str = {{100,userSelectStr,1,10,100,1000}};
+		tS.motionCorrectionRefFrame.val = {{100,userSelectVal,1,10,100,1000,5000,10000,20000}};
+		tS.motionCorrectionRefFrame.str = {{100,userSelectStr,1,10,100,1000,5000,10000,20000}};
 		tS.motionCorrectionRefFrame.tooltip =  {{['The reference frame for motion correction.' 10 'Avoid selecting 1st couple of movie frames or one that has issues.']}};
 	tS.regRegionUseBtwnSessions = [];
 		% tS.regRegionUseBtwnSessions.val = {{-1,0,-2,0}};
@@ -170,12 +170,12 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		tS.normalizeType.str = {{'bandpass','divideByLowpass','imagejFFT','highpass','matlabDisk'}};
 		tS.normalizeType.tooltip = {{['Spatial filtering applied before getting spatial translation coordinates.' 10 'Try "matlabDisk" if default does not work.']}};
 	tS.normalizeFreqLow = [];
-		tS.normalizeFreqLow.val = {{70,10,20,30,40,50,60,70,80,90}};
-		tS.normalizeFreqLow.str = {{70,10,20,30,40,50,60,70,80,90}};
+		tS.normalizeFreqLow.val = {{70,0,2,5,7,10,20,30,40,50,60,70,80,90}};
+		tS.normalizeFreqLow.str = {{70,0,2,5,7,10,20,30,40,50,60,70,80,90}};
 		tS.normalizeFreqLow.tooltip = {{'For any "normalizeType" FFT options selected, the lower frequency.'}};
 	tS.normalizeFreqHigh = [];
-		tS.normalizeFreqHigh.val = {{100,80,90,100,110}};
-		tS.normalizeFreqHigh.str = {{100,80,90,100,110}};
+		tS.normalizeFreqHigh.val = {{100,80,90,100,110,120,150,200,250,300,400,500,600,700}};
+		tS.normalizeFreqHigh.str = {{100,80,90,100,110,120,150,200,250,300,400,500,600,700}};
 		tS.normalizeFreqHigh.tooltip = {{'For any "normalizeType" FFT options selected, the higher frequency.'}};
 	tS.normalizeBandpassType = [];
 		tS.normalizeBandpassType.val = {{'bandpass','lowpass','highpass'}};
@@ -185,7 +185,18 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		tS.normalizeBandpassMask.val = {{'gaussian','binary'}};
 		tS.normalizeBandpassMask.str = {{'gaussian','binary'}};
 		tS.normalizeBandpassMask.tooltip = {{['If "normalizeType" is an FFT, how "normalizeBandpassType" is applied.' 10 '"binary" option will produce ringing.']}};
-	tS.SmoothX = [];
+	
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    tS.normalizeImagejFFTLarge = [];
+		tS.normalizeImagejFFTLarge.val = {{10000,userSelectVal,100,500,1000,5000,8000}};
+		tS.normalizeImagejFFTLarge.str = {{10000,userSelectStr,100,500,1000,5000,8000}};
+		tS.normalizeImagejFFTLarge.tooltip = {{'Used if imagejFFT is selected for turboreg normalization'}};
+	tS.normalizeImagejFFTSmall = [];
+		tS.normalizeImagejFFTSmall.val = {{80,userSelectVal,10,20,30,40,50,60,70,90,100}};
+		tS.normalizeImagejFFTSmall.str = {{80,userSelectStr,10,20,30,40,50,60,70,90,100}};
+		tS.normalizeImagejFFTSmall.tooltip = {{'Used if imagejFFT is selected for turboreg normalization'}};
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    tS.SmoothX = [];
 		tS.SmoothX.val = {{10,userSelectVal,1,5,10,20,30,40,50,60,70,80,90}};
 		tS.SmoothX.str = {{10,userSelectStr,1,5,10,20,30,40,50,60,70,80,90}};
 		tS.SmoothX.tooltip = {{'Turboreg''s x smoothing size in pixels.'}};
@@ -204,8 +215,8 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		tS.MOVIE_NORMALIZATION______________.str = {{'====================='}};
 		tS.MOVIE_NORMALIZATION______________.tooltip =  {{'====================='}};
 	tS.filterBeforeRegister = [];
-		tS.filterBeforeRegister.val = {{[],'divideByLowpass','imagejFFT','bandpass'}};
-		tS.filterBeforeRegister.str = {{'NO filtering before registering','matlab divide by lowpass before registering','imageJ divide by lowpass (requires Miji!)','matlab bandpass before registering'}};
+		tS.filterBeforeRegister.val = {{'divideByLowpass',[],'imagejFFT','bandpass','medianFilter'}};
+		tS.filterBeforeRegister.str = {{'matlab divide by lowpass before registering','NO filtering before registering','imageJ divide by lowpass (requires Miji!)','matlab bandpass before registering', 'Median Filter'}};
 		tS.filterBeforeRegister.tooltip = {{'IMPORTANT: type of spatial filtering applied after getting spatial transformation coordinates but BEFORE actually motion correcting the movie.'}};
 	tS.saveBeforeFilterRegister = [];
 		tS.saveBeforeFilterRegister.val = {{0,1}};
@@ -226,11 +237,11 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 	tS.filterBeforeRegImagejFFTLarge = [];
 		tS.filterBeforeRegImagejFFTLarge.val = {{10000,userSelectVal,100,500,1000,5000,8000}};
 		tS.filterBeforeRegImagejFFTLarge.str = {{10000,userSelectStr,100,500,1000,5000,8000}};
-		tS.filterBeforeRegImagejFFTLarge.tooltip = {{'Generally ignore since ImageJ isn''t needed for spatial filtering anymore'}};
+		tS.filterBeforeRegImagejFFTLarge.tooltip = {{'Used if imagejFFT is selected for turboreg normalization'}};
 	tS.filterBeforeRegImagejFFTSmall = [];
 		tS.filterBeforeRegImagejFFTSmall.val = {{80,userSelectVal,10,20,30,40,50,60,70,90,100}};
 		tS.filterBeforeRegImagejFFTSmall.str = {{80,userSelectStr,10,20,30,40,50,60,70,90,100}};
-		tS.filterBeforeRegImagejFFTSmall.tooltip = {{'Generally ignore since ImageJ isn''t needed for spatial filtering anymore'}};
+		tS.filterBeforeRegImagejFFTSmall.tooltip = {{'Used if imagejFFT is selected for turboreg normalization'}};
 	tS.medianFilterSize = [];
 		tS.medianFilterSize.val = {{3,userSelectVal,5,7,9,11,13,15}};
 		tS.medianFilterSize.str = {{3,userSelectStr,5,7,9,11,13,15}};
@@ -252,15 +263,13 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		tS.MOVIE_DOWNSAMPLING______________.str = {{'====================='}};
 		tS.MOVIE_DOWNSAMPLING______________.tooltip =  {{'====================='}};
 	tS.downsampleFactorTime = [];
-		tS.downsampleFactorTime.val = {{4,userSelectVal,1,2,4,6,8,10,20}};
-		tS.downsampleFactorTime.str = {{4,userSelectStr,1,2,4,6,8,10,20}};
+		tS.downsampleFactorTime.val = {{1,userSelectVal,1,2,4,6,8,10,20}};
+		tS.downsampleFactorTime.str = {{1,userSelectStr,1,2,4,6,8,10,20}};
 		tS.downsampleFactorTime.tooltip = {{'By what factor to downsample movie in time.'}};
 	tS.downsampleFactorSpace = [];
-		tS.downsampleFactorSpace.val = {{2,userSelectVal,1,2,4,6,8,10,20}};
-		tS.downsampleFactorSpace.str = {{2,userSelectStr,1,2,4,6,8,10,20}};
+		tS.downsampleFactorSpace.val = {{1,userSelectVal,1,2,4,6,8,10,20}};
+		tS.downsampleFactorSpace.str = {{1,userSelectStr,1,2,4,6,8,10,20}};
 		tS.downsampleFactorSpace.tooltip = {{'By what factor to downsample movie in space.'}};
-		
-	% ===================================
 	tS.IO_and_MOVIE_IDENTIFICATION______________ = [];
 		tS.IO_and_MOVIE_IDENTIFICATION______________.val = {{'====================='}};
 		tS.IO_and_MOVIE_IDENTIFICATION______________.str = {{'====================='}};
