@@ -1,3 +1,8 @@
+# Reda Chalhoub
+# Ignore the entire USER_PATH folder
+/USER_PATH
+start_CIAtah.m
+
 # Biafra Ahanonu
 
 # ignore the private folder where user information is stored
