@@ -29,8 +29,8 @@ function [fileList] = getFileList(inputDir, filterExp,varargin)
 	% Binary: 1 = add inputDir to file paths, 0 = do not add input directory.
 	options.addInputDirToPath = 1;
 	% Char: lexicographic (e.g. 1 10 11 2 21 22 unless have 01 02 10 11 21 22) or numeric (e.g. 1 2 10 11 21 22) or natural (e.g. 1 2 10 11 21 22)
-	% options.sortMethod = 'lexicographic';
-	options.sortMethod = 'natural';
+	options.sortMethod = 'lexicographic';
+	% options.sortMethod = 'natural';
 	% DEPRECIATED 1 = recursively find files in all sub-directories. 0 = only find files in inputDir directory.
 	options.recusive = 0;
 	% get options
