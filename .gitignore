@@ -1,3 +1,7 @@
+# Reda Chalhoub
+# Ignore the entire USER_PATH folder
+/USER_PATH
+
 # Biafra Ahanonu
 
 # ignore the private folder where user information is stored
