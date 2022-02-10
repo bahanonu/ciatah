@@ -8,5 +8,5 @@ function [success] = convertInscopixIsxdToHdf5(inputFilePath,varargin)
 	% outputs
 		%
 
-	[success] = ciapkg.image.convertInscopixIsxdToHdf5(inputFilePath,'passArgs', varargin);
+	[success] = ciapkg.inscopix.convertInscopixIsxdToHdf5(inputFilePath,'passArgs', varargin);
 end
