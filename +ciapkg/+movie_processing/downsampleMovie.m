@@ -11,6 +11,7 @@ function [inputMovie] = downsampleMovie(inputMovie, varargin)
 	% changelog
 		% 2013.12.19 added the spatial downsampling to the function.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2022.02.09 [23:42:18] - Update for Matlab standards.
 	% TODO
 
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
@@ -52,13 +53,13 @@ function [inputMovie] = downsampleMovie(inputMovie, varargin)
 	%	options.downsampleFactor = downsampleFactor;
 	%end
 	% load the movie within downsample function
-	if strcmp(class(inputMovie),'char')|strcmp(class(inputMovie),'cell')
+	if ischar(inputMovie)||iscell(inputMovie)
 		inputMovie = loadMovieList(inputMovie,'convertToDouble',options.convertToDouble,'frameList',options.frameList,'inputDatasetName',options.inputDatasetName);
 	end
 
 	if options.downsampleFactor==1
-		display(repmat('=',1,7))
-		display('Downsample factor is 1, no downsampling...')
+		disp(repmat('=',1,7))
+		disp('Downsample factor is 1, no downsampling...')
 		return;
 	end
 
@@ -96,7 +97,7 @@ function [inputMovie] = downsampleMovie(inputMovie, varargin)
 						% to reduce memory footprint, place new frame in old movie and cut off the unneeded frames after
 						inputMovie(1:downX,frame,1:downZ) = downsampledFrame;
 						% inputMovie(:,frame,:) = downsampledFrame;
-						if (frame==1||mod(frame,waitbarOnInterval)==0||frame==downZ)&options.waitbarOn==1
+						if (frame==1||mod(frame,waitbarOnInterval)==0||frame==downZ)&&options.waitbarOn==1
 							reverseStr = cmdWaitbar(frame,downY,reverseStr,'inputStr',[secondaryDownsampleType ' temporally downsampling matrix']);
 						end
 					end
@@ -129,7 +130,7 @@ function [inputMovie] = downsampleMovie(inputMovie, varargin)
 							inputMovie(1:downX,1:downY,frame) = downsampledFrame;
 						end
 						% inputMovieDownsampled(1:downX,1:downY,frame) = downsampledFrame;
-						if (frame==1||mod(frame,waitbarOnInterval)==0||frame==downZ)&options.waitbarOn==1
+						if (frame==1||mod(frame,waitbarOnInterval)==0||frame==downZ)&&options.waitbarOn==1
 							reverseStr = cmdWaitbar(frame,downZ,reverseStr,'inputStr',[secondaryDownsampleType ' spatially downsampling matrix']);
 						end
 					end
@@ -143,7 +144,7 @@ function [inputMovie] = downsampleMovie(inputMovie, varargin)
 					return;
 			end
 		otherwise
-			display('incorrect dimension option, choose time or space');
+			disp('incorrect dimension option, choose time or space');
 	end
-	display(' ');
+	disp(' ');
 end

@@ -166,7 +166,7 @@ function obj = viewObjmaps(obj,varargin)
 			if isempty(inputSignals)
 				disp('no input signals');
 				try
-					suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType ' | ' obj.signalExtractionMethod,])
+					ciapkg.overloaded.suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType ' | ' obj.signalExtractionMethod,])
 				catch
 				end
 				continue;
@@ -276,7 +276,7 @@ function obj = viewObjmaps(obj,varargin)
 				axis equal tight; box off;
 				title('Cellmap | All extraction outputs')
 
-			% suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType])
+			% ciapkg.overloaded.suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType])
 
 			titleStr = sprintf('%d/%d: %s | %s | %s\n %s | %d cells, %d total | Zoom enabled',thisFileNumIdx,nFilesToAnalyze,obj.folderBaseDisplayStr{obj.fileNum},strrep(foldername,'_','\_'),validType,obj.signalExtractionMethod,sum(valid==1),length(valid));
 			ciapkg.overloaded.suptitle(titleStr)
@@ -290,6 +290,8 @@ function obj = viewObjmaps(obj,varargin)
 			set(gcf,'SizeChangedFcn',{@resizeui,axHandle});
 
 			linkaxes(linkAx);
+            set(gcf,'PaperUnits','inches','PaperPosition',[0 0 22 16])
+		    obj.modelSaveImgToFile([],'objMapsGeneral_','current',[]);
 
 			% =======
 			plotSets = [options.figList(1) options.figList(2)];
@@ -339,7 +341,7 @@ function obj = viewObjmaps(obj,varargin)
 					% rectangle('Position',[imgColX-scaleBarLengthPx-imgColX*0.05 imgRowY-imgRowY*0.05 scaleBarLengthPx 5],'FaceColor',[1 1 1],'EdgeColor','none')
 					% annotation('line',[imgRow-50 imgRow-30]/imgRow,[20 20]/imgCol,'LineWidth',3,'Color',[1 1 1]);
 
-					suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType 10  'Zoom enabled.'])
+					ciapkg.overloaded.suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType 10  'Zoom enabled.'])
 
 					titleStr = sprintf('%d/%d: %s | %s | %s\n %s | %d cells, %d total | Zoom enabled',thisFileNumIdx,nFilesToAnalyze,obj.folderBaseDisplayStr{obj.fileNum},strrep(foldername,'_','\_'),validType,obj.signalExtractionMethod,sum(valid==1),length(valid));
 					ciapkg.overloaded.suptitle(titleStr)
@@ -374,7 +376,7 @@ function obj = viewObjmaps(obj,varargin)
 			try
 				for iii = [options.figList(4) options.figList(1)]
 					[~,~] = openFigure(iii+thisFileNumIdx, '');
-					suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType ' | ' obj.signalExtractionMethod,])
+					ciapkg.overloaded.suptitle([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.folderBaseDisplayStr{obj.fileNum} ' | ' strrep(foldername,'_','\_') ' | ' validType ' | ' obj.signalExtractionMethod,])
 				end
 			catch err
 				disp(repmat('@',1,7))

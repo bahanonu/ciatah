@@ -21,11 +21,15 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2021.09.10 [03:02:08] - Added support for file list when selecting a specific folder.
 		% 2021.10.20 [21:46:35] - Font scaling support.
+        % 2022.01.04 [12:15:56] - Additional check only for movie previews of supported movie files. "Folder files" list selection additional regexp support.
+        % 2022.01.25 [19:30:58] - Changed so that 'Start selected method' button selects the correct folders like occurs when pressing enter.
+        % 2022.02.25 [13:06:09] - The folder list will no longer reset when selecting certain GUI elements that should not impact folder list.
 	% TODO
 		%
 
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
 	try
-		import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 		%% ==========================================
 		% CONSTANTS AND VARIABLES
@@ -257,6 +261,7 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 			subfxn_setOutputVars()
 			close(hFig)
 		end
+		validFoldersIdx
 		return;
 		% idNumIdxArray = get(hListboxS.folders,'Value');
 	catch err
@@ -394,10 +399,19 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 			% else
 				% useAltValid = 0;
 			% end
+			
+			
+			% if any(strcmp({'subjectBox','assayBox'},get(src,'Tag')))
 
+			% end
+			
 			[validFoldersIdx] = pipelineFolderFilter(obj,useAltValid,validFoldersIdx);
 
-			if strcmp(get(src,'Tag'),'folders')~=1
+			% validFoldersIdx = hListboxStruct.ValueFolder;
+
+			% if strcmp(get(src,'Tag'),'folders')~=1
+
+			if any(strcmp({'methodBox','cellExtractionBox','cellExtractFiletypeBox','guiEnabled','folders'},get(src,'Tag')))==0
 				if length(get(hListboxS.folders,'Value'))==1
 				else
 					set(hListboxS.folders,'Value',validFoldersIdx);				
@@ -434,22 +448,25 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		end
 
 		try
-			evnt.Key;
+			eventKey = evnt.Key;
 			keyCheck = 1;
-		catch
+        catch
+            eventKey = '';
 			keyCheck = 0;
 		end
 		if startMethodFlag==1
 			keyCheck = 1;
+            % Make a pseudo event key
+            eventKey = 'return';
 		end
 		if keyCheck==1&&checkEnabled==1
-			if startMethodFlag==1||strcmp(evnt.Key,'return')
+			if startMethodFlag==1||strcmp(eventKey,'return')
 				subfxn_returnNormal();
 			else
 				% disp('Check')
 			end
 			% If escape, close.
-			if strcmp(evnt.Key,'escape')
+			if strcmp(eventKey,'escape')
 				exitCallback();
 				% breakMovieLoop = 1;
 				% hListboxStruct = [];
@@ -531,7 +548,10 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 	function startMethodCallback(source,eventdata)
 		breakMovieLoop = 1;
 		startMethodFlag = 1;
-		onKeyPressRelease(source, eventdata, 1,hFig)
+		idNumIdxArray = hListboxStruct.Value;
+		validFoldersIdx = hListboxStruct.ValueFolder;
+		subfxn_returnNormal();
+		% onKeyPressRelease(source, eventdata, 1,hFig)
 		% close(hFig)
 	end
 	function runMoviesToggleCallback(source,eventdata)
@@ -777,7 +797,8 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 				folderFileListHere = folderFileListHere(3:end);
 				set(hListboxS.folderFiles,'string',folderFileListHere);
 				set(hListboxS.folderFiles,'Value',1);
-				folderFilesHighlight = cellfun(@(x) contains(x,{obj.fileFilterRegexp,obj.fileFilterRegexpRaw}),folderFileListHere);
+				folderFilesHighlight = cellfun(@(x) ~isempty(cell2mat(regexp(x,{obj.fileFilterRegexp,obj.fileFilterRegexpRaw}))),folderFileListHere,'UniformOutput',0);
+                folderFilesHighlight = cell2mat(folderFilesHighlight);
 				if any(folderFilesHighlight)
 					selectFilesIdx = find(folderFilesHighlight);
 					% Only update value if within range, else ignore so listbox still renders.
@@ -814,7 +835,23 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 					continue;
 				else
 					movieCheck{zz} = 1;
-				end
+                end
+                % Check that movie is supported, remove unsupported files.
+                if iscell(fileList{zz})&&length(fileList{zz})>1
+                    supportedMovie = [];
+                    for yy = 1:length(fileList{zz})
+                        [~, supportedMovie(yy), ~] = ciapkg.io.getMovieFileType(fileList{zz}{yy});
+                    end
+                    fileList{zz} = fileList{zz}(logical(supportedMovie));
+                end              
+                fileList{zz}'
+                [~, supportedMovie, ~] = ciapkg.io.getMovieFileType(fileList{zz});
+                if supportedMovie==0
+					movieCheck{zz} = 0;
+					continue;
+				else
+					movieCheck{zz} = 1;
+                end
 				inputMoviePath{zz} = fileList{zz}{1};
 				inputMovieDims{zz} = ciapkg.io.getMovieInfo(inputMoviePath{zz},'inputDatasetName',obj.inputDatasetName);
 				if isempty(inputMovieDims{zz})

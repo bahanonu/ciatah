@@ -11,14 +11,21 @@ function manageMiji(varargin)
 		% 2021.06.20 [00:20:38] - Add support for setting up ImageJ along with closing all windows to future proof any changes to those calls.
         % 2021.07.16 [13:34:57] - Check that ImageJ already in java path to prevent duplicate loading and wasting time.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2021.12.19 [10:40:47] - Added `forceLoad` option.
 	% TODO
 		%
 
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
-	% DESCRIPTION
+	% Str:
+		% 'start' - start Miji'.
+		% 'setupImageJ' - Sets up ImageJ by pointing Java path to the jar files.
+		% 'closeAllWindows' - Closes all open windows but leaves ImageJ running.
+		% 'exit' - close Miji.
 	options.startStop = 'start';
+    % Binary: 1 = force loading Miji.
+    options.forceLoad = 0;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -98,13 +105,13 @@ function manageMiji(varargin)
 				imagejPath = [ciapkg.getDirExternalPrograms filesep 'imagej'];
 				pathsToAdd = {[imagejPath filesep 'mij.jar'],[imagejPath filesep 'ij.jar']};
 				nPaths = length(pathsToAdd);
-                
+
                 javaDyna = javaclasspath('-dynamic');
                 % matchIdx = cellfun(@isempty,regexpi(javaDyna,pathsToAdd));
                 matchIdx = ismember(pathsToAdd,javaDyna);
                 % cellfun(@(x) javarmpath(x),javaDyna(matchIdx));
                 % javaDynaPathStr = join(javaDyna(matchIdx),''',''');
-                if any(~matchIdx)
+                if options.forceLoad==1||any(~matchIdx)
                     for i = 1:nPaths
                         if matchIdx(i)==1
                             continue;
@@ -118,8 +125,6 @@ function manageMiji(varargin)
                 else
                     disp('ImageJ already loaded!')
                 end
-                
-				
 			case 'closeAllWindows'
 				% Closes all open windows but leaves ImageJ running.
 

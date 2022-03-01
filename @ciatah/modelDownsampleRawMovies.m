@@ -13,6 +13,7 @@ function obj = modelDownsampleRawMovies(obj)
 		% 2019.11.18 [17:28:48] - Input dialog for folder list or GUI to manually entering multiple folders to downsample. Easier for users than current purely comma separated single line list.
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2021.12.08 [22:11:00] - Additional updates to handle CIAtah v4.0 API switch.
+		% 2022.02.25 [15:40:56] - Change TIF finding to split apart the information file before using for regular expression.
 
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 	
@@ -242,7 +243,6 @@ function obj = modelDownsampleRawMovies(obj)
 	end
 end
 function downsampleTiffMovieFxnObj(folderPath,options)
-
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	options.deflateLevel = 1;
@@ -250,19 +250,23 @@ function downsampleTiffMovieFxnObj(folderPath,options)
 	% get list of regular expressions
 	fileRegexpListOriginal = getFileList([folderPath filesep],options.srcSubfolderFileFilterRegexp);
 	fileRegexpList = regexp(fileRegexpListOriginal, options.srcSubfolderFileFilterRegexp,'match');
+	options.srcSubfolderFileFilterRegexp
 	cellfun(@display,fileRegexpList);
 	% fileRegexpList = getFileList([folderPath filesep], options.srcFolderFilterRegexp);
 	nFileRegexp = length(fileRegexpList);
+	
 	% go over each set of regexp
 	for fileRegexpNo=1:nFileRegexp
+		disp('==========================================')
 		thisFileRegexp = fileRegexpList{fileRegexpNo};
 		thisFileRegexp = regexprep(thisFileRegexp,options.srcSubfolderFileFilterRegexpExt,'');
 		thisFileRegexp = thisFileRegexp{1};
 		display(thisFileRegexp)
+		[~,thisFileRegexp,~] = fileparts(thisFileRegexp);
 		% get a list of tiff associated with regexp
 		[folderPath filesep]
-		[thisFileRegexp '.*.tif']
-		movieList = getFileList([folderPath filesep], [thisFileRegexp '.*.tif']);
+		[thisFileRegexp '.*.tif$']
+		movieList = getFileList([folderPath filesep], [thisFileRegexp '.*.tif$']);
 		% due to naming convention, shift last to 1st
 		movieList = circshift(movieList,[0 1]);
 		cellfun(@display,movieList);
@@ -272,6 +276,7 @@ function downsampleTiffMovieFxnObj(folderPath,options)
 		display(['save HDF5: ' newFilename])
 		% load and downsample each tiff
 		nMovies = length(movieList);
+		nMovies
 		for movieNo=1:nMovies
 			display(repmat('+',1,21))
 			display(['downsampling ' num2str(movieNo) '/' num2str(nMovies)])

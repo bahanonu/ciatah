@@ -60,6 +60,8 @@ function [inputMovies] = createMontageMovie(inputMovies,varargin)
 
 		% check to see if need to load movies
 		for movieNo = 1:nMovies
+            display(repmat('+',1,21))
+            fprintf('%d/%d.\n',movieNo,nMovies)
 			% get the movie
 			if strcmp(class(inputMovies{movieNo}),'char')
 				inputMovies{movieNo} = loadMovieList(inputMovies{movieNo},'convertToDouble',options.convertToDouble,'frameList',options.frameList,'inputDatasetName',options.inputDatasetName);

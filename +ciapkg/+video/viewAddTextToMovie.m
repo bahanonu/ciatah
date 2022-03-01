@@ -1,4 +1,4 @@
-function [movieTmp] = viewAddTextToMovie(movieTmp,inputText,fontSize)
+function [movieTmp] = viewAddTextToMovie(movieTmp,inputText,fontSize,varargin)
 	% Adds text to movie matrix.
 	% Biafra Ahanonu
 	% inputs
@@ -9,6 +9,7 @@ function [movieTmp] = viewAddTextToMovie(movieTmp,inputText,fontSize)
 	% changelog
 		% 2016.07.01 [15:05:03] - improved
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+        % 2022.01.26 [15:16:20] - Added varargin for future additions.
 	% TODO
 		%
 

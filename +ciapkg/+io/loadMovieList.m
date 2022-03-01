@@ -57,6 +57,7 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2021.08.13 [02:31:48] - Added HDF5 capitalized file extension.
         % 2021.08.26 [16:15:37] - Ensure that loadMovieList has all output arguments set no matter return conditions.
+        % 2022.02.24 [10:24:28] - AVI now read(...,'native') is faster.
 		
 	% TODO
 		% OPEN
@@ -230,22 +231,26 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 				if options.displayWarnings==0
 					warning off
 				end
-				tiffHandle = Tiff(thisMoviePath, 'r');
+				tiffHandle = Tiff(thisMoviePath, 'r+');
 				tmpFrame = tiffHandle.read();
 				xyDims = size(tmpFrame);
+                % nTiles = numberOfTiles(tiffHandle);
+                nTiles = size(imfinfo(thisMoviePath,'tif'),1);;
 				if options.displayWarnings==0
 					warning on
 				end
 
 				dims.x(iMovie) = xyDims(1);
 				dims.y(iMovie) = xyDims(2);
-				dims.z(iMovie) = size(imfinfo(thisMoviePath),1);
+				% dims.z(iMovie) = size(imfinfo(thisMoviePath),1);
+				dims.z(iMovie) = nTiles;
 				dims.one(iMovie) = xyDims(1);
 				dims.two(iMovie) = xyDims(2);
-				dims.three(iMovie) = size(imfinfo(thisMoviePath),1);
+				% dims.three(iMovie) = size(imfinfo(thisMoviePath),1);
+                dims.three(iMovie) = nTiles;
 
 				if dims.z(iMovie)==1
-					fileInfo = imfinfo(thisMoviePath);
+					fileInfo = imfinfo(thisMoviePath,'tif');
 					try
 						numFramesStr = regexp(fileInfo.ImageDescription, 'images=(\d*)', 'tokens');
 						nFrames = str2double(numFramesStr{1}{1});
@@ -326,7 +331,8 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 				dims.one(iMovie) = xyloObj.Height;
 				dims.two(iMovie) = xyloObj.Width;
 				dims.three(iMovie) = xyloObj.NumberOfFrames;
-				tmpFrame = read(xyloObj, 1);
+				tmpFrame = read(xyloObj, 1, 'native');
+				tmpFrame = tmpFrame.cdata;
 				% tmpFrame = readFrame(xyloObj);
 			case 'isxd'
 				inputMovieIsx = isx.Movie.read(thisMoviePath);
@@ -526,7 +532,7 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 					thisMoviePath = movieList{iMovie};
 					tiffHandle = Tiff(thisMoviePath, 'r');
 					tmpFramePerma = tiffHandle.read();
-					fileInfoH = imfinfo(thisMoviePath);
+					fileInfoH = imfinfo(thisMoviePath,'tif');
 					displayInfoH = 1;
 					NumberframeH = dims.z(iMovie);
 				elseif options.onlyCheckFirstFileInfo==1&&iMovie>1

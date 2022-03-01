@@ -52,7 +52,7 @@ function obj = modelModifyRegionAnalysis(obj,varargin)
 			display(repmat('=',1,21))
 			display([num2str(fileNum) '/' num2str(nFolders) ': ' obj.fileIDNameArray{obj.fileNum}]);
 
-			obj.modelVarsFromFilesCheck(fileNum);
+			% obj.modelVarsFromFilesCheck(fileNum);
 
 			if strcmp(analysisToRun,'loadPreviousSelections')
 				regionFile = getFileList(obj.inputFolders{obj.fileNum},obj.regionModSaveStr);

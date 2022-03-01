@@ -40,6 +40,11 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2021.09.10 [10:14:04] - Fix to handle folders with no files.
 		% 2021.11.16 [11:52:36] - Add verification that turboreg MEX function is in the path.
+		% 2021.12.31 [18:59:24] - Updated suptitle to ciapkg.overloaded.suptitle
+		% 2022.01.19 [16:26:06] - Fix "No movies" dialog box displaying when movies successfully run.
+		% 2022.01.25 [16:08:49] - Add `modelPreprocessMovieFunction` settings saved in CIAtah class to saved output file for later retrieval.
+		% 2022.01.26 [08:31:06] - For selecting turboreg crop coordinates, switched to ciapkg.io.readFrame when single frame is requested as this is faster and avoids long read times of all frame information as occurs in certain types of TIFF files or hard drives.
+		% 2022.02.09 [23:51:18] - Misc code fixes to conform to better Matlab language standards.
 	% TODO
 		% Allow users to save out analysis options order and load it back in.
 		% Insert NaNs or mean of the movie into dropped frame location, see line 260
@@ -122,10 +127,11 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	options.logFileRegexp = '(recording.*.(txt|xml)|.*_metadata.mat)';
 	% Str: daset
 	options.nwbSettingsDatasetname = '/general/optophysiology/imaging_plane/description';
+	options.h5SettingsDatasetname = '/movie/preprocessingSettingsAll';
 	% ====
 	% get options
 	options = getOptions(options,varargin);
-	options
+	disp(options)
 	% % unpack options into current workspace
 	% fn=fieldnames(options);
 	% for i=1:length(fn)
@@ -141,8 +147,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		drawnow
 	end
 	% read in the list of folders
-	if strcmp(class(options.folderListPath),'char')&~strcmp(options.folderListPath,'manual')
-		if ~isempty(regexp(options.folderListPath,'.txt'))
+	if ischar(options.folderListPath)&&~strcmp(options.folderListPath,'manual')
+		if ~isempty(regexp(options.folderListPath,'.txt', 'once'))
 			fid = fopen(options.folderListPath, 'r');
 			tmpData = textscan(fid,'%s','Delimiter','\n');
 			folderList = tmpData{1,1};
@@ -152,12 +158,12 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			folderList = {options.folderListPath};
 		end
 		nFiles = length(folderList);
-	elseif strcmp(class(options.folderListPath),'cell')
+	elseif iscell(options.folderListPath)
 		folderList = options.folderListPath;
 		nFiles = length(folderList);
 	else
 		if strcmp(options.folderListPath,'manual')
-			display('Dialog box: select text file that points to analysis folders.')
+			disp('Dialog box: select text file that points to analysis folders.')
 			[folderListPath,folderPath,~] = uigetfile('*.*','select text file that points to analysis folders','example.txt');
 			% exit if user picks nothing
 			if folderListPath==0
@@ -201,6 +207,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		'downsampleSpace',...
 		'spatialFilter',...
 		'stripeRemoval',...
+		'manualRegister',...
 		'turboreg',...
 		'fft_highpass',...
 		'crop',...
@@ -233,6 +240,9 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		'stripeRemoval',struct(...
 			'save','strpRm',...
 			'str','Remove vertical or horizontal stripes (e.g. camera artifacts).'),...
+		'manualRegister',struct(...
+			'save','manReg',...
+			'str','Manually register movie images. (ignore)'),...
 		'turboreg',struct(...
 			'save','treg',...
 			'str','TurboReg (motion correction with option to spatially filter)'),...
@@ -269,26 +279,26 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	defaultChoiceIdx = find(ismember(analysisOptionList,defaultChoiceList));
 	defaultSaveIdx = find(ismember(analysisOptionList,defaultChoiceList{end}));
 	if isfield(obj.functionSettings,'modelPreprocessMovieFunction')
-        if ~isempty(obj.functionSettings.modelPreprocessMovieFunction)
-        	try
-            	analysisOptionList = obj.functionSettings.modelPreprocessMovieFunction.analysisOptionList;
-            	defaultChoiceList = obj.functionSettings.modelPreprocessMovieFunction.defaultChoiceList;
-            	defaultChoiceIdx = obj.functionSettings.modelPreprocessMovieFunction.defaultChoiceIdx;
-            	defaultSaveIdx = obj.functionSettings.modelPreprocessMovieFunction.defaultSaveIdx;
-            catch err
+		if ~isempty(obj.functionSettings.modelPreprocessMovieFunction)
+			try
+				analysisOptionList = obj.functionSettings.modelPreprocessMovieFunction.analysisOptionList;
+				defaultChoiceList = obj.functionSettings.modelPreprocessMovieFunction.defaultChoiceList;
+				defaultChoiceIdx = obj.functionSettings.modelPreprocessMovieFunction.defaultChoiceIdx;
+				defaultSaveIdx = obj.functionSettings.modelPreprocessMovieFunction.defaultSaveIdx;
+			catch err
 				disp(repmat('@',1,7))
 				disp(getReport(err,'extended','hyperlinks','on'));
 				disp(repmat('@',1,7))
 			end
-        else
-        end
+		else
+		end
 	else
 		% Do nothing
 	end
 
 	analysisOptionListStr = analysisOptionList;
-	for optNoS = 1:length(analysisOptionListStr)
-		analysisOptionListStr{optNoS} = analysisOptsInfo.(analysisOptionListStr{optNoS}).str;
+	for optNoS3 = 1:length(analysisOptionListStr)
+		analysisOptionListStr{optNoS3} = analysisOptsInfo.(analysisOptionListStr{optNoS3}).str;
 	end
 		% analysisOptionListStr(strcmp(analysisOptionListStr,'crop')) = {'crop (add NaN border after motion correction)'};
 		% analysisOptionListStr(strcmp(analysisOptionListStr,'turboreg')) = {'turboreg (motion correction, can include spatial filtering)'};
@@ -296,7 +306,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	%defaultChoiceIdx = find(cellfun(@(x) sum(strcmp(x,defaultChoiceList)),analysisOptionList));
 	try
 		ok = 1;
-		[figHandle figNo] = openFigure(1776, '');clf;
+		[~, ~] = openFigure(1776, '');clf;
 		instructTextPos = [1 80 70 20]/100;
 		listTextPos = [1 40 98 28]/100;
 		listTextPos2 = [1 1 98 28]/100;
@@ -306,12 +316,12 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 
 		shortcutMenuHandle = uicontrol('style','pushbutton','Units','normalized','position',[1 75 30 3]/100,'FontSize',9,'string','Reset to default list order','callback',@subfxn_resetSetpsMenu);
 		shortcutMenuHandle2 = uicontrol('style','pushbutton','Units','normalized','position',[32 75 30 3]/100,'FontSize',9,'string','Select default options (e.g. post-dragging)','callback',@subfxn_highlightDefault);
-		shortcutMenuHandle2 = uicontrol('style','pushbutton','Units','normalized','position',[63 75 30 3]/100,'FontSize',9,'string','Finished','callback',@subfxn_closeOptions);
+		shortcutMenuHandle3 = uicontrol('style','pushbutton','Units','normalized','position',[63 75 30 3]/100,'FontSize',9,'string','Finished','callback',@subfxn_closeOptions);
 		% shortcutMenuHandle = uicontrol('style','pushbutton','Units','normalized','position',[32 62 30 3]/100,'FontSize',9,'string','Next screen','callback',@subfxn_highlightDefault);
 
 
-		uicontrol('Style','Text','String',['Analysis steps to perform.'],'Units','normalized','Position',[1 68 90 3]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold');
-		[hListbox jListbox jScrollPane jDND] = reorderableListbox('String',analysisOptionListStr,'Units','normalized','Position',listTextPos,'Max',Inf,'Min',0,'Value',defaultChoiceIdx,...
+		uicontrol('Style','Text','String','Analysis steps to perform.','Units','normalized','Position',[1 68 90 3]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold');
+		[hListbox, jListbox, jScrollPane, jDND] = reorderableListbox('String',analysisOptionListStr,'Units','normalized','Position',listTextPos,'Max',Inf,'Min',0,'Value',defaultChoiceIdx,...
 			'MousePressedCallback',@subfxn_analysisOutputMenuChange,...
 			'MouseReleasedCallback',@subfxn_analysisOutputMenuChange,...
 			'DragOverCallback',@subfxn_analysisOutputMenuChange2,...
@@ -319,19 +329,19 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			);
 
 		uicontrol('Style','Text','String',['At which analysis step should files be saved to disk?'],'Units','normalized','Position',[1 30 90 3]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold');
-		[hListboxS jListboxS jScrollPaneS jDNDS] = reorderableListbox('String',analysisOptionListStr,'Units','normalized','Position',listTextPos2,'Max',Inf,'Min',0,'Value',defaultSaveIdx);
+		[hListboxS, jListboxS, jScrollPaneS, jDNDS] = reorderableListbox('String',analysisOptionListStr,'Units','normalized','Position',listTextPos2,'Max',Inf,'Min',0,'Value',defaultSaveIdx);
 
 		uicontrol('Style','Text','String',['Analysis step selection and ordering' 10 '======='...
 			10 'Gentlemen, you can not fight in here! This is the War Room.' 10 'We can know only that we know nothing.' 10 'And that is the highest degree of human wisdom.'...
 			10 10 '1: Click items to select.' 10 '2: Drag to re-order analysis.' 10 '3: Click command window and press ENTER to continue.'],'Units','normalized','Position',instructTextPos,'BackgroundColor','white','HorizontalAlignment','Left');
 
 
-		emptyBox = uicontrol('Style','Text','String',[''],'Units','normalized','Position',[1 1 1 1]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold','FontSize',7);
+		emptyBox = uicontrol('Style','Text','String','','Units','normalized','Position',[1 1 1 1]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold','FontSize',7);
 
 		if ismac
 			cmdWinEditorFont = 'Menlo-Regular';
 		elseif isunix
-		    cmdWinEditorFont = 'Consolas';
+			cmdWinEditorFont = 'Consolas';
 		elseif ispc
 			cmdWinEditorFont = 'Consolas';
 		else
@@ -356,27 +366,27 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 
 		% Correct back to original names before proceeding
 		fnTmp = fieldnames(analysisOptsInfo);
-		for optNoS = 1:length(analysisOptionList)
-			for fnNo = 1:length(fnTmp)
-				if strcmp(analysisOptionList{optNoS},analysisOptsInfo.(fnTmp{fnNo}).str)==1
-					analysisOptionList{optNoS} = fnTmp{fnNo};
+		for optNoS4 = 1:length(analysisOptionList)
+			for fnNo2 = 1:length(fnTmp)
+				if strcmp(analysisOptionList{optNoS4},analysisOptsInfo.(fnTmp{fnNo2}).str)==1
+					analysisOptionList{optNoS4} = fnTmp{fnNo2};
 				end
 			end
 		end
 
 		analysisOptionListStr = analysisOptionList;
-		for optNoS = 1:length(analysisOptionListStr)
-			analysisOptionListStr{optNoS} = analysisOptsInfo.(analysisOptionListStr{optNoS}).str;
+		for optNoS4 = 1:length(analysisOptionListStr)
+			analysisOptionListStr{optNoS4} = analysisOptsInfo.(analysisOptionListStr{optNoS4}).str;
 		end
 
 	catch err
 		display(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));
 		display(repmat('@',1,7))
-		display('BACKUP DIALOG')
+		disp('BACKUP DIALOG')
 		[analysisOptionsIdx, ok] = listdlg('ListString',analysisOptionList,'InitialValue',defaultChoiceIdx,...
 			'Name','the red pill...',...
-			'PromptString',['select analysis steps to perform. will be analyzed top to bottom, with top first'],...
+			'PromptString','select analysis steps to perform. will be analyzed top to bottom, with top first',...
 			'ListSize',[scnsize(3)*0.4 scnsize(4)*0.3]);
 		% pause
 	end
@@ -395,26 +405,26 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	oldMethod = 0;
 	if oldMethod==1
 		try
-			[figHandle figNo] = openFigure(1776, '');clf;
-			[hListbox jListbox jScrollPane jDND] = reorderableListbox('String',analysisOptionListStr,'Units','normalized','Position',listTextPos,'Max',Inf,'Min',0,'Value',defaultSaveIdx);
+			[~, ~] = openFigure(1776, '');clf;
+			[hListbox, jListbox, jScrollPane, jDND] = reorderableListbox('String',analysisOptionListStr,'Units','normalized','Position',listTextPos,'Max',Inf,'Min',0,'Value',defaultSaveIdx);
 			uicontrol('Style','Text','String',['Analysis steps to save' 10 '=======' 10 'Gentlemen, you can not fight in here! This is the War Room.' 10 10 '1: Click analysis steps to save output' 10 '2: Click command window and press ENTER to continue'],'Units','normalized','Position',instructTextPos,'BackgroundColor','white','HorizontalAlignment','Left');
 			usaFlagPic(USAflagStr);
 			pause
 			saveIdx = hListbox.Value;
 			% close(1776);
-			[figHandle figNo] = openFigure(1776, '');clf;
+			[~, ~] = openFigure(1776, '');clf;
 		catch err
 			display(repmat('@',1,7))
 			disp(getReport(err,'extended','hyperlinks','on'));
 			display(repmat('@',1,7))
-			display('BACKUP DIALOG')
+			disp('BACKUP DIALOG')
 			[saveIdx, ok] = listdlg('ListString',analysisOptionList,'InitialValue',defaultSaveIdx,...
 				'Name','Gentlemen, you can not fight in here! This is the War Room.',...
 				'PromptString','select at which stages to save a file. if option not selected for analysis, will be ignored',...
 				'ListSize',[scnsize(3)*0.4 scnsize(4)*0.3]);
 		end
 	else
-		[figHandle figNo] = openFigure(1776, '');clf;
+		[~, ~] = openFigure(1776, '');clf;
 	end
 
 	% Update file filter to the last saved out option
@@ -431,13 +441,13 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 
 	if isfield(obj.functionSettings,'modelPreprocessMovieFunction')
 		% usrInput = obj.functionSettings.modelEditStimTable.usrInput;
-    else
-        obj.functionSettings.modelPreprocessMovieFunction = struct;
-    end
-    obj.functionSettings.modelPreprocessMovieFunction.analysisOptionList = analysisOptionList;
-    obj.functionSettings.modelPreprocessMovieFunction.defaultChoiceList = analysisOptionList(analysisOptionsIdx);
-    obj.functionSettings.modelPreprocessMovieFunction.defaultChoiceIdx = analysisOptionsIdx;
-    obj.functionSettings.modelPreprocessMovieFunction.defaultSaveIdx = saveIdx;
+	else
+		obj.functionSettings.modelPreprocessMovieFunction = struct;
+	end
+	obj.functionSettings.modelPreprocessMovieFunction.analysisOptionList = analysisOptionList;
+	obj.functionSettings.modelPreprocessMovieFunction.defaultChoiceList = analysisOptionList(analysisOptionsIdx);
+	obj.functionSettings.modelPreprocessMovieFunction.defaultChoiceIdx = analysisOptionsIdx;
+	obj.functionSettings.modelPreprocessMovieFunction.defaultSaveIdx = saveIdx;
 
 	% ========================
 	movieSettings = inputdlg({...
@@ -458,7 +468,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			num2str(obj.nwbLoadFiles)...
 		}...
 	);
-	movieSettings
+	disp(movieSettings)
 	if isempty(movieSettings)
 		disp('User canceled input, exiting...')
 		return;
@@ -489,7 +499,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		try
 			usrIdxChoiceStr = {'Automatic (saved in class).','Manually load from file.'};
 			scnsize = get(0,'ScreenSize');
-			[sel, ok] = listdlg('ListString',usrIdxChoiceStr,'ListSize',[scnsize(3)*0.4 scnsize(4)*0.25],'Name','How to load previous settings? Press enter if no previous settings.','PromptString',{['Settings saved to "obj.preprocessSettings" and in MAT-file:'],settingsSaveStr});
+			[sel, ok] = listdlg('ListString',usrIdxChoiceStr,'ListSize',[scnsize(3)*0.4 scnsize(4)*0.25],'Name','How to load previous settings? Press enter if no previous settings.','PromptString',{'Settings saved to "obj.preprocessSettings" and in MAT-file:',settingsSaveStr});
 			if ok==0
 				return;
 			end
@@ -499,16 +509,16 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				end
 			else
 				% [settingsName,settingsFolderPath,~] = uigetfile('*.*','select text file that points to analysis folders','example.txt');
-				[settingsName,settingsFolderPath,~] = uigetfile('*.*','Select previous preprocessing settings file or HDF5 movie containing pre-processing settings.','_modelPreprocessMovieFunction_settings.mat');
+				[settingsName,settingsFolderPath,~] = uigetfile('*.*','Select previous preprocessing settings file (e.g. preprocessingOptions) or HDF5 movie containing pre-processing settings.','_modelPreprocessMovieFunction_settings.mat');
 
 				settingsLoadPath = [settingsFolderPath settingsName];
-				[tmpPath,tmpName,tmpExt] = fileparts(settingsName);
+				[~,~,tmpExt] = fileparts(settingsName);
 
 				% Load settings from HDF5 or NWB as needed, else load from MAT file.
 				switch tmpExt
 					case {'.h5','.hdf5'}
 						disp('Loading settings from prior HDF5 file')
-						previousPreprocessSettings = ciapkg.io.jsonRead(settingsLoadPath);
+						previousPreprocessSettings = ciapkg.io.jsonRead(settingsLoadPath,'inputDatasetName',options.h5SettingsDatasetname);
 					case {'.nwb'}
 						disp('Loading settings from prior NWB file')
 						previousPreprocessSettings = ciapkg.io.jsonRead(settingsLoadPath,'inputDatasetName',options.nwbSettingsDatasetname);
@@ -575,13 +585,13 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			end
 		end
 	end
-	ostruct.folderList = {}
+	ostruct.folderList = {};
 	ostruct.savedFilePaths = {};
 	ostruct.fileNumList = {};
 	% ========================
 	manageParallelWorkers('parallel',options.turboreg.useParallel,'setNumCores',options.turboreg.nParallelWorkers);
 	% ========================
-	folderList
+	disp(folderList)
 	startTime = tic;
 	frameListDlg = 0;
 	%
@@ -606,7 +616,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 					ostruct.nPCs{fileNum} = str2num(dirInfo{3});
 					ostruct.nICs{fileNum} = str2num(dirInfo{2});
 				else
-					display('please add nICs and PCs')
+					disp('please add nICs and PCs')
 					ostruct.nPCs{fileNum} = 700;
 					ostruct.nICs{fileNum} = 500;
 				end
@@ -619,7 +629,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			if strfind(thisDir,'#')==1
 				display([num2str(fileNum) '/' num2str(length(folderList)) ': ' thisDir]);
 				display([num2str(fileNumToRun) '/' num2str(nFilesToRun) ': ' thisDir]);
-				display('skipping...')
+				disp('skipping...')
 				continue;
 			end
 
@@ -630,7 +640,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 
 				checkSaveString = [thisDir filesep options.concurrentAnalysisFilename];
 				if exist(checkSaveString,'file')~=0
-					display('SKIPPING ANALYSIS FOR THIS FOLDER')
+					disp('SKIPPING ANALYSIS FOR THIS FOLDER')
 					continue
 				else
 					% put a temporary file in the directory to cause other scripts to skip
@@ -655,7 +665,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 
 			display([num2str(fileNum) '/' num2str(length(folderList)) ': ' thisDir]);
 			display([num2str(fileNumToRun) '/' num2str(nFilesToRun) ': ' thisDir]);
-			display(['saving diary: ' diarySaveStr])
+			disp(['saving diary: ' diarySaveStr])
 
 			% For debugging, display whole options structure
 			fn_structdisp(options)
@@ -672,7 +682,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 
 			% get information from directory
 			fileInfo = getFileInfo(movieList{1});
-			fileInfo
+			disp(fileInfo)
 			% base string to save as
 			fileInfoSaveStr = [fileInfo.date '_' fileInfo.protocol '_' fileInfo.subject '_' fileInfo.assay];
 			thisDirSaveStr = [thisDir filesep fileInfoSaveStr];
@@ -704,10 +714,10 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				nMovies = 1;
 			end
 			for movieNo = 1:nMovies
-				display(['movie ' num2str(movieNo) '/' num2str(nMovies) ': ' ])
+				disp(['movie ' num2str(movieNo) '/' num2str(nMovies) ': ' ])
 				% thisMovieList = movieList{movieNo};
 				% 'loadSpecificImgClass','single'
-				if options.turboreg.loadMovieInEqualParts~=0&options.processMoviesSeparately~=1
+				if options.turboreg.loadMovieInEqualParts~=0&&options.processMoviesSeparately~=1
 					movieDims = loadMovieList(movieList,'convertToDouble',0,'frameList',[],'inputDatasetName',obj.inputDatasetName,'treatMoviesAsContinuous',1,'loadSpecificImgClass','single','getMovieDims',1);
 					thisFrameList = options.frameList;
 					if isempty(thisFrameList)
@@ -729,7 +739,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 					% playMovie(thisMovie);
 				else
 					% options.turboreg.treatMoviesAsContinuousSwitch = 1;
-					if isempty(options.frameList)&options.turboreg.loadMoviesFrameByFrame==1
+					if isempty(options.frameList)&&options.turboreg.loadMoviesFrameByFrame==1
 						movieDims = loadMovieList(movieList,'convertToDouble',0,'frameList',options.frameList,'inputDatasetName',options.datasetName,'treatMoviesAsContinuous',options.turboreg.treatMoviesAsContinuousSwitch,'loadSpecificImgClass','single','getMovieDims',1);
 						sum(movieDims.z)
 						thisFrameList = 1:sum(movieDims.z);
@@ -751,12 +761,12 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 					dispStr = [num2str(fileNumToRun) '/' num2str(nFilesToRun) ': ' 10 thisDirDispStr];
 					axis image; colormap gray;
 					set(0,'DefaultTextInterpreter','none');
-					% suptitle([num2str(fileNumIdx) '\' num2str(nFilesToRun) ': ' 10 strrep(thisDir,'\','/')],'fontSize',12,'plotregion',0.9,'titleypos',0.95);
+					% ciapkg.overloaded.suptitle([num2str(fileNumIdx) '\' num2str(nFilesToRun) ': ' 10 strrep(thisDir,'\','/')],'fontSize',12,'plotregion',0.9,'titleypos',0.95);
 					uicontrol('Style','Text','String',dispStr,'Units','normalized','Position',[0.1 0.9 0.8 0.10],'BackgroundColor','white','HorizontalAlignment','Center');
 					set(0,'DefaultTextInterpreter','latex');
 
 					% title(dispStr);
-				% suptitle([num2str(fileNumToRun) '/' num2str(nFilesToRun) ': ' 10 strrep(thisDir,'\','/')]);
+				% ciapkg.overloaded.suptitle([num2str(fileNumToRun) '/' num2str(nFilesToRun) ': ' 10 strrep(thisDir,'\','/')]);
 
 				% nOptions = length(analysisOptionsIdx)
 				saveStr = '';
@@ -768,7 +778,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 					optionName = analysisOptionList{optionIdx};
 
 					% Update the save string based on the analysis about to be run.
-					if strcmp(optionName,'turboreg')&~isempty(options.turboreg.filterBeforeRegister)
+					if strcmp(optionName,'turboreg')&&~isempty(options.turboreg.filterBeforeRegister)
 						saveStr = [saveStr '_' 'spFltBfReg'];
 					end
 					try
@@ -778,7 +788,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 					end
 
 					display(repmat('*',1,7));
-					display([optionName ' movie...']);
+					disp([optionName ' movie...']);
 
 					%% ADD BACK DROPPED FRAMES
 					% try
@@ -793,7 +803,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 					% end
 					try
 						switch optionName
-							case 'fixDropFrames';
+							case 'fixDropFrames'
 								subfxnAddDroppedFrames();
 							case 'turboreg'
 								subfxnPlotMotionCorrectionMetric('start');
@@ -826,7 +836,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 								% Get the amount of motion and hence amount to crop, directly from turboreg output
 								% gg = cellfun(@(z) cell2mat(cellfun(@(y) cell2mat(cellfun(@(x) max(abs(x.Translation)),y,'UniformOutput',false)),z,'UniformOutput',false)),ResultsOutOriginal,'UniformOutput',false);
 								gg = cellfun(@(z) cell2mat(cellfun(@(y) cell2mat(cellfun(@(x) max(ceil(abs(x.Translation))),y,'UniformOutput',false)),z,'UniformOutput',false)),ResultsOutOriginal,'UniformOutput',false);
-								pxToCropAllTmp = ceil(nanmax(sum(abs(cat(1,gg{:})),1)));
+								pxToCropAllTmp = ceil(max(sum(abs(cat(1,gg{:})),1),[],'omitnan'));
 								fprintf('pxToCropAllTmp: %d\n',pxToCropAllTmp);
 								if pxToCropAllTmp>pxToCropAll
 									disp('Adjusting pxToCropAll')
@@ -873,11 +883,16 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 
 									jsonSettingStr = ciapkg.io.jsonWrite(preprocessingSettingsAll);
 									tmpStruct.preprocessingSettingsAll = jsonSettingStr;
+									if isfield(obj.functionSettings,'modelPreprocessMovieFunction')
+										if ~isempty(obj.functionSettings.modelPreprocessMovieFunction)
+											tmpStruct.settingsAnalysisOperations = ciapkg.io.jsonWrite(obj.functionSettings.modelPreprocessMovieFunction);
+										end
+									end
 
 									if obj.nwbLoadFiles==1
 										movieSaved = saveMatrixToFile(tmpCropMovie,resaveCropFileName,...
 											'descriptionImagingPlane',tmpStruct.preprocessingSettingsAll,...
-											'deflateLevel',options.deflateLevel)
+											'deflateLevel',options.deflateLevel);
 
 									else
 										movieSaved2 = writeHDF5Data(tmpCropMovie,resaveCropFileName,...
@@ -886,13 +901,15 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 												options.turboreg,...
 												analysisOptionStruct,...
 												optionsCopy,...
+												settingsAnalysisOperations,...
 												tmpStruct},...
 											'addInfoName',{...
 												'/movie/processingSettings',...
 												'/movie/analysisOperations',...
 												'/movie/modelPreprocessMovieFunctionOptions',...
+												'/movie/settingsAnalysisOperations',...
 												'/movie'},...
-												'deflateLevel',options.deflateLevel)
+												'deflateLevel',options.deflateLevel);
 									end
 
 									clear tmpStruct jsonSettingStr;
@@ -987,12 +1004,20 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 						% end
 						% movieSaved = writeHDF5Data(thisMovie,savePathStr,'datasetname',options.outputDatasetName)
 						analysisOptionListTmp = analysisOptionList(analysisOptionsIdx);
-						analysisOptionStruct = struct;for optNo=1:length(analysisOptionListTmp);analysisOptionStruct.([char(optNo+'A'-1) '_' analysisOptionListTmp{optNo}])=1;end
+						analysisOptionStruct = struct;
+						for optNo5 = 1:length(analysisOptionListTmp)
+								analysisOptionStruct.([char(optNo5+'A'-1) '_' analysisOptionListTmp{optNo5}]) = 1;
+						end
 						optionsCopy = options;
 						optionsCopy.turboreg = [];
 
 						jsonSettingStr = ciapkg.io.jsonWrite(preprocessingSettingsAll);
 						tmpStruct.preprocessingSettingsAll = jsonSettingStr;
+						if isfield(obj.functionSettings,'modelPreprocessMovieFunction')
+							if ~isempty(obj.functionSettings.modelPreprocessMovieFunction)
+								tmpStruct.settingsAnalysisOperations = ciapkg.io.jsonWrite(obj.functionSettings.modelPreprocessMovieFunction);
+							end
+						end
 
 						% movieSaved = writeHDF5Data(thisMovie,savePathStr,...
 						% 	'datasetname',options.outputDatasetName,...
@@ -1022,7 +1047,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 
 							movieSaved = saveMatrixToFile(thisMovie,savePathStr,...
 								'descriptionImagingPlane',tmpStruct.preprocessingSettingsAll,...
-								'deflateLevel',options.deflateLevel)
+								'deflateLevel',options.deflateLevel);
 
 							% movieSaved = saveMatrixToFile(thisMovie,savePathStr)
 						else
@@ -1038,7 +1063,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 									'/movie/analysisOperations',...
 									'/movie/modelPreprocessMovieFunctionOptions',...
 									'/movie'},...
-								'deflateLevel',options.deflateLevel)
+								'deflateLevel',options.deflateLevel);
 						end
 
 						clear tmpStruct jsonSettingStr;
@@ -1097,7 +1122,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	% if options.inputPCAICA==0
 	% 	[ostruct options] = getPcaIcaParams(ostruct,options)
 	% end
-	[ostruct options] = playOutputMovies(ostruct,options)
+	[ostruct, options] = playOutputMovies(ostruct,options);
 
 	toc(startTime)
 
@@ -1109,20 +1134,20 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 
 	function mouseWheelChange(hObject, callbackdata, handles)
 		% Change keyIn to force while loop to exit, need for certain commands.
-	    keyIn = 0;
+		keyIn = 0;
 
-	    if callbackdata.VerticalScrollCount > 0
-	        set(gcf,'Tag','next')
-	    elseif callbackdata.VerticalScrollCount < 0
-	       	set(gcf,'Tag','next')
-	    end
+		if callbackdata.VerticalScrollCount > 0
+			set(gcf,'Tag','next')
+		elseif callbackdata.VerticalScrollCount < 0
+			set(gcf,'Tag','next')
+		end
 	end
 	function subfxn_resetSetpsMenu(src,event)
 		% analysisOptionListOrig = analysisOptionList;
 		% defaultChoiceListOrig = defaultChoiceList;
 		analysisOptionListStr = analysisOptionListOrig;
-		for optNoS = 1:length(analysisOptionListStr)
-			analysisOptionListStr{optNoS} = analysisOptsInfo.(analysisOptionListStr{optNoS}).str;
+		for optNoS2 = 1:length(analysisOptionListStr)
+			analysisOptionListStr{optNoS2} = analysisOptsInfo.(analysisOptionListStr{optNoS2}).str;
 		end
 		defaultChoiceIdx = find(ismember(analysisOptionListOrig,defaultChoiceListOrig));
 		hListbox.String = analysisOptionListStr;
@@ -1231,17 +1256,17 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		if ~isempty(options.calcDroppedFramesFromMovie)==1
 			% Do not need full movie if calculating dropped frames from the movie, continue.
 		elseif ~isempty(options.frameList)
-			display('Full movie needs to be loaded to add dropped frames')
+			disp('Full movie needs to be loaded to add dropped frames')
 			return;
 		else
 
 		end
 
-		display('adding in dropped frames if any')
+		disp('adding in dropped frames if any')
 		listLogFiles = getFileList(thisDir,options.logFileRegexp);
 
-		if isempty(listLogFiles) & isempty(options.calcDroppedFramesFromMovie)
-			display('Add log files to folder in order to add back dropped frames')
+		if isempty(listLogFiles) && isempty(options.calcDroppedFramesFromMovie)
+			disp('Add log files to folder in order to add back dropped frames')
 			return;
 		elseif ~isempty(listLogFiles)
 			% get information about number of frames and dropped frames from recording files
@@ -1303,8 +1328,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		end
 
 		% In the case of Inscopix v3 and similar movies, users can force a final check
-		if isempty(droppedFrames) & ~isempty(options.calcDroppedFramesFromMovie)
-			perFrameCheck = squeeze(nanmean(thisMovie,[1 2]));
+		if isempty(droppedFrames) && ~isempty(options.calcDroppedFramesFromMovie)
+			perFrameCheck = squeeze(mean(thisMovie,[1 2],'omitnan'));
 			figure;plot(perFrameCheck)
 			if isnan(options.calcDroppedFramesFromMovie)
 				perFrameCheck = isnan(perFrameCheck);
@@ -1316,7 +1341,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		end
 
 		if isempty(droppedFrames)
-			display('No dropped frames!')
+			disp('No dropped frames!')
 			return;
 		end
 
@@ -1343,7 +1368,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				% Do nothing
 		end
 		for rowNo=1:nRows
-			inputMovieDroppedF0(rowNo,:) = nanmean(squeeze(thisMovie(rowNo,:,:)),2);
+			inputMovieDroppedF0(rowNo,:) = mean(squeeze(thisMovie(rowNo,:,:)),2,'omitnan');
 			if mod(rowNo,5)==0;reverseStr = cmdWaitbar(rowNo,nRows,reverseStr,'inputStr','calculating mean...','waitbarOn',1,'displayEvery',5);end
 		end
 		% movieMean = nanmean(inputMovieTmp(:));
@@ -1355,7 +1380,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				thisMovie(:,:,(end+1):(end+length(droppedFrames))) = 0;
 				display(['post-corrected movie size: ' num2str(size(thisMovie))])
 				% vectorized way: get the setdiff(dropped,totalFrames), use this corrected frame indexes and map onto the actual frames in raw movie, shift all frames in original matrix to new position then add in mean to dropped frame indexes
-				display('adding in dropped frames to matrix...')
+				disp('adding in dropped frames to matrix...')
 				correctFrameIdx = setdiff(1:size(thisMovie,3),droppedFrames);
 				thisMovie(:,:,correctFrameIdx) = thisMovie(:,:,1:originalNumMovieFrames);
 			case 'replace'
@@ -1407,12 +1432,12 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		   % to reduce memory footprint, place new frame in old movie and cut off the unneeded frames after
 		   thisMovie(1:downX,frame,1:downZ) = downsampledFrame;
 		   % inputMovie(:,frame,:) = downsampledFrame;
-			if mod(frame,20)==0&options.waitbarOn==1|frame==downY
+			if mod(frame,20)==0&&options.waitbarOn==1||frame==downY
 				reverseStr = cmdWaitbar(frame,downY,reverseStr,'inputStr','temporally downsampling matrix');
 			end
 		end
-		j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
-		reverseStr = '';
+		subfxn_dispMovieSize(thisMovie);
+		% reverseStr = '';
 		% for frame = (downZ+1):size(thisMovie,3)
 		%     thisMovie(:,:,1) = [];
 		%     reverseStr = cmdWaitbar(frame,downZ,reverseStr,'inputStr','removing elements');
@@ -1424,7 +1449,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		clear thisMovie;
 		thisMovie = thisMovieTmp;
 		clear thisMovieTmp;
-		j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
+		subfxn_dispMovieSize(thisMovie);
 		drawnow;
 		% =====================
 	end
@@ -1462,18 +1487,18 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				thisMovie(1:downX,1:downY,frame) = downsampledFrame;
 			end
 			% inputMovieDownsampled(1:downX,1:downY,frame) = downsampledFrame;
-			if mod(frame,20)==0&options.waitbarOn==1|frame==downZ
+			if mod(frame,20)==0&&options.waitbarOn==1||frame==downZ
 				reverseStr = cmdWaitbar(frame,downZ,reverseStr,'inputStr',[secondaryDownsampleType 'spatially downsampling matrix']);
 			end
 		end
 		thisMovie = thisMovie(1:downX,1:downY,:);
-		j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
+		subfxn_dispMovieSize(thisMovie);
 
 		if exist('turboRegCoords','var')
 			% Adjust crop coordinates if downsampling in space takes place before turboreg
 			disp(['Adjusting motion correction crop coordinates for spatial downsampling: ' num2str(turboRegCoords{fileNum}{movieNo})]);
 			orderCheck = find(strcmp(analysisOptionList(analysisOptionsIdx),'downsampleSpace'))<find(strcmp(analysisOptionList(analysisOptionsIdx),'turboreg'));
-			if ~isempty(turboRegCoords{fileNum}{movieNo})&&any(orderCheck)==1
+			if ~isempty(turboRegCoords{fileNum}{movieNo})&&any(orderCheck)
 				turboRegCoords{fileNum}{movieNo} = floor(turboRegCoords{fileNum}{movieNo}/options.downsampleFactor);
 				% Ensure that the turbo crop coordinates are greater than zero
 				turboRegCoords{fileNum}{movieNo} = max(1,turboRegCoords{fileNum}{movieNo});
@@ -1512,7 +1537,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% =====================
 		% get the movie F0
 		% thisMovie = single(thisMovie);
-		display('getting F0...')
+		disp('getting F0...')
 		inputMovieF0 = zeros([size(thisMovie,1) size(thisMovie,2)]);
 		if strcmp(options.dfofType,'dfstd')
 			inputMovieStd = zeros([size(thisMovie,1) size(thisMovie,2)]);
@@ -1526,18 +1551,18 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% Determine the type of F0 calculation to perform.
 		switch options.dfofType
 			case 'dfof'
-				F0fxn = @(x,y) nanmean(x,y);
+				F0fxn = @(x,y) mean(x,y,'omitnan');
 			case 'dfofMin'
 				switch options.minType
 					case 'min'
-						F0fxn = @(x,y) nanmin(x,y);
+						F0fxn = @(x,y) min(x,y,'omitnan');
 					case 'soft'
 						F0fxn = @(x,y) prctile(x,options.minSoftPct,y);
 					otherwise
-						F0fxn = @(x,y) nanmin(x,y);
+						F0fxn = @(x,y) min(x,y,'omitnan');
 				end
 			otherwise
-				F0fxn = @(x,y) nanmean(x,y);
+				F0fxn = @(x,y) mean(x,y,'omitnan');
 		end
 
 		for rowNo=1:nRows
@@ -1546,7 +1571,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			% inputMovieF0(rowNo,:) = nanmean(rowFrame,2);
 			inputMovieF0(rowNo,:) = F0fxn(rowFrame,2);
 			if strcmp(options.dfofType,'dfstd')
-				inputMovieStd(rowNo,:) = nanstd(rowFrame,[],2);
+				inputMovieStd(rowNo,:) = std(rowFrame,[],2,'omitnan');
 			else
 			end
 			if mod(rowNo,5)==0;reverseStr = cmdWaitbar(rowNo,nRows,reverseStr,'inputStr',progressStr,'waitbarOn',1,'displayEvery',5);end
@@ -1557,15 +1582,15 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		savePathStr = [thisProcessingDirFileInfoStr '_inputMovieF0' '.h5'];
 		movieSaved = writeHDF5Data(inputMovieF0,savePathStr,'deflateLevel',options.deflateLevel,'datasetname',options.outputDatasetName);
 
-		thisMovieMean = nanmean(inputMovieF0(:));
+		thisMovieMean = mean(inputMovieF0(:),'omitnan');
 		% bsxfun for fast matrix divide
 		switch options.dfofType
 			case 'divide'
-				display('F(t)/F0...')
+				disp('F(t)/F0...')
 				% dfofMatrix = bsxfun(@ldivide,double(inputMovieF0),double(inputMovie));
 				thisMovie = bsxfun(@ldivide,inputMovieF0,thisMovie);
 			case 'dfof'
-				display('F(t)/F0 - 1...')
+				disp('F(t)/F0 - 1...')
 				% dfofMatrix = bsxfun(@ldivide,double(inputMovieF0),double(inputMovie));
 				% thisMovie = bsxfun(@ldivide,inputMovieF0,thisMovie);
 				reverseStr = '';
@@ -1579,11 +1604,11 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				
 				switch options.minType
 					case 'min'
-						display('F(t)/F0 - 1, F0 = min...')
+						disp('F(t)/F0 - 1, F0 = min...')
 					case 'soft'
-						display('F(t)/F0 - 1, F0 = min prctile...')
+						disp('F(t)/F0 - 1, F0 = min prctile...')
 					otherwise
-						display('F(t)/F0 - 1, F0 = min...')
+						disp('F(t)/F0 - 1, F0 = min...')
 				end
 				% dfofMatrix = bsxfun(@ldivide,double(inputMovieF0),double(inputMovie));
 				% thisMovie = bsxfun(@ldivide,inputMovieF0,thisMovie);
@@ -1595,12 +1620,12 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				end
 				thisMovie = thisMovie-1;
 			case 'dfstd'
-				display('(F(t)-F0)/std...')
+				disp('(F(t)-F0)/std...')
 				% dfofMatrix = bsxfun(@ldivide,double(inputMovieF0),double(inputMovie));
 				% dfofMatrix = bsxfun(@minus,inputMovie,inputMovieF0);
 				% dfofMatrix = bsxfun(@ldivide,inputMovieStd,dfofMatrix);
 
-				everseStr = '';
+				reverseStr = '';
 				nFrames = size(thisMovie,3);
 				for frameNo = 1:nFrames
 					thisMovie(:,:,frameNo) = thisMovie(:,:,frameNo)-inputMovieF0;
@@ -1609,7 +1634,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				end
 				% thisMovie = thisMovie-1;
 			case 'minus'
-				display('F(t)-F0...')
+				disp('F(t)-F0...')
 				% dfofMatrix = bsxfun(@ldivide,double(inputMovieF0),double(inputMovie));
 				thisMovie = bsxfun(@minus,thisMovie,inputMovieF0);
 			otherwise
@@ -1626,7 +1651,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			corrMetric2 = NaN([1 size(thisMovie,3)]);
 			cc = turboRegCoords{fileNum}{movieNo};
 			meanG_cc = meanG(cc(2):cc(4),cc(1):cc(3));
-			for i =1:size(thisMovie,3);
+			for i =1:size(thisMovie,3)
 				thisFrame_cc = thisMovie(cc(2):cc(4),cc(1):cc(3),i);
 				corrMetric(i) = corr2(meanG_cc,thisFrame_cc);
 				corrMetric2(i) = corr(meanG_cc(:),thisFrame_cc(:),'Type','Spearman');
@@ -1648,7 +1673,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				% box off;xlabel('Frames');ylabel('Correlation')
 				% title('corr2')
 			% ax1(end+1) = subplot(1,2,2)
-				% suptitle("Pearson correlation of all frames to movie mean")
+				% ciapkg.overloaded.suptitle("Pearson correlation of all frames to movie mean")
 				title("Pearson correlation of all frames to movie mean")
 				legendStr = cellfun(@(x) {strcat('===',x,sprintf('===\nPre-motion correction corr2')),'Post-motion correction corr2'},obj.folderBaseDisplayStr,'UniformOutput',false);
 				legend([legendStr{:}])
@@ -1669,7 +1694,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				title("Spearman's correlation of all frames to movie mean.")
 
 			% set(ax1,'Nextplot','add')
-			% suptitle('Correlation of all frames to movie mean')
+			% ciapkg.overloaded.suptitle('Correlation of all frames to movie mean')
 
 			% legendStr = cellfun(@(x) {strcat('===',x,sprintf('===\nPre-motion correction corr2')),'Pre-motion correction Spearman','Post-motion correction corr2','Post-motion correction Spearman'},obj.folderBaseDisplayStr,'UniformOutput',false);
 			% legend([legendStr{:}])
@@ -1689,7 +1714,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		subsetList = round(linspace(1,movieLength,numSubsets));
 		display(['registering sublists: ' num2str(subsetList)]);
 		% convert movie to single for turboreg
-		j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
+		subfxn_dispMovieSize(thisMovie);
 		% thisMovie = single(thisMovie);
 		% get reference frame before subsetting, so won't change
 		% thisMovieRefFrame = squeeze(thisMovie(:,:,options.refCropFrame));
@@ -1744,7 +1769,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			ioptions.imagejFFTSmall = options.turboreg.filterBeforeRegImagejFFTSmall;
 
 			if ~isempty(options.turboreg.saveFilterBeforeRegister)
-				options.turboreg.saveFilterBeforeRegister = [thisDirSaveStr saveStr '_lowpass']
+				options.turboreg.saveFilterBeforeRegister = [thisDirSaveStr saveStr '_lowpass'];
 				if obj.nwbLoadFiles==0
 					options.turboreg.saveFilterBeforeRegister = [options.turboreg.saveFilterBeforeRegister '.h5'];
 				elseif obj.nwbLoadFiles==1
@@ -1781,7 +1806,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			% dt=whos('VARIABLE_YOU_CARE_ABOUT'); MB=dt.bytes*9.53674e-7;
 			% thisMovie(:,:,movieSubset) = turboregMovie(thisMovie(:,:,movieSubset),'options',ioptions);
 			% j = whos('turboregThisMovie');j.bytes=j.bytes*9.53674e-7;j
-			j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
+			subfxn_dispMovieSize(thisMovie);
 			% [thisMovie(:,:,movieSubset), ResultsOutOriginal{thisSet}] = turboregMovie(thisMovie(:,:,movieSubset),'options',ioptions);
 
 
@@ -1874,13 +1899,13 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			case 'imtransform'
 				reverseStr = '';
 				for row=1:size(thisMovie,1)
-					thisMovieMinMask(row,:) = logical(nanmax(isnan(squeeze(thisMovie(3,:,:))),[],2));
+					thisMovieMinMask(row,:) = logical(max(isnan(squeeze(thisMovie(3,:,:))),[],2,'omitnan'));
 					reverseStr = cmdWaitbar(row,size(thisMovie,1),reverseStr,'inputStr','getting crop amount','waitbarOn',1,'displayEvery',5);
 				end
 			case 'transfturboreg'
 				reverseStr = '';
 				for row=1:size(thisMovie,1)
-					thisMovieMinMask(row,:) = logical(nanmin(squeeze(thisMovie(row,:,:))~=0,[],2)==0);
+					thisMovieMinMask(row,:) = logical(min(squeeze(thisMovie(row,:,:))~=0,[],2,'omitnan')==0);
 					reverseStr = cmdWaitbar(row,size(thisMovie,1),reverseStr,'inputStr','getting crop amount','waitbarOn',1,'displayEvery',5);
 				end
 			otherwise
@@ -1907,7 +1932,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 					% 	logical(nanmin(squeeze(thisMovie(row,:,:)),[],2)==0)'
 					% end
 					% thisMovieMinMask(row,:) = logical(nanmin(squeeze(thisMovie(row,:,:)),[],2)==0);
-					thisMovieMinMask(row,:) = logical(nanmax(isnan(squeeze(thisMovie(3,:,:))),[],2));
+					thisMovieMinMask(row,:) = logical(max(isnan(squeeze(thisMovie(3,:,:))),[],2,'omitnan'));
 					reverseStr = cmdWaitbar(row,size(thisMovie,1),reverseStr,'inputStr','getting crop amount','waitbarOn',1,'displayEvery',5);
 					% logical(nanmin(~isnan(thisMovie(row,:,:)),[],3)==0);
 				end
@@ -1915,7 +1940,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				% thisMovieMinMask = logical(nanmin(thisMovie~=0,[],3)==0);
 				reverseStr = '';
 				for row=1:size(thisMovie,1)
-					thisMovieMinMask(row,:) = logical(nanmin(squeeze(thisMovie(row,:,:))~=0,[],2)==0);
+					thisMovieMinMask(row,:) = logical(min(squeeze(thisMovie(row,:,:))~=0,[],2,'omitnan')==0);
 					reverseStr = cmdWaitbar(row,size(thisMovie,1),reverseStr,'inputStr','getting crop amount','waitbarOn',1,'displayEvery',5);
 					% logical(nanmin(~isnan(thisMovie(row,:,:)),[],3)==0);
 				end
@@ -1962,7 +1987,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% saveStr = [saveStr '_crop'];
 	end
 	function cropMatrixPreProcess(pxToCropPreprocess)
-  %   	if size(thisMovie,2)>=size(thisMovie,1)
+		% if size(thisMovie,2)>=size(thisMovie,1)
 		% 	coords(1) = pxToCropPreprocess; %xmin
 		% 	coords(2) = pxToCropPreprocess; %ymin
 		% 	coords(3) = size(thisMovie,1)-pxToCropPreprocess;   %xmax
@@ -1985,8 +2010,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		bottomRowCrop = size(thisMovie,1)-pxToCropPreprocess; % bottom row
 		rightColCrop = size(thisMovie,2)-pxToCropPreprocess; % right column
 
-		rowLen = size(thisMovie,1);
-		colLen = size(thisMovie,2);
+		% rowLen = size(thisMovie,1);
+		% colLen = size(thisMovie,2);
 		% set leftmost columns to NaN
 		thisMovie(1:end,1:leftColCrop,:) = NaN;
 		% set rightmost columns to NaN
@@ -2004,7 +2029,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		subsetList = round(linspace(1,movieLength,numSubsets));
 		display(['registering sublists: ' num2str(subsetList)]);
 		% convert movie to single for turboreg
-		j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
+		subfxn_dispMovieSize(thisMovie);
 		% get reference frame before subsetting, so won't change
 		nSubsets = (length(subsetList)-1);
 		for thisSet = 1:nSubsets
@@ -2020,7 +2045,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				display([num2str(subsetStartIdx) '-' num2str(subsetEndIdx-1) ' ' num2str(thisSet) '/' num2str(nSubsets)])
 			end
 			display(repmat('$',1,7))
-			j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
+			subfxn_dispMovieSize(thisMovie);
 			thisMovie(:,:,movieSubset) = normalizeMovie(thisMovie(:,:,movieSubset),'normalizationType','medianFilter','medianFilterNeighborhoodSize',options.turboreg.medianFilterSize);
 			toc(subsetStartTime)
 		end
@@ -2066,7 +2091,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		subsetList = round(linspace(1,movieLength,numSubsets));
 		display(['filtering sublists: ' num2str(subsetList)]);
 		% convert movie to single for turboreg
-		j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
+		subfxn_dispMovieSize(thisMovie);
 		% get reference frame before subsetting, so won't change
 		nSubsets = (length(subsetList)-1);
 		for thisSet = 1:nSubsets
@@ -2082,7 +2107,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				display([num2str(subsetStartIdx) '-' num2str(subsetEndIdx-1) ' ' num2str(thisSet) '/' num2str(nSubsets)])
 			end
 			display(repmat('$',1,7))
-			j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
+			subfxn_dispMovieSize(thisMovie);
 
 			% thisMovie(:,:,movieSubset) = normalizeMovie(thisMovie(:,:,movieSubset),'normalizationType','medianFilter','medianFilterNeighborhoodSize',options.turboreg.medianFilterSize);
 
@@ -2095,10 +2120,10 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				case 'imagejFFT'
 					imagefFftOnInputMovie('inputMovie');
 				case 'divideByLowpass'
-					display('dividing movie by lowpass...')
+					disp('dividing movie by lowpass...')
 					thisMovie(:,:,movieSubset) = normalizeMovie(single(thisMovie(:,:,movieSubset)),'normalizationType','lowpassFFTDivisive','freqLow',options.turboreg.filterBeforeRegFreqLow,'freqHigh',options.turboreg.filterBeforeRegFreqHigh,'waitbarOn',1,'bandpassMask','gaussian');
 				case 'bandpass'
-					display('bandpass filtering...')
+					disp('bandpass filtering...')
 					[thisMovie(:,:,movieSubset)] = normalizeMovie(single(thisMovie(:,:,movieSubset)),'normalizationType','fft','freqLow',options.turboreg.filterBeforeRegFreqLow,'freqHigh',options.turboreg.filterBeforeRegFreqHigh,'bandpassType','bandpass','showImages',0,'bandpassMask','gaussian');
 				otherwise
 					% do nothing
@@ -2116,7 +2141,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		subsetList = round(linspace(1,movieLength,numSubsets));
 		display(['Stripe removal sublists: ' num2str(subsetList)]);
 		% convert movie to single for turboreg
-		j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
+		subfxn_dispMovieSize(thisMovie);
 		% get reference frame before subsetting, so won't change
 		nSubsets = (length(subsetList)-1);
 		for thisSet = 1:nSubsets
@@ -2132,7 +2157,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				display([num2str(subsetStartIdx) '-' num2str(subsetEndIdx-1) ' ' num2str(thisSet) '/' num2str(nSubsets)])
 			end
 			display(repmat('$',1,7))
-			j = whos('thisMovie');j.bytes=j.bytes*9.53674e-7;j;display(['movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
+			subfxn_dispMovieSize(thisMovie);
 
 			thisMovie(:,:,movieSubset) = removeStripsFromMovie(single(thisMovie(:,:,movieSubset)),'stripOrientation',options.turboreg.stripOrientationRemove,'meanFilterSize',options.turboreg.stripSize,'freqLowExclude',options.turboreg.stripfreqLowExclude,'bandpassType',options.turboreg.stripfreqBandpassType,'freqHighExclude',options.turboreg.stripfreqHighExclude,'waitbarOn',1);
 
@@ -2279,24 +2304,32 @@ function [turboRegCoords] = turboregCropSelection(options,folderList)
 					else
 						frameToGrabHere = frameToGrabHere + options.frameList(1);	
 					end
-					thisFrame = loadMovieList(inputFilePath,'convertToDouble',0,'frameList',frameToGrabHere,'inputDatasetName',options.datasetName,'treatMoviesAsContinuous',options.turboreg.treatMoviesAsContinuousSwitch,'loadSpecificImgClass','single');
-                    
-                    if size(thisFrame,3)>1
-                       % thisFrame = max(thisFrame,[],3);
-                       % thisFrame = squeeze(thisFrame(:,:,1)); 
-                       thisFrame = squeeze(nanmean(thisFrame(:,:,1),3)); 
-                    end
 
-					[figHandle, figNo] = openFigure(9, '');
+					if length(frameToGrabHere)==1&&options.turboreg.treatMoviesAsContinuousSwitch==0
+						thisFrame = ciapkg.io.readFrame(inputFilePath,frameToGrabHere);
+					else
+						% for zFrame = 1:length(frameToGrabHere)
+
+						% end
+						thisFrame = loadMovieList(inputFilePath,'convertToDouble',0,'frameList',frameToGrabHere,'inputDatasetName',options.datasetName,'treatMoviesAsContinuous',options.turboreg.treatMoviesAsContinuousSwitch,'loadSpecificImgClass','single');
+					end
+					
+					if size(thisFrame,3)>1
+					   % thisFrame = max(thisFrame,[],3);
+					   % thisFrame = squeeze(thisFrame(:,:,1)); 
+					   thisFrame = squeeze(mean(thisFrame(:,:,1),3,'omitnan')); 
+					end
+
+					[~, ~] = openFigure(9, '');
 					titleStr = ['Click to drag-n-draw region.' 10 'Double-click region to continue.' 10 'Note: Only cropping for motion correction.' 10 'Original movie dimensions retained after registration.' 10 'Frame: ' num2str(frameToGrabHere)];
 					subplot(1,2,1);
-                        imagesc(thisFrame);
-                        axis image;
-                        colormap gray;
-                        title(titleStr)
-                        box off;
+						imagesc(thisFrame);
+						axis image;
+						colormap gray;
+						title(titleStr)
+						box off;
 					set(0,'DefaultTextInterpreter','none');
-					% suptitle([num2str(fileNumIdx) '\' num2str(nFilesToRun) ': ' 10 strrep(thisDir,'\','/')],'fontSize',12,'plotregion',0.9,'titleypos',0.95);
+					% ciapkg.overloaded.suptitle([num2str(fileNumIdx) '\' num2str(nFilesToRun) ': ' 10 strrep(thisDir,'\','/')],'fontSize',12,'plotregion',0.9,'titleypos',0.95);
 					uicontrol('Style','Text','String',[num2str(fileNumIdx) '\' num2str(nFilesToRun) ': ' strrep(thisDir,'\','/')],'Units','normalized','Position',[0.1 0.9 0.8 0.10],'BackgroundColor','white','HorizontalAlignment','Center');
 					set(0,'DefaultTextInterpreter','latex');
 					% subplot(1,2,1);imagesc(thisFrame); axis image; colormap gray; title('Click to drag-n-draw region. Double-click region to continue.')
@@ -2358,7 +2391,7 @@ function [turboRegCoords] = turboregCropSelection(options,folderList)
 					% thisFrameCropped = thisFrame.*sp;
 
 					% Display the subsetted image with appropriate axis ratio
-					[figHandle figNo] = openFigure(9, '');
+					[~, ~] = openFigure(9, '');
 					subplot(1,2,2);imagesc(thisFrameCropped); axis image; colormap gray; title('cropped region');drawnow;
 
 					if applyPreviousTurboreg==0
@@ -2379,14 +2412,14 @@ function [turboRegCoords] = turboregCropSelection(options,folderList)
 					end
 					if any(strcmp(fileInfo.subject,fieldnames(coordsStructure)))
 						pause(0.15)
-						coordsStructure
+						disp(coordsStructure)
 					end
 				case 'coordinates'
 					% gets the coordinates of the turboreg from the filelist
-					display('not implemented')
+					disp('not implemented')
 				otherwise
 					% if no option selected, uses the entire FOV for each image
-					display('not implemented')
+					disp('not implemented')
 					turboRegCoords{fileNum}{movieNo}=[];
 			end
 		end
@@ -2399,7 +2432,7 @@ function h = subfxn_getImRect(titleStr)
 	setPositionConstraintFcn(h,fcn);
 end
 % function [ostruct options] = getPcaIcaParams(ostruct,options)
-function [ostruct options] = playOutputMovies(ostruct,options)
+function [ostruct, options] = playOutputMovies(ostruct,options)
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	nFiles = length(ostruct.savedFilePaths);
@@ -2407,13 +2440,13 @@ function [ostruct options] = playOutputMovies(ostruct,options)
 	movieFrameList = {};
 	numFramesPerPart = 50;
 	numParts = 10;
-	display('pre-allocating movies to display...')
+	disp('pre-allocating movies to display...')
 	thisMovieArray = {};
 	for fileNum=1:nFiles
 		try
-			display('+++++++')
+			disp('+++++++')
 			if isempty(ostruct.savedFilePaths{fileNum})
-				display('no movie!')
+				disp('no movie!')
 				% display([num2str(fileNum) '/' num2str(nFiles) ' skipping: ' ostruct.savedFilePaths{fileNum}]);
 				continue;
 			else
@@ -2454,7 +2487,7 @@ function [ostruct options] = playOutputMovies(ostruct,options)
 	% MIJ.start
 	manageMiji('startStop','start');
 
-	if isempty(thisMovieArray)|all(~cellfun(@isempty,thisMovieArray))
+	if isempty(thisMovieArray)||all(cellfun(@isempty,thisMovieArray))
 		uiwait(ciapkg.overloaded.msgbox('No movies, check that processing ran successfully.','Success','modal'));
 	else
 		uiwait(ciapkg.overloaded.msgbox('Press OK to view a snippet of analyzed movies','Success','modal'));
@@ -2462,9 +2495,9 @@ function [ostruct options] = playOutputMovies(ostruct,options)
 	% ask user for estimate of nPCs and nICs
 	for fileNum = 1:nFiles
 		try
-			display('+++++++')
+			disp('+++++++')
 			if isempty(ostruct.savedFilePaths{fileNum})
-				display('no movie!')
+				disp('no movie!')
 				% display([num2str(fileNum) '/' num2str(nFiles) ' skipping: ' ostruct.savedFilePaths{fileNum}]);
 				continue;
 			else
@@ -2518,7 +2551,7 @@ function [ostruct options] = playOutputMovies(ostruct,options)
 
 			if options.askForPCICs==1
 				% add arbitrary nPCs and nICs to the output
-				answer = inputdlg({'nPCs','nICs'},'cell extraction estimates',1)
+				answer = inputdlg({'nPCs','nICs'},'cell extraction estimates',1);
 				if isempty(answer)
 					ostruct.nPCs{trueFileNum} = [];
 					ostruct.nICs{trueFileNum} = [];
@@ -2549,13 +2582,13 @@ function inputMovie = cropInputMovieSlice(inputMovie,options,ResultsOutOriginal)
 		case 'imtransform'
 			reverseStr = '';
 			for row=1:size(inputMovie,1)
-				thisMovieMinMask(row,:) = logical(nanmax(isnan(squeeze(inputMovie(3,:,:))),[],2));
+				thisMovieMinMask(row,:) = logical(max(isnan(squeeze(inputMovie(3,:,:))),[],2,"omitnan"));
 				reverseStr = cmdWaitbar(row,size(inputMovie,1),reverseStr,'inputStr','getting crop amount','waitbarOn',1,'displayEvery',5);
 			end
 		case 'transfturboreg'
 			reverseStr = '';
 			for row=1:size(inputMovie,1)
-				thisMovieMinMask(row,:) = logical(nanmin(squeeze(inputMovie(row,:,:))~=0,[],2)==0);
+				thisMovieMinMask(row,:) = logical(min(squeeze(inputMovie(row,:,:))~=0,[],2,"omitnan")==0);
 				reverseStr = cmdWaitbar(row,size(inputMovie,1),reverseStr,'inputStr','getting crop amount','waitbarOn',1,'displayEvery',5);
 			end
 		otherwise
@@ -2593,8 +2626,8 @@ function inputMovie = cropInputMovieSlice(inputMovie,options,ResultsOutOriginal)
 	bottomRowCrop = size(inputMovie,1)-pxToCropPreprocess; % bottom row
 	rightColCrop = size(inputMovie,2)-pxToCropPreprocess; % right column
 
-	rowLen = size(inputMovie,1);
-	colLen = size(inputMovie,2);
+	% rowLen = size(inputMovie,1);
+	% colLen = size(inputMovie,2);
 	% set leftmost columns to NaN
 	inputMovie(1:end,1:leftColCrop,:) = NaN;
 	% set rightmost columns to NaN
@@ -2628,7 +2661,7 @@ function [movieType, supported] = getMovieFileType(thisMoviePath)
 	% determine how to load movie, don't assume every movie in list is of the same type
 	supported = 1;
 	try
-		[pathstr,name,ext] = fileparts(thisMoviePath);
+		[~,~,ext] = fileparts(thisMoviePath);
 	catch
 		movieType = '';
 		supported = 0;
@@ -2647,4 +2680,9 @@ function [movieType, supported] = getMovieFileType(thisMoviePath)
 		movieType = '';
 		supported = 0;
 	end
+end
+function subfxn_dispMovieSize(thisMovie)
+	j = whos('thisMovie');
+	j.bytes=j.bytes*9.53674e-7;
+	display(['Movie dims: ' num2str(size(thisMovie)) ' | Movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
 end

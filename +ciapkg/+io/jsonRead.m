@@ -9,6 +9,7 @@ function [matVar] = jsonRead(inputVar,varargin)
 
 	% changelog
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+        % 2022.01.25 [15:52:31] - Edge case where the end of the imported string is a space, causing jsondecode to fail.
 	% TODO
 		%
 
@@ -38,7 +39,9 @@ function [matVar] = jsonRead(inputVar,varargin)
 				end
 				try
 					jsondecode(inputVar);
-				catch
+                catch
+                    % Edge case where the end of the imported string is a space, causing jsondecode to fail.
+                    inputVar = char(inputVar);
 					inputVar = inputVar(1:end-1);
 				end
 				if ~ischar(inputVar)

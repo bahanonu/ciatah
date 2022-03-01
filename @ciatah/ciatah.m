@@ -23,6 +23,9 @@ classdef ciatah < dynamicprops
 		% 2021.03.25 [22:46:38] - Moved many smaller helper functions in ciatah.m to their own M-files to make maintenance easier.
 		% 2021.06.18 [20:28:28] - Added modelVarsFromFilesCheck support.
 		% 2021.06.30 [11:14:12] - Added FRAMES_PER_SECOND_PLAYBACK.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2021.10.20 [21:46:52] - Added fontSizeGuiScale.
+		% 2022.02.09 [23:51:18] - Misc code fixes to conform to better Matlab language standards.
 	% TODO
 		%
 
@@ -141,8 +144,8 @@ classdef ciatah < dynamicprops
 		% colormap = customColormap({[27 52 93]/256,[1 1 1],[106 41 50]/256},'nPoints',50);
 		% use for stimulus related viewing functions
 		% frames before/after stimulus to look
-		timeSequence = [-25:25];
-		postStimulusTimeSeq = [0:10];
+		timeSequence = -25:25;
+		postStimulusTimeSeq = 0:10;
 		% bin analysis, integer only
 		binDownsampleAmount = 1;
 		% number of standard deviation for threshold crossing
@@ -438,69 +441,69 @@ classdef ciatah < dynamicprops
 
 		% List of available calciumImagingAnalysis methods
 		methodsList = {...
-		'------- SETUP -------',
-		'modelAddNewFolders',
-		'help',
-		'setup',
-		'update',
-		'loadDependencies',
-		'setMovieInfo',
-		'resetMijiClass',
-		'',
-		'------- CLASS/BEHAVIOR -------',
-		'showVars',
-		'showFolders',
-		'saveObj',
-		'initializeObj',
-		'setMainSettings',
-		'',
-		'------- DATA CHECK/LOAD/EXPORT -------',
-		'modelGetFileInfo',
-		'modelVerifyDataIntegrity',
-		'modelBatchCopyFiles',
-		'modelLoadSaveData',
-		'modelExportData',
-		'',
-		'------- VISUALIZATION/PREPROCESS CHECK -------',
-		'viewMovieFiltering',
-		'viewMovieRegistrationTest',
-		'viewMovie',
-		'',
-		'------- PREPROCESS -------',
-		'modelDownsampleRawMovies',
-		'modelPreprocessMovie',
-		'modelModifyMovies',
-		'removeConcurrentAnalysisFiles',
-		'',
-		'------- CELL/SIGNAL EXTRACTION -------',
-		'modelExtractSignalsFromMovie',
-		'viewCellExtractionOnMovie',
-		'removeConcurrentAnalysisFiles',
-		'',
-		'------- LOAD CELL-EXTRACTION/SIGNAL DATA -------',
-		'modelVarsFromFiles',
-		'',
-		'------- SIGNAL SORTING -------',
-		'computeManualSortSignals',
-		'modelModifyRegionAnalysis',
-		'',
-		'------- PREPROCESS VERIFICATION -------',
-		'viewMovie',
-		'viewObjmaps',
-		'viewCreateObjmaps',
-		'viewMovieCreateSideBySide',
-		'',
-		'------- ACROSS SESSION ANALYSIS: COMPUTE/VIEW -------',
-		'viewSubjectMovieFrames',
-		'computeMatchObjBtwnTrials',
-		'',
-		'viewMatchObjBtwnSessions',
-		'modelSaveMatchObjBtwnTrials',
-		'computeCellDistances',
-		'computeCrossDayDistancesAlignment',
-		'',
-		'------- TRACKING -------',
-		'modelTrackingData',
+		'------- SETUP -------';
+		'modelAddNewFolders';
+		'help';
+		'setup';
+		'update';
+		'loadDependencies';
+		'setMovieInfo';
+		'resetMijiClass';
+		'';
+		'------- CLASS/BEHAVIOR -------';
+		'showVars';
+		'showFolders';
+		'saveObj';
+		'initializeObj';
+		'setMainSettings';
+		'';
+		'------- DATA CHECK/LOAD/EXPORT -------';
+		'modelGetFileInfo';
+		'modelVerifyDataIntegrity';
+		'modelBatchCopyFiles';
+		'modelLoadSaveData';
+		'modelExportData';
+		'';
+		'------- VISUALIZATION/PREPROCESS CHECK -------';
+		'viewMovieFiltering';
+		'viewMovieRegistrationTest';
+		'viewMovie';
+		'';
+		'------- PREPROCESS -------';
+		'modelDownsampleRawMovies';
+		'modelPreprocessMovie';
+		'modelModifyMovies';
+		'removeConcurrentAnalysisFiles';
+		'';
+		'------- CELL/SIGNAL EXTRACTION -------';
+		'modelExtractSignalsFromMovie';
+		'viewCellExtractionOnMovie';
+		'removeConcurrentAnalysisFiles';
+		'';
+		'------- LOAD CELL-EXTRACTION/SIGNAL DATA -------';
+		'modelVarsFromFiles';
+		'';
+		'------- SIGNAL SORTING -------';
+		'computeManualSortSignals';
+		'modelModifyRegionAnalysis';
+		'';
+		'------- PREPROCESS VERIFICATION -------';
+		'viewMovie';
+		'viewObjmaps';
+		'viewCreateObjmaps';
+		'viewMovieCreateSideBySide';
+		'';
+		'------- ACROSS SESSION ANALYSIS: COMPUTE/VIEW -------';
+		'viewSubjectMovieFrames';
+		'computeMatchObjBtwnTrials';
+		'';
+		'viewMatchObjBtwnSessions';
+		'modelSaveMatchObjBtwnTrials';
+		'computeCellDistances';
+		'computeCrossDayDistancesAlignment';
+		'';
+		'------- TRACKING -------';
+		'modelTrackingData';
 		'viewOverlayTrackingToVideo'
 		};
 
@@ -744,7 +747,7 @@ classdef ciatah < dynamicprops
 		obj = setMovieInfo(obj)
 		[validFoldersIdx] = pipelineFolderFilter(obj,useAltValid,validFoldersIdx)
 
-		[output output2] = modelGetStim(obj,idNum,varargin)
+		[output, output2] = modelGetStim(obj,idNum,varargin)
 
 		% view help about the object
 		obj = help(obj)

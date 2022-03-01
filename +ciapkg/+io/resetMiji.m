@@ -17,6 +17,7 @@ function [success] = resetMiji(varargin)
 		% 2019.09.09 [18:04:10] - Updated to add fallback to modelAddOutsideDependencies to ask for path to Fiji/Miji in case it is not properly in the path or has been moved.
 		% 2019.10.15 [12:29:30] - Added flag to prevent recursive loop between resetMiji and modelAddOutsideDependencies.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+        % 2021.12.19 [10:34:00] - Update to use manageMiji to setup Miji, avoid certain issues. Also search for imagej instead of Fiji path.
 	% TODO
 		%
 
@@ -42,7 +43,8 @@ function [success] = resetMiji(varargin)
 		try
 			clear MIJ miji Miji mij;
 			javaDyna = javaclasspath('-dynamic');
-			matchIdx = ~cellfun(@isempty,regexpi(javaDyna,'Fiji'));
+			% matchIdx = ~cellfun(@isempty,regexpi(javaDyna,'Fiji'));
+            matchIdx = ~cellfun(@isempty,regexpi(javaDyna,'imagej'));
 			% cellfun(@(x) javarmpath(x),javaDyna(matchIdx));
 			javaDynaPathStr = join(javaDyna(matchIdx),''',''');
 			if ~isempty(javaDynaPathStr)
@@ -52,9 +54,11 @@ function [success] = resetMiji(varargin)
 			end
 			clear MIJ miji Miji mij;
 			% Load Miji so paths added to javaclasspath('-dynamic')
-			currP=pwd;
+			currP = pwd;
 			% Miji;
-			Miji(false);
+			% Miji(false);
+            ciapkg.io.manageMiji('startStop','setupImageJ');
+            MIJ.start;
 			cd(currP);
 			MIJ.exit;
 			% pause(1);

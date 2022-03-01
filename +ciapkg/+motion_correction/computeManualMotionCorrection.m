@@ -23,9 +23,11 @@ function [inputImagesTranslated, outputStruct] = computeManualMotionCorrection(i
 		% 2021.08.06 [09:43:53] - Added acceleration based on rapid user clicks or holding down direction keys
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2021.10.13 [21:20:04] - Add support for 90 degree quick rotation, fix passing of flip dims.
-        % 2021.10.29 [12:45:48] - Change number of pixels to translate per click and UI improvements.
-        % 2021.11.01 [11:44:01] - Improved pre-allocation, minimize GUI slowdown for large inputs over time.
-        % 2021.11.17 [02:30:23] - Improve speed of GUI and responsiveness.
+		% 2021.10.29 [12:45:48] - Change number of pixels to translate per click and UI improvements.
+		% 2021.11.01 [11:44:01] - Improved pre-allocation, minimize GUI slowdown for large inputs over time.
+		% 2021.11.17 [02:30:23] - Improve speed of GUI and responsiveness.
+		% 2021.12.19 [11:00:15] - Force altInputImages to initialize as input class type to avoid automatic conversion to double (save space/ram).
+		% 2022.01.29 [19:13:55] - Significant speed improvements by removing certain calls to figure, axis, imagesc, etc. that slow down UI over time when many sessions aligned.
 	% TODO
 		% Add ability to auto-crop if inputs are not of the right size them convert back to correct size after manual correction
 		% inputRegisterImage - [x y nCells] - Image to register to.
@@ -55,8 +57,10 @@ function [inputImagesTranslated, outputStruct] = computeManualMotionCorrection(i
 	options.gammaCorrection = 1;
 	% Float: time (seconds) between user clicks to speed up translation.
 	options.userClickTimerThreshold = 0.1;
-    % Int: Amount of pixels to move image for each user x-y click
-    options.translationAmt = 1;
+	% Int: Amount of pixels to move image for each user x-y click
+	options.translationAmt = 1;
+	% Binary: 1 = include images output struct, 0 = do not include.
+	options.includeImgsOutputStruct = 1;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -83,11 +87,11 @@ function [inputImagesTranslated, outputStruct] = computeManualMotionCorrection(i
 			end
 			switch options.cellCombineType
 				case 'max'
-					inputImages = cellfun(@(x) nanmax(x,[],3),inputImages,'UniformOutput',false);
+					inputImages = cellfun(@(x) max(x,[],3,'omitnan'),inputImages,'UniformOutput',false);
 				case 'mean'
-					inputImages = cellfun(@(x) nanmean(x,3),inputImages,'UniformOutput',false);
+					inputImages = cellfun(@(x) mean(x,3,'omitnan'),inputImages,'UniformOutput',false);
 				otherwise
-					inputImages = cellfun(@(x) nanmax(x,[],3),inputImages,'UniformOutput',false);
+					inputImages = cellfun(@(x) max(x,[],3,'omitnan'),inputImages,'UniformOutput',false);
 			end                
 			inputImages = cat(3,inputImages{:});
 			disp(['inputImages: ' num2str(size(inputImages))])
@@ -102,37 +106,83 @@ function [inputImagesTranslated, outputStruct] = computeManualMotionCorrection(i
 		if options.makeInputDimsEqual==1
 			[inputImages] = downsampleMovie(inputImages,'downsampleX',size(inputRegisterImage,1),'downsampleY',size(inputRegisterImage,2),'downsampleDimension','space');
 		end
-
+		
 		% Pre-allocate to speed up GUI especially with large number of sessions.
-		for frameNo = 1:size(inputImages,3)
-			outputStruct.registeredMarkerImage{frameNo} = inputImages(:,:,frameNo)*NaN;
-			outputStruct.translationVector{frameNo} = NaN;
-			outputStruct.rotationVector{frameNo} = NaN;
-			outputStruct.flipDimVector{frameNo} = NaN;
-			outputStruct.gammaCorrection{frameNo} = NaN;
-			outputStruct.gammaCorrectionRef{frameNo} = NaN;
-			outputStruct.inputImagesCorrected{frameNo} = inputImages(:,:,frameNo)*NaN;
-			outputStruct.inputImagesOriginal{frameNo} = inputImages(:,:,frameNo)*NaN;
-			if ~isempty(options.altInputImages)
-				outputStruct.altInputImages{frameNo} = options.altInputImages{frameNo}*NaN;
-			end
-		end
+		nImagesRegister = size(inputImages,3);
+		% for frameNo = 1:nImagesRegister
+		% 	outputStruct.registeredMarkerImage{frameNo} = inputImages(:,:,frameNo)*NaN;
+		% 	outputStruct.translationVector{frameNo} = NaN;
+		% 	outputStruct.rotationVector{frameNo} = NaN;
+		% 	outputStruct.flipDimVector{frameNo} = NaN;
+		% 	outputStruct.gammaCorrection{frameNo} = NaN;
+		% 	outputStruct.gammaCorrectionRef{frameNo} = NaN;
+		% 	outputStruct.inputImagesCorrected{frameNo} = inputImages(:,:,frameNo)*NaN;
+		% 	outputStruct.inputImagesOriginal{frameNo} = inputImages(:,:,frameNo)*NaN;
+		% 	if ~isempty(options.altInputImages)
+		% 		outputStruct.altInputImages{frameNo} = options.altInputImages{frameNo}*NaN;
+		% 		% outputStruct.altInputImages{frameNo} = inputImages(:,:,frameNo)*NaN;
+		% 	end
+		% end
+
+		% Pre-allocate arrays only but do not fill due to shared memory deep copy issue.
+		% See https://www.mathworks.com/matlabcentral/answers/48807-how-preallocate-structure-for-better-memory#comment_116968.
+		outputStruct.registeredMarkerImage = cell(1,nImagesRegister);
+		outputStruct.translationVector = cell(1,nImagesRegister);
+		outputStruct.rotationVector = cell(1,nImagesRegister);
+		outputStruct.flipDimVector = cell(1,nImagesRegister);
+		outputStruct.gammaCorrection = cell(1,nImagesRegister);
+		outputStruct.gammaCorrectionRef = cell(1,nImagesRegister);
+		outputStruct.inputImagesCorrected = cell(1,nImagesRegister);
+		outputStruct.inputImagesOriginal = cell(1,nImagesRegister);
+		outputStruct.altInputImages = cell(1,nImagesRegister);
+
+		imgStruct = struct;
+		imgStruct.imgHandle = [];
+		imgStruct.imgHandle2 = [];
+		imgStruct.imgHandle3 = [];
+		imgStruct.imgTitleHandle = [];
 
 		% Determine whether to register each inputImages frame as representative of how to translate each matrix in options.altInputImages
+		tic
 		if ~isempty(options.altInputImages)
 			inputImagesTranslated = NaN(size(inputImages));
 			for frameNo = 1:size(inputImages,3)
+				display(repmat('=',1,21))
 				fprintf('Running %d/%d input image...\n',frameNo,size(inputImages,3));
-				[outputStruct] = subfxnRegisterImage(inputImages(:,:,frameNo),inputRegisterImage,options,outputStruct,frameNo,size(inputImages,3));
+				disp(toc);tic
+				% [outputStruct] = subfxnRegisterImage(inputImages(:,:,frameNo),inputRegisterImage,options,outputStruct,frameNo,size(inputImages,3));
 
-				outputStruct.altInputImages{frameNo} = NaN(size(options.altInputImages{frameNo}));
+				tmpStructPass = struct;
+				tmpStructPass.gammaCorrection = outputStruct.gammaCorrection;
+				tmpStructPass.gammaCorrectionRef = outputStruct.gammaCorrectionRef;
 
-				fprintf('Translating/rotating/flipping alt input images...\n')
+				[OUT1, imgStruct] = subfxnRegisterImage(inputImages(:,:,frameNo),inputRegisterImage,options,tmpStructPass,frameNo,size(inputImages,3),imgStruct);
+				fprintf('Done manual translate...\n')
+				disp(toc);tic
+				% outputStruct.altInputImages{frameNo} = NaN(size(options.altInputImages{frameNo}),class(options.altInputImages{frameNo}));
+
+				outputStruct.translationVector{frameNo} = OUT1.translationVector;
+				outputStruct.rotationVector{frameNo} = OUT1.rotationVector;
+				outputStruct.flipDimVector{frameNo} = OUT1.flipDimVector;
+				outputStruct.gammaCorrection{frameNo} = OUT1.gammaCorrection;
+				outputStruct.gammaCorrectionRef{frameNo} = OUT1.gammaCorrectionRef;
+
+				if options.includeImgsOutputStruct==1
+					outputStruct.registeredMarkerImage{frameNo} = OUT1.registeredMarkerImage;
+					outputStruct.inputImagesCorrected{frameNo} = OUT1.inputImagesCorrected;
+					outputStruct.inputImagesOriginal{frameNo} = OUT1.inputImagesOriginal;
+				end
+
+				fprintf('Translating/rotating/flipping Input images...\n')
 				inputImagesTranslated(:,:,frameNo) = imtranslate(inputImages(:,:,frameNo),outputStruct.translationVector{frameNo});
 				inputImagesTranslated(:,:,frameNo) = imrotate(inputImagesTranslated(:,:,frameNo),outputStruct.rotationVector{frameNo},'nearest','crop');
 				inputImagesTranslated(:,:,frameNo) = subfxn_flipImage(inputImagesTranslated(:,:,frameNo),outputStruct.flipDimVector{frameNo});
-				outputStruct.translationVector{frameNo}
-				for imgNo = 1:size(outputStruct.altInputImages{frameNo},3)
+				disp(toc);tic
+
+				fprintf('Translating/rotating/flipping alt input images...\n')
+
+				tmpAltInputImages = NaN(size(options.altInputImages{frameNo}));
+				for imgNo = 1:size(tmpAltInputImages,3)
 					% figure;
 					% 	subplot(1,2,1)
 					% 		imagesc(options.altInputImages{frameNo}(:,:,imgNo)); axis equal tight
@@ -141,20 +191,34 @@ function [inputImagesTranslated, outputStruct] = computeManualMotionCorrection(i
 					% 	pause
 
 					% TRANSLATE
-					outputStruct.altInputImages{frameNo}(:,:,imgNo) = imtranslate(options.altInputImages{frameNo}(:,:,imgNo),outputStruct.translationVector{frameNo});
+					tmpAltInputImages(:,:,imgNo) = imtranslate(options.altInputImages{frameNo}(:,:,imgNo),outputStruct.translationVector{frameNo});
 
 					% ROTATION
-					outputStruct.altInputImages{frameNo}(:,:,imgNo) = imrotate(outputStruct.altInputImages{frameNo}(:,:,imgNo),outputStruct.rotationVector{frameNo},'nearest','crop');
+					tmpAltInputImages(:,:,imgNo) = imrotate(tmpAltInputImages(:,:,imgNo),outputStruct.rotationVector{frameNo},'nearest','crop');
 					
 					% FLIP IMAGE
-					outputStruct.altInputImages{frameNo}(:,:,imgNo) = subfxn_flipImage(outputStruct.altInputImages{frameNo}(:,:,imgNo),outputStruct.flipDimVector{frameNo});
+					tmpAltInputImages(:,:,imgNo) = subfxn_flipImage(tmpAltInputImages(:,:,imgNo),outputStruct.flipDimVector{frameNo});
 				end
+				outputStruct.altInputImages{frameNo} = tmpAltInputImages;
+				clear tmpAltInputImages;
+				disp(toc);tic
 				% figure;imagesc(max(outputStruct.altInputImages{frameNo},[],3))
 			end
 		else
 			% First register the inputImages by moving relative to inputRegisterImage
 			for frameNo = 1:size(inputImages,3)
-				[outputStruct] = subfxnRegisterImage(inputImages(:,:,frameNo),inputRegisterImage,options,outputStruct,frameNo,size(inputImages,3));
+				[OUT1, imgStruct] = subfxnRegisterImage(inputImages(:,:,frameNo),inputRegisterImage,options,outputStruct,frameNo,size(inputImages,3),imgStruct);
+
+				outputStruct.registeredMarkerImage{frameNo} = OUT1.registeredMarkerImage;
+				outputStruct.translationVector{frameNo} = OUT1.translationVector;
+				outputStruct.rotationVector{frameNo} = OUT1.rotationVector;
+				outputStruct.flipDimVector{frameNo} = OUT1.flipDimVector;
+				outputStruct.gammaCorrection{frameNo} = OUT1.gammaCorrection;
+				outputStruct.gammaCorrectionRef{frameNo} = OUT1.gammaCorrectionRef;
+				outputStruct.inputImagesCorrected{frameNo} = OUT1.inputImagesCorrected;
+				outputStruct.inputImagesOriginal{frameNo} = OUT1.inputImagesOriginal;
+
+
 				inputImagesTranslated = NaN(size(inputImages));
 				inputImagesTranslated(:,:,frameNo) = imtranslate(inputImages(:,:,frameNo),outputStruct.translationVector{frameNo});
 				if outputStruct.rotationVector{frameNo}==0
@@ -186,14 +250,16 @@ function [inputImagesTranslated, outputStruct] = computeManualMotionCorrection(i
 		display(repmat('@',1,7))
 	end
 end
-function [outputStruct] = subfxnRegisterImage(inputImages,inputRegisterImage,options,outputStruct,imgNo,imgN)
+% function [outputStruct] = subfxnRegisterImage(inputImages,inputRegisterImage,options,outputStruct,imgNo,imgN)
+function [outputStructTmp, imgStruct] = subfxnRegisterImage(inputImages,inputRegisterImage,options,inputStruct,imgNo,imgN,imgStruct)
+	disp(toc);tic
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 	
 	inputRegisterImageCellmap = createObjMap(inputRegisterImage);
 
 	if options.registerUseOutlines==1
-		[thresholdedImages boundaryIndices] = thresholdImages(inputRegisterImage,'binary',1,'getBoundaryIndex',1,'threshold',options.imageThreshold,'imageFilter','median');
-		inputRegisterImageOutlines = zeros([size(inputRegisterImageCellmap)]);
+		[thresholdedImages, boundaryIndices] = thresholdImages(inputRegisterImage,'binary',1,'getBoundaryIndex',1,'threshold',options.imageThreshold,'imageFilter','median');
+		inputRegisterImageOutlines = zeros(size(inputRegisterImageCellmap));
 		inputRegisterImageOutlines([boundaryIndices{:}]) = 1;
 	else
 		inputRegisterImageOutlines = normalizeVector(single(inputRegisterImage(:,:,1)),'normRange','zeroToOne');
@@ -201,28 +267,35 @@ function [outputStruct] = subfxnRegisterImage(inputImages,inputRegisterImage,opt
 	inputRegisterImageOutlinesOriginal = inputRegisterImageOutlines;
 
 	[figHandle, figNo] = openFigure(options.translationFigNo, '');
-    colormap(ciapkg.api.customColormap());
+	colormap(ciapkg.api.customColormap());
 	% Force current character to be a new figure.
 	set(gcf,'currentch','0');
 	if imgNo==1
 		clf
 	end
+
+	disp('Setup #1');
+	disp(toc);tic
+
 	% normalize input marker image
 	inputImages = normalizeVector(single(inputImages),'normRange','zeroToOne');
 	inputImagesOriginal = inputImages;
-    
-    % rgbImage = cat(3,inputRegisterImageOutlines,inputImages,inputRegisterImageOutlines);
-    
+	
+	% rgbImage = cat(3,inputRegisterImageOutlines,inputImages,inputRegisterImageOutlines);
+	
 	gammaCorrection = options.gammaCorrection;
 	gammaCorrectionRef = options.gammaCorrection;
-    try
-        % Get prior gamma corrections
-        gammaCorrection = outputStruct.gammaCorrection{imgNo-1};
-        gammaCorrectionRef = outputStruct.gammaCorrectionRef{imgNo-1};
-    catch
-        
-    end
-    
+	try
+		% Get prior gamma corrections
+		gammaCorrection = inputStruct.gammaCorrection{imgNo-1};
+		gammaCorrectionRef = inputStruct.gammaCorrectionRef{imgNo-1};
+	catch
+		
+	end
+
+	disp('Setup #2');
+	disp(toc);tic
+	
 	inputImages = imadjust(inputImages,[],[],gammaCorrection);
 	inputRegisterImage = imadjust(inputRegisterImage,[],[],gammaCorrectionRef);
 	continueRegistering = 1;
@@ -232,10 +305,13 @@ function [outputStruct] = subfxnRegisterImage(inputImages,inputRegisterImage,opt
 	% zoom on;
 	% set(figHandle, 'KeyPressFcn', @(source,eventdata) figure(figHandle));
 	set(figHandle, 'KeyPressFcn', @(source,eventdata) subfxnRespondUser(source,eventdata));
-	figure(figHandle)
-    
+	% figure(figHandle)
+	
 	rgbImage = subfxncreateRgbImg();
-    
+
+	disp('Setup #3');
+	disp(toc);tic
+	
 	imgTitleFxn = @(imgNo,imgN,gammaCorrection,gammaCorrectionRef,translationVector,rotationVector,translationAmt) sprintf('Image %d/%d\nup/down/left/right arrows for translation | A/S = rotate +1 left/right, Q/W = rotate +90 left/right  | 5/6 = flip x/y | f to finish\n1/2 keys for image gamma down/up | gamma = %0.3f |  gamma(ref) = %0.3f | translation %d %d | rotation %d\npurple = reference image, green = image to manually translate | %d px/click',imgNo,imgN,gammaCorrection,gammaCorrectionRef,translationVector,rotationVector,translationAmt);
 	
 	imgTitle = imgTitleFxn(imgNo,imgN,gammaCorrection,gammaCorrectionRef,translationVector,rotationVector,options.translationAmt);
@@ -243,54 +319,87 @@ function [outputStruct] = subfxnRegisterImage(inputImages,inputRegisterImage,opt
 	subplotTmp = @(x,y,z) subaxis(x,y,z, 'Spacing', 0.02, 'Padding', 0.02, 'MarginTop', 0.07,'MarginBottom', 0.02,'MarginLeft', 0.03,'MarginRight', 0.02);
 	subplotTmp2 = @(x,y,z) subaxis(x,y,z, 'Spacing', 0.02, 'Padding', 0.001, 'MarginTop', 0.07,'MarginBottom', 0.02,'MarginLeft', 0.03,'MarginRight', 0.02);
 
-    horzLineMid = @(imgX,cLine) plot([1 size(imgX,2)],[size(imgX,1)/2 size(imgX,1)/2],cLine); % horizontal mid line
-    vertLineMid = @(imgX,cLine) plot([size(imgX,2)/2 size(imgX,2)/2],[1 size(imgX,1)],cLine); % vertical mid line
-        
-	subplotTmp(2,4,[1:3 5:7])
-		imgHandle = imagesc(rgbImage);
-        hold on;
-		axis equal tight
-		box off;
-		imgTitleHandle = title(imgTitle);
-        horzLineMid(rgbImage,'w-');
-        vertLineMid(rgbImage,'w-');
+	horzLineMid = @(imgX,cLine) plot([1 size(imgX,2)],[size(imgX,1)/2 size(imgX,1)/2],cLine); % horizontal mid line
+	vertLineMid = @(imgX,cLine) plot([size(imgX,2)/2 size(imgX,2)/2],[1 size(imgX,1)],cLine); % vertical mid line
+	 
+	if isempty(imgStruct.imgHandle)   
+		subplotTmp(2,4,[1:3 5:7])
+			imgHandle = imagesc(rgbImage);
+			hold on;
+			axis image;
+			% axis equal tight
+			box off;
+			imgTitleHandle = title(imgTitle);
+			horzLineMid(rgbImage,'w-');
+			vertLineMid(rgbImage,'w-');
 
-	subplotTmp2(2,4,[4])
-		imgHandle2 = imagesc(rgbImage(:,:,1));
-		axis equal tight
-		box off;
-		title('Reference')
-        hold on;
-        horzLineMid(rgbImage,'k-');
-        vertLineMid(rgbImage,'k-');
-        
-	subplotTmp2(2,4,[8])
-		imgHandle3 = imagesc(rgbImage(:,:,2));		
-		axis equal tight
-		box off;
-		title('Test')
-        hold on;
-        horzLineMid(rgbImage,'k-');
-        vertLineMid(rgbImage,'k-');
+		imgStruct.imgHandle = imgHandle;
+		imgStruct.imgTitleHandle = imgTitleHandle;
+	else
+		imgHandle = imgStruct.imgHandle;
+		imgTitleHandle = imgStruct.imgTitleHandle;
+		% set(imgHandle,'Cdata',rgbImage);
+	end
+
+	if isempty(imgStruct.imgHandle2)
+		subplotTmp2(2,4,[4])
+			imgHandle2 = imagesc(rgbImage(:,:,1));
+			axis image;
+			% axis equal tight
+			box off;
+			title('Reference')
+			hold on;
+			horzLineMid(rgbImage,'k-');
+			vertLineMid(rgbImage,'k-');
+
+		imgStruct.imgHandle2 = imgHandle2;
+	else
+		imgHandle2 = imgStruct.imgHandle2;
+		% set(imgHandle,'Cdata',rgbImage(:,:,1));
+	end
+		
+	if isempty(imgStruct.imgHandle3)
+		subplotTmp2(2,4,[8])
+			imgHandle3 = imagesc(rgbImage(:,:,2));	
+			axis image;	
+			% axis equal tight
+			box off;
+			title('Test')
+			hold on;
+			horzLineMid(rgbImage,'k-');
+			vertLineMid(rgbImage,'k-');
+
+		imgStruct.imgHandle3 = imgHandle3;
+	else
+		imgHandle3 = imgStruct.imgHandle3;
+	end
 
 	userClickTimer = tic;
 	subfxnRespondUser([],[]);
 
+	disp('Setup manual UI');
+	disp(toc);tic
+
 	uiwait(figHandle)
 
-	outputStruct.registeredMarkerImage{imgNo} = imtranslate(inputImagesOriginal,translationVector);
-	outputStruct.translationVector{imgNo} = translationVector;
-	outputStruct.rotationVector{imgNo} = rotationVector;
-	outputStruct.flipDimVector{imgNo} = flipDimVector;
-	outputStruct.gammaCorrection{imgNo} = gammaCorrection;
-	outputStruct.gammaCorrectionRef{imgNo} = gammaCorrectionRef;
-	outputStruct.inputImagesCorrected{imgNo} = inputImages;
-	outputStruct.inputImagesOriginal{imgNo} = inputImagesOriginal;
+	disp('Manual translate done.')
+	disp(toc);tic
 
+	disp('Allocating output structure')
+	outputStructTmp = struct;
+	outputStructTmp.registeredMarkerImage = imtranslate(inputImagesOriginal,translationVector);
+	outputStructTmp.translationVector = translationVector;
+	outputStructTmp.rotationVector = rotationVector;
+	outputStructTmp.flipDimVector = flipDimVector;
+	outputStructTmp.gammaCorrection = gammaCorrection;
+	outputStructTmp.gammaCorrectionRef = gammaCorrectionRef;
+	outputStructTmp.inputImagesCorrected = inputImages;
+	outputStructTmp.inputImagesOriginal = inputImagesOriginal;
+	disp(toc);tic
 	% function rgbImage = subfxncreateRgbImg()
-    function rgbImage = subfxncreateRgbImg()
-        rgbImage = cat(3,inputRegisterImageOutlines,inputImages,inputRegisterImageOutlines);
-        
+	function rgbImage = subfxncreateRgbImg()
+		rgbImage = cat(3,inputRegisterImageOutlines,inputImages,inputRegisterImageOutlines);
+		
 		% rgbImage(:,:,1) = inputRegisterImageOutlines; %red
 		% rgbImage(:,:,2) = inputImages; %green
 		% if options.registerUseOutlines==1
@@ -301,21 +410,21 @@ function [outputStruct] = subfxnRegisterImage(inputImages,inputRegisterImage,opt
 	end
 
 	function subfxnRespondUser(src,event)
-		figure(figHandle)
+		% figure(figHandle)
 		subfxnDrawImg()
 				
 		% pause
 		[tDelta, continueRegistering, gDelta, rDelta, gDeltaRef, flipDimHere,translationAmtTmp] = subfxnRespondToUserInputTranslation();
-        
-        if ~isempty(translationAmtTmp)
-            options.translationAmt = options.translationAmt+translationAmtTmp;
-            if options.translationAmt<0
-                options.translationAmt = 1;
-            end
-        end
+		
+		if ~isempty(translationAmtTmp)
+			options.translationAmt = options.translationAmt+translationAmtTmp;
+			if options.translationAmt<0
+				options.translationAmt = 1;
+			end
+		end
 		
 		userClickT = toc(userClickTimer);
-        tModBase = options.translationAmt;
+		tModBase = options.translationAmt;
 		tMod = tModBase*1;
 		if userClickT<options.userClickTimerThreshold*4
 			tMod = tModBase*2;
@@ -335,7 +444,7 @@ function [outputStruct] = subfxnRegisterImage(inputImages,inputRegisterImage,opt
 		flipDimVector = [flipDimVector flipDimHere];
 		
 		gammaCorrection = subfxnGammaUpdate(gammaCorrection,gDelta);
-        % gDeltaRef
+		% gDeltaRef
 		gammaCorrectionRef = subfxnGammaUpdate(gammaCorrectionRef,gDeltaRef);
 
 		inputImages = imtranslate(inputImagesOriginal,translationVector);
@@ -407,7 +516,7 @@ function [tDelta, continueLoop, gDelta, rDelta, gDeltaRef, flipDimHere,translati
 	gDeltaRef = 0;
 	rDelta = 0;
 	flipDimHere = 0;
-    translationAmt = [];
+	translationAmt = [];
 	reply = double(reply);
 
 	% decide what to do based on input (not a switch due to multiple comparisons)
@@ -445,7 +554,7 @@ function [tDelta, continueLoop, gDelta, rDelta, gDeltaRef, flipDimHere,translati
 	elseif isequal(reply, 54)
 		% 6 - flip y
 		flipDimHere = 2;
-    elseif isequal(reply, 55)
+	elseif isequal(reply, 55)
 		% 7 - decrease px/click
 		translationAmt = -1;
 	elseif isequal(reply, 56)

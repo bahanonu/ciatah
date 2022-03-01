@@ -1,11 +1,17 @@
 function [output1,output2] = exampleFxn(input1,input2,varargin)
+	% EXAMPLEFXN(input1,input2,varargin)
+	% 
 	% DESCRIPTION.
+	% 
 	% Biafra Ahanonu
 	% started: INSERT_DATE
+	% 
 	% inputs
-		%
+	% 	input1
+	% 	input2
 	% outputs
-		%
+	% 	output1
+	% 	output2
 
 	% changelog
 		%
@@ -36,13 +42,19 @@ end
 
 % CIAtah method
 function obj = functionName(obj,varargin)
-	% DESCRIPTION
+	% EXAMPLEFXN(input1,input2,varargin)
+	% 
+	% DESCRIPTION.
+	% 
 	% Biafra Ahanonu
 	% started: INSERT_DATE
+	% 
 	% inputs
-		%
+	% 	input1
+	% 	input2
 	% outputs
-		%
+	% 	output1
+	% 	output2
 
 	% changelog
 		%

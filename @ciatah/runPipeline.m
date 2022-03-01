@@ -10,6 +10,7 @@ function obj = runPipeline(obj,varargin)
 	% changelog
 		% 2020.05.09 [18:36:01] - Added a check to make sure certain directories are unloaded after running a module if they are not needed.
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2022.02.25 [09:54:56] - Eliminate the close all figure when initializing the main GUI. Unexpected for some users and undesirable in certain cases.
 	% TODO
 		%
 
@@ -28,7 +29,8 @@ function obj = runPipeline(obj,varargin)
 	catch
 		set(0, 'DefaultUICOntrolFontSize', 11)
 	end
-	close all;clc;
+	% close all;
+	clc;
 
 	fxnsToRun = obj.methodsList;
 	%========================

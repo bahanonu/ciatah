@@ -1,4 +1,4 @@
-function [movieTmp] = viewAddTextToMovie(movieTmp,inputText,fontSize)
+function [movieTmp] = viewAddTextToMovie(movieTmp,inputText,fontSize,varargin)
 	% Adds text to movie matrix.
 	% Biafra Ahanonu
 	% inputs
@@ -6,5 +6,5 @@ function [movieTmp] = viewAddTextToMovie(movieTmp,inputText,fontSize)
 	% outputs
 		%
 
-	[movieTmp] = ciapkg.video.viewAddTextToMovie(movieTmp,inputText,'passArgs', varargin);
+	[movieTmp] = ciapkg.video.viewAddTextToMovie(movieTmp,inputText,fontSize,'passArgs', varargin);
 end

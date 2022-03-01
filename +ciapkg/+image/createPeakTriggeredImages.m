@@ -19,6 +19,7 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 		% 2019.10.29 [13:51:04] - Added support for parallel.pool.Constant when PCT auto-start parallel pool disabled.
 		% 2020.05.06 [16:24:00] - Fix for hdf5FileWorkerConstant when gcp empty.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2022.01.27 [‏‎13:14:38] - Ensure only unique signal peaks used.
 	% TODO
 		% Take 2 frames after peak and average to improve SNR
 
@@ -411,6 +412,10 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 					if nPeaksToUse>options_maxPeaksToUse
 						nPeaksToUse = options_maxPeaksToUse;
 					end
+
+					% Ensure only unique signal peaks used
+					signalPeaksThis = unique(signalPeaksThis,'stable');
+
 					offset = {};
 					block = {};
 					for signalPeakFrameNo = 1:nPeaksToUse
@@ -427,6 +432,8 @@ function [outputImages, outputMeanImageCorrs, outputMeanImageCorr2, outputMeanIm
 					end
 					% [signalImagesCrop] = readHDF5Subset(inputMovie, offset, block,'datasetName',options_inputDatasetName,'displayInfo',0,'hdf5Fid',options_hdf5Fid,'keepFileOpen',options_keepFileOpen);
 
+					% offset
+					% block
 					[signalImagesCrop] = readHDF5Subset(inputMoviePath, offset, block,'datasetName',options_inputDatasetName,'displayInfo',0,'hdf5Fid',hdf5FileWorkerConstant.Value,'keepFileOpen',options_keepFileOpen,'displayInfo',options_displayInfo);
 
 					%signalImagesCrop = cat(3,signalImagesCrop{:});

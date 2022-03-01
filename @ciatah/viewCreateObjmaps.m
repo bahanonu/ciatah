@@ -964,7 +964,7 @@ function obj = viewCreateObjmaps(obj,varargin)
 							% num2str(size(signalPeaks,1))
 				end
 
-				suptitle([subject ' | ' assay ' | firing rate map | ' num2str(sum(validAuto)) ' (' num2str(nSawSignals) ') cells'])
+				                ([subject ' | ' assay ' | firing rate map | ' num2str(sum(validAuto)) ' (' num2str(nSawSignals) ') cells'])
 				% titleAxes = axes('Position', [0, 0.95, 1, 0.05],'Visible','off');
 				% axes(titleAxes)
 				% cla(ax,'reset')

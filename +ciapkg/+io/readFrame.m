@@ -17,6 +17,7 @@ function [thisFrame,movieFileID,inputMovieDims] = readFrame(inputMoviePath,frame
 		% 2021.06.30 [01:26:29] - Updated handling of no file path character input.
 		% 2021.07.03 [09:02:14] - Updated to have backup read method for different tiff styles.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2022.02.24 [10:24:28] - AVI now read(...,'native') is faster.
 	% TODO
 		%
 
@@ -58,7 +59,11 @@ function [thisFrame,movieFileID,inputMovieDims] = readFrame(inputMoviePath,frame
 
 		if ~isempty(options.frameList)
 			frameNo = options.frameList(frameNo);
-		end
+        end
+        
+        if iscell(inputMoviePath)==1&&length(inputMoviePath)==1
+            inputMoviePath = inputMoviePath{1};
+        end
 
 		% Check if path to movie or uder 
 		if ischar(inputMoviePath)
@@ -71,6 +76,7 @@ function [thisFrame,movieFileID,inputMovieDims] = readFrame(inputMoviePath,frame
 		% Get the movie file identifier to faster access/reading during future calls.
 		if isempty(options.movieFileID)
 			options.movieFileID = subfxn_getMovieObj(inputMoviePath,options);
+			movieFileID = options.movieFileID;
 		end
 
 		[thisFrame, inputMovieDims] = subfxn_loadFrame(inputMoviePath,options);
@@ -112,6 +118,7 @@ function [thisFrame,movieFileID,inputMovieDims] = readFrame(inputMoviePath,frame
 						disp(repmat('@',1,7))
 						disp(getReport(err,'extended','hyperlinks','on'));
 						disp(repmat('@',1,7))
+						% fileInfo = imfinfo(filename);
 					end
 					% err
 					% display(repmat('@',1,7))
@@ -126,7 +133,8 @@ function [thisFrame,movieFileID,inputMovieDims] = readFrame(inputMoviePath,frame
 				else
 					xyloObj = options.movieFileID;
 				end
-				thisFrame = read(xyloObj, frameNo);
+				thisFrame = read(xyloObj, frameNo,'native');
+				thisFrame = thisFrame.cdata;
 				if options.rgbDisplay==0
 					if size(thisFrame,3)==3&isempty(options.rgbChannel)
 						thisFrame = squeeze(thisFrame(:,:,1));

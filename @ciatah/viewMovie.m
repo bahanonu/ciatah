@@ -13,8 +13,9 @@ function obj = viewMovie(obj)
 		% 2020.10.25 [21:05:21] - Added support for viewing movies from disk.
 		% 2021.02.24 [09:04:24] - Fix treatMoviesAsContinuous=0 + playMovieFromDisk=1 issue.
 		% 2021.06.18 [21:41:07] - added modelVarsFromFilesCheck() to check and load signals if user hasn't already.
-		% 2021.06.20 [‏‎00:14:59] - Added support for simple and advanced settings.
+		% 2021.06.20 [00:14:59] - Added support for simple and advanced settings.
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2021.12.31 [18:59:24] - Updated suptitle to ciapkg.overloaded.suptitle
 	% TODO
 		%
 
@@ -906,7 +907,7 @@ function [cropCoords noCrop] = getCropMovieCoords(movieList)
 		[figHandle figNo] = openFigure(9, '');
 		subplot(1,2,1);imagesc(thisFrame); axis image; colormap gray; title('click, drag-n-draw region')
 		set(0,'DefaultTextInterpreter','none');
-		suptitle([num2str(movieNo) '\' num2str(nMovies) ': ' strrep(inputFilePath,'\','/')]);
+		ciapkg.overloaded.suptitle([num2str(movieNo) '\' num2str(nMovies) ': ' strrep(inputFilePath,'\','/')]);
 		set(0,'DefaultTextInterpreter','latex');
 
 		% Use ginput to select corner points of a rectangular
