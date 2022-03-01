@@ -9,7 +9,7 @@ function obj = modelVerifyDataIntegrity(obj)
 
 	% changelog
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
-		% 2021.12.31 [18:59:24] - Updated suptitle to ciapkg.overloaded.suptitle
+		% 2021.12.31 [18:59:24] - Updated suptitle to ciapkg.overloaded.suptitle.
 	% TODO
 		%
 

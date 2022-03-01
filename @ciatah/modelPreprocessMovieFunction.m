@@ -40,7 +40,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2021.09.10 [10:14:04] - Fix to handle folders with no files.
 		% 2021.11.16 [11:52:36] - Add verification that turboreg MEX function is in the path.
-		% 2021.12.31 [18:59:24] - Updated suptitle to ciapkg.overloaded.suptitle
+		% 2021.12.31 [18:59:24] - Updated suptitle to ciapkg.overloaded.suptitle.
 		% 2022.01.19 [16:26:06] - Fix "No movies" dialog box displaying when movies successfully run.
 		% 2022.01.25 [16:08:49] - Add `modelPreprocessMovieFunction` settings saved in CIAtah class to saved output file for later retrieval.
 		% 2022.01.26 [08:31:06] - For selecting turboreg crop coordinates, switched to ciapkg.io.readFrame when single frame is requested as this is faster and avoids long read times of all frame information as occurs in certain types of TIFF files or hard drives.
