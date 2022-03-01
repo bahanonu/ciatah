@@ -10,7 +10,7 @@ function obj = runPipeline(obj,varargin)
 	% changelog
 		% 2020.05.09 [18:36:01] - Added a check to make sure certain directories are unloaded after running a module if they are not needed.
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
-		% 2022.02.25 [09:54:56] - Eliminate the close all figure when initializing the main GUI. Unexpected for some users and undesirable in certain cases.
+		% 2022.02.25 [09:54:56] - Eliminate the close all figure when initializing the main GUI. Unexpected for some users and undesirable in certain cases. Instead close all figures if a method is selected, this avoids user not getting feedback if figures are re-used and focus is not shifted.
 	% TODO
 		%
 
@@ -199,9 +199,11 @@ function obj = runPipeline(obj,varargin)
 		end
 	end
 
+
 	for thisFxn = fxnsToRun
 		try
 			disp(repmat('!',1,21))
+			close all;
 			if ismethod(obj,thisFxn)
 				disp(['Running: obj.' thisFxn{1}]);
 				obj.(thisFxn{1});
