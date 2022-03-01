@@ -11,6 +11,7 @@ function obj = computeMatchObjBtwnTrials(obj,varargin)
 		% 2019.07.03 [16:36:32] - Updated to call viewMatchObjBtwnSessions afterwards as an option
 		% 2021.06.18 [21:41:07] - added modelVarsFromFilesCheck() to check and load signals if user hasn't already.
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2021.11.05 [14:13:36] - Added manual alignment option before automated for cases in which there are large shifts or rotations along with changes in bulk cells identified that might be hard for automated to align.
 	% TODO
 		%
 
@@ -55,7 +56,7 @@ function obj = computeMatchObjBtwnTrials(obj,varargin)
 	% 	usrIdxChoice = userDefaults;
 	% end
 	scnsize = get(0,'ScreenSize');
-	userDefaults = {'1','5','0.4','','2','1','corr2','0.6','0.3','1e-6','0','1','filtered'};
+	userDefaults = {'1','5','0.4','','2','1','corr2','0.6','0.3','1e-6','0','1','filtered','0'};
 	usrIdxChoice = inputdlg({...
 		'Number of rounds to register images (integer)',...
 		'Distance threshold to match cells cross-session (in pixels)',...
@@ -70,11 +71,13 @@ function obj = computeMatchObjBtwnTrials(obj,varargin)
 		'Visually compare image correlation values and matched images (1 = yes, 0 = no)',...
 		'View full results after [viewMatchObjBtwnSessions] (1 = yes, 0 = no)',...
 		'Type of image to use for cross-session alignment? (filtered, raw)',...
+		'Manual cross-session alignment? (1 = yes, 0 = no)'...
 		},'Cross-session cell alignment options',1,...
 		userDefaults);
 
 	% options.frameList = [1:500];
 	s1 = 1;
+	uOpts = struct;
 	nCorrections = str2num(usrIdxChoice{s1});s1=s1+1;
 	maxDistance = str2num(usrIdxChoice{s1});s1=s1+1;
 	imageThreshold = str2num(usrIdxChoice{s1});s1=s1+1;
@@ -88,6 +91,7 @@ function obj = computeMatchObjBtwnTrials(obj,varargin)
 	turboregZeroThres = str2num(usrIdxChoice{s1});s1=s1+1;
 	runViewMatchObjBtwnSessions = str2num(usrIdxChoice{s1});s1=s1+1;
 	imagesType = usrIdxChoice{s1};s1=s1+1;
+	uOpts.runManualAlign = str2num(usrIdxChoice{s1});s1=s1+1;
 
 	for thisSubjectStr=subjectList
 		try
@@ -162,13 +166,18 @@ function obj = computeMatchObjBtwnTrials(obj,varargin)
 			display(['rawSignals: ' num2str(size(rawSignals))])
 			display(['rawImages: ' num2str(size(rawImages))])
 
-			% [rawImages, outputStruct] = computeManualMotionCorrection(rawImages,'registerUseOutlines',0,'cellCombineType','mean','gammaCorrection',1.6);
-
 			if isempty(trialToAlignUserOption)
 				trialToAlign = floor(quantile(1:length(validFoldersIdx),0.5));
 			else
 				trialToAlign = trialToAlignUserOption;
 			end
+
+			% Align manually if user requests.
+			if uOpts.runManualAlign==1
+				[rawImages, outputStruct] = computeManualMotionCorrection(rawImages,'registerUseOutlines',0,'cellCombineType','max','gammaCorrection',1.6,'refFrame',trialToAlign);
+			end
+
+			
 			% alignmentStruct = matchObjBtwnTrials(rawImages,'inputSignals',rawSignals,'trialToAlign',trialToAlign,'additionalAlignmentImages',additionalAlignmentImages,'nCorrections',nCorrections);
 
 			clear mOpts;

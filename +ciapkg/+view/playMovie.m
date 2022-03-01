@@ -35,6 +35,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		% 2021.07.03 [08:16:32] - Added feature to input line overlays on input movie (e.g. to overlay cell extraction outputs).
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2021.10.07 [15:05:52] - Update to avoid caxis with rgb movies, making them hard to view.
+        % 2022.02.24 [10:24:28] - AVI now read(...,'native') is faster. Also add `primaryTrackingPointNback` option to allow a trailing number of points from prior frames to appear.
 
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
@@ -89,6 +90,8 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 	options.secondaryPointsOverlay = [];
 	% Matrix: columns = [xpos ypos angle(degrees) magnitude], rows = frames. Both angle and magnitude are optional.
 	options.primaryTrackingPoint = [];
+	% Int: number of frames back to indicate smaller tracking points.
+	options.primaryTrackingPointNback = 20;
 	% Str: color of primary pointer tracker
 	options.primaryTrackingPointColor = 'r';
 	% Matrix: columns = [xpos ypos angle(degrees) magnitude], rows = frames. Both angle and magnitude are optional.
@@ -674,7 +677,19 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 				end
 			end
 			if ~isempty(options.primaryTrackingPoint)
-				plot(options.primaryTrackingPoint(frame,1), options.primaryTrackingPoint(frame,2), [options.primaryTrackingPointColor '+'], 'Markersize', 17)
+				if exist('plotHandle','var')==1
+					delete(plotHandle)
+					delete(plotHandle2)
+				end
+				plotHandle = plot(options.primaryTrackingPoint(frame,1), options.primaryTrackingPoint(frame,2), [options.primaryTrackingPointColor '+'], 'Markersize', 17, 'LineWidth',3);
+
+				nBack = options.primaryTrackingPointNback;
+				if frame>nBack
+					nBackVec = [-nBack:-1]+frame;
+				else
+					nBackVec = [1:frame];
+				end
+				plotHandle2 = plot(options.primaryTrackingPoint(nBackVec,1), options.primaryTrackingPoint(nBackVec,2), [options.primaryTrackingPointColor '+'], 'Markersize', 5, 'LineWidth',1);
 
 				if size(options.primaryTrackingPoint,2)>2
 					if size(options.primaryTrackingPoint,2)>3
@@ -1029,10 +1044,11 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 				warning on;
 			case 'avi'
 				if extraMovieSwitch==1
-					thisFrame = read(xyloObjExtra, frameNo);
+					thisFrame = read(xyloObjExtra, frameNo, 'native');
 				else
-					thisFrame = read(xyloObj, frameNo);
+					thisFrame = read(xyloObj, frameNo, 'native');
 				end
+				thisFrame = thisFrame.cdata;
 
 				if options.rgbDisplay==0
 					if size(thisFrame,3)==3&isempty(options.rgbChannel)
@@ -1139,13 +1155,12 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 				end
 
 				% break;
-			case 49 %'1' %skip
+			case 52 %'1' %fast switch FPS
 				if options.fps==1
 					options.fps = 60;
 				else
 					options.fps = 1;
 				end
-
 			case 115 %'s' %skip
 				frame = frame+dirChange*round(options.fps);
 			case 112 %'p' %pause

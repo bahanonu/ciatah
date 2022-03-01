@@ -13,9 +13,7 @@
 <img src="https://user-images.githubusercontent.com/5241605/117930569-03593480-b2b3-11eb-87f2-314e8ed77e94.png" align="center" onerror="this.style.display='none'" alt=''>
 <br>
 
-<p>
 `CIAtah` (pronounced cheetah; formerly <ins>c</ins>alcium<ins>I</ins>maging<ins>A</ins>nalysis [ciapkg]) is a software package for analyzing one- and two-photon calcium imaging datasets.
-</p>
 
 <img src="https://user-images.githubusercontent.com/5241605/99499485-d6dce500-292d-11eb-8c68-b089fe1985c8.png" width="42%" align="right" alt="ciatah_logo">
 

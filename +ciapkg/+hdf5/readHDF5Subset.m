@@ -21,6 +21,7 @@ function [dataSubset fid] = readHDF5Subset(inputFilePath, offset, block, varargi
 		% 2019.10.10 [12:52:54] - Add correction for frame order. Select hyperslab in HDF5 makes blocks in sorted order, so after reading the explicit offset ordering is not the original unsorted order.
 		% 2021.02.15 [12:02:36] - Updated support for files with datasets that contain 2D matrices.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2022.01.27 [13:20:04] - Fix display of information on error.
 	% TODO
 		% DONE: Make support for duplicate frames more robust so minimize the number of file reads.
 
@@ -203,14 +204,18 @@ function [dataSubset fid] = readHDF5Subset(inputFilePath, offset, block, varargi
 		disp(getReport(err,'extended','hyperlinks','on'));
 		display(repmat('@',1,7))
 
-		offsetError = cat(1,offset{:});
-		blockError = cat(1,block{:});
+		% offsetError = cat(1,offset{:});
+		% blockError = cat(1,block{:});
+
+        offsetError = [offset{:}];
+		blockError = [block{:}];
+
 		% size(offset);
 		% size(block);
-		disp(['offsetError: ' offsetError]);
-		disp(['blockError: ' blockError]);
-		disp(['offset: ' size(offset)]);
-		disp(['block: ' size(block)]);
+		disp(['offsetError: ' num2str(offsetError)]);
+		disp(['blockError: ' num2str(blockError)]);
+		disp(['offset: ' num2str(size(offset))]);
+		disp(['block: ' num2str(size(block))]);
 
 		if options.errorRun==1
 			return;

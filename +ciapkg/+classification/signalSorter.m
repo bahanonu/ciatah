@@ -75,6 +75,9 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 		% 2021.07.12 [10:14:21] - Changed call to overloaded functions to `ciapkg.overloaded` to avoid altering users Matlab workspace native functions.
 		% 2021.07.12 [11:15:06] - Change selection of cell on the maps to be instantaneous for where the mouse location is, much faster, don't have to wait for ginputCustom cross-hairs to show. Users can still show crosshairs with 'V'.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2021.12.22 [08:19:19] - Updated suptitle to ciapkg.overloaded.suptitle. Also limit number of GUI re-runs to prevent infinite looping.
+        % 2022.01.19 [12:35:42] - Fixed issue with `gca.XRuler.Axle.LineStyle` being an empty object when axes created, leading to failure to assign and error loops.
+        % 2022.02.06 [20:06:19] - Make all openFigure to ciapkg.api.openFigure.
 	% TODO
 		% DONE: New GUI interface to allow users to scroll through video and see cell activity at that point
 		% DONE: allow option to mark rest as bad signals
@@ -237,6 +240,8 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 	options.minEventsAddPeaks = 4;
 	% Int: font size of GUI elements
 	options.fontSize = 8;
+	% Int: number of times to re-run GUI in case of errors
+	options.guiReRunNo = 5;
 	% get options
 	options = getOptions(options,varargin);
 	% unpack options into current workspace
@@ -323,7 +328,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 	% pre-open all needed figures
 	for figNoFake = [1996 1997 1776 1777 1778 1779 42 1]
 		try;close(figNoFake);end
-		[~, ~] = openFigure(figNoFake, '');
+		[~, ~] = ciapkg.api.openFigure(figNoFake, '');
 		clf
 		drawnow
 	end
@@ -600,11 +605,15 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 
 	% Re-run in case of any errors or problems with the GUI
 	safeExit = 0;
-	while safeExit==0
+	% Re-run only a limited number of times to prevent infinite looping
+	nReRuns = options.guiReRunNo;
+	runNo = 1;
+	while safeExit==0&runNo<nReRuns
 		try
 			% Run the main decision-making function
 			[choices, safeExit] = chooseSignals(options,1:nSignals, inputImages,inputSignals,objMap, valid, inputStr,tmpDir,sessionID,signalPeakIdx,signalSnr,inputImagesThres,inputImageSizes,peakOutputStat,ROItraces,imgStats,inputSignalSignal,inputSignalNoise,inputImagesBoundaryIndices,signalPeakIdxOriginal,signalPeaksOriginal,instructionStr);
 		catch err
+			runNo = runNo+1;
 			disp(repmat('@',1,7))
 			disp(getReport(err,'extended','hyperlinks','on'));
 			disp(repmat('@',1,7))
@@ -612,7 +621,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 	end
 
 	% Assume all skips were good ICs that user forgot to enter
-	validChoices = choices;;
+	validChoices = choices;
 	validChoices(validChoices==-1)=1;
 	validChoices = logical(validChoices);
 
@@ -673,7 +682,7 @@ function plotSignalStatistics(inputSignals,inputImageSizes,inputStr,pointColor, 
 	if ~isempty(slopeRatio)&&~isempty(signalSnr)
 		% start plotting!
 		figNo = 1776;%AMERICA
-		[~, figNo] = openFigure(figNo, '');
+		[~, figNo] = ciapkg.api.openFigure(figNo, '');
 		hold off;
 		plot(normalizeVector(slopeRatio),'Color',[4 4 4]/5);hold on;
 		plot(normalizeVector(signalSnr),'r');
@@ -681,7 +690,7 @@ function plotSignalStatistics(inputSignals,inputImageSizes,inputStr,pointColor, 
 		hleg1 = legend('S-ratio','SNR');
 		xlabel('ic rank');ylabel('SNR');box off;hold off;
 
-		[~, figNo] = openFigure(figNo, '');
+		[~, figNo] = ciapkg.api.openFigure(figNo, '');
 		hold off;
 		plot(slopeRatio,'Color',[4 4 4]/5);hold on;
 		plot(signalSnr,'r');
@@ -689,14 +698,14 @@ function plotSignalStatistics(inputSignals,inputImageSizes,inputStr,pointColor, 
 		hleg1 = legend('S-ratio','SNR');
 		xlabel('ic rank');ylabel('SNR');box off;hold off;
 
-		[~, figNo] = openFigure(figNo, '');
+		[~, figNo] = ciapkg.api.openFigure(figNo, '');
 		scatter(signalSnr,slopeRatio,[pointColor '.']);hold on;
 		plot(signalSnr, r, 'k-');
 		title(['SNR v S-ratio for ' inputStr])
 		xlabel('SNR');ylabel('S-ratio');box off;
 		eval(holdState);
 
-		[~, figNo] = openFigure(figNo, '');
+		[~, figNo] = ciapkg.api.openFigure(figNo, '');
 		scatter3(signalSnr,slopeRatio,inputImageSizes,[pointColor '.'])
 		title(['SNR, S-ratio, filter size for ' inputStr])
 		xlabel('SNR');ylabel('S-ratio');zlabel('ic size');
@@ -1266,8 +1275,9 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 
 			plotPeakSignal(thisTrace,testpeaks,cellIDStr,instructionStr,minValTraces,maxValTraces,peakROI,peakOutputStat.avgSpikeTrace(i,:),peakOutputStat.slopeRatio(i),peakOutputStat.spikeCenterTrace{i},valid);
 			axisH = gca;
-			axisH.XRuler.Axle.LineStyle = 'none';
-			axisH.YRuler.Axle.LineStyle = 'none';
+            set(axisH,'XTick',[],'YTick',[]);
+			% axisH.XRuler.Axle.LineStyle = 'none';
+			% axisH.YRuler.Axle.LineStyle = 'none';
 			% add in the ratio of the rise/decay slopes. Should be >>1 for calcium
 
 			if i==1
@@ -1679,7 +1689,7 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 		% 'M' make a montage of peak frames
 		if isequal(reply, 109)&&~isempty(options.inputMovie)
 			try
-				% [~, ~] = openFigure(options.secondFigNo, '');
+				% [~, ~] = ciapkg.api.openFigure(options.secondFigNo, '');
 				figure(options.secondFigNo)
 				clf
 				croppedPeakImages2 = viewMontage(options.inputMovie,thisImage,options,thisTrace,[signalPeakIdx{i}],minValMovie,maxValMovie,options.cropSizeLength,i,1);
@@ -1696,7 +1706,7 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 
 				colorbar('Location','eastoutside');
 
-				suptitle('Press any key to exit')
+				ciapkg.overloaded.suptitle('Press any key to exit')
 				set(gcf,'currentch','3');
 				keyIn = get(gcf,'CurrentCharacter');
 				drawnow
@@ -1768,7 +1778,7 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 			subfxnCreateLegend();
 		% 'I' display trace with median removed
 		elseif isequal(reply, 105)
-			% [~, ~] = openFigure(options.secondFigNo, '');
+			% [~, ~] = ciapkg.api.openFigure(options.secondFigNo, '');
 			figure(options.secondFigNo)
 				clf
 				set(gcf,'currentch','3');
@@ -1783,7 +1793,7 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 				axis equal tight
 				colormap([options.colormap]);
 				colorbar
-				suptitle('Current signal source image | Press any key to exit')
+				ciapkg.overloaded.suptitle('Current signal source image | Press any key to exit')
 				drawnow
 				while strcmp(keyIn,'3')
 					keyIn = get(gcf,'CurrentCharacter');
@@ -1792,7 +1802,7 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 				close(options.secondFigNo)
 		% 'R' display trace with median removed
 		elseif isequal(reply, 114)
-			% [~, ~] = openFigure(options.secondFigNo, '');
+			% [~, ~] = ciapkg.api.openFigure(options.secondFigNo, '');
 			figure(options.secondFigNo)
 				clf
 				set(gcf,'currentch','3');
@@ -1905,7 +1915,7 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 					title('All traces')
 					% legend()
 
-				suptitle('Press any key to exit | Zoom is enabled on traces, x axes are linked')
+				ciapkg.overloaded.suptitle('Press any key to exit | Zoom is enabled on traces, x axes are linked')
 				linkaxes(linkAx,'x');
 				drawnow
 			while strcmp(keyIn,'3')
@@ -2029,7 +2039,7 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 	    end
 	end
 	function [conMenu] = subfxn_createShortcutInfo()
-		
+
 		sepMenuLins = {'','',''};
 		% {'Drag edges to resize legend window.','',''},...
 		menuListInfo = {...
@@ -2084,7 +2094,7 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 			if isempty([menuListInfo{mNo}{1}])
 		    	labelStr = [''];
 			else
-		    	labelStr = ['<HTML><PRE>' menuListInfo{mNo}{1} ' ' menuListInfo{mNo}{3} '</PRE>'];		
+		    	labelStr = ['<HTML><PRE>' menuListInfo{mNo}{1} ' ' menuListInfo{mNo}{3} '</PRE>'];
 			end
 			mitemAll{mNo} = uimenu(conMenu,'label',labelStr,'MenuSelectedFcn',@(src,evnt) subfxnUserInputGui(double(menuListInfo{mNo}{2})));
 		end
@@ -2248,26 +2258,34 @@ function [axValid, axValidAll] = subfxnSignalSorterProgressBars(i,valid,inputMov
 	validData(:,i,3) = 1;
 
 	if i==1
-		if ~isempty(axValid)
-			delete(findobj(mainFig,'Tag','colorProgressBar1'));
-		end
-		colorbar(inputMoviePlotLoc2Handle,'off')
-		s2Pos = plotboxpos(inputMoviePlotLoc2Handle);
-		cbh = colorbar(inputMoviePlotLoc2Handle,'Location','eastoutside','Position',[s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)],'FontSize',options.fontSize-2);
-		ylabel(cbh,'Fluorescence (e.g. \DeltaF/F or \DeltaF/\sigma)','FontSize',options.fontSize-1);
-
-		set(mainFig,'CurrentAxes',inputMoviePlotLocHandle);
-		s3Pos = plotboxpos(gca);
-
-		axValid = axes('Position',[s3Pos(1) 0.98 s3Pos(3) 0.02],'XTick',[],'YTick',[]);
-		validImgHandle = imagesc(axValid,validData);
-		set(axValid,'XTick',[],'YTick',[],'Tag','colorProgressBar1')
-		xlabel(['Cell (green), non-cell (red), unknown (gray) | ' 'signal ' cellIDStr ' (' num2str(sum(valid==1)) ' good)'],'FontSize',options.fontSize-2)
-
-		box off
-		axValid.XRuler.Axle.LineStyle = 'none';
-		axValid.YColor = [1,1,1,0];
-		% axValid.YRuler.Axle.LineStyle = 'none';
+        try
+		    if ~isempty(axValid)
+			    delete(findobj(mainFig,'Tag','colorProgressBar1'));
+		    end
+		    colorbar(inputMoviePlotLoc2Handle,'off')
+		    s2Pos = plotboxpos(inputMoviePlotLoc2Handle);
+		    cbh = colorbar(inputMoviePlotLoc2Handle,'Location','eastoutside','Position',[s2Pos(1)+s2Pos(3)+0.005 s2Pos(2) 0.01 s2Pos(4)],'FontSize',options.fontSize-2);
+		    ylabel(cbh,'Fluorescence (e.g. \DeltaF/F or \DeltaF/\sigma)','FontSize',options.fontSize-1);
+    
+		    set(mainFig,'CurrentAxes',inputMoviePlotLocHandle);
+		    s3Pos = plotboxpos(gca);
+    
+		    axValid = axes('Position',[s3Pos(1) 0.98 s3Pos(3) 0.02],'XTick',[],'YTick',[]);
+		    validImgHandle = imagesc(axValid,validData);
+		    set(axValid,'XTick',[],'YTick',[],'Tag','colorProgressBar1')
+		    xlabel(['Cell (green), non-cell (red), unknown (gray) | ' 'signal ' cellIDStr ' (' num2str(sum(valid==1)) ' good)'],'FontSize',options.fontSize-2)
+    
+		    box off
+            % axValid
+            set(axValid,'XTick',[],'YTick',[]);
+		    % axValid.XRuler.Axle.LineStyle = 'none';
+		    axValid.YColor = [1,1,1,0];
+		    % axValid.YRuler.Axle.LineStyle = 'none';
+        catch err
+		    disp(repmat('@',1,7))
+		    disp(getReport(err,'extended','hyperlinks','on'));
+		    disp(repmat('@',1,7))
+	    end
 	else
 		thisHandle = findobj(axValid,'Type','image');
 		set(thisHandle,'CData',validData);
@@ -2280,21 +2298,29 @@ function [axValid, axValidAll] = subfxnSignalSorterProgressBars(i,valid,inputMov
 	validData(:,validSorted==0,1) = 1;
 	validData(:,validSorted==1,2) = 1;
 	if i==1
-		if ~isempty(axValidAll)
-			delete(findobj(mainFig,'Tag','colorProgressBar2'));
-		end
-		set(mainFig,'CurrentAxes',inputMoviePlotLoc2Handle);
-		s3Pos = plotboxpos(gca);
-		axValidAll = axes('Position',[s3Pos(1) 0.98 s3Pos(3) 0.02],'XTick',[],'YTick',[]);
-		validImgHandle = imagesc(axValidAll,validData);
-		set(axValidAll,'XTick',[],'YTick',[],'Tag','colorProgressBar2')
-		% xlabel(['Percent: cell (green), non-cell (red), unknown (gray).'],'FontSize',options.fontSize-2)
-		xlabel(['<---see.'],'FontSize',options.fontSize-2)
-
-		box off
-		axValidAll.XRuler.Axle.LineStyle = 'none';
-		axValidAll.YColor = [1,1,1,0];
-		% axValidAll.YRuler.Axle.LineStyle = 'none';
+        try
+		    if ~isempty(axValidAll)
+			    delete(findobj(mainFig,'Tag','colorProgressBar2'));
+		    end
+		    set(mainFig,'CurrentAxes',inputMoviePlotLoc2Handle);
+		    s3Pos = plotboxpos(gca);
+		    axValidAll = axes('Position',[s3Pos(1) 0.98 s3Pos(3) 0.02],'XTick',[],'YTick',[]);
+		    validImgHandle = imagesc(axValidAll,validData);
+		    set(axValidAll,'XTick',[],'YTick',[],'Tag','colorProgressBar2')
+		    % xlabel(['Percent: cell (green), non-cell (red), unknown (gray).'],'FontSize',options.fontSize-2)
+		    xlabel(['<---see.'],'FontSize',options.fontSize-2)
+    
+		    box off
+            % axValidAll
+            set(axValidAll,'XTick',[],'YTick',[]);
+		    % axValidAll.XRuler.Axle.LineStyle = 'none';
+		    axValidAll.YColor = [1,1,1,0];
+		    % axValidAll.YRuler.Axle.LineStyle = 'none';
+        catch err
+		    disp(repmat('@',1,7))
+		    disp(getReport(err,'extended','hyperlinks','on'));
+		    disp(repmat('@',1,7))
+	    end
 	else
 		thisHandle = findobj(axValidAll,'Type','image');
 		set(thisHandle,'CData',validData);
@@ -2359,7 +2385,7 @@ function instructionStr = subfxnCreateLegend()
 	clf
 	set(tmpHandle,'Name','Key legend','NumberTitle','off')
 	uicontrol('style','text','string',instructionStr,'Units', 'normalized','position',[1 1 80 90]/100,'horizontalAlignment', 'left','FontSize',9)
-	suptitle('signalSorter shortcuts/legend')
+	ciapkg.overloaded.suptitle('signalSorter shortcuts/legend')
 	axis off
 
 	% s.Interpreter = 'tex';
@@ -2631,8 +2657,9 @@ function [slopeRatio] = plotPeakSignal(thisTrace,testpeaks,cellIDStr,instruction
 		uistack(h,'bottom');
 
 		axisH = gca;
-		axisH.XRuler.Axle.LineStyle = 'none';
-		axisH.YRuler.Axle.LineStyle = 'none';
+        set(axisH,'XTick',[],'YTick',[]);
+		% axisH.XRuler.Axle.LineStyle = 'none';
+		% axisH.YRuler.Axle.LineStyle = 'none';
 
 		hold off;
 	catch err

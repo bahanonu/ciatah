@@ -9,10 +9,11 @@ function [movieInfo] = getMovieInfo(inputMovie,varargin)
 
 	% changelog
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+        % 2022.01.20 [22:50:25] - Directly call loadMovieList and bypass ciapkg.api.
 	% TODO
 		%
 
-	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+	% import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	% ========================
 	% DESCRIPTION
@@ -30,7 +31,7 @@ function [movieInfo] = getMovieInfo(inputMovie,varargin)
 
 	try
 		movieInfo = [];
-		movieInfo = loadMovieList(inputMovie,'getMovieDims',1,'passArgs',varargin);
+		movieInfo = ciapkg.io.loadMovieList(inputMovie,'getMovieDims',1,'passArgs',varargin);
 	catch err
 		disp(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));

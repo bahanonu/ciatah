@@ -12,6 +12,7 @@ function [success] = modelAddOutsideDependencies(dependencyName,varargin)
 		% 2021.02.01 [??‎15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
 		% 2021.06.20 [00:20:12] - Updated to add support for ImageJ call instead of Fiji.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2021.12.26 [‏‎09:10:55] - No longer use Fiji-based Miji.
 	% TODO
 		%
 
@@ -44,7 +45,10 @@ function [success] = modelAddOutsideDependencies(dependencyName,varargin)
 						disp('Miji loaded!')
 						return;
 					end
-				end
+                end
+                
+                % No longer use Fiji-based Miji.
+                return;
 
 				if exist('Miji.m','file')==2
 					display(['Miji located in: ' which('Miji.m')]);

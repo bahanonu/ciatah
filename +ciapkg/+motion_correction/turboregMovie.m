@@ -405,7 +405,7 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	inputMovie = single(inputMovie);
 
 
-	subfxn_dispMovieFrames(inputMovie,'Registration==1');
+	subfxn_dispMovieFrames(inputMovie,'Registration==1',2);
 
 	% ========================
 	if options.removeEdges==1
@@ -987,7 +987,7 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 			end
 		end
 		if options.showFigs==1
-			subfxn_dispMovieFrames(inputMovieCropped,'Registration==0');
+			subfxn_dispMovieFrames(inputMovieCropped,'Registration==0',1);
 		end
 		% title('normalized movie');
 		% GammaValue = 2.95
@@ -997,8 +997,8 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	end
 	disp('=======')
 end
-function subfxn_dispMovieFrames(inputMovieCropped,titleStr)
-	ciapkg.api.openFigure(9019, '');
+function subfxn_dispMovieFrames(inputMovieCropped,titleStr,inputMod)
+	ciapkg.api.openFigure(9019+inputMod, '');
 	colormap gray;
 	subplot(2,2,1)
 		imagesc(squeeze(inputMovieCropped(:,:,1)));
@@ -1013,6 +1013,7 @@ function subfxn_dispMovieFrames(inputMovieCropped,titleStr)
 		axis image; box off;
 		title('Diff image #1 and #2')
 	ciapkg.overloaded.suptitle(titleStr)
+	drawnow
 end
 function cropCoords = getCropSelection(thisFrame)
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.

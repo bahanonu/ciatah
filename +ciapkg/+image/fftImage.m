@@ -30,6 +30,7 @@ function [inputImageFiltered, additionalOutput] = fftImage(inputImage,varargin)
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
 		% 2018.09.04 [17:31:47] - option to have padding optimized for power of 2, increasing fft speed by about 4.5x.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2022.02.09 [23:51:18] - Misc code fixes to conform to better Matlab language standards.
 	% TODO
 		% something...
 
@@ -74,8 +75,8 @@ function [inputImageFiltered, additionalOutput] = fftImage(inputImage,varargin)
 		additionalOutput.blank = '';
 		if options.runfftTest==0
 			% pad the array to remove edge effects
-			[imX imY] = size(inputImage);
-			[imXOriginal imYOriginal] = size(inputImage);
+			[imX, imY] = size(inputImage);
+			[imXOriginal, imYOriginal] = size(inputImage);
 			if options.padImage==1
 				if options.padImageVersion==2
 					optDim = @(x) 2^ceil(log(x)/log(2));
@@ -93,13 +94,13 @@ function [inputImageFiltered, additionalOutput] = fftImage(inputImage,varargin)
 			% mean(inputImage(:))
 			% inputImage = single(mat2gray(inputImage));
 			% mean(inputImage(:))
-			[imX imY] = size(inputImage);
+			% [imX, imY] = size(inputImage);
 			% convert to frequency spectrum
 			% tic
 			inputImageFFT = fft2(inputImage);
 			% toc
 			inputImageFFT = fftshift(inputImageFFT);
-			[imFFTX imFFTY] = size(inputImageFFT);
+			[imFFTX, imFFTY] = size(inputImageFFT);
 
 			% create mask
 			% tic
@@ -135,7 +136,7 @@ function [inputImageFiltered, additionalOutput] = fftImage(inputImage,varargin)
 						end
 					case 'binary'
 						% create binary mask, tried with fspecial but this is easier
-						[ffty fftx] = size(inputImageFFT);
+						[ffty, fftx] = size(inputImageFFT);
 						cx = round(fftx/2);
 						cy = round(ffty/2);
 						[x,y] = meshgrid(-(cx-1):(fftx-cx),-(cy-1):(ffty-cy));
@@ -154,8 +155,8 @@ function [inputImageFiltered, additionalOutput] = fftImage(inputImage,varargin)
 								% do nothing
 						end
 					otherwise
-						display('invalid option given')
-						filtered_image = inputImage;
+						disp('invalid option given')
+						inputImageFiltered = inputImage;
 						return
 				end
 			else
@@ -181,7 +182,7 @@ function [inputImageFiltered, additionalOutput] = fftImage(inputImage,varargin)
 			if options.padImage==1
 				% imXOriginal
 				 % imYOriginal
-			 	if options.padImageVersion==2
+				if options.padImageVersion==2
 					xIdx = (options.padSize(1)+1):(options.padSize(1)+imXOriginal);
 					yIdx = (options.padSize(2)+1):(options.padSize(2)+imYOriginal);
 					inputImageFiltered = inputImageFiltered(xIdx,yIdx);
@@ -200,13 +201,13 @@ function [inputImageFiltered, additionalOutput] = fftImage(inputImage,varargin)
 				if options.padImage==1
 					% imXOriginal
 					 % imYOriginal
-				 	if options.padImageVersion==2
+					if options.padImageVersion==2
 						inputImage = inputImage(xIdx,yIdx);
-				 	else
+					else
 						inputImage = inputImage(options.padSize+1:end-options.padSize,options.padSize+1:end-options.padSize);
-				 	end
+					end
 				 end
-				inputImageNorm = normalizeVector(inputImage,'normRange','zeroToOne');
+				% inputImageNorm = normalizeVector(inputImage,'normRange','zeroToOne');
 				inputImageFilteredNorm = normalizeVector(inputImageFiltered,'normRange','zeroToOne');
 				openFigure(90, '');
 				colormap(customColormap([]));
@@ -231,12 +232,12 @@ function [inputImageFiltered, additionalOutput] = fftImage(inputImage,varargin)
 				subplot(2,3,4)
 					imagesc(inputImage)
 					axis square;
-					title(['input image, mean= ' num2str(nanmean(inputImage(:)))])
+					title(['input image, mean= ' num2str(mean(inputImage(:),'omitnan'))])
 					box off;
 				subplot(2,3,5)
 					imagesc(inputImageFilteredNorm)
 					axis square;
-					title(['fft image, mean=' num2str(nanmean(inputImageFiltered(:)))])
+					title(['fft image, mean=' num2str(mean(inputImageFiltered(:),'omitnan'))])
 					box off;
 				subplot(2,3,6)
 					% imagesc(horzcat(inputImageNorm,inputImageFilteredNorm))
@@ -244,7 +245,7 @@ function [inputImageFiltered, additionalOutput] = fftImage(inputImage,varargin)
 					imageDiff = inputImage-inputImageFiltered;
 					imagesc(imageDiff);
 					axis square;
-					title(['difference, mean=' num2str(nanmean(imageDiff(:)))])
+					title(['difference, mean=' num2str(mean(imageDiff(:),'omitnan'))])
 					box off;
 				changeFont(14);
 				drawnow
@@ -259,7 +260,7 @@ function [inputImageFiltered, additionalOutput] = fftImage(inputImage,varargin)
 			nFreqs = length(freqList);
 			inputImageTest = zeros([size(inputImage,1) size(inputImage,2) nFreqs]);
 			for freq = freqList
-				freqDiff = options.highFreq - options.lowFreq;
+				% freqDiff = options.highFreq - options.lowFreq;
 				switch options.bandpassType
 					case 'highpass'
 						options.lowFreq = freq;
@@ -296,18 +297,18 @@ function fftshow2(f,type)
 	% cf=fftshift(fft2(c));
 	% fftshow(cf,'abs')
 	%
-	if nargin<2,
+	if nargin<2
 		type='log';
 	end
-	if (type=='log')
+	if strcmp(type,'log')==1
 		fl = log(1+abs(f));
 		fm = max(fl(:));
 		imagesc(im2uint8(fl/fm))
-	elseif (type=='abs')
+	elseif strcmp(type,'abs')==1
 		fa=abs(f);
 		fm=max(fa(:));
 		imagesc(fa/fm)
 	else
 		error('TYPE must be abs or log.');
-	end;
+	end
 end

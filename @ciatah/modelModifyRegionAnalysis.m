@@ -11,6 +11,7 @@ function obj = modelModifyRegionAnalysis(obj,varargin)
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
 		% 2021.06.18 [21:41:07] - added modelVarsFromFilesCheck() to check and load signals if user hasn't already.
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2022.02.28 [‏‎13:01:20] - Fix modelVarsFromFilesCheck and modelVarsFromFiles recursion edge case.
 	% TODO
 		%
 
@@ -52,7 +53,7 @@ function obj = modelModifyRegionAnalysis(obj,varargin)
 			display(repmat('=',1,21))
 			display([num2str(fileNum) '/' num2str(nFolders) ': ' obj.fileIDNameArray{obj.fileNum}]);
 
-			obj.modelVarsFromFilesCheck(fileNum);
+			% obj.modelVarsFromFilesCheck(fileNum);
 
 			if strcmp(analysisToRun,'loadPreviousSelections')
 				regionFile = getFileList(obj.inputFolders{obj.fileNum},obj.regionModSaveStr);

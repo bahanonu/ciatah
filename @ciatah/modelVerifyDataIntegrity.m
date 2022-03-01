@@ -9,6 +9,7 @@ function obj = modelVerifyDataIntegrity(obj)
 
 	% changelog
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2021.12.31 [18:59:24] - Updated suptitle to ciapkg.overloaded.suptitle.
 	% TODO
 		%
 
@@ -802,7 +803,7 @@ function obj = modelVerifyDataIntegrity(obj)
 					axis tight;
 					set(gca,'xlim',[0 lengthMovie]);
 					% ciapkg.overloaded.suptitle(thisDirSaveStr);
-					supHandle = suptitle([strrep(obj.folderBaseSaveStr{obj.fileNum},'_',' ') ' | ' fileFilterRegexp]);
+					supHandle = ciapkg.overloaded.suptitle([strrep(obj.folderBaseSaveStr{obj.fileNum},'_',' ') ' | ' fileFilterRegexp]);
 					set(supHandle, 'Interpreter', 'none');
 
 					% plot the PSD of the whole movie average

@@ -490,7 +490,7 @@ function [regCoords] = subfxnCropSelection(options,folderList)
 					[figHandle figNo] = openFigure(9, '');
 					subplot(1,2,1);imagesc(thisFrame); axis image; colormap gray; title('click, drag-n-draw region')
 					set(0,'DefaultTextInterpreter','none');
-					suptitle([num2str(fileNumIdx) '\' num2str(nFilesToRun) ': ' 10 strrep(thisDir,'\','/')]);
+					ciapkg.overloaded.suptitle([num2str(fileNumIdx) '\' num2str(nFilesToRun) ': ' 10 strrep(thisDir,'\','/')]);
 					set(0,'DefaultTextInterpreter','latex');
 
 					% Use ginput to select corner points of a rectangular

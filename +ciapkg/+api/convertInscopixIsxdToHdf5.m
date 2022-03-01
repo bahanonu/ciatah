@@ -7,6 +7,8 @@ function [success] = convertInscopixIsxdToHdf5(inputFilePath,varargin)
 		% inputMoviePath - char: path to ISXD file.
 	% outputs
 		%
+	% changelog
+		% 2022.01.26 [07:46:01] - Update +image package to +inscopix.
 
-	[success] = ciapkg.image.convertInscopixIsxdToHdf5(inputFilePath,'passArgs', varargin);
+	[success] = ciapkg.inscopix.convertInscopixIsxdToHdf5(inputFilePath,'passArgs', varargin);
 end

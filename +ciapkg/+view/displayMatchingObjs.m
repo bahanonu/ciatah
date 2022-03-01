@@ -10,6 +10,7 @@ function [matchedObjMaps euclideanStruct] = displayMatchingObjs(inputImages,glob
     % changelog
         % 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
         % 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+        % 2021.12.31 [18:59:24] - Updated suptitle to ciapkg.overloaded.suptitle
     % TODO
         %
 
@@ -222,7 +223,7 @@ function [matchedObjMaps euclideanStruct] = displayMatchingObjs(inputImages,glob
             zoom on;
             box off
 
-            suptitle(['globalID ' num2str(globalNo) '/' num2str(nGlobals) '   f:finish    left/right: forward/back'])
+            ciapkg.overloaded.suptitle(['globalID ' num2str(globalNo) '/' num2str(nGlobals) '   f:finish    left/right: forward/back'])
 
             set(gcf,'currentch','3');
             % keyIn = get(gcf,'CurrentCharacter');
