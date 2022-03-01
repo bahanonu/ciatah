@@ -1,13 +1,18 @@
 function [movieType, supported, movieType2] = getMovieFileType(thisMoviePath,varargin)
-	% Determine how to load movie, don't assume every movie in list is of the same type
+	% [movieType, supported, movieType2] = getMovieFileType(thisMoviePath,varargin)
+	%
+	% Determine whether movie is a type supported by CIAtah, don't assume every movie in list is of the same type.
+	%
 	% Biafra Ahanonu
 	% started: 2020.09.01 [‏‎14:16:57]
-	% inputs
-		% thisMoviePath - String: path to movie file.
-	% outputs
-		% movieType - Movie type
-		% supported - logical, whether movie is supported by CIAtah.
-		% movieType2 - Second movie type name (e.g. for NWB, where primary is HDF5).
+	%
+	% Inputs
+	% 	thisMoviePath - String: path to movie file.
+	%
+	% Outputs
+	% 	movieType - Movie type
+	% 	supported - logical, whether movie is supported by CIAtah.
+	% 	movieType2 - Second movie type name (e.g. for NWB, where primary is HDF5).
 
 	% changelog
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
@@ -15,6 +20,7 @@ function [movieType, supported, movieType2] = getMovieFileType(thisMoviePath,var
 		% 2022.01.04 [12:23:47] - Update all strcmp to endsWith to ensure finding file extension as there are cases where software will export metadata into files with naming schema like NAME.tif.xml for NAME.tif and this can cause issues when using strcmp without endsWith-like checks.
 		% 2022.01.04 [13:28:05] - Update docs.
 		% 2022.02.24 [09:37:55] - Added varargin support.
+		% 2022.03.01 [08:56:21] - Added support for checking if a cell was accidentally input instead of a string path along with verifying that input was a string. Added support for oir and czi/lsm Olympus and Zeiss file formats that already was in loadMovieList.
 	% TODO
 		%
 
@@ -35,11 +41,28 @@ function [movieType, supported, movieType2] = getMovieFileType(thisMoviePath,var
 	% ========================
 
 	supported = 1;
+	movieType = '';
+	movieType2 = '';
+
+	% Check to see if user input a cell array, attempt to grab string inside.
+	if iscell(thisMoviePath)
+		try
+			thisMoviePath = thisMoviePath{1};
+		catch
+			supported = 0;
+			return;
+		end
+	end
+
+	if ~ischar(thisMoviePath)
+		disp('Input not supported, input a string to full file path.')
+		supported = 0;
+		return;
+	end
+
 	try
 		[pathstr, name, ext] = fileparts(thisMoviePath);
 	catch
-		movieType = '';
-		movieType2 = '';
 		supported = 0;
 		return;
 	end
@@ -54,8 +77,12 @@ function [movieType, supported, movieType2] = getMovieFileType(thisMoviePath,var
 		movieType = 'tiff';
 	elseif endsWith(ext,'.avi','IgnoreCase',true)
 		movieType = 'avi';
-	elseif endsWith(ext,'.isxd','IgnoreCase',true)
+	elseif endsWith(ext,'.isxd','IgnoreCase',true) % Inscopix file format
 		movieType = 'isxd';
+	elseif endsWith(ext,'.oir') % Olympus file format
+		movieType = 'bioformats';
+	elseif endsWith(ext,{'.czi','.lsm'}) % Zeiss file format
+		movieType = 'bioformats';
 	else
 		movieType = '';
 		supported = 0;
