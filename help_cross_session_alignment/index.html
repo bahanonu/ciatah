@@ -216,17 +216,20 @@
             <div class="section">
               
                 <h1 id="cross-day-or-session-cell-alignment-alignment">Cross-day or -session cell alignment alignment<a class="headerlink" href="#cross-day-or-session-cell-alignment-alignment" title="Permanent link">&para;</a></h1>
+<p>The purpose of cross-session alignment is to allow users to align cells across imaging sessions (e.g. those taken on different days) and thus compare coding of cells, changing in biological variables, and other parameters across conditions and time in their data.</p>
+<p>This page details additional notes on one of the algorithms used in CIAtah, usage outside the CIAtah GUI, and other tips. The main function used to run cross-session analysis that allows users to align cells across sessions/days can be found at:</p>
+<ul>
+<li><a href="https://github.com/bahanonu/ciatah/blob/master/+ciapkg/+classification/matchObjBtwnTrials.m">https://github.com/bahanonu/ciatah/blob/master/+ciapkg/+classification/matchObjBtwnTrials.m</a></li>
+</ul>
 <p align="center">
   <strong>Stable cell alignment across imaging sessions.</strong>
 </p>
 <p align="center">
   <a href="https://user-images.githubusercontent.com/5241605/105437652-4ca74a80-5c16-11eb-893a-87ea6d53e964.gif">
-    <img src="https://user-images.githubusercontent.com/5241605/105437652-4ca74a80-5c16-11eb-893a-87ea6d53e964.gif" align="center" title="m121_matchedCells" alt="m121_matchedCells" width="20%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
+    <img src="https://user-images.githubusercontent.com/5241605/105437652-4ca74a80-5c16-11eb-893a-87ea6d53e964.gif" align="center" title="m121_matchedCells" alt="m121_matchedCells" width="40%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
   </a>
 </p>
 
-<p>The main function used to run cross-session analysis that allows users to align cells across sessions/days can be found at:
-- <a href="https://github.com/bahanonu/ciatah/blob/master/classification/matchObjBtwnTrials.m">https://github.com/bahanonu/ciatah/blob/master/classification/matchObjBtwnTrials.m</a></p>
 <p>Below is an example of what the main output from cross-session alignment, a <code>globalIDs</code> matrix containing indices matches cells across days, looks like when visualized. Each column is an imaging session and each row is an individual global cell with the color indicating that global cell's within-session number. Any black cells indicate where no match was found for that global cell in that imaging day.</p>
 <p><a href="https://user-images.githubusercontent.com/5241605/126750867-1ea1bcff-b3d1-493f-aac9-b7b7c7292796.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/126750867-1ea1bcff-b3d1-493f-aac9-b7b7c7292796.png" alt="Global cell output" width="70%"/></a></p>
 <h2 id="algorithm-overview">Algorithm overview<a class="headerlink" href="#algorithm-overview" title="Permanent link">&para;</a></h2>
