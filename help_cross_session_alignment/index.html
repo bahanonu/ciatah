@@ -216,13 +216,25 @@
             <div class="section">
               
                 <h1 id="cross-day-or-session-cell-alignment-alignment">Cross-day or -session cell alignment alignment<a class="headerlink" href="#cross-day-or-session-cell-alignment-alignment" title="Permanent link">&para;</a></h1>
+<p align="center">
+  <strong>Stable cell alignment across imaging sessions.</strong>
+</p>
+<p align="center">
+  <a href="https://user-images.githubusercontent.com/5241605/105437652-4ca74a80-5c16-11eb-893a-87ea6d53e964.gif">
+    <img src="https://user-images.githubusercontent.com/5241605/105437652-4ca74a80-5c16-11eb-893a-87ea6d53e964.gif" align="center" title="m121_matchedCells" alt="m121_matchedCells" width="20%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
+  </a>
+</p>
+
 <p>The main function used to run cross-session analysis that allows users to align cells across sessions/days can be found at:
 - <a href="https://github.com/bahanonu/ciatah/blob/master/classification/matchObjBtwnTrials.m">https://github.com/bahanonu/ciatah/blob/master/classification/matchObjBtwnTrials.m</a></p>
+<p>Below is an example of what the main output from cross-session alignment, a <code>globalIDs</code> matrix containing indices matches cells across days, looks like when visualized. Each column is an imaging session and each row is an individual global cell with the color indicating that global cell's within-session number. Any black cells indicate where no match was found for that global cell in that imaging day.</p>
+<p><a href="https://user-images.githubusercontent.com/5241605/126750867-1ea1bcff-b3d1-493f-aac9-b7b7c7292796.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/126750867-1ea1bcff-b3d1-493f-aac9-b7b7c7292796.png" alt="Global cell output" width="70%"/></a></p>
 <h2 id="algorithm-overview">Algorithm overview<a class="headerlink" href="#algorithm-overview" title="Permanent link">&para;</a></h2>
 <p>For details, see <strong>Cross-day analysis of BLA neuronal activity</strong> methods section in the Corder<em>, Ahanonu</em>, et al. <em>Science</em>, 2019:</p>
 <ul>
 <li><a href="http://science.sciencemag.org/content/sci/suppl/2019/01/16/363.6424.276.DC1/aap8586_Corder_SM.pdf#page=10">http://science.sciencemag.org/content/sci/suppl/2019/01/16/363.6424.276.DC1/aap8586_Corder_SM.pdf#page=10</a>.</li>
 </ul>
+<p>We will also have details in an forthcoming imaging experiments and analysis book chapter.</p>
 <!-- ![image](https://user-images.githubusercontent.com/5241605/51709763-21b09e80-1fdc-11e9-9332-1d52c9ed6bd5.png) -->
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/126744851-cd6e64ab-9b83-40bf-aa38-2301276f0ccf.png" /></p>
 <p>Below is a general description of the algorithm/method used to match cells across sessions and references the above figure. A reference to the associated book chapter will be added in the future.</p>
