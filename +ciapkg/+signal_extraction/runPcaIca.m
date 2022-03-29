@@ -14,6 +14,7 @@ function [pcaicaAnalysisOutput] = runPcaIca(inputMovie,nPCs,nICs,varargin)
 	% changelog
 		% 2020.10.14 [13:52:47] - Updated to complete conversion from class to independent function.
 		% 2020.10.17 [19:05:12] - Additional updates to deal with matrix inputs and give additional information for each PCA-ICA version output.
+		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 	% TODO
 		%
 
@@ -59,12 +60,12 @@ function [pcaicaAnalysisOutput] = runPcaIca(inputMovie,nPCs,nICs,varargin)
 		if options.version==1
 			disp('running PCA-ICA, old version...')
 			startTime = tic;
-			[PcaFilters, PcaTraces] = runPCA(inputMovie, '', nPCs, options.fileFilterRegexp,'inputDatasetName',options.inputDatasetName,'frameList',options.frameList);
+			[PcaFilters, PcaTraces] = ciapkg.signal_extraction.pca_ica.runPCA(inputMovie, '', nPCs, options.fileFilterRegexp,'inputDatasetName',options.inputDatasetName,'frameList',options.frameList);
 			if isempty(PcaFilters)
 				disp('PCs are empty, skipping...')
 				return;
 			end
-			[IcaFilters, IcaTraces, IcaInfo] = runICA(PcaFilters, PcaTraces, '', nICs, '');
+			[IcaFilters, IcaTraces, IcaInfo] = ciapkg.signal_extraction.pca_ica.runICA(PcaFilters, PcaTraces, '', nICs, '');
 			pcaicaAnalysisOutput.IcaInfo = IcaInfo;
 			traceSaveDimOrder = '[nComponents frames]';
 			% reorder if needed
@@ -78,7 +79,7 @@ function [pcaicaAnalysisOutput] = runPcaIca(inputMovie,nPCs,nICs,varargin)
 		elseif options.version==2
 			disp('running PCA-ICA, new version...')
 			startTime = tic;
-			[PcaOutputSpatial, PcaOutputTemporal, PcaOutputSingularValues, PcaInfo] = run_pca(inputMovie, nPCs, 'movie_dataset_name',options.inputDatasetName,'frameList',options.frameList);
+			[PcaOutputSpatial, PcaOutputTemporal, PcaOutputSingularValues, PcaInfo] = ciapkg.signal_extraction.pca_ica_2.run_pca(inputMovie, nPCs, 'movie_dataset_name',options.inputDatasetName,'frameList',options.frameList);
 
 			if isempty(PcaOutputTemporal)
 				disp('PCs are empty, skipping...')
@@ -99,7 +100,7 @@ function [pcaicaAnalysisOutput] = runPcaIca(inputMovie,nPCs,nICs,varargin)
 			% output_units = 'std';
 			% options.PCAICA.term_tol = 5e-6;
 			% options.PCAICA.max_iter = 1e3;
-			[IcaFilters, IcaTraces, IcaInfo] = run_ica(...
+			[IcaFilters, IcaTraces, IcaInfo] = ciapkg.signal_extraction.pca_ica_2.run_ica(...
 				PcaOutputSpatial,...
 				PcaOutputTemporal,...
 				PcaOutputSingularValues,...
