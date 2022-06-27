@@ -11,6 +11,7 @@ function obj = initializeObj(obj)
 		% 2020.06.05 [11:29:24] - Improved toolbox check.
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2021.11.16 [11:13:07] - Wrap calls to diverging_map to avoid potential ciatah initialization errors on macOS.
+		% 2022.06.27 [12:48:22] - Ensure all save paths (pics, data, log, settings, video, etc.) use absolute CIAtah private directory to match CIAtah default properties initialization and to avoid instances where users have non-CIAtah root path working directory.
 	% TODO
 		%
 
@@ -47,11 +48,11 @@ function obj = initializeObj(obj)
 	disp(repmat('*',1,42))
 
 	% Ensure date paths are up to date
-	obj.picsSavePath = ['private' filesep 'pics' filesep datestr(now,'yyyymmdd','local') filesep];
-	obj.dataSavePath = ['private' filesep 'data' filesep datestr(now,'yyyymmdd','local') filesep];
-	obj.logSavePath = ['private' filesep 'logs' filesep datestr(now,'yyyymmdd','local') filesep];
-	obj.settingsSavePath = ['private' filesep 'settings'];
-	obj.videoSaveDir = ['private' filesep 'vids' filesep datestr(now,'yyyymmdd','local') filesep];
+	obj.picsSavePath = [ciapkg.getDir() filesep 'private' filesep 'pics' filesep datestr(now,'yyyymmdd','local') filesep];
+	obj.dataSavePath = [ciapkg.getDir() filesep 'private' filesep 'data' filesep datestr(now,'yyyymmdd','local') filesep];
+	obj.logSavePath = [ciapkg.getDir() filesep 'private' filesep 'logs' filesep datestr(now,'yyyymmdd','local') filesep];
+	obj.settingsSavePath = [ciapkg.getDir() filesep 'private' filesep 'settings'];
+	obj.videoSaveDir = [ciapkg.getDir() filesep 'private' filesep 'vids' filesep datestr(now,'yyyymmdd','local') filesep];
 
 	% ensure private folders are set
 	if ~exist(obj.picsSavePath,'dir');mkdir(obj.picsSavePath);fprintf('Creating directory: %s\n',obj.picsSavePath);end
