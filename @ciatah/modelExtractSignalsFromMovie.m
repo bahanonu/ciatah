@@ -20,7 +20,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		% 2019.10.29 [17:21:23] - Added a check to make sure that filenames produced are valid MATLAB ones for settings, e.g. for CNMF-e.
 		% 2019.11.10 [20:34:42] - Add a warning with some common tips for users if error during cell extraction. Skip modelVarsFromFiles and viewObjmaps loading to reduce user confusion for any folders that had issues during cell extraction.
 		% 2020.05.08 [20:01:52] - Make creation of settings an explicit option that the user can change.
-		% 2021.02.01 [??‎15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
+		% 2021.02.01 [15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
 		% 2021.02.25 [16:44:41] - Update `saveRunTimes` to handle case in which user selects multiple movies for cell extraction.
 		% 2021.03.20 [19:23:25] - Convert ndSparse outputs to single from cell-extraction algorithms (e.g. for CELLMax/EXTRACT) when saving as NWB. Updated EXTRACT support to include additional options.
 		% 2021.04.08 [16:23:20] - Use filesep in getAlgorithmRootPath to avoid issues in Unix-based systems.
@@ -29,6 +29,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2021.11.08 [12:42:12] - Add nwbpkg support.
 		% 2021.11.09 [15:29:01] - Updated EXTRACT support.
+		% 2022.06.27 [15:33:57] - matlab.desktop.editor.openDocument no longer uses pwd since options.settingsPrivateSaveFolder is based on an absolute path.
 	% TODO
 		%
 
@@ -1041,7 +1042,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 						end
 						fclose(fileID);
 
-						h1 = matlab.desktop.editor.openDocument([pwd filesep newSettings]);
+						h1 = matlab.desktop.editor.openDocument([newSettings]);
 						disp(['Close "' newFile '.m" file in Editor to continue!'])
 						% pause while user edits
 						while h1.Opened==1;end

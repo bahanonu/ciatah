@@ -25,6 +25,9 @@
 
 Below are recordings and additional documents for users who want to learn more about calcium imaging analysis/experiments and the CIAtah pipeline.
 
+<ins> __Book chapter__ </ins> — We have a book chapter that goes over all steps of miniscope imaging: viral injections, GRIN lens probe implant, pain experimental design, data processing and neural/behavioral analysis, and more.
+- See [Ahanonu, B., Corder, G. (2022). _Recording Pain-Related Brain Activity in Behaving Animals Using Calcium Imaging and Miniature Microscopes_](https://doi.org/10.1007/978-1-0716-2039-7_13) (https://doi.org/10.1007/978-1-0716-2039-7_13).
+
 <ins>__Webinar__</ins> — This webinar gives an overview of calcium imaging analysis (with a focus on CIAtah) along with tips for improving experiments and analysis: https://info.inscopix.com/inscopix-inspire-view-webinarbiafra-ahanonu-signal-in-the-noise-distinguishing-relevant-neural-activity-in-calcium-imaging.
 
 <ins>__Workshop tutorial__</ins> — This recording gives an overview of setting up and using CIAtah: https://www.youtube.com/watch?v=I6abW3uuJJw.
@@ -66,6 +69,7 @@ Made in USA.<br>
 - Includes all major calcium imaging analysis steps:
   - Movie visualization (including reading from disk, for fast viewing of large movies);
   - pre-processing (motion correction, spatiotemporal downsampling, spatial filtering, relative fluorescence calculation, etc.);
+   <!-- - Pre-processing supports read-from-disk based analysis for movies that are too large to fit into RAM. -->
   - support for multiple cell-extraction methods (CELLMax, PCA-ICA, <a href='https://github.com/flatironinstitute/CaImAn-MATLAB' target='_blank'>CNMF</a>, CNMF-E, <a href='https://github.com/schnitzer-lab/EXTRACT-public' target='_blank'>EXTRACT</a>, etc.);
   - manual classification of cells via GUIs;
   - automated cell classification (i.e. CLEAN algorithm, coming soon!);
@@ -161,6 +165,12 @@ ciapkg.io.matlabToolboxCheck();
 
 ### Setup `CIAtah`
 
+- Download and install `CIAtah` dependencies. These will all be located in the `_external_programs` sub-folder within the CIAtah main code directory.
+
+```MATLAB
+ciapkg.io.loadDependencies;
+```
+
 - Run `CIAtah` using the below MATLAB commands. Call `obj;` in the MATLAB command window each time you want to go back to the main GUI. __Note: `calciumImagingAnalysis` class is now called `ciatah`, all functionality is the same.__
 
 ```MATLAB
@@ -245,6 +255,19 @@ Please cite [Corder*, Ahanonu*, et al. 2019](http://science.sciencemag.org/conte
 }
 ```
 
+Please cite the [Ahanonu and Corder, 2022](https://doi.org/10.1007/978-1-0716-2039-7_13) book chapter if you used procedures detailed therein.
+
+```bibtex
+@incollection{ahanonu2022recording,
+  title={Recording Pain-Related Brain Activity in Behaving Animals Using Calcium Imaging and Miniature Microscopes},
+  author={Ahanonu, Biafra and Corder, Gregory},
+  booktitle={Contemporary Approaches to the Study of Pain},
+  pages={217--276},
+  year={2022},
+  publisher={Springer}
+}
+```
+
 Please see https://bahanonu.github.io/ciatah/references/ for additional references depending on processing steps undertaken.
 
 <!-- 
@@ -274,4 +297,6 @@ This project is licensed under the terms of the MIT license. See LICENSE file fo
 ## Repository stats
 - ![visitors](https://visitor-badge.glitch.me/badge?page_id=bahanonu.calciumImagingAnalysis) (starting 2020.09.22)
 - ![Hits](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https%3A%2F%2Fgithub.com%2Fbahanonu%2FcalciumImagingAnalysis) (starting 2020.09.16)
+- ![visitors](https://page-views.glitch.me/badge?page_id=bahanonu.ciatah) (starting 2022.03.02, backup)
+- ![visitors](https://visitor-badge.deta.dev/badge?page_id=bahanonu.ciatah&left_color=gray&right_color=red) (starting 2022.03.02, backup)
 <!-- - [![HitCount](http://hits.dwyl.com/bahanonu/calciumImagingAnalysis.svg)](http://hits.dwyl.com/bahanonu/calciumImagingAnalysis) (starting 2020.08.16), frozen til `dwyl` migrates to new server. -->
