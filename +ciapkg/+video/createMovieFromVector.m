@@ -11,6 +11,7 @@ function [vectorMovie] = createMovieFromVector(inputVector,movieDim,varargin)
 	% changelog
 		% 2021.05.04 [09:29:19] - Users can now manually change value assigned to center line or signal.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2022.08.02 [08:38:38] - Fixed issue where the min 2nd dimension would always be options.windowSize, leading to errors.
 	% TODO
 		%
 
@@ -55,7 +56,7 @@ function [vectorMovie] = createMovieFromVector(inputVector,movieDim,varargin)
 		reverseStr = '';
 		% amount to downsample the second dimension
 		movieDimY = round(movieDim(1)/options.secondDimDownsample);
-
+		size(vectorMovie)
 		for frameNo = 1:nFrames
 			frameVectorIdx = windowSize+frameNo;
 
@@ -65,6 +66,8 @@ function [vectorMovie] = createMovieFromVector(inputVector,movieDim,varargin)
 			frameVectorIdx(frameVectorIdx>nFrames) = 0;
 			% frameVectorIdx(frameVectorIdx==0) = frameVectorIdx(find(frameVectorIdx,1,'last'));
 
+			thisFrame = vectorMovie(:,:,frameNo);
+
 			% add each time point in vector to movie
 			for thisFrameVectorNo = 1:length(frameVectorIdx)
 				if frameVectorIdx(thisFrameVectorNo)==0
@@ -73,11 +76,13 @@ function [vectorMovie] = createMovieFromVector(inputVector,movieDim,varargin)
 					relativeStimValue = round(inputVector(frameVectorIdx(thisFrameVectorNo))*movieDimY);
 				end
 				% add relative (to max) value of vector to movie
-				vectorMovie(1:relativeStimValue,thisFrameVectorNo,frameNo) = options.signalValue;
+				% vectorMovie(1:relativeStimValue,thisFrameVectorNo,frameNo) = options.signalValue;
+				thisFrame(1:relativeStimValue,thisFrameVectorNo) = options.signalValue;
 			end
 
 			% resize vector movie to match movie dimensions given
-			vectorMovie(:,:,frameNo) = imresize(vectorMovie(:,1:length(frameVectorIdx),frameNo),[movieDimY movieDim(2)],'bilinear');
+			% vectorMovie(:,:,frameNo) = imresize(vectorMovie(:,1:length(frameVectorIdx),frameNo),[movieDimY movieDim(2)],'bilinear');
+			vectorMovie(:,:,frameNo) = imresize(thisFrame(:,1:length(frameVectorIdx)),[movieDimY movieDim(2)],'bilinear');
 			vectorMovie(:,round(end/2),frameNo) = options.centerLineValue;
 
 			reverseStr = cmdWaitbar(frameNo,nFrames,reverseStr,'inputStr','creating matrix: ','waitbarOn',1,'displayEvery',50);

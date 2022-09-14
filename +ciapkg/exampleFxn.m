@@ -1,20 +1,25 @@
 function [output1,output2] = exampleFxn(input1,input2,varargin)
-	% EXAMPLEFXN(input1,input2,varargin)
+	% [output1,output2] = EXAMPLEFXN(input1,input2,varargin)
 	% 
 	% DESCRIPTION.
 	% 
 	% Biafra Ahanonu
 	% started: INSERT_DATE
 	% 
-	% inputs
+	% Inputs
 	% 	input1
 	% 	input2
-	% outputs
+	% 
+	% Outputs
 	% 	output1
 	% 	output2
+	% 
+	% Options (input as Name-Value with Name = options.(Name))
+	% 	% DESCRIPTION
+	% 	options.exampleOption = '';
 
-	% changelog
-		%
+	% Changelog
+		% 2022.03.14 [01:47:04] - Added nested and local functions to the example function.
 	% TODO
 		%
 
@@ -23,7 +28,7 @@ function [output1,output2] = exampleFxn(input1,input2,varargin)
 	options.exampleOption = '';
 	% get options
 	options = ciapkg.io.getOptions(options,varargin);
-	% display(options)
+	% disp(options)
 	% unpack options into current workspace
 	% fn=fieldnames(options);
 	% for i=1:length(fn)
@@ -38,7 +43,16 @@ function [output1,output2] = exampleFxn(input1,input2,varargin)
 		disp(getReport(err,'extended','hyperlinks','on'));
 		disp(repmat('@',1,7))
 	end
+
+	function [outputs] = nestedfxn_exampleFxn(arg)
+		% Always start nested functions with "nestedfxn_" prefix.
+		% outputs = ;
+	end	
 end
+function [outputs] = localfxn_exampleFxn(arg)
+	% Always start local functions with "localfxn_" prefix.
+	% outputs = ;
+end	
 
 % CIAtah method
 function obj = functionName(obj,varargin)

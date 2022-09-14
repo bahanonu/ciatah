@@ -1,13 +1,34 @@
 # Cross-day or -session cell alignment alignment
 
-The main function used to run cross-session analysis that allows users to align cells across sessions/days can be found at:
-- https://github.com/bahanonu/ciatah/blob/master/classification/matchObjBtwnTrials.m
+The purpose of cross-session alignment is to allow users to align cells across imaging sessions (e.g. those taken on different days) and thus compare coding of cells, changing in biological variables, and other parameters across conditions and time in their data.
+
+This page details additional notes on one of the algorithms used in CIAtah, usage outside the CIAtah GUI, and other tips. The main function used to run cross-session analysis that allows users to align cells across sessions/days can be found at:
+
+- https://github.com/bahanonu/ciatah/blob/master/+ciapkg/+classification/matchObjBtwnTrials.m
+
+<p align="center">
+  <strong>Stable cell alignment across imaging sessions.</strong>
+</p>
+<p align="center">
+  <a href="https://user-images.githubusercontent.com/5241605/105437652-4ca74a80-5c16-11eb-893a-87ea6d53e964.gif">
+    <img src="https://user-images.githubusercontent.com/5241605/105437652-4ca74a80-5c16-11eb-893a-87ea6d53e964.gif" align="center" title="m121_matchedCells" alt="m121_matchedCells" width="40%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
+  </a>
+</p>
+
+
+
+Below is an example of what the main output from cross-session alignment, a `globalIDs` matrix containing indices matches cells across days, looks like when visualized. Each column is an imaging session and each row is an individual global cell with the color indicating that global cell's within-session number. Any black cells indicate where no match was found for that global cell in that imaging day.
+
+<a href="https://user-images.githubusercontent.com/5241605/126750867-1ea1bcff-b3d1-493f-aac9-b7b7c7292796.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/126750867-1ea1bcff-b3d1-493f-aac9-b7b7c7292796.png" alt="Global cell output" width="70%"/></a>
+
 
 ## Algorithm overview
 
 For details, see __Cross-day analysis of BLA neuronal activity__ methods section in the Corder*, Ahanonu*, et al. _Science_, 2019:
 
 - http://science.sciencemag.org/content/sci/suppl/2019/01/16/363.6424.276.DC1/aap8586_Corder_SM.pdf#page=10.
+
+We will also have details in an forthcoming imaging experiments and analysis book chapter.
 
 <!-- ![image](https://user-images.githubusercontent.com/5241605/51709763-21b09e80-1fdc-11e9-9332-1d52c9ed6bd5.png) -->
 ![image](https://user-images.githubusercontent.com/5241605/126744851-cd6e64ab-9b83-40bf-aa38-2301276f0ccf.png)

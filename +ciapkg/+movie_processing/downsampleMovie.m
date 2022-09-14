@@ -1,27 +1,34 @@
 function [inputMovie] = downsampleMovie(inputMovie, varargin)
+	% [inputMovie] = downsampleMovie(inputMovie, varargin)
+	%
 	% Downsamples a movie in either space or time, uses floor to calculate downsampled dimensions.
+	%
 	% Biafra Ahanonu
 	% started 2013.11.09 [09:31:32]
 	%
 	% inputs
-		% inputMovie: a NxMxP matrix
+	%	inputMovie: a [x y t] matrix.
 	% options
-		% downsampleType
-		% downsampleFactor - amount to downsample in time
+	%	downsampleDimension - Str: 'time' or 'space'. Dimension to downsample
+	%	downsampleType - Str: 'bilinear' or 'bicubic'. Type of downsampling.
+	%	downsampleFactor - Int or float: amount to downsample dimension by.
+	%
 	% changelog
 		% 2013.12.19 added the spatial downsampling to the function.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2022.02.09 [23:42:18] - Update for Matlab standards.
+		% 2022.06.28 [16:58:08] - Update information for users/comments.
 	% TODO
 
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% default options
-	% time or space
+	% Str: 'time' or 'space'. Dimension to downsample
 	options.downsampleDimension = 'time';
+	% Str: 'bilinear' or 'bicubic'. Type of downsampling.
 	options.downsampleType = 'bilinear';
-	% any value, integers preferred
+	% Int or float: amount to downsample dimension by.
 	options.downsampleFactor = 4;
 	% exact dimensions to downsample in Z (time)
 	options.downsampleZ = [];

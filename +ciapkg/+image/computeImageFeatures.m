@@ -1,12 +1,18 @@
 function [imgStats] = computeImageFeatures(inputImages, varargin)
+	% [imgStats] = computeImageFeatures(inputImages, varargin)
+	% 
 	% Filters large and small objects in an set of images, returns filtered matricies along with vector with decisions and sizes.
+	% 
 	% Biafra Ahanonu
 	% 2013.10.31
 	% based on SpikeE code
+	% 
 	% inputs
 	%   inputImages - [x y nSignals]
+	% 
 	% outputs
 	%   imgStats -
+	% 
 	% options
 	%   minNumPixels
 	%   maxNumPixels
@@ -17,8 +23,10 @@ function [imgStats] = computeImageFeatures(inputImages, varargin)
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
 		% 2019.07.17 [00:29:16] - Added support for sparse input images (mainly ndSparse format).
 		% 2019.09.10 [20:51:00] - Converted to parfor and removed unpacking options, bad practice.
-        % 2019.10.02 [21:25:36] - Updated addedFeatures support for parfor and allowed this feature to be properly accessed by users.
+		% 2019.10.02 [21:25:36] - Updated addedFeatures support for parfor and allowed this feature to be properly accessed by users.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2022.04.13 [02:28:15] - Make default thresholding fast thresholding.
+		% 2022.07.20 [14:42:00] - Improved annotation of code and added options.fastThresholding. Also by default plots are not made. Refactored extra features code and finding centroid to avoid unnecessary function calls, speeding up code.
 	% TODO
 		%
 
@@ -28,7 +36,7 @@ function [imgStats] = computeImageFeatures(inputImages, varargin)
 	% get options
 	options.minNumPixels = 25;
 	options.maxNumPixels = 600;
-	options.makePlots = 1;
+	options.makePlots = 0;
 	options.waitbarOn = 1;
 	options.thresholdImages = 1;
 	options.threshold = 0.5;
@@ -40,11 +48,18 @@ function [imgStats] = computeImageFeatures(inputImages, varargin)
 	% Input images for add features
 	options.addedFeaturesInputImages = [];
 	options.runRegionprops = 1;
-
+	% 
 	options.xCoords = [];
 	options.yCoords = [];
-
+	% 
 	options.parforAltSwitch = 0;
+	% Binary: 1 = fast thresholding (vectorized), 0 = normal thresholding
+	options.fastThresholding = 1;
+	% image filter: none, median,
+	options.imageFilter = 'none';
+
+	% Binary: 1 = whether to display info on command line.
+	options.displayInfo = 1;
 
 	options = getOptions(options,varargin);
 	% unpack options into current workspace
@@ -72,15 +87,7 @@ function [imgStats] = computeImageFeatures(inputImages, varargin)
 		if options.addedFeatures==1&&isempty(options.addedFeaturesInputImages)
 			options.addedFeaturesInputImages = inputImages;
 		end
-		inputImages = thresholdImages(inputImages,'waitbarOn',1,'binary',1,'threshold',options.threshold);
-	end
-
-	% get the centroids and other info for movie
-	if isempty(options.xCoords)
-		[xCoords, yCoords] = findCentroid(inputImages,'waitbarOn',options.waitbarOn,'runImageThreshold',0);
-	else
-		xCoords = options.xCoords;
-		yCoords = options.yCoords;
+		inputImages = thresholdImages(inputImages,'waitbarOn',1,'binary',1,'threshold',options.threshold,'fastThresholding',options.fastThresholding,'removeUnconnected',1,'imageFilter',options.imageFilter);
 	end
 
 	% Only implement in Matlab 2017a and above
@@ -97,7 +104,9 @@ function [imgStats] = computeImageFeatures(inputImages, varargin)
 	options_waitbarOn = options.waitbarOn;
 
 	% loop over images and get their stats
-	disp('Computing image features...')
+	if options.displayInfo==1
+		disp('Computing image features...')
+	end
 	regionStat = cell([nImages 1]);
 	if options_runRegionprops==1
 		% ticBytes(gcp)
@@ -110,18 +119,6 @@ function [imgStats] = computeImageFeatures(inputImages, varargin)
 				thisFilt = full(thisFilt);
 			end
 			regionStat{imageNo} = regionprops(thisFilt, options_featureList);
-			% regionStat
-			% figure;imagesc(inputImages(:,:,imageNo));
-			% for ifeature = featureList
-			% 	% regionStat = regionprops(iImage, ifeature{1});
-			% 	try
-			% 		% eval(['imgStats.' ifeature{1} '(imageNo) = regionStat.' ifeature{1} ';']);
-			% 		imgStats.(ifeature{1})(imageNo) = regionStat.(ifeature{1});
-			% 	catch
-			% 		% eval(['imgStats.' ifeature{1} '(imageNo) = NaN;']);
-			% 		imgStats.(ifeature{1})(imageNo) = NaN;
-			% 	end
-			% end
 			if ~verLessThan('matlab', '9.2')
 				send(D, imageNo); % Update
 			end
@@ -131,7 +128,9 @@ function [imgStats] = computeImageFeatures(inputImages, varargin)
 
 		% Add region states to the general pool
 		if ~verLessThan('matlab', '9.2'); p=1;end
-		disp('Adding regionprops features to output...')
+		if options.displayInfo==1
+			disp('Adding regionprops features to output...')
+		end
 		for imageNo = 1:nImages
 			for ifeature = options_featureList
 				% regionStat = regionprops(iImage, ifeature{1});
@@ -152,12 +151,23 @@ function [imgStats] = computeImageFeatures(inputImages, varargin)
 
 	if ~verLessThan('matlab', '9.2'); p=1;end
 
-	if parforAltSwitch==1
-        disp('Computing alternative image features with parfor...')
-		imgKurtosis = NaN([1 nImages]);
-		imgSkewness = NaN([1 nImages]);
-		if options.addedFeatures==1
-            addedFeaturesInputImages = options.addedFeaturesInputImages;
+
+	if options.addedFeatures==1
+		% get the centroids and other info for movie
+		if isempty(options.xCoords)
+			[xCoords, yCoords] = findCentroid(inputImages,'waitbarOn',options.waitbarOn,'runImageThreshold',0);
+		else
+			xCoords = options.xCoords;
+			yCoords = options.yCoords;
+		end
+
+		if parforAltSwitch==1
+			imgKurtosis = NaN([1 nImages]);
+			imgSkewness = NaN([1 nImages]);
+			if options.displayInfo==1
+				disp('Computing alternative image features with parfor...')
+			end
+			addedFeaturesInputImages = options.addedFeaturesInputImages;
 			parfor imageNo = 1:nImages
 				thisFilt = addedFeaturesInputImages(:,:,imageNo);
 				if issparse(thisFilt)
@@ -179,11 +189,11 @@ function [imgStats] = computeImageFeatures(inputImages, varargin)
 
 			imgStats.imgKurtosis = imgKurtosis;
 			imgStats.imgSkewness = imgSkewness;
-		end
-    else
-        disp('Computing alternative image features...')
-		for imageNo = 1:nImages
-			if options.addedFeatures==1
+		else
+			if options.displayInfo==1
+				disp('Computing alternative image features...')
+			end
+			for imageNo = 1:nImages
 				% iImage2 = squeeze(options.addedFeaturesInputImages(:,:,imageNo));
 				% figure(11);imagesc(iImage2);title(num2str(imageNo))
 				% [imageNo xCoords(imageNo) yCoords(imageNo)]
@@ -203,22 +213,9 @@ function [imgStats] = computeImageFeatures(inputImages, varargin)
 				end
 				% imgStats.imgKurtosis(imageNo) = kurtosis(iImage(:));
 				% imgStats.imgSkewness(imageNo) = skewness(iImage(:));
-			else
-
-			end
-			% regionStat = regionprops(iImage, 'Eccentricity','EquivDiameter','Area','Orientation','Perimeter','Solidity');
-			% imgStats.Eccentricity(imageNo) = regionStat.Eccentricity;
-			% imgStats.EquivDiameter(imageNo) = regionStat.EquivDiameter;
-			% imgStats.Area(imageNo) = regionStat.Area;
-			% imgStats.Orientation(imageNo) = regionStat.Orientation;
-			% imgStats.Perimeter(imageNo) = regionStat.Perimeter;
-			% imgStats.Solidity(imageNo) = regionStat.Solidity;
-
-			% if (imageNo==1||mod(imageNo,10)==0||imageNo==nImages)&&options.waitbarOn==1
-			% 	reverseStr = cmdWaitbar(imageNo,nImages,reverseStr,'inputStr','computing image features');
-			% end
-			if ~verLessThan('matlab', '9.2')
-				send(D, imageNo); % Update
+				if ~verLessThan('matlab', '9.2')
+					send(D, imageNo); % Update
+				end
 			end
 		end
 	end
@@ -260,15 +257,6 @@ function [imgStats] = computeImageFeatures(inputImages, varargin)
 					xlabel('rank'); ylabel(fn{i})
 					hold off
 				end
-
-				% subplot(2,1,1)
-				% scatter3(imgStats.Eccentricity(valid),imgStats.Perimeter(valid),imgStats.Orientation(valid),[pointColor '.'])
-				% xlabel('Eccentricity');ylabel('perimeter');zlabel('Orientation');
-				% rotate3d on;hold on;
-				% subplot(2,1,2)
-				% scatter3(imgStats.Area(valid),imgStats.Perimeter(valid),imgStats.Solidity(valid),[pointColor '.'])
-				% xlabel('area');ylabel('perimeter');zlabel('solidity');
-				% rotate3d on;hold on;
 			end
 
 	end
@@ -289,3 +277,40 @@ function [imgStats] = computeImageFeatures(inputImages, varargin)
 		end
 	end
 end
+
+% OLD code
+
+
+% regionStat
+% figure;imagesc(inputImages(:,:,imageNo));
+% for ifeature = featureList
+% 	% regionStat = regionprops(iImage, ifeature{1});
+% 	try
+% 		% eval(['imgStats.' ifeature{1} '(imageNo) = regionStat.' ifeature{1} ';']);
+% 		imgStats.(ifeature{1})(imageNo) = regionStat.(ifeature{1});
+% 	catch
+% 		% eval(['imgStats.' ifeature{1} '(imageNo) = NaN;']);
+% 		imgStats.(ifeature{1})(imageNo) = NaN;
+% 	end
+% end
+
+% regionStat = regionprops(iImage, 'Eccentricity','EquivDiameter','Area','Orientation','Perimeter','Solidity');
+% imgStats.Eccentricity(imageNo) = regionStat.Eccentricity;
+% imgStats.EquivDiameter(imageNo) = regionStat.EquivDiameter;
+% imgStats.Area(imageNo) = regionStat.Area;
+% imgStats.Orientation(imageNo) = regionStat.Orientation;
+% imgStats.Perimeter(imageNo) = regionStat.Perimeter;
+% imgStats.Solidity(imageNo) = regionStat.Solidity;
+
+% if (imageNo==1||mod(imageNo,10)==0||imageNo==nImages)&&options.waitbarOn==1
+% 	reverseStr = cmdWaitbar(imageNo,nImages,reverseStr,'inputStr','computing image features');
+% end
+
+% subplot(2,1,1)
+% scatter3(imgStats.Eccentricity(valid),imgStats.Perimeter(valid),imgStats.Orientation(valid),[pointColor '.'])
+% xlabel('Eccentricity');ylabel('perimeter');zlabel('Orientation');
+% rotate3d on;hold on;
+% subplot(2,1,2)
+% scatter3(imgStats.Area(valid),imgStats.Perimeter(valid),imgStats.Solidity(valid),[pointColor '.'])
+% xlabel('area');ylabel('perimeter');zlabel('solidity');
+% rotate3d on;hold on;

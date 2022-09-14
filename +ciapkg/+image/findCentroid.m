@@ -12,6 +12,8 @@ function [xCoords yCoords allCoords] = findCentroid(inputMatrix,varargin)
 		% 2016.08.06 - some changes to speed up algorithm by using thresholded rather than weighted sum of image.
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2022.04.13 [02:28:15] - Make default thresholding fast thresholding.
+		% 2022.04.23 [17:30:06] - Update to ensure threshold based on max value if user inputs non-normalized (e.g. distribution forced to zero to one) thresholded images.
 	% TODO
 		%
 
@@ -53,7 +55,7 @@ function [xCoords yCoords allCoords] = findCentroid(inputMatrix,varargin)
 	end
 
 	if options.runImageThreshold==1
-		inputMatrixThreshold = thresholdImages(inputMatrix,'waitbarOn',options.waitbarOn,'threshold',options.imageThreshold,'removeUnconnected',1);
+		inputMatrixThreshold = thresholdImages(inputMatrix,'waitbarOn',options.waitbarOn,'threshold',options.imageThreshold,'removeUnconnected',1,'fastThresholding',1);
 	else
 		inputMatrixThreshold = inputMatrix;
 	end
@@ -76,7 +78,7 @@ function [xCoords yCoords allCoords] = findCentroid(inputMatrix,varargin)
 		% get the sum of the image
 		% imagesum = sum(thisImage(:));
 		% get coordinates
-		[i,j,imgValue] = find(thisImage > options_thresholdValue);
+		[i,j,imgValue] = find(thisImage > (options_thresholdValue*max(thisImage(:),[],'omitnan')));
 		% weight the centroid by the intensity of the image
 
 		% imgValue = imgValue*0; imgValue = imgValue+1;

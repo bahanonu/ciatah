@@ -21,6 +21,7 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction_batch(inputMovie,v
 		% 2021.01.24 [14:29:06] - Added trace origin type to output structure.
 		% 2021.03.20 [20:20:27] - extractedSignalsType, extractedSignalsEstType struct update.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2022.07.29 [20:16:13] - Updated to add option to ignore remove_false_positives.
 	% TODO
 		%
 
@@ -30,10 +31,14 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction_batch(inputMovie,v
 	% OVERALL
 	% turn on parallel
 	options.nonCNMF.parallel = 1;
+	% Binary: 1 = classify components,
+	options.nonCNMF.classifyComponents = 1;
 	% Binary: 1 = run merging algorithms
 	options.runMerge = 1;
 	% Binary: 1 = remove false positives using CNMF-E algorithm
 	options.runRemoveFalsePositives = 1;
+	% Str: HDF5 dataset name
+	options.nonCNMF.inputDatasetName = '/1';
 	% ===COMPUTATION
 	% Float: GB, memory space you allow to use in MATLAB
 	options.memory_size_to_use = 8; %
@@ -309,7 +314,7 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction_batch(inputMovie,v
 			%% update spatial components
 
 			%% pick neurons from the residual
-			[center_res, Cn_res, PNR_res] =neuron.initComponents_residual_parallel([], save_initialization, use_parallel, min_corr_res, min_pnr_res, seed_method_res);
+			[center_res, Cn_res, PNR_res] = neuron.initComponents_residual_parallel([], save_initialization, use_parallel, min_corr_res, min_pnr_res, seed_method_res);
 			if show_init
 				axes(ax_init);
 				plot(center_res(:, 2), center_res(:, 1), '.g', 'markersize', 10);
@@ -331,8 +336,10 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction_batch(inputMovie,v
 				% update temporal
 				neuron.update_temporal_parallel(use_parallel);
 
-				% delete bad neurons
-				neuron.remove_false_positives();
+				if options.runRemoveFalsePositives==1
+					% delete bad neurons
+					neuron.remove_false_positives();
+				end
 
 				% merge neurons based on temporal correlation + distances
 				neuron.merge_neurons_dist_corr(show_merge);
@@ -350,6 +357,7 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction_batch(inputMovie,v
 
 				% delete neurons
 				tags = neuron.tag_neurons_parallel();  % find neurons with fewer nonzero pixels than min_pixel and silent calcium transients
+
 				ids = find(tags>0);
 				if ~isempty(ids)
 					neuron.viewNeurons(ids, neuron.C_raw);
@@ -363,14 +371,18 @@ function [cnmfeAnalysisOutput] = computeCnmfeSignalExtraction_batch(inputMovie,v
 
 			K = size(neuron.A,2);
 			tags = neuron.tag_neurons_parallel();  % find neurons with fewer nonzero pixels than min_pixel and silent calcium transients
-			neuron.remove_false_positives();
+			if options.runRemoveFalsePositives==1
+				neuron.remove_false_positives();
+			end
 			neuron.merge_neurons_dist_corr(show_merge);
 			neuron.merge_high_corr(show_merge, merge_thr_spatial);
 
 			if K~=size(neuron.A,2)
 				neuron.update_spatial_parallel(use_parallel);
 				neuron.update_temporal_parallel(use_parallel);
-				neuron.remove_false_positives();
+				if options.runRemoveFalsePositives==1
+					neuron.remove_false_positives();
+				end
 			end
 
 			%% save the workspace for future analysis

@@ -13,12 +13,12 @@
 <img src="https://user-images.githubusercontent.com/5241605/117930569-03593480-b2b3-11eb-87f2-314e8ed77e94.png" align="center" onerror="this.style.display='none'" alt=''>
 <br>
 
-`CIAtah` (pronounced cheetah; formerly <ins>c</ins>alcium<ins>I</ins>maging<ins>A</ins>nalysis [ciapkg]) is a software package for analyzing one- and two-photon calcium imaging datasets.
+`CIAtah` (pronounced cheetah; formerly <ins>c</ins>alcium<ins>I</ins>maging<ins>A</ins>nalysis [ciapkg]) is a software package for analyzing one- and two-photon calcium imaging datasets. It can also be used to process other imaging datasets (e.g. from non-calcium indicators and dyes).
 
 <img src="https://user-images.githubusercontent.com/5241605/99499485-d6dce500-292d-11eb-8c68-b089fe1985c8.png" width="42%" align="right" alt="ciatah_logo">
 
 `CIAtah` currently requires `MATLAB` and runs on all major operating systems (Windows, Linux [e.g. Ubuntu], and macOS).
-- Note: `CIAtah` version `v4` moves the remaining (i.e. all except external packages/software) CIAtah functions into the `ciapkg` package to improve namespace handling and requires MATLAB R2019b or above ([due to package import changes](https://www.mathworks.com/help/matlab/matlab_prog/upgrade-code-for-r2019b-changes-to-function-precedence-order.html#mw_2934c766-e115-4d22-9abf-eb46a1415f2c)). Users with earlier versions of MATLAB can download `CIAtah` version `v3` (see [Releases](https://github.com/bahanonu/ciatah/releases)) until pre-R2019b MATLAB support is fully integrated into v4.
+- Note: `CIAtah` version `v4` moves the remaining (i.e. all except external packages and software) CIAtah functions into the `ciapkg` package to improve namespace handling and requires MATLAB R2019b or above ([due to package import changes](https://www.mathworks.com/help/matlab/matlab_prog/upgrade-code-for-r2019b-changes-to-function-precedence-order.html#mw_2934c766-e115-4d22-9abf-eb46a1415f2c)). Users with earlier versions of MATLAB can download `CIAtah` version `v3` (see [Releases](https://github.com/bahanonu/ciatah/releases)) until pre-R2019b MATLAB support is fully integrated into v4.
 
 
 ## Full documentation at https://bahanonu.github.io/ciatah/.
@@ -68,14 +68,20 @@ Made in USA.<br>
 - A GUI, via `ciatah` class, with different modules for large-scale batch analysis.
 - Includes all major calcium imaging analysis steps:
   - Movie visualization (including reading from disk, for fast viewing of large movies);
-  - pre-processing (motion correction, spatiotemporal downsampling, spatial filtering, relative fluorescence calculation, etc.);
+  - pre-processing (motion correction [e.g. TurboReg, NoRMCorre] , spatiotemporal downsampling, spatial filtering, relative fluorescence calculation, etc.);
    <!-- - Pre-processing supports read-from-disk based analysis for movies that are too large to fit into RAM. -->
-  - support for multiple cell-extraction methods (CELLMax, PCA-ICA, <a href='https://github.com/flatironinstitute/CaImAn-MATLAB' target='_blank'>CNMF</a>, CNMF-E, <a href='https://github.com/schnitzer-lab/EXTRACT-public' target='_blank'>EXTRACT</a>, etc.);
+  - support for multiple cell-extraction methods:
+    - <a href='https://github.com/mukamel-lab/CellSort'>PCA-ICA</a>
+    - <a href='https://searchworks.stanford.edu/view/11513617'>CELLMax</a> (<a href='https://searchworks.stanford.edu/view/12854822'>additional</a>)
+    - <a href='https://github.com/flatironinstitute/CaImAn-MATLAB' target='_blank'>CNMF</a>
+    - <a href='https://github.com/zhoupc/CNMF_E'>CNMF-E</a>
+    - <a href='https://github.com/schnitzer-lab/EXTRACT-public' target='_blank'>EXTRACT</a>
+    - etc.
   - manual classification of cells via GUIs;
   - automated cell classification (i.e. CLEAN algorithm, coming soon!);
   - cross-session cell alignment, and more.
 - Includes example one- and two-photon calcium imaging datasets for testing `CIAtah`.
-- Supports a plethora of major imaging movie file formats: HDF5, NWB, AVI, ISXD [Inscopix], TIFF, and [Bio-Formats](https://www.openmicroscopy.org/bio-formats/) compatible formats (Olympus [OIR] and Zeiss [CZI and LSM] currently, additional support to be added or upon request).
+- Supports a plethora of major imaging movie file formats: HDF5, NWB, AVI, ISXD [Inscopix], TIFF, SLD [SlideBook], and [Bio-Formats](https://www.openmicroscopy.org/bio-formats/) compatible formats (Olympus [OIR] and Zeiss [CZI and LSM] currently, additional support to be added or upon request).
 - Supports [Neurodata Without Borders](https://www.nwb.org/) data standard (see [calcium imaging tutorial](https://neurodatawithoutborders.github.io/matnwb/tutorials/html/ophys.html)) for reading/writing cell-extraction and imaging movie files.
 - Animal position tracking (e.g. in open-field assay) via ImageJ plugin.
 - Requires `MATLAB` and runs on all major operating systems (Windows, Linux [e.g. Ubuntu], and macOS).

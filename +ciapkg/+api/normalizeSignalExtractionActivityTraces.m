@@ -1,5 +1,8 @@
 function inputSignals = normalizeSignalExtractionActivityTraces(inputSignals,inputImages, varargin)
+	% [inputSignals] = ciapkg.signal_extraction.normalizeSignalExtractionActivityTraces(inputSignals,inputImages,'passArgs', varargin);
+	% 
 	% Normalizes cell activity traces by the max value in the associated image, normally to produce dF/F equivalent activity traces
+	%
 	% started: 2019.08.25 [18:19:34]
 	% Biafra Ahanonu
 	% Branched from normalizeCELLMaxTraces (Lacey Kitch and Biafra Ahanonu)

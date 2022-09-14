@@ -1,12 +1,13 @@
 function [fileList] = getFileList(inputDir, filterExp,varargin)
-	% Gathers a list of files based on an input regular expression.
+	% [fileList] = getFileList(inputDir, filterExp,varargin)
+	% Gathers a list of files or folders in a directory based on an input regular expression.
 	% Biafra Ahanonu
 	% started: 2013.10.08 [11:02:31]
 	% inputs
-		% inputDir - directory to gather files from and regexp filter for files
-		% filterExp - regexp used to find files
+	%	inputDir - directory to gather files from and regexp filter for files
+	%	filterExp - regexp used to find files/folders.
 	% outputs
-		% file list, full path
+	%	fileList - cell array of strings containing identified files or folders.
 
 	% changelog
 		% 2014.03.21 - added feature to input cell array of filters
@@ -14,8 +15,10 @@ function [fileList] = getFileList(inputDir, filterExp,varargin)
 		% 2019.03.08 [13:12:59] - added support for natural sorting of files
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2021.09.10 [03:17:56] - Added support to exclude adding the input directory to each file path.
+		% 2022.05.26 [22:24:42] - Improved support multiple directory input.
+		% 2022.06.12 [16:42:24] - Added folder filter.
 	% TODO
-		% Fix recusive to recursive in a backwards compatible way
+		% [DONE] Fix "recusive" (sp) option to recursive in a backwards compatible way.
 
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
@@ -31,6 +34,8 @@ function [fileList] = getFileList(inputDir, filterExp,varargin)
 	% Char: lexicographic (e.g. 1 10 11 2 21 22 unless have 01 02 10 11 21 22) or numeric (e.g. 1 2 10 11 21 22) or natural (e.g. 1 2 10 11 21 22)
 	% options.sortMethod = 'lexicographic';
 	options.sortMethod = 'natural';
+	% Binary: 1 = only include folders in the output. 0 = include folders and files.
+	options.onlyFolders = 0;
 	% DEPRECIATED 1 = recursively find files in all sub-directories. 0 = only find files in inputDir directory.
 	options.recusive = 0;
 	% get options
@@ -55,8 +60,12 @@ function [fileList] = getFileList(inputDir, filterExp,varargin)
 	end
 
 	fileList = {};
-	for thisDir = inputDir
-		thisDirHere = thisDir{1};
+	nDirs = length(inputDir);
+	%for thisDir = inputDir
+	for i = 1:nDirs
+		thisDir = inputDir{i};
+		% thisDirHere = thisDir{i};
+		thisDirHere = thisDir;
 		if options.recusive==0
 			files = dir(thisDirHere);
 		else
@@ -68,7 +77,11 @@ function [fileList] = getFileList(inputDir, filterExp,varargin)
 				if options.regexpWithFolder==1
 					filename = [options.regexpWithFolder filesep filename];
 				end
-
+				% If option selected, remove non-folders.
+				if options.onlyFolders==1&&isfolder(filename)==0
+					continue
+				end
+				% Add found file/folder to the list.
 				if(~isempty(cell2mat(regexpi(filename, filterExp))))
 					if options.addInputDirToPath==1
 						fileList{end+1} = [thisDirHere filesep filename];
@@ -81,6 +94,11 @@ function [fileList] = getFileList(inputDir, filterExp,varargin)
 			else
 				filename = files(file,:);
 				filename = filename{1};
+				% If option selected, remove non-folders.
+				if options.onlyFolders==1&&isfolder(filename)==0
+					continue
+				end
+				% Add found file/folder to the list.
 				if(~isempty(cell2mat(regexpi(filename, filterExp))))
 					if options.addInputDirToPath==1
 						fileList{end+1} = [filename];

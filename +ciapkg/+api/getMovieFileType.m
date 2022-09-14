@@ -1,4 +1,4 @@
-function [movieType, supported, movieType2] = getMovieFileType(thisMoviePath)
+function [movieType, supported, movieType2] = getMovieFileType(thisMoviePath,varargin)
 	% Determine how to load movie, don't assume every movie in list is of the same type
 	% Biafra Ahanonu
 	% started: 2020.09.01 [‏‎14:16:57]

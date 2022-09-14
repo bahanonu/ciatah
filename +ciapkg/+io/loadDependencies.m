@@ -22,6 +22,10 @@ function loadDependencies(varargin)
 		% 2021.07.23 [00:22:22] - Added gramm (https://github.com/piermorel/gramm) support/downloading for graphics plotting.
 		% 2021.07.26 [13:16:37] - Added Turboreg (moved from within ciapkg) to make explicit that this is an external program.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2022.03.04 [06:57:14] - Added PatchWarp (https://github.com/ryhattori/PatchWarp). Code clean up.
+		% 2022.03.09 [17:01:54] - Updated NoRMCorre to use https://github.com/bahanonu/NoRMCorre as that is a package version, cleaner namespace.
+		% 2022.04.08 [15:17:28] - Added CIAtah utilities repository (https://github.com/bahanonu/ciatah_utils) to separate outside code from main repository.
+		% 2022.07.10 [20:27:29] - Add SlideBook .jar reader to Bio-Formats download.
 	% TODO
 		% Verify all dependencies download and if not ask user to download again.
 
@@ -31,11 +35,39 @@ function loadDependencies(varargin)
 	% DESCRIPTION
 	options.externalProgramsDir = ciapkg.getDirExternalPrograms();
 	options.guiEnabled = 1;
-	options.dependencyStr = {'downloadTurboreg','downloadImageJ','downloadCnmfGithubRepositories','example_downloadTestData','downloadNeuroDataWithoutBorders','downloadEXTRACT','downloadBioFormats','downloadGramm','downloadNoRMCorre','downloadMiji','loadMiji'};
+	options.dependencyStr = {...
+		'downloadCIAtahUtils';
+		'downloadTurboreg';
+		'downloadImageJ';
+		'downloadCnmfGithubRepositories';
+		'example_downloadTestData';
+		'downloadNeuroDataWithoutBorders';
+		'downloadEXTRACT';
+		'downloadBioFormats';
+		'downloadGramm';
+		'downloadNoRMCorre';
+		'downloadMiji';
+		'downloadPatchWarp';
+		'loadMiji';
+	};
 
-	options.dispStr = {'Download Turboreg (motion correction)','Download ImageJ','Download CNMF, CNMF-E, and CVX code.','Download test one- and two photon datasets.','Download NWB (NeuroDataWithoutBorders)','Download EXTRACT','Download Bio-Formats','Download gramm (GRAMmar of graphics for Matlab, e.g. ggplot2-like)','Download NoRMCorre (motion correction)','Download Fiji (to run Miji)','Load Fiji/Miji into MATLAB path.'};
+	options.dispStr = {...
+		'Download CIAtah utilities/dependencies';
+		'Download Turboreg (motion correction)';
+		'Download ImageJ';
+		'Download CNMF, CNMF-E, and CVX code.';
+		'Download test one- and two photon datasets.';
+		'Download NWB (NeuroDataWithoutBorders)';
+		'Download EXTRACT';
+		'Download Bio-Formats';
+		'Download gramm (GRAMmar of graphics for Matlab, e.g. ggplot2-like)';
+		'Download NoRMCorre (motion correction)';
+		'Download Fiji (to run Miji)';
+		'Download PatchWarp (motion correction)';
+		'Load Fiji/Miji into MATLAB path.';
+	};
 	% Int vector: index of options.dependencyStr to run by default with no GUI
-	options.depIdxArray = [1 2 3 4 5 6 7 8];
+	options.depIdxArray = [1 2 3 4 5 6 7 8 9];
 	% Binary: 1 = force update even if already downloaded. 0 = skip if already downloaded
 	options.forceUpdate = 0;
 	% get options
@@ -73,6 +105,10 @@ function loadDependencies(varargin)
 	for depNo = 1:length(depIdxArray)
 		disp([10 repmat('>',1,42)])
 		disp(dispStr{depNo})
+
+		optionsH.forceUpdate = forceUpdate;
+		optionsH.signalExtractionDir = options.externalProgramsDir;
+
 		switch analysisTypeD{depNo}
 			case 'downloadCnmfGithubRepositories'
 				[success] = downloadCnmfGithubRepositories('forceUpdate',forceUpdate);
@@ -95,9 +131,17 @@ function loadDependencies(varargin)
 				modelAddOutsideDependencies('miji');
 			case 'example_downloadTestData'
 				example_downloadTestData();
+			case 'downloadCIAtahUtils'
+				optionsH.gitNameDisp = {'ciatah_utils'};
+				% optionsH.gitRepos = {'https://github.com/flatironinstitute/NoRMCorre'};
+				optionsH.gitRepos = {'https://github.com/bahanonu/ciatah_utils'};				
+				optionsH.gitRepos = cellfun(@(x) [x '/archive/master.zip'],optionsH.gitRepos,'UniformOutput',false);
+				optionsH.outputDir = optionsH.gitNameDisp;
+				% optionsH.gitName = cellfun(@(x) [x '-master'],optionsH.gitNameDisp,'UniformOutput',false);
+				% optionsH.gitName = {'NoRMCorre-public-master'};
+				optionsH.gitName = {'ciatah_utils-master'};
+				[success] = downloadGithubRepositories('options',optionsH);
 			case 'downloadTurboreg'
-				optionsH.forceUpdate = forceUpdate;
-				optionsH.signalExtractionDir = options.externalProgramsDir;
 				optionsH.gitNameDisp = {'turboreg'};
 				optionsH.gitRepos = {'http://tiny.ucsf.edu/ciatahTurboreg'};
 				optionsH.outputDir = optionsH.gitNameDisp;
@@ -105,8 +149,6 @@ function loadDependencies(varargin)
 				optionsH.gitName = {'Motion_Correction_Turboreg'};
 				[success] = downloadGithubRepositories('options',optionsH);
 			case 'downloadCellExtraction'
-				optionsH.forceUpdate = forceUpdate;
-				optionsH.signalExtractionDir = options.externalProgramsDir;
 				optionsH.gitNameDisp = {'cellmax_clean','extract'};
 				optionsH.gitRepos = {'https://github.com/schnitzer-lab/CELLMax_CLEAN','https://github.com/schnitzer-lab/EXTRACT'};
 				optionsH.gitRepos = cellfun(@(x) [x '/archive/master.zip'],optionsH.gitRepos,'UniformOutput',false);
@@ -114,18 +156,24 @@ function loadDependencies(varargin)
 				optionsH.gitName = cellfun(@(x) [x '-master'],optionsH.gitNameDisp,'UniformOutput',false);
 				[success] = downloadGithubRepositories('options',optionsH);
 			case 'downloadNoRMCorre'
-				optionsH.forceUpdate = forceUpdate;
-				optionsH.signalExtractionDir = options.externalProgramsDir;
 				optionsH.gitNameDisp = {'normcorre'};
-				optionsH.gitRepos = {'https://github.com/flatironinstitute/NoRMCorre'};
+				% optionsH.gitRepos = {'https://github.com/flatironinstitute/NoRMCorre'};
+				optionsH.gitRepos = {'https://github.com/bahanonu/NoRMCorre'};				
 				optionsH.gitRepos = cellfun(@(x) [x '/archive/master.zip'],optionsH.gitRepos,'UniformOutput',false);
 				optionsH.outputDir = optionsH.gitNameDisp;
 				% optionsH.gitName = cellfun(@(x) [x '-master'],optionsH.gitNameDisp,'UniformOutput',false);
-				optionsH.gitName = {'NoRMCorre-public-master'};
+				% optionsH.gitName = {'NoRMCorre-public-master'};
+				optionsH.gitName = {'NoRMCorre-master'};
+				[success] = downloadGithubRepositories('options',optionsH);
+			case 'downloadPatchWarp'
+				optionsH.gitNameDisp = {'patchwarp'};
+				optionsH.gitRepos = {'https://github.com/ryhattori/PatchWarp'};
+				optionsH.gitRepos = cellfun(@(x) [x '/archive/master.zip'],optionsH.gitRepos,'UniformOutput',false);
+				optionsH.outputDir = optionsH.gitNameDisp;
+				% optionsH.gitName = cellfun(@(x) [x '-master'],optionsH.gitNameDisp,'UniformOutput',false);
+				optionsH.gitName = {'PatchWarp-main'};
 				[success] = downloadGithubRepositories('options',optionsH);
 			case 'downloadGramm'
-				optionsH.forceUpdate = forceUpdate;
-				optionsH.signalExtractionDir = options.externalProgramsDir;
 				optionsH.gitNameDisp = {'gramm'};
 				optionsH.gitRepos = {'https://github.com/piermorel/gramm'};
 				optionsH.gitRepos = cellfun(@(x) [x '/archive/master.zip'],optionsH.gitRepos,'UniformOutput',false);
@@ -134,8 +182,6 @@ function loadDependencies(varargin)
 				optionsH.gitName = {'gramm-master'};
 				[success] = downloadGithubRepositories('options',optionsH);
 			case 'downloadEXTRACT'
-				optionsH.forceUpdate = forceUpdate;
-				optionsH.signalExtractionDir = options.externalProgramsDir;
 				optionsH.gitNameDisp = {'extract'};
 				optionsH.gitRepos = {'https://github.com/schnitzer-lab/EXTRACT-public'};
 				optionsH.gitRepos = cellfun(@(x) [x '/archive/master.zip'],optionsH.gitRepos,'UniformOutput',false);
@@ -144,8 +190,6 @@ function loadDependencies(varargin)
 				optionsH.gitName = {'EXTRACT-public-master'};
 				[success] = downloadGithubRepositories('options',optionsH);
 			case 'downloadNeuroDataWithoutBorders'
-				optionsH.forceUpdate = forceUpdate;
-				optionsH.signalExtractionDir = options.externalProgramsDir;
 				optionsH.gitNameDisp = {'nwbpkg','yamlmatlab','matnwb'};
 				optionsH.gitRepos = {'https://github.com/schnitzer-lab/nwbpkg','https://github.com/ewiger/yamlmatlab'};
 				% 'https://github.com/NeurodataWithoutBorders/matnwb'
@@ -163,14 +207,22 @@ function loadDependencies(varargin)
 				ciapkg.nwb.setupNwb('checkDependencies',0);
 				% obj.loadBatchFunctionFolders;
 			case 'downloadBioFormats'
-				optionsH.forceUpdate = forceUpdate;
-				optionsH.signalExtractionDir = options.externalProgramsDir;
 				optionsH.gitNameDisp = {'bfmatlab'};
-				optionsH.gitRepos = {'https://downloads.openmicroscopy.org/bio-formats/6.6.1/artifacts/bfmatlab.zip'};
+				optionsH.gitRepos = {'https://downloads.openmicroscopy.org/bio-formats/6.10.0/artifacts/bfmatlab.zip'};
 				optionsH.outputDir = optionsH.gitNameDisp;
 				% optionsH.gitName = cellfun(@(x) [x '-master'],optionsH.gitNameDisp,'UniformOutput',false);
 				optionsH.gitName = {'bfmatlab'};
 				[success] = downloadGithubRepositories('options',optionsH);
+
+				% Download SlideBook reader.
+				downloadUrl = 'https://sites.imagej.net/SlideBook/jars/bio-formats/SlideBook6Reader.jar-20190125132114';
+				websave(fullfile(ciapkg.getDirExternalPrograms(),'bfmatlab_readers','SlideBook6Reader.jar'),downloadUrl);
+
+				slideBookPath = fullfile(ciapkg.getDirExternalPrograms(),'bfmatlab_readers','SlideBook6Reader.jar');
+				if isfile(slideBookPath)==1
+					javaaddpath(slideBookPath);
+				end
+				
 			case 'downloadImageJ'
 				% Download mij.jar and ij.ar with Box backup in case mij.jar site offline.
 				downloadFiles = {'http://bigwww.epfl.ch/sage/soft/mij/mij.jar','http://rsb.info.nih.gov/ij/upgrade/ij.jar','http://tiny.ucsf.edu/3wFyol'};
@@ -214,4 +266,5 @@ function loadDependencies(varargin)
 				% nothing
 		end
 	end
+	ciapkg.loadBatchFxns;
 end

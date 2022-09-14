@@ -15,6 +15,7 @@ function [inputImages, inputSignals, valid, imageSizes, imgFeatures] = filterIma
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
 		% 2019.07.17 [00:29:16] - Added support for sparse input images (mainly ndSparse format).
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2022.04.13 [02:28:15] - Make default thresholding fast thresholding.
 	% TODO
 		%
 
@@ -68,9 +69,9 @@ function [inputImages, inputSignals, valid, imageSizes, imgFeatures] = filterIma
 
 	if options.thresholdImages==1
 		if options.modifyInputImage==1
-			[inputImages,~,numObjects] = thresholdImages(inputImages,'waitbarOn',options.waitbarOn,'binary',1,'threshold',options.threshold);
+			[inputImages,~,numObjects] = thresholdImages(inputImages,'waitbarOn',options.waitbarOn,'binary',1,'threshold',options.threshold,'fastThresholding',1);
 		else
-			[inputImagesCopy,~,numObjects] = thresholdImages(inputImages,'waitbarOn',options.waitbarOn,'binary',1,'threshold',options.threshold);
+			[inputImagesCopy,~,numObjects] = thresholdImages(inputImages,'waitbarOn',options.waitbarOn,'binary',1,'threshold',options.threshold,'fastThresholding',1);
 		end
 	else
 		if options.modifyInputImage==1

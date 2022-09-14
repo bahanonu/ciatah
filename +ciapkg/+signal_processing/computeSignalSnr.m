@@ -1,26 +1,34 @@
 function [inputSnr, inputMse, inputSnrSignal, inputSnrNoise, outputSignal, outputNoise] = computeSignalSnr(inputSignals,varargin)
-	% Obtains an approximate SNR for an input signal
+	% [inputSnr, inputMse, inputSnrSignal, inputSnrNoise, outputSignal, outputNoise] = computeSignalSnr(inputSignals,varargin)
+	% 
+	% Calculates the SNR for an input signal. Multiple algorithms available.
+	% 
 	% Biafra Ahanonu
 	% started: 2013.11.04 [11:54:09]
-	% inputs
-		% inputSignals: [nSignals frame] matrix
-	% outputs
-		% inputSnr: [1 nSignals] vector of calculated SNR. NaN used where SNR is not calculated.
-		% inputMse: [1 nSignals] vector of MSE. NaN used where MSE is not calculated.
+	% 
+	% Inputs
+	% 	inputSignals: [nSignals frame] matrix
+	% 
+	% Outputs
+	% 	inputSnr: [1 nSignals] vector of calculated SNR. NaN used where SNR is not calculated.
+	% 	inputMse: [1 nSignals] vector of MSE. NaN used where MSE is not calculated.
+	% 
 	% options
-		% % type of SNR to calculate
-		% options.SNRtype = 'mean(signal)/std(noise)';
-		% % frames around which to remove the signal for noise estimation
-		% options.timeSeq = [-10:10];
-		% % show the waitbar
-		% options.waitbarOn = 1;
-		% % save time if already computed peaks
-		% options.testpeaks = [];
-		% options.testpeaksArray = [];
+	% 	% type of SNR to calculate
+	% 	options.SNRtype = 'mean(signal)/std(noise)';
+	% 	% frames around which to remove the signal for noise estimation
+	% 	options.timeSeq = [-10:10];
+	% 	% show the waitbar
+	% 	options.waitbarOn = 1;
+	% 	% save time if already computed peaks
+	% 	options.testpeaks = [];
+	% 	options.testpeaksArray = [];
+
 	% changelog
 		% 2013.12.08 now uses RMS to calculate the SNR after removing the signal to get an estimated noise trace.
 		% 2018.03.25 - Added iterative method to determine when signal ends. also added mean centering of trace to correct for offset traces causing problems.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2022.03.14 [01:42:21] - Better comments for options.
 
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
@@ -37,8 +45,9 @@ function [inputSnr, inputMse, inputSnrSignal, inputSnrNoise, outputSignal, outpu
 	options.waitbarOn = 1;
 	% whether to display output information
 	options.displayOutput = 1;
-	% save time if already computed peaks
+	% Matrix: save time if already computed peaks. [nSignals frame] matrix. Binary matrix with 1 = peaks, 0 = non-peaks.
 	options.testpeaks = [];
+	% Cell array: save time if already computed peaks. {1 nSignals} cell array. Each cell contains [1 nPeaks] vector that stores the frame locations of each peak.
 	options.testpeaksArray = [];
 	% alternative if want to use non-shared peaks
 	options.testpeaksArrayAlt = [];

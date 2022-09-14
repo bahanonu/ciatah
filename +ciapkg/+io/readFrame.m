@@ -18,6 +18,7 @@ function [thisFrame,movieFileID,inputMovieDims] = readFrame(inputMoviePath,frame
 		% 2021.07.03 [09:02:14] - Updated to have backup read method for different tiff styles.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2022.02.24 [10:24:28] - AVI now read(...,'native') is faster.
+		% 2022.07.27 [13:48:43] - Ensure subfxn_loadFrame nested function outputs frame data (even if file does not contain the requested frame, e.g. empty matrix).
 	% TODO
 		%
 
@@ -88,6 +89,7 @@ function [thisFrame,movieFileID,inputMovieDims] = readFrame(inputMoviePath,frame
 	end
 	function [thisFrame, inputMovieDims] = subfxn_loadFrame(inputMoviePathHere,options)
 		inputMovieDims = options.inputMovieDims;
+		thisFrame = [];
 		switch movieType
 			case 'hdf5'
 				% Much faster to input the existing movie dimensions.
@@ -97,7 +99,7 @@ function [thisFrame,movieFileID,inputMovieDims] = readFrame(inputMoviePath,frame
 				else
 					inputMovieDims = options.inputMovieDims;	
 				end
-
+				% inputMovieDims
 				thisFrame = h5read(inputMoviePathHere,options.inputDatasetName,[1 1 frameNo],[inputMovieDims(1) inputMovieDims(2) 1]);
 			case 'tiff'
 				warning off;

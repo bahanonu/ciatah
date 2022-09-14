@@ -1,11 +1,24 @@
 function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
-	% Motion corrects (using turboreg) a movie. 
-		% - Both turboreg (to get 2D translation coordinates) and registering images (transfturboreg, imwarp, imtransform) have been parallelized. 
-		% - Can also turboreg to one set of images and apply the registration to another set (e.g. for cross-day alignment). 
-		% - Spatial filtering is applied after obtaining registration coordinates but before transformation, this reduced chance that 0s or NaNs at edge after transformation mess with proper spatial filtering.
+	% [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
+	% 
+	% Motion corrects (using turboreg or NoRMCorre) a movie. 
+	% 	- Both turboreg (to get 2D translation coordinates) and registering images (transfturboreg, imwarp, imtransform) have been parallelized. 
+	% 	- Can also turboreg to one set of images and apply the registration to another set (e.g. for cross-day alignment). 
+	% 	- Spatial filtering is applied after obtaining registration coordinates but before transformation, this reduced chance that 0s or NaNs at edge after transformation mess with proper spatial filtering.
+	% 
 	% Biafra Ahanonu
 	% started 2013.11.09 [11:04:18]
-	% modified from code created by Jerome Lecoq in 2011 and parallel code update by biafra ahanonu
+	% 
+	% Parts of code based on that from Jerome Lecoq (2011) and parallel code update by Biafra Ahanonu (2013).
+	% 
+	% Input
+	% 	inputMovie - 3D matrix: [x y frames] matrix containing data to be motion corrected across frames.
+	% 
+	% Output
+	% 	inputMovie - 3D matrix: [x y frames] matrix containing data after motion correction across frames.
+	% 	ResultsOutOriginal
+	% 		TurboReg - Cell array {1 frames}: contains the motion correction data for each frame for later use.
+	% 		NoRMCorre - Structure: contains the motion correction data for each frame for later use.
 
 	% changelog
 		% 2013.03.29 - parallelizing turboreg v1
@@ -27,6 +40,12 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		% 2021.09.11 [10:40:05] - Additional matlab disk normalizeType options.
 		% 2021.11.01 [12:15:10] - Additional display of information.
 		% 2021.11.16 [11:58:14] - Added verification that turboreg MEX function is in the path.
+		% 2022.01.22 [20:46:51] - Refactor code to remove need to transform movie into cell array, performance and memory improvements.
+		% 2022.03.08 [12:23:53] - Added NoRMCorre support, function will eventually be merged with "registerMovie" or renamed to indicate support for multiple algorithms. Reason to integrate NoRMCorre into this function is takes advantage of existing pre-processing pipeline and integration with other algorithms (e.g. cross-session).
+		% 2022.03.09 [16:34:47] - Check if inputs are sparse, convert to single.
+		% 2022.03.09 [17:32:42] - Use custom bahanonu NoRMCorre that is within a package and update to use reference picture instead of template.
+		% 2022.04.23 [18:40:22] - Updated to which('normcorre.normcorre') from which('normcorre') since normcorre now inside a package.
+		% 2022.09.12 [20:46:04] - Additional NoRMCorre support and getNoRMCorreParams checking before running NoRMCorre.
 	% TO-DO
 		% Add support for "imregtform" based registration.
 
@@ -53,6 +72,11 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	% ========================
 	% get options
 	% =======IMPORTANT OPTIONS=====
+	% Str: motion correction algorithm.
+		% 'turboreg' - TurboReg as developed by Philippe Thevenaz.
+		% 'normcorre' - NoRMCorre as developed by several authors at Flatiron Institute.
+	options.mcMethod = 'turboreg';
+	% options.mcMethod = 'normcorre';
 	% Str: dataset name in HDF5 file where data is stored, if inputMovie is a path to a movie.
 	options.inputDatasetName = '/1';
 	% Int vector: if loading movie inside function, provide frameList to load specific frames
@@ -171,7 +195,11 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	options.returnNormalizedMovie = 0;
 	% Binary: 1 = run correlation before spatial filtering, 0 = do not run correlation.
 	options.computeCorr = 0;
-
+	% =======
+	% NoRMCorre
+	% Struct: NoRMCorre settings
+	options.optsNoRMCorre = ciapkg.motion_correction.getNoRMCorreParams([1 1 1],'guiDisplay',0);
+	% 
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -181,17 +209,31 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	%     eval([fn{i} '=options.' fn{i} ';']);
 	% end
 	if options.displayOptions==1
-		options
+		fn_structdisp(options)
 	end
 
 	% ========================
 	% Verify that turboreg MEX function is in the path.
-	if isempty(which('turboreg'))==1
-		ciapkg.loadBatchFxns();
+	if isempty(which('turboreg'))==1||isempty(which('normcorre.normcorre'))==1
+		% ciapkg.loadBatchFxns();
+		ciapkg.loadBatchFxns('removeDirFxnToFindExclude','normcorre.m');
 	end
+
+	% ========================
+	% Algorithm specific options
+	switch options.mcMethod
+		case 'turboreg'
+
+		case 'normcorre'
+			% NoRMCorre is to be run on the entire input matrix.
+			options.cropCoords = [];
+		otherwise
+
+	end
+
 	% ========================
 	% check that Miji is present
-	if strcmp(options.normalizeType,'imagejFFT')|strcmp(options.normalizeBeforeRegister,'imagejFFT')
+	if strcmp(options.normalizeType,'imagejFFT')||strcmp(options.normalizeBeforeRegister,'imagejFFT')
 		% if exist('Miji.m','file')==2
 		% 	disp(['Miji located in: ' which('Miji.m')]);
 		% 	% Miji is loaded, continue
@@ -207,6 +249,12 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		% 	end
 		% end
 		modelAddOutsideDependencies('miji');
+	end
+	% ========================
+	% Check for sparse inputs
+	if issparse(inputMovie)
+		disp('Converting from sparse to single.')
+		inputMovie = single(full(inputMovie));
 	end
 	% ========================
 	inputMovieClass = class(inputMovie);
@@ -248,14 +296,17 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		ResultsOut = ResultsOutTemp;
 		% Remove NaNs from inputMovie so transfturboreg doesn't run into issue.
 		inputMovie(isnan(inputMovie)) = 0;
-		convertInputMovieToCell();
+		% convertInputMovieToCell();
 		% size(inputMovie)
 		% class(inputMovie)
 		% size(inputMovie{1})
 		% class(inputMovie{1})
 		InterpListSelection = turboRegOptions.Interp;
 		registerMovie();
-		inputMovie = cat(3,inputMovie{:});
+
+		% Convert back into matrix.
+		% inputMovie = cat(3,inputMovie{:});
+
 		ResultsOutOriginal = ResultsOut;
 		return;
 	end
@@ -271,14 +322,17 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		% ResultsOut = ResultsOutTemp;
 		% Remove NaNs from inputMovie so transfturboreg doesn't run into issue.
 		inputMovie(isnan(inputMovie)) = 0;
-		convertInputMovieToCell();
+		% convertInputMovieToCell();
 		% size(inputMovie)
 		% class(inputMovie)
 		% size(inputMovie{1})
 		% class(inputMovie{1})
 		InterpListSelection = turboRegOptions.Interp;
 		registerMovie();
-		inputMovie = cat(3,inputMovie{:});
+
+		% Convert back into matrix.
+		% inputMovie = cat(3,inputMovie{:});
+
 		ResultsOutOriginal = ResultsOut;
 		return;
 	end
@@ -327,8 +381,8 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	end
 
 	if ~isempty(options.saveTurboregCoords)
-		options.saveTurboregCoords
-		ResultsOut
+		disp(options.saveTurboregCoords)
+		disp(ResultsOut)
 	end
 	ResultsOutOriginal = ResultsOut;
 
@@ -361,7 +415,8 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		% ===
 		% if we are using the turboreg coordinates for frame #options.altMovieRegisterNum to register all frames from options.altMovieRegister, want to give registerMovie an identical sized array to altMovieRegister like it normally expects
 		% this was made for having refCellmap and testCellmap, aligning the testCellmap to the refCellmap then registering all the cell images for testCellmap to refCellmap
-		for resultNo=1:size(options.altMovieRegister,3);
+		ResultsOutTemp = cell([1 size(options.altMovieRegister,3)]);
+		for resultNo=1:size(options.altMovieRegister,3)
 			ResultsOutTemp{resultNo} = ResultsOut{options.altMovieRegisterNum};
 		end
 		ResultsOut = ResultsOutTemp;
@@ -369,17 +424,17 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		%Convert array to cell array, allows slicing (not contiguous memory block)
 		% add input movie to
 		inputMovie = options.altMovieRegister;
-		convertInputMovieToCell();
+		% convertInputMovieToCell();
 	elseif ~isempty(options.cropCoords)
 		disp('restoring uncropped movie and converting to cell...');
 		clear registeredMovie;
 		%Convert array to cell array, allows slicing (not contiguous memory block)
-		convertInputMovieToCell();
+		% convertInputMovieToCell();
 		% ===
 	else
-		disp('converting movie to cell...');
+		% disp('converting movie to cell...');
 		%Convert array to cell array, allows slicing (not contiguous memory block)
-		convertInputMovieToCell();
+		% convertInputMovieToCell();
 		% ===
 	end
 	% ========================
@@ -399,11 +454,11 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	toc(startTime)
 
 	% ========================
-	disp('converting cell array back to matrix')
+	% disp('converting cell array back to matrix')
 	%Convert cell array back to 3D matrix
-	inputMovie = cat(3,inputMovie{:});
-	inputMovie = single(inputMovie);
+	% inputMovie = cat(3,inputMovie{:});
 
+	inputMovie = single(inputMovie);
 
 	subfxn_dispMovieFrames(inputMovie,'Registration==1',2);
 
@@ -439,7 +494,7 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	function convertInputMovieToCell()
 		%Get dimension information about 3D movie matrix
 		[inputMovieX, inputMovieY, inputMovieZ] = size(inputMovie);
-		reshapeValue = size(inputMovie);
+		% reshapeValue = size(inputMovie);
 		%Convert array to cell array, allows slicing (not contiguous memory block)
 		inputMovie = squeeze(mat2cell(inputMovie,inputMovieX,inputMovieY,ones(1,inputMovieZ)));
 	end
@@ -447,7 +502,7 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	function convertinputMovieCroppedToCell()
 		%Get dimension information about 3D movie matrix
 		[inputMovieX, inputMovieY, inputMovieZ] = size(inputMovieCropped);
-		reshapeValue = size(inputMovieCropped);
+		% reshapeValue = size(inputMovieCropped);
 		%Convert array to cell array, allows slicing (not contiguous memory block)
 		inputMovieCropped = squeeze(mat2cell(inputMovieCropped,inputMovieX,inputMovieY,ones(1,inputMovieZ)));
 	end
@@ -469,197 +524,270 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 
 	% function [ResultsOut averagePictureEdge] = turboregMovieParallel(inputMovie,turboRegOptions,options)
 	function turboregMovieParallel()
-		% get reference picture and other pre-allocation
-		postProcessPic = single(squeeze(inputMovieCropped(:,:,options.refFrame)));
-		mask = single(ones(size(postProcessPic)));
-		imgRegMask = single(double(mask));
-		% we add an offset to be able to give NaN to black borders
-		averagePictureEdge = zeros(size(imgRegMask));
-		refPic = single(squeeze(inputMovieCropped(:,:,options.refFrame)));
-		% refPic = squeeze(inputMovieCropped(:,:,options.refFrame));
+		switch options.mcMethod
+			case 'turboreg'
+				% get reference picture and other pre-allocation
+				postProcessPic = single(squeeze(inputMovieCropped(:,:,options.refFrame)));
+				mask = single(ones(size(postProcessPic)));
+				imgRegMask = single(double(mask));
+				% we add an offset to be able to give NaN to black borders
+				averagePictureEdge = zeros(size(imgRegMask));
+				refPic = single(squeeze(inputMovieCropped(:,:,options.refFrame)));
+				% refPic = squeeze(inputMovieCropped(:,:,options.refFrame));
 
-		MatrixMotCorrDispl=zeros(3,options.maxFrame);
+				MatrixMotCorrDispl = zeros(3,options.maxFrame);
 
-		% ===
-		%Convert array to cell array, allows slicing (not contiguous memory block)
-		convertinputMovieCroppedToCell();
-		% ===
+				% ===
+				%Convert array to cell array, allows slicing (not contiguous memory block)
+				% convertinputMovieCroppedToCell();
+				% ===
 
-		% Get data class, can be removed...
-		movieClass = class(inputMovieCropped);
-		% you need this FileExchange function for progress in a parfor loop
-		disp('turboreg-ing...');
-		disp('');
-		% parallel for loop, since each turboreg operation is independent, can send each frame to separate workspaces
-		startTurboRegTime = tic;
-		%
-		nFramesToTurboreg = options.maxFrame;
-		if options.parallel==1; nWorkers=Inf;else;nWorkers=0;end
-		parfor (frameNo=1:nFramesToTurboreg,nWorkers)
-			% get current frames
-			thisFrame = inputMovieCropped{frameNo};
-			thisFrameToAlign=single(thisFrame);
-			% thisFrameToAlign=thisFrame;
+				% Get data class, can be removed...
+				movieClass = class(inputMovieCropped);
+				% you need this FileExchange function for progress in a parfor loop
+				disp('turboreg-ing...');
+				disp('');
+				% parallel for loop, since each turboreg operation is independent, can send each frame to separate workspaces
+				startTurboRegTime = tic;
+				%
+				nFramesToTurboreg = options.maxFrame;
+				if options.parallel==1; nWorkers=Inf;else;nWorkers=0;end
+				parfor (frameNo=1:nFramesToTurboreg,nWorkers)
+					% get current frames
+					% thisFrame = inputMovieCropped{frameNo};
 
-			if ismac
-				% Code to run on Mac platform
-				[ImageOut,ResultsOut{frameNo}]=turboreg(refPic,thisFrameToAlign,mask,imgRegMask,turboRegOptions);
-				% create a mask
-				averagePictureEdge = averagePictureEdge | ImageOut==0;
-			elseif isunix
-				% Code to run on Linux platform
-				[ResultsOut{frameNo}]=turboreg(refPic,thisFrameToAlign,mask,imgRegMask,turboRegOptions);
-				% create a mask
-				% averagePictureEdge = averagePictureEdge | ImageOut==0;
-			elseif ispc
-				% Code to run on Windows platform
-				[ImageOut,ResultsOut{frameNo}]=turboreg(refPic,thisFrameToAlign,mask,imgRegMask,turboRegOptions);
-				% create a mask
-				averagePictureEdge = averagePictureEdge | ImageOut==0;
-			else
-				% return;
-				disp('Platform not supported')
-			end
+					thisFrame = inputMovieCropped(:,:,frameNo);
 
-			if ~verLessThan('matlab', '9.2')
-				send(D, frameNo); % Update
-			end
+					thisFrameToAlign=single(thisFrame);
+					% thisFrameToAlign=thisFrame;
+
+					if ismac
+						% Code to run on Mac platform
+						[ImageOut,ResultsOut{frameNo}] = turboreg(refPic,thisFrameToAlign,mask,imgRegMask,turboRegOptions);
+						% create a mask
+						averagePictureEdge = averagePictureEdge | ImageOut==0;
+					elseif isunix
+						% Code to run on Linux platform
+						[ResultsOut{frameNo}] = turboreg(refPic,thisFrameToAlign,mask,imgRegMask,turboRegOptions);
+						% create a mask
+						% averagePictureEdge = averagePictureEdge | ImageOut==0;
+					elseif ispc
+						% Code to run on Windows platform
+						[ImageOut,ResultsOut{frameNo}] = turboreg(refPic,thisFrameToAlign,mask,imgRegMask,turboRegOptions);
+						% create a mask
+						averagePictureEdge = averagePictureEdge | ImageOut==0;
+					else
+						% return;
+						disp('Platform not supported')
+					end
+
+					if ~verLessThan('matlab', '9.2')
+						send(D, frameNo); % Update
+					end
+				end
+				% dispstat('Finished.','keepprev');
+				toc(startTurboRegTime);
+				drawnow;
+				% save('ResultsOutFile','ResultsOut');
+			case 'normcorre'
+				startTurboRegTime = tic;
+				
+				bound = 0;
+				refPic = single(squeeze(inputMovieCropped(:,:,options.refFrame)));
+				inputMovieCroppedTmp = inputMovieCropped(bound/2+1:end-bound/2,bound/2+1:end-bound/2,:);
+
+				optsNoRMCorre = options.optsNoRMCorre;
+				if isempty(fieldnames(optsNoRMCorre))
+					disp('Getting NoRMCorre params...')
+					optsNoRMCorre = ciapkg.motion_correction.getNoRMCorreParams(size(inputMovieCropped),'guiDisplay',0);
+				end
+
+				% Ensure NoRMCorre gets the correct inputs
+				optsNoRMCorre.d1 = size(inputMovieCropped,1);
+				optsNoRMCorre.d2 = size(inputMovieCropped,2);
+				% fn_structdisp(optsNoRMCorre)
+				% [optsNoRMCorre] = subfxn_getNoRMCorreParams(inputMovieCropped);
+				[~,ResultsOut,template2] = normcorre.normcorre_batch(...
+					inputMovieCroppedTmp,...
+					optsNoRMCorre,...
+					refPic);
+				clear inputMovieCroppedTmp
+				toc(startTurboRegTime);				
+			otherwise
 		end
-		% dispstat('Finished.','keepprev');
-		toc(startTurboRegTime);
-		drawnow;
-		% save('ResultsOutFile','ResultsOut');
+			
 	end
 
+	function [optsNC] = subfxn_getNoRMCorreParams(inputMovieHere)
+		[d1,d2,T] = size(inputMovieHere);
+		bound = 0;
+		sizeCorFactor = 2;
+		% sizeCorFactor = 1;
+		optsNC = normcorre.NoRMCorreSetParms(...
+			'd1', d1-bound,...
+			'd2', d2-bound,...
+			'init_batch',  10,...
+			'bin_width',  50,...
+			'grid_size', [128,128]/sizeCorFactor,... % [128,128]/2 [64,64]
+			'mot_uf', 4,...
+			'correct_bidir', false,...
+			'overlap_pre', 32,...
+			'overlap_post', 32,...
+			'max_dev', 50,...
+			'use_parallel', true,...
+			'print_msg', true,...
+			'us_fac', 4,...
+			'max_shift', 100,...
+			'boundary', 'NaN');
+			% 'init_batch_interval',options.refFrame,...
+	end
+
+	
 	% function registerMovie(movieData,ResultsOut,InterpListSelection,TransformationType,options)
 	function registerMovie()
 		disp('registering frames...');
 		disp('');
-		% need to register subsets of the movie so parfor won't crash due to serialization errors
-		% TODO: make this subset based on the size of the movie, e.g. only send 1GB chunks to workers
-		subsetSize = options.subsetSizeFrames;
-		numSubsets = ceil(length(inputMovie)/subsetSize)+1;
-		subsetList = round(linspace(1,length(inputMovie),numSubsets));
-		display(['registering sublists: ' num2str(subsetList)]);
-		if options.turboregRotation==1
-			disp('Using rotation in registration')
-		end
-		fprintf('Performing %s registration and %s transformation.\n',options.registrationFxn,TransformationType);
-		% ResultsOut{1}.Rotation
-		nSubsets = (length(subsetList)-1);
-		for thisSet=1:nSubsets
-			subsetStartIdx = subsetList(thisSet);
-			subsetEndIdx = subsetList(thisSet+1);
-			if thisSet==nSubsets
-				movieSubset = subsetStartIdx:subsetEndIdx;
-				display([num2str(subsetStartIdx) '-' num2str(subsetEndIdx) ' ' num2str(thisSet) '/' num2str(nSubsets)])
-			else
-				movieSubset = subsetStartIdx:(subsetEndIdx-1);
-				display([num2str(subsetStartIdx) '-' num2str(subsetEndIdx-1) ' ' num2str(thisSet) '/' num2str(nSubsets)])
-			end
-			movieDataTemp(movieSubset) = inputMovie(movieSubset);
-			% loop over and register each frame
-			if options.parallel==1; nWorkers=Inf;else;nWorkers=0;end
 
-			turboregRotationOption = options.turboregRotation;
-			registrationFxnOption = options.registrationFxn;
-			nMovieSubsets = length(movieSubset);
-			
-			% Create anonymous transform function to save CPU cycles in loop
-			switch TransformationType
-				case 'affine'
-					transformFxn = @(xform) affine2d(xform);
-					% tform = affine2d(double(xform));
-				case 'projective'
-					transformFxn = @(xform) projective2d(xform);
-					% tform = projective2d(double(xform));
-				otherwise
-					transformFxn = @(xform) affine2d(xform);
-					% tform = affine2d(double(xform));
-			end
+		switch options.mcMethod
+			case 'normcorre'
+				startTurboRegTime = tic;
+				[optsNC] = subfxn_getNoRMCorreParams(inputMovie);
+				bound = 0;
+				inputMovie = normcorre.apply_shifts(inputMovie,ResultsOut,optsNC,bound/2,bound/2); % apply the shifts to the removed percentile
+				toc(startTurboRegTime);
+			case 'turboreg'
+				% Need to register subsets of the movie so parfor won't crash due to serialization errors.
+				% TODO: make this subset based on the size of the movie, e.g. only send 1GB chunks to workers.
+				subsetSize = options.subsetSizeFrames;
+				nFramesHere = size(inputMovie,3);
+				% numSubsets = ceil(length(inputMovie)/subsetSize)+1;
+				numSubsets = ceil(nFramesHere/subsetSize)+1;
+				% subsetList = round(linspace(1,length(inputMovie),numSubsets));
+				subsetList = round(linspace(1,nFramesHere,numSubsets));
+				display(['registering sublists: ' num2str(subsetList)]);
+				if options.turboregRotation==1
+					disp('Using rotation in registration')
+				end
+				fprintf('Performing %s registration and %s transformation.\n',options.registrationFxn,TransformationType);
+				% ResultsOut{1}.Rotation
+				nSubsets = (length(subsetList)-1);
+				for thisSet=1:nSubsets
+					subsetStartIdx = subsetList(thisSet);
+					subsetEndIdx = subsetList(thisSet+1);
+					if thisSet==nSubsets
+						movieSubset = subsetStartIdx:subsetEndIdx;
+						display([num2str(subsetStartIdx) '-' num2str(subsetEndIdx) ' ' num2str(thisSet) '/' num2str(nSubsets)])
+					else
+						movieSubset = subsetStartIdx:(subsetEndIdx-1);
+						display([num2str(subsetStartIdx) '-' num2str(subsetEndIdx-1) ' ' num2str(thisSet) '/' num2str(nSubsets)])
+					end
 
-			parfor (i = movieSubset,nWorkers)
-				% thisFrame = movieDataTemp{i};
-				% get rotation and translation profile for image
-				% if turboregRotationOption==1
-				% 	MatrixMotCorrDispl(:,i)=[ResultsOut{i}.Translation(1) ResultsOut{i}.Translation(2) ResultsOut{i}.Rotation];
-				% else
-				% 	MatrixMotCorrDispl(:,i)=[ResultsOut{i}.Translation(1) ResultsOut{i}.Translation(2) 0];
-				% end
+					% Get a slice of the data.
+					% movieDataTemp(movieSubset) = inputMovie(movieSubset);
+					
+					% movieDataTemp = inputMovie(:,:,movieSubset);
 
-				% Transform movie given results of turboreg
-				switch registrationFxnOption
-					case {'imtransform','imwarp'}
+					% loop over and register each frame
+					if options.parallel==1; nWorkers=Inf;else;nWorkers=0;end
+
+					turboregRotationOption = options.turboregRotation;
+					registrationFxnOption = options.registrationFxn;
+					nMovieSubsets = length(movieSubset);
+					
+					% [transformFxn] = subfxn_transformFxn(TransformationType);
+
+					parfor (i = movieSubset,nWorkers)
+						rOutTmp = ResultsOut{i};
+
+						% thisFrameT = movieDataTemp{i};
+						thisFrameT = inputMovie(:,:,i);
+
+						% get rotation and translation profile for image
 						% if turboregRotationOption==1
-						% 	rotMat = [...
-						% 			cos(ResultsOut{i}.Rotation) sin(ResultsOut{i}.Rotation) 0;...
-						% 			-sin(ResultsOut{i}.Rotation) cos(ResultsOut{i}.Rotation) 0;...
-						% 			0 0 0];
+						% 	MatrixMotCorrDispl(:,i)=[rOutTmp.Translation(1) rOutTmp.Translation(2) rOutTmp.Rotation];
 						% else
-						% 	rotMat = [0 0 0;0 0 0;0 0 0];
+						% 	MatrixMotCorrDispl(:,i)=[rOutTmp.Translation(1) rOutTmp.Translation(2) 0];
 						% end
 
-						% translateMat =...
-						% 	[0 0 0;...
-						% 	0 0 0;...
-						% 	ResultsOut{i}.Translation(2) ResultsOut{i}.Translation(1) 0];
-						% xform = translateMat + SkewingMat;
+						% Transform movie given results of turboreg
 
-						% Get the skew/translation/rotation matrix from turboreg
-						SkewingMat = ResultsOut{i}.Skew;
+						switch registrationFxnOption
+							case {'imtransform','imwarp'}
+								% if turboregRotationOption==1
+								% 	rotMat = [...
+								% 			cos(rOutTmp.Rotation) sin(rOutTmp.Rotation) 0;...
+								% 			-sin(rOutTmp.Rotation) cos(rOutTmp.Rotation) 0;...
+								% 			0 0 0];
+								% else
+								% 	rotMat = [0 0 0;0 0 0;0 0 0];
+								% end
 
-						rotMat = [...
-							cos(ResultsOut{i}.Rotation) sin(ResultsOut{i}.Rotation) 0;...
-							-sin(ResultsOut{i}.Rotation) cos(ResultsOut{i}.Rotation) 0;...
-							0 0 1];
+								% translateMat =...
+								% 	[0 0 0;...
+								% 	0 0 0;...
+								% 	rOutTmp.Translation(2) rOutTmp.Translation(1) 0];
+								% xform = translateMat + SkewingMat;
 
-						translateMat =...
-							[1 0 0;...
-							0 1 0;...
-							ResultsOut{i}.Translation(2) ResultsOut{i}.Translation(1) 1];
+								% Get the skew/translation/rotation matrix from turboreg
+								SkewingMat = rOutTmp.Skew;
 
-						xform = translateMat*SkewingMat*rotMat;
+								rotMat = [...
+									cos(rOutTmp.Rotation) sin(rOutTmp.Rotation) 0;...
+									-sin(rOutTmp.Rotation) cos(rOutTmp.Rotation) 0;...
+									0 0 1];
 
-						if strcmp(registrationFxnOption,'imtransform')==1
-							% Perform the transformation
-							tform = maketform(TransformationType,double(xform));
-							% InterpListSelection = 'nearest';
-							movieDataTemp{i} = single(imtransform(movieDataTemp{i},tform,char(InterpListSelection),...
-								'UData',[1 size(movieDataTemp{i},2)]-ResultsOut{i}.Origin(2)-1,...
-								'VData',[1 size(movieDataTemp{i},1)]-ResultsOut{i}.Origin(1)-1,...
-								'XData',[1 size(movieDataTemp{i},2)]-ResultsOut{i}.Origin(2)-1,...
-								'YData',[1 size(movieDataTemp{i},1)]-ResultsOut{i}.Origin(1)-1,...
-								'fill',NaN));
-						elseif strcmp(registrationFxnOption,'imwarp')==1
-							tform = transformFxn(double(xform));
-							% Define input spatial referencing.
-							RI = imref2d(size(movieDataTemp{i}),[[1 size(movieDataTemp{i},2)]-ResultsOut{i}.Origin(2)-1],[[1 size(movieDataTemp{i},1)]-ResultsOut{i}.Origin(1)-1]);
+								translateMat =...
+									[1 0 0;...
+									0 1 0;...
+									rOutTmp.Translation(2) rOutTmp.Translation(1) 1];
 
-							% Define output spatial referencing.
-							Rout = imref2d(size(movieDataTemp{i}),[[1 size(movieDataTemp{i},2)]-ResultsOut{i}.Origin(2)-1],[[1 size(movieDataTemp{i},1)]-ResultsOut{i}.Origin(1)-1]);
+								xform = translateMat*SkewingMat*rotMat;
 
-							movieDataTemp{i} = single(imwarp(movieDataTemp{i},RI,tform,char(InterpListSelection),...
-								'OutputView',Rout,...
-								'FillValues',NaN));
+								if strcmp(registrationFxnOption,'imtransform')==1
+									% Perform the transformation
+									tform = maketform(TransformationType,double(xform));
+									% InterpListSelection = 'nearest';
+									thisFrameT = single(imtransform(thisFrameT,tform,char(InterpListSelection),...
+										'UData',[1 size(thisFrameT,2)]-rOutTmp.Origin(2)-1,...
+										'VData',[1 size(thisFrameT,1)]-rOutTmp.Origin(1)-1,...
+										'XData',[1 size(thisFrameT,2)]-rOutTmp.Origin(2)-1,...
+										'YData',[1 size(thisFrameT,1)]-rOutTmp.Origin(1)-1,...
+										'fill',NaN));
+								elseif strcmp(registrationFxnOption,'imwarp')==1
+									tform = subfxn_transformFxn(TransformationType,xform);
+									% Define input spatial referencing.
+									RI = imref2d(size(thisFrameT),[[1 size(thisFrameT,2)]-rOutTmp.Origin(2)-1],[[1 size(thisFrameT,1)]-rOutTmp.Origin(1)-1]);
+
+									% Define output spatial referencing.
+									Rout = imref2d(size(thisFrameT),[[1 size(thisFrameT,2)]-rOutTmp.Origin(2)-1],[[1 size(thisFrameT,1)]-rOutTmp.Origin(1)-1]);
+
+									thisFrameT = single(imwarp(thisFrameT,RI,tform,char(InterpListSelection),...
+										'OutputView',Rout,...
+										'FillValues',NaN));
+								end
+							case 'transfturboreg'
+								frameClass = class(thisFrameT);
+								thisFrameT = ...
+								cast(...
+									transfturboreg(...
+										single(thisFrameT),...
+										ones(size(thisFrameT),'single'),...
+										rOutTmp),...
+									frameClass);
+							otherwise
+								% do nothing
 						end
-					case 'transfturboreg'
-						frameClass = class(movieDataTemp{i});
-						movieDataTemp{i} = ...
-						cast(...
-							transfturboreg(...
-								single(movieDataTemp{i}),...
-								ones(size(movieDataTemp{i}),'single'),...
-								ResultsOut{i}),...
-							frameClass);
-					otherwise
-						% do nothing
-				end
-			end
-			dispstat('Finished.','keepprev');
 
-			inputMovie(movieSubset)=movieDataTemp(movieSubset);
-			clear movieDataTemp;
-		end
+						inputMovie(:,:,i) = thisFrameT;
+					end
+					dispstat('Finished.','keepprev');
+
+					% inputMovie(movieSubset)=movieDataTemp(movieSubset);
+					% clear movieDataTemp;
+				end
+			otherwise
+				% Do nothing
+			end
 	end
 	function removeInputMovieEdges()
 		% turboreg outputs 0s where movement goes off the screen
@@ -669,13 +797,13 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 			case 'imtransform'
 				reverseStr = '';
 				for row=1:size(inputMovie,1)
-					thisMovieMinMask(row,:) = logical(nanmax(isnan(squeeze(inputMovie(3,:,:))),[],2));
+					thisMovieMinMask(row,:) = logical(max(isnan(squeeze(inputMovie(3,:,:))),[],2,'omitnan'));
 					reverseStr = cmdWaitbar(row,size(inputMovie,1),reverseStr,'inputStr','getting crop amount','waitbarOn',1,'displayEvery',5);
 				end
 			case 'transfturboreg'
 				reverseStr = '';
 				for row=1:size(inputMovie,1)
-					thisMovieMinMask(row,:) = logical(nanmin(squeeze(inputMovie(row,:,:))~=0,[],2)==0);
+					thisMovieMinMask(row,:) = logical(min(squeeze(inputMovie(row,:,:))~=0,[],2,'omitnan')==0);
 					reverseStr = cmdWaitbar(row,size(inputMovie,1),reverseStr,'inputStr','getting crop amount','waitbarOn',1,'displayEvery',5);
 				end
 			otherwise
@@ -765,8 +893,8 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		bottomRowCrop = size(inputMovie,1)-pxToCropPreprocess; % bottom row
 		rightColCrop = size(inputMovie,2)-pxToCropPreprocess; % right column
 
-		rowLen = size(inputMovie,1);
-		colLen = size(inputMovie,2);
+		% rowLen = size(inputMovie,1);
+		% colLen = size(inputMovie,2);
 		% set leftmost columns to NaN
 		inputMovie(1:end,1:leftColCrop,:) = NaN;
 		% set rightmost columns to NaN
@@ -804,7 +932,7 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		rectCrop=[xmin ymin xmax-xmin ymax-ymin];
 
 		if options.showFigs==1
-			[figHandle, figNo] = openFigure(100, '');
+			[~, ~] = openFigure(100, '');
 			imagesc(imcrop(inputMovie(:,:,1),rectCrop));
 		end
 		% To get the final size, we just apply on the first figure
@@ -923,11 +1051,13 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 
 					%Get dimension information about 3D movie matrix
 					[inputMovieX, inputMovieY, inputMovieZ] = size(inputMovieCropped);
-					reshapeValue = size(inputMovieCropped);
-					%Convert array to cell array, allows slicing (not contiguous memory block)
-					inputMovieCropped = squeeze(mat2cell(inputMovieCropped,inputMovieX,inputMovieY,ones(1,inputMovieZ)));
+					% reshapeValue = size(inputMovieCropped);
 
-					imageNow = squeeze(inputMovieCropped{1});
+					%Convert array to cell array, allows slicing (not contiguous memory block)
+					% inputMovieCropped = squeeze(mat2cell(inputMovieCropped,inputMovieX,inputMovieY,ones(1,inputMovieZ)));
+
+					% imageNow = squeeze(inputMovieCropped{1});
+					imageNow = squeeze(inputMovieCropped(:,:,1));
 					[rows,cols] = size(imageNow);
 					r1 = min(rows,cols)/options.matlabdiskR1;
 					r2 = options.matlabdiskR2;
@@ -935,20 +1065,24 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 					hDisk2 = fspecial('disk', r2);
 					transform = @(A) transform_2(A,hDisk,hDisk2);
 					reverseStr = '';
-					% nImages = size(inputMovieCropped,3);
-					nImages = length(inputMovieCropped);
+					nImages = size(inputMovieCropped,3);
+					% nImages = length(inputMovieCropped);
 
 					if options.parallel==1; nWorkers=Inf;else;nWorkers=0;end
 					parfor (imageNo = 1:nImages,nWorkers)
-						imageNow = squeeze(inputMovieCropped{imageNo});
-						inputMovieCropped{imageNo} = transform(imageNow);
+						% imageNow = squeeze(inputMovieCropped{imageNo});
+						% inputMovieCropped{imageNo} = transform(imageNow);
+
+						imageNow = squeeze(inputMovieCropped(:,:,imageNo));
+						inputMovieCropped(:,:,imageNo) = transform(imageNow);
+
 						% if (mod(imageNo,20)==0|imageNo==nImages)
 						%     reverseStr = cmdWaitbar(imageNo,nImages,reverseStr,'inputStr','fspecial normalizing');
 						% end
 					end
 					dispstat('Finished.','keepprev');
 
-					inputMovieCropped = cat(3,inputMovieCropped{:});
+					% inputMovieCropped = cat(3,inputMovieCropped{:});
 				case 'divideByLowpass'
 					disp('dividing movie by lowpass...')
 					inputMovieCropped = normalizeMovie(single(inputMovieCropped),'normalizationType','imfilter','blurRadius',20,'waitbarOn',1);
@@ -1065,4 +1199,19 @@ function A_tr = transform_2(A, ssm_filter, asm_filter)
 
 	A_tr = imfilter(A_tr, asm_filter);
 
+end
+function [tform] = subfxn_transformFxn(TransformationType,xform)
+	% Create anonymous transform function to save CPU cycles in loop
+	switch TransformationType
+		case 'affine'
+			% transformFxn = @(xform) affine2d(xform);
+			tform = affine2d(double(xform));
+			% tform = subfxn_transformFxn(TransformationType,double(xform));
+		case 'projective'
+			% transformFxn = @(xform) projective2d(xform);
+			tform = projective2d(double(xform));
+		otherwise
+			% transformFxn = @(xform) affine2d(xform);
+			tform = affine2d(double(xform));
+	end
 end

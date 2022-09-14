@@ -25,7 +25,7 @@ function obj = viewMovie(obj)
 	% fileFilterRegexp = obj.fileFilterRegexp;
 	FRAMES_PER_SECOND = obj.FRAMES_PER_SECOND;
 	% DOWNSAMPLE_FACTOR = obj.DOWNSAMPLE_FACTOR;
-	options.videoPlayer = [];
+	options.videoPlayer = '';
 	options.settingsType = '';
 	% =====================
 	currentDateTimeStr = datestr(now,'yyyymmdd_HHMM','local');

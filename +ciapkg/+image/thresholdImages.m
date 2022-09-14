@@ -24,6 +24,7 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
 		% 2021.07.06 [10:12:33] - Added support for fast thresholding using vectorized form, faster than parfor loop.
 		% 2021.07.06 [18:57:02] - Fast border calculation using convn for options.fastThresholding==1, less precise than bwboundaries or bwareafilt but works for fast display purposes.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2022.06.27 [19:41:34] - manageParallelWorkers now passed options.waitbarOn value to reduce command line clutter if user request in thresholdImages.
 	% TODO
 		%
 
@@ -88,7 +89,7 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
 	% pre-allocate for speed
 	% thresholdedImages = zeros(size(inputImages),class(inputImages));
 	boundaryIndices = cell([nImages 1]);
-	manageParallelWorkers('parallel',options.parallel);
+	manageParallelWorkers('parallel',options.parallel,'displayInfo',options.waitbarOn);
 	if options.waitbarOn==1
 		disp('thresholding images...')
 	end
@@ -152,6 +153,13 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
 				inputImages = medfilt3(inputImages,[options_medianFilterNeighborhoodSize options_medianFilterNeighborhoodSize 1]);
 			otherwise
 				% body
+		end
+		
+		if options.removeUnconnectedBinary==1
+			parfor(imageNo=1:nImages,nWorkers)
+				thisFilt = inputImages(:,:,imageNo);
+				[~,numObjects(imageNo)] = bwlabel(thisFilt);
+			end
 		end
 		
 		if options_getBoundaryIndex==1

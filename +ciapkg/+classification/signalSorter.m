@@ -1,20 +1,31 @@
 function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSignals,varargin)
+	% [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSignals,varargin)
+	% 
 	% Displays a GUI for sorting images (e.g. cells) and their associated signals (e.g. fluorescence activity traces). Also does preliminary sorting based on image/signal properties if requested by user.
-	% See following URL for details of GUI and tips on manual sorting: https://github.com/bahanonu/calciumImagingAnalysis/wiki/Manual-cell-sorting-of-cell-extraction-outputs.
+	% 
+	% See following URL for details of GUI and tips on manual sorting: https://bahanonu.github.io/ciatah/help_manual_cell_sorting/.
+	% 
 	% Biafra Ahanonu
 	% started: 2013.10.08
+	% 
 	% Dependent code
-		% getOptions.m, createObjMap.m, removeSmallICs.m, identifySpikes.m, etc., see repository
-	% inputs
-		% inputImages - [x y N] matrix where N = number of images, x/y are dimensions. Use permute(inputImages,[2 3 1]) if you use [N x y] for matrix indexing.
-			% Alternatively, make inputImages = give path to NWB file and inputSignals = [] for signalSorter to automatically load NWB files.
-		% inputSignals - [N time] matrix where N = number of signals (traces) and time = frames.
-		% inputID - obsolete, kept for compatibility, just input empty []
-		% nSignals - obsolete, kept for compatibility
-	% outputs
-		% inputImages - [N x y] matrix where N = number of images, x/y are dimensions with only manual choices kept.
-		% inputSignals
-		% choices
+	% 	getOptions.m, createObjMap.m, removeSmallICs.m, identifySpikes.m, etc., see CIAtah repository.
+	% 
+	% Inputs
+	% 	<strong>inputImages</strong>
+	% 	  1) [x y N] matrix where N = number of images, x/y are dimensions. Use permute(inputImages,[2 3 1]) if you use [N x y] for matrix indexing.
+	% 	  2) Path to NWB file and inputSignals = [] for signalSorter to automatically load NWB files.
+	% 	<strong>inputSignals</strong> - [N time] matrix where N = number of signals (traces) and time = frames.
+	% 	inputID - obsolete, kept for compatibility, just input empty []
+	% 	nSignals - obsolete, kept for compatibility
+	% 
+	% Outputs
+	% 	<strong>inputImages</strong> - Matrix: filtered with only good outputs. [N x y] matrix where N = number of images, x/y are dimensions with only manual choices kept.
+	% 	<strong>inputSignals</strong> - Matrix: filtered with only good outputs. [N time] matrix where N = number of signals (traces) and time = frames.
+	% 	<strong>choices</strong> - [1 N] vector using the below key:
+	% 		1 = yes
+	% 		0 = no
+	% 		2 = not designated by user
 
 	% changelog
 		% 2013.10.xx changed to ginput and altered UI to show more relevant information, now shows a objMap overlayed with the current filter, etc.
@@ -78,6 +89,7 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 		% 2021.12.22 [08:19:19] - Updated suptitle to ciapkg.overloaded.suptitle. Also limit number of GUI re-runs to prevent infinite looping.
         % 2022.01.19 [12:35:42] - Fixed issue with `gca.XRuler.Axle.LineStyle` being an empty object when axes created, leading to failure to assign and error loops.
         % 2022.02.06 [20:06:19] - Make all openFigure to ciapkg.api.openFigure.
+        % 2022.03.14 [01:10:52] - Comments update.
 	% TODO
 		% DONE: New GUI interface to allow users to scroll through video and see cell activity at that point
 		% DONE: allow option to mark rest as bad signals
@@ -171,8 +183,9 @@ function [inputImages, inputSignals, choices] = signalSorter(inputImages,inputSi
 	options.randomizeOrder = 0;
 	% show ROI traces in addition to input traces
 	options.showROITrace = 0;
-	% pre-compute signal peaks
+	% Matrix: save time if already computed peaks. [nSignals frame] matrix. Binary matrix with 1 = peaks, 0 = non-peaks.
 	options.signalPeaks = [];
+	% Cell array: save time if already computed peaks. {1 nSignals} cell array. Each cell contains [1 nPeaks] vector that stores the frame locations of each peak.
 	options.signalPeaksArray = [];
 	% ROI for peak signal plotting
 	options.peakROI = -20:20;
@@ -1550,6 +1563,9 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 					set(zoomHandle,'ActionPostCallback',@sliderZoomCallback);
 				end
 
+				% Create progress bar
+				[axValid, axValidAll] = subfxn_progressBarCreate(axValid, axValidAll);
+
 				set(objMapPlotLocHandle,'tag','objMapPlotLocHandle')
 				set(objMapZoomPlotLocHandle,'tag','objMapZoomPlotLocHandle')
 				% if strcmp(get(zoom(1),'Enable'),'off')
@@ -1557,10 +1573,8 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 				% end
 				set(objMapPlotLocHandle,'ButtonDownFcn',@subfxnSelectCellOnCellmap)
 				set(objMapZoomPlotLocHandle,'ButtonDownFcn',@subfxnSelectCellOnCellmap)
-				set(mainFig, 'KeyPressFcn', @(source,eventdata) figure(mainFig));
 
-				% Create progress bar
-				[axValid, axValidAll] = subfxn_progressBarCreate(axValid, axValidAll);
+				set(mainFig, 'KeyPressFcn', @(source,eventdata) figure(mainFig));
 
 				while strcmp(keyIn,'3')
 					frameNoTotal = frameNoTotal+1;
@@ -1583,6 +1597,8 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 				end
 				set(objMapPlotLocHandle,'tag','objMapPlotLocHandle')
 				set(objMapZoomPlotLocHandle,'tag','objMapZoomPlotLocHandle')
+				set(objMapPlotLocHandle,'ButtonDownFcn',@subfxnSelectCellOnCellmap)
+				set(objMapZoomPlotLocHandle,'ButtonDownFcn',@subfxnSelectCellOnCellmap)
 
 				reply = double(keyIn);
 				set(gcf,'currentch','3');
@@ -2109,6 +2125,7 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 		set(gcf,'uicontextmenu',conMenu);
 	end
 	function subfxnSelectCellOnCellmap(source,eventdata)
+		disp('Click screen')
 		if showCrossHairs==1
 			[xUser,yUser,~] = ciapkg.overloaded.ginputCustom(1);
 		else
@@ -2118,6 +2135,7 @@ function [valid, safeExit] = chooseSignals(options,signalList, inputImages,input
 		end
 		mapTags = {'objMapPlotLocHandle','objMapZoomPlotLocHandle'};
 		thisPlotTag = find(ismember(mapTags, get(gca,'tag')));
+		thisPlotTag
 		if isempty(thisPlotTag)
 			% zoom;
 		elseif thisPlotTag<0|thisPlotTag>length(mapTags)
@@ -2551,7 +2569,7 @@ function [croppedPeakImages2, croppedPeakImages] = viewMontage(inputMovie,inputI
 	croppedPeakImages = cat(3,meanTransientImage,croppedPeakImages);
 
 	croppedPeakImages222 = compareSignalToMovie(inputMovie, inputImage, thisTrace,'getOnlyPeakImages',1,'waitbarOn',0,'extendedCrosshairs',2,'crossHairVal',maxValMovie*options.crossHairPercent,'outlines',0,'signalPeakArray',signalPeakArray,'cropSize',cropSizeLength,'crosshairs',0,'addPadding',1,'xCoords',xCoords,'yCoords',yCoords,'outlineVal',NaN,'inputDatasetName',options.inputDatasetName,'inputMovieDims',options.inputMovieDims,'hdf5Fid',options.hdf5Fid,'keepFileOpen',options.keepFileOpen);
-	[thresholdedImages, boundaryIndices] = thresholdImages(croppedPeakImages222(:,:,1),'binary',1,'getBoundaryIndex',1,'threshold',options.thresholdOutline,'removeUnconnectedBinary',0);
+	[thresholdedImages, boundaryIndices] = thresholdImages(croppedPeakImages222(:,:,1),'binary',1,'getBoundaryIndex',1,'threshold',options.thresholdOutline,'removeUnconnectedBinary',0,'waitbarOn',0);
 	for imageNo = 1:size(croppedPeakImages,3)
 		tmpImg = croppedPeakImages(:,:,imageNo);
 		tmpImg(boundaryIndices{1}) = NaN;

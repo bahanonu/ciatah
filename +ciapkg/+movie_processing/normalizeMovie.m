@@ -15,6 +15,7 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		% 2021.01.15 [21:09:55] - Moved detrend support into normalizeMovie.
 		% 2021.06.02 [20:04:49] - Detrend movie now uses nanmean to get around issues in motion corrected videos.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2022.05.16 [16:39:45] - Switch away from using nanmean to mean('omitnan'). Detrend flight code refactor.
 	% TODO
 		%
 
@@ -721,7 +722,7 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		%Get dimension information about 3D movie matrix
 		[inputMovieX, inputMovieY, inputMovieZ] = size(inputMovie);
 
-		frameMeanInputMovie = squeeze(nanmean(inputMovie,[1 2]));
+		frameMeanInputMovie = squeeze(mean(inputMovie,[1 2],'omitnan'));
 
 		trendVals = frameMeanInputMovie - detrend(frameMeanInputMovie,option.detrendDegree);
 
@@ -740,12 +741,14 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		% end
 
 		parfor frame = 1:nFramesToNormalize
-			thisFrame = inputMovie(:,:,frame);
-			thisFrame = squeeze(thisFrame);
-			thisFrame = thisFrame - trendVals(frame);
-			thisFrame = thisFrame + meanInputMovie;
+			inputMovie(:,:,frame) = inputMovie(:,:,frame) - trendVals(frame) + meanInputMovie;
 
-			inputMovie(:,:,frame) = thisFrame;
+			% thisFrame = inputMovie(:,:,frame);
+			% thisFrame = squeeze(thisFrame);
+			% thisFrame = thisFrame - trendVals(frame);
+			% thisFrame = thisFrame + meanInputMovie;
+
+			% inputMovie(:,:,frame) = thisFrame;
 
 			if ~verLessThan('matlab', '9.2')
 				send(D, frame); % Update

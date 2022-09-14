@@ -21,6 +21,23 @@ Page outlines some common issues and fixes to them that may be encountered while
 * [File or folder dialog box with no instructions](#file-or-folder-dialog-box-with-no-instructions)
 ***
 
+## Error opening AVI or other files due to codec issues
+
+If run into issues opening certain AVI files (e.g. due to codec issues) with CIAtah/MATLAB:
+
+```Matlab
+Error using VideoReader/initReader (line 734)
+Unable to determine the required codec.
+
+Error in audiovideo.internal.IVideoReader (line 136)
+            initReader(obj, fileName, currentTime);
+
+Error in VideoReader (line 104)
+            obj@audiovideo.internal.IVideoReader(varargin{:});
+```
+
+, install `K-Lite Codec Pack` (https://codecguide.com/download_kl.htm) or similar for added support.
+
 ## PCA-ICA, CNMF-E, or other cell extraction algorithm's don't produce sensible output.
 
 - When running `modelPreprocessMovie` a dialog box appears showing the available analysis steps. Certain combinations of these steps make sense while others should be avoided.

@@ -20,7 +20,7 @@ function loadBatchFxns(varargin)
 		% 2020.05.09 [16:40:13] - Updates to remove additional specific repositories that should not be loaded by default. Add support for overriding this feature.
 		% 2020.06.05 [23:35:43] - If user doesn't have Parallel Toolbox, still works
 		% 2020.07.21 [14:11:42] - Fix to make sure all sub-folders (not just the root) are also removed in the case of certain external_programs.
-		% 2021.02.01 [??‎15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
+		% 2021.02.01 [15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
 		% 2021.06.20 [00:22:38] - Added manageMiji('startStop','closeAllWindows'); support.
 		% 2021.07.16 [13:38:55] - Remove redundant loading and unloading of external programs via additional checks.
 		% 2021.07.22 [19:51:50] - Moved loadBatchFxns into ciapkg package. Use ciapkg.getDir to get directory as standard IO.
@@ -28,10 +28,46 @@ function loadBatchFxns(varargin)
 		% 2021.08.09 [12:06:32] - Do not add docs and data folders or sub-folders to the path.
 		% 2021.08.24 [13:46:13] - Update to fullfile call using filesep to make platform neutral.
 		% 2021.11.09 [19:14:49] - Improved handling of external programs both in adding and removing from path. Additional support for removing specific packages that are not always needed.
+		% 2022.03.04 [07:03:22] - Added patchwarp to list of excluded by default folders for external programs.
+		% 2022.03.08 [15:17:16] - Directly allow use of ciapkg.io.getOptions since it is not dependent on loadBatchFxns due to being inside a package. Also allow option for user to specify which special packages that are not normally loaded to be loaded rather than loading everything if they want a specific package loaded.
+		% 2022.07.11 [14:22:30] - Speed up removal of directories not needed by default by directly locating the root path of that algorithm rather than searching for the M-file within the entire external programs directory, saves time. Users must have downloaded dependencies using loadDependencies.
+		% 2022.07.14 [20:19:47] - Add SlideBook JAR to the path for Bio-Formats support.
 	% TODO
 		%
 	
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
+	% ========================
+	% Cell array of strings: M-files pointing to root directories that should be excluded from loading.
+	options.removeDirFxnToFind = {...
+		'extractor.m';
+		'tenrandblk.m';
+		'patchwarp.m';
+		};
+		% 'runCELLMax.m';
+	options.removeDirFxnToFindDirs = {...
+		'extract';
+		'tensor_toolbox';
+		'patchwarp';
+		};
+		% 'cellmax';
+		% 'normcorre.m';
+	% Cell array of strings: M-files to overload options.removeDirFxnToFind.
+	options.removeDirFxnToFindExclude = {};
+	% get options
+	options = ciapkg.io.getOptions(options,varargin);
+	% display(options)
+	% unpack options into current workspace
+	% fn=fieldnames(options);
+	% for i=1:length(fn)
+	% 	eval([fn{i} '=options.' fn{i} ';']);
+	% end
+	% ========================
+
+	% Backwards compatibility for prior functions that just call loadBatchFxns with single input argument.
+	if iscell(varargin)&&length(varargin)>1
+		varargin = '';
+	end
 
 	% Disable the handle graphics warning "The DrawMode property will be removed in a future release. Use the SortMethod property instead." from being displayed. Comment out this line for debugging purposes as needed.
 	warning('off','MATLAB:hg:WillBeRemovedReplaceWith')
@@ -40,7 +76,12 @@ function loadBatchFxns(varargin)
 	externalProgramsDir = ciapkg.getDirExternalPrograms();
 
 	% List of M-files where if found, that programs directory should by default be removed from the path.
-	removeDirFxnToFind = {'runCELLMax.m','extractor.m','normcorre.m','tenrandblk.m'};
+	removeDirFxnToFind = options.removeDirFxnToFind;
+	removeDirFxnToFindDirs = options.removeDirFxnToFindDirs;
+	if ~isempty(options.removeDirFxnToFindExclude)
+		[removeDirFxnToFind, idx1] = setdiff(removeDirFxnToFind,options.removeDirFxnToFindExclude);
+		removeDirFxnToFindDirs = removeDirFxnToFindDirs(idx1);
+	end
 	% 'cellmax.runCELLMax', 'CELLMax_Wrapper.m'
 
 	% Add calciumImagingAnalysis directory and subdirectories to path, use dbstack to ensure only add in the root directory regardless of where user has current MATLAB folder.
@@ -73,30 +114,30 @@ function loadBatchFxns(varargin)
 
 	% pathListArray = subfxnRemoveDirs(0,pathListArray);
 	pathListArrayOriginal = pathListArray;
-
+	
 	% =================================================
 	% Remove paths that are already in MATLAB path to save time
 	pathFilter = cellfun(@isempty,pathListArray);
 	pathListArray = pathListArray(~pathFilter);
 	pathFilter = ismember(pathListArray,strsplit(path,pathsep));
 	pathListArray = pathListArray(~pathFilter);
-
+	
 	% Remove 'docs' and 'data', don't need to be in the path.
 	matchIdxD = contains(pathListArray,[functionDir filesep 'docs']);
 	pathListArray = pathListArray(~matchIdxD);
 
 	matchIdxD = contains(pathListArray,[functionDir filesep 'data']);
 	pathListArray = pathListArray(~matchIdxD);
-
+	
 	matchIdxD = contains(pathListArray,[externalProgramsDir filesep '_downloads']);
-	pathListArray = pathListArray(~matchIdxD);	
+	pathListArray = pathListArray(~matchIdxD);
 
 	% If going to remove directories in removeDirFxnToFind then do so now to prevent redundant calls to addpath, etc.
 	findListFlag = [];
 	if isempty(varargin)
 		[pathListArray,findListFlag] = subfxnRemoveDirs(0,pathListArray);
 	end
-
+	
 	if strcmp(varargin,'excludeExternalPrograms')
 		disp(['Excluding ' externalProgramsDir ' from PATH adding.'])
 		matchIdx2 = contains(pathListArray,externalProgramsDir);
@@ -104,8 +145,16 @@ function loadBatchFxns(varargin)
 	end
 
 	% =================================================
-	% Add paths as needed and remove any paths that should not be present.
+	% Add SlideBook reader to the path
+	slideBookPath = fullfile(ciapkg.getDirExternalPrograms(),'bfmatlab_readers','SlideBook6Reader.jar');
+	if isfile(slideBookPath)==1
+		disp(['Adding to JAVA path: ' slideBookPath])
+		javaaddpath(slideBookPath);
+	end
 
+	% =================================================
+	% Add paths as needed and remove any paths that should not be present.
+	
 	skipRemovePath = 0;
 	if isempty(pathListArray)&isempty(varargin)
 		disp('Folders still need to be removed.')
@@ -253,8 +302,26 @@ function loadBatchFxns(varargin)
 			pathToRmCell = {};
 			findListFlag = [];
 			matchIdxAll = [];
+			if rmPathFlag==0
+				% extDir = dir([functionDir filesep externalProgramsDir]);
+				extDir = dir([externalProgramsDir]);
+				extDir = extDir([extDir.isdir]);
+				if length(extDir)<3
+					disp('No external programs!')
+					return;
+				end
+				extDir = extDir(3:end);
+			end
+
+			if rmPathFlag==1
+				pathFull = strsplit(path,pathsep);
+			end
+
 			for iNo = 1:length(fxnRootFolder)
 				thisFxn = fxnRootFolder{iNo};
+				thisFxnFolder = removeDirFxnToFindDirs{iNo};
+
+				mfileLocFlag = 0;
 
 				fileLoc = which(thisFxn);
 				if isempty(fileLoc)
@@ -263,28 +330,28 @@ function loadBatchFxns(varargin)
 					findListFlag(iNo) = 1;
 				end
 				if rmPathFlag==1
-					[pathToRm,~,~] = fileparts(fileLoc);
+					% [pathToRm,~,~] = fileparts(fileLoc);
+					pathToRm = fullfile(externalProgramsDir,thisFxnFolder);
 				else
-					% extDir = dir([functionDir filesep externalProgramsDir]);
-					extDir = dir([externalProgramsDir]);
-					extDir = extDir([extDir.isdir]);
-					if length(extDir)<3
-						disp('No external programs!')
-						return;
-					end
-					extDir = extDir(3:end);
-					foundFiles = dir(fullfile([externalProgramsDir], ['**' filesep thisFxn '']));
-					if isempty(foundFiles)
-						pathToRm = [];
-					else
-						pathToRm = foundFiles.folder;
+					pathToRm = fullfile(externalProgramsDir,thisFxnFolder);
+
+					if ~isdir(pathToRm)
+						foundFiles = dir(fullfile([externalProgramsDir], ['**' filesep thisFxn '']));
+						if isempty(foundFiles)
+							pathToRm = [];
+						else
+							pathToRm = foundFiles.folder;
+						end
+						mfileLocFlag = 1;
 					end
 				end
 
 				if ~isempty(pathToRm)
-					% extractor now in sub-directory
-					if strcmp(thisFxn,'extractor.m')
-						[pathToRm,~,~] = fileparts(pathToRm);
+					if mfileLocFlag==1
+						% extractor now in sub-directory
+						if strcmp(thisFxn,'extractor.m')
+							[pathToRm,~,~] = fileparts(pathToRm);
+						end
 					end
 
 					if strcmp(thisFxn,'CELLMax_Wrapper.m')|strcmp(thisFxn,'cellmax.runCELLMax')
@@ -294,20 +361,33 @@ function loadBatchFxns(varargin)
 					else
 						thisFxnStr = thisFxn;
 					end
+
 					matchIdx = contains(pathListArray,pathToRm);
-					if rmPathFlag==1&any(matchIdx)==1
-					% if rmPathFlag==1
-						fprintf('Removing unneeded directory from path: %s.\n',thisFxnStr);
-						% pathToRmCell{end+1} = pathToRm;
-						pathToRmCell = [pathToRmCell{:} pathListArray(matchIdx)];
+					if rmPathFlag==1
+						matchIdx = matchIdx&contains(pathListArray,pathToRm);
+
+						if any(matchIdx)==1
+							fprintf('Removing unneeded directory from path: %s.\n',thisFxnStr);
+							% pathToRmCell{end+1} = pathToRm;
+							pathToRmCell = [pathToRmCell{:} pathListArray(matchIdx)];
+						end
+
+						matchIdx_pathFull = contains(pathFull,pathToRm);
+						if any(matchIdx_pathFull)==1
+							pathToRmCell = [pathToRmCell{:} pathFull(matchIdx_pathFull)];
+						end
+						pathToRmCell = unique(pathToRmCell);
+
+						filterIdx22 = ismember(pathToRmCell,pathFull);
+						pathToRmCell = pathToRmCell(filterIdx22);
 						% rmpath(pathToRm);
 					elseif rmPathFlag==0
 						fprintf('Removing unneeded directory from "to add" path list: %s.\n',thisFxnStr);
 						% pathListArray = pathListArray(~matchIdx);
 						if isempty(matchIdxAll)
-							matchIdxAll = ~matchIdx;
+							matchIdxAll = matchIdx;
 						elseif ~isempty(matchIdx)
-							matchIdxAll = matchIdxAll|~matchIdx;
+							matchIdxAll = matchIdxAll|matchIdx;
 						end
 					end
 					% pathToRm
@@ -318,11 +398,15 @@ function loadBatchFxns(varargin)
 			end
 
 			if rmPathFlag==1
+				% pathToRmCell'
 				% Only remove path if user requests
-				rmpath(strjoin(pathToRmCell,pathsep));
+				if isempty(pathToRmCell)
+				else
+					rmpath(strjoin(pathToRmCell,pathsep));
+				end
 			elseif rmPathFlag==0&~isempty(matchIdxAll)
 				% Remove from list of folders to add to path
-				pathListArray = pathListArray(matchIdxAll);
+				pathListArray = pathListArray(~matchIdxAll);
 			end
 		catch err
 			disp(repmat('@',1,7))

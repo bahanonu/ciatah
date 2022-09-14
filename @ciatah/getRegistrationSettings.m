@@ -26,6 +26,8 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		% 2021.07.22 [12:10:10] - Added movie detrend options.
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2021.12.01 [19:21:00] - Handle "User selects specific value" going into infinite loop. Allow cancel option to prevent loop.
+		% 2022.06.28 [15:28:13] - Add additional black background support.
+		% 2022.07.10 [17:21:21] - Added largeMovieLoad setting.
 	% TODO
 		% DONE: Allow user to input prior settings, indicate those changed from default by orange or similar color.
 
@@ -110,6 +112,10 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		tS.REGISTRATION______________.val = {{'====================='}};
 		tS.REGISTRATION______________.str = {{'====================='}};
 		tS.REGISTRATION______________.tooltip =  {{'====================='}};
+	tS.mcMethod = [];
+		tS.mcMethod.val = {{'turboreg','normcorre'}};
+		tS.mcMethod.str = {{'Turboreg motion correction','NoRMCorre (non-rigid) motion correction'}};
+		tS.mcMethod.tooltip =  {{'Method to use for motion correction.'}};
 	tS.parallel = [];
 		tS.parallel.val = {{1,0}};
 		tS.parallel.str = {{'parallel processing','NO parallel processing'}};
@@ -303,6 +309,10 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		tS.nParallelWorkers.val = {{nWorkersDefault, userSelectVal, nWorkersDefault*2}};
 		tS.nParallelWorkers.str = {{nWorkersDefault, userSelectStr, nWorkersDefault*2}};
 		tS.nParallelWorkers.tooltip = {{defaultTooltips}};
+	tS.largeMovieLoad = [];
+		tS.largeMovieLoad.val = {{0,1}};
+		tS.largeMovieLoad.str = {{'No','Yes'}};
+		tS.largeMovieLoad.tooltip = {{'Whether to load movie without pre-allocating matrix, useful for single large movie in each folder that needs to be processed.'}};
 		
 	% ===================================
 	tS.STRIPE_REMOVAL______________ = [];
@@ -404,6 +414,7 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 	nGuiSubsetsTrue = (nGuiSubsets-1);
 	% nGuiSubsetsTrue = 1;
 	figure(figNoDefault);
+	set(gcf,'color',[0 0 0]);
 	for thisSet = 1:nGuiSubsetsTrue
 		% 1:nPropertiesToChange
 		% subsetStartTime = tic;
@@ -421,8 +432,8 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 
 		[figHandle figNo] = openFigure(figNoDefault, '');
 		clf
-		uicontrol('Style','Text','String',inputTitleStr,'Units','normalized','Position',[uiXOffset uiYOffset+0.05 0.8 0.05],'BackgroundColor','white','HorizontalAlignment','Left','FontSize',uiFontSize);
-		uicontrol('Style','Text','String',sprintf('Options page %d/%d: Mouse over each options for tips. To continue, press enter. Orange = previous non-default settings.\n>>>On older MATLAB versions, select the command window before pressing enter.',thisSet,nGuiSubsets-1),'Units','normalized','Position',[uiXOffset uiYOffset+0.02 uiTxtSize+uiBoxSize 0.05],'BackgroundColor','white','HorizontalAlignment','Left','FontSize',uiFontSize);
+		uicontrol('Style','Text','String',inputTitleStr,'Units','normalized','Position',[uiXOffset uiYOffset+0.05 0.8 0.05],'BackgroundColor','black','ForegroundColor','white','HorizontalAlignment','Left','FontSize',uiFontSize);
+		uicontrol('Style','Text','String',sprintf('Options page %d/%d: Mouse over each options for tips. To continue, press enter. Orange = previous non-default settings.\n>>>On older MATLAB versions, select the command window before pressing enter.',thisSet,nGuiSubsets-1),'Units','normalized','Position',[uiXOffset uiYOffset+0.02 uiTxtSize+uiBoxSize 0.05],'BackgroundColor','black','ForegroundColor','white','HorizontalAlignment','Left','FontSize',uiFontSize);
 
 		propNoDisp = 1;
 		for propertyNo = propertySubsetList
@@ -465,7 +476,7 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 
 			listPos = [uiXOffset+uiTxtSize+colNo uiYOffset-uiXIncrement*propNoDisp uiBoxSize 0.05];
 			uiListHandles{propertyNo} = uicontrol('Style', 'popup','String', propertySettingsStr.(property),'Units','normalized',...
-				'Position', listPos,...
+				'Position', listPos,'BackgroundColor','black','ForegroundColor','white',...
 				'Callback',@subfxnInterfaceCallback,'FontSize',uiFontSize,'Tag',property);
 
 			% jEdit = findjobj(uiTextHandles{propertyNo});
@@ -482,15 +493,16 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 
 			% If property is non-default, set to orange to alert user.
 			if any(ismember(nonDefaultProperties,property))
-				set(uiListHandles{propertyNo},'Backgroundcolor',[254 216 177]/255);
+				set(uiListHandles{propertyNo},'Backgroundcolor',[254 216 177]/255/2);
 			end
 
 			propNoDisp = propNoDisp+1;
 		end
 
 		startMethodHandle = uicontrol('style','pushbutton','Units', 'normalized','position',[80 94 20 2]/100,'FontSize',9,'string','Click when done.','BackgroundColor',[153 255 153]/255,'callback',@subfxn_closeOptions);
-		emptyBox = uicontrol('Style','Text','String',[''],'Units','normalized','Position',[1 1 1 1]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold','FontSize',7);
+		emptyBox = uicontrol('Style','Text','String',[''],'Units','normalized','Position',[1 1 1 1]/100,'BackgroundColor','black','ForegroundColor','white','HorizontalAlignment','Left','FontWeight','bold','FontSize',7);
 		set(gcf,'KeyPressFcn', @subfxn_closeOptionsKey);
+		ciapkg.view.changeFont('none','fontColor','w')
 		% waitfor(gcf,'Tag');
 		waitfor(emptyBox);
 		% pause
@@ -528,7 +540,7 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 	% 	preprocessSettingStruct.refCropFrame = str2num(movieSettings{1});
 	% end
 	function subfxnInterfaceCallback(hObject,callbackdata)
-		set(hObject, 'Backgroundcolor', [208,229,180]/255);
+		set(hObject, 'Backgroundcolor', [208,229,180]/255/2);
 
 		% De-select the current option, allows user to press enter to continue.
 		set(hObject, 'Enable', 'off');

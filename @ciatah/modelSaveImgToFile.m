@@ -9,6 +9,7 @@ function obj = modelSaveImgToFile(obj,saveFile,thisFigName,thisFigNo,thisFileID,
 
 	% changelog
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2022.07.28 [17:32:57] - Update PaperPosition to auto to avoid error "Positioning Figure for ResizeFcn.  Set PaperPositionMode to 'auto' (match figure screen size) to avoid resizing and this warning."
 	% TODO
 		%
 
@@ -60,7 +61,9 @@ function obj = modelSaveImgToFile(obj,saveFile,thisFigName,thisFigNo,thisFileID,
 			if strcmp(class(thisFigNo),'char')&strcmp(thisFigNo,'current')
 
 			else
-				set(thisFigNo,'PaperUnits',options.PaperUnits,'PaperPosition',options.PaperPosition)
+				% set(thisFigNo,'PaperUnits',options.PaperUnits,'PaperPosition',options.PaperPosition)
+				% set(thisFigNo,'PaperUnits',options.PaperUnits,'PaperPosition',options.PaperPosition)
+				set(thisFigNo,'PaperUnits',options.PaperUnits,'PaperPosition','auto');
 				% set(thisFigNo,'PaperUnits','inches','PaperPosition',[0 0 20 20])
 				set(0,'CurrentFigure',thisFigNo)
 				% figure(thisFigNo)

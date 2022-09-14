@@ -1,15 +1,22 @@
 function appendDataToHdf5(filename, datasetName, inputData, varargin)
+	% appendDataToHdf5(filename, datasetName, inputData, varargin)
+	% 
 	% Appends 3D data to existing dataset in hdf5 file, assumes x,y are the same, only appending z.
+	% 
 	% Biafra Ahanonu
 	% started: 2014.01.07
+	% 
 	% inputs
-		%
+	%	filename - Str: path to existing HDF5 file.
+	% 	datasetName - Str: name for the existing dataset to append to.
+	% 	inputData - 3D matrix: input data to append to the end of the existing HDF5 dataset.
 	% outputs
 		%
 
 	% changelog
 		% 2014.07.22
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2022.03.13 [23:49:04] - Update comments.
 	% TODO
 		%
 

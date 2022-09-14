@@ -290,7 +290,7 @@ function obj = viewObjmaps(obj,varargin)
 			set(gcf,'SizeChangedFcn',{@resizeui,axHandle});
 
 			linkaxes(linkAx);
-            set(gcf,'PaperUnits','inches','PaperPosition',[0 0 22 16])
+            % set(gcf,'PaperUnits','inches','PaperPosition',[0 0 22 16])
 		    obj.modelSaveImgToFile([],'objMapsGeneral_','current',[]);
 
 			% =======

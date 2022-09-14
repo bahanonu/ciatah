@@ -19,6 +19,13 @@ Below are steps needed to quickly get started using the `{{ site.name }}` softwa
  cd('{{ code.mainclass }}-master')
  ```
 
+## Check required toolboxes installed
+
+`{{ site.name }}` depends on several MATLAB toolboxes to run properly. Run the below command to have `{{ site.name }}` check whether dependencies have been installed properly. If not use the `Add-Ons` (https://www.mathworks.com/help/matlab/matlab_env/get-add-ons.html) explorer to install each toolbox.
+
+```Matlab
+ciapkg.io.matlabToolboxCheck;`
+```
 
 ## Setup `{{ site.name }}`
 

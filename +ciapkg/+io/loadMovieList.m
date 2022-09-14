@@ -1,35 +1,81 @@
 function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, varargin)
+	% [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, varargin)
+	% 
 	% Load movies, automatically detects type (avi, tif, or hdf5) and concatenates if multiple movies in a list.
-		% NOTE:
-			% The function assumes input is 2D time series movies with [x y frames] as dimensions
-			% If movies are different sizes, use largest dimensions and align all movies to top-left corner.
+	% 	NOTE:
+	% 		The function assumes input is 2D time series movies with [x y frames] as dimensions
+	% 		If movies are different sizes, use largest dimensions and align all movies to top-left corner.
+	% 
 	% Biafra Ahanonu
 	% started: 2013.11.01
-	% inputs
-		% movieList = either a char string containing a path name or a cell array containing char strings, e.g. 'pathToFile' or {'path1','path2'}
-	% outputs
-		% outputMovie - [x y frame] matrix.
-		% movieDims - structure containing x,y,z information for the movie.
-		% nPixels - total number of pixels in the movie across all frames.
-		% nFrames - total number of frames in the movie depending on user requests in option.frameList.
-	% options
-		% options.supportedTypes = {'.h5','.nwb','.hdf5','.tif','.tiff','.avi'};
-		% % movie type
-		% options.movieType = 'tiff';
-		% % hierarchy name in hdf5 where movie is
-		% options.inputDatasetName = '/1';
-		% % convert file movie to double?
-		% options.convertToDouble = 0;
-		% % 'single','double'
-		% options.loadSpecificImgClass = [];
-		% % list of specific frames to load
-		% options.frameList = [];
-		% % should the waitbar be shown?
-		% options.waitbarOn=1;
-		% % just return the movie dimensions
-		% options.getMovieDims = 0;
-		% % treat movies in list as continuous with regards to frame
-		% options.treatMoviesAsContinuous = 0;
+	% 
+	% Inputs
+	% 	movieList = either a char string containing a path name or a cell array containing char strings, e.g. 'pathToFile' or {'path1','path2'}
+	% 
+	% Outputs
+	% 	outputMovie - [x y frame] matrix.
+	% 	movieDims - structure containing x,y,z information for the movie.
+	% 	nPixels - total number of pixels in the movie across all frames.
+	% 	nFrames - total number of frames in the movie depending on user requests in option.frameList.
+	% 
+	% Options (input as Name-Value with Name = options.(Name))
+	%	% Int vector: list of specific frames to load.
+	%	options.frameList = [];
+	%	% Str: path to MAT-file to load movie into, e.g. when conducting processing on movies that are larger than RAM.
+	%	options.matfile = '';
+	%	% Str: Variable name for movie to store MAT-file in. DO NOT CHANGE for the moment.
+	%	options.matfileVarname = 'outputMovie';
+	%	% Cell array of str: list of supported file types, in general DO NOT change.
+	%	options.supportedTypes = {'.h5','.hdf5','.tif','.tiff','.avi',...
+	%		'.nwb',... % Neurodata Without Borders format
+	%		'.isxd',... % Inscopix format
+	%		'.oir',... % Olympus formats
+	%		'.czi','.lsm'... % Zeiss formats
+	%	};
+	%	% Str: movie type.
+	%	options.movieType = 'tiff';
+	%	% Str: hierarchy name in HDF5 file where movie data is located.
+	%	options.inputDatasetName = '/1';
+	%	% Str: default NWB hierarchy names in HDF5 file where movie data is located, will look in the order indicates
+	%	options.defaultNwbDatasetName = {'/acquisition/TwoPhotonSeries/data'};
+	%	% Str: fallback hierarchy name, e.g. '/images'
+	%	options.inputDatasetNameBackup = [];
+	%	% Binary: 1 = convert file movie to double, 0 = keep original format.
+	%	options.convertToDouble = 0;
+	%	% Str: 'single','double'
+	%	options.loadSpecificImgClass = [];
+	%	% Binary: 1 = read frame by frame to save memory, 0 = read continuous chunk.
+	%	options.forcePerFrameRead = 0;
+	%	% Binary: 1 = waitbar/progress bar is shown, 0 = no progress shown.
+	%	options.waitbarOn = 1;
+	%	% Binary: 1 = just return the movie dimensions, do not load the movie.
+	%	options.getMovieDims = 0;
+	%	% Binary: 1 = treat movies in list as continuous with regards to frames to extract.
+	%	options.treatMoviesAsContinuous = 0;
+	%	% Binary: 1 = whether to display info on command line.
+	%	options.displayInfo = 1;
+	%	% Binary: Whether to display diagnostic information
+	%	options.displayDiagnosticInfo = 0;
+	%	% Binary: 1 = display diagnostic information, 0 = do not display diagnostic information.
+	%	options.displayWarnings = 1;
+	%	% Matrix: Pre-specify the size, if need to get around memory re-allocation issues
+	%	options.presetMovieSize = [];
+	%	% Binary: 1 = avoid pre-allocating if single large matrix, saves memory. 0 = pre-allocate matrix.
+	%	options.largeMovieLoad = 0;
+	%	% Int: [numParts framesPerPart] number of equal parts to load the movie in
+	%	options.loadMovieInEqualParts = [];
+	%	% Binary: 1 = only check information for 1st file then populate the rest with identical information, useful for folders with thousands of TIF or other images
+	%	options.onlyCheckFirstFileInfo = 0;
+	%	% Binary: 1 = h5info, 0 = hdf5info. DO NOT rely on this, will be deprecated/eliminated soon.
+	%	options.useH5info = 1;
+	%	% Int: [] = do nothing, 1-3 indicates R,G,B channels to take from multicolor RGB AVI
+	%	options.rgbChannel = [];
+	%	% Int: Bio-Formats series number to load.
+	%	options.bfSeriesNo = 1;
+	%	% Int: Bio-Formats channel number to load.
+	%	options.bfChannelNo = 1;
+	%	% Cell array: Store file information, e.g. make TIFF reading faster.
+	%	options.fileInfo = {};
 
 	% changelog
 		% 2014.02.14 [14:14:39] now can load non-monotonic lists for avi and hdf5 files.
@@ -58,7 +104,12 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 		% 2021.08.13 [02:31:48] - Added HDF5 capitalized file extension.
         % 2021.08.26 [16:15:37] - Ensure that loadMovieList has all output arguments set no matter return conditions.
         % 2022.02.24 [10:24:28] - AVI now read(...,'native') is faster.
-		
+		% 2022.03.07 [15:56:58] - Speed improvements related to imfinfo calls.
+		% 2022.03.13 [19:43:23] - Add option to load movie into a MAT-file.
+		% 2022.03.23 [22:24:46] - Improve Bio-Formats support, including using bfGetPlane to partially load data along with adding ndpi support.
+		% 2022.07.05 [21:21:35] - Add SlideBook Bio-Formats support. Remove local function getMovieFileType to force use of CIAtah getMovieFileType function. Updated getIndex call to avoid issues with certain Bio-Formats. Ensure getting correct Bio-Formats frames and loadMovieList output.
+		% 2022.07.28 [18:44:47] - Hide TIF warnings.
+        
 	% TODO
 		% OPEN
 			% Bio-Formats
@@ -76,6 +127,12 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	% ========================
+	% Int vector: list of specific frames to load.
+	options.frameList = [];
+	% Str: path to MAT-file to load movie into, e.g. when conducting processing on movies that are larger than RAM.
+	options.matfile = '';
+	% Str: Variable name for movie to store MAT-file in. DO NOT CHANGE for the moment.
+	options.matfileVarname = 'outputMovie';
 	% Cell array of str: list of supported file types, in general DO NOT change.
 	options.supportedTypes = {'.h5','.hdf5','.tif','.tiff','.avi',...
 		'.nwb',... % Neurodata Without Borders format
@@ -95,8 +152,6 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 	options.convertToDouble = 0;
 	% Str: 'single','double'
 	options.loadSpecificImgClass = [];
-	% Int vector: list of specific frames to load.
-	options.frameList = [];
 	% Binary: 1 = read frame by frame to save memory, 0 = read continuous chunk.
 	options.forcePerFrameRead = 0;
 	% Binary: 1 = waitbar/progress bar is shown, 0 = no progress shown.
@@ -113,7 +168,7 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 	options.displayWarnings = 1;
 	% Matrix: Pre-specify the size, if need to get around memory re-allocation issues
 	options.presetMovieSize = [];
-	% Binary: 1 = avoid pre-allocating if single large matrix, saves memory
+	% Binary: 1 = avoid pre-allocating if single large matrix, saves memory. 0 = pre-allocate matrix.
 	options.largeMovieLoad = 0;
 	% Int: [numParts framesPerPart] number of equal parts to load the movie in
 	options.loadMovieInEqualParts = [];
@@ -127,6 +182,10 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 	options.bfSeriesNo = 1;
 	% Int: Bio-Formats channel number to load.
 	options.bfChannelNo = 1;
+	% Int: Bio-Formats z dimension to load.
+	options.bfZdimNo = 1;
+	% Cell array: Store file information, e.g. make TIFF reading faster.
+	options.fileInfo = {};
 	% get options
 	options = ciapkg.io.getOptions(options,varargin);
 	% unpack options into current workspace
@@ -146,11 +205,26 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 	if options.displayInfo==1
 		display(repmat('#',1,3))
 	end
+
 	% ========================
-	% allow usr to input just a string if a single movie
+	% Create MAT-file object and variable
+	if ~isempty(options.matfile)
+		save(options.matfile,'outputMovie','-v7.3');
+		matObj = matfile(options.matfile,'Writable',true);
+
+		% There is no need to pre-allocate the MAT-file, skip.
+		options.largeMovieLoad = 1;
+	end
+
+	% ========================
+	% Allow usr to input just a string if a single movie
 	if ischar(movieList)
 		movieList = {movieList};
-	end
+    end
+    % Setup file info.
+    if isempty(options.fileInfo)
+        options.fileInfo = cell([1 length(movieList)]);
+    end
 
 	% ========================
 	% modify frameList if loading equal parts
@@ -231,15 +305,19 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 				if options.displayWarnings==0
 					warning off
 				end
+				warning off
 				tiffHandle = Tiff(thisMoviePath, 'r+');
+				warning on
 				tmpFrame = tiffHandle.read();
 				xyDims = size(tmpFrame);
+                options.fileInfo{iMovie} = imfinfo(thisMoviePath,'tif');
                 % nTiles = numberOfTiles(tiffHandle);
-                nTiles = size(imfinfo(thisMoviePath,'tif'),1);;
+                nTiles = size(options.fileInfo{iMovie},1);;
 				if options.displayWarnings==0
 					warning on
 				end
 
+				% dims.class{iMovie} = class(tmpFrame);
 				dims.x(iMovie) = xyDims(1);
 				dims.y(iMovie) = xyDims(2);
 				% dims.z(iMovie) = size(imfinfo(thisMoviePath),1);
@@ -250,7 +328,8 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
                 dims.three(iMovie) = nTiles;
 
 				if dims.z(iMovie)==1
-					fileInfo = imfinfo(thisMoviePath,'tif');
+					% fileInfo = imfinfo(thisMoviePath,'tif');
+                    fileInfo = options.fileInfo{iMovie};
 					try
 						numFramesStr = regexp(fileInfo.ImageDescription, 'images=(\d*)', 'tokens');
 						nFrames = str2double(numFramesStr{1}{1});
@@ -347,11 +426,15 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 				tmpFrame = inputMovieIsx.get_frame_data(0);
 			case 'bioformats'
 				bfreaderTmp = bfGetReader(thisMoviePath);
+				bfreaderTmp.setSeries(options.bfSeriesNo);
+
 				omeMeta = bfreaderTmp.getMetadataStore();
-				stackSizeX = omeMeta.getPixelsSizeX(0).getValue(); % image width, pixels
-				stackSizeY = omeMeta.getPixelsSizeY(0).getValue(); % image height, pixels
-				stackSizeZ = omeMeta.getPixelsSizeZ(0).getValue();
-				nFrames = stackSizeZ;
+				stackSizeX = omeMeta.getPixelsSizeX(options.bfSeriesNo).getValue(); % image width, pixels
+				stackSizeY = omeMeta.getPixelsSizeY(options.bfSeriesNo).getValue(); % image height, pixels
+				stackSizeZ = omeMeta.getPixelsSizeZ(options.bfSeriesNo).getValue();
+				% Get time points (frames) for this series
+				nFrames = bfreaderTmp.getSizeT;
+
 				xyDims = [stackSizeY stackSizeX];
 				dims.x(iMovie) = xyDims(1);
 				dims.y(iMovie) = xyDims(2);
@@ -359,8 +442,10 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 				dims.one(iMovie) = xyDims(1);
 				dims.two(iMovie) = xyDims(2);
 				dims.three(iMovie) = nFrames;
-				tmpFrame = bfGetPlane(bfreaderTmp, 1);
-				nChannels = omeMeta.getChannelCount(0);
+
+				iPlane = bfreaderTmp.getIndex(0, options.bfChannelNo-1, 0)+1;
+				tmpFrame = bfGetPlane(bfreaderTmp, iPlane);
+				nChannels = omeMeta.getChannelCount(options.bfSeriesNo);
 		end
 		if isempty(options.loadSpecificImgClass)
 			imgClass = class(tmpFrame);
@@ -374,7 +459,7 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 			if any(frameListTmp>dims.three(iMovie))
 				rmIDx = frameListTmp>dims.three(iMovie);
 				if options.displayInfo==1
-					disp(sprintf('Removing %d frames outside movie length.',sum(rmIDx)))
+					fprintf('Removing %d frames outside movie length.\n',sum(rmIDx));
 				end
 				frameListTmp(rmIDx) = [];
 			else
@@ -408,7 +493,7 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 				if any(zDimLength>sum(dims.three))
 					rmIDx = frameListTmp>sum(dims.three);
 					if options.displayInfo==1
-						disp(sprintf('Removing %d frames outside movie length.',sum(rmIDx)))
+						fprintf('Removing %d frames outside movie length.\n',sum(rmIDx));
 					end
 					frameListTmp(rmIDx) = [];
 					zDimLength = length(frameListTmp);
@@ -445,7 +530,7 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 			globalFrame{i} = frameList(g{i}) - zdimsCumsum(i);
 			dims.z(i) = length(globalFrame{i});
 		end
-		[cellfun(@max,globalFrame,'UniformOutput',false); cellfun(@min,globalFrame,'UniformOutput',false)]
+		disp([cellfun(@max,globalFrame,'UniformOutput',false); cellfun(@min,globalFrame,'UniformOutput',false)])
 		% pause
 	else
 		globalFrame = [];
@@ -516,7 +601,7 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 		if any(thisFrameList>dims.three(iMovie))
 			rmIDx2 = thisFrameList>dims.three(iMovie);
 			if options.displayInfo==1
-				disp(sprintf('Removing %d frames outside movie length.',sum(rmIDx2)))
+				fprintf('Removing %d frames outside movie length.\n',sum(rmIDx2));
 			end
 			thisFrameList(rmIDx2) = [];
 		end
@@ -532,19 +617,21 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 					thisMoviePath = movieList{iMovie};
 					tiffHandle = Tiff(thisMoviePath, 'r');
 					tmpFramePerma = tiffHandle.read();
-					fileInfoH = imfinfo(thisMoviePath,'tif');
+					% fileInfoH = imfinfo(thisMoviePath,'tif');
+                    fileInfoH = options.fileInfo{iMovie};
 					displayInfoH = 1;
 					NumberframeH = dims.z(iMovie);
 				elseif options.onlyCheckFirstFileInfo==1&&iMovie>1
 					displayInfoH = 0;
 					NumberframeH = dims.z(iMovie);
+                    fileInfoH = options.fileInfo{iMovie};
 				else
 					% For all other cases (e.g. TIF stacks) don't alter
 					tmpFramePerma = [];
 					displayInfoH = 1;
 					Numberframe = [];
 					NumberframeH = [];
-					fileInfoH = [];
+					fileInfoH = options.fileInfo{iMovie};
 				end
 
 				if options.displayInfo==0
@@ -553,19 +640,39 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 
 				if numMovies==1
 					if isempty(thisFrameList)
-						outputMovie = load_tif_movie(thisMoviePath,1,'displayInfo',options.displayInfo);
+						outputMovie = load_tif_movie(thisMoviePath,1,'displayInfo',options.displayInfo,'fileInfo',fileInfoH);
+						% outputMovie = outputMovie.Movie;
+					else
+						outputMovie = load_tif_movie(thisMoviePath,1,'frameList',thisFrameList,'displayInfo',options.displayInfo,'fileInfo',fileInfoH);
+					end
+
+					if isempty(options.matfile)
 						outputMovie = outputMovie.Movie;
 					else
-						outputMovie = load_tif_movie(thisMoviePath,1,'frameList',thisFrameList,'displayInfo',options.displayInfo);
-						outputMovie = outputMovie.Movie;
+						matObj.outputMovie = outputMovie.Movie;
 					end
 				else
 					if isempty(thisFrameList)
 						tmpMovie = load_tif_movie(thisMoviePath,1,'tmpImage',tmpFramePerma,'displayInfo',displayInfoH,'Numberframe',NumberframeH,'fileInfo',fileInfoH);
-						tmpMovie = tmpMovie.Movie;
+						% tmpMovie = tmpMovie.Movie;
 					else
 						tmpMovie = load_tif_movie(thisMoviePath,1,'frameList',thisFrameList,'tmpImage',tmpFramePerma,'displayInfo',displayInfoH,'Numberframe',NumberframeH,'fileInfo',fileInfoH);
+					end
+
+					if isempty(options.matfile)
 						tmpMovie = tmpMovie.Movie;
+					else
+						if iMovie==1
+							if dims.z(iMovie)==0
+								matObj.outputMovie(1:dims.x(iMovie),1:dims.y(iMovie),1) = tmpMovie.Movie;
+							else
+								matObj.outputMovie(1:dims.x(iMovie),1:dims.y(iMovie),1:dims.z(iMovie)) = tmpMovie.Movie;				
+							end
+						else
+							% assume 3D movies with [x y frames] as dimensions
+							zOffset = sum(dims.z(1:iMovie-1));
+							matObj.outputMovie(1:dims.x(iMovie),1:dims.y(iMovie),(zOffset+1):(zOffset+dims.z(iMovie))) = tmpMovie.Movie;
+						end
 					end
 				end
 			% ========================
@@ -583,7 +690,7 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 					hReadInfo = getHdf5Info();
 					% read in the file
 					% hReadInfo.Attributes
-					if options.largeMovieLoad==1
+					if options.largeMovieLoad==1&&numMovies==1
 						if options.useH5info==1
 							outputMovie = h5read(thisMoviePath,options.inputDatasetName);
 						else
@@ -779,13 +886,17 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 			case 'bioformats'
 				% Setup movie class
 				bfreaderTmp = bfGetReader(thisMoviePath);
-				omeMeta = bfreaderTmp.getMetadataStore();
-				stackSizeX = omeMeta.getPixelsSizeX(0).getValue(); % image width, pixels
-				stackSizeY = omeMeta.getPixelsSizeY(0).getValue(); % image height, pixels
-				stackSizeZ = omeMeta.getPixelsSizeZ(0).getValue();
-				nChannels = omeMeta.getChannelCount(0);
+				bfreaderTmp.setSeries(options.bfSeriesNo);
 
-				nFramesHere = stackSizeZ;
+				omeMeta = bfreaderTmp.getMetadataStore();
+				stackSizeX = omeMeta.getPixelsSizeX(options.bfSeriesNo).getValue(); % image width, pixels
+				stackSizeY = omeMeta.getPixelsSizeY(options.bfSeriesNo).getValue(); % image height, pixels
+				stackSizeZ = omeMeta.getPixelsSizeZ(options.bfSeriesNo).getValue();
+				nChannels = omeMeta.getChannelCount(options.bfSeriesNo);
+
+				% Get the number of time points (frames).
+				nFramesHere = bfreaderTmp.getSizeT;
+
 				xyDims = [stackSizeX stackSizeY];
 
 				if isempty(thisFrameList)
@@ -795,45 +906,85 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 					nFrames = length(thisFrameList);
 					framesToGrab = thisFrameList;
 				end
-				vidHeight = xyDims(1);
-				vidWidth = xyDims(2);
+				vidHeight = xyDims(2);
+				vidWidth = xyDims(1);
 
 				% Preallocate movie structure.
-				tmpMovie = zeros(vidHeight, vidWidth, nFrames, imgClass);
+				if numMovies==1
+					outputMovie = zeros(vidHeight, vidWidth, nFrames, imgClass);
+				else
+					tmpMovie = zeros(vidHeight, vidWidth, nFrames, imgClass);
+				end
 
 				% Read one frame at a time.
 				reverseStr = '';
 				iframe = 1;
 				nFrames = length(framesToGrab);
 
-				% Read in movie data
-				tmpMovie = bfopen(thisMoviePath);
 
-				% bfopen returns an n-by-4 cell array, where n is the number of series in the dataset. If s is the series index between 1 and n:
-				% The data{s, 1} element is an m-by-2 cell array, where m is the number of planes in the s-th series. If t is the plane index between 1 and m:
-				% The data{s, 1}{t, 1} element contains the pixel data for the t-th plane in the s-th series.
-				% The data{s, 1}{t, 2} element contains the label for the t-th plane in the s-th series.
-				% The data{s, 2} element contains original metadata key/value pairs that apply to the s-th series.
-				% The data{s, 3} element contains color lookup tables for each plane in the s-th series.
-				% The data{s, 4} element contains a standardized OME metadata structure, which is the same regardless of the input file format, and contains common metadata values such as physical pixel sizes - see OME metadata below for examples.
+				zPlane = 0;
+				iZ = 1;
+				dispEvery = round(nFrames/20);
+				% Adjust for zero-based indexing
+				framesToGrab = framesToGrab-1;
 
-				% Frame information
-				frameInfo = tmpMovie{options.bfSeriesNo, 1}(:,2);
+				% figure;
+				reverseStr = '';
+				for t = framesToGrab
+					iPlane = bfreaderTmp.getIndex(zPlane, options.bfChannelNo-1, t)+1;
+					tmpFrame = bfGetPlane(bfreaderTmp, iPlane);
+					% figure;
+					% imagesc(tmpFrame);
+					if numMovies==1
+						outputMovie(:,:,iZ) = tmpFrame;
+					else
+						tmpMovie(:,:,iZ) = tmpFrame;
+					end
+					iZ = iZ+1;
+					
+					if options.displayInfo==1
+						reverseStr = cmdWaitbar(iZ,nFrames,reverseStr,'inputStr','Loading bio-formats file: ','waitbarOn',options.waitbarOn,'displayEvery',dispEvery);
+					end
+					% pause(0.01)
+				end
+				if numMovies==1
+					clear tmpMovie
+				end
+				% ciapkg.api.playMovie(tmpMovie);
+				% size(tmpMovie)
 
-				% Grab just the movie frames and convert from cell to matrix.
-				tmpMovie = tmpMovie{options.bfSeriesNo, 1}(:,1);
-				tmpMovie = cat(3,tmpMovie{:});
+				% continue;
+				extraBioformatsFlag = 0;
+				if extraBioformatsFlag==1
+					% Read in movie data
+					tmpMovie = bfopen(thisMoviePath);
 
-				% Only keep single channel if more than 1 channel in an image.
-				if nChannels>1
-					try
-						chanKeepIdx = cell2mat(cellfun(@(x) str2num(cell2mat(regexp(x,'(?<=C\?=|C=)\d+(?=/)','match'))),frameInfo,'UniformOutput',false));
-						chanKeepIdx = chanKeepIdx==options.bfChannelNo;
-						tmpMovie = tmpMovie(:,:,chanKeepIdx);
-					catch err
-						disp(repmat('@',1,7))
-						disp(getReport(err,'extended','hyperlinks','on'));
-						disp(repmat('@',1,7))
+					% bfopen returns an n-by-4 cell array, where n is the number of series in the dataset. If s is the series index between 1 and n:
+					% The data{s, 1} element is an m-by-2 cell array, where m is the number of planes in the s-th series. If t is the plane index between 1 and m:
+					% The data{s, 1}{t, 1} element contains the pixel data for the t-th plane in the s-th series.
+					% The data{s, 1}{t, 2} element contains the label for the t-th plane in the s-th series.
+					% The data{s, 2} element contains original metadata key/value pairs that apply to the s-th series.
+					% The data{s, 3} element contains color lookup tables for each plane in the s-th series.
+					% The data{s, 4} element contains a standardized OME metadata structure, which is the same regardless of the input file format, and contains common metadata values such as physical pixel sizes - see OME metadata below for examples.
+
+					% Frame information
+					frameInfo = tmpMovie{options.bfSeriesNo, 1}(:,2);
+
+					% Grab just the movie frames and convert from cell to matrix.
+					tmpMovie = tmpMovie{options.bfSeriesNo, 1}(:,1);
+					tmpMovie = cat(3,tmpMovie{:});
+
+					% Only keep single channel if more than 1 channel in an image.
+					if nChannels>1
+						try
+							chanKeepIdx = cell2mat(cellfun(@(x) str2num(cell2mat(regexp(x,'(?<=C\?=|C=)\d+(?=/)','match'))),frameInfo,'UniformOutput',false));
+							chanKeepIdx = chanKeepIdx==options.bfChannelNo;
+							tmpMovie = tmpMovie(:,:,chanKeepIdx);
+						catch err
+							disp(repmat('@',1,7))
+							disp(getReport(err,'extended','hyperlinks','on'));
+							disp(repmat('@',1,7))
+						end
 					end
 				end
 			% ========================
@@ -846,7 +997,7 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 				if dims.z(iMovie)==0
 					outputMovie(1:dims.x(iMovie),1:dims.y(iMovie),1) = tmpMovie;
 				else
-					outputMovie(1:dims.x(iMovie),1:dims.y(iMovie),1:dims.z(iMovie)) = tmpMovie;				
+					outputMovie(1:dims.x(iMovie),1:dims.y(iMovie),1:dims.z(iMovie)) = tmpMovie;	
 				end
 				% outputMovie(:,:,:) = tmpMovie;
 			else
@@ -981,37 +1132,40 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 		end
 	end
 end
-
-function [movieType, supported] = getMovieFileType(thisMoviePath)
-	% determine how to load movie, don't assume every movie in list is of the same type
-	supported = 1;
-	try
-		[pathstr,name,ext] = fileparts(thisMoviePath);
-	catch
-		movieType = '';
-		supported = 0;
-		return;
-	end
-	% files are assumed to be named correctly (lying does no one any good)
-	if any(strcmp(ext,{'.h5','.hdf5','.HDF5'}))		
-		movieType = 'hdf5';
-	elseif strcmp(ext,'.nwb')
-		movieType = 'hdf5';
-	elseif any(strcmp(ext,{'.tif','.tiff'}))		
-		movieType = 'tiff';
-	elseif strcmp(ext,'.avi')
-		movieType = 'avi';
-	elseif strcmp(ext,'.isxd') % Inscopix file format
-		movieType = 'isxd';
-	elseif strcmp(ext,'.oir') % Olympus file format
-		movieType = 'bioformats';
-	elseif any(strcmp(ext,{'.czi','.lsm'})) % Zeiss file format
-		movieType = 'bioformats';
-	else
-		movieType = '';
-		supported = 0;
-	end
-end
+% function [movieType, supported] = getMovieFileType(thisMoviePath)
+% 	% determine how to load movie, don't assume every movie in list is of the same type
+% 	supported = 1;
+% 	try
+% 		[pathstr,name,ext] = fileparts(thisMoviePath);
+% 	catch
+% 		movieType = '';
+% 		supported = 0;
+% 		return;
+% 	end
+% 	% files are assumed to be named correctly (lying does no one any good)
+% 	if any(strcmp(ext,{'.h5','.hdf5','.HDF5'}))		
+% 		movieType = 'hdf5';
+% 	elseif strcmp(ext,'.nwb')
+% 		movieType = 'hdf5';
+% 	elseif any(strcmp(ext,{'.tif','.tiff'}))		
+% 		movieType = 'tiff';
+% 	elseif strcmp(ext,'.avi')
+% 		movieType = 'avi';
+% 	elseif strcmp(ext,'.isxd') % Inscopix file format
+% 		movieType = 'isxd';
+% 	elseif strcmp(ext,'.ndpi') % Hamamatsu file format
+% 		movieType = 'bioformats';
+% 	elseif strcmp(ext,'.oir') % Olympus file format
+% 		movieType = 'bioformats';
+% 	elseif any(strcmp(ext,{'.czi','.lsm'})) % Zeiss file format
+% 		movieType = 'bioformats';
+% 	elseif endsWith(ext,'.sld') % SlideBook file format
+% 		movieType = 'bioformats';
+% 	else
+% 		movieType = '';
+% 		supported = 0;
+% 	end
+% end
 function subfxnDisplay(str,options)
 	if options.displayInfo==1
 		disp(str)

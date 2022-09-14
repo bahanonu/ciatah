@@ -1,15 +1,18 @@
 function [success] = writeHDF5Data(inputData,fileSavePath,varargin)
+	% [success] = writeHDF5Data(inputData,fileSavePath,varargin)
+	% 
 	% Saves input data to a HDF5 file, tries to preserve datatype.
+	% 
 	% Biafra Ahanonu
 	% started: 2013.11.01
 	%
 	% inputs
-		% inputData: matrix, [x y frames] preferred.
-		% fileSavePath: str, path where HDF5 file should be saved.
+	% 	inputData: matrix, [x y frames] preferred.
+	% 	fileSavePath: str, path where HDF5 file should be saved.
 	% outputs
-		% success = 1 if successful save, 0 if error.
+	% 	success = 1 if successful save, 0 if error.
 	% options
-		% datasetname = HDF5 hierarchy where data should be stored
+	% 	datasetname = HDF5 hierarchy where data should be stored
 
 	% changelog
 		% 2014.01.23 - updated so that it saves as the input data-type rather than defaulting to double
@@ -25,6 +28,7 @@ function [success] = writeHDF5Data(inputData,fileSavePath,varargin)
 
 	%========================
 	% old way of saving, only temporary until full switch
+	% Str: name of HDF5 dataset to save data into.
 	options.datasetname = '/1';
 	% HDF5: append (don't blank HDF5 file) or new (blank HDF5 file)
 	options.writeMode = 'new';

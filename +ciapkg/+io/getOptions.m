@@ -1,13 +1,17 @@
 function [options] = getOptions(options,inputArgs,varargin)
+	% [options] = getOptions(options,inputArgs,varargin)
+	%
 	% Gets default options for a function and replaces them with inputArgs inputs if they are present in Name-Value pair input (e.g. varargin).
+	%
 	% Biafra Ahanonu
 	% Started: 2013.11.04.
 	%
 	% inputs
-		% options - structure passed by parent function with each fieldname containing an option to be used by the parent function.
-		% inputArgs - an even numbered cell array, with {'option','value'} as the ordering. Normally pass varargin.
+	%	options - structure passed by parent function with each fieldname containing an option to be used by the parent function.
+	%	inputArgs - an even numbered cell array, with {'option','value'} as the ordering. Normally pass varargin.
 	% Outputs
-		% options - options structure passed back to parent function with modified Name-Value inputs to function added.
+	%	options - options structure passed back to parent function with modified Name-Value inputs to function added.
+	%
 	% NOTE
 		% Use the 'options' name-value pair to input an options structure that will overwrite default options in a function, example below.
 		% options.Stargazer = 1;
@@ -58,6 +62,7 @@ function [options] = getOptions(options,inputArgs,varargin)
 		% 2020.06.29 [18:54:56] - Support case where calling getOptions from command line or where there is no stack.
 		% 2020.09.29 [13:21:09] - Added passArgs option, this mimics the ... construct in R, so users can pass along arguments without having to define them in the calling function (e.g. in the case of wrapper functions).
 		% 2021.10.07 [10:44:30] - Ensure no warnings are shown. Added fix to handle users calling API version of getOptions with getOptions variable input arguments.
+		% 2022.03.03 [15:06:54] - In 2021a MATLAB introduced Name=value syntax for passing name-value arguments. These are passed within varargin as a string array instead of a char array as was the case with comma-separated syntax. getOptions now checks for isstring in addition to ischar to add support for this syntax to CIAtah functions. See https://www.mathworks.com/help/matlab/release-notes.html?rntext=&startrelease=R2021a&endrelease=R2021a&groupby=release&sortby=descending&searchHighlight=#mw_77c0932f-4a31-44e6-b550-db5a736c2de3.
 
 	% TODO
 		% Allow input of an option structure - DONE!
@@ -128,7 +133,7 @@ function [options] = getOptions(options,inputArgs,varargin)
 	for i = 1:2:length(inputArgs)
 		% inputArgs = inputArgs{1};
 		val = inputArgs{i};
-		if ischar(val)
+		if ischar(val)||isstring(val)
 			%display([inputArgs{i} ': ' num2str(inputArgs{i+1})]);
 			if strcmp('options',val)
 				% Special options struct, only add field names defined by the user. Keep all original field names that are not input by the user.

@@ -10,8 +10,10 @@ function obj = modelVarsFromFiles(obj)
 	% changelog
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2022.04.08 [16:41:27] - Enforce that NWB loading only looks for .nwb files and ensure that manual or automatic classifications are loaded when loading NWB files.
+		% 2022.04.09 [20:30:52] - Ensure when loading cell extraction CIAtah-style that only MAT files are loaded.
 	% TODO
-		% ADD SUPPORT FOR EM ANALYSIS
+		% ADD SUPPORT FOR EM ANALYSIS - Done.
 
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
@@ -20,7 +22,7 @@ function obj = modelVarsFromFiles(obj)
 
 	% get options
 	% options = getOptions(options,varargin);
-	% display(options)
+	% disp(options)
 	% unpack options into current workspace
 	% fn=fieldnames(options);
 	% for i=1:length(fn)
@@ -28,8 +30,8 @@ function obj = modelVarsFromFiles(obj)
 	% end
 	%========================
 
-	display(repmat('#',1,21))
-	display('loading files...')
+	disp(repmat('#',1,21))
+	disp('loading files...')
 
 	for figNo = [98 1996 1997 95 99]
 		openFigure(figNo, '');
@@ -37,10 +39,6 @@ function obj = modelVarsFromFiles(obj)
 	drawnow;
 
 	signalExtractionMethod = obj.signalExtractionMethod;
-	% usrIdxChoiceStr = {'PCAICA','EM'};
-	% [sel, ok] = listdlg('ListString',usrIdxChoiceStr);
-	% usrIdxChoiceList = {2,1};
-	% signalExtractionMethod = usrIdxChoiceStr{sel};
 
 	optFieldnames = fieldnames(obj.filterImageOptions);
 	if obj.guiEnabled==1
@@ -67,16 +65,16 @@ function obj = modelVarsFromFiles(obj)
 		reportMidpoint = 0;
 	end
 
-	[fileIdxArray idNumIdxArray nFilesToAnalyze nFiles] = obj.getAnalysisSubsetsToAnalyze();
+	[fileIdxArray, idNumIdxArray, nFilesToAnalyze, nFiles] = obj.getAnalysisSubsetsToAnalyze();
 	for thisFileNumIdx = 1:nFilesToAnalyze
 		try
 			fileNum = fileIdxArray(thisFileNumIdx);
 			obj.fileNum = fileNum;
-			display(repmat('=',1,21))
-			% display([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ' (' num2str(fileNum) '/' num2str(nFiles) '): ' obj.fileIDNameArray{obj.fileNum}]);
+			disp(repmat('=',1,21))
+			% disp([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ' (' num2str(fileNum) '/' num2str(nFiles) '): ' obj.fileIDNameArray{obj.fileNum}]);
 	% nFolders = length(obj.dataPath);
 	% for fileNum = 1:nFolders
-	% 	display(repmat('-',1,7))
+	% 	disp(repmat('-',1,7))
 	% 	try
 			obj.rawSignals{fileNum} = [];
 			obj.rawImages{fileNum} = [];
@@ -88,20 +86,21 @@ function obj = modelVarsFromFiles(obj)
 			obj.validManual{fileNum} = [];
 			obj.validAuto{fileNum} = [];
 			if strmatch('#',obj.dataPath{fileNum})
-				% display([num2str(fileNum) '/' num2str(nFolders) ' | skipping: ' obj.dataPath{fileNum}]);
-				% display([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ' (' num2str(fileNum) '/' num2str(nFiles) ') | skipping: ' obj.fileIDNameArray{obj.fileNum}]);
+				% disp([num2str(fileNum) '/' num2str(nFolders) ' | skipping: ' obj.dataPath{fileNum}]);
+				% disp([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ' (' num2str(fileNum) '/' num2str(nFiles) ') | skipping: ' obj.fileIDNameArray{obj.fileNum}]);
 				fprintf('%d/%d (%d/%d) | skipping: %s\n',thisFileNumIdx,nFilesToAnalyze,fileNum,nFiles,obj.fileIDNameArray{obj.fileNum});
 				obj.rawSignals{fileNum} = [];
 				obj.rawImages{fileNum} = [];
 				continue;
 			else
-				% display([num2str(fileNum) '/' num2str(nFolders) ': ' obj.dataPath{fileNum}]);
+				% disp([num2str(fileNum) '/' num2str(nFolders) ': ' obj.dataPath{fileNum}]);
 				% obj.fileIDNameArray{obj.fileNum}
-				% display([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ' (' num2str(fileNum) '/' num2str(nFiles) '): ' obj.fileIDNameArray{obj.fileNum}]);
+				% disp([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ' (' num2str(fileNum) '/' num2str(nFiles) '): ' obj.fileIDNameArray{obj.fileNum}]);
 				fprintf('%d/%d (%d/%d): %s\n',thisFileNumIdx,nFilesToAnalyze,fileNum,nFiles,obj.fileIDNameArray{obj.fileNum});
 			end
 
 			signalExtractionMethodOriginal = signalExtractionMethod;
+			nwbLoadLock = 0;
 			if obj.nwbLoadFiles==1
 				signalExtractionMethod = 'NWB';
 			end
@@ -109,7 +108,7 @@ function obj = modelVarsFromFiles(obj)
 				case 'NWB'
 					% Check whether to use override NWB regular expression, else use calciumImagingAnalysis defaults.
 					if isempty(obj.nwbFileRegexp)
-						filesToLoad = getFileList([obj.dataPath{fileNum} filesep obj.nwbFileFolder],obj.extractionMethodSaveStr.(obj.signalExtractionMethod));
+						filesToLoad = getFileList([obj.dataPath{fileNum} filesep obj.nwbFileFolder],[obj.extractionMethodSaveStr.(obj.signalExtractionMethod) '.nwb$']);
 					else
 						filesToLoad = getFileList([obj.dataPath{fileNum} filesep obj.nwbFileFolder],obj.nwbFileRegexp);
 					end
@@ -125,6 +124,25 @@ function obj = modelVarsFromFiles(obj)
 						signalExtractionMethod = signalExtractionMethodOriginal;
 					end
 					rawFiles = 1;
+
+					% Load manual and classifier information if available.
+					regexPairs = {...
+						obj.extractionMethodSortedSaveStr.(obj.signalExtractionMethod);
+						obj.extractionMethodClassifierSaveStr.(obj.signalExtractionMethod);
+					};
+
+					% get list of files to load
+					filesToLoad = getFileList(obj.dataPath{fileNum},strrep(regexPairs{1},'.mat',''));
+					if isempty(filesToLoad)
+						disp('no files!');
+						continue
+					end
+					% load files in order
+					for i=1:length(filesToLoad)
+						disp(['loading: ' filesToLoad{i}]);
+						load(filesToLoad{i});
+					end
+
 				otherwise
 			end
 
@@ -142,13 +160,13 @@ function obj = modelVarsFromFiles(obj)
 						% {obj.rawEMStructSaveStr},...
 					};
 					% get list of files to load
-					filesToLoad = getFileList(obj.dataPath{fileNum},strrep(regexPairs{1},'.mat',''));
+					filesToLoad = getFileList(obj.dataPath{fileNum},strrep(regexPairs{1},'.mat','.*.mat$'));
 					rawFiles = 0;
 					filesToLoad = [];
 					fileToLoadNo = 1;
 					nRegExps = length(regexPairs);
 					while isempty(filesToLoad)
-						filesToLoad = getFileList(obj.dataPath{obj.fileNum},strrep(regexPairs{fileToLoadNo},'.mat',''));
+						filesToLoad = getFileList(obj.dataPath{obj.fileNum},strrep(regexPairs{fileToLoadNo},'.mat','.*.mat$'));
 						fileToLoadNo = fileToLoadNo+1;
 						if fileToLoadNo>nRegExps
 							break;
@@ -160,7 +178,7 @@ function obj = modelVarsFromFiles(obj)
 					cellfun(@(x) fprintf('Found: %s\n',x),filesToLoad)
 					if isempty(filesToLoad)
 					% if(~exist(filesToLoad{1}, 'file'))
-						display('no files!');
+						disp('no files!');
 						continue
 					end
 
@@ -170,33 +188,35 @@ function obj = modelVarsFromFiles(obj)
 					%     rawFiles = 1;
 					%     if isempty(filesToLoad)
 					%     % if(~exist(filesToLoad{1}, 'file'))
-					%     	display('no files!');
+					%     	disp('no files!');
 					%         continue
 					%     end
 					% end
 					% load files in order
 					for i=1:length(filesToLoad)
-						display(['loading: ' filesToLoad{i}]);
+						disp(['loading: ' filesToLoad{i}]);
 						load(filesToLoad{i});
 					end
-					if exist('pcaicaAnalysisOutput','var')
-						signalTraces = double(pcaicaAnalysisOutput.IcaTraces);
-						% signalImages = permute(double(pcaicaAnalysisOutput.IcaFilters),[3 1 2]);
-						if strcmp(pcaicaAnalysisOutput.imageSaveDimOrder,'xyz')
-							signalImages = double(pcaicaAnalysisOutput.IcaFilters);
-						elseif strcmp(pcaicaAnalysisOutput.imageSaveDimOrder,'zxy')
-							signalImages = permute(double(pcaicaAnalysisOutput.IcaFilters),[2 3 1]);
-							% inputImages = pcaicaAnalysisOutput.IcaFilters;
-						else
-							% inputImages = permute(double(pcaicaAnalysisOutput.IcaFilters));
-							signalImages = pcaicaAnalysisOutput.IcaFilters;
-						end
+					if nwbLoadLock==0
+						if exist('pcaicaAnalysisOutput','var')
+							signalTraces = double(pcaicaAnalysisOutput.IcaTraces);
+							% signalImages = permute(double(pcaicaAnalysisOutput.IcaFilters),[3 1 2]);
+							if strcmp(pcaicaAnalysisOutput.imageSaveDimOrder,'xyz')
+								signalImages = double(pcaicaAnalysisOutput.IcaFilters);
+							elseif strcmp(pcaicaAnalysisOutput.imageSaveDimOrder,'zxy')
+								signalImages = permute(double(pcaicaAnalysisOutput.IcaFilters),[2 3 1]);
+								% inputImages = pcaicaAnalysisOutput.IcaFilters;
+							else
+								% inputImages = permute(double(pcaicaAnalysisOutput.IcaFilters));
+								signalImages = pcaicaAnalysisOutput.IcaFilters;
+							end
 
-						clear pcaicaAnalysisOutput;
-					else
-						signalImages = permute(IcaFilters,[2 3 1]);
-						signalTraces = IcaTraces;
-						clear IcaFilters IcaTraces;
+							clear pcaicaAnalysisOutput;
+						else
+							signalImages = permute(IcaFilters,[2 3 1]);
+							signalTraces = IcaTraces;
+							clear IcaFilters IcaTraces;
+						end
 					end
 					rawFiles = 1;
 				case {'EM','CELLMax'}
@@ -210,12 +230,12 @@ function obj = modelVarsFromFiles(obj)
 					% get list of files to load
 					filesToLoad = getFileList(obj.dataPath{fileNum},strrep(regexPairs{1},'.mat',''));
 					if isempty(filesToLoad)
-						display('no files!');
+						disp('no files!');
 						continue
 					end
 					% load files in order
 					for i=1:length(filesToLoad)
-						display(['loading: ' filesToLoad{i}]);
+						disp(['loading: ' filesToLoad{i}]);
 						load(filesToLoad{i});
 					end
 					if exist('cellmaxAnalysisOutput','var')
@@ -244,12 +264,12 @@ function obj = modelVarsFromFiles(obj)
 					% get list of files to load
 					filesToLoad = getFileList(obj.dataPath{fileNum},strrep(regexPairs{1},'.mat',''));
 					if isempty(filesToLoad)
-						display('no files!');
+						disp('no files!');
 						continue
 					end
 					% load files in order
 					for i=1:length(filesToLoad)
-						display(['loading: ' filesToLoad{i}]);
+						disp(['loading: ' filesToLoad{i}]);
 						load(filesToLoad{i});
 					end
 					signalImages = double(extractAnalysisOutput.filters);
@@ -268,12 +288,12 @@ function obj = modelVarsFromFiles(obj)
 					% get list of files to load
 					filesToLoad = getFileList(obj.dataPath{fileNum},strrep(regexPairs{1},'.mat',''));
 					if isempty(filesToLoad)
-						display('no files!');
+						disp('no files!');
 						continue
 					end
 					% load files in order
 					for i=1:length(filesToLoad)
-						display(['loading: ' filesToLoad{i}]);
+						disp(['loading: ' filesToLoad{i}]);
 						load(filesToLoad{i});
 					end
 					% signalImages = double(permute(cnmfAnalysisOutput.extractedImages,[3 1 2]));
@@ -288,12 +308,12 @@ function obj = modelVarsFromFiles(obj)
 					% get list of files to load
 					filesToLoad = getFileList(obj.dataPath{fileNum},strrep(regexPairs{1},'.mat',''));
 					if isempty(filesToLoad)
-						display('no files!');
+						disp('no files!');
 						continue
 					end
 					% load files in order
 					for i=1:length(filesToLoad)
-						display(['loading: ' filesToLoad{i}]);
+						disp(['loading: ' filesToLoad{i}]);
 						load(filesToLoad{i});
 					end
 					% signalImages = double(permute(cnmfAnalysisOutput.extractedImages,[3 1 2]));
@@ -308,12 +328,12 @@ function obj = modelVarsFromFiles(obj)
 					% get list of files to load
 					filesToLoad = getFileList(obj.dataPath{fileNum},strrep(regexPairs{1},'.mat',''));
 					if isempty(filesToLoad)
-						display('no files!');
+						disp('no files!');
 						continue
 					end
 					% load files in order
 					for i=1:length(filesToLoad)
-						display(['loading: ' filesToLoad{i}]);
+						disp(['loading: ' filesToLoad{i}]);
 						load(filesToLoad{i});
 					end
 					% signalImages = double(permute(cnmfAnalysisOutput.extractedImages,[3 1 2]));
@@ -327,18 +347,18 @@ function obj = modelVarsFromFiles(obj)
 
 			signalExtractionMethod = signalExtractionMethodOriginal;
 
-			display(['signalTraces: ' num2str(size(signalTraces))])
-			display(['signalImages: ' num2str(size(signalImages))])
-			% display(['signalPeaks: ' num2str(size(signalPeaks))])
-			% display(['signalPeaksArray: ' num2str(size(signalPeaksArray))])
+			disp(['signalTraces: ' num2str(size(signalTraces))])
+			disp(['signalImages: ' num2str(size(signalImages))])
+			% disp(['signalPeaks: ' num2str(size(signalPeaks))])
+			% disp(['signalPeaksArray: ' num2str(size(signalPeaksArray))])
 
 			% if manually sorted signals, add
 			% if exist('valid','var')|exist('validCellMax','var')|exist('validEXTRACT','var')
 			varList = who;
 			% if length(intersect({obj.validPCAICAStructVarname,obj.validEMStructVarname,obj.validPCAICAStructVarname,obj.validEXTRACTStructVarname,obj.validCNMFStructVarname},varList))>0
 			if length(intersect({obj.extractionMethodValidVarname.(obj.signalExtractionMethod)},varList))>0
-				display('adding manually sorted values...')
-				display(['adding valid{' num2str(fileNum) '}.' obj.signalExtractionMethod '.manual identifications...'])
+				disp('adding manually sorted values...')
+				disp(['adding valid{' num2str(fileNum) '}.' obj.signalExtractionMethod '.manual identifications...'])
 				if exist(obj.validPCAICAStructVarname,'var')
 					obj.validManual{fileNum} = valid;
 					obj.valid{fileNum}.(obj.signalExtractionMethod).manual = valid;
@@ -369,12 +389,12 @@ function obj = modelVarsFromFiles(obj)
 					obj.valid{fileNum}.(obj.signalExtractionMethod).manual = validROI;
 					clear validROI;
 				end
-				display('clearing manual variable...')
+				disp('clearing manual variable...')
 			end
 			if exist('validClassifier','var')
-				display('adding classifier annotation for signals...')
+				disp('adding classifier annotation for signals...')
 				obj.valid{fileNum}.(obj.signalExtractionMethod).classifier = validClassifier;
-				display('clearing manual variable...')
+				disp('clearing manual variable...')
 				clear validClassifier;
 			end
 
@@ -389,7 +409,7 @@ function obj = modelVarsFromFiles(obj)
 
 			% get the x/y coordinates
 			if isempty(signalImages);continue;end;
-			[xCoords yCoords] = findCentroid(signalImages,'thresholdValue',0.4,'imageThreshold',0.4);
+			[xCoords, yCoords] = findCentroid(signalImages,'thresholdValue',0.4,'imageThreshold',0.4);
 			obj.objLocations{fileNum}.(obj.signalExtractionMethod) = [xCoords(:) yCoords(:)];
 
 			% rawFiles
@@ -408,8 +428,8 @@ function obj = modelVarsFromFiles(obj)
 				% 	[signalImagesTmp(imageNo,:,:)] = viewMontage(inputMovie,signalImages(imageNo,:,:),signalTraces(imageNo,:),obj.signalPeaksArray{fileNum});
 				% end
 				% signalImages = signalImagesTmp;
-				display(['traces dims: ' num2str(size(signalTracesTmp))])
-				display(['images dims: ' num2str(size(signalImages))])
+				disp(['traces dims: ' num2str(size(signalTracesTmp))])
+				disp(['images dims: ' num2str(size(signalImages))])
 				[~, ~, validAuto, imageSizes, imgFeatures] = filterImages(signalImages, signalTracesTmp,'featureList',obj.classifierImageFeaturesNames,'options',obj.filterImageOptions,'testpeaks',testpeaks,'testpeaksArray',obj.signalPeaksArray{fileNum},'xCoords',xCoords,'yCoords',yCoords);
 
 				% obj.classifierFeatures{fileNum}.(obj.signalExtractionMethod).imageFeatures = imgFeatures;
@@ -429,7 +449,7 @@ function obj = modelVarsFromFiles(obj)
 				% obj.rawImagesFiltered{fileNum} = createObjMap(filterImageGroups);
 				size(validAuto)
 				% validAuto
-				display(['adding valid{' num2str(fileNum) '}.' obj.signalExtractionMethod '.auto identifications...'])
+				disp(['adding valid{' num2str(fileNum) '}.' obj.signalExtractionMethod '.auto identifications...'])
 				obj.validAuto{fileNum} = validAuto;
 				obj.valid{fileNum}.(obj.signalExtractionMethod).auto = validAuto;
 				clear validAuto
@@ -442,7 +462,7 @@ function obj = modelVarsFromFiles(obj)
 
 			% add files
 			if obj.loadVarsToRam == 1
-				display('Loading variables into ram.')
+				disp('Loading variables into ram.')
 				if exist('signalTraces','var')
 					obj.rawSignals{fileNum} = signalTraces;
 				end
@@ -455,9 +475,9 @@ function obj = modelVarsFromFiles(obj)
 			end
 			clear signalTraces signalImages
 		catch err
-			display(repmat('@',1,7))
+			disp(repmat('@',1,7))
 			disp(getReport(err,'extended','hyperlinks','on'));
-			display(repmat('@',1,7))
+			disp(repmat('@',1,7))
 		end
 	end
 	obj.guiEnabled = 0;
