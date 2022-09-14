@@ -27,6 +27,7 @@ function loadDependencies(varargin)
 		% 2022.04.08 [15:17:28] - Added CIAtah utilities repository (https://github.com/bahanonu/ciatah_utils) to separate outside code from main repository.
 		% 2022.07.10 [20:27:29] - Add SlideBook .jar reader to Bio-Formats download.
 		% 2022.09.14 [09:33:53] - Ensure NoRMCorre is in default options.
+		% 2022.09.14 [09:47:20] - Ensure bfmatlab_readers directory exists, else websave errors occur.
 	% TODO
 		% Verify all dependencies download and if not ask user to download again.
 
@@ -217,6 +218,9 @@ function loadDependencies(varargin)
 
 				% Download SlideBook reader.
 				downloadUrl = 'https://sites.imagej.net/SlideBook/jars/bio-formats/SlideBook6Reader.jar-20190125132114';
+				% Ensure directory exists
+				ciapkg.io.mkdir(fullfile(ciapkg.getDirExternalPrograms(),'bfmatlab_readers'));
+				% Download
 				websave(fullfile(ciapkg.getDirExternalPrograms(),'bfmatlab_readers','SlideBook6Reader.jar'),downloadUrl);
 
 				slideBookPath = fullfile(ciapkg.getDirExternalPrograms(),'bfmatlab_readers','SlideBook6Reader.jar');
