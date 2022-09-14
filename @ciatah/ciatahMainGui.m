@@ -30,6 +30,7 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
         % 2022.07.27 [14:23:56] - Feature to allow preview of HDF5 datasets. Expanding to Bio-Formats and other types of data with internal structures for data.
         % 2022.07.28 [04:48:16] - Added ability to open folder in OS GUI, e.g. Windows Explorer.
         % 2022.07.30 [10:54:53] - If manual input for filtering folders set back to no filter to avoid GUI loops.
+        % 2022.09.14 [09:51:55] - Make sure preview data and open folder buttons are associated with correct previewDataHandle and openFoldersHandle handles.
 	% TODO
 		%
 
@@ -889,9 +890,9 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 
 		runMoviesToggleHandle = uicontrol('style','pushbutton','Units', 'normalized','position',[bOff 45 50 2]/100,'FontSize',fontSizeH,'string',subfxn_previewMovieState(),'BackgroundColor',buttonBackgroundColor,'callback',@runMoviesToggleCallback);
 
-		runMoviesToggleHandle = uicontrol('style','pushbutton','Units', 'normalized','position',[bOff+50 45 24 2]/100,'FontSize',fontSizeH,'string','Preview file internal structure (HDF5, BioFormats)','BackgroundColor',colorStruct.gray,'callback',@subfxn_previewDataInfo);
+		previewDataHandle = uicontrol('style','pushbutton','Units', 'normalized','position',[bOff+50 45 24 2]/100,'FontSize',fontSizeH,'string','Preview file internal structure (HDF5, BioFormats)','BackgroundColor',colorStruct.gray,'callback',@subfxn_previewDataInfo);
 
-		runMoviesToggleHandle = uicontrol('style','pushbutton','Units', 'normalized','position',[bOff+50+24 45 24 2]/100,'FontSize',fontSizeH,'string','Open folder OS gui','BackgroundColor',colorStruct.gray,'callback',@subfxn_openFolderGui);
+		openFoldersHandle = uicontrol('style','pushbutton','Units', 'normalized','position',[bOff+50+24 45 24 2]/100,'FontSize',fontSizeH,'string','Open folder OS gui','BackgroundColor',colorStruct.gray,'callback',@subfxn_openFolderGui);
 		
 		fileFilterRegexpHandle = uicontrol('style','edit','Units', 'normalized','position',[bOff dy txtW 2]/100,'FontSize',fontSizeH,'string',obj.fileFilterRegexp,'callback',@movieSettingsCallback,'KeyReleaseFcn',@movieSettingsCallback);
 			uicontrol('Style','text','String','Processed movie regular expression:','Units','normalized','Position',[bOff dy+dz txtW dz]/100,'BackgroundColor',figBackgroundColor,'ForegroundColor',figTextColor,'HorizontalAlignment','Left','FontWeight','normal','FontSize',fontSizeH);

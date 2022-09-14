@@ -140,6 +140,8 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 	options.menuFontColor = [1 1 1];
 	% Vector: [R G B] vector for color of menu background.
 	options.menuBkgdColor = [0 0 0]+0.2;
+	% Str: 'painters' or 'opengl'
+	options.renderer = 'opengl';
 	% get options
 	options = getOptions(options,varargin);
 	% options
