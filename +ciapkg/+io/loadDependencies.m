@@ -26,6 +26,7 @@ function loadDependencies(varargin)
 		% 2022.03.09 [17:01:54] - Updated NoRMCorre to use https://github.com/bahanonu/NoRMCorre as that is a package version, cleaner namespace.
 		% 2022.04.08 [15:17:28] - Added CIAtah utilities repository (https://github.com/bahanonu/ciatah_utils) to separate outside code from main repository.
 		% 2022.07.10 [20:27:29] - Add SlideBook .jar reader to Bio-Formats download.
+		% 2022.09.14 [09:33:53] - Ensure NoRMCorre is in default options.
 	% TODO
 		% Verify all dependencies download and if not ask user to download again.
 
@@ -67,7 +68,7 @@ function loadDependencies(varargin)
 		'Load Fiji/Miji into MATLAB path.';
 	};
 	% Int vector: index of options.dependencyStr to run by default with no GUI
-	options.depIdxArray = [1 2 3 4 5 6 7 8 9];
+	options.depIdxArray = [1 2 3 4 5 6 7 8 9 10];
 	% Binary: 1 = force update even if already downloaded. 0 = skip if already downloaded
 	options.forceUpdate = 0;
 	% get options
