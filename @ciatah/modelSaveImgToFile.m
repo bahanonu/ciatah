@@ -61,12 +61,18 @@ function obj = modelSaveImgToFile(obj,saveFile,thisFigName,thisFigNo,thisFileID,
 			if strcmp(class(thisFigNo),'char')&strcmp(thisFigNo,'current')
 
 			else
-				% set(thisFigNo,'PaperUnits',options.PaperUnits,'PaperPosition',options.PaperPosition)
-				% set(thisFigNo,'PaperUnits',options.PaperUnits,'PaperPosition',options.PaperPosition)
-				set(thisFigNo,'PaperUnits',options.PaperUnits,'PaperPosition','auto');
-				% set(thisFigNo,'PaperUnits','inches','PaperPosition',[0 0 20 20])
-				set(0,'CurrentFigure',thisFigNo)
-				% figure(thisFigNo)
+				try
+					% set(thisFigNo,'PaperUnits',options.PaperUnits,'PaperPosition',options.PaperPosition)
+					% set(thisFigNo,'PaperUnits',options.PaperUnits,'PaperPosition',options.PaperPosition)
+					set(thisFigNo,'PaperUnits',options.PaperUnits,'PaperPosition','auto');
+					% set(thisFigNo,'PaperUnits','inches','PaperPosition',[0 0 20 20])
+					set(0,'CurrentFigure',thisFigNo)
+					% figure(thisFigNo)
+				catch err
+					display(repmat('@',1,7))
+					disp(getReport(err,'extended','hyperlinks','on'));
+					display(repmat('@',1,7))
+				end
 			end
 		end
 

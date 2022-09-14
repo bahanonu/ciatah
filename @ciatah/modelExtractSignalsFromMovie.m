@@ -32,6 +32,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		% 2022.06.27 [15:33:57] - matlab.desktop.editor.openDocument no longer uses pwd since options.settingsPrivateSaveFolder is based on an absolute path.
 		% 2022.06.29 [11:25:57] - CELLMax support for loading prior settings.
 		% 2022.07.05 [20:12:34] - Update to EXTRACT support: added additional options, do not automatically eliminate summary section, and more.
+		% 2022.09.14 [10:52:43] - Switch order of mergeStructs and supplying cell radius to EXTRACT, else empty vector can be passed depending on user input.
 	% TODO
 		%
 
@@ -1544,8 +1545,6 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		% Load default configuration
 		extractConfig = get_defaults([]);
 
-		extractConfig.avg_cell_radius = gridWidth.(obj.subjectStr{obj.fileNum});
-
 		% switch options.EXTRACT.gpuOrCPU
 		% 	case 'gpu'
 		% 		extractConfig.use_gpu = 1;
@@ -1564,6 +1563,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		% Merge user options and EXTRACT options
 		[extractConfig] = ciapkg.io.mergeStructs(extractConfig,options.EXTRACT,'showStack',0);
 		[extractConfig.thresholds] = ciapkg.io.mergeStructs(extractConfig.thresholds,options.EXTRACT,'showStack',0);
+
+		extractConfig.avg_cell_radius = gridWidth.(obj.subjectStr{obj.fileNum});
 
 		fn_structdisp(extractConfig);
 
