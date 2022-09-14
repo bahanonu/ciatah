@@ -1,49 +1,70 @@
 function [peakOutputStat] = computePeakStatistics(inputSignals,varargin)
-	% Get slope ratio, the average trace from detected peaks, and other peak-related statistics
+	% [peakOutputStat] = computePeakStatistics(inputSignals,varargin)
+	% 
+	% Get slope ratio, the average trace from detected peaks, and other peak-related statistics.
+	% 
 	% Biafra Ahanonu
 	% started: 2013.12.09
-	% inputs
-		% inputSignals = [n m] matrix where n={1....N}
-	% outputs
-		% slopeRatio
-		% traceErr
-		% fwhmSignal
-		% avgPeakAmplitude
-		% spikeCenterTrace
-		% pwelchPxx
-		% pwelchf
+	% 
+	% Inputs
+	% 	inputSignals = [n m] matrix where n = {1....N} and m = frames.
+	% 
+	% Outputs
+	% 	peakOutputStat - structure containing the following fields, where N = number of signals, P = # of peaks, W = peak window (frames):
+	% 		fwhmSignal - Cell array {1 N} of [1 P] vectors: Full width at half maximum for each peak.
+	% 		slopeRatio - Vector [1 N]: slope ratio (e.g. area of rise vs. decay) of peaks for each signal.
+	% 		avgSpikeTrace - Vector [N W]: average peak for each signal.
+	% 		avgSpikeVar - Vector [1 N]: average variance of the signal after the peak across all peaks.
+	% 		avgSpikeCorr - Vector [1 N]: average correlation of all post-peak signals.
+	% 		traceErr - Vector [1 N]: deviation in the error across all peaks within W window.
+	% 		avgFwhm - Vector [1 N]: mean Full width at half maximum across all peaks for each signal.
+	% 		fwhmSignalSignals - Cell array {1 N} of [1 P] vectors: Full width at half maximum for each peak.
+	% 		avgPeakAmplitude - Vector [1 N]: mean peak amplitude across all peaks for each signal.
+	% 		traceSkewness - Vector [1 N]: the skewness of each signal.
+	% 		traceKurtosis - Vector [1 N]: the kurtosis of each signal.
+	% 		traceFanoFactor - Vector [1 N]: the fano factor of each signal.
+	% 		traceAutoCorr - Vector [1 N]: the auto-correlation of each signal defined at set frame shift (see options.frameShiftAmt).
+	% 		spikeCenterTrace - Cell array {1 N} of [P W] vectors: matrix containing signal sliced around all peaks.
+	% 		pwelchPxx - Cell array {1 N}: PSDs for each signal.
+	% 		pwelchf - Cell array {1 N}: frequency corresponding to the output PSDs for each signal.
+
 	% TODO
 		% - Use the SNR signal calculated to determine when to end the S ratio calculation
 	% changelog
 		% 2013.12.24 - changed output so that it is a structure, allows more flexibility when adding new statistics.
 		% 2019.09.10 [11:30:07] - Added fano factor, trace frame lagged auto-correlation, parallelization, and misc improvements.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2022.03.14 [01:31:51] - Update comments along with code standard improvements.
+		% 2022.04.26 [00:12:03] - options.testpeaksArray can be used regardless of vector (with peak frames) orientation.
 
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
-	%
+	% Char cell array: cell array of strings for different features to include in the output.
 	options.featureList = {'avgSpikeTrace','spikeCenterTrace','avgSpikeVar','avgSpikeCorr','avgPeakAmplitude','slopeRatio','fwhmTrace'};
+	% Binary: 1 = only detect and output the slope ratio. 0 = perform full analysis/output.
 	options.onlySlopeRatio = 0;
-	%
-	options.spikeROI = [-40:40];
-	%
+	% Int vector: window (in frames) around each peak to perform the various peak statistics analyses.
+	options.spikeROI = -40:40;
+	% Int: number of frames before and after peak to use for certain statistics, e.g. slopeRatio.
 	options.slopeFrameWindow = 10;
-	%
+	% Binary: 1 = show the wait bar. 0 = do not show wait bar.
 	options.waitbarOn = 1;
-	% determine whether power-spectral density should be calculated
+	% Binary: 1 = calculate power-spectral density.
 	options.psd = 0;
-	% should fwhm analysis be plotted?
+	% Binary: 1 = plot fwhm analysis. 0 = do not plot analysis.
 	options.fwhmPlot = 0;
-	% save time if already computed peaks
+	% Matrix: save time if already computed peaks. [nSignals frame] matrix. Binary matrix with 1 = peaks, 0 = non-peaks.
 	options.testpeaks = [];
+	% Cell array: save time if already computed peaks. {1 nSignals} cell array. Each cell contains [1 nPeaks] vector that stores the frame locations of each peak.
 	options.testpeaksArray = [];
-	% Median filter the data
+	% Binary: 1 = median filter the data.
 	options.medianFilter = 1;
-	% number of frames to calculate median filter
+	% Int: number of frames to calculate rolling median filter.
 	options.medianFilterLength = 200;
+	% Int: the size of the moving average to use on the input signals, to smooth out noise.
 	options.movAvgFiltSize = [];
-	% Int: how many frames to shift when calculating auto-correlation
+	% Int: number of frames to shift when calculating auto-correlation.
 	options.frameShiftAmt = 2;
 	% get options
 	options = getOptions(options,varargin);
@@ -64,24 +85,6 @@ function [peakOutputStat] = computePeakStatistics(inputSignals,varargin)
 		end
 	end
 
-	% peakOutputStat.fwhmSignal = [];
-	% peakOutputStat.slopeRatio = [];
-	% peakOutputStat.avgSpikeTrace = [];
-	% peakOutputStat.avgSpikeVar = [];
-	% peakOutputStat.avgSpikeCorr = [];
-	% peakOutputStat.traceErr = [];
-	% peakOutputStat.fwhmSignal = [];
-	% peakOutputStat.avgFwhm = [];
-	% peakOutputStat.fwhmSignalSignals = [];
-	% peakOutputStat.avgPeakAmplitude = [];
-	% peakOutputStat.traceSkewness = [];
-	% peakOutputStat.traceKurtosis = [];
-	% peakOutputStat.traceFanoFactor = [];
-	% peakOutputStat.traceAutoCorr = [];
-	% peakOutputStat.spikeCenterTrace = [];
-	% peakOutputStat.pwelchPxx = [];
-	% peakOutputStat.pwelchf = [];
-
 	% get a list of all indices to pull out
 	nSignals = size(inputSignals,1);
 	% reverseStr = '';
@@ -98,7 +101,7 @@ function [peakOutputStat] = computePeakStatistics(inputSignals,varargin)
 		afterEach(D, @nUpdateParforProgress);
 		p = 0;
 		N = nSignals;
-		nInterval = round(nSignals/30);%25
+		nInterval = round(N/30);%25
 		options_waitbarOn = options.waitbarOn;
 	end
 
@@ -128,12 +131,12 @@ function [peakOutputStat] = computePeakStatistics(inputSignals,varargin)
 		avgSpikeCorr(i) = peakStat.avgSpikeCorr;
 		traceErr(i) = peakStat.traceErr;
 		fwhmSignal{i} = peakStat.fwhmTrace(:);
-		avgFwhm(i) = nanmean(peakStat.fwhmTrace(:));
+		avgFwhm(i) = mean(peakStat.fwhmTrace(:),'omitnan');
 		fwhmSignalSignals{i} = peakStat.fwhmTrace(:);
 		avgPeakAmplitude(i) = peakStat.avgPeakAmplitude;
 		traceSkewness(i) = skewness(thisSignal(:));
 		traceKurtosis(i) = kurtosis(thisSignal(:));
-		traceFanoFactor(i) = (nanstd(thisSignal(:))^2)/nanmean(thisSignal(:));
+		traceFanoFactor(i) = (std(thisSignal(:),'omitnan')^2)/mean(thisSignal(:),'omitnan');
 		traceAutoCorr(i) = corr(thisSignal(:),circshift(thisSignal(:),options_frameShiftAmt));
 		spikeCenterTrace{i} = peakStat.spikeCenterTrace;
 		if options_psd==1
@@ -217,8 +220,10 @@ function [peakStat] = peakStats(testpeaks,inputSignal,spikeROI,slopeFrameWindow,
 	% [testpeaks dummyVar] = computeSignalPeaks(inputSignal);
 	% if peaks exists, do statistics else return NaNs
 	if ~isempty(testpeaks)
+		% Force peaks to be correct dimensions.
+		testpeaks = testpeaks(:);
 		% get a list of indices around which to extract spike signals
-		extractMatrix = bsxfun(@plus,testpeaks',spikeROI);
+		extractMatrix = bsxfun(@plus,testpeaks,spikeROI);
 		extractMatrix(extractMatrix<=0)=1;
 		extractMatrix(extractMatrix>=size(inputSignal,2))=size(inputSignal,2);
 		peakStat.spikeCenterTrace = reshape(inputSignal(extractMatrix),size(extractMatrix));
@@ -239,7 +244,7 @@ function [peakStat] = peakStats(testpeaks,inputSignal,spikeROI,slopeFrameWindow,
 		if size(spikeCenterTrace,1)==1
 			peakStat.avgSpikeTrace = spikeCenterTrace;
 		else
-			peakStat.avgSpikeTrace = nanmean(spikeCenterTrace);
+			peakStat.avgSpikeTrace = mean(spikeCenterTrace,'omitnan');
 		end
 
 		% or get correlation
@@ -250,7 +255,7 @@ function [peakStat] = peakStats(testpeaks,inputSignal,spikeROI,slopeFrameWindow,
 		corrHere = corr(spikeCenterTrace(:,round(end/2):end)',spikeCenterTrace(:,round(end/2):end)','type','Spearman');
 
 		corrHere(logical(eye(size(corrHere)))) = NaN;
-		peakStat.avgSpikeCorr = nanmean(corrHere(:));
+		peakStat.avgSpikeCorr = mean(corrHere(:),'omitnan');
 
 		if 0
 			% size(spikeCenterTrace)
@@ -259,29 +264,29 @@ function [peakStat] = peakStats(testpeaks,inputSignal,spikeROI,slopeFrameWindow,
 				corrHere = corr(spikeCenterTrace',spikeCenterTrace');
 				imagesc(corrHere)
 				corrHere(logical(eye(size(corrHere)))) = NaN;
-				title(num2str(nanmean(corrHere(:))))
+				title(num2str(mean(corrHere(:),'omitnan')))
 			subplot(1,2,2)
 				corrHere = corr(spikeCenterTrace(:,round(end/2):end)',spikeCenterTrace(:,round(end/2):end)');
 				imagesc(corrHere)
 				corrHere(logical(eye(size(corrHere)))) = NaN;
-				title(num2str(nanmean(corrHere(:))))
+				title(num2str(mean(corrHere(:),'omitnan')))
 				pause(0.01);
 			% size(corr(spikeCenterTrace',spikeCenterTrace'))
 		end
 
 		% peakStat.avgSpikeVar = nanmean(squeeze(nanvar(spikeCenterTrace(:,round(end/2):end),[],1)));
 		% Change to index of dispersion
-		varH = nanvar(spikeCenterTrace(:,round(end/2):end),[],1);
-		meanH = nanmean(spikeCenterTrace(:,round(end/2):end),1);
-		peakStat.avgSpikeVar = nanmean(squeeze(varH));
-		peakStat.avgSpikeVMR = nanmean(squeeze(varH./meanH));
+		varH = var(spikeCenterTrace(:,round(end/2):end),[],1,'omitnan');
+		meanH = mean(spikeCenterTrace(:,round(end/2):end),1,'omitnan');
+		peakStat.avgSpikeVar = mean(squeeze(varH),'omitnan');
+		peakStat.avgSpikeVMR = mean(squeeze(varH./meanH),'omitnan');
 
 		% get the peak amplitude
 		peakStat.avgPeakAmplitude = peakStat.avgSpikeTrace(find(spikeROI==0));
 		% slopeRatio = (peakDfof-avgSpikeTrace(find(spikeROI==-slopeFrameWindow)))/(peakDfof-avgSpikeTrace(find(spikeROI==slopeFrameWindow)));
 
 		% get the deviation in the error
-		peakStat.traceErr = sum(nanstd(spikeCenterTrace))/sqrt(size(spikeCenterTrace,1));
+		peakStat.traceErr = sum(std(spikeCenterTrace,'omitnan'))/sqrt(size(spikeCenterTrace,1));
 
 		% % get a ratio metric (normalized between 1 and -1) for the asymmetry in the peaks
 		% prePeakIdx = find(spikeROI==-(slopeFrameWindow)):find(spikeROI==-1);
@@ -314,7 +319,7 @@ function [peakStat] = peakStats(testpeaks,inputSignal,spikeROI,slopeFrameWindow,
 
 		if options_psd==1
 			% get the power-spectrum
-			[peakStat.pwelchPxx peakStat.pwelchf] = pwelch(inputSignal,100,25,512,5);
+			[peakStat.pwelchPxx, peakStat.pwelchf] = pwelch(inputSignal,100,25,512,5);
 		end
 	else
 		peakStat.avgSpikeTrace = nan(1,length(spikeROI));
@@ -331,7 +336,7 @@ function [peakStat] = peakStats(testpeaks,inputSignal,spikeROI,slopeFrameWindow,
 		end
 	end
 end
-function plotStatistics()
+% function plotStatistics()
 	% figure(92929)
 	% hist(fwhmSignal,[0:nanmax(fwhmSignal)]); box off;
 	% xlabel('FWHM (frames)'); ylabel('count');
@@ -352,4 +357,24 @@ function plotStatistics()
 	% errorbar(spikeROI, avgSpikeTrace, traceErr);
 	% t=1:length(traceErr);
 	% fill([spikeROI fliplr(spikeROI)],[avgSpikeTrace+traceErr fliplr(avgSpikeTrace-traceErr)],[4 4 4]/8, 'FaceAlpha', 0.4, 'EdgeColor','none')
-end
+% end
+% function localfxn_createOutput()
+
+	% peakOutputStat.fwhmSignal = [];
+	% peakOutputStat.slopeRatio = [];
+	% peakOutputStat.avgSpikeTrace = [];
+	% peakOutputStat.avgSpikeVar = [];
+	% peakOutputStat.avgSpikeCorr = [];
+	% peakOutputStat.traceErr = [];
+	% peakOutputStat.fwhmSignal = [];
+	% peakOutputStat.avgFwhm = [];
+	% peakOutputStat.fwhmSignalSignals = [];
+	% peakOutputStat.avgPeakAmplitude = [];
+	% peakOutputStat.traceSkewness = [];
+	% peakOutputStat.traceKurtosis = [];
+	% peakOutputStat.traceFanoFactor = [];
+	% peakOutputStat.traceAutoCorr = [];
+	% peakOutputStat.spikeCenterTrace = [];
+	% peakOutputStat.pwelchPxx = [];
+	% peakOutputStat.pwelchf = [];
+% end

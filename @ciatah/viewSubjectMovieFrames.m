@@ -11,6 +11,7 @@ function obj = viewSubjectMovieFrames(obj)
 	% changelog
 		% 2021.06.18 [21:41:07] - added modelVarsFromFilesCheck() to check and load signals if user hasn't already.
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2022.03.16 [08:45:40] - Update code standards.
 	% TODO
 		%
 
@@ -164,37 +165,37 @@ function obj = viewSubjectMovieFrames(obj)
 			% MIJ.run('Close All Without Saving');
 			manageMiji('startStop','closeAllWindows');
 		case 4
-			[fileIdxArray idNumIdxArray nFilesToAnalyze nFiles] = obj.getAnalysisSubsetsToAnalyze();
+			[fileIdxArray, idNumIdxArray, nFilesToAnalyze, nFiles] = obj.getAnalysisSubsetsToAnalyze();
 			for thisSubjectStr = subjectList
 				try
-					display(repmat('=',1,7))
+					disp(repmat('=',1,7))
 					fprintf('Subject %s', thisSubjectStr{1});
 					validFoldersIdx = find(strcmp(thisSubjectStr,obj.subjectStr));
 					validFoldersIdx = intersect(fileIdxArray,validFoldersIdx);
 					if isempty(validFoldersIdx)
-						display('Skipping...')
+						disp('Skipping...')
 						continue;
 					end
-					subjectMovieFrames = [];
+					subjectMovieFrames = single([]);
 					for folderNo = 1:length(validFoldersIdx)
-						display('===')
+						disp('===')
 						thisFileNum = validFoldersIdx(folderNo);
 						obj.fileNum = thisFileNum;
 
 						% Check that signal extraction information is loaded.
 						obj.modelVarsFromFilesCheck(thisFileNum);
 
-						[inputSignals inputImages signalPeaks signalPeakIdx valid] = modelGetSignalsImages(obj,'returnType','raw');
-						if isempty(inputSignals);display('no input signals');continue;end
+						[inputSignals, inputImages, signalPeaks, signalPeakIdx, valid] = modelGetSignalsImages(obj,'returnType','raw');
+						if isempty(inputSignals);disp('no input signals');continue;end
 
 						inputImages = thresholdImages(inputImages,'binary',0,'getBoundaryIndex',0,'threshold',0.4,'imageFilter','none');
 
 						goodImages = inputImages(:,:,logical(valid));
-						goodImages = nanmax(goodImages,[],3);
+						goodImages = max(goodImages,[],3,'omitnan');
 
 						badImages = inputImages(:,:,~logical(valid));
-						badImages = nanmax(badImages,[],3);
-						[sum(valid) size(goodImages) NaN size(inputImages)]
+						badImages = max(badImages,[],3,'omitnan');
+						disp(num2str([sum(valid) size(goodImages) NaN size(inputImages)]))
 						goodImages = goodImages + 0.5*badImages;
 
 						% [goodImages] = viewAddTextToMovie(goodImages,obj.assay{obj.fileNum},12);

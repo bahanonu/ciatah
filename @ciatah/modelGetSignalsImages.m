@@ -14,6 +14,7 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 		% 2020.12.08 [01:14:09] - Reorganized returnType to be outside raw signals flag, so common filtering mechanism regardless of variables loaded into RAM or not. This fixes if a user loads variables into RAM then uses cross-session alignment, the viewMatchObjBtwnSessions method may not display registered images (cross-session alignment is still fine and valid).
 		% 2021.06.30 [14:52:23] - Updated to allow loading raw files without calling modelVarsFromFiles.
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2022.04.09 [20:30:52] - Ensure when loading cell extraction CIAtah-style that only MAT files are loaded.
 	% TODO
 		% Give a user a warning() output if there are no or empty cell-extraction outputs
 
@@ -256,7 +257,7 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 				end
 			else
 				while isempty(filesToLoad)
-					filesToLoad = getFileList(obj.dataPath{thisFileNum},strrep(regexPairs{fileToLoadNo},'.mat',''));
+					filesToLoad = getFileList(obj.dataPath{thisFileNum},strrep(regexPairs{fileToLoadNo},'.mat','.*.mat$'));
 					fileToLoadNo = fileToLoadNo+1;
 					if fileToLoadNo>nRegExps
 						break;
@@ -264,7 +265,7 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 				end
 			end
 			if isempty(filesToLoad)
-			else			
+			else
 				[inputImages,inputSignals,infoStruct,algorithmStr,inputSignals2] = ciapkg.io.loadSignalExtraction(filesToLoad{1});
 			end
 			signalPeaks = [];
@@ -300,7 +301,7 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 
 		if loadCiaFiles==1
 			while isempty(filesToLoad)
-				filesToLoad = getFileList(obj.dataPath{thisFileNum},strrep(regexPairs{fileToLoadNo},'.mat',''));
+				filesToLoad = getFileList(obj.dataPath{thisFileNum},strrep(regexPairs{fileToLoadNo},'.mat','.*.mat$'));
 				fileToLoadNo = fileToLoadNo+1;
 				if fileToLoadNo>nRegExps
 					break;
@@ -642,7 +643,11 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 
 	% if exist('inputSignals','var')
 	if ~isempty(inputSignals)
-		if isempty(obj.signalPeaksArray{thisFileNum})
+		if isempty(obj.signalPeaksArray)
+			disp('Please run modelVarsFromFiles')
+			signalPeaks = [];
+			signalPeaksArray = [];
+		elseif isempty(obj.signalPeaksArray{thisFileNum})
 			signalPeaks = [];
 			signalPeaksArray = [];
 		else

@@ -10,8 +10,9 @@ function [output1,output2] = createGroupColorMaps(inputImages,groupVector,vararg
 
 	% changelog
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2022.07.20 [14:47:26] - Added fast thresholding option.
 	% TODO
-		%
+		% 
 
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
@@ -20,6 +21,8 @@ function [output1,output2] = createGroupColorMaps(inputImages,groupVector,vararg
 	options.dilateOutlinesFactor = 0;
 	% Float: threshold for thresholding images, fraction of maximum image value.
 	options.threshold = 0.4;
+	% Binary: 1 = fast thresholding (vectorized), 0 = normal thresholding
+	options.fastThresholding = 1;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -35,7 +38,7 @@ function [output1,output2] = createGroupColorMaps(inputImages,groupVector,vararg
 		% inputImages = pcaicaAnalysisOutput.IcaFilters;
 
 		% Get boundary indices (for outline of cell locations)
-		[inputImagesThresholded, boundaryIndices] = thresholdImages(inputImages,'binary',0,'threshold',options.threshold,'imageFilter','none','getBoundaryIndex',1,'imageFilterBinary','none');
+		[inputImagesThresholded, boundaryIndices] = thresholdImages(inputImages,'binary',0,'threshold',options.threshold,'imageFilter','none','getBoundaryIndex',1,'imageFilterBinary','none','fastThresholding',options.fastThresholding);
 
 		dilateOutlinesFactor = options.dilateOutlinesFactor;
 

@@ -1,4 +1,4 @@
-function [dataSubset fid] = readHDF5Subset(inputFilePath, offset, block, varargin)
+function [dataSubset, fid] = readHDF5Subset(inputFilePath, offset, block, varargin)
 	% Gets a subset of data from an HDF5 file.
 	% Biafra Ahanonu
 	% started: 2013.11.10
@@ -223,7 +223,7 @@ function [dataSubset fid] = readHDF5Subset(inputFilePath, offset, block, varargi
 
 		try
 			if options.displayInfo==1
-				display('Block contains extra dimension');
+				disp('Block contains extra dimension');
 			end
 			% offset and size of the block to get, flip dimensions so in format that H5S wants
 			offsetTmp = offset;

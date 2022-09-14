@@ -45,6 +45,14 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% 2022.01.25 [16:08:49] - Add `modelPreprocessMovieFunction` settings saved in CIAtah class to saved output file for later retrieval.
 		% 2022.01.26 [08:31:06] - For selecting turboreg crop coordinates, switched to ciapkg.io.readFrame when single frame is requested as this is faster and avoids long read times of all frame information as occurs in certain types of TIFF files or hard drives.
 		% 2022.02.09 [23:51:18] - Misc code fixes to conform to better Matlab language standards.
+		% 2022.03.03 [19:18:54] - Change all nested and local functions to start with "nestedfxn_" or "localfxn_" prefixes for clarity. Added option to fix "broken" frames, e.g. frames in which the camera gives out garbled or improperly formatted data. Fix with mean of the movie to reduce effect on downstream analysis. Disable local function "getMovieFileType" in favor or CIAtah package function.
+		% 2022.03.09 [16:50:36] - Added option to place prefix on all output files.
+		% 2022.03.12 [19:19:41] - Detrending now does everything within nested function instead of calling normalizeMovie() to reduce memory overhead.
+		% 2022.03.13 [23:20:08] - Added support for MAT-file based processing of movies.
+		% 2022.06.28 [15:28:13] - Add additional black background support.
+		% 2022.07.10 [17:21:21] - Added largeMovieLoad setting support, improve memory allocation for select movies.
+		% 2022.07.27 [12:45:08] - Make sure readFrame is compatible with all HDF5 dataset names.
+		% 2022.07.18 [10:30:01] - NormCorre integrated into the pipeline for end users.
 	% TODO
 		% Allow users to save out analysis options order and load it back in.
 		% Insert NaNs or mean of the movie into dropped frame location, see line 260
@@ -59,6 +67,12 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	% load necessary functions and defaults
 	% loadBatchFxns();
 	%========================
+	% Str: path to MAT-file that will be used to temporarily store processed movie, to avoid Out of Memory errors for certain movies.
+	options.matfilePath = '';
+	% Str: Variable name for movie to store MAT-file in. DO NOT CHANGE for the moment.
+	options.matfileVarname = 'thisMovie';
+	% INTERNAL | Binary: 1 = running MAT-file based analysis, 0 = run normal analysis load in disk.
+	options.runMatfile = 0;
 	% Binary: 1 = show figures, 0 = disable showing figures
 	options.showFigures = 1;
 	% set the options, these can be modified by varargin
@@ -128,6 +142,12 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	% Str: daset
 	options.nwbSettingsDatasetname = '/general/optophysiology/imaging_plane/description';
 	options.h5SettingsDatasetname = '/movie/preprocessingSettingsAll';
+	% Str: prefix to add to all saved files.
+	options.saveFilePrefix = '';
+	% Str: suffix to add to all saved files.
+	options.saveFileSuffix = '';
+	% Str: suffix to add to all saved files.
+	options.videoPlayer = 'matlab';
 	% ====
 	% get options
 	options = getOptions(options,varargin);
@@ -245,7 +265,10 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			'str','Manually register movie images. (ignore)'),...
 		'turboreg',struct(...
 			'save','treg',...
-			'str','TurboReg (motion correction with option to spatially filter)'),...
+			'str','Motion correction - TurboReg or NoRMCorre (with option to spatially filter)'),...
+		'normcorre',struct(...
+			'save','normcorre',...
+			'str','NoRMCorre (motion correction with option to spatially filter)'),...
 		'fft_highpass',struct(...
 			'save','fftHp',...
 			'str','High-pass FFT (ignore most cases).'),...
@@ -296,6 +319,12 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% Do nothing
 	end
 
+	% Load existing settings
+	try
+		options.videoPlayer = obj.functionSettings.modelPreprocessMovieFunction.options.videoPlayer;
+	catch
+	end
+
 	analysisOptionListStr = analysisOptionList;
 	for optNoS3 = 1:length(analysisOptionListStr)
 		analysisOptionListStr{optNoS3} = analysisOptsInfo.(analysisOptionListStr{optNoS3}).str;
@@ -307,6 +336,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	try
 		ok = 1;
 		[~, ~] = openFigure(1776, '');clf;
+
+		set(gcf,'color',[0 0 0]);
 		instructTextPos = [1 80 70 20]/100;
 		listTextPos = [1 40 98 28]/100;
 		listTextPos2 = [1 1 98 28]/100;
@@ -314,29 +345,30 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		figNoList = struct;
 		figNoList.detrend = 102030;
 
-		shortcutMenuHandle = uicontrol('style','pushbutton','Units','normalized','position',[1 75 30 3]/100,'FontSize',9,'string','Reset to default list order','callback',@subfxn_resetSetpsMenu);
-		shortcutMenuHandle2 = uicontrol('style','pushbutton','Units','normalized','position',[32 75 30 3]/100,'FontSize',9,'string','Select default options (e.g. post-dragging)','callback',@subfxn_highlightDefault);
-		shortcutMenuHandle3 = uicontrol('style','pushbutton','Units','normalized','position',[63 75 30 3]/100,'FontSize',9,'string','Finished','callback',@subfxn_closeOptions);
-		% shortcutMenuHandle = uicontrol('style','pushbutton','Units','normalized','position',[32 62 30 3]/100,'FontSize',9,'string','Next screen','callback',@subfxn_highlightDefault);
+		shortcutMenuHandle = uicontrol('style','pushbutton','Units','normalized','position',[1 75 30 3]/100,'FontSize',9,'string','Reset to default list order','callback',@nestedfxn_resetSetpsMenu);
+		shortcutMenuHandle2 = uicontrol('style','pushbutton','Units','normalized','position',[32 75 30 3]/100,'FontSize',9,'string','Select default options (e.g. post-dragging)','callback',@nestedfxn_highlightDefault);
+		shortcutMenuHandle3 = uicontrol('style','pushbutton','Units','normalized','position',[63 75 30 3]/100,'FontSize',9,'string','Finished','callback',@nestedfxn_closeOptions);
+		% shortcutMenuHandle = uicontrol('style','pushbutton','Units','normalized','position',[32 62 30 3]/100,'FontSize',9,'string','Next screen','callback',@nestedfxn_highlightDefault);
 
 
-		uicontrol('Style','Text','String','Analysis steps to perform.','Units','normalized','Position',[1 68 90 3]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold');
+		uicontrol('Style','Text','String','Analysis steps to perform.','Units','normalized','Position',[1 68 90 3]/100,'BackgroundColor','black','ForegroundColor','white','HorizontalAlignment','Left','FontWeight','bold');
 		[hListbox, jListbox, jScrollPane, jDND] = reorderableListbox('String',analysisOptionListStr,'Units','normalized','Position',listTextPos,'Max',Inf,'Min',0,'Value',defaultChoiceIdx,...
-			'MousePressedCallback',@subfxn_analysisOutputMenuChange,...
-			'MouseReleasedCallback',@subfxn_analysisOutputMenuChange,...
-			'DragOverCallback',@subfxn_analysisOutputMenuChange2,...
-			'DropCallback',@subfxn_analysisOutputMenuChange...
+			'MousePressedCallback',@nestedfxn_analysisOutputMenuChange,...
+			'MouseReleasedCallback',@nestedfxn_analysisOutputMenuChange,...
+			'DragOverCallback',@nestedfxn_analysisOutputMenuChange2,...
+			'DropCallback',@nestedfxn_analysisOutputMenuChange...
 			);
 
-		uicontrol('Style','Text','String',['At which analysis step should files be saved to disk?'],'Units','normalized','Position',[1 30 90 3]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold');
+		uicontrol('Style','Text','String',['At which analysis step should files be saved to disk?'],'Units','normalized','Position',[1 30 90 3]/100,'BackgroundColor','black','ForegroundColor','white','HorizontalAlignment','Left','FontWeight','bold');
 		[hListboxS, jListboxS, jScrollPaneS, jDNDS] = reorderableListbox('String',analysisOptionListStr,'Units','normalized','Position',listTextPos2,'Max',Inf,'Min',0,'Value',defaultSaveIdx);
 
 		uicontrol('Style','Text','String',['Analysis step selection and ordering' 10 '======='...
 			10 'Gentlemen, you can not fight in here! This is the War Room.' 10 'We can know only that we know nothing.' 10 'And that is the highest degree of human wisdom.'...
-			10 10 '1: Click items to select.' 10 '2: Drag to re-order analysis.' 10 '3: Click command window and press ENTER to continue.'],'Units','normalized','Position',instructTextPos,'BackgroundColor','white','HorizontalAlignment','Left');
+			10 10 '1: Click items to select.' 10 '2: Drag to re-order analysis.' 10 '3: Click command window and press ENTER to continue.'],...
+			'Units','normalized','Position',instructTextPos,'BackgroundColor','black','ForegroundColor','white','HorizontalAlignment','Left');
 
 
-		emptyBox = uicontrol('Style','Text','String','','Units','normalized','Position',[1 1 1 1]/100,'BackgroundColor','white','HorizontalAlignment','Left','FontWeight','bold','FontSize',7);
+		emptyBox = uicontrol('Style','Text','String','','Units','normalized','Position',[1 1 1 1]/100,'BackgroundColor','black','ForegroundColor','white','HorizontalAlignment','Left','FontWeight','bold','FontSize',7);
 
 		if ismac
 			cmdWinEditorFont = 'Menlo-Regular';
@@ -348,15 +380,17 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			cmdWinEditorFont = 'FixedWidth';
 		end
 
-		usaFlagPic = @(x) uicontrol('Style','Text','String',x,'Units','normalized','Position',[0.7 0.85 0.28 0.14],'BackgroundColor','white','HorizontalAlignment','Right','FontName',cmdWinEditorFont,'FontSize',5);
+		usaFlagPic = @(x) uicontrol('Style','Text','String',x,'Units','normalized','Position',[0.7 0.85 0.28 0.14],'BackgroundColor','black','ForegroundColor','white','HorizontalAlignment','Right','FontName',cmdWinEditorFont,'FontSize',5);
 
 		usaFlagPic(USAflagStr);
 		% exitHandle = uicontrol('style','pushbutton','Units', 'normalized','position',[5 85 50 3]/100,'FontSize',9,'string','Click here to finish','callback',@subfxnCloseFig,'HorizontalAlignment','Left');
 
 		% Wait for user input
-		% set(gcf, 'WindowScrollWheelFcn', @mouseWheelChange);
+		% set(gcf, 'WindowScrollWheelFcn', @nestedfxn_mouseWheelChange);
 		% set(gcf,'KeyPressFcn', @(src,event) set(gcf,'Tag','next'));
-		set(gcf,'KeyPressFcn', @subfxn_closeOptionsKey);
+		set(gcf,'KeyPressFcn', @nestedfxn_closeOptionsKey);
+		set(gcf,'color',[0 0 0]);
+		ciapkg.view.changeFont('none','fontColor','w')
 		% waitfor(gcf,'Tag');
 		waitfor(emptyBox);
 		% pause
@@ -456,7 +490,11 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			'[optional, if using HDF5] Input HDF5 file dataset name (e.g. "/images" for raw Inscopix or "/1" for example data, sans quotes): ',...
 			'[optional, if using HDF5] Output HDF5 file dataset name (see above): ',...
 			'[optional] (0) Use default preprocessing settings, (1) Save settings or load previously saved settings: ',...
-			'[optional] (1) Save movie to NWB format, (0) Save to HDF5 format: '...
+			'[optional] (1) Save movie to NWB format, (0) Save to HDF5 format: ',...
+			'[optional] Prefix to add to all processed movies (e.g. "concat_", "experiment_"): ',...
+			'[optional] Suffix to add to all processed movies (e.g. "concat_", "experiment_"): '...
+			'[optional] Default video player (imagej or matlab): ',...
+			'[optional] MAT-file path if processing large movie (e.g. getting Out of Memory errors), SSD drive preferred for speed: '...
 		},...
 		'Preprocessing settings',[1 100],...
 		{...
@@ -465,7 +503,11 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			obj.inputDatasetName,...
 			obj.outputDatasetName,...
 			num2str(obj.saveLoadPreprocessingSettings),...
-			num2str(obj.nwbLoadFiles)...
+			num2str(obj.nwbLoadFiles),...
+			'',...
+			'',...
+			options.videoPlayer,...
+			options.matfilePath...
 		}...
 	);
 	disp(movieSettings)
@@ -479,6 +521,12 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	obj.outputDatasetName = movieSettings{4};
 	obj.saveLoadPreprocessingSettings = str2num(movieSettings{5});
 	obj.nwbLoadFiles = str2num(movieSettings{6});
+	options.saveFilePrefix = movieSettings{7};
+	options.saveFileSuffix = movieSettings{8};
+	options.videoPlayer = movieSettings{9};
+	options.matfilePath = movieSettings{10};
+
+	obj.functionSettings.modelPreprocessMovieFunction.options.videoPlayer = options.videoPlayer;
 
 	if obj.saveLoadPreprocessingSettings==1
 		currentDateTimeStr = datestr(now,'yyyymmdd_HHMMSS','local');
@@ -538,8 +586,19 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		end
 	else
 	end
+
+	% Get movie processing settings, NOT just for motion correction
 	[options.turboreg, preprocessingSettingsAll] = obj.getRegistrationSettings('Processing options','inputSettings',previousPreprocessSettings);
 	fn_structdisp(options.turboreg)
+
+
+	% Get additional NormCorre settings
+	switch options.turboreg.mcMethod
+		case 'normcorre'
+			optsNoRMCorre = ciapkg.motion_correction.getNoRMCorreParams([400 400 1],'guiDisplay',1);
+		otherwise
+			optsNoRMCorre = [];
+	end
 
 	if obj.saveLoadPreprocessingSettings==1
 		obj.preprocessSettings = preprocessingSettingsAll;
@@ -575,7 +634,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	if sum(strcmp(analysisOptionList(analysisOptionsIdx),'turboreg'))>0
 		if options.processMovies==1
 			try
-				[turboRegCoords] = turboregCropSelection(options,folderList);
+				[turboRegCoords] = localfxn_turboregCropSelection(options,folderList);
 			catch err
 				disp(repmat('@',1,7))
 				disp(getReport(err,'extended','hyperlinks','on'));
@@ -673,7 +732,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 
 			% Get the list of movies
 			movieList = getFileList(thisDir, options.fileFilterRegexp);
-			[movieList] = removeUnsupportedFiles(movieList,options);
+			[movieList] = localfxn_removeUnsupportedFiles(movieList,options);
 
 			% If there are no files in this folder to analyze, skip to the next folder.
 			if isempty(movieList)
@@ -685,7 +744,12 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			disp(fileInfo)
 			% base string to save as
 			fileInfoSaveStr = [fileInfo.date '_' fileInfo.protocol '_' fileInfo.subject '_' fileInfo.assay];
-			thisDirSaveStr = [thisDir filesep fileInfoSaveStr];
+			if isempty(options.saveFilePrefix)
+				thisDirSaveStr = [thisDir filesep fileInfoSaveStr];
+			else
+				thisDirSaveStr = [thisDir filesep options.saveFilePrefix fileInfoSaveStr];
+			end
+
 			thisProcessingDirFileInfoStr = [thisProcessingDir filesep currentDateTimeStr '_' fileInfoSaveStr];
 			saveStr = '';
 			% add the folder to the output structure
@@ -734,19 +798,34 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 					% options.frameList
 					options.frameList(options.frameList>sum(movieDims.z)) = [];
 				end
-				if options.processMoviesSeparately==1
-					thisMovie = loadMovieList(movieList{movieNo},'convertToDouble',0,'frameList',options.frameList,'inputDatasetName',options.datasetName,'treatMoviesAsContinuous',0,'loadSpecificImgClass','single');
-					% playMovie(thisMovie);
-				else
-					% options.turboreg.treatMoviesAsContinuousSwitch = 1;
-					if isempty(options.frameList)&&options.turboreg.loadMoviesFrameByFrame==1
-						movieDims = loadMovieList(movieList,'convertToDouble',0,'frameList',options.frameList,'inputDatasetName',options.datasetName,'treatMoviesAsContinuous',options.turboreg.treatMoviesAsContinuousSwitch,'loadSpecificImgClass','single','getMovieDims',1);
-						sum(movieDims.z)
-						thisFrameList = 1:sum(movieDims.z);
+				if isempty(options.matfilePath)
+					if options.processMoviesSeparately==1
+						thisMovie = loadMovieList(movieList{movieNo},'convertToDouble',0,'frameList',options.frameList,'inputDatasetName',options.datasetName,'treatMoviesAsContinuous',0,'loadSpecificImgClass','single','largeMovieLoad',options.turboreg.largeMovieLoad);
+						% playMovie(thisMovie);
 					else
-						thisFrameList = options.frameList;
+						% options.turboreg.treatMoviesAsContinuousSwitch = 1;
+						if isempty(options.frameList)&&options.turboreg.loadMoviesFrameByFrame==1
+							movieDims = loadMovieList(movieList,'convertToDouble',0,'frameList',options.frameList,'inputDatasetName',options.datasetName,'treatMoviesAsContinuous',options.turboreg.treatMoviesAsContinuousSwitch,'loadSpecificImgClass','single','getMovieDims',1,'largeMovieLoad',options.turboreg.largeMovieLoad);
+							sum(movieDims.z)
+							thisFrameList = 1:sum(movieDims.z);
+						else
+							thisFrameList = options.frameList;
+						end
+						thisMovie = loadMovieList(movieList,'convertToDouble',0,'frameList',thisFrameList,'inputDatasetName',options.datasetName,'treatMoviesAsContinuous',options.turboreg.treatMoviesAsContinuousSwitch,'loadSpecificImgClass','single','largeMovieLoad',options.turboreg.largeMovieLoad);
 					end
-					thisMovie = loadMovieList(movieList,'convertToDouble',0,'frameList',thisFrameList,'inputDatasetName',options.datasetName,'treatMoviesAsContinuous',options.turboreg.treatMoviesAsContinuousSwitch,'loadSpecificImgClass','single');
+				else
+					% Write data to MAT-file to allow read-from-disk processing.
+					[success] = writeDataToMatfile(movieList{movieNo},options.matfileVarname,options.matfilePath,...
+						'chunkSize',options.turboregNumFramesSubset,...
+						'saveSpecificImgClass','single');
+					matObj = matfile(movieList{movieNo},'Writable',true);
+
+					% Make a dummy thisMovie for use in certain cases.
+					thisMovie = [];
+					if success==0
+						continue;
+					end
+					options.runMatfile = 1;
 				end
 
 				if options.processMoviesSeparately==1
@@ -756,7 +835,12 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				end
 
 				[~, ~] = openFigure(4242, '');
-					imagesc(squeeze(thisMovie(:,:,1)))
+					if options.runMatfile==1
+						tmpFrameHere = squeeze(matObj.(options.matfileVarname)(:,:,1));
+					else
+						tmpFrameHere = squeeze(thisMovie(:,:,1));
+					end
+					imagesc()
 					box off;
 					dispStr = [num2str(fileNumToRun) '/' num2str(nFilesToRun) ': ' 10 thisDirDispStr];
 					axis image; colormap gray;
@@ -774,7 +858,9 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				inputMovieF0 = [];
 				% to improve memory usage, edit the movie in loops, at least until this is made object oriented.
 				for optionIdx = analysisOptionsIdx
-					thisMovie = single(thisMovie);
+					if options.runMatfile==0
+						thisMovie = single(thisMovie);
+					end
 					optionName = analysisOptionList{optionIdx};
 
 					% Update the save string based on the analysis about to be run.
@@ -793,7 +879,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 					%% ADD BACK DROPPED FRAMES
 					% try
 					% 	if strcmp(optionName,'downsampleTime')
-					% 		subfxnAddDroppedFrames();
+					% 		nestedfxn_addDroppedFrames();
 					% 	end
 					% catch err
 					% 	% save the location of the downsampled dfof for PCA-ICA identification
@@ -804,9 +890,9 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 					try
 						switch optionName
 							case 'fixDropFrames'
-								subfxnAddDroppedFrames();
+								nestedfxn_addDroppedFrames();
 							case 'turboreg'
-								subfxnPlotMotionCorrectionMetric('start');
+								subfxn_plotMotionCorrectionMetric('start');
 
 								pxToCropAll = 0;
 								ResultsOutOriginal = {};
@@ -817,7 +903,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 										% Miji;
 										manageMiji('startStop','start');
 									end
-									turboregInputMovie();
+									subfxn_turboregInputMovie();
 
 									% Save output of translation.
 									save([thisProcessingDir filesep currentDateTimeStr '_turboregTranslationOutput.mat'],'ResultsOutOriginal');
@@ -827,16 +913,20 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 									end
 									% playMovie(thisMovie);
 									if options.turboreg.numTurboregIterations>1
-										pxToCropTmp = getCropValues();
+										pxToCropTmp = subfxn_getCropValues();
 										pxToCropAll = max([pxToCropAll pxToCropTmp]);
 										fprintf('pxToCropAll: %d\n',pxToCropAll);
 									end
 								end
 
 								% Get the amount of motion and hence amount to crop, directly from turboreg output
-								% gg = cellfun(@(z) cell2mat(cellfun(@(y) cell2mat(cellfun(@(x) max(abs(x.Translation)),y,'UniformOutput',false)),z,'UniformOutput',false)),ResultsOutOriginal,'UniformOutput',false);
-								gg = cellfun(@(z) cell2mat(cellfun(@(y) cell2mat(cellfun(@(x) max(ceil(abs(x.Translation))),y,'UniformOutput',false)),z,'UniformOutput',false)),ResultsOutOriginal,'UniformOutput',false);
-								pxToCropAllTmp = ceil(max(sum(abs(cat(1,gg{:})),1),[],'omitnan'));
+								try
+									% gg = cellfun(@(z) cell2mat(cellfun(@(y) cell2mat(cellfun(@(x) max(abs(x.Translation)),y,'UniformOutput',false)),z,'UniformOutput',false)),ResultsOutOriginal,'UniformOutput',false);
+									gg = cellfun(@(z) cell2mat(cellfun(@(y) cell2mat(cellfun(@(x) max(ceil(abs(x.Translation))),y,'UniformOutput',false)),z,'UniformOutput',false)),ResultsOutOriginal,'UniformOutput',false);
+									pxToCropAllTmp = ceil(max(sum(abs(cat(1,gg{:})),1),[],'omitnan'));
+								catch
+									pxToCropAllTmp = 0;
+								end
 								fprintf('pxToCropAllTmp: %d\n',pxToCropAllTmp);
 								if pxToCropAllTmp>pxToCropAll
 									disp('Adjusting pxToCropAll')
@@ -918,47 +1008,47 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 									clear tmpCropMovie;
 								end
 
-								subfxnPlotMotionCorrectionMetric('end');
+								subfxn_plotMotionCorrectionMetric('end');
 							case 'crop'
 								if exist('pxToCropAll','var')==1&&pxToCropAll~=0
 									if pxToCropAll~=0
 										if pxToCropAll<options.pxToCrop
 											% [thisMovie] = cropMatrix(thisMovie,'pxToCrop',tmpPxToCrop);
-											cropMatrixPreProcess(pxToCropAll);
+											subfxn_cropMatrixPreProcess(pxToCropAll);
 										else
 											% [thisMovie] = cropMatrix(thisMovie,'pxToCrop',options.pxToCrop);
-											cropMatrixPreProcess(options.pxToCrop);
+											subfxn_cropMatrixPreProcess(options.pxToCrop);
 										end
 									end
 								else
-									cropInputMovie();
+									subfxn_cropInputMovie();
 								end
 							case 'medianFilter'
-								medianFilterInputMovie();
+								subfxn_medianFilterInputMovie();
 							case 'detrend'
-								detrendInputMovie();
+								subfxn_detrendInputMovie();
 							case 'spatialFilter'
-								spatialFilterInputMovie();
+								subfxn_spatialFilterInputMovie();
 							case 'stripeRemoval'
-								stripeRemovalInputMovie();
+								subfxn_stripeRemovalInputMovie();
 							case 'movieProjections'
-								movieProjectionsInputMovie();
+								subfxn_movieProjectionsInputMovie();
 							case 'fft_highpass'
-								fftHighpassInputMovie();
+								subfxn_fftHighpassInputMovie();
 							case 'fft_lowpass'
-								fftLowpassInputMovie();
+								subfxn_fftLowpassInputMovie();
 							case 'dfof'
-								dfofInputMovie();
+								subfxn_dfofInputMovie();
 							case 'dfstd'
 								options.dfofType = 'dfstd';
-								dfofInputMovie();
+								subfxn_dfofInputMovie();
 							case 'dfofMin'
 								options.dfofType = 'dfofMin';
-								dfofInputMovie();
+								subfxn_dfofInputMovie();
 							case 'downsampleTime'
-								downsampleTimeInputMovie();
+								subfxn_downsampleTimeInputMovie();
 							case 'downsampleSpace'
-								downsampleSpaceInputMovie();
+								subfxn_downsampleSpaceInputMovie();
 							otherwise
 								% do nothing
 						end
@@ -979,6 +1069,10 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 					% saveIdx
 					if sum(optionIdx==saveIdx)
 
+						% if isempty(options.saveFilePrefix)
+						% else
+						% 	savePathStr = [thisDirSaveStr options.saveFilePrefix saveStr '_' num2str(movieNo)];
+						% end
 						savePathStr = [thisDirSaveStr saveStr '_' num2str(movieNo)];
 						if obj.nwbLoadFiles==0
 							savePathStr = [savePathStr '.h5'];
@@ -1033,7 +1127,25 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 						% 		'/movie'},...
 						% 	'deflateLevel',options.deflateLevel)
 
-						if obj.nwbLoadFiles==1
+						addInfoCell = {...
+									options.turboreg,...
+									analysisOptionStruct,...
+									optionsCopy,...
+									tmpStruct};
+						addInfoNameCell = {...
+									'/movie/processingSettings',...
+									'/movie/analysisOperations',...
+									'/movie/modelPreprocessMovieFunctionOptions',...
+									'/movie'};
+
+						if options.runMatfile==1
+							ciapkg.hdf5.writeMatfileToHDF5(options.matfilePath,options.matfileVarname,savePathStr,...
+								'addInfo',addInfoCell,...
+								'addInfoName',addInfoNameCell,...
+								'chunkSize',options.turboregNumFramesSubset,...
+								'datasetname',options.outputDatasetName,...
+								'deflateLevel',options.deflateLevel);
+						elseif obj.nwbLoadFiles==1
 							% movieSaved = saveMatrixToFile(thisMovie,savePathStr,...
 							% 	'inputDatasetName',options.outputDatasetName,...
 							% 	'addInfo',{tmpStruct},...
@@ -1053,16 +1165,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 						else
 							movieSaved = saveMatrixToFile(thisMovie,savePathStr,...
 								'inputDatasetName',options.outputDatasetName,...
-								'addInfo',{...
-									options.turboreg,...
-									analysisOptionStruct,...
-									optionsCopy,...
-									tmpStruct},...
-								'addInfoName',{...
-									'/movie/processingSettings',...
-									'/movie/analysisOperations',...
-									'/movie/modelPreprocessMovieFunctionOptions',...
-									'/movie'},...
+								'addInfo',addInfoCell,...
+								'addInfoName',addInfoNameCell,...
 								'deflateLevel',options.deflateLevel);
 						end
 
@@ -1072,12 +1176,21 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 						ostruct.fileNumList{end+1} = fileNum;
 						% ostruct.savedFilePaths{end+1} = savePathStr;
 					end
-					display(repmat('$',1,7))
-					display(['thisMovie: ' class(thisMovie) ' | ' num2str(size(thisMovie))])
-					display(repmat('$',1,7))
+					disp(repmat('$',1,7))
+					if options.runMatfile==1
+						disp(['thisMovie: ' class(matObj.(options.matfileVarname)(1,1,1)) ' | ' num2str(size(matObj,options.matfileVarname))])
+					else
+						disp(['thisMovie: ' class(thisMovie) ' | ' num2str(size(thisMovie))])
+					end
+					disp(repmat('$',1,7))
 				end
 			end
-			movieFrames = size(thisMovie,3);
+			if options.runMatfile==1
+				movieFrames = size(matObj,options.matfileVarname);
+				movieFrames = movieFrames(3);
+			else
+				movieFrames = size(thisMovie,3);
+			end
 			if movieFrames>500
 				ostruct.movieFrames{fileNum} = 500;
 			else
@@ -1122,7 +1235,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	% if options.inputPCAICA==0
 	% 	[ostruct options] = getPcaIcaParams(ostruct,options)
 	% end
-	[ostruct, options] = playOutputMovies(ostruct,options);
+	[ostruct, options] = localfxn_playOutputMovies(ostruct,options);
 
 	toc(startTime)
 
@@ -1132,7 +1245,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	disp(['Changing' ciapkg.pkgName 'input HDF5 dataset name "' obj.inputDatasetName '"->"' obj.outputDatasetName '"'])
 	obj.inputDatasetName = obj.outputDatasetName;
 
-	function mouseWheelChange(hObject, callbackdata, handles)
+	function nestedfxn_mouseWheelChange(hObject, callbackdata, handles)
 		% Change keyIn to force while loop to exit, need for certain commands.
 		keyIn = 0;
 
@@ -1142,7 +1255,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			set(gcf,'Tag','next')
 		end
 	end
-	function subfxn_resetSetpsMenu(src,event)
+	function nestedfxn_resetSetpsMenu(src,event)
 		% analysisOptionListOrig = analysisOptionList;
 		% defaultChoiceListOrig = defaultChoiceList;
 		analysisOptionListStr = analysisOptionListOrig;
@@ -1156,7 +1269,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		hListboxS.String = analysisOptionListStr;
 		hListboxS.Value = defaultChoiceIdx(end);
 	end
-	function subfxn_highlightDefault(src,event)
+	function nestedfxn_highlightDefault(src,event)
 		% analysisOptionListOrig = analysisOptionList;
 		% defaultChoiceListOrig = defaultChoiceList;
 		% analysisOptionListStr = analysisOptionListOrig;
@@ -1179,7 +1292,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		hListbox.Value = defaultChoiceIdx;
 		hListboxS.Value = defaultChoiceIdx(end);
 	end
-	function subfxn_analysisOutputMenuChange(src,event)
+	function nestedfxn_analysisOutputMenuChange(src,event)
 		% analysisOptionListOrig = analysisOptionList;
 		% defaultChoiceListOrig = defaultChoiceList;
 		% analysisOptionListStr = analysisOptionListOrig;
@@ -1210,7 +1323,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% defaultSaveList = analysisOptionList{analysisOptionsIdx(end)};
 		% defaultSaveIdx = find(ismember(analysisOptionList,defaultSaveList));
 	end	
-	function subfxn_analysisOutputMenuChange2(src,event,PERMORDER)
+	function nestedfxn_analysisOutputMenuChange2(src,event,PERMORDER)
 		% analysisOptionListOrig = analysisOptionList;
 		% defaultChoiceListOrig = defaultChoiceList;
 		% analysisOptionListStr = analysisOptionListOrig;
@@ -1240,16 +1353,42 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% defaultSaveList = analysisOptionList{analysisOptionsIdx(end)};
 		% defaultSaveIdx = find(ismember(analysisOptionList,defaultSaveList));
 	end	
-	function subfxn_closeOptions(src,event)
+	function nestedfxn_closeOptions(src,event)
 		delete(emptyBox);
 	end
-	function subfxn_closeOptionsKey(src,event)
+	function nestedfxn_closeOptionsKey(src,event)
 		if event.Key=="return"
 			delete(emptyBox)
 		end
 	end
+	function nestedfxn_fixErrorFrames()
+		% Fixes frames in which the camera gives out garbled or improperly formatted data.
 
-	function subfxnAddDroppedFrames()
+		nRegions = 4;
+		nFramesHere = size(thisMovie,3);
+		metrixMatrix = zeros([nRegions nFrames]);
+
+		for subregionNo = 1:nRegions
+			% Select sub-regions to use for analysis.
+
+
+			% Calculate metric (e.g. difference, correlation, etc.) between
+
+
+			% Z-score metric by normalizing across all frames.
+		end
+
+
+		% Use threshold to determine which
+
+
+		% Calculate replacement frame, e.g. mean
+
+
+		% Replace frames.
+
+	end
+	function nestedfxn_addDroppedFrames()
 		% TODO: to make this proper, need to verify that the log file names match those of movie files
 		display(repmat('-',1,7));
 
@@ -1406,7 +1545,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% end
 	end
 
-	function downsampleTimeInputMovie()
+	function subfxn_downsampleTimeInputMovie()
 		options.downsampleZ = [];
 		options.waitbarOn = 1;
 		% thisMovie = single(thisMovie);
@@ -1436,7 +1575,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				reverseStr = cmdWaitbar(frame,downY,reverseStr,'inputStr','temporally downsampling matrix');
 			end
 		end
-		subfxn_dispMovieSize(thisMovie);
+		localfxn_dispMovieSize(thisMovie);
 		% reverseStr = '';
 		% for frame = (downZ+1):size(thisMovie,3)
 		%     thisMovie(:,:,1) = [];
@@ -1449,12 +1588,12 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		clear thisMovie;
 		thisMovie = thisMovieTmp;
 		clear thisMovieTmp;
-		subfxn_dispMovieSize(thisMovie);
+		localfxn_dispMovieSize(thisMovie);
 		drawnow;
 		% =====================
 	end
 
-	function downsampleSpaceInputMovie()
+	function subfxn_downsampleSpaceInputMovie()
 		% Nested function to downsample input movie in space
 		options.downsampleZ = [];
 		options.waitbarOn = 1;
@@ -1492,7 +1631,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			end
 		end
 		thisMovie = thisMovie(1:downX,1:downY,:);
-		subfxn_dispMovieSize(thisMovie);
+		localfxn_dispMovieSize(thisMovie);
 
 		if exist('turboRegCoords','var')
 			% Adjust crop coordinates if downsampling in space takes place before turboreg
@@ -1510,7 +1649,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% =====================
 	end
 
-	function dfofInputMovie()
+	function subfxn_dfofInputMovie()
 		% dfof must have positive values
 		% thisMovieMin = nanmin(thisMovie(:));
 		if strcmp(options.turboreg.filterBeforeRegister,'bandpass')
@@ -1642,8 +1781,9 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		end
 		% =====================
 	end
-	function subfxnPlotMotionCorrectionMetric(motionState)
+	function subfxn_plotMotionCorrectionMetric(motionState)
 		try
+			disp('Calculating and plotting correlation metric')
 			colorList = hsv(length(obj.inputFolders));
 
 			meanG = mean(thisMovie,3);
@@ -1651,7 +1791,12 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			corrMetric2 = NaN([1 size(thisMovie,3)]);
 			cc = turboRegCoords{fileNum}{movieNo};
 			meanG_cc = meanG(cc(2):cc(4),cc(1):cc(3));
-			for i =1:size(thisMovie,3)
+			fprintf('Calculating correlation metric: ')
+			nFramesThis = size(thisMovie,3);
+			for i = 1:nFramesThis
+				if mod(i,500)==0
+					fprintf('%d | ',round((i/nFramesThis)*100));
+				end
 				thisFrame_cc = thisMovie(cc(2):cc(4),cc(1):cc(3),i);
 				corrMetric(i) = corr2(meanG_cc,thisFrame_cc);
 				corrMetric2(i) = corr(meanG_cc(:),thisFrame_cc(:),'Type','Spearman');
@@ -1706,15 +1851,17 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			disp(repmat('@',1,7))
 		end
 	end
-	function turboregInputMovie()
+	function subfxn_turboregInputMovie()
+		disp(['Motion correction method: ' options.turboreg.mcMethod])
 		% number of frames to subset
 		subsetSize = options.turboregNumFramesSubset;
 		movieLength = size(thisMovie,3);
 		numSubsets = ceil(movieLength/subsetSize)+1;
 		subsetList = round(linspace(1,movieLength,numSubsets));
-		display(['registering sublists: ' num2str(subsetList)]);
+		disp(['registering sublists: ' num2str(subsetList)]);
+		disp(options.turboreg.mcMethod)
 		% convert movie to single for turboreg
-		subfxn_dispMovieSize(thisMovie);
+		localfxn_dispMovieSize(thisMovie);
 		% thisMovie = single(thisMovie);
 		% get reference frame before subsetting, so won't change
 		% thisMovieRefFrame = squeeze(thisMovie(:,:,options.refCropFrame));
@@ -1731,12 +1878,13 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			display(repmat('$',1,7))
 			if thisSet==nSubsets
 				movieSubset = subsetStartIdx:subsetEndIdx;
-				display([num2str(subsetStartIdx) '-' num2str(subsetEndIdx) ' ' num2str(thisSet) '/' num2str(nSubsets)])
+				% display([num2str(subsetStartIdx) '-' num2str(subsetEndIdx) ' ' num2str(thisSet) '/' num2str(nSubsets)])
 			else
 				movieSubset = subsetStartIdx:(subsetEndIdx-1);
-				display([num2str(subsetStartIdx) '-' num2str(subsetEndIdx-1) ' ' num2str(thisSet) '/' num2str(nSubsets)])
+				% display([num2str(subsetStartIdx) '-' num2str(subsetEndIdx-1) ' ' num2str(thisSet) '/' num2str(nSubsets)])
 			end
-			display(repmat('$',1,7))
+			disp([num2str(movieSubset(1)) '-' num2str(movieSubset(end)) ' ' num2str(thisSet) '/' num2str(nSubsets)])
+			disp(repmat('$',1,7))
 			%run with altered defaults
 			% ioptions.Levels = 2;
 			% ioptions.Lastlevels = 1;
@@ -1744,6 +1892,10 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			% ioptions.minGain=0.0;
 			% ioptions.SmoothX = 80;
 			% ioptions.SmoothY = 80;
+
+			% Set the motion correction algorithm
+			ioptions.mcMethod = options.turboreg.mcMethod;
+
 			ioptions.turboregRotation = options.turboreg.turboregRotation;
 			ioptions.RegisType = options.turboreg.RegisType;
 			ioptions.parallel = options.turboreg.parallel;
@@ -1785,6 +1937,10 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			% If multiple frames requested, only use the 1st
 			ioptions.refFrame = options.refCropFrame(1);
 			ioptions.refFrameMatrix = thisMovieRefFrame;
+
+			ioptions.optsNoRMCorre = optsNoRMCorre;
+			ioptions.displayOptions = 1;
+			ioptions
 			% for frameDftNo = movieSubset
 			% 	refFftFrame = fft2(thisMovieRefFrame);
 			% 	regFftFrame = fft2(squeeze(thisMovie(:,:,frameDftNo)));
@@ -1806,7 +1962,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			% dt=whos('VARIABLE_YOU_CARE_ABOUT'); MB=dt.bytes*9.53674e-7;
 			% thisMovie(:,:,movieSubset) = turboregMovie(thisMovie(:,:,movieSubset),'options',ioptions);
 			% j = whos('turboregThisMovie');j.bytes=j.bytes*9.53674e-7;j
-			subfxn_dispMovieSize(thisMovie);
+			localfxn_dispMovieSize(thisMovie);
 			% [thisMovie(:,:,movieSubset), ResultsOutOriginal{thisSet}] = turboregMovie(thisMovie(:,:,movieSubset),'options',ioptions);
 
 
@@ -1830,7 +1986,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				% 	[tmpMovieNoFilter, ~] = turboregMovie(tmpMovieNoFilter,'options',ioptions);
 				% end
 				% Crop movie
-				tmpMovieNoFilter = cropInputMovieSlice(tmpMovieNoFilter,options,ResultsOutOriginal);
+				tmpMovieNoFilter = localfxn_cropInputMovieSlice(tmpMovieNoFilter,options,ResultsOutOriginal);
 
 				% Add filtered movie to overall registered subset
 				thisMovie(:,:,movieSubset) = tmpMovieWithFilter;
@@ -1891,7 +2047,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		end
 		clear ioptions;
 	end
-	function tmpPxToCrop = getCropValues()
+	function tmpPxToCrop = subfxn_getCropValues()
 		% Get values to use to add border and eliminate edge movement due to motion correction
 		thisMovieMinMask = zeros([size(thisMovie,1) size(thisMovie,2)]);
 		options.turboreg.registrationFxn
@@ -1918,7 +2074,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		tmpPxToCrop = max([topVal bottomVal leftVal rightVal]);
 		display(['[topVal bottomVal leftVal rightVal]: ' num2str([topVal bottomVal leftVal rightVal])])
 	end
-	function cropInputMovie()
+	function subfxn_cropInputMovie()
 		% turboreg outputs 0s where movement goes off the screen
 		thisMovieMinMask = zeros([size(thisMovie,1) size(thisMovie,2)]);
 		options.turboreg.registrationFxn
@@ -1976,17 +2132,17 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		if tmpPxToCrop~=0
 			if tmpPxToCrop<options.pxToCrop
 				% [thisMovie] = cropMatrix(thisMovie,'pxToCrop',tmpPxToCrop);
-				cropMatrixPreProcess(tmpPxToCrop);
+				subfxn_cropMatrixPreProcess(tmpPxToCrop);
 			else
 				% [thisMovie] = cropMatrix(thisMovie,'pxToCrop',options.pxToCrop);
-				cropMatrixPreProcess(options.pxToCrop);
+				subfxn_cropMatrixPreProcess(options.pxToCrop);
 			end
 		end
 		% % convert to single (32-bit floating point)
 		% % thisMovie = single(thisMovie);
 		% saveStr = [saveStr '_crop'];
 	end
-	function cropMatrixPreProcess(pxToCropPreprocess)
+	function subfxn_cropMatrixPreProcess(pxToCropPreprocess)
 		% if size(thisMovie,2)>=size(thisMovie,1)
 		% 	coords(1) = pxToCropPreprocess; %xmin
 		% 	coords(2) = pxToCropPreprocess; %ymin
@@ -2021,7 +2177,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% set bottom rows to NaN
 		thisMovie(bottomRowCrop:end,1:end,:) = NaN;
 	end
-	function medianFilterInputMovie()
+	function subfxn_medianFilterInputMovie()
 		% number of frames to subset
 		subsetSize = options.turboregNumFramesSubset;
 		movieLength = size(thisMovie,3);
@@ -2029,7 +2185,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		subsetList = round(linspace(1,movieLength,numSubsets));
 		display(['registering sublists: ' num2str(subsetList)]);
 		% convert movie to single for turboreg
-		subfxn_dispMovieSize(thisMovie);
+		localfxn_dispMovieSize(thisMovie);
 		% get reference frame before subsetting, so won't change
 		nSubsets = (length(subsetList)-1);
 		for thisSet = 1:nSubsets
@@ -2045,13 +2201,13 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				display([num2str(subsetStartIdx) '-' num2str(subsetEndIdx-1) ' ' num2str(thisSet) '/' num2str(nSubsets)])
 			end
 			display(repmat('$',1,7))
-			subfxn_dispMovieSize(thisMovie);
+			localfxn_dispMovieSize(thisMovie);
 			thisMovie(:,:,movieSubset) = normalizeMovie(thisMovie(:,:,movieSubset),'normalizationType','medianFilter','medianFilterNeighborhoodSize',options.turboreg.medianFilterSize);
 			toc(subsetStartTime)
 		end
 		% thisMovie = normalizeMovie(thisMovie,'normalizationType','medianFilter');
 	end
-	function detrendInputMovie()
+	function subfxn_detrendInputMovie()
 		% Plot trend before and after
 
 		openFigure(figNoList.detrend);
@@ -2066,8 +2222,22 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			disp(repmat('@',1,7))
 		end
 
+		frameMeanInputMovie = squeeze(mean(thisMovie,[1 2],'omitnan'));
+
+		trendVals = frameMeanInputMovie - detrend(frameMeanInputMovie,options.turboreg.detrendDegree);
+
+		% meanInputMovie = detrend(frameMeanInputMovie,0);
+		meanInputMovie = mean(frameMeanInputMovie,'omitnan');
+
+		nFramesToNormalize = size(thisMovie,3);
+
+		parfor frame = 1:nFramesToNormalize
+			thisFrame = thisMovie(:,:,frame);
+			thisMovie(:,:,frame) = thisFrame - trendVals(frame) + meanInputMovie;
+		end
+
 		% Takes an input movie and removes an underlying change in mean frame fluorescence.
-		thisMovie = normalizeMovie(thisMovie,'normalizationType','detrend','detrendDegree',options.turboreg.detrendDegree);
+		% thisMovie = normalizeMovie(thisMovie,'normalizationType','detrend','detrendDegree',options.turboreg.detrendDegree);
 
 		openFigure(figNoList.detrend);
 			try
@@ -2083,7 +2253,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				disp(repmat('@',1,7))
 			end
 	end
-	function spatialFilterInputMovie()
+	function subfxn_spatialFilterInputMovie()
 		% number of frames to subset
 		subsetSize = options.turboregNumFramesSubset;
 		movieLength = size(thisMovie,3);
@@ -2091,7 +2261,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		subsetList = round(linspace(1,movieLength,numSubsets));
 		display(['filtering sublists: ' num2str(subsetList)]);
 		% convert movie to single for turboreg
-		subfxn_dispMovieSize(thisMovie);
+		localfxn_dispMovieSize(thisMovie);
 		% get reference frame before subsetting, so won't change
 		nSubsets = (length(subsetList)-1);
 		for thisSet = 1:nSubsets
@@ -2107,7 +2277,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				display([num2str(subsetStartIdx) '-' num2str(subsetEndIdx-1) ' ' num2str(thisSet) '/' num2str(nSubsets)])
 			end
 			display(repmat('$',1,7))
-			subfxn_dispMovieSize(thisMovie);
+			localfxn_dispMovieSize(thisMovie);
 
 			% thisMovie(:,:,movieSubset) = normalizeMovie(thisMovie(:,:,movieSubset),'normalizationType','medianFilter','medianFilterNeighborhoodSize',options.turboreg.medianFilterSize);
 
@@ -2133,7 +2303,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		end
 		% thisMovie = normalizeMovie(thisMovie,'normalizationType','medianFilter');
 	end
-	function stripeRemovalInputMovie()
+	function subfxn_stripeRemovalInputMovie()
 		% number of frames to subset
 		subsetSize = options.turboregNumFramesSubset;
 		movieLength = size(thisMovie,3);
@@ -2141,7 +2311,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		subsetList = round(linspace(1,movieLength,numSubsets));
 		display(['Stripe removal sublists: ' num2str(subsetList)]);
 		% convert movie to single for turboreg
-		subfxn_dispMovieSize(thisMovie);
+		localfxn_dispMovieSize(thisMovie);
 		% get reference frame before subsetting, so won't change
 		nSubsets = (length(subsetList)-1);
 		for thisSet = 1:nSubsets
@@ -2157,7 +2327,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				display([num2str(subsetStartIdx) '-' num2str(subsetEndIdx-1) ' ' num2str(thisSet) '/' num2str(nSubsets)])
 			end
 			display(repmat('$',1,7))
-			subfxn_dispMovieSize(thisMovie);
+			localfxn_dispMovieSize(thisMovie);
 
 			thisMovie(:,:,movieSubset) = removeStripsFromMovie(single(thisMovie(:,:,movieSubset)),'stripOrientation',options.turboreg.stripOrientationRemove,'meanFilterSize',options.turboreg.stripSize,'freqLowExclude',options.turboreg.stripfreqLowExclude,'bandpassType',options.turboreg.stripfreqBandpassType,'freqHighExclude',options.turboreg.stripfreqHighExclude,'waitbarOn',1);
 
@@ -2165,14 +2335,14 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		end
 		% thisMovie = normalizeMovie(thisMovie,'normalizationType','medianFilter');
 	end
-	function movieProjectionsInputMovie()
+	function subfxn_movieProjectionsInputMovie()
 
 		% get the max projection
 
 
 		% get the mean projection
 	end
-	function fftHighpassInputMovie()
+	function subfxn_fftHighpassInputMovie()
 		% do a highpass filter
 		ioptions.normalizationType = 'fft';
 		ioptions.freqLow = 7;
@@ -2192,7 +2362,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		[thisMovie] = normalizeVector(thisMovie,'normRange','zeroToOne');
 		clear ioptions;
 	end
-	function fftLowpassInputMovie()
+	function subfxn_fftLowpassInputMovie()
 		% do a lowpass filter
 		ioptions.normalizationType = 'fft';
 		ioptions.freqLow = 1;
@@ -2231,7 +2401,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	end
 end
 
-function [turboRegCoords] = turboregCropSelection(options,folderList)
+function [turboRegCoords] = localfxn_turboregCropSelection(options,folderList)
 	% Biafra Ahanonu
 	% 2013.11.10 [19:28:53]
 
@@ -2267,7 +2437,7 @@ function [turboRegCoords] = turboregCropSelection(options,folderList)
 		movieList = regexp(folderList{fileNum},',','split');
 		% movieList = movieList{1};
 		movieList = getFileList(movieList, options.fileFilterRegexp);
-		[movieList] = removeUnsupportedFiles(movieList,options);
+		[movieList] = localfxn_removeUnsupportedFiles(movieList,options);
 		if isempty(movieList)
 			continue;
 		end
@@ -2290,7 +2460,7 @@ function [turboRegCoords] = turboregCropSelection(options,folderList)
 					display([num2str(fileNumIdx) '/' num2str(nFilesToRun) ': ' thisDir])
 					disp(['options.fileFilterRegexp: ' options.fileFilterRegexp])
 					movieList = getFileList(thisDir, options.fileFilterRegexp);
-					[movieList] = removeUnsupportedFiles(movieList,options);
+					[movieList] = localfxn_removeUnsupportedFiles(movieList,options);
 					cellfun(@disp,movieList);
 					inputFilePath = movieList{movieNo};
 					if nMovies==1
@@ -2306,12 +2476,14 @@ function [turboRegCoords] = turboregCropSelection(options,folderList)
 					end
 
 					if length(frameToGrabHere)==1&&options.turboreg.treatMoviesAsContinuousSwitch==0
-						thisFrame = ciapkg.io.readFrame(inputFilePath,frameToGrabHere);
+						thisFrame = ciapkg.io.readFrame(inputFilePath,frameToGrabHere,'inputDatasetName',options.datasetName);
+					elseif length(frameToGrabHere)==1&&options.turboreg.treatMoviesAsContinuousSwitch==1&&nMovies==1
+						thisFrame = ciapkg.io.readFrame(inputFilePath,frameToGrabHere,'inputDatasetName',options.datasetName);
 					else
 						% for zFrame = 1:length(frameToGrabHere)
 
 						% end
-						thisFrame = loadMovieList(inputFilePath,'convertToDouble',0,'frameList',frameToGrabHere,'inputDatasetName',options.datasetName,'treatMoviesAsContinuous',options.turboreg.treatMoviesAsContinuousSwitch,'loadSpecificImgClass','single');
+						thisFrame = ciapkg.io.loadMovieList(inputFilePath,'convertToDouble',0,'frameList',frameToGrabHere,'inputDatasetName',options.datasetName,'treatMoviesAsContinuous',options.turboreg.treatMoviesAsContinuousSwitch,'loadSpecificImgClass','single');
 					end
 					
 					if size(thisFrame,3)>1
@@ -2328,9 +2500,12 @@ function [turboRegCoords] = turboregCropSelection(options,folderList)
 						colormap gray;
 						title(titleStr)
 						box off;
+						set(gcf,'color',[0 0 0]);
+						set(gca,'color',[0 0 0]);
+						ciapkg.view.changeFont('none','fontColor','w');
 					set(0,'DefaultTextInterpreter','none');
 					% ciapkg.overloaded.suptitle([num2str(fileNumIdx) '\' num2str(nFilesToRun) ': ' 10 strrep(thisDir,'\','/')],'fontSize',12,'plotregion',0.9,'titleypos',0.95);
-					uicontrol('Style','Text','String',[num2str(fileNumIdx) '\' num2str(nFilesToRun) ': ' strrep(thisDir,'\','/')],'Units','normalized','Position',[0.1 0.9 0.8 0.10],'BackgroundColor','white','HorizontalAlignment','Center');
+					uicontrol('Style','Text','String',[num2str(fileNumIdx) '\' num2str(nFilesToRun) ': ' strrep(thisDir,'\','/')],'Units','normalized','Position',[0.1 0.9 0.8 0.10],'BackgroundColor','black','ForegroundColor','white','HorizontalAlignment','Center');
 					set(0,'DefaultTextInterpreter','latex');
 					% subplot(1,2,1);imagesc(thisFrame); axis image; colormap gray; title('Click to drag-n-draw region. Double-click region to continue.')
 
@@ -2340,17 +2515,17 @@ function [turboRegCoords] = turboregCropSelection(options,folderList)
 					switch applyPreviousTurboreg
 						case -1 %'NO | do not duplicate coords across multiple folders'
 							% p = round(getrect);
-							h = subfxn_getImRect(titleStr);
+							h = localfxn_getImRect(titleStr);
 							p = round(wait(h));
 						case 0 %'YES | duplicate coords across multiple folders'
 							% p = round(getrect);
-							h = subfxn_getImRect(titleStr);
+							h = localfxn_getImRect(titleStr);
 							p = round(wait(h));
 							coordsStructure.(fileInfo.subject) = p;
 						case -2 %'YES | duplicate coords if subject the same'
 							if ~any(strcmp(fileInfo.subject,fieldnames(coordsStructure)))
 								% p = round(getrect);
-								h = subfxn_getImRect(titleStr);
+								h = localfxn_getImRect(titleStr);
 								p = round(wait(h));
 								coordsStructure.(fileInfo.subject) = p;
 							else
@@ -2392,7 +2567,15 @@ function [turboRegCoords] = turboregCropSelection(options,folderList)
 
 					% Display the subsetted image with appropriate axis ratio
 					[~, ~] = openFigure(9, '');
-					subplot(1,2,2);imagesc(thisFrameCropped); axis image; colormap gray; title('cropped region');drawnow;
+					subplot(1,2,2);
+						imagesc(thisFrameCropped);
+						axis image;
+						colormap gray;
+						title('cropped region');
+						set(gcf,'color',[0 0 0]);
+						set(gca,'color',[0 0 0]);
+						ciapkg.view.changeFont('none','fontColor','w');
+						drawnow;
 
 					if applyPreviousTurboreg==0
 						if runAllFolders==1
@@ -2425,14 +2608,14 @@ function [turboRegCoords] = turboregCropSelection(options,folderList)
 		end
 	end
 end
-function h = subfxn_getImRect(titleStr)
+function h = localfxn_getImRect(titleStr)
 	h = imrect(gca);
 	addNewPositionCallback(h,@(p) title([titleStr 10 mat2str(p,3)]));
 	fcn = makeConstrainToRectFcn('imrect',get(gca,'XLim'),get(gca,'YLim'));
 	setPositionConstraintFcn(h,fcn);
 end
 % function [ostruct options] = getPcaIcaParams(ostruct,options)
-function [ostruct, options] = playOutputMovies(ostruct,options)
+function [ostruct, options] = localfxn_playOutputMovies(ostruct,options)
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	nFiles = length(ostruct.savedFilePaths);
@@ -2440,58 +2623,67 @@ function [ostruct, options] = playOutputMovies(ostruct,options)
 	movieFrameList = {};
 	numFramesPerPart = 50;
 	numParts = 10;
-	disp('pre-allocating movies to display...')
-	thisMovieArray = {};
-	for fileNum=1:nFiles
-		try
-			disp('+++++++')
-			if isempty(ostruct.savedFilePaths{fileNum})
-				disp('no movie!')
-				% display([num2str(fileNum) '/' num2str(nFiles) ' skipping: ' ostruct.savedFilePaths{fileNum}]);
-				continue;
-			else
-				pathInfo = [num2str(fileNum) '/' num2str(nFiles) ': ' ostruct.savedFilePaths{fileNum}];
-				% display(pathInfo);
-				fprintf('%d/%d:%s\n',fileNum,nFiles,ostruct.savedFilePaths{fileNum})
+
+	switch options.videoPlayer
+		case 'imagej'
+			disp('pre-allocating movies to display...')
+			thisMovieArray = {};
+			for fileNum=1:nFiles
+				try
+					disp('+++++++')
+					if isempty(ostruct.savedFilePaths{fileNum})
+						disp('no movie!')
+						% display([num2str(fileNum) '/' num2str(nFiles) ' skipping: ' ostruct.savedFilePaths{fileNum}]);
+						continue;
+					else
+						pathInfo = [num2str(fileNum) '/' num2str(nFiles) ': ' ostruct.savedFilePaths{fileNum}];
+						% display(pathInfo);
+						fprintf('%d/%d:%s\n',fileNum,nFiles,ostruct.savedFilePaths{fileNum})
+					end
+					movieList = {ostruct.savedFilePaths{fileNum}};
+
+					% movieDims = loadMovieList(movieList,'convertToDouble',0,'frameList',options.frameList,'getMovieDims',1);
+					movieDims = loadMovieList(movieList,'convertToDouble',0,'frameList',[],'getMovieDims',1,'inputDatasetName',options.outputDatasetName);
+
+					movieFrames = movieDims.three;
+					if movieFrames>500
+						movieFrames = 500;
+					else
+						% ostruct.movieFrames{fileNum} = movieFrames;
+					end
+					movieFrameList{fileNum} = movieFrames;
+
+					% options.frameList = [1:ostruct.movieFrames{fileNum}];
+					options.frameList = [1:movieFrames];
+
+					% get the movie
+					% thisMovieArray{fileNum} = loadMovieList(movieList,'convertToDouble',0,'frameList',options.frameList);
+					thisMovieArray{fileNum} = loadMovieList(movieList,'convertToDouble',0,'frameList',[],'loadMovieInEqualParts',[numParts numFramesPerPart],'inputDatasetName',options.outputDatasetName,'largeMovieLoad',options.turboreg.largeMovieLoad);
+					% thisMovieArray{fileNum} = loadMovieList(movieList,'convertToDouble',0,'frameList',options.frameList,'loadMovieInEqualParts',[numParts numFramesPerPart]);
+
+				catch err
+					thisMovieArray{fileNum} = [];
+					display(repmat('@',1,7))
+					disp(getReport(err,'extended','hyperlinks','on'));
+					display(repmat('@',1,7))
+				end
 			end
-			movieList = {ostruct.savedFilePaths{fileNum}};
-
-			% movieDims = loadMovieList(movieList,'convertToDouble',0,'frameList',options.frameList,'getMovieDims',1);
-			movieDims = loadMovieList(movieList,'convertToDouble',0,'frameList',[],'getMovieDims',1,'inputDatasetName',options.outputDatasetName);
-
-			movieFrames = movieDims.three;
-			if movieFrames>500
-				movieFrames = 500;
+			% inputdlg({'press OK to view a snippet of analyzed movies'},'...',1);
+			% Miji;
+			% MIJ.start
+			manageMiji('startStop','start');
+		
+			if isempty(thisMovieArray)||all(cellfun(@isempty,thisMovieArray))
+				uiwait(ciapkg.overloaded.msgbox('No movies, check that processing ran successfully.','Success','modal'));
 			else
-				% ostruct.movieFrames{fileNum} = movieFrames;
+				uiwait(ciapkg.overloaded.msgbox('Press OK to view a snippet of analyzed movies','Success','modal'));
 			end
-			movieFrameList{fileNum} = movieFrames;
-
-			% options.frameList = [1:ostruct.movieFrames{fileNum}];
-			options.frameList = [1:movieFrames];
-
-			% get the movie
-			% thisMovieArray{fileNum} = loadMovieList(movieList,'convertToDouble',0,'frameList',options.frameList);
-			thisMovieArray{fileNum} = loadMovieList(movieList,'convertToDouble',0,'frameList',[],'loadMovieInEqualParts',[numParts numFramesPerPart],'inputDatasetName',options.outputDatasetName);
-			% thisMovieArray{fileNum} = loadMovieList(movieList,'convertToDouble',0,'frameList',options.frameList,'loadMovieInEqualParts',[numParts numFramesPerPart]);
-
-		catch err
-			thisMovieArray{fileNum} = [];
-			display(repmat('@',1,7))
-			disp(getReport(err,'extended','hyperlinks','on'));
-			display(repmat('@',1,7))
-		end
+		case 'matlab'
+			% Do nothing
+		otherwise
+			% Do nothing
 	end
-	% inputdlg({'press OK to view a snippet of analyzed movies'},'...',1);
-	% Miji;
-	% MIJ.start
-	manageMiji('startStop','start');
 
-	if isempty(thisMovieArray)||all(cellfun(@isempty,thisMovieArray))
-		uiwait(ciapkg.overloaded.msgbox('No movies, check that processing ran successfully.','Success','modal'));
-	else
-		uiwait(ciapkg.overloaded.msgbox('Press OK to view a snippet of analyzed movies','Success','modal'));
-	end
 	% ask user for estimate of nPCs and nICs
 	for fileNum = 1:nFiles
 		try
@@ -2505,48 +2697,68 @@ function [ostruct, options] = playOutputMovies(ostruct,options)
 				display(pathInfo);
 			end
 
-			% get the list of movies
-			movieList = {ostruct.savedFilePaths{fileNum}};
-
-			% options.frameList = [1:ostruct.movieFrames{fileNum}];
-			options.frameList = [1:movieFrameList{fileNum}];
-
-			% get the movie
-			% thisMovie = loadMovieList(movieList,'convertToDouble',0,'frameList',options.frameList);
-			thisMovie = thisMovieArray{fileNum};
-
-			if isempty(thisMovie)
-				continue;
-			end
-
 			trueFileNum = ostruct.fileNumList{fileNum};
 
-			% Try with Miji, else use built-in player
-			try
-				% playMovie(thisMovie,'fps',120,'extraTitleText',[10 pathInfo]);
-				% MIJ.createImage([num2str(fileNum) '/' num2str(length(ostruct.folderList)) ': ' ostruct.folderList{fileNum}],thisMovie, true);
-				% [num2str(trueFileNum) '/' num2str(length(ostruct.folderList)) ': ' ostruct.folderList{trueFileNum}]
-				titleStr = sprintf('%d/%d (%d/%d): %s',trueFileNum,length(ostruct.folderList),fileNum,nFiles,ostruct.folderList{trueFileNum});
-				ciapkg.overloaded.msgbox('Click movie to open next dialog box.','Success','normal')
-				MIJ.createImage(titleStr,thisMovie, true);
-				if size(thisMovie,1)<300
-					% for foobar=1:2; MIJ.run('In [+]'); end
-					for foobar=1:1; MIJ.run('In [+]'); end
-				end
-				for foobar=1:2; MIJ.run('Enhance Contrast','saturated=0.35'); end
-				MIJ.run('Start Animation [\]');
-				uiwait(ciapkg.overloaded.msgbox('press OK to move onto next movie','Success','modal'));
-				% MIJ.run('Close All Without Saving');
-				manageMiji('startStop','closeAllWindows');
-			catch err
-				disp(repmat('@',1,7))
-				disp(getReport(err,'extended','hyperlinks','on'));
-				disp(repmat('@',1,7))
-				ciapkg.overloaded.msgbox('Press E in movie GUI to move onto next movie, close this box to continue','Success','modal')
-				playMovie(thisMovie);
+			switch options.videoPlayer
+				case 'matlab'
+					thisFilePath = ostruct.savedFilePaths{fileNum};
+					[~,thisFileTitle,thisFileTitleExt] = fileparts(thisFilePath);
+					thisFileTitle = [thisFileTitle thisFileTitleExt];
+					titleStr = sprintf('%d/%d (%d/%d): \n %s \n %s',trueFileNum,length(ostruct.folderList),fileNum,nFiles,ostruct.folderList{trueFileNum},thisFileTitle);
 
-				% Play the movie from disk, better preview.
-				playMovie(ostruct.savedFilePaths{fileNum});
+					if fileNum==1
+						ciapkg.overloaded.msgbox('Press E in movie GUI to move onto next movie, close this box to continue','Success','modal')
+					end
+					% playMovie(thisMovie);
+
+					% Play the movie from disk, better preview.
+					playMovie(thisFilePath,'extraTitleText',titleStr,'colormapColor','gray');
+				case 'imagej'
+					% Try with Miji, else use built-in player
+					try
+						titleStr = sprintf('%d/%d (%d/%d): %s',trueFileNum,length(ostruct.folderList),fileNum,nFiles,ostruct.folderList{trueFileNum});
+
+						% get the list of movies
+						movieList = {ostruct.savedFilePaths{fileNum}};
+
+						% options.frameList = [1:ostruct.movieFrames{fileNum}];
+						options.frameList = [1:movieFrameList{fileNum}];
+
+						% get the movie
+						% thisMovie = loadMovieList(movieList,'convertToDouble',0,'frameList',options.frameList);
+						thisMovie = thisMovieArray{fileNum};
+
+						if isempty(thisMovie)
+							continue;
+						end
+
+						% playMovie(thisMovie,'fps',120,'extraTitleText',[10 pathInfo]);
+						% MIJ.createImage([num2str(fileNum) '/' num2str(length(ostruct.folderList)) ': ' ostruct.folderList{fileNum}],thisMovie, true);
+						% [num2str(trueFileNum) '/' num2str(length(ostruct.folderList)) ': ' ostruct.folderList{trueFileNum}]
+						
+						ciapkg.overloaded.msgbox('Click movie to open next dialog box.','Success','normal')
+						MIJ.createImage(titleStr,thisMovie, true);
+						if size(thisMovie,1)<300
+							% for foobar=1:2; MIJ.run('In [+]'); end
+							for foobar=1:1; MIJ.run('In [+]'); end
+						end
+						for foobar=1:2; MIJ.run('Enhance Contrast','saturated=0.35'); end
+						MIJ.run('Start Animation [\]');
+						uiwait(ciapkg.overloaded.msgbox('press OK to move onto next movie','Success','modal'));
+						% MIJ.run('Close All Without Saving');
+						manageMiji('startStop','closeAllWindows');
+					catch err
+						disp(repmat('@',1,7))
+						disp(getReport(err,'extended','hyperlinks','on'));
+						disp(repmat('@',1,7))
+						ciapkg.overloaded.msgbox('Press E in movie GUI to move onto next movie, close this box to continue','Success','modal')
+						playMovie(thisMovie);
+
+						% Play the movie from disk, better preview.
+						playMovie(ostruct.savedFilePaths{fileNum});
+					end
+				otherwise
+					disp('Wrong video player option, skipping...')
 			end
 
 			if options.askForPCICs==1
@@ -2569,10 +2781,18 @@ function [ostruct, options] = playOutputMovies(ostruct,options)
 			display(repmat('@',1,7))
 		end
 	end
-	% MIJ.exit;
-	manageMiji('startStop','exit');
+
+	switch options.videoPlayer
+		case 'matlab'
+			% Do nothing
+		case 'imagej'
+			% MIJ.exit;
+			manageMiji('startStop','exit');
+		otherwise
+			% Do nothing
+	end
 end
-function inputMovie = cropInputMovieSlice(inputMovie,options,ResultsOutOriginal)
+function inputMovie = localfxn_cropInputMovieSlice(inputMovie,options,ResultsOutOriginal)
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	% turboreg outputs 0s where movement goes off the screen
@@ -2637,7 +2857,7 @@ function inputMovie = cropInputMovieSlice(inputMovie,options,ResultsOutOriginal)
 	% set bottom rows to NaN
 	inputMovie(bottomRowCrop:end,1:end,:) = NaN;
 end
-function [movieList] = removeUnsupportedFiles(movieList,options)
+function [movieList] = localfxn_removeUnsupportedFiles(movieList,options)
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	% Reject anything not HDF5, TIF, AVI, or ISXD
@@ -2657,32 +2877,36 @@ function [movieList] = removeUnsupportedFiles(movieList,options)
 	end
 	movieList = tmpMovieList;
 end
-function [movieType, supported] = getMovieFileType(thisMoviePath)
-	% determine how to load movie, don't assume every movie in list is of the same type
-	supported = 1;
-	try
-		[~,~,ext] = fileparts(thisMoviePath);
-	catch
-		movieType = '';
-		supported = 0;
-		return;
-	end
-	% files are assumed to be named correctly (lying does no one any good)
-	if strcmp(ext,'.h5')||strcmp(ext,'.hdf5')
-		movieType = 'hdf5';
-	elseif strcmp(ext,'.tif')||strcmp(ext,'.tiff')
-		movieType = 'tiff';
-	elseif strcmp(ext,'.avi')
-		movieType = 'avi';
-	elseif strcmp(ext,'.isxd')
-		movieType = 'isxd';
-	else
-		movieType = '';
-		supported = 0;
-	end
-end
-function subfxn_dispMovieSize(thisMovie)
+% function [movieType, supported] = getMovieFileType(thisMoviePath)
+% 	% determine how to load movie, don't assume every movie in list is of the same type
+% 	supported = 1;
+% 	try
+% 		[~,~,ext] = fileparts(thisMoviePath);
+% 	catch
+% 		movieType = '';
+% 		supported = 0;
+% 		return;
+% 	end
+% 	% files are assumed to be named correctly (lying does no one any good)
+% 	if strcmp(ext,'.h5')||strcmp(ext,'.hdf5')
+% 		movieType = 'hdf5';
+% 	elseif strcmp(ext,'.tif')||strcmp(ext,'.tiff')
+% 		movieType = 'tiff';
+% 	elseif strcmp(ext,'.avi')
+% 		movieType = 'avi';
+% 	elseif strcmp(ext,'.isxd')
+% 		movieType = 'isxd';
+% 	else
+% 		movieType = '';
+% 		supported = 0;
+% 	end
+% end
+function localfxn_dispMovieSize(thisMovie)
 	j = whos('thisMovie');
 	j.bytes=j.bytes*9.53674e-7;
 	display(['Movie dims: ' num2str(size(thisMovie)) ' | Movie size: ' num2str(j.bytes) 'Mb | ' num2str(j.size) ' | ' j.class]);
+end
+function localfxn_changeFigName(hFig,titleStr)
+
+	set(hFig,'Name',[ciapkg.pkgName ': start-up GUI'],'NumberTitle','off')
 end

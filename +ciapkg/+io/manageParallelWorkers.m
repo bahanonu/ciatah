@@ -28,6 +28,7 @@ function [success] = manageParallelWorkers(varargin)
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
         % 2022.02.09 [19:03:24] - Added nCoresFree option for users to set the number of cores to remain free.
 		% 2022.02.28 [18:36:15] - Added ability to input just the number of workers to open as 1st single input argument that aliases for the "setNumCores" Name-Value input, still support other input arguments as well.
+		% 2022.06.27 [19:40:56] - Added displayInfo option.
 	% TODO
 		%
 
@@ -59,6 +60,8 @@ function [success] = manageParallelWorkers(varargin)
 	options.forceParpoolStart = 0;
     % Int: default number of logical cores that will remain free (e.g. number of workers to load will be nLogicalCores - options.nCoresFree).
     options.nCoresFree = 1;
+    % Binary: 1 = whether to display info on command line.
+    options.displayInfo = 1;
 	% get options
 	options = getOptions(options,varargin);
 	% options = getOptions(options,varargin,'getFunctionDefaults',1);
@@ -88,7 +91,9 @@ function [success] = manageParallelWorkers(varargin)
 				% Check whether user has disabled auto-load, if so, they do not run manageParallelWorkers
 				parSet = parallel.Settings;
 				if parSet.Pool.AutoCreate==false
-					disp('User has set parSet.Pool.AutoCreate to false, DO NOT auto-start parallel pool.')
+					if options.displayInfo==1
+						disp('User has set parSet.Pool.AutoCreate to false, DO NOT auto-start parallel pool. Use Name-Value input "forceParpoolStart=1" to force starting of parallel pool.')
+					end
 					return;
 				end
 			end

@@ -13,6 +13,7 @@ function [fileInfo] = getFileInfo(fileStr, varargin)
 		% 2015.12.11 - Noting modifications to allow a second type of file format to be supported, mostly for antipsychotic analysis
 		% 2017.04.15 - added multiplane support
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2022.03.18 [10:10:11] - Add trial # to output.
 	% TODO
 		%
 
@@ -125,15 +126,25 @@ function [fileInfo] = getFileInfo(fileStr, varargin)
 	catch
 		fileInfo.assayNum = 0;
 	end
+
+	% =======
 	% get trial
 	trialListOriginal = ['(' options.trialList{:} ')'];
 	trialList = strcat(trialListOriginal, '\d+');
-	fileInfo.trial = regexp(fileStr,trialListOriginal, 'match');
+	% fileInfo.trial = regexp(fileStr,trialListOriginal, 'match');
+	fileInfo.trial = regexp(fileStr,trialList, 'match');
 	% add NULL string if no assay found
 	if ~isempty(fileInfo.trial)
 		fileInfo.trial = fileInfo.trial{1};
 	else
 		fileInfo.trial = 'NULL000';
+	end
+	% % get out the trial number
+	try
+		tokenMatches = regexp(fileInfo.trial,'\d+','match');
+		fileInfo.trialNo = str2num(cell2mat(tokenMatches(end)));
+	catch
+		fileInfo.trialNo = 0;
 	end
 
 	% date

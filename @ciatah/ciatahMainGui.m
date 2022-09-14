@@ -24,6 +24,13 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
         % 2022.01.04 [12:15:56] - Additional check only for movie previews of supported movie files. "Folder files" list selection additional regexp support.
         % 2022.01.25 [19:30:58] - Changed so that 'Start selected method' button selects the correct folders like occurs when pressing enter.
         % 2022.02.25 [13:06:09] - The folder list will no longer reset when selecting certain GUI elements that should not impact folder list.
+        % 2022.03.14 [13:31:02] - Improve speed of movie display by better passing of movie information to ciapkg.io.readFrame.
+        % 2022.03.15 [01:14:23] - If processed and raw movie are the same length, sliders move in sync. By default use 'painters' renderer as that can produce smoother rendering than opengl.
+        % 2022.07.27 [13:49:59] - Added file sizes to the folder files preview. Reset movie dimension on folder select change so movie previews run without outputting initial error (movies would still preview, users just might be confused by the warning).
+        % 2022.07.27 [14:23:56] - Feature to allow preview of HDF5 datasets. Expanding to Bio-Formats and other types of data with internal structures for data.
+        % 2022.07.28 [04:48:16] - Added ability to open folder in OS GUI, e.g. Windows Explorer.
+        % 2022.07.30 [10:54:53] - If manual input for filtering folders set back to no filter to avoid GUI loops.
+        % 2022.09.14 [09:51:55] - Make sure preview data and open folder buttons are associated with correct previewDataHandle and openFoldersHandle handles.
 	% TODO
 		%
 
@@ -54,6 +61,7 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		colorStruct = struct;
 		colorStruct.red = [255 153 153]/255;
 		colorStruct.yellow = [255, 255, 153]/255;
+		colorStruct.gray = [153, 153, 153]/255;
 
 		defaultFontSize = obj.fontSizeGui;
 
@@ -94,6 +102,17 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 			selectList = obj.inputFolders(:);
 		end
 
+		% Dimensions for each movie
+		inputMovieDims1 = [];
+		inputMovieDims2 = [];
+
+		% Folder files cell array
+		currentFolder = '';
+		currentFolderFilesList = {};
+
+		% 1 = sliders are clicked, 0 = not clicked.
+		sliderLockState = 0;
+
 		%% ==========================================
 		% SETUP FIGURE
 		useAltValid = {'no additional filter','manually sorted folders','not manually sorted folders','manual classification already in obj',['has ' obj.signalExtractionMethod ' extracted cells'],['missing ' obj.signalExtractionMethod ' extracted cells'],'fileFilterRegexp','valid auto',['has ' obj.fileFilterRegexp ' movie file'],'manual index entry'};
@@ -109,6 +128,10 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		% [x0 y0 width height]
 		uicontrol('Style','text','String',[ciapkg.pkgName],'Units','normalized','Position',[1 96 20 3]/100,'BackgroundColor',figBackgroundColor,'HorizontalAlignment','Left','ForegroundColor',figTextColor,'FontWeight','bold','FontAngle','italic','FontSize',defaultFontSize*fontScale);
 		uicontrol('Style','text','String',[inputTxt ' Press TAB to select next section, ENTER to continue, and ESC to exit.'],'Units','normalized','Position',[10 96 90 3]/100,'BackgroundColor',figBackgroundColor,'HorizontalAlignment','Left','ForegroundColor',figTextColor,'FontSize',9*fontScale);
+
+		% Set the default renderer
+		% set(hFig,'Renderer','painters'); % 'opengl'
+		set(hFig,'Renderer','opengl'); % 'opengl'
 
 
 		%% ==========================================
@@ -152,9 +175,14 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 
 		% [x0 y0 width height]
 		addFoldersLoc = hListboxT.folders.Position;
-		addFoldersLoc(3) = 0.30;
-		addFoldersLoc(1) = 0.69;
-		addFoldersHandle = uicontrol('style','pushbutton','Units', 'normalized','position',addFoldersLoc,'FontSize',9*fontScale,'string','Click to add folders.','BackgroundColor',[153 153 153]/255,'callback',@callback_addFolders);
+		addFoldersLoc(3) = 0.15;
+		addFoldersLoc(1) = 0.63;
+		addFoldersHandle = uicontrol('style','pushbutton','Units', 'normalized','position',addFoldersLoc,'FontSize',9*fontScale,'string','Add folders.','BackgroundColor',[153 153 153]/255,'callback',@callback_addFolders);
+
+		loadFoldersLoc = hListboxT.folders.Position;
+		loadFoldersLoc(3) = 0.20;
+		loadFoldersLoc(1) = 0.79;
+		loadFoldersHandle = uicontrol('style','pushbutton','Units', 'normalized','position',loadFoldersLoc,'FontSize',9*fontScale,'string','Load cell extraction.','BackgroundColor',[153 153 153]/255,'callback',@callback_loadFolders);
 		
 
 		%% ==========================================
@@ -261,7 +289,7 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 			subfxn_setOutputVars()
 			close(hFig)
 		end
-		validFoldersIdx
+		disp(validFoldersIdx)
 		return;
 		% idNumIdxArray = get(hListboxS.folders,'Value');
 	catch err
@@ -407,9 +435,21 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 			
 			[validFoldersIdx] = pipelineFolderFilter(obj,useAltValid,validFoldersIdx);
 
+			% If manual input set back to no filter to avoid GUI loops
+			if strcmp(useAltValid,'manual index entry')==1
+				set(hListboxS.folderFilt,'Value',1)
+			end
+
 			% validFoldersIdx = hListboxStruct.ValueFolder;
 
 			% if strcmp(get(src,'Tag'),'folders')~=1
+
+			% If folder is changed, reset the movie dimensions to avoid errors.
+			if any(strcmp({'folders'},get(src,'Tag')))==1
+				% Dimensions for each movie
+				inputMovieDims1 = [];
+				inputMovieDims2 = [];
+			end
 
 			if any(strcmp({'methodBox','cellExtractionBox','cellExtractFiletypeBox','guiEnabled','folders'},get(src,'Tag')))==0
 				if length(get(hListboxS.folders,'Value'))==1
@@ -539,11 +579,17 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		% uiresume(hFig);
 	end
 	function subfxn_setOutputVars()
-		hListboxStruct.ValueFolder = get(hListboxS.folders,'Value');
-		hListboxStruct.Value = hListbox.Value;
-		hListboxStruct.guiIdx = get(hListboxS.guiEnabled,'Value');
-		hListboxStruct.nwbLoadFiles = get(hListboxS.cellExtractFiletype,'Value');
-		if hListboxStruct.nwbLoadFiles==1;hListboxStruct.nwbLoadFiles=0;else;hListboxStruct.nwbLoadFiles=1;end
+		if isvalid(hFig)
+			hListboxStruct.ValueFolder = get(hListboxS.folders,'Value');
+			hListboxStruct.Value = hListbox.Value;
+			hListboxStruct.guiIdx = get(hListboxS.guiEnabled,'Value');
+			hListboxStruct.nwbLoadFiles = get(hListboxS.cellExtractFiletype,'Value');
+			if hListboxStruct.nwbLoadFiles==1
+				hListboxStruct.nwbLoadFiles=0;
+			else
+				hListboxStruct.nwbLoadFiles=1;
+			end
+		end
 	end
 	function startMethodCallback(source,eventdata)
 		breakMovieLoop = 1;
@@ -576,9 +622,67 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
             returnStr = 'Preview movies by selecting one folder in "Loaded folders" (click to disable).';
         end
     end
+    function subfxn_previewDataInfo(source,eventdata)
+    	disp('Listing out internal data for select file types.')
+    	% folderIdx = get(hListboxS.folders,'Value');
+    	currentFolder
+        selectFiles = get(hListboxS.folderFiles,'Value');
+        % folderFilesList = get(hListboxS.folderFiles,'string');
+        folderFilesList = currentFolderFilesList(selectFiles);
+        % cellfun(@disp,folderFilesList)
+        for iz3 = 1:length(folderFilesList)
+			disp(repmat('==',1,7))
+			thisFullFile = fullfile(currentFolder,folderFilesList{iz3});
+			if isfile(thisFullFile)~=1
+				continue;
+			end
+			disp(folderFilesList{iz3})
+			disp(thisFullFile)
+			[~,~,extH] = fileparts(thisFullFile);
+
+			[movieTypeTmp, supported] = ciapkg.io.getMovieFileType(thisFullFile);
+
+			switch movieTypeTmp
+				case 'tiff'
+				case 'hdf5'
+					% Display only HDF5 dataset names, no additional metadata.
+        			h5disp(thisFullFile,'/','min')
+				case 'avi'
+				case 'isxd'
+				case 'bioformats'
+					% Just display series of names in the file
+					[bfSeriesNo] = ciapkg.bf.dispFileSeries(thisFullFile);
+				otherwise
+			end
+        end
+        disp('Done!')
+    end
+    function subfxn_openFolderGui(source,eventdata)
+    	if ~isempty(currentFolder)
+			if (ispc)
+				winopen(currentFolder)
+			elseif ismac
+			    cmdRun = ['open ' currentFolder];
+			    [status1, cmdout1] = system(cmdRun); %#ok<ASGLU>
+			else
+			    % xdg-open opens folder in Linux, if no xdg-open, display an error.
+			    cmdRun = ['xdg-open ' currentFolder];
+			    [status1, cmdout1] = system(cmdRun); %#ok<ASGLU>
+			end 
+    	end
+    end
 	function callback_addFolders(source,eventdata)
 		% Set current method to modelAddNewFolders and start method.
-		hListbox.Value = 2;
+		hListbox.Value = find(strcmp('modelAddNewFolders',obj.methodsList));
+		obj.currentMethod = hListbox.String{hListbox.Value};
+		% breakMovieLoop = 1;
+		% exitFlag = 1;
+		% close(hFig)
+		subfxn_returnNormal();
+	end
+	function callback_loadFolders(source,eventdata)
+		% Set current method to modelAddNewFolders and start method.
+		hListbox.Value = find(strcmp('modelVarsFromFiles',obj.methodsList),1);
 		obj.currentMethod = hListbox.String{hListbox.Value};
 		% breakMovieLoop = 1;
 		% exitFlag = 1;
@@ -641,9 +745,11 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		switch switchTag
 			case 'First'
 				set(frameSlider,'Enable','on');
+				sliderLockState = 1;
 				% addlistener(frameSlider,'Value','PostSet',@frameCallbackChange);
 			case 'Second'
 				set(frameSliderTwo,'Enable','on');
+				sliderLockState = 2;
 				% addlistener(frameSliderTwo,'Value','PostSet',@frameCallbackChange);
 			otherwise
 				return;
@@ -672,19 +778,37 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		originalPauseState = breakMovieLoop;
 		breakMovieLoop = 1;
 		switchTag = get(source,'Tag');
+
 		switch switchTag
 			case 'First'
 				i = max(1,round(get(frameSlider,'value')));
+				% If movies are equal length, keep both sliders in sync.
+				if length(inputMovieDims1)==3&&length(inputMovieDims2)==3
+					if inputMovieDims1(3)==inputMovieDims2(3)
+						i2 = i;
+					end
+				end
 			case 'Second'
 				i2 = max(1,round(get(frameSliderTwo,'value')));
+				% If movies are equal length, keep both sliders in sync.
+				if length(inputMovieDims1)==3&&length(inputMovieDims2)==3
+					if inputMovieDims1(3)==inputMovieDims2(3)
+						i = i2;
+					end
+				end
 			otherwise
 				return;
 		end
 		addlistener(frameSlider,'Value','PostSet',@blankCallback);
 		set(frameSlider,'Enable','off')
+		set(frameSliderTwo,'Enable','off')
 		drawnow update;
 		set(frameSlider,'Enable','inactive')
+		set(frameSliderTwo,'Enable','inactive')
 		breakMovieLoop = originalPauseState;
+		sliderLockState = 0;
+	end
+	function blankCallback(source,eventdata)
 	end
 	function [selBoxInfo] = subfxn_guiElementSetupInfo()
 		% set(hFig,'Color',[0,0,0]);
@@ -764,7 +888,11 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		bOff = 1;
 		fontSizeH = 11*fontScale;
 
-		runMoviesToggleHandle = uicontrol('style','pushbutton','Units', 'normalized','position',[bOff 45 98 2]/100,'FontSize',fontSizeH,'string',subfxn_previewMovieState(),'BackgroundColor',buttonBackgroundColor,'callback',@runMoviesToggleCallback);
+		runMoviesToggleHandle = uicontrol('style','pushbutton','Units', 'normalized','position',[bOff 45 50 2]/100,'FontSize',fontSizeH,'string',subfxn_previewMovieState(),'BackgroundColor',buttonBackgroundColor,'callback',@runMoviesToggleCallback);
+
+		previewDataHandle = uicontrol('style','pushbutton','Units', 'normalized','position',[bOff+50 45 24 2]/100,'FontSize',fontSizeH,'string','Preview file internal structure (HDF5, BioFormats)','BackgroundColor',colorStruct.gray,'callback',@subfxn_previewDataInfo);
+
+		openFoldersHandle = uicontrol('style','pushbutton','Units', 'normalized','position',[bOff+50+24 45 24 2]/100,'FontSize',fontSizeH,'string','Open folder OS gui','BackgroundColor',colorStruct.gray,'callback',@subfxn_openFolderGui);
 		
 		fileFilterRegexpHandle = uicontrol('style','edit','Units', 'normalized','position',[bOff dy txtW 2]/100,'FontSize',fontSizeH,'string',obj.fileFilterRegexp,'callback',@movieSettingsCallback,'KeyReleaseFcn',@movieSettingsCallback);
 			uicontrol('Style','text','String','Processed movie regular expression:','Units','normalized','Position',[bOff dy+dz txtW dz]/100,'BackgroundColor',figBackgroundColor,'ForegroundColor',figTextColor,'HorizontalAlignment','Left','FontWeight','normal','FontSize',fontSizeH);
@@ -790,12 +918,32 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 			end
 
 			thisFolderPath = obj.inputFolders{folderIdx};
-
+			currentFolder = thisFolderPath;
 			% Update file list
 			try
 				folderFileListHere = ciapkg.api.getFileList(thisFolderPath,'.','addInputDirToPath',0);
 				folderFileListHere = folderFileListHere(3:end);
+				currentFolderFilesList = folderFileListHere;
+				for iz2 = 1:length(folderFileListHere)
+					thisFileTmp = folderFileListHere{iz2};
+					thisFileFullPath = fullfile(thisFolderPath,thisFileTmp);
+					if isfile(thisFileFullPath)==1
+						fileInfo2 = dir(thisFileFullPath);
+						fileSize = fileInfo2.bytes*9.53674e-7;
+						% Show in GB or Mb
+						if fileSize>2^10
+							thisFileTmp = sprintf('%s (%0.2f GB)',thisFileTmp,round(fileSize/2^10,2));
+						else
+							thisFileTmp = sprintf('%s (%0.2f MB)',thisFileTmp,round(fileSize,2));
+						end
+					elseif isfolder(thisFileFullPath)==1
+						thisFileTmp = ['->' thisFileTmp];
+					end
+					folderFileListHere{iz2} = thisFileTmp;
+				end
 				set(hListboxS.folderFiles,'string',folderFileListHere);
+
+				% Update selected files
 				set(hListboxS.folderFiles,'Value',1);
 				folderFilesHighlight = cellfun(@(x) ~isempty(cell2mat(regexp(x,{obj.fileFilterRegexp,obj.fileFilterRegexpRaw}))),folderFileListHere,'UniformOutput',0);
                 folderFilesHighlight = cell2mat(folderFilesHighlight);
@@ -996,8 +1144,16 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 				while breakMovieLoop==0
 					if movieCheck{1}==1
 						if isvalid(movieImgHandle)
+							try
+								if inputMovieDims1(3)==inputMovieDims2(3)&&sliderLockState==2
+									set(frameSlider,'Value',i2);
+								end
+							catch 
+
+							end
+
 							i = round(get(frameSlider,'Value'));
-							[thisFrame,~,~] = ciapkg.io.readFrame(inputMoviePath{1},i,'inputDatasetName',obj.inputDatasetName);
+							[thisFrame,~,inputMovieDims1] = ciapkg.io.readFrame(inputMoviePath{1},i,'inputDatasetName',obj.inputDatasetName,'inputMovieDims',inputMovieDims1);
 
 							if ~isempty(boundaryIndices)&opts.overlayCellExtraction==1
 								thisFrame([boundaryIndices{:}]) = NaN;
@@ -1016,8 +1172,16 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 
 					if movieCheck{2}==1
 						if isvalid(movieImgHandleTwo)
+							try
+								if inputMovieDims1(3)==inputMovieDims2(3)&&sliderLockState==1
+									set(frameSliderTwo,'Value',i);
+								end
+							catch
+
+							end
+
 							i2 = round(get(frameSliderTwo,'Value'));
-							[thisFrame2,~,~] = ciapkg.io.readFrame(inputMoviePath{2},i2,'inputDatasetName',obj.inputDatasetName);
+							[thisFrame2,~,inputMovieDims2] = ciapkg.io.readFrame(inputMoviePath{2},i2,'inputDatasetName',obj.inputDatasetName,'inputMovieDims',inputMovieDims2);
 
 							if ~isempty(boundaryIndices)&opts.overlayCellExtraction==1
 								thisFrame2([boundaryIndices{:}]) = NaN;
@@ -1041,6 +1205,8 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 					if breakMovieLoop==1
 						break;
 					end
+					% drawnow
+					drawnow limitrate
 					pause(1/FPShere);
 				end
 				warning on;

@@ -15,6 +15,7 @@ function out = load_tif_movie(filename,downsample_xy,varargin)
 		% 2019.03.10 [20:17:09] Allow user to pre-input TIF temporary file to speed-up load times, esp. with individual files, see options.tmpImage and options.fileInfo
 		% 2020.09.01 [14:27:12] - Suppress warning at user request and remove unecessary file handle call.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+        % 2022.03.07 [15:56:58] - Speed improvements related to imfinfo calls. Added tiffread support and ScanImageTiffReader support (not user accessible currently).
 	% TODO
 		%
 
@@ -43,8 +44,11 @@ function out = load_tif_movie(filename,downsample_xy,varargin)
 		%First load a single frame of the movie to get generic information
         if options.displayInfo==0
             warning off
-        end
+		end
+		warning off
 		TifLink = Tiff(filename, 'r'); % Create the Tiff object
+		warning on;
+		
 		warning off
 		TmpImage = TifLink.read();%Read in one picture to get the image size and data type
 		warning on
@@ -59,7 +63,10 @@ function out = load_tif_movie(filename,downsample_xy,varargin)
 
 	% Pre-allocate the movie
 	if isempty(options.Numberframe)
-		out.Numberframe=size(imfinfo(filename),1);% Number of frames
+        if isempty(options.fileInfo)
+            options.fileInfo = imfinfo(filename);
+        end
+		out.Numberframe = size(options.fileInfo,1);% Number of frames
 		framesToGrab = 1:out.Numberframe;
 	else
 		out.Numberframe = options.Numberframe;
@@ -157,29 +164,59 @@ function out = load_tif_movie(filename,downsample_xy,varargin)
 		warning off
 		
 		tiffID = Tiff(filename,'r');
+        
+        % tsStack = TIFFStack(filename);
 
 		% tiffID.setDirectory(1);
 		% rgbTiff = size(read(tiffID),3);
-		for frameNo = 1:nFramesDim
-			% out.Movie(:,:,frameNo) = fread(fileID, [fileInfo.Width fileInfo.Height], fileType, 0, byteorder)';
-			% out.Movie(:,:,frameNo) = fread(fileID, [imgWidth(1) imgHeight(1)], fileType, 0, byteorder)';
-			% fseek(fileID, StripOffsets(frameNo), 'bof');
-			
-			tiffID.setDirectory(framesToGrab2(frameNo));
-			% rgbTiff = size(read(tiffID),3);
-			%if rgbTiff==1
-			try
-				out.Movie(:,:,frameNo) = read(tiffID);
-			catch
-				tmpFrame = read(tiffID);
-				out.Movie(:,:,frameNo) = tmpFrame(:,:,1);
-			end
-			%elseif rgbTiff==3
-			%	tmpFrame = read(tiffID);
-			%	out.Movie(:,:,frameNo) = tmpFrame(:,:,1);
-			%end
-			reverseStr = cmdWaitbar(frameNo,nFrames,reverseStr,'inputStr','loading ImageJ tif','waitbarOn',1,'displayEvery',50);
+		
+		% tic
+		%out.Movie = loadtiff(filename);
+		% toc
+		
+		%return
+        
+		% tic
+        if length(1:nFramesDim)==nFrames
+            out.Movie = tiffread(filename,[],'ReadUnknownTags',1);
+        else
+            out.Movie = tiffread(filename, framesToGrab2,'ReadUnknownTags',1);
 		end
+		out.Movie = cat(3,out.Movie(:).data);
+        % toc
+		warning on
+        return;
+        
+        % Use scan image reader
+        if 0&&length(1:nFramesDim)==nFrames
+           tifReader = ScanImageTiffReader.ScanImageTiffReader(filename);
+           tifReader = tifReader.data();
+		else
+			tic
+            for frameNo = 1:nFramesDim
+                % out.Movie(:,:,frameNo) = fread(fileID, [fileInfo.Width fileInfo.Height], fileType, 0, byteorder)';
+                % out.Movie(:,:,frameNo) = fread(fileID, [imgWidth(1) imgHeight(1)], fileType, 0, byteorder)';
+                % fseek(fileID, StripOffsets(frameNo), 'bof');
+
+                tiffID.setDirectory(framesToGrab2(frameNo));
+                % rgbTiff = size(read(tiffID),3);
+                %if rgbTiff==1
+                try
+                    out.Movie(:,:,frameNo) = read(tiffID);
+                    % out.Movie(:,:,frameNo) = tsStack(:,:,frameNo);
+                catch
+                    tmpFrame = read(tiffID);
+                    % tmpFrame = tsStack(frameNo);
+                    out.Movie(:,:,frameNo) = tmpFrame(:,:,1);
+                end
+                %elseif rgbTiff==3
+                %	tmpFrame = read(tiffID);
+                %	out.Movie(:,:,frameNo) = tmpFrame(:,:,1);
+                %end
+                reverseStr = cmdWaitbar(frameNo,nFrames,reverseStr,'inputStr','loading ImageJ tif','waitbarOn',1,'displayEvery',50);
+			end
+			toc
+        end
 		warning on
 		% playMovie(out.Movie)
 
@@ -204,7 +241,7 @@ function out = load_tif_movie(filename,downsample_xy,varargin)
 					fileInfo = fileInfo(1);
 				end
 			catch
-				display('assuming single frame');
+				disp('assuming single frame');
 				nFrames = 1;
 			end
 		else

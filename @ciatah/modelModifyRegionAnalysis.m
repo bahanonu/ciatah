@@ -11,7 +11,8 @@ function obj = modelModifyRegionAnalysis(obj,varargin)
 		% 2017.01.14 [20:06:04] - support switched from [nSignals x y] to [x y nSignals]
 		% 2021.06.18 [21:41:07] - added modelVarsFromFilesCheck() to check and load signals if user hasn't already.
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
-		% 2022.02.28 [‏‎13:01:20] - Fix modelVarsFromFilesCheck and modelVarsFromFiles recursion edge case.
+		% 2022.02.28 [13:01:20] - Fix modelVarsFromFilesCheck and modelVarsFromFiles recursion edge case.
+		% 2022.08.26 [15:00:28] - Misc code standard updates.
 	% TODO
 		%
 
@@ -26,7 +27,7 @@ function obj = modelModifyRegionAnalysis(obj,varargin)
 
 	if obj.guiEnabled==1
 		scnsize = get(0,'ScreenSize');
-		[fileIdxArray idNumIdxArray nFilesToAnalyze nFiles] = obj.getAnalysisSubsetsToAnalyze();
+		[fileIdxArray, idNumIdxArray, nFilesToAnalyze, nFiles] = obj.getAnalysisSubsetsToAnalyze();
 
 		% [fileIdxArray, ok] = listdlg('ListString',obj.fileIDNameArray,'ListSize',[scnsize(3)*0.2 scnsize(4)*0.25],'Name','which folders to analyze?');
 		scnsize = get(0,'ScreenSize');
@@ -59,12 +60,12 @@ function obj = modelModifyRegionAnalysis(obj,varargin)
 				regionFile = getFileList(obj.inputFolders{obj.fileNum},obj.regionModSaveStr);
 				% if no file, skip
 				if isempty(regionFile)
-					display('No region analysis to load!')
+					disp('No region analysis to load!')
 					continue;
 				end
 				regionFile = regionFile{1};
 				fprintf('loading: %s',regionFile)
-				loadFile = load(regionFile,'roipolyRegion','roipolyCoords')
+				loadFile = load(regionFile,'roipolyRegion','roipolyCoords');
 				obj.analysisROIArray{obj.fileNum} = loadFile.roipolyRegion;
 				obj.validRegionModPoly{obj.fileNum} = loadFile.roipolyCoords;
 				% NOT DONE!!!!!!!!
@@ -73,14 +74,14 @@ function obj = modelModifyRegionAnalysis(obj,varargin)
 				regionFile = getFileList(obj.inputFolders{obj.fileNum},obj.regionModSaveStr);
 				% if no file, skip
 				if isempty(regionFile)
-					display('No region analysis to load!')
+					disp('No region analysis to load!')
 					continue;
 				end
-				loadFile = load(regionFile,'roipolyRegion','roipolyCoords')
+				loadFile = load(regionFile,'roipolyRegion','roipolyCoords');
 				obj.analysisROIArray{obj.fileNum} = loadFile.roipolyRegion;
 				obj.validRegionModPoly{obj.fileNum} = loadFile.roipolyCoords;
 			end
-			[inputSignals inputImages signalPeaks signalPeaksArray] = modelGetSignalsImages(obj,'returnType','raw');
+			[inputSignals, inputImages, signalPeaks, signalPeaksArray] = modelGetSignalsImages(obj,'returnType','raw');
 			% inputImages = thresholdImages(inputImages,'binary',0)/3;
 			% [inputSignals inputImages signalPeaks signalPeaksArray] = modelGetSignalsImages(obj);
 
@@ -147,9 +148,9 @@ function obj = modelModifyRegionAnalysis(obj,varargin)
 							h = impoly(gca,polyCoords);
 							h.wait
 							polyCoords = h.getPosition;
-							[obj.analysisROIArray{obj.fileNum} xpoly ypoly] = roipoly(thisCellmap+0.1,polyCoords(:,1),polyCoords(:,2));
+							[obj.analysisROIArray{obj.fileNum}, xpoly, ypoly] = roipoly(thisCellmap+0.1,polyCoords(:,1),polyCoords(:,2));
 						else
-							[obj.analysisROIArray{obj.fileNum} xpoly ypoly] = roipoly;
+							[obj.analysisROIArray{obj.fileNum}, xpoly, ypoly] = roipoly;
 						end
 						obj.validRegionModPoly{obj.fileNum} = [xpoly ypoly];
 					end
@@ -158,13 +159,13 @@ function obj = modelModifyRegionAnalysis(obj,varargin)
 					drawnow;
 			end
 			if strcmp(analysisToRun,'runAlreadySelectedRegions')
-				display('Using previous ROI')
+				disp('Using previous ROI')
 			end
 			inputImagesROI = obj.analysisROIArray{obj.fileNum};
 			inputImagesThres = thresholdImages(inputImages,'waitbarOn',1,'binary',1);
 			% signalInROI = squeeze(nansum(nansum(bsxfun(@times,inputImages,permute(inputImages,[2 3 1])),1),2));
-			display('finding ROIs inside region...')
-			signalInROI = squeeze(nansum(nansum(bsxfun(@times,inputImagesThres,inputImagesROI),1),2));
+			disp('finding ROIs inside region...')
+			signalInROI = squeeze(sum(sum(bsxfun(@times,inputImagesThres,inputImagesROI),1,'omitnan'),2,'omitnan'));
 
 			% signalInROI = applyImagesToMovie(inputImages,permute(inputImages,[2 3 1]), 'alreadyThreshold',1);
 			signalsToKeep = signalInROI~=0;

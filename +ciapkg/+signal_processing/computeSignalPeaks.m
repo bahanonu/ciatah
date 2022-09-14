@@ -1,35 +1,43 @@
-function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(signalMatrix, varargin)
+function [signalPeaks, signalPeaksArray, signalSigmas, signalStruct] = computeSignalPeaks(signalMatrix, varargin)
+	% [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(signalMatrix, varargin)
+	% 
 	% Binarize [0,1] input analog signals based on peaks in the signal.
+	% 
 	% Biafra Ahanonu
 	% started: 2013.10.28
+	% 
 	% inputs
-	  % signalMatrix: [nSignals frame] matrix
+	% 	signalMatrix: [nSignals frame] matrix containing analog input signals.
 	% outputs
-		% signalPeaks: [nSignals frame] matrix. Binary matrix with 1 = peaks.
-		% signalPeaksArray: {1 nSignals} cell array. Each cell contains [1 nPeaks] vector that stores the frame locations of each peak.
+	% 	signalPeaks: [nSignals frame] matrix. Binary matrix with 1 = peaks, 0 = non-peaks.
+	% 	signalPeaksArray: {1 nSignals} cell array. Each cell contains [1 nPeaks] vector that stores the frame locations of each peak.
+	% 	signalSigmas: [nSignals 1] - std of each signal.
+	% 	signalStruct: structure containing signalPeaks and signalPeaksArray if multiple thresholds requested.
 	% options
-		% See below.
-		% % make a plot?
-		% options.makePlots = 0;
-		% % show waitbar?
-		% options.waitbarOn = 1;
-		% % make summary plots of spike information
-		% options.makeSummaryPlots = 0;
-		% % number of standard deviations above the threshold to count as spike
-		% options.numStdsForThresh = 3;
-		% % minimum number of time units between events
-		% options.minTimeBtEvents = 8;
-		% % shift peak detection
-		% options.nFramesShift = 0;
-		% % should diff and fast oopsi be done?
-		% options.addedAnalysis = 0;
-		% % use simulated oopsi data
-		% options.oopsiSimulated = 0;
+	% 	See below.
+	% 	% make a plot?
+	% 	options.makePlots = 0;
+	% 	% show waitbar?
+	% 	options.waitbarOn = 1;
+	% 	% make summary plots of spike information
+	% 	options.makeSummaryPlots = 0;
+	% 	% number of standard deviations above the threshold to count as spike
+	% 	options.numStdsForThresh = 3;
+	% 	% minimum number of time units between events
+	% 	options.minTimeBtEvents = 8;
+	% 	% shift peak detection
+	% 	options.nFramesShift = 0;
+	% 	% should diff and fast oopsi be done?
+	% 	options.addedAnalysis = 0;
+	% 	% use simulated oopsi data
+	% 	options.oopsiSimulated = 0;
 	% changelog
 		% 2015.10.06 [00:14:09] Changed computePeakForSignal to shift the signal to the actual nearby peak since findpeak is sometimes off by a frame or two, should also improve the S-ratio.
 		% 2016.07.05 [14:52:43] Made changes to computePeakForSignal to improve diff based peak detection.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2022.04.20 [21:29:09] - Better comments for options.
 	% TODO:
+		% Add option to obtain multiple signal peak outputs from different thresholds in the same run, would save time.
 		% allow input of options file (e.g. for different GCaMP variants, brain regions, etc.)
 		% integrate nearest neighbor into analysis if there is a lot of cross-talk
 		% possibly integrate into identifySpikes?
@@ -42,47 +50,43 @@ function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(sign
 	%========================
 	% Binary: 1 = show plots with found events and other information for each signal. 0 = do not show signal plot GUI.
 	options.makePlots = 0;
-	% show waitbar?
+	% Binary: 1 = show wait bar, 0 = do not show wait bar.
 	options.waitbarOn = 1;
-	% make summary plots of spike information
+	% Binary: 1 = make summary plots of spike information, 0 = no summary plots.
 	options.makeSummaryPlots = 0;
 	% ===
-	% number of standard deviations above the threshold to count as spike
-	% options.numStdsForThresh = 3;
-	% options.numStdsForThresh = 0.5;
-	options.numStdsForThresh = 3;
-	% alternative for display purposes
+	% Int: number of standard deviations above the threshold to count as spike
+	options.numStdsForThresh = 3; % 0.5
+	% DEPRECIATED - Int: alternative to options.numStdsForThresh for display purposes 
 	options.numStdsForThreshTwo = 2;
-	% minimum number of time units between events
+	% Int: minimum number of time units between events.
 	options.minTimeBtEvents = 8;
-	% detect on differential ('diff') or raw ('raw') trace
-	% options.detectMethod = 'raw';
-	options.detectMethod = 'diff';
-	% the size of the moving average
+	% Str: detect on differential ('diff') or raw ('raw') trace
+	options.detectMethod = 'diff'; % 'raw'
+	% Int: the size of the window to use to ignore smaller peaks near larger peaks.
 	options.movAvgReqSize = 2;
+	% Int: the size of the moving average to use on the input signals, to smooth out noise.
 	options.movAvgFiltSize = 3;
-	% decide whether to have a moving average
+	% Binary: 1 = use moving average as specified in options.movAvgFiltSize.
 	options.doMovAvg = 1;
-	% subtract median calculated over a filter of some range.
+	% Binary: 1 = subtract median calculated over a filter of some range.
 	options.doMedianFilter = 1;
-	% number of frames to calculate median filter
+	% Int: number of frames to calculate rolling median filter.
 	options.medianFilterLength = 201;
-	% report the midpoint of the rise
-	options.reportMidpoint=0;
-	% shift peak detection
-	options.nFramesShift = 0;
-	% region around each peak to look for a maximum to adjust the test peak by
+	% Binary: 1 = leave report peaks as determined by findpeaks (e.g. normally midpoint of the peak rise if using 'diff'). 0 = adjust peak location to the maximum value found within a options.peakMaxLook window.
+	options.reportMidpoint = 0;
+	% Int vector: frames before and after region around each peak to look for a maximum to adjust the test peak by.
 	options.peakMaxLook = -6:6;
+	% Int: number of frames to shift detected peaks.
+	options.nFramesShift = 0;
 	% ===
-	% should diff and fast oopsi be done?
+	% Binary: 1 = perform diff and fast oopsi.
 	options.addedAnalysis = 0;
-	% use simulated oopsi data
+	% Binary: 1 = use simulated oopsi data.
 	options.oopsiSimulated = 0;
-	% decide whether to have a moving average
-	% options.doMovAvg = 0;
-	% 1 = open workers, 0 = do not open workers
+	% Binary: 1 = open workers, 0 = do not open workers
 	options.parallel = 1;
-	% display output
+	% Binary: 1 = display output information. 0 = suppress most output (e.g. when running in batch for certain applications).
 	options.outputInfo = 1;
 	% Binary: 1 = convert input inputSignals matrix to cell array
 	options.convertSignalsToCell = 1;
@@ -119,6 +123,8 @@ function [signalPeaks, signalPeaksArray, signalSigmas] = computeSignalPeaks(sign
 				signalMatrix(signalNo,repIdx) = nanmean(signalMatrix(signalNo,:));
 			end
 		end
+
+		signalStruct = struct;
 
 		% this matrix will contain binarized version of signalMatrix
 		signalPeaks = zeros(size(signalMatrix));

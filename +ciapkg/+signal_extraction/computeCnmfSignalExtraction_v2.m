@@ -1,5 +1,5 @@
 function [cnmfAnalysisOutput] = computeCnmfSignalExtraction_v2(inputMovie,numExpectedComponents,varargin)
-	% Brapper function for CNMF, update for most recent versions.
+	% Wrapper function for CNMF, update for most recent versions.
 	% Building off of demo_script.m in CNMF github repo
 	% Most recent commit tested on: https://github.com/epnev/ca_source_extraction/commit/187bbdbe66bca466b83b81861b5601891a95b8d1
 	% https://github.com/epnev/ca_source_extraction/blob/master/demo_script_class.m

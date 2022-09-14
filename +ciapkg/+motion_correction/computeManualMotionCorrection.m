@@ -28,6 +28,10 @@ function [inputImagesTranslated, outputStruct] = computeManualMotionCorrection(i
 		% 2021.11.17 [02:30:23] - Improve speed of GUI and responsiveness.
 		% 2021.12.19 [11:00:15] - Force altInputImages to initialize as input class type to avoid automatic conversion to double (save space/ram).
 		% 2022.01.29 [19:13:55] - Significant speed improvements by removing certain calls to figure, axis, imagesc, etc. that slow down UI over time when many sessions aligned.
+		% 2022.03.09 [16:34:47] - Check if inputs are sparse, convert to single.
+		% 2022.03.16 [08:54:11] - By default use 'painters' renderer as that can produce smoother rendering than opengl.
+		% 2022.04.25 [11:16:24] - Update to make sure titles update correctly for test images.
+		% 2022.09.14 [08:55:37] - Add renderer option to allow users to choose painters or opengl.
 	% TODO
 		% Add ability to auto-crop if inputs are not of the right size them convert back to correct size after manual correction
 		% inputRegisterImage - [x y nCells] - Image to register to.
@@ -61,6 +65,8 @@ function [inputImagesTranslated, outputStruct] = computeManualMotionCorrection(i
 	options.translationAmt = 1;
 	% Binary: 1 = include images output struct, 0 = do not include.
 	options.includeImgsOutputStruct = 1;
+	% Str: 'painters' or 'opengl'
+	options.renderer = 'opengl';
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -98,6 +104,14 @@ function [inputImagesTranslated, outputStruct] = computeManualMotionCorrection(i
 		else
 			switchInputImagesBack = 0;
 		end
+
+		% ========================
+		% Check for sparse inputs
+		if issparse(inputImages)
+			disp('Converting from sparse to single.')
+			inputImages = single(full(inputImages));
+		end
+		% ========================
 
 		% Get register frame
 		inputRegisterImage = inputImages(:,:,options.refFrame);
@@ -266,7 +280,11 @@ function [outputStructTmp, imgStruct] = subfxnRegisterImage(inputImages,inputReg
 	end
 	inputRegisterImageOutlinesOriginal = inputRegisterImageOutlines;
 
-	[figHandle, figNo] = openFigure(options.translationFigNo, '');
+	[figHandle, ~] = openFigure(options.translationFigNo, '');
+
+	% Set the default renderer
+	set(figHandle,'Renderer',options.renderer);
+
 	colormap(ciapkg.api.customColormap());
 	% Force current character to be a new figure.
 	set(gcf,'currentch','0');
@@ -312,7 +330,7 @@ function [outputStructTmp, imgStruct] = subfxnRegisterImage(inputImages,inputReg
 	disp('Setup #3');
 	disp(toc);tic
 	
-	imgTitleFxn = @(imgNo,imgN,gammaCorrection,gammaCorrectionRef,translationVector,rotationVector,translationAmt) sprintf('Image %d/%d\nup/down/left/right arrows for translation | A/S = rotate +1 left/right, Q/W = rotate +90 left/right  | 5/6 = flip x/y | f to finish\n1/2 keys for image gamma down/up | gamma = %0.3f |  gamma(ref) = %0.3f | translation %d %d | rotation %d\npurple = reference image, green = image to manually translate | %d px/click',imgNo,imgN,gammaCorrection,gammaCorrectionRef,translationVector,rotationVector,translationAmt);
+	imgTitleFxn = @(imgNo,imgN,gammaCorrection,gammaCorrectionRef,translationVector,rotationVector,translationAmt) sprintf('Image %d/%d\nup/down/left/right arrows for translation\nA/S = rotate +1 left/right, Q/W = rotate +90 left/right  | 5/6 = flip x/y | f to finish\n1/2 keys for image gamma down/up | gamma = %0.3f |  gamma(ref) = %0.3f | translation %d %d | rotation %d\npurple = reference image, green = image to manually translate | %d px/click',imgNo,imgN,gammaCorrection,gammaCorrectionRef,translationVector,rotationVector,translationAmt);
 	
 	imgTitle = imgTitleFxn(imgNo,imgN,gammaCorrection,gammaCorrectionRef,translationVector,rotationVector,options.translationAmt);
 
@@ -347,7 +365,7 @@ function [outputStructTmp, imgStruct] = subfxnRegisterImage(inputImages,inputReg
 			axis image;
 			% axis equal tight
 			box off;
-			title('Reference')
+			title(['Reference (#' num2str(options.refFrame) ')'])
 			hold on;
 			horzLineMid(rgbImage,'k-');
 			vertLineMid(rgbImage,'k-');
@@ -364,14 +382,17 @@ function [outputStructTmp, imgStruct] = subfxnRegisterImage(inputImages,inputReg
 			axis image;	
 			% axis equal tight
 			box off;
-			title('Test')
+			% title('Test')
+			imgHandle3_title = title(['Test (#' num2str(imgNo) ')']);
 			hold on;
 			horzLineMid(rgbImage,'k-');
 			vertLineMid(rgbImage,'k-');
 
 		imgStruct.imgHandle3 = imgHandle3;
+		imgStruct.imgHandle3_title = imgHandle3_title;
 	else
 		imgHandle3 = imgStruct.imgHandle3;
+		set(imgStruct.imgHandle3_title,'String',['Test (#' num2str(imgNo) ')']);
 	end
 
 	userClickTimer = tic;

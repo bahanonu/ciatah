@@ -10,6 +10,7 @@ function [success] = downloadCnmfGithubRepositories(varargin)
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2021.12.01 [20:09:10] - Update display of information if CVX is not automatically found.
 		% 2022.04.08 [15:37:36] - Download CVX from a custom URL since the main URL sometimes has a long response time, leading to timeouts.
+		% 2022.06.27 [14:30:32] - Update URLs to include a backup URL for cvx since would often timeout.
 
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
@@ -35,9 +36,8 @@ function [success] = downloadCnmfGithubRepositories(varargin)
 		gitRepos = {...
 			'https://github.com/bahanonu/CNMF_E/archive/master.zip';
 			'https://github.com/flatironinstitute/CaImAn-MATLAB/archive/master.zip';
-			'http://tiny.ucsf.edu/YR4gfF';
-			};
-			% 'http://web.cvxr.com/cvx/cvx-rd.zip';
+			'http://tiny.ucsf.edu/YR4gfF'; % 'http://web.cvxr.com/cvx/cvx-rd.zip';
+			};			
 		outputDir = {'cnmfe','cnmf_current','cvx_rd'};
 		gitName = {'CNMF_E-master','CaImAn-MATLAB-master','cvx'};
 		nRepos = length(outputDir);

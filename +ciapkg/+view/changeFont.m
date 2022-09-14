@@ -14,6 +14,7 @@ function [success] = changeFont(FontSize,varargin)
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
         % 2021.11.18 [09:00:28] - Updated so can update font size, name, color more independent of one another.
         % 2022.01.14 [05:53:37] - Updated so doesn't change Axes backgroundcolor when changing font color, only Axes text.
+        % 2022.03.14 [04:06:10] - Also check for matlab.ui.control.UIControl when conducting font color changes and ignore to not cause errors.
 	% TODO
 		% Add support for changing other font aspects, e.g. figure Font family, command window font, etc.
 
@@ -60,7 +61,7 @@ function [success] = changeFont(FontSize,varargin)
                 tmpList = findall(gcf,'-property','FontSize');
                 rmIdx = zeros([1 length(tmpList)]);
                 for i = 1:length(tmpList)
-                    if strcmp(class(tmpList(i)),'matlab.graphics.axis.Axes')==1
+                    if any(strcmp(class(tmpList(i)),{'matlab.graphics.axis.Axes','matlab.ui.control.UIControl'}))
                         rmIdx(i) = 1;
                     end
                 end

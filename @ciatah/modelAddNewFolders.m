@@ -11,6 +11,8 @@ function obj = modelAddNewFolders(obj,varargin)
 		% 2021.02.02 [11:27:21] - 'Add CIAtah example folders.' now adds the absolute path to avoid path errors if user changes Matlab current directory.
 		% 2021.06.01 [??15:43:11] - Add 'next' button to initial menu, in part to add MATLAB Online support.
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2022.04.10 [09:23:32] - Add additional check for when user adds blank folder paths (NOT empty folders) and remove them.
+		% 2022.07.05 [19:27:24] - Empty folder check update.
 
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
@@ -172,6 +174,16 @@ function obj = modelAddNewFolders(obj,varargin)
 			newFolderListCell = options.folderCellArray;
 			nNewFolders = length(newFolderListCell);
 		end
+
+		newFolderListCell
+		disp('Checking and removing blank folders')
+		emptyFolderIdx = cellfun(@isempty,newFolderListCell,'UniformOutput',false);
+		emptyFolderIdx = cell2mat(emptyFolderIdx);
+		if any(emptyFolderIdx)
+			newFolderListCell = newFolderListCell(~emptyFolderIdx);
+		end
+		newFolderListCell
+		nNewFolders = length(newFolderListCell);
 
 		fileIdxArray = (nExistingFolders+1):(nExistingFolders+nNewFolders);
 		% obj.foldersToAnalyze = fileIdxArray;

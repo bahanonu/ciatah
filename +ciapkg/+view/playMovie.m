@@ -1,12 +1,17 @@
 function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
+	% [exitSignal, ostruct] = playMovie(inputMovie, varargin)
+	% 
 	% Plays a movie that is either a 3D xyt matrix or path to file. Additional inputs to view multiple movies or sync'd signal data and can also save the resulting figure as a movie.
+	% 
 	% Biafra Ahanonu
 	% started 2013.11.09 [10:39:50]
 	%
 	% inputs
-		% inputMovie - either grayscale or color movie matrix:
-			% grayscale: [x y t] matrix of x,y height/width and t frames
-			% RGB: [x y C t] matrix of x,y height/width, t frames, and C color channel (3 as RGB)
+	% 	inputMovie - either:
+	% 		grayscale: [x y t] matrix of x,y height/width and t frames
+	% 		RGB: [x y C t] matrix of x,y height/width, t frames, and C color channel (3 as RGB)
+	% 		Path: full file path to a movie containing a [x y t] or [x y C t] matrix.
+	% 		Path (MAT-file): full path to a MAT-file with a variable containing a [x y t] or [x y C t] matrix.
 	% options
 		% fps -
 		% extraMovie - extra movie to play, [X Y Z] matrix of X,Y height/width and Z frames
@@ -35,7 +40,12 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		% 2021.07.03 [08:16:32] - Added feature to input line overlays on input movie (e.g. to overlay cell extraction outputs).
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2021.10.07 [15:05:52] - Update to avoid caxis with rgb movies, making them hard to view.
-        % 2022.02.24 [10:24:28] - AVI now read(...,'native') is faster. Also add `primaryTrackingPointNback` option to allow a trailing number of points from prior frames to appear.
+		% 2022.02.24 [10:24:28] - AVI now read(...,'native') is faster. Also add `primaryTrackingPointNback` option to allow a trailing number of points from prior frames to appear.
+		% 2022.03.14 [02:13:44] - Added support for read from disk (minimal RAM use) matfile reading of a MAT-file with data in a specified variable name.
+		% 2022.03.14 [04:21:16] - Default background and theme is now black.
+		% 2022.03.15 [01:33:56] - By default use 'painters' renderer as that can produce smoother rendering than opengl.
+		% 2022.07.26 [09:43:59] - Sub-sampling now has option to downsample instead of just taking every X pixel, slower but better quality.
+		% 2022.09.14 [08:55:37] - Add renderer option to allow users to choose painters or opengl.
 
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
@@ -43,6 +53,8 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 	% options
 	% Int: figure number to open
 	options.figNo = 42;
+	% Binary: 1 = do not close figure before loading GUI. 0 = close figure.
+	options.keepFig = 1;
 	% Int: set the frame rate to display the movie.
 	options.fps = 20;
 	% Int: set the min/max frames per second to display the movie.
@@ -51,6 +63,8 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 	options.fpsMin = 1/10;
 	% Int: By what amount to sub-sample the frames in spatial dimensions. 1 = no sub-sampling. >1 = sub-sampling enabled.
 	options.subSampleMovie = 1;
+	% Str: Type of sub-sampling to apply when user request subSampleMovie>1. 'Downsample' (imresize to downsample movie bi-linearly) or 'subsample' (take every X pixels).
+	options.subSampleMovieType = 'downsample';
 	% Matrix: [X Y Z], additional movie to show. X,Y height/width and Z frames.
 	options.extraMovie = [];
 	% 2D matrix: [signals frames] signals related to inputMovie.
@@ -118,6 +132,16 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 	options.contrastFixMultiplier = 1e2;
 	% Int: Multiplier to set contrast to a range usable by GUI elements.
 	options.contrastFixMultiplierGUI = 1e5;
+	% Str: name of variable in MAT-file to use for loading data.
+	options.matfileVarname = '';
+	% Vector: [R G B] vector for color of background for slider.
+	options.sliderBkgdColor = [1 1 1]*0.3;
+	% Vector: [R G B] vector for color of text in the menu.
+	options.menuFontColor = [1 1 1];
+	% Vector: [R G B] vector for color of menu background.
+	options.menuBkgdColor = [0 0 0]+0.2;
+	% Str: 'painters' or 'opengl'
+	options.renderer = 'opengl';
 	% get options
 	options = getOptions(options,varargin);
 	% options
@@ -137,35 +161,52 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 	% Obtain movie information and connect to file if user gives a path to a movie.
 	if ischar(inputMovie)==1
 		inputMovieIsChar = 1;
-		% inputMovieName = inputMovie;
-		inputMovieDims = loadMovieList(inputMovie,'inputDatasetName',options.inputDatasetName,'displayInfo',1,'getMovieDims',1,'displayWarnings',0);
-		inputMovieDims = [inputMovieDims.one inputMovieDims.two inputMovieDims.three];
-		options.nFrames = inputMovieDims(3);
-		nFramesOriginal = options.nFrames;
-
-		readMovieChunks = 1;
 
 		[movieType, supported, movieTypeSpecific] = ciapkg.io.getMovieFileType(inputMovie);
 		if ~isempty(options.extraMovie)
 			[movieTypeExtra, supported, movieTypeSpecificExtra] = ciapkg.io.getMovieFileType(options.extraMovie);
 		end
 
-		% If NWB, change dataset name to NWB default
-		if strcmp(movieTypeSpecific,'nwb')
-			options.inputDatasetName = options.defaultNwbDatasetName{1};
-		end
-
 		if supported==0
 			disp('Unsupported movie type provided.')
 			return;
+		else
+			disp(['Supported movie type provided: ' movieType])
 		end
 
-		% Setup connection to file to reduce I/O for file types that need it.
-		[~,movieFileID,inputMovieDims] = ciapkg.io.readFrame(inputMovie,1,'inputDatasetName',options.inputDatasetName);
+		readMovieChunks = 1;
 
-		if ~isempty(options.extraMovie)
-			[~,movieFileIDExtra,inputMovieDimsExtra] = ciapkg.io.readFrame(options.extraMovie,1,'inputDatasetName',options.inputDatasetName);
+		if strcmp(movieType,'mat')==1
+			disp(['Opening connection to MAT-file: ' inputMovie])
+			matObj = matfile(inputMovie);
+
+			% If user has not input a variable name, show a list
+			if isempty(options.matfileVarname)
+				matfileVarList = who('-file', inputMovie);
+				[userMatIdx,~] = listdlg('PromptString','Select variable in MAT-file to play.','ListString',matfileVarList);
+				options.matfileVarname = matfileVarList{userMatIdx};
+			end
+			inputMovieDims = size(matObj,options.matfileVarname);
+		else
+			% inputMovieName = inputMovie;
+			inputMovieDims = loadMovieList(inputMovie,'inputDatasetName',options.inputDatasetName,'displayInfo',1,'getMovieDims',1,'displayWarnings',0);
+			inputMovieDims = [inputMovieDims.one inputMovieDims.two inputMovieDims.three];
+			
+			% If NWB, change dataset name to NWB default
+			if strcmp(movieTypeSpecific,'nwb')
+				options.inputDatasetName = options.defaultNwbDatasetName{1};
+			end
+
+			% Setup connection to file to reduce I/O for file types that need it.
+			[~,movieFileID,~] = ciapkg.io.readFrame(inputMovie,1,'inputDatasetName',options.inputDatasetName);
+
+			if ~isempty(options.extraMovie)
+				[~,movieFileIDExtra,inputMovieDimsExtra] = ciapkg.io.readFrame(options.extraMovie,1,'inputDatasetName',options.inputDatasetName);
+			end
 		end
+		options.nFrames = inputMovieDims(3);
+		nFramesOriginal = options.nFrames;
+
 	else
 		inputMovieIsChar = 0;
 		inputMovieDims = size(inputMovie);
@@ -218,12 +259,18 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 	% pass to calling functions, in case you want to exit an upper-level loop
 	exitSignal = 0;
 
-    try
-        close(options.figNo)
-    catch
-    end
+	try
+		if options.keepFig==0
+			close(options.figNo)
+		end
+	catch
+	end
 	fig1 = figure(options.figNo);
 	% fig = figure(42,'KeyPressFcn',@detectKeyPress);
+
+	% Set the default renderer
+	% set(fig1,'Renderer','painters'); % 'opengl'
+	set(fig1,'Renderer',options.renderer); % 'opengl'
 
 	clf
 	set(findobj(gcf,'type','axes'),'hittest','off')
@@ -287,9 +334,13 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		% axHandle = fig1;
 	end
 
-	if ischar(inputMovie)==1
+	if inputMovieIsChar==1
+		if strcmp(movieType,'mat')==1
+			[tmpFrame] = matObj.(options.matfileVarname)(:,:,1);
+		else
+			[tmpFrame] = ciapkg.io.readFrame(inputMovie,1,'movieFileID',movieFileID,'inputMovieDims',inputMovieDims,'inputDatasetName',options.inputDatasetName);
+		end
 		% tmpFrame = subfxn_readMovieDisk(inputMovie,1,movieType);
-		[tmpFrame] = ciapkg.io.readFrame(inputMovie,1,'movieFileID',movieFileID,'inputMovieDims',inputMovieDims,'inputDatasetName',options.inputDatasetName);
 		% tmpFrame = loadMovieList(inputMovie,'inputDatasetName',options.inputDatasetName,'displayInfo',0,'displayDiagnosticInfo',0,'displayWarnings',0,'frameList',1);
 	else
 		if length(size(inputMovie))==4
@@ -305,7 +356,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 
 	imagesc(tmpFrame)
 	axHandle = gca;
-    mainTitleHandle = title(options.extraTitleText);
+	% mainTitleHandle = title(options.extraTitleText);
 	% axHandle.Toolbar.Visible = 'off';
 	box off;
 	if ~isempty(options.extraLinePlot)
@@ -329,7 +380,8 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		sliderStepF = [1/(nFrames*0.1) 0.2];
 	end
 	frameSlider = uicontrol('style','slider','Units', 'normalized','position',[15 1 80 2]/100,...
-		'min',1,'max',nFrames,'Value',1,'SliderStep',sliderStepF,'callback',@frameCallback,'Enable','inactive','ButtonDownFcn',@pauseLoopCallback);
+		'min',1,'max',nFrames,'Value',1,'SliderStep',sliderStepF,'callback',@frameCallback,...
+		'BackgroundColor',options.sliderBkgdColor,'Enable','inactive','ButtonDownFcn',@pauseLoopCallback);
 	% set(gcf,'WindowButtonDownFcn',@pauseLoopCallback);
 	% addlistener(frameSlider,'Value','PostSet',@pauseLoopCallback);
 	% waitfor(source,'Value')
@@ -340,6 +392,12 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 	% TITLE AND COMMANDS
 	% close(fig1);fig1 = figure(42);
 	[supTitleStr, suptitleHandle, conMenu] = subfxn_createShortcutInfo();
+	if ~isempty(options.extraTitleText)
+		% mainTitleHandle = title([supTitleStr 10 options.extraTitleText]);
+		mainTitleHandle = title([supTitleStr]);
+		% currTmpTitle = get(suptitleHandle,'String');
+		% set(suptitleHandle,'String',[currTmpTitle 10 options.extraTitleText]);
+	end
 
 	% ==========================================
 	% SETUP FIGURE STATES
@@ -349,7 +407,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 	% keydown = 0;
 	% set(fig1,'KeyPressFcn', '1;');
 	set(fig1,'KeyPressFcn', @detectKeyPress);
-    set(gcf, 'WindowScrollWheelFcn', @mouseWheelChange);
+	set(gcf, 'WindowScrollWheelFcn', @mouseWheelChange);
 	set(gcf,'currentch','3');
 	keyIn = get(gcf,'CurrentCharacter');
 	set(gcf,'SelectionType','normal');
@@ -395,7 +453,8 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		% options.extraLinePlotLegend = options.labelLegend;
 	end
 	% use for references to keep contrast stable across frames
-	firstFrame = squeeze(inputMovie(:,:,1));
+	% firstFrame = squeeze(inputMovie(:,:,1));
+
 	maxAdjFactor = 1;
 	if ~isempty(options.movieMinMax)
 		minMovie(1) = double(options.movieMinMax(1));
@@ -409,14 +468,18 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 				extraMovieFrame = inputMovie(find(options.extraMovie));
 			end
 		else
-			if ischar(inputMovie)==1
+			if inputMovieIsChar==1
 				% tmpFrame = loadMovieList(inputMovie,'inputDatasetName',options.inputDatasetName,'displayInfo',0,'displayDiagnosticInfo',0,'displayWarnings',0,'frameList',1:100);
 				% inputMovieFrame = subfxn_readMovieDisk(inputMovie,1,movieType);
 				% if ~isempty(options.extraMovie)
 				% 	extraMovieFrame = subfxn_readMovieDisk(options.extraMovie,1,movieType,1);
 				% end
 
-				[inputMovieFrame] = ciapkg.io.readFrame(inputMovie,1,'movieFileID',movieFileID,'inputMovieDims',inputMovieDims,'inputDatasetName',options.inputDatasetName);
+				if strcmp(movieType,'mat')==1
+					[inputMovieFrame] = matObj.(options.matfileVarname)(:,:,1);
+				else
+					[inputMovieFrame] = ciapkg.io.readFrame(inputMovie,1,'movieFileID',movieFileID,'inputMovieDims',inputMovieDims,'inputDatasetName',options.inputDatasetName);
+				end
 				if ~isempty(options.extraMovie)
 					extraMovieFrame = ciapkg.io.readFrame(options.extraMovie,1,'movieFileID',movieFileIDExtra,'inputMovieDims',inputMovieDimsExtra,'inputDatasetName',options.inputDatasetName);
 				end
@@ -455,9 +518,11 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 	% guiMinMax
 	% pause
 	contrastSliderLow = uicontrol('style','slider','Units', 'normalized','position',[21 3 37 2]/100,...
-		'min',guiMinMax(1),'max',guiMinMax(2),'Value',guiMinMax(1),'SliderStep',sliderStepC,'callback',@contrastCallback,'Enable','on','ButtonDownFcn',@contrastButtonActivateCallback);
+		'min',guiMinMax(1),'max',guiMinMax(2),'Value',guiMinMax(1),'SliderStep',sliderStepC,...
+		'BackgroundColor',options.sliderBkgdColor,'callback',@contrastCallback,'Enable','on','ButtonDownFcn',@contrastButtonActivateCallback);
 	contrastSliderHigh = uicontrol('style','slider','Units', 'normalized','position',[58 3 37 2]/100,...
-		'min',guiMinMax(1),'max',guiMinMax(2),'Value',guiMinMax(2),'SliderStep',sliderStepC,'callback',@contrastCallback,'Enable','on','ButtonDownFcn',@contrastButtonActivateCallback);
+		'min',guiMinMax(1),'max',guiMinMax(2),'Value',guiMinMax(2),'SliderStep',sliderStepC,...
+		'BackgroundColor',options.sliderBkgdColor,'callback',@contrastCallback,'Enable','on','ButtonDownFcn',@contrastButtonActivateCallback);
 	contrastFrameText = uicontrol('style','edit','Units', 'normalized','position',[1 3 20 2]/100,'FontSize',9,'string',sprintf('Contrast: %0.3f, %0.3f',options.movieMinMax(1), options.movieMinMax(2)));
 
 	% =================================================
@@ -499,6 +564,10 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 	colorbarSwitchTwo = 1;
 	pauseLoop = 0;
 
+	set(gcf,'color',[0 0 0]);
+	ciapkg.view.changeFont(9,'fontColor','w')
+	set(gca,'color',[0 0 0]);
+
 	try
 		while loopSignal==1
 			% [figHandle figNo] = openFigure(42, '');
@@ -507,13 +576,13 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 			% set(frameText,'string',['Frame ' num2str(frame) '/' num2str(nFrames)])
 
 			% =====================
-			if options.runImageJ==1&~ischar(inputMovie)
+			if options.runImageJ==1&&~ischar(inputMovie)
 				subfxn_imageJ(inputMovie);
 				% Run once else loops without exit
 				options.runImageJ = 0;
 			end
 			if ~isempty(options.extraMovie)
-				subplotNum = [1];
+				subplotNum = 1;
 			end
 			if ~isempty(options.extraLinePlot)
 				subplotNum = [1 3];
@@ -521,9 +590,12 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 
 			% Display an image from the movie
 			if readMovieChunks==1
-				%
-				% thisFrame = subfxn_readMovieDisk(inputMovie,frame,movieType);
-				[thisFrame] = ciapkg.io.readFrame(inputMovie,frame,'movieFileID',movieFileID,'inputMovieDims',inputMovieDims,'inputDatasetName',options.inputDatasetName);
+				if strcmp(movieType,'mat')==1
+					[thisFrame] = matObj.(options.matfileVarname)(:,:,frame);
+				else
+					% thisFrame = subfxn_readMovieDisk(inputMovie,frame,movieType);
+					[thisFrame] = ciapkg.io.readFrame(inputMovie,frame,'movieFileID',movieFileID,'inputMovieDims',inputMovieDims,'inputDatasetName',options.inputDatasetName);
+				end
 			else
 				if length(size(inputMovie))==4
 					thisFrame = squeeze(inputMovie(:,:,:,frame));	
@@ -600,7 +672,19 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 			montageHandle = findobj(axHandle,'Type','image');
 			if options.subSampleMovie>1
 				ssm = options.subSampleMovie;
-				set(montageHandle,'Cdata',thisFrame(1:ssm:end,1:ssm:end),'AlphaData',imAlpha(1:ssm:end,1:ssm:end));
+
+				% Spatially downsample movie, slower but improved quality
+				thisFrame2 = thisFrame;
+				thisFrame2(isnan(thisFrame2)) = 0;
+				thisFrame2 = imresize(thisFrame,1/ssm,'bilinear');
+				% imAlpha2 = imresize(imAlpha,ssm,'bilinear');
+				switch options.subSampleMovieType
+					case 'downsample'
+						set(montageHandle,'Cdata',thisFrame2,'AlphaData',imAlpha(1:ssm:end,1:ssm:end));
+					case 'subsample'
+						set(montageHandle,'Cdata',thisFrame(1:ssm:end,1:ssm:end),'AlphaData',imAlpha(1:ssm:end,1:ssm:end));
+					otherwise
+				end
 			else
 				if length(size(thisFrame))==3
 					% set(montageHandle,'Cdata',squeeze(thisFrame(:,:,1)),'AlphaData',imAlpha);
@@ -859,11 +943,11 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 			% 	if strcmp(thisKey,'f'); break; end;
 			% 	if strcmp(thisKey,'p'); pause; thisKey=[]; end;
 			% end
-            % [frame pauseLoop]
+			% [frame pauseLoop]
 			if pauseLoop==0
 				frame = frame+round(dirChange);
-                subfxn_updateSliderInfo();
-            elseif pauseLoop==1
+				subfxn_updateSliderInfo();
+			elseif pauseLoop==1
 			end
 			if frame>nFrames
 				if options.recordMovie~=0
@@ -903,14 +987,14 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		keyIn = get(H,'CurrentCharacter');
 		% drawnow
 		% keyIn
-        % if double(keyIn)==112&pauseLoop==1
-            % pauseLoop = 0;
-        % end
+		% if double(keyIn)==112&pauseLoop==1
+			% pauseLoop = 0;
+		% end
 	end
 	function pauseLoopCallback(source,eventdata)
 		% disp([num2str(frame) ' - pause loop'])
-        % keyIn = get(gcf,'CurrentCharacter');
-        % disp(keyIn)
+		% keyIn = get(gcf,'CurrentCharacter');
+		% disp(keyIn)
 		set(frameSlider,'Enable','on')
 		addlistener(frameSlider,'Value','PostSet',@frameCallbackChange);
 		% pauseLoop = 1;
@@ -923,8 +1007,8 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 	end
 	function contrastButtonActivateCallback(source,eventdata)
 		% disp([num2str(frame) ' - pause loop'])
-        % keyIn = get(gcf,'CurrentCharacter');
-        % disp(keyIn)
+		% keyIn = get(gcf,'CurrentCharacter');
+		% disp(keyIn)
 
 
 		set(contrastSliderLow,'Enable','on')
@@ -965,9 +1049,9 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		addlistener(contrastSliderLow,'Value','PostSet',@blankCallback);
 		addlistener(contrastSliderHigh,'Value','PostSet',@blankCallback);
 
-        % set(contrastSliderLow,'Enable','off')
-        % set(contrastSliderHigh,'Enable','off')
-        drawnow update;
+		% set(contrastSliderLow,'Enable','off')
+		% set(contrastSliderHigh,'Enable','off')
+		drawnow update;
 		% set(contrastSliderLow,'Enable','inactive')
 		% set(contrastSliderHigh,'Enable','inactive')
 
@@ -978,19 +1062,19 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 	function frameCallbackChange(source,eventdata)
 		frame = max(1,round(get(frameSlider,'value')));
 		set(frameText,'visible','on','string',['Frame ' num2str(frame) '/' num2str(nFrames)])
-    end
-    function mouseWheelChange(hObject, callbackdata, handles)
-        if callbackdata.VerticalScrollCount > 0
-            frame = frame + 1;
-            dirChange = 1;
-        elseif callbackdata.VerticalScrollCount < 0
-            frame = frame - 1;
-            dirChange = -1;
-        end
-        subfxn_updateSliderInfo();
-    end
+	end
+	function mouseWheelChange(hObject, callbackdata, handles)
+		if callbackdata.VerticalScrollCount > 0
+			frame = frame + 1;
+			dirChange = 1;
+		elseif callbackdata.VerticalScrollCount < 0
+			frame = frame - 1;
+			dirChange = -1;
+		end
+		subfxn_updateSliderInfo();
+	end
 	function frameCallback(source,eventdata)
-        originalPauseState = pauseLoop;
+		originalPauseState = pauseLoop;
 		pauseLoop = 1;
 		frame = max(1,round(get(frameSlider,'value')));
 		% disp(num2str(frame))
@@ -999,26 +1083,26 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		set(frameText,'visible','on','string',['Frame ' num2str(frame) '/' num2str(nFrames)])
 		% pauseLoop
 		addlistener(frameSlider,'Value','PostSet',@blankCallback);
-        set(frameSlider,'Enable','off')
-        drawnow update;
+		set(frameSlider,'Enable','off')
+		drawnow update;
 		set(frameSlider,'Enable','inactive')
-        pauseLoop = originalPauseState;
+		pauseLoop = originalPauseState;
 
 		% breakLoop = 1;
 
 		% Update the frame line indicator
 		% set(mainFig,'CurrentAxes',signalAxes)
 			% frameLineHandle.XData = [frameNo frameNo];
-    end
-    function subfxn_updateSliderInfo()
-    	if frame<=0
-    		frame = nFrames;
-    	elseif frame>nFrames
-    		frame = 1;
-    	end
-        set(frameSlider,'Value',frame)
+	end
+	function subfxn_updateSliderInfo()
+		if frame<=0
+			frame = nFrames;
+		elseif frame>nFrames
+			frame = 1;
+		end
+		set(frameSlider,'Value',frame)
 		set(frameText,'string',['Frame ' num2str(frame) '/' num2str(nFrames)])
-    end
+	end
 	function thisFrame = subfxn_readMovieDisk(inputMoviePath,frameNo,movieTypeT,extraMovieSwitch)
 		% Fast reading of frame from disk, bypass loadMovieList if possible due to overhead.
 		if nargin==4
@@ -1064,26 +1148,26 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		end
 	end
 	function subfxn_respondUserInput(keyInTmp)
-        if nargin>0
-            keyIn = keyInTmp;
-        else
-            keyIn = get(gcf,'CurrentCharacter');
-            if isempty(double(keyIn))
-                keyIn = '/';
-            elseif double(keyIn)~=51
-                figure(fig1)
-                set(gcf,'CurrentCharacter','3');
-                pause(1/options.fps);
-                drawnow
-            else
-                % double(keyIn)
-            end
-        end
+		if nargin>0
+			keyIn = keyInTmp;
+		else
+			keyIn = get(gcf,'CurrentCharacter');
+			if isempty(double(keyIn))
+				keyIn = '/';
+			elseif double(keyIn)~=51
+				figure(fig1)
+				set(gcf,'CurrentCharacter','3');
+				pause(1/options.fps);
+				drawnow
+			else
+				% double(keyIn)
+			end
+		end
 
-        % inputdlgcol options
-        AddOpts.Resize='on';
-        AddOpts.WindowStyle='normal';
-        AddOpts.Interpreter='tex';
+		% inputdlgcol options
+		AddOpts.Resize='on';
+		AddOpts.WindowStyle='normal';
+		AddOpts.Interpreter='tex';
 
 		mousePressState = get(gcf,'SelectionType');
 		switch mousePressState
@@ -1104,7 +1188,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		end
 
 		% Ignore these commands if input movie is character
-		if inputMovieIsChar&any(double(keyIn)==[105 100 97 110 99])
+		if inputMovieIsChar&&any(double(keyIn)==[105 100 97 110 99])
 			disp([keyIn ' not valid for movies input as path.'])
 			return;
 		end
@@ -1165,12 +1249,12 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 				frame = frame+dirChange*round(options.fps);
 			case 112 %'p' %pause
 				% dirChange = 0;
-	            if pauseLoop==1
-	                pauseLoop = 0;
-	            else
-	                pauseLoop = 1;
-	            end
-	            %ginput(1);
+				if pauseLoop==1
+					pauseLoop = 0;
+				else
+					pauseLoop = 1;
+				end
+				%ginput(1);
 				% while waitforbuttonpress~=0
 				% end
 			case 31 % down arrow
@@ -1202,7 +1286,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 			case 106 %'j' %change contrast
 
 				[usrIdxChoice, ok] = getUserMovieChoice({'Adjust 1st movie contrast','Adjust 2nd movie contrast','optimal dF/F','Copy contrast from 1st->2nd','Copy contrast from 2nd->1st'});
-                if ok==0; return; end
+				if ok==0; return; end
 
 				if usrIdxChoice==4
 					maxMovie(2) = maxMovie(1);
@@ -1215,7 +1299,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 					minMovie(1) = -0.01;
 				else
 					[sel, ok] = listdlg('ListString',{'Adjustable contrast GUI','Contrast input dialog'},'ListSize',[300 300]);
-                    if ok==0; return; end
+					if ok==0; return; end
 					fixMultiplier = options.contrastFixMultiplierGUI;
 
 					if usrIdxChoice==1
@@ -1295,9 +1379,9 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 			case 108 %'l' %label frame
 				if ~isempty(options.labelLegend)
 					[labelID, ok] = listdlg('ListString',options.labelLegend,'PromptString','toggle label(s), can select multiple to switch','ListSize' ,[400 350]);
-                    if ok==0; return; end
+					if ok==0; return; end
 					[impulseState, ok] = listdlg('ListString',{'continuous','single frame'},'PromptString','continuous state or single frame?','ListSize' ,[400 350]);
-                    if ok==0; return; end
+					if ok==0; return; end
 					% usrIdxChoice = options.labelLegend{sel};
 					% labelID = inputdlg('enter label');labelID = labelID{1};
 					% labelID = num2str(labelID{1});
@@ -1319,18 +1403,18 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 				colormap(options.colormapColor);
 			case 100 %'d' %dfof
 				[usrIdxChoice, ok] = getUserMovieChoice({'1st movie','2nd movie'});
-                if ok==0; return; end
+				if ok==0; return; end
 				% make sure selection chosen, else return
 				if ok~=0
 					switch usrIdxChoice
 						case 1
 							inputMovie = dfofMovie(inputMovie);
-							maxMovie(1) = nanmax(inputMovie(:));
-							minMovie(1) = nanmin(inputMovie(:));
+							maxMovie(1) = max(inputMovie(:),'omitnan');
+							minMovie(1) = min(inputMovie(:),'omitnan');
 						case 2
 							options.extraMovie = dfofMovie(options.extraMovie);
-							maxMovie(2) = nanmax(options.extraMovie(:));
-							minMovie(2) = nanmin(options.extraMovie(:));
+							maxMovie(2) = max(options.extraMovie(:),'omitnan');
+							minMovie(2) = min(options.extraMovie(:),'omitnan');
 						otherwise
 							% nothing
 					end
@@ -1345,7 +1429,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 				nFrames = size(inputMovie,3);
 			case 110 %'n' %normalize
 				[usrIdxChoice , ok] = getUserMovieChoice({'1st movie','2nd movie'});
-                if ok==0; return; end
+				if ok==0; return; end
 				[usrExtraChoice, ok] = getUserMovieChoice({'keep original','duplicate'});
 				% make sure selection chosen, else return
 				if ok~=0
@@ -1359,8 +1443,8 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 						case 1
 							if usrExtraChoice==2
 								options.extraMovie = normalizeMovie(inputMovie,'options',ioptions);
-								maxMovie(2) = nanmax(inputMovie(:));
-								minMovie(2) = nanmin(inputMovie(:));
+								maxMovie(2) = max(inputMovie(:),'omitnan');
+								minMovie(2) = min(inputMovie(:),'omitnan');
 							else
 								inputMovie = normalizeMovie(inputMovie,'options',ioptions);
 							end
@@ -1371,11 +1455,11 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 					end
 				end
 			case 99 %'c' %crop
-				[movieChoice ok] = getUserMovieChoice({'1st movie','2nd movie'});
+				[movieChoice, ok] = getUserMovieChoice({'1st movie','2nd movie'});
 				[cropChoice] = getUserMovieChoice({'NaN border crop','full crop'});
 
 				dirChange = 1;
-				[coords] = getCropCoords(thisFrame)
+				[coords] = getCropCoords(thisFrame);
 				sp = coords;
 				switch movieChoice
 					case 1
@@ -1420,11 +1504,11 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 				end
 				switch movieChoice
 					case 1
-						maxMovie(1) = nanmax(inputMovie(:));
-						minMovie(1) = nanmin(inputMovie(:));
+						maxMovie(1) = max(inputMovie(:),'omitnan');
+						minMovie(1) = min(inputMovie(:),'omitnan');
 					case 2
-						maxMovie(2) = nanmax(options.extraMovie(:));
-						minMovie(2) = nanmin(options.extraMovie(:));
+						maxMovie(2) = max(options.extraMovie(:),'omitnan');
+						minMovie(2) = min(options.extraMovie(:),'omitnan');
 					otherwise
 				end
 				figure(42);
@@ -1433,7 +1517,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 				frameChange = inputdlgcol('goto | Enter frame # to skip to:','',1,{''},AddOpts,2);
 				if ~isempty(frameChange)
 					frameChange = str2num(frameChange{1});
-					if frameChange>nFrames|frameChange<1
+					if frameChange>nFrames||frameChange<1
 						% do nothing, invalid command
 					else
 						frame = frameChange;
@@ -1463,16 +1547,17 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 	function [supTitleStr, suptitleHandle, conMenu] = subfxn_createShortcutInfo()
 		titleSep = '\hspace{1em}';
 		sepVar = ['}' 10 '\texttt{'];
-		if isempty(options.extraTitleText)|1
+		% if isempty(options.extraTitleText)||1
+		if isempty(options.extraTitleText)
 			options.extraTitleText = '';
 		else
-		    options.extraTitleText = strrep(options.extraTitleText,'\','\char`\\');
-		    options.extraTitleText = strrep(options.extraTitleText,'#','\char`\#');
+			options.extraTitleText = strrep(options.extraTitleText,'\','\char`\\');
+			options.extraTitleText = strrep(options.extraTitleText,'#','\char`\#');
 			options.extraTitleText = [10 '\texttt{' options.extraTitleText '}'];
 		end
 
 		% S.fh = figure;
-		shortcutMenuHandle = uicontrol('style','pushbutton','Units','normalized','position',[0 97 50 3]/100,'FontSize',9,'string','Shortcuts menu (or right-click GUI)','callback',@subfxn_displayShortcuts);
+		shortcutMenuHandle = uicontrol('style','pushbutton','Units','normalized','position',[0 97 20 3]/100,'FontSize',9,'string','Shortcuts menu (or right-click GUI)','BackgroundColor',options.menuBkgdColor,'ForegroundColor',options.menuFontColor,'HorizontalAlignment','left','callback',@subfxn_displayShortcuts);
 
 		sepMenuLins = {'','',''};
 		menuListInfo = {...
@@ -1507,9 +1592,9 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		mitemAll = {};
 		for mNo = 1:length(menuListInfo)
 			if isempty([menuListInfo{mNo}{1}])
-		    	labelStr = [''];
+				labelStr = [''];
 			else
-		    	labelStr = ['<HTML><PRE>' menuListInfo{mNo}{1} ':   ' menuListInfo{mNo}{3} '</PRE>'];
+				labelStr = ['<HTML><PRE>' menuListInfo{mNo}{1} ':   ' menuListInfo{mNo}{3} '</PRE>'];
 			end
 			mitemAll{mNo} = uimenu(conMenu,'label',labelStr,'MenuSelectedFcn',@(src,evnt) subfxn_respondUserInput(menuListInfo{mNo}{2}));
 		end
@@ -1555,9 +1640,12 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		end
 		disp(strrep(supTitleStr,titleSep, 10))
 		% suptitleHandle = ciapkg.overloaded.suptitle(strrep(strrep('/','\',supTitleStr),'_','\_'));
-		suptitleHandle = ciapkg.overloaded.suptitle(supTitleStr,'titleypos',0.93);
-		set(suptitleHandle,'FontName',get(0,'DefaultAxesFontName'));
-		set(suptitleHandle,'FontSize',12,'FontWeight','normal')
+
+		suptitleHandle = [];
+
+		% suptitleHandle = ciapkg.overloaded.suptitle(supTitleStr,'titleypos',0.93);
+		% set(suptitleHandle,'FontName',get(0,'DefaultAxesFontName'));
+		% set(suptitleHandle,'FontSize',12,'FontWeight','normal')
 		hold off;
 		% imcontrast
 	end

@@ -1,16 +1,21 @@
 function [success] = saveMatrixToFile(inputMatrix,savePath,varargin)
-	% Save 3D matrix to arbitrary file type (HDF5, TIF, AVI for now).
+	% [success] = saveMatrixToFile(inputMatrix,savePath,varargin)
+	% 
+	% Save 3D matrix to user-specified file type. Currently supports HDF5, TIF, NWB, and AVI.
+	% 
 	% Biafra Ahanonu
 	% started: 2016.01.12 [11:09:53]
-	% inputs
-		% inputMatrix - [x y frame] movie matrix
-		% savePath - character string of path to file with extension included,
-	% outputs
-		%
+	% 
+	% Inputs
+	% 	inputMatrix - 3D matrix: [x y t] movie matrix, where t = frames normally.
+	% 	savePath - Str: character string of path to save file with extension included.
+	% Outputs
+	%	success - Binary: 1 = saved successfully, 0 = error during save.
 
 	% changelog
 		% 2021.04.24 [16:00:01] - updated TIFF saving to add support for export of multi-channel color timeseries TIFF stack if in format [x y C t] where x,y = width/height, C = RGB channels, t = frames
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+        % 2022.03.06 [12:27:29] - Use Fast_Tiff_Write to write out TIF files instead of saveastiff by default. Give option with options.tifWriter.
 	% TODO
 		% Add checking of data size so tiff can be automatically switched
 
@@ -37,6 +42,8 @@ function [success] = saveMatrixToFile(inputMatrix,savePath,varargin)
 	options.deflateLevel = 1;
 	% Str: description of imaging plane
 	options.descriptionImagingPlane = 'NA';
+	% Str: 'saveastiff' (normally slower) or 'Fast_Tiff_Write'.
+	options.tifWriter = 'Fast_Tiff_Write';
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -83,14 +90,31 @@ function [success] = saveMatrixToFile(inputMatrix,savePath,varargin)
 				end
 				close(writerObj);
 			case 'tiff'
-				tiffOptions.comp = 'no';
+				% tiffOptions.comp = 'no';
+                tiffOptions.compress = 'lzw';
 				tiffOptions.overwrite = true;
                 if length(size(inputMatrix))==4
                     tiffOptions.color = true;
                     disp('Saving TIFF as color timeseries stack.');
                 end
 				fprintf('Saving to: %s\n',savePath);
-				saveastiff(inputMatrix, savePath, tiffOptions);
+                
+                switch options.tifWriter
+                    case 'saveastiff'
+                       saveastiff(inputMatrix, savePath, tiffOptions);
+                    case 'Fast_Tiff_Write'
+                        compression = 0;
+                        tic;
+                        fTIF = Fast_Tiff_Write(savePath,1,compression);
+                        for i=1:size(inputMatrix,3)
+                            fTIF.WriteIMG(squeeze(inputMatrix(:,:,i))');
+                        end
+                        fTIF.close;
+                    otherwise
+                       saveastiff(inputMatrix, savePath, tiffOptions);
+                end
+                
+
 			case 'hdf5'
 				fprintf('Saving to: %s\n',savePath);
 				[output] = writeHDF5Data(inputMatrix,savePath,'datasetname',options.inputDatasetName,'addInfo',options.addInfo,'addInfoName',options.addInfoName,'writeMode',options.writeMode,'deflateLevel',options.deflateLevel);

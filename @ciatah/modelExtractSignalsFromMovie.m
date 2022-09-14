@@ -30,6 +30,9 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		% 2021.11.08 [12:42:12] - Add nwbpkg support.
 		% 2021.11.09 [15:29:01] - Updated EXTRACT support.
 		% 2022.06.27 [15:33:57] - matlab.desktop.editor.openDocument no longer uses pwd since options.settingsPrivateSaveFolder is based on an absolute path.
+		% 2022.06.29 [11:25:57] - CELLMax support for loading prior settings.
+		% 2022.07.05 [20:12:34] - Update to EXTRACT support: added additional options, do not automatically eliminate summary section, and more.
+		% 2022.09.14 [10:52:43] - Switch order of mergeStructs and supplying cell radius to EXTRACT, else empty vector can be passed depending on user input.
 	% TODO
 		%
 
@@ -490,6 +493,16 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 		try
+			if exist(algorithmFile,'file')==2
+				fprintf('Found: %s\n',algorithmFile)
+				return;
+			elseif length(which('cellmax.runCELLMax'))>0
+				fprintf('Found: %s\n',algorithmFile)
+				return;
+			else
+				fprintf('Did not find: %s\n',algorithmFile)
+			end
+
 			% foundFiles = dir(fullfile([obj.defaultObjDir filesep obj.externalProgramsDir], ['**\' algorithmFile '']));
 			foundFiles = dir(fullfile([obj.externalProgramsDir], ['**' filesep algorithmFile '']));
 			pathToAdd = foundFiles.folder;
@@ -752,85 +765,121 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 					options.PCAICA.max_iter = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.PCAICA
 				case {'EM','CELLMax'}
+					% 'CELLMax | readMovieChunks | read movie chunks from disk? (1 = yes, 0 = no)',...
+
+					% Check if prior settings available.
+					options.CELLMax.readMovieChunks = '1';
+					options.CELLMax.percentFramesPerIteration = '0.3';
+					options.CELLMax.minIters = '50';
+					options.CELLMax.maxIters = '120';
+					options.CELLMax.gridSpacing = '';
+					options.CELLMax.gridWidth = '';
+					options.CELLMax.maxSqSize = '150';
+					options.CELLMax.percentFramesPCAICA = '0.5';
+					options.CELLMax.useGPU = '0';
+					options.CELLMax.subsampleMethod = 'random';
+					options.CELLMax.sizeThresh = '5';
+					options.CELLMax.sizeThreshMax = '250';
+					options.CELLMax.areaOverlapThresh = '0.65';
+					options.CELLMax.removeCorrProbs = '1';
+					options.CELLMax.distanceThresh = '3';
+					options.CELLMax.corrRemovalAreaOverlapThresh = '0.3';
+					options.CELLMax.threshForElim = '0.005';
+					options.CELLMax.scaledPhiCorrThresh = '0.3';
+					options.CELLMax.runMovieImageCorrThreshold = '1';
+					options.CELLMax.movieImageCorrThreshold = '0.15';
+					options.CELLMax.loadPreviousChunks = '0';
+					options.CELLMax.saveIterMovie = '0';
+					options.CELLMax.sqOverlap = '16';
+					options.CELLMax.downsampleFactorTime = '1';
+					options.CELLMax.downsampleFactorSpace = '1';
+					options.CELLMax.spatialFilterMovie = '0';
+					options.CELLMax.useSparseImageMatrix = '0';
+					options.CELLMax.exitEarlySaveSparse = '0';
+					options.CELLMax.numFramesSampleFitNoiseSigma = '1000';
+					options.CELLMax.recalculateFinalTraces = '1';
+					options.CELLMax.dsInitializeThreshold = '0.01';
+					options.CELLMax.numSigmasThresh = '0';
+					options.CELLMax.numPhotonsPerSigma = '10';
+					options.CELLMax.upsampleFullIters = '2';
+					options.CELLMax.removeAutoCorrThres = '0.65';
+					options.CELLMax.removeAutoCorrThres = '0.65';
+					options.CELLMax.saveChunksToRam = '1';
+					options.CELLMax.eccentricityThreshold = '0.99';
+					options.CELLMax.numObjThreshold = '3';
+
+					optsDefault = options.CELLMax;
+					try
+						optionsLoaded = obj.functionSettings.modelExtractSignalsFromMovie.options.CELLMax;
+						optsFn = fieldnames(optionsLoaded);
+						for iz = 1:length(optsFn)
+							options.CELLMax.(optsFn{iz}) = optionsLoaded.(optsFn{iz});
+						end
+						disp('Loaded prior settings!')
+					catch
+					end
+
+					% movieSettingsStrs = {...
+					mOpt = struct;
+						mOpt.readMovieChunks = 'read movie chunks from disk? (1 = yes, 0 = no)';
+						mOpt.percentFramesPerIteration = 'fraction of total frames subset each iteration? (Float 0->1)';
+						mOpt.minIters = 'number of min iterations? (Int)';
+						mOpt.maxIters = 'number of max iterations? (Int)';
+						mOpt.gridSpacing = '? (Int, leave blank for manual)';
+						mOpt.gridWidth = '? (Int, leave blank for manual)';
+						mOpt.maxSqSize = 'max square tile size? (Int)';
+						mOpt.percentFramesPCAICA = 'percent frames for PCA-ICA? (Float 0->1)';
+						mOpt.useGPU = 'use GPU? (1 = yes, 0 = no)';
+						mOpt.subsampleMethod = 'subsample method? (Str: random, resampleRemaining)';
+						mOpt.sizeThresh = '? (Int)';
+						mOpt.sizeThreshMax = '? (Int)';
+						mOpt.areaOverlapThresh = '?';
+						mOpt.removeCorrProbs = '? (1 = yes, 0 = no)';
+						mOpt.distanceThresh = '?';
+						mOpt.corrRemovalAreaOverlapThresh = '?';
+						mOpt.threshForElim = '? (elimination threshold scaled phi)';
+						mOpt.scaledPhiCorrThresh = '?';
+						mOpt.runMovieImageCorrThreshold = '?';
+						mOpt.movieImageCorrThreshold = '?';
+						mOpt.loadPreviousChunks = '?';
+						mOpt.saveIterMovie = '?';
+						mOpt.sqOverlap = '?';
+						mOpt.downsampleFactorTime = '?';
+						mOpt.downsampleFactorSpace = '?';
+						mOpt.spatialFilterMovie = ' (0 = no, 1 = yes, after loading)?';
+						mOpt.useSparseImageMatrix = ' (0 = no, 1 = yes)?';
+						mOpt.exitEarlySaveSparse = ' (0 = no, 1 = yes)?';
+						mOpt.numFramesSampleFitNoiseSigma = ' (Int, frames)?';
+						mOpt.recalculateFinalTraces = ' (0 = no, 1 = yes)?';
+						mOpt.dsInitializeThreshold = ' (Float, range 0:1)?';
+						mOpt.numSigmasThresh = ' (Float)?';
+						mOpt.numPhotonsPerSigma = ' (Int)?';
+						mOpt.upsampleFullIters = ' (Int)?';
+						mOpt.removeAutoCorrThres = ' (Float, range 0:1)?';
+						mOpt.saveChunksToRam = ' (0 = no, 1 = yes)?';
+						mOpt.eccentricityThreshold = 'Float: value 0 to 1, eccentricity (0 = more circular). By default is 0.99 so that dendrites are not excluded, lower if interested more in cells.';
+						mOpt.numObjThreshold = 'Int: Filter kept if number of objects is <= numObjThreshold. This generally filters for noise that does not produce a single object containing the signal.';
+					% };
+
+					% optsTmp = cellfun(@num2str,struct2cell(optsDefault),'UniformOutput',false);
+					% for iz = 1:length(movieSettingsStrs)
+					% 	movieSettingsStrs{iz} = [movieSettingsStrs{iz} ' | default: ' num2str(optsTmp{iz})];
+					% end
+
+					fnTmp = fieldnames(options.CELLMax);
+					movieSettingsStrs = {};
+					for iz = 1:length(fnTmp)
+						movieSettingsStrs{iz} = [fnTmp{iz} ' | ' mOpt.(fnTmp{iz}) ' | default: ' optsDefault.(fnTmp{iz})];
+					end
+
 					AddOpts.Resize='on';
 					AddOpts.WindowStyle='normal';
 					AddOpts.Interpreter='tex';
-							% 'CELLMax | readMovieChunks | read movie chunks from disk? (1 = yes, 0 = no)',...
-					movieSettings = inputdlgcol({...
-							'readMovieChunks | read movie chunks from disk? (1 = yes, 0 = no)',...
-							'percentFramesPerIteration | fraction of total frames subset each iteration? (Float 0->1)',...
-							'minIters | number of min iterations? (Int)',...
-							'maxIters | number of max iterations? (Int)',...
-							'gridSpacing? (Int, leave blank for manual)',...
-							'gridWidth? (Int, leave blank for manual)',...
-							'maxSqSize | max square tile size? (Int)',...
-							'percentFramesPCAICA | percent frames for PCA-ICA? (Float 0->1)',...
-							'useGPU | use GPU? (1 = yes, 0 = no)',...
-							'subsampleMethod | subsample method? (Str: random, resampleRemaining)',...
-							'sizeThresh? (Int)',...
-							'sizeThreshMax? (Int)',...
-							'areaOverlapThresh?',...
-							'removeCorrProbs? (1 = yes, 0 = no)',...
-							'distanceThresh?',...
-							'corrRemovalAreaOverlapThresh?',...
-							'threshForElim? (elimination threshold scaled phi)',...
-							'scaledPhiCorrThresh?',...
-							'runMovieImageCorrThreshold?',...
-							'movieImageCorrThreshold?',...
-							'loadPreviousChunks?',...
-							'saveIterMovie?',...
-							'sqOverlap?',...
-							'downsampleFactorTime?',...
-							'downsampleFactorSpace?',...
-							'spatialFilterMovie (0 = no, 1 = yes, after loading)?',...
-							'useSparseImageMatrix (0 = no, 1 = yes)?',...
-							'exitEarlySaveSparse (0 = no, 1 = yes)?',...
-							'numFramesSampleFitNoiseSigma (Int, frames)?',...
-							'recalculateFinalTraces (0 = no, 1 = yes)?',...
-							'dsInitializeThreshold (Float, range 0:1)?',...
-							'numSigmasThresh (Float)?',...
-							'numPhotonsPerSigma (Int)?',...
-							'upsampleFullIters (Int)?',...
-							'removeAutoCorrThres (Float, range 0:1)?',...
-						},...
+					movieSettings = inputdlgcol(movieSettingsStrs,...
 						dlgStr,1,...
-						{...
-							'1',...
-							'0.3',...
-							'50',...
-							'120',...
-							'',...
-							'',...
-							'101',...
-							'0.5',...
-							'0',...
-							'random',...
-							'5',...
-							'250',...
-							'0.65',...
-							'1',...
-							'3',...
-							'0.3',...
-							'0.005',...
-							'0.3',...
-							'1',...
-							'0.15',...
-							'0',...
-							'0',...
-							'16',...
-							'1',...
-							'1',...
-							'0',...
-							'0',...
-							'0',...
-							'1000',...
-							'1',...
-							'0.01',...
-							'0',...
-							'10',...
-							'2',...
-							'0.65'...
-						},AddOpts,2);
+							cellfun(@num2str,struct2cell(options.CELLMax),'UniformOutput',false),...
+						AddOpts,2);
+
 					setNo = 1;
 					options.CELLMax.readMovieChunks = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.CELLMax.percentFramesPerIteration = str2num(movieSettings{setNo});setNo = setNo+1;
@@ -868,39 +917,118 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 					options.CELLMax.numPhotonsPerSigma = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.CELLMax.upsampleFullIters = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.CELLMax.removeAutoCorrThres = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.CELLMax.saveChunksToRam = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.CELLMax.eccentricityThreshold = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.CELLMax.numObjThreshold = str2num(movieSettings{setNo});setNo = setNo+1;
+
+					obj.functionSettings.modelExtractSignalsFromMovie.options.CELLMax = options.CELLMax;
 
 				case 'EXTRACT'
-					movieSettings = inputdlg({...
-							'EXTRACT | Use GPU (''gpu'') or CPU (''cpu'')?',...
-							'EXTRACT | avg_cell_radius (Avg. cell radius, also controls cell elimination)? Leave blank for GUI to estimate radius.',...
-							'EXTRACT | cellfind_min_snr (threshold on the max instantaneous per-pixel SNR in the movie for searching for cells)?',...
-							'EXTRACT | preprocess? (1 = yes, 0 = no, [ONLY SELECT 1 on raw, motion-corrected movies])',...
-							'EXTRACT | num_partitions? Int: number of partitions in x and y.',...
-							'EXTRACT | compact_output? (1 = yes, 0 = no)',...
-							'EXTRACT | trace_output_option? Trace output type("nonneg" or "raw")',...
-							'EXTRACT | use_sparse_arrays? (1 = yes, 0 = no)'...
-						},...
+
+					% Check if prior settings available.
+					options.EXTRACT.use_gpu = '0';
+					options.EXTRACT.parallel_cpu = '1';
+					options.EXTRACT.multi_gpu = '0';
+					options.EXTRACT.avg_cell_radius = '';
+					options.EXTRACT.cellfind_min_snr = '1';
+					options.EXTRACT.preprocess = '0';
+					options.EXTRACT.num_partitions_x = '2';
+					options.EXTRACT.num_partitions_y = '2';
+					options.EXTRACT.compact_output = '1';
+					options.EXTRACT.trace_output_option = 'nonneg';
+					options.EXTRACT.use_sparse_arrays = '0';
+					options.EXTRACT.T_min_snr = '10';
+					options.EXTRACT.cellfind_max_steps = '1000';
+					options.EXTRACT.temporal_corrupt_thresh = '0.7';
+					options.EXTRACT.spatial_corrupt_thresh = '0.7';
+					options.EXTRACT.size_upper_limit = '10';
+					options.EXTRACT.low_ST_index_thresh = '1e-2';
+					options.EXTRACT.low_ST_corr_thresh = '-Inf';
+					options.EXTRACT.init_with_gaussian = '0';
+					options.EXTRACT.downsample_time_by = '1';
+					options.EXTRACT.downsample_space_by = '1';
+					options.EXTRACT.T_dup_corr_thresh = '0.95';
+					options.EXTRACT.max_iter = '6';
+					options.EXTRACT.cellfind_filter_type = 'butter';
+
+					optsDefault = options.EXTRACT;
+					try
+						optionsLoaded = obj.functionSettings.modelExtractSignalsFromMovie.options.EXTRACT;
+						optsFn = fieldnames(optionsLoaded);
+						for iz = 1:length(optsFn)
+							options.EXTRACT.(optsFn{iz}) = optionsLoaded.(optsFn{iz});
+						end
+						disp('Loaded prior settings!')
+					catch
+					end
+
+					movieSettingsStrs = {...
+						'use_gpu | Use GPU (1, ''gpu'') or CPU (0, ''cpu'')?',...
+						'parallel_cpu | parallel processing in CPU mode? (1 = yes, 0 = no)',...
+						'multi_gpu | parallel processing on multiple GPUs (1 = yes, 0 = no)',...
+						'avg_cell_radius | Avg. cell radius (also controls cell elimination)? Leave blank for GUI to estimate radius.',...
+						'cellfind_min_snr | Threshold on the max instantaneous per-pixel SNR in the movie for searching for cells?',...
+						'preprocess | Preprocess movie? (1 = yes, 0 = no - ONLY SELECT 1 on raw, motion-corrected movies)',...
+						'num_partitions | Int: number of partitions in x.',...
+						'num_partitions | Int: number of partitions in y.',...
+						'compact_output | Do not include bad components in output? (1 = yes, 0 = no)',...
+						'trace_output_option | Trace output type ("nonneg" or "raw")',...
+						'use_sparse_arrays | Save output as sparse arrays, to save memory for large FOV movies (1 = yes, 0 = no)',...
+						'T_min_snr | Cells with temporal trace SNR below this value are eliminated (Int, e.g. 10)',...
+						'cellfind_max_steps | Maximum number of cell candidate initialization during cell finding step. (Int, e.g. 100)',...
+						'temporal_corrupt_thresh | Traces with index > value are eliminated (0 to 1, e.g. 0.7)',...
+						'spatial_corrupt_thresh | Images with index > value are eliminated (0 to 1, e.g. 0.7)',...
+						'size_upper_limit | any cell with an area outside of these will be eliminated during cell refinement',...
+						'low_ST_index_thresh | threshold the ROIs, where the inferred traces do not explain the activity inside the filter well',...
+						'low_ST_corr_thresh | threshold the ROIs, where the inferred traces do not explain the activity inside the filter well',...
+						'init_with_gaussian | Initialize with a Gaussian shape prior to robust estimation? (1 = yes, 0 = no)',...
+						'downsample_time_by | Downsampling factor time',...
+						'downsample_space_by | Downsampling factor space',...
+						'T_dup_corr_thresh | Duplicate removal correlation threshold',...
+						'max_iter | Max iterations during cell finding step',...
+						'cellfind_filter_type | Type of the spatial smoothing filter used for cell finding. Options: "butter" (IIR butterworth filter), "gauss" (FIR filter with a gaussian kernel), "wiener" (wiener filter), "movavg" (moving average in space), "median" (median filtering in 3D), "none" (no filtering).',...
+					};
+
+					optsTmp = cellfun(@num2str,struct2cell(optsDefault),'UniformOutput',false);
+					for iz = 1:length(movieSettingsStrs)
+						movieSettingsStrs{iz} = strrep([movieSettingsStrs{iz} ' | default: ' num2str(optsTmp{iz})],'_','\_');
+					end
+
+					AddOpts.Resize='on';
+					AddOpts.WindowStyle='normal';
+					AddOpts.Interpreter='tex';
+					movieSettings = inputdlgcol(movieSettingsStrs,...
 						dlgStr,1,...
-						{...
-							'cpu',...
-							'',...
-							'1'...
-							'0',...
-							'2',...
-							'0',...
-							'nonneg',...
-							'0',...
-						}...
-					);setNo = 1;
-					options.EXTRACT.gpuOrCPU = movieSettings{setNo};setNo = setNo+1;
+							cellfun(@num2str,struct2cell(options.EXTRACT),'UniformOutput',false),...
+						AddOpts,2);
+
+					setNo = 1;
+					options.EXTRACT.use_gpu = str2num(movieSettings{setNo});setNo = setNo+1;					
+					options.EXTRACT.parallel_cpu = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.EXTRACT.multi_gpu = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.EXTRACT.avg_cell_radius = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.EXTRACT.cellfind_min_snr = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.EXTRACT.preprocess = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.EXTRACT.num_partitions_x = str2num(movieSettings{setNo});setNo = setNo+1;
-					options.EXTRACT.num_partitions_y = options.EXTRACT.num_partitions_x;
+					options.EXTRACT.num_partitions_y = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.EXTRACT.compact_output = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.EXTRACT.trace_output_option = movieSettings{setNo};setNo = setNo+1;
 					options.EXTRACT.use_sparse_arrays = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.EXTRACT.T_min_snr = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.EXTRACT.cellfind_max_steps = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.EXTRACT.temporal_corrupt_thresh = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.EXTRACT.spatial_corrupt_thresh = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.EXTRACT.size_upper_limit = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.EXTRACT.low_ST_index_thresh = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.EXTRACT.low_ST_corr_thresh = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.EXTRACT.init_with_gaussian = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.EXTRACT.downsample_time_by = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.EXTRACT.downsample_space_by = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.EXTRACT.T_dup_corr_thresh = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.EXTRACT.max_iter = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.EXTRACT.cellfind_filter_type = movieSettings{setNo};setNo = setNo+1;
+
+					obj.functionSettings.modelExtractSignalsFromMovie.options.EXTRACT = options.EXTRACT;
 
 				case 'CNMF'
 					movieSettings = inputdlg({...
@@ -957,7 +1085,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 							'CNMF-E | iterate over parameter space? (1 = yes, 0 = no)',...
 							'CNMF-E | only run initialization algorithm? (1 = yes, 0 = no)',...
 							'CNMF-E | Spatial down-sampling factor (scalar >= 1)',...
-							'CNMF-E | Temporal down-sampling factor (scalar >= 1)'...
+							'CNMF-E | Temporal down-sampling factor (scalar >= 1)',...
+							'CNMF | Run CNMF output classifier (1 = yes, 0 = no)',...
 						},...
 						dlgStr,1,...
 						{...
@@ -968,7 +1097,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 							'0',...
 							'0',...
 							'1',...
-							'1'...
+							'1',...
+							'1',...
 						}...
 					);setNo = 1;
 					options.CNMFE.openEditor = str2num(movieSettings{setNo});setNo = setNo+1;
@@ -979,6 +1109,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 					options.CNMFE.onlyRunInitialization = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.CNMFE.ssub = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.CNMFE.tsub = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.CNMFE.classifyComponents = str2num(movieSettings{setNo});setNo = setNo+1;
 
 					if options.CNMFE.deleteTempFolders==1
 						display(repmat('*',1,21))
@@ -1293,6 +1424,9 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		emOptions.CELLMaxoptions.numFramesSampleFitNoiseSigma = options.CELLMax.numFramesSampleFitNoiseSigma;
 		emOptions.CELLMaxoptions.recalculateFinalTraces = options.CELLMax.recalculateFinalTraces;
 
+		emOptions.CELLMaxoptions.eccentricityThreshold = options.CELLMax.eccentricityThreshold;
+		emOptions.CELLMaxoptions.numObjThreshold = options.CELLMax.numObjThreshold;
+
 		if options.defaultOptions==0
 			emOptions.CELLMaxoptions.localICimgs = [];
 			emOptions.CELLMaxoptions.localICtraces = [];
@@ -1408,115 +1542,42 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 
 		ciapkg.loadBatchFxns('loadEverything');
 
-		movieList = getFileList(obj.inputFolders{obj.fileNum}, fileFilterRegexp);
-		[inputMovie thisMovieSize Npixels Ntime] = loadMovieList(movieList,'convertToDouble',0,'inputDatasetName',obj.inputDatasetName,'treatMoviesAsContinuous',1);
-		inputMovie(isnan(inputMovie)) = 0;
-
-		% opts.movie_dataset = obj.inputDatasetName;
-		% % opts.save_to_movie_dir = 1;
-		% % % make larger if using 2x downsampled movie
-		% % opts.spat_linfilt_halfwidth = 2;
-		% % opts.ss_cell_size_threshold = 5;
-		% % opts.spat_medfilt_enabled = 0;
-		% % opts.trim_pixels = 0.4;
-		% % opts.verbos = 2;
-		% % opts.disableGPU = 1;
-
-		% % options.turboreg = getFxnSettings();
-		% % options.turboreg
-		% % options.datasetName = options.turboreg.datasetName;
-
-		% % settingDefaults = struct(...
-		% %     'movie_dataset',{{'/1','/Movie','/movie'}},...
-		% %     'save_to_movie_dir',  {{1,0}},...
-		% %     'spat_linfilt_halfwidth', {{2,5}},...
-		% %     'ss_cell_size_threshold', {{5,10}},...
-		% %     'spat_medfilt_enabled', {{0,1}},...
-		% %     'trim_pixels', {{0.4,0.6}},...
-		% %     'verbos', {{0,1}},...
-		% %     'disableGPU', {{1,0}}...
-		% % );
-		% % settingStr = struct(...
-		% %     'movie_dataset',{{'/1','/Movie','/movie'}},...
-		% %     'save_to_movie_dir',  {{1,0}},...
-		% %     'spat_linfilt_halfwidth', {{2,5}},...
-		% %     'ss_cell_size_threshold', {{5,10}},...
-		% %     'spat_medfilt_enabled', {{0,1}},...
-		% %     'trim_pixels', {{0.4,0.6}},...
-		% %     'verbos', {{0,1}},...
-		% %     'disableGPU', {{1,0}}...
-		% % );
-
-		% [h,w,t] = size(inputMovie);
-
-		% opts.max_cell_radius=30;
-		% opts.min_cell_spacing=5;
-		% opts.remove_duplicate_cells = 0;
-		% % Use GPU
-		% opts.compute_device='gpu';
-
-		% % This is how to call the function 'partition_helper()' to find out how many partitions are necessary:
-		% num_parts = partition_helper(h,w,t,opts.min_cell_spacing,opts.max_cell_radius);
-
-		% % Below call returned num_parts=20. We decide to partition x axis to 4, and y axis to 5. This makes 20 parititions overall.
-		% nPlotsRoot = sqrt(num_parts);
-		% if nPlotsRoot<2
-		% 	nPlotsRoot = 2;
-		% end
-		% integ = fix(nPlotsRoot);
-		% fract = abs(nPlotsRoot - integ);
-		% opts.num_partition_y = ceil(nPlotsRoot);
-		% opts.num_partition_x = floor(nPlotsRoot)+round(fract)
-
-		% min_cell_spacing=3;
-		% max_cell_radius=10;
-		% num_partition_x=3;
-		% num_partitiony=3;
-		% cell_keep_tolerance=5;
-		% subtract_background=1;
-
-		% opts.config.diffuse_F=1;
-		% opts.config.smooth_T = 0;
-		% opts.config.smooth_F = 0;
-		% opts.config.cell_keep_tolerance
-
-		% [filters,traces,info,opts] = extractor(movieList{1},opts);
-		% [filters,traces,info,opts] = extractor(inputMovie,opts);
-		% outStruct = extractor(inputMovie,opts);
-
-		% switch pcaicaPCsICsSwitchStr
-		% 	case 'Subject'
-		% 		nPCsnICs = obj.numExpectedSignals.(obj.signalExtractionMethod).(obj.subjectStr{obj.fileNum})
-		% 	case 'Folder'
-		% 		nPCsnICs = obj.numExpectedSignals.(obj.signalExtractionMethod).Folders{obj.fileNum}
-		% 	otherwise
-		% 		% body
-		% end
-		% extractConfig.num_estimated_cells = nPCsnICs(1);
-
 		% Load default configuration
 		extractConfig = get_defaults([]);
 
-		extractConfig.avg_cell_radius = gridWidth.(obj.subjectStr{obj.fileNum});
-		extractConfig.preprocess = options.EXTRACT.preprocess;
-		switch options.EXTRACT.gpuOrCPU
-			case 'gpu'
-				extractConfig.use_gpu = 1;
-			case 'cpu'
-				extractConfig.use_gpu = 0;
-				extractConfig.parallel_cpu = 1;
-			otherwise
-				% body
-		end
+		% switch options.EXTRACT.gpuOrCPU
+		% 	case 'gpu'
+		% 		extractConfig.use_gpu = 1;
+		% 	case 'cpu'
+		% 		extractConfig.use_gpu = 0;
+		% 		extractConfig.parallel_cpu = 1;
+		% 	otherwise
+		% 		% body
+		% end
 		% extractConfig.remove_static_background = false;
 		% extractConfig.skip_dff = true;
 
-		extractConfig.cellfind_min_snr = options.EXTRACT.cellfind_min_snr;
 		extractConfig.num_partitions_x = options.EXTRACT.num_partitions_x;
 		extractConfig.num_partitions_y = options.EXTRACT.num_partitions_y;
-		extractConfig.trace_output_option = options.EXTRACT.trace_output_option;
-		extractConfig.use_sparse_arrays = options.EXTRACT.use_sparse_arrays;
+
+		% Merge user options and EXTRACT options
+		[extractConfig] = ciapkg.io.mergeStructs(extractConfig,options.EXTRACT,'showStack',0);
+		[extractConfig.thresholds] = ciapkg.io.mergeStructs(extractConfig.thresholds,options.EXTRACT,'showStack',0);
+
+		extractConfig.avg_cell_radius = gridWidth.(obj.subjectStr{obj.fileNum});
+
+		fn_structdisp(extractConfig);
+
+		% extractConfig.preprocess = options.EXTRACT.preprocess;
+		% extractConfig.cellfind_min_snr = options.EXTRACT.cellfind_min_snr;
+		% extractConfig.trace_output_option = options.EXTRACT.trace_output_option;
+		% extractConfig.use_sparse_arrays = options.EXTRACT.use_sparse_arrays;
 		% extractConfig.compact_output = options.EXTRACT.compact_output;
+		% extractConfig.T_min_SNR = options.EXTRACT.T_min_SNR;
+		% extractConfig.cellfind_max_steps = options.EXTRACT.cellfind_max_steps;
+		% extractConfig.temporal_corrupt_thresh = options.EXTRACT.temporal_corrupt_thresh;
+		% extractConfig.spatial_corrupt_thresh = options.EXTRACT.spatial_corrupt_thresh;
+		% extractConfig.multi_gpu = options.EXTRACT.multi_gpu;
 
 		% extractConfig.thresholds.T_min_snr = 3; % multiply with noise_std
 		% extractConfig.thresholds.size_lower_limit = 1/5; % multiply with avg_cell_area
@@ -1528,6 +1589,14 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		% extractConfig.thresholds.eccent_thresh = 6; % set to inf if dendrite aware
 		% extractConfig.thresholds.low_ST_index_thresh = 1e-2;
 		% extractConfig.thresholds.high_ST_index_thresh = 0.8;
+
+		% disp(extractConfig)
+		% pause
+
+		% Load movie
+		movieList = getFileList(obj.inputFolders{obj.fileNum}, fileFilterRegexp);
+		[inputMovie thisMovieSize Npixels Ntime] = loadMovieList(movieList,'convertToDouble',0,'inputDatasetName',obj.inputDatasetName,'treatMoviesAsContinuous',1);
+		inputMovie(isnan(inputMovie)) = 0;
 
 		startTime = tic;
 		outStruct = extractor(inputMovie,extractConfig);
@@ -1543,9 +1612,11 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		try
 			extractAnalysisOutput.info = outStruct.info;
 			extractAnalysisOutput.config = outStruct.config;
-			extractAnalysisOutput.info = outStruct.info;
+			% extractAnalysisOutput.info = outStruct.info;
+
 			% Remove the large summary field since takes up unnecessary space
-			extractAnalysisOutput.info.summary = [];
+			% extractAnalysisOutput.info.summary = [];
+
 			extractAnalysisOutput.file = movieList{1};
 			extractAnalysisOutput.userInputConfig = extractConfig;
 			% for backwards compatibility
@@ -1844,7 +1915,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			cnmfeOptions = cnmfeOpts;
 		end
 
-		cnmfOptions.nonCNMF.inputDatasetName = obj.inputDatasetName;
+		cnmfeOptions.nonCNMF.inputDatasetName = obj.inputDatasetName;
+		cnmfeOptions.nonCNMF.classifyComponents = options.CNMFE.classifyComponents;
 
 		try
 			display(repmat('*',1,14))
@@ -2212,3 +2284,88 @@ function [turboregSettingStruct] = getFxnSettings()
 	end
 	close(1337)
 end
+
+% function [extractAnalysisOutput] = runEXTRACTSignalFinder()
+
+		% opts.movie_dataset = obj.inputDatasetName;
+		% % opts.save_to_movie_dir = 1;
+		% % % make larger if using 2x downsampled movie
+		% % opts.spat_linfilt_halfwidth = 2;
+		% % opts.ss_cell_size_threshold = 5;
+		% % opts.spat_medfilt_enabled = 0;
+		% % opts.trim_pixels = 0.4;
+		% % opts.verbos = 2;
+		% % opts.disableGPU = 1;
+
+		% % options.turboreg = getFxnSettings();
+		% % options.turboreg
+		% % options.datasetName = options.turboreg.datasetName;
+
+		% % settingDefaults = struct(...
+		% %     'movie_dataset',{{'/1','/Movie','/movie'}},...
+		% %     'save_to_movie_dir',  {{1,0}},...
+		% %     'spat_linfilt_halfwidth', {{2,5}},...
+		% %     'ss_cell_size_threshold', {{5,10}},...
+		% %     'spat_medfilt_enabled', {{0,1}},...
+		% %     'trim_pixels', {{0.4,0.6}},...
+		% %     'verbos', {{0,1}},...
+		% %     'disableGPU', {{1,0}}...
+		% % );
+		% % settingStr = struct(...
+		% %     'movie_dataset',{{'/1','/Movie','/movie'}},...
+		% %     'save_to_movie_dir',  {{1,0}},...
+		% %     'spat_linfilt_halfwidth', {{2,5}},...
+		% %     'ss_cell_size_threshold', {{5,10}},...
+		% %     'spat_medfilt_enabled', {{0,1}},...
+		% %     'trim_pixels', {{0.4,0.6}},...
+		% %     'verbos', {{0,1}},...
+		% %     'disableGPU', {{1,0}}...
+		% % );
+
+		% [h,w,t] = size(inputMovie);
+
+		% opts.max_cell_radius=30;
+		% opts.min_cell_spacing=5;
+		% opts.remove_duplicate_cells = 0;
+		% % Use GPU
+		% opts.compute_device='gpu';
+
+		% % This is how to call the function 'partition_helper()' to find out how many partitions are necessary:
+		% num_parts = partition_helper(h,w,t,opts.min_cell_spacing,opts.max_cell_radius);
+
+		% % Below call returned num_parts=20. We decide to partition x axis to 4, and y axis to 5. This makes 20 parititions overall.
+		% nPlotsRoot = sqrt(num_parts);
+		% if nPlotsRoot<2
+		% 	nPlotsRoot = 2;
+		% end
+		% integ = fix(nPlotsRoot);
+		% fract = abs(nPlotsRoot - integ);
+		% opts.num_partition_y = ceil(nPlotsRoot);
+		% opts.num_partition_x = floor(nPlotsRoot)+round(fract)
+
+		% min_cell_spacing=3;
+		% max_cell_radius=10;
+		% num_partition_x=3;
+		% num_partitiony=3;
+		% cell_keep_tolerance=5;
+		% subtract_background=1;
+
+		% opts.config.diffuse_F=1;
+		% opts.config.smooth_T = 0;
+		% opts.config.smooth_F = 0;
+		% opts.config.cell_keep_tolerance
+
+		% [filters,traces,info,opts] = extractor(movieList{1},opts);
+		% [filters,traces,info,opts] = extractor(inputMovie,opts);
+		% outStruct = extractor(inputMovie,opts);
+
+		% switch pcaicaPCsICsSwitchStr
+		% 	case 'Subject'
+		% 		nPCsnICs = obj.numExpectedSignals.(obj.signalExtractionMethod).(obj.subjectStr{obj.fileNum})
+		% 	case 'Folder'
+		% 		nPCsnICs = obj.numExpectedSignals.(obj.signalExtractionMethod).Folders{obj.fileNum}
+		% 	otherwise
+		% 		% body
+		% end
+		% extractConfig.num_estimated_cells = nPCsnICs(1);
+% end

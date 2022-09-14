@@ -4,7 +4,7 @@ function [movieType, supported, movieType2] = getMovieFileType(thisMoviePath,var
 	% Determine whether movie is a type supported by CIAtah, don't assume every movie in list is of the same type.
 	%
 	% Biafra Ahanonu
-	% started: 2020.09.01 [‏‎14:16:57]
+	% started: 2020.09.01 [14:16:57]
 	%
 	% Inputs
 	% 	thisMoviePath - String: path to movie file.
@@ -21,6 +21,8 @@ function [movieType, supported, movieType2] = getMovieFileType(thisMoviePath,var
 		% 2022.01.04 [13:28:05] - Update docs.
 		% 2022.02.24 [09:37:55] - Added varargin support.
 		% 2022.03.01 [08:56:21] - Added support for checking if a cell was accidentally input instead of a string path along with verifying that input was a string. Added support for oir and czi/lsm Olympus and Zeiss file formats that already was in loadMovieList.
+		% 2022.03.14 [02:17:28] - Added MAT-file support.
+		% 2022.07.05 [21:21:35] - Add SlideBook Bio-Formats support.
 	% TODO
 		%
 
@@ -77,11 +79,15 @@ function [movieType, supported, movieType2] = getMovieFileType(thisMoviePath,var
 		movieType = 'tiff';
 	elseif endsWith(ext,'.avi','IgnoreCase',true)
 		movieType = 'avi';
+	elseif endsWith(ext,'.mat','IgnoreCase',true)
+		movieType = 'mat';
 	elseif endsWith(ext,'.isxd','IgnoreCase',true) % Inscopix file format
 		movieType = 'isxd';
 	elseif endsWith(ext,'.oir') % Olympus file format
 		movieType = 'bioformats';
 	elseif endsWith(ext,{'.czi','.lsm'}) % Zeiss file format
+		movieType = 'bioformats';
+	elseif endsWith(ext,'.sld') % SlideBook file format
 		movieType = 'bioformats';
 	else
 		movieType = '';
