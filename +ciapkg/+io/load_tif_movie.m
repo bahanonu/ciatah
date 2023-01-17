@@ -15,7 +15,8 @@ function out = load_tif_movie(filename,downsample_xy,varargin)
 		% 2019.03.10 [20:17:09] Allow user to pre-input TIF temporary file to speed-up load times, esp. with individual files, see options.tmpImage and options.fileInfo
 		% 2020.09.01 [14:27:12] - Suppress warning at user request and remove unecessary file handle call.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
-        % 2022.03.07 [15:56:58] - Speed improvements related to imfinfo calls. Added tiffread support and ScanImageTiffReader support (not user accessible currently).
+		% 2022.03.07 [15:56:58] - Speed improvements related to imfinfo calls. Added tiffread support and ScanImageTiffReader support (not user accessible currently).
+		% 2022.12.21/2023.01.17 [14:18:24] - Updated to fallback on Tiff library and read when reading standard TIFF file with tiffread fails, in part to add support for BigTIFF.
 	% TODO
 		%
 
@@ -42,8 +43,8 @@ function out = load_tif_movie(filename,downsample_xy,varargin)
 
 	if isempty(options.tmpImage)
 		%First load a single frame of the movie to get generic information
-        if options.displayInfo==0
-            warning off
+		if options.displayInfo==0
+			warning off
 		end
 		warning off
 		TifLink = Tiff(filename, 'r'); % Create the Tiff object
@@ -63,9 +64,9 @@ function out = load_tif_movie(filename,downsample_xy,varargin)
 
 	% Pre-allocate the movie
 	if isempty(options.Numberframe)
-        if isempty(options.fileInfo)
-            options.fileInfo = imfinfo(filename);
-        end
+		if isempty(options.fileInfo)
+			options.fileInfo = imfinfo(filename);
+		end
 		out.Numberframe = size(options.fileInfo,1);% Number of frames
 		framesToGrab = 1:out.Numberframe;
 	else
@@ -164,8 +165,8 @@ function out = load_tif_movie(filename,downsample_xy,varargin)
 		warning off
 		
 		tiffID = Tiff(filename,'r');
-        
-        % tsStack = TIFFStack(filename);
+		
+		% tsStack = TIFFStack(filename);
 
 		% tiffID.setDirectory(1);
 		% rgbTiff = size(read(tiffID),3);
@@ -175,48 +176,80 @@ function out = load_tif_movie(filename,downsample_xy,varargin)
 		% toc
 		
 		%return
-        
+		
 		% tic
-        if length(1:nFramesDim)==nFrames
-            out.Movie = tiffread(filename,[],'ReadUnknownTags',1);
-        else
-            out.Movie = tiffread(filename, framesToGrab2,'ReadUnknownTags',1);
+		try
+			if length(1:nFramesDim)==nFrames
+				out.Movie = tiffread(filename,[],'ReadUnknownTags',0);
+			else
+				out.Movie = tiffread(filename, framesToGrab2,'ReadUnknownTags',0);
+			end
+			out.Movie = cat(3,out.Movie(:).data);
+			class(out.Movie)
+			% toc
+		catch err
+			disp(repmat('@',1,7))
+			disp(getReport(err,'extended','hyperlinks','on'));
+			disp(repmat('@',1,7))
+
+			disp('Using secondary TIFF loading...')
+
+			tic
+			[tiff_id] = localfxn_getTiffType(filename);
+
+			if tiff_id==42
+				disp('Classic TIFF.')
+			elseif tiff_id==43
+				disp('BigTIFF.')
+			else
+				disp('Unknown TIFF or incorrect format.')
+			end
+
+			for frameNo = 1:nFramesDim
+				tiffID.setDirectory(framesToGrab2(frameNo));
+				try
+					out.Movie(:,:,frameNo) = read(tiffID);
+				catch
+					tmpFrame = read(tiffID);
+					out.Movie(:,:,frameNo) = tmpFrame(:,:,1);
+				end
+				reverseStr = cmdWaitbar(frameNo,nFramesDim,reverseStr,'inputStr','loading ImageJ tif','waitbarOn',1,'displayEvery',50);
+			end
+			toc	
 		end
-		out.Movie = cat(3,out.Movie(:).data);
-        % toc
 		warning on
-        return;
-        
-        % Use scan image reader
-        if 0&&length(1:nFramesDim)==nFrames
-           tifReader = ScanImageTiffReader.ScanImageTiffReader(filename);
-           tifReader = tifReader.data();
+		return;
+		
+		% Use scan image reader
+		if 0&&length(1:nFramesDim)==nFrames
+		   tifReader = ScanImageTiffReader.ScanImageTiffReader(filename);
+		   tifReader = tifReader.data();
 		else
 			tic
-            for frameNo = 1:nFramesDim
-                % out.Movie(:,:,frameNo) = fread(fileID, [fileInfo.Width fileInfo.Height], fileType, 0, byteorder)';
-                % out.Movie(:,:,frameNo) = fread(fileID, [imgWidth(1) imgHeight(1)], fileType, 0, byteorder)';
-                % fseek(fileID, StripOffsets(frameNo), 'bof');
+			for frameNo = 1:nFramesDim
+				% out.Movie(:,:,frameNo) = fread(fileID, [fileInfo.Width fileInfo.Height], fileType, 0, byteorder)';
+				% out.Movie(:,:,frameNo) = fread(fileID, [imgWidth(1) imgHeight(1)], fileType, 0, byteorder)';
+				% fseek(fileID, StripOffsets(frameNo), 'bof');
 
-                tiffID.setDirectory(framesToGrab2(frameNo));
-                % rgbTiff = size(read(tiffID),3);
-                %if rgbTiff==1
-                try
-                    out.Movie(:,:,frameNo) = read(tiffID);
-                    % out.Movie(:,:,frameNo) = tsStack(:,:,frameNo);
-                catch
-                    tmpFrame = read(tiffID);
-                    % tmpFrame = tsStack(frameNo);
-                    out.Movie(:,:,frameNo) = tmpFrame(:,:,1);
-                end
-                %elseif rgbTiff==3
-                %	tmpFrame = read(tiffID);
-                %	out.Movie(:,:,frameNo) = tmpFrame(:,:,1);
-                %end
-                reverseStr = cmdWaitbar(frameNo,nFrames,reverseStr,'inputStr','loading ImageJ tif','waitbarOn',1,'displayEvery',50);
+				tiffID.setDirectory(framesToGrab2(frameNo));
+				% rgbTiff = size(read(tiffID),3);
+				%if rgbTiff==1
+				try
+					out.Movie(:,:,frameNo) = read(tiffID);
+					% out.Movie(:,:,frameNo) = tsStack(:,:,frameNo);
+				catch
+					tmpFrame = read(tiffID);
+					% tmpFrame = tsStack(frameNo);
+					out.Movie(:,:,frameNo) = tmpFrame(:,:,1);
+				end
+				%elseif rgbTiff==3
+				%	tmpFrame = read(tiffID);
+				%	out.Movie(:,:,frameNo) = tmpFrame(:,:,1);
+				%end
+				reverseStr = cmdWaitbar(frameNo,nFrames,reverseStr,'inputStr','loading ImageJ tif','waitbarOn',1,'displayEvery',50);
 			end
 			toc
-        end
+		end
 		warning on
 		% playMovie(out.Movie)
 
@@ -328,24 +361,45 @@ function out = load_tif_movie(filename,downsample_xy,varargin)
 		tifflib('close',FileID);
 
 		% for frameNo=framesToGrab
-		%     tifflib('setDirectory',FileID,1+frameNo-1);
-		%     % Go through each strip of data.
-		%     for r = 1:rps:hImage
-		%         row_inds = r:min(hImage,r+rps-1);
-		%         stripNum = tifflib('computeStrip',FileID,r);
-		%         display([num2str(r) ' | ' num2str(row_inds) ' | ' num2str(stripNum)])
-		%         if downsample_xy~=1
-		%             TmpImage(row_inds,:) = tifflib('readEncodedStrip',FileID,stripNum);
-		%         else
-		%             nrows = nrows + size(tifflib('readEncodedStrip',FileID,stripNum),1)
-		%             out.Movie(row_inds,:,frameNo)= tifflib('readEncodedStrip',FileID,stripNum);
-		%         end
-		%     end
-		%     if downsample_xy~=1
-		%         out.Movie(:,:,frameNo)=imresize(TmpImage,1/downsample_xy);
-		%     end
-		%     reverseStr = cmdWaitbar(frame,numel(framesToGrab),reverseStr,'inputStr','loading non-ImageJ tif','waitbarOn',1,'displayEvery',50);
+		% 	tifflib('setDirectory',FileID,1+frameNo-1);
+		% 	% Go through each strip of data.
+		% 	for r = 1:rps:hImage
+		% 		row_inds = r:min(hImage,r+rps-1);
+		% 		stripNum = tifflib('computeStrip',FileID,r);
+		% 		display([num2str(r) ' | ' num2str(row_inds) ' | ' num2str(stripNum)])
+		% 		if downsample_xy~=1
+		% 			TmpImage(row_inds,:) = tifflib('readEncodedStrip',FileID,stripNum);
+		% 		else
+		% 			nrows = nrows + size(tifflib('readEncodedStrip',FileID,stripNum),1)
+		% 			out.Movie(row_inds,:,frameNo)= tifflib('readEncodedStrip',FileID,stripNum);
+		% 		end
+		% 	end
+		% 	if downsample_xy~=1
+		% 		out.Movie(:,:,frameNo)=imresize(TmpImage,1/downsample_xy);
+		% 	end
+		% 	reverseStr = cmdWaitbar(frame,numel(framesToGrab),reverseStr,'inputStr','loading non-ImageJ tif','waitbarOn',1,'displayEvery',50);
 		% end
 		% tifflib('close',FileID);
 	end
+end
+function [tiff_id] = localfxn_getTiffType(filename)
+	% Determine whether classic TIFF or BigTIFF.
+
+	% ===
+	% From tiffread
+	fileID = fopen(filename,'r','l');
+	%% ---- read byte order: II = little endian, MM = big endian
+	bos = fread(fileID, 2, '*char');
+	if ( strcmp(bos', 'II') )
+		ByteOrder = 'ieee-le';    % Intel little-endian format
+	elseif ( strcmp(bos','MM') )
+		ByteOrder = 'ieee-be';
+	else
+		error('This is not a TIFF file (no MM or II).');
+	end
+	%% ---- read in a number which identifies TIFF format
+	tiff_id = fread(fileID,1,'uint16',ByteOrder);
+	fclose(fileID);
+	fileID = -1;
+	% ===
 end
