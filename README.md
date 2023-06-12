@@ -5,7 +5,7 @@
 ![GitHub top language](https://img.shields.io/github/languages/top/bahanonu/calciumImagingAnalysis?style=flat-square&logo=appveyor)
 ![GitHub license](https://img.shields.io/github/license/bahanonu/calciumImagingAnalysis?style=flat-square&logo=appveyor)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/bahanonu/calciumImagingAnalysis?style=flat-square&logo=appveyor)
-![visitors](https://vbr.wocr.tk/badge?page_id=bahanonu/ciatah)
+![visitors](https://vbr.wocr.tk/badge?page_id=bahanonu.ciatah)
 <!-- <img src="https://visitor-badge.glitch.me/badge?page_id=bahanonu.calciumImagingAnalysis" onerror="this.style.display='none'" alt='visitors' style='display:inline'> -->
 <!-- ![Hits](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https%3A%2F%2Fgithub.com%2Fbahanonu%2FcalciumImagingAnalysis) -->
 <!-- <img src="https://hitcounter.pythonanywhere.com/count/tag.svg?url=https%3A%2F%2Fgithub.com%2Fbahanonu%2FcalciumImagingAnalysis" onerror="this.style.display='none'" alt=''> -->
