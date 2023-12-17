@@ -8,7 +8,7 @@ function setFigureDefaults()
 		%
 
 	% changelog
-		%
+		% 2022.11.02 [17:06:11] - Disable Matlab UI font size change for code and text, that is left to the user.
 	% TODO
 		%
 
@@ -25,8 +25,6 @@ function setFigureDefaults()
 	defaultFontStr = 'Consolas';
 	defaultUIFontStr = 'Consolas';
 
-	% Change the command window and editor fonts
-	FontSize = 9;
 	% java.awt.Font.BOLD
 	if ismac
 		cmdWinEditorFont = 'Menlo-Regular';
@@ -38,8 +36,10 @@ function setFigureDefaults()
 	    disp('Platform not supported')
 	end
 
-	com.mathworks.services.FontPrefs.setCodeFont(java.awt.Font(cmdWinEditorFont,0,FontSize*2))
-    com.mathworks.services.FontPrefs.setTextFont(java.awt.Font(cmdWinEditorFont,0,FontSize*2))
+	% Change the command window and editor fonts
+	% FontSize = 9;
+	% com.mathworks.services.FontPrefs.setCodeFont(java.awt.Font(cmdWinEditorFont,0,FontSize*2))
+ %    com.mathworks.services.FontPrefs.setTextFont(java.awt.Font(cmdWinEditorFont,0,FontSize*2))
 
 	% 'DefaultLineLineSmoothing','on',...
 	% 'DefaultPatchLineSmoothing','on',...

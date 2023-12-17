@@ -20,7 +20,7 @@ The following programs will be found in this folder after downloading (e.g. afte
 - Motion correction
 	- `Turboreg` - C and MEX function implementation of http://bigwww.epfl.ch/thevenaz/turboreg/.
 	- `NoRMCorre` - https://github.com/flatironinstitute/NoRMCorre.
-
+	- `PatchWarp` - https://github.com/ryhattori/PatchWarp.
 
 ## Direct download
 Direct download links for cases in which users are having connectivity issues. Extract and place contents in folder in the `_external_programs` named as indicated:
@@ -38,3 +38,5 @@ Direct download links for cases in which users are having connectivity issues. E
 - `matnwb` - https://github.com/NeurodataWithoutBorders/matnwb/archive/v2.2.5.3.zip
 - `gramm` - https://github.com/piermorel/gramm/archive/master.zip
 - `turboreg` - http://tiny.ucsf.edu/ciatahTurboreg
+- `cocoapi` - https://github.com/cocodataset/cocoapi
+- `patchwarp` - https://github.com/ryhattori/PatchWarp using my fork https://github.com/bahanonu/PatchWarp

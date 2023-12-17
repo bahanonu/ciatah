@@ -31,6 +31,9 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
         % 2022.07.28 [04:48:16] - Added ability to open folder in OS GUI, e.g. Windows Explorer.
         % 2022.07.30 [10:54:53] - If manual input for filtering folders set back to no filter to avoid GUI loops.
         % 2022.09.14 [09:51:55] - Make sure preview data and open folder buttons are associated with correct previewDataHandle and openFoldersHandle handles.
+        % 2022.11.05 [17:54:02] - List of files in selected folder now contain file dates. Folder are now sorted to appear first in the list.
+        % 2023.05.08 [19:27:47] - Get around error with incorrect filter for input images applied.
+        % 2023.05.09 [12:22:49] - Allow user to reset folders along with prior select folders stay selected on next reload of object.
 	% TODO
 		%
 
@@ -175,9 +178,14 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 
 		% [x0 y0 width height]
 		addFoldersLoc = hListboxT.folders.Position;
-		addFoldersLoc(3) = 0.15;
-		addFoldersLoc(1) = 0.63;
+		addFoldersLoc(3) = 0.14;
+		addFoldersLoc(1) = 0.64;
 		addFoldersHandle = uicontrol('style','pushbutton','Units', 'normalized','position',addFoldersLoc,'FontSize',9*fontScale,'string','Add folders.','BackgroundColor',[153 153 153]/255,'callback',@callback_addFolders);
+
+		resetFoldersLoc = hListboxT.folders.Position;
+		resetFoldersLoc(3) = 0.10;
+		resetFoldersLoc(1) = 0.53;
+		resetFoldersHandle = uicontrol('style','pushbutton','Units', 'normalized','position',resetFoldersLoc,'FontSize',9*fontScale,'string','Select all.','BackgroundColor',[153 153 153]/255,'callback',@callback_resetFolders);
 
 		loadFoldersLoc = hListboxT.folders.Position;
 		loadFoldersLoc(3) = 0.20;
@@ -454,7 +462,10 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 			if any(strcmp({'methodBox','cellExtractionBox','cellExtractFiletypeBox','guiEnabled','folders'},get(src,'Tag')))==0
 				if length(get(hListboxS.folders,'Value'))==1
 				else
-					set(hListboxS.folders,'Value',validFoldersIdx);				
+					set(hListboxS.folders,'Value',validFoldersIdx);	
+					if ~isempty(obj.guiFoldersSelected)
+						set(hListboxS.folders,'Value',obj.guiFoldersSelected);
+					end			
 				end
 			end
 
@@ -680,6 +691,11 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		% close(hFig)
 		subfxn_returnNormal();
 	end
+	function callback_resetFolders(source,eventdata)
+		% Select all folders and reset prior users input
+		set(hListboxS.folders,'Value',1:length(selectList));	
+		obj.guiFoldersSelected = [];
+	end	
 	function callback_loadFolders(source,eventdata)
 		% Set current method to modelAddNewFolders and start method.
 		hListbox.Value = find(strcmp('modelVarsFromFiles',obj.methodsList),1);
@@ -843,6 +859,9 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 		selBoxInfo.subject.Value = 1:length(subjectStrUnique);
 		selBoxInfo.assay.Value = 1:length(assayStrUnique);
 		selBoxInfo.folders.Value = 1:length(selectList);
+		if ~isempty(obj.guiFoldersSelected)
+			selBoxInfo.folders.Value = obj.guiFoldersSelected;
+		end
 		selBoxInfo.folderFiles.Value = 1;
 		if obj.guiEnabled==1;ggg=1;else;ggg=2;end
 		selBoxInfo.guiEnabled.Value = ggg;
@@ -923,29 +942,50 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
 			try
 				folderFileListHere = ciapkg.api.getFileList(thisFolderPath,'.','addInputDirToPath',0);
 				folderFileListHere = folderFileListHere(3:end);
+				folderFileListHereDisp = {};
 				currentFolderFilesList = folderFileListHere;
+				maxFileLength = max(cell2mat(cellfun(@length,folderFileListHere,'UniformOutput',false)));
+				for iz2 = 1:length(folderFileListHere)
+					thisFileTmp = folderFileListHere{iz2};
+					thisFileFullPath = fullfile(thisFolderPath,thisFileTmp);
+					if isfolder(thisFileFullPath)==1
+						spacerLength = maxFileLength - length(thisFileTmp);
+						thisFileTmp = ['->' thisFileTmp];
+						spacerStr = repmat(' ',1,spacerLength);
+						thisFileTmp = [thisFileTmp spacerStr 'Folder'];
+						folderFileListHereDisp{end+1} = thisFileTmp;
+					end
+				end
 				for iz2 = 1:length(folderFileListHere)
 					thisFileTmp = folderFileListHere{iz2};
 					thisFileFullPath = fullfile(thisFolderPath,thisFileTmp);
 					if isfile(thisFileFullPath)==1
 						fileInfo2 = dir(thisFileFullPath);
 						fileSize = fileInfo2.bytes*9.53674e-7;
+						fileDate = datetime(fileInfo2.date);
+						fileDate.Format = 'yyyy.MM.dd HH:mm';
+						fileDate = char(fileDate);
+
+						spacerLength = maxFileLength - length(thisFileTmp);
+						spacerStr = repmat(' ',1,spacerLength);
 						% Show in GB or Mb
 						if fileSize>2^10
-							thisFileTmp = sprintf('%s (%0.2f GB)',thisFileTmp,round(fileSize/2^10,2));
+							thisFileTmp = sprintf('%s %s (%0.2f GB) [%s]',thisFileTmp,spacerStr,round(fileSize/2^10,2),fileDate);
 						else
-							thisFileTmp = sprintf('%s (%0.2f MB)',thisFileTmp,round(fileSize,2));
+							thisFileTmp = sprintf('%s %s (%0.2f MB) [%s]',thisFileTmp,spacerStr,round(fileSize,2),fileDate);
 						end
 					elseif isfolder(thisFileFullPath)==1
+						continue;
 						thisFileTmp = ['->' thisFileTmp];
 					end
-					folderFileListHere{iz2} = thisFileTmp;
+					folderFileListHereDisp{end+1} = thisFileTmp;
+					% folderFileListHere{iz2} = thisFileTmp;
 				end
-				set(hListboxS.folderFiles,'string',folderFileListHere);
+				set(hListboxS.folderFiles,'string',folderFileListHereDisp);
 
 				% Update selected files
 				set(hListboxS.folderFiles,'Value',1);
-				folderFilesHighlight = cellfun(@(x) ~isempty(cell2mat(regexp(x,{obj.fileFilterRegexp,obj.fileFilterRegexpRaw}))),folderFileListHere,'UniformOutput',0);
+				folderFilesHighlight = cellfun(@(x) ~isempty(cell2mat(regexp(x,{obj.fileFilterRegexp,obj.fileFilterRegexpRaw}))),folderFileListHereDisp,'UniformOutput',0);
                 folderFilesHighlight = cell2mat(folderFilesHighlight);
 				if any(folderFilesHighlight)
 					selectFilesIdx = find(folderFilesHighlight);
@@ -1093,7 +1133,11 @@ function [idNumIdxArray, validFoldersIdx, ok] = ciatahMainGui(obj,fxnsToRun,inpu
                         if isempty(logical(valid))
                             
                         else
-                            inputImages = inputImages(:,:,logical(valid));
+                        	try
+                            	inputImages = inputImages(:,:,logical(valid));
+                            catch
+
+                            end
                         end
 						signalExtImageCache{obj.fileNum}.(obj.signalExtractionMethod) = {inputImages,inputSignals};
 					end

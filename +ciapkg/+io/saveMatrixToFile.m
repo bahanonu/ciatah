@@ -28,9 +28,9 @@ function [success] = saveMatrixToFile(inputMatrix,savePath,varargin)
 	options.aviSaveType = 'Grayscale AVI';
 	% whether to have the waitbar enabled
 	options.waitbarOn = 1;
-	% hierarchy name in hdf5 where movie is
+	% Hierarchy name in HDF5 file where movie is stored.
 	options.inputDatasetName = '/1';
-	% frame rate, e.g. for AVI
+	% Frame rate, e.g. for AVI
 	options.saveFPS = 20;
 	% HDF5: additional information to save inside the HDF5 file
 	options.addInfo = [];

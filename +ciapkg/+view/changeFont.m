@@ -15,13 +15,14 @@ function [success] = changeFont(FontSize,varargin)
         % 2021.11.18 [09:00:28] - Updated so can update font size, name, color more independent of one another.
         % 2022.01.14 [05:53:37] - Updated so doesn't change Axes backgroundcolor when changing font color, only Axes text.
         % 2022.03.14 [04:06:10] - Also check for matlab.ui.control.UIControl when conducting font color changes and ignore to not cause errors.
-	% TODO
-		% Add support for changing other font aspects, e.g. figure Font family, command window font, etc.
+		% 2022.12.03 [21:51:44] - Update to handle legend, since use TextColor property instead of Color for text. Users can also put in a blank fontSize to avoid changing that property, can skip UI that would normally appear.
 
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	%========================
 	% DESCRIPTION
+	% Binary: 1 = display GUI if font size is blank. 0 = no GUI displayed, font size changing is skipped.
+	options.fontSizeGui = 0;
 	% Int: size of font to use
 	options.FontSize = [];
 	% Float: [r g b] vector between 0 to 1.
@@ -48,25 +49,39 @@ function [success] = changeFont(FontSize,varargin)
             end
 		else
 			options.FontSize = FontSize;
-			if isempty(options.FontSize)
-				userInput = inputdlg('New font');
-				userInput = str2num(userInput{1});
+			if options.fontSizeGui==0&isempty(options.FontSize)
 			else
-				userInput = options.FontSize;
+				if isempty(options.FontSize)
+					userInput = inputdlg('New font');
+					userInput = str2num(userInput{1});
+				else
+					userInput = options.FontSize;
+				end
+				set(findall(gcf,'-property','FontSize'),'FontSize',userInput);
 			end
-			set(findall(gcf,'-property','FontSize'),'FontSize',userInput);
         end
         if ~isempty(options.fontColor)
             try
                 tmpList = findall(gcf,'-property','FontSize');
                 rmIdx = zeros([1 length(tmpList)]);
+				lgdIdx = zeros([1 length(tmpList)]);
                 for i = 1:length(tmpList)
                     if any(strcmp(class(tmpList(i)),{'matlab.graphics.axis.Axes','matlab.ui.control.UIControl'}))
                         rmIdx(i) = 1;
-                    end
-                end
-                tmpList2 = tmpList(find(~rmIdx));
+					end
+					if any(strcmp(class(tmpList(i)),{'matlab.graphics.illustration.Legend'}))
+                        lgdIdx(i) = 1;
+					end
+				end
+				% Change text colors
+                tmpList2 = tmpList(~rmIdx);
                 set(tmpList2,'Color',options.fontColor);
+
+				% Change legend colors
+                tmpListLgd = tmpList(logical(lgdIdx));
+                set(tmpListLgd,'TextColor',options.fontColor);
+                %set(tmpListLgd,'Box','off');
+
                 %tmpList2 = tmpList(~rmIdx);
                 %set(tmpList2,'TextColor',options.fontColor);
                 % set(findall(gcf,'-property','FontSize'),'Color',options.fontColor);

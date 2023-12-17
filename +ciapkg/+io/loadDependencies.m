@@ -1,4 +1,4 @@
-function loadDependencies(varargin)
+function [success] = loadDependencies(varargin)
 	% Download and load CIAtah dependencies.
 	% Biafra Ahanonu
 	% started: 2014.07.31
@@ -28,6 +28,8 @@ function loadDependencies(varargin)
 		% 2022.07.10 [20:27:29] - Add SlideBook .jar reader to Bio-Formats download.
 		% 2022.09.14 [09:33:53] - Ensure NoRMCorre is in default options.
 		% 2022.09.14 [09:47:20] - Ensure bfmatlab_readers directory exists, else websave errors occur.
+		% 2022.11.06 [12:47:17] - Ensure display location of SlideBook6Reader.jar saving.
+		% 2022.12.05 [11:14:36] - Add success output.
 	% TODO
 		% Verify all dependencies download and if not ask user to download again.
 
@@ -81,6 +83,8 @@ function loadDependencies(varargin)
 	% 	eval([fn{i} '=options.' fn{i} ';']);
 	% end
 	%========================
+
+	success = 0;
 
 	scnsize = get(0,'ScreenSize');
 	if ischar(options.dispStr)
@@ -221,7 +225,10 @@ function loadDependencies(varargin)
 				% Ensure directory exists
 				ciapkg.io.mkdir(fullfile(ciapkg.getDirExternalPrograms(),'bfmatlab_readers'));
 				% Download
-				websave(fullfile(ciapkg.getDirExternalPrograms(),'bfmatlab_readers','SlideBook6Reader.jar'),downloadUrl);
+				rawSavePathDownloadTmp = fullfile(ciapkg.getDirExternalPrograms());
+				rawSavePathDownloadTmp = fullfile(rawSavePathDownloadTmp,'bfmatlab_readers','SlideBook6Reader.jar');
+				fprintf('Downloading %s file to %s\n',downloadUrl,rawSavePathDownloadTmp)
+				websave(rawSavePathDownloadTmp,downloadUrl);
 
 				slideBookPath = fullfile(ciapkg.getDirExternalPrograms(),'bfmatlab_readers','SlideBook6Reader.jar');
 				if isfile(slideBookPath)==1
