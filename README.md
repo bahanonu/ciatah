@@ -324,7 +324,8 @@ Statistics on total hits on the main repository and documentation pages. Several
 - ![visitors](https://page-views.glitch.me/badge?page_id=bahanonu.ciatah) (starting 2022.03.02, backup)
 - ![visitors](https://visitor-badge.deta.dev/badge?page_id=bahanonu.ciatah&left_color=gray&right_color=red) (starting 2022.03.02, backup)
 - ![visitors](https://visitor-badge.glitch.me/badge?page_id=bahanonu.calciumImagingAnalysis)
-- [![Visits Badge](https://badges.pufler.dev/visits/bahanonu/ciatah?cacheSeconds=3600)](https://badges.pufler.dev) (starting 2023.06.13) <!-- Potentially more unique visitors -->
-- ![visitors](https://vbr.wocr.tk/badge?page_id=bahanonu_ciatah&cache=on) <!-- Potentially more unique visitors -->
+- [![Visits Badge](https://badges.pufler.dev/visits/bahanonu/ciatah?cacheSeconds=3600)](https://badges.pufler.dev) (starting 2023.12.17) <!-- Potentially more unique visitors -->
+- ![visitors](https://vbr.wocr.tk/badge?page_id=bahanonu_ciatah&cache=on) (starting 2023.12.17) <!-- Potentially more unique visitors -->
+- ![visitors](https://vbr.wocr.tk/badge?page_id=bahanonu.ciatah)
 
 <!-- - [![HitCount](http://hits.dwyl.com/bahanonu/calciumImagingAnalysis.svg)](http://hits.dwyl.com/bahanonu/calciumImagingAnalysis) (starting 2020.08.16), frozen til `dwyl` migrates to new server. -->
