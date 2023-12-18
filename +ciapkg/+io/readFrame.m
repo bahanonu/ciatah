@@ -8,7 +8,7 @@ function [thisFrame,movieFileID,inputMovieDims] = readFrame(inputMoviePath,frame
 	% outputs
 		%
 	% Usage
-		% For non-HDF5 file types, need to open a link to the 
+		% For non-HDF5 file types, need to open a link to the file then can pass the handle for faster subsequent reading.
 			% [thisFrame,movieFileID,inputMovieDims] = ciapkg.io.readFrame(inputMoviePath,frameNo);
 			% Then for the second call, feed in movieFileID and inputMovieDims to improve read speed.
 			% [thisFrame] = ciapkg.io.readFrame(inputMoviePath,frameNo,'movieFileID',movieFileID,'inputMovieDims',inputMovieDims);
@@ -19,6 +19,9 @@ function [thisFrame,movieFileID,inputMovieDims] = readFrame(inputMoviePath,frame
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2022.02.24 [10:24:28] - AVI now read(...,'native') is faster.
 		% 2022.07.27 [13:48:43] - Ensure subfxn_loadFrame nested function outputs frame data (even if file does not contain the requested frame, e.g. empty matrix).
+		% 2022.10.27 [18:33:58] - Update AVI support to do additional cdata checks.
+		% 2023.06.07 [11:44:55] - Add support for reading multiple files if a character cell array of char vectors is given.
+		% 2023.08.19 [14:45:49] - Add bioformats passing arguments for loadMovieList as options.
 	% TODO
 		%
 
@@ -43,6 +46,12 @@ function [thisFrame,movieFileID,inputMovieDims] = readFrame(inputMoviePath,frame
 	options.rgbDisplay = 0;
 	% Int: [] = do nothing, 1-3 indicates R,G,B channels to take from multicolor RGB AVI
 	options.rgbChannel = [];
+	% Int: Bio-Formats series number to load.
+	options.bfSeriesNo = 0;
+	% Int: Bio-Formats channel number to load.
+	options.bfChannelNo = 1;
+	% Int: Bio-Formats z dimension to load.
+	options.bfZdimNo = 1;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -64,11 +73,29 @@ function [thisFrame,movieFileID,inputMovieDims] = readFrame(inputMoviePath,frame
         
         if iscell(inputMoviePath)==1&&length(inputMoviePath)==1
             inputMoviePath = inputMoviePath{1};
-        end
-
-		% Check if path to movie or uder 
+            [thisFrame] = subfxn_loadFrameWrapper(inputMoviePath,options);
+        elseif iscell(inputMoviePath)==1&&length(inputMoviePath)>1
+        	disp(['Loading frame ' num2str(frameNo) ' from ' num2str(length(inputMoviePath)) ' movies.'])
+        	thisFrameTmp = {};
+        	nFrames = length(inputMoviePath);
+        	for i = 1:nFrames
+        		thisFrameTmp{i} = subfxn_loadFrameWrapper(inputMoviePath{i},options);
+        	end
+        	thisFrame = cat(3,thisFrameTmp{:});
+        elseif ischar(inputMoviePath)==1
+            [thisFrame] = subfxn_loadFrameWrapper(inputMoviePath,options);
+        end		
+	catch err
+		disp(repmat('@',1,7))
+		disp(getReport(err,'extended','hyperlinks','on'));
+		disp(repmat('@',1,7))
+	end
+	function [thisFrame] = subfxn_loadFrameWrapper(inputMoviePath,options)
+		% Check if path to valid movie file type
 		if ischar(inputMoviePath)
 			[movieType, supported, movieTypeSpecific] = ciapkg.io.getMovieFileType(inputMoviePath);
+			options.movieType = movieType;
+			options.movieTypeSpecific = movieTypeSpecific;
 		else
 			disp('Please input a file path.');
 			return;
@@ -81,25 +108,26 @@ function [thisFrame,movieFileID,inputMovieDims] = readFrame(inputMoviePath,frame
 		end
 
 		[thisFrame, inputMovieDims] = subfxn_loadFrame(inputMoviePath,options);
-		
-	catch err
-		disp(repmat('@',1,7))
-		disp(getReport(err,'extended','hyperlinks','on'));
-		disp(repmat('@',1,7))
 	end
 	function [thisFrame, inputMovieDims] = subfxn_loadFrame(inputMoviePathHere,options)
 		inputMovieDims = options.inputMovieDims;
 		thisFrame = [];
+		movieType = options.movieType;
+		movieTypeSpecific = options.movieTypeSpecific;
 		switch movieType
 			case 'hdf5'
 				% Much faster to input the existing movie dimensions.
 				if isempty(options.inputMovieDims)
-					[inputMovieDims] = ciapkg.io.getMovieInfo(inputMoviePath,'frameList',options.frameList,'inputDatasetName',options.inputDatasetName,'displayInfo',0,'displayDiagnosticInfo',0);
+					[inputMovieDims] = ciapkg.io.getMovieInfo(inputMoviePathHere,'frameList',options.frameList,'inputDatasetName',options.inputDatasetName,'displayInfo',0,'displayDiagnosticInfo',0);
 					inputMovieDims = [inputMovieDims.one inputMovieDims.two inputMovieDims.three];
 				else
 					inputMovieDims = options.inputMovieDims;	
 				end
 				% inputMovieDims
+				% inputMoviePathHere
+				% options.inputDatasetName
+				% [1 1 frameNo]
+				% [inputMovieDims(1) inputMovieDims(2) 1]
 				thisFrame = h5read(inputMoviePathHere,options.inputDatasetName,[1 1 frameNo],[inputMovieDims(1) inputMovieDims(2) 1]);
 			case 'tiff'
 				warning off;
@@ -131,14 +159,18 @@ function [thisFrame,movieFileID,inputMovieDims] = readFrame(inputMoviePath,frame
 			case 'avi'
 				if isempty(options.movieFileID)
 					% Much slower, avoid.
-					xyloObj = subfxn_getMovieObj(inputMoviePathHere,options)
+					xyloObj = subfxn_getMovieObj(inputMoviePathHere,options);
 				else
 					xyloObj = options.movieFileID;
 				end
 				thisFrame = read(xyloObj, frameNo,'native');
-				thisFrame = thisFrame.cdata;
+				if isstruct(thisFrame)
+					thisFrame = thisFrame.cdata;
+				else
+					% Do nothing, frame is already a matrix
+				end
 				if options.rgbDisplay==0
-					if size(thisFrame,3)==3&isempty(options.rgbChannel)
+					if size(thisFrame,3)==3 & isempty(options.rgbChannel)
 						thisFrame = squeeze(thisFrame(:,:,1));
 					elseif ~isempty(options.rgbChannel)
 						thisFrame = squeeze(thisFrame(:,:,options.rgbChannel));
@@ -153,12 +185,21 @@ function [thisFrame,movieFileID,inputMovieDims] = readFrame(inputMoviePath,frame
 				end
 				thisFrame = inputMovieIsx.get_frame_data(frameNo-1);
 			otherwise
-				thisFrame = loadMovieList(inputMoviePathHere,'inputDatasetName',options.inputDatasetName,'displayInfo',0,'displayDiagnosticInfo',0,'displayWarnings',0,'frameList',frameNo);
+				thisFrame = loadMovieList(inputMoviePathHere,...
+					'inputDatasetName',options.inputDatasetName,...
+					'displayInfo',0,'displayDiagnosticInfo',0,...
+					'displayWarnings',0,'frameList',frameNo,...
+					'bfSeriesNo',options.bfSeriesNo,...
+					'bfChannelNo',options.bfChannelNo,...
+					'bfZdimNo',options.bfZdimNo);
+				
 		end
 	end
 	function movieFileID = subfxn_getMovieObj(inputMoviePathHere,options)
 		% Setup connection to file to reduce I/O for file types that need it.
 		movieFileID = [];
+		movieType = options.movieType;
+		movieTypeSpecific = options.movieTypeSpecific;
 		switch movieTypeSpecific
 			case 'hdf5'
 				%

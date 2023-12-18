@@ -109,6 +109,9 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 		% 2022.03.23 [22:24:46] - Improve Bio-Formats support, including using bfGetPlane to partially load data along with adding ndpi support.
 		% 2022.07.05 [21:21:35] - Add SlideBook Bio-Formats support. Remove local function getMovieFileType to force use of CIAtah getMovieFileType function. Updated getIndex call to avoid issues with certain Bio-Formats. Ensure getting correct Bio-Formats frames and loadMovieList output.
 		% 2022.07.28 [18:44:47] - Hide TIF warnings.
+		% 2022.10.24 [10:32:25] - Added mp4 support.
+		% 2022.10.27 [18:33:58] - Update AVI support to do additional cdata checks.
+		% 2022.12.02 [16:04:03] - To reduce automatic conversion to double when reading HDF5 with largeMovieLoad=1 and a specific set of frames, force outputMovie default value to be single. This is made consistent across all image types, checks if float or not then re-initializes default outputMovie.
         
 	% TODO
 		% OPEN
@@ -179,7 +182,7 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 	% Int: [] = do nothing, 1-3 indicates R,G,B channels to take from multicolor RGB AVI
 	options.rgbChannel = [];
 	% Int: Bio-Formats series number to load.
-	options.bfSeriesNo = 1;
+	options.bfSeriesNo = 0;
 	% Int: Bio-Formats channel number to load.
 	options.bfChannelNo = 1;
 	% Int: Bio-Formats z dimension to load.
@@ -197,7 +200,7 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 	startTime = tic;
     
     % Ensure all output arguments set
-    outputMovie = NaN;
+    outputMovie = NaN('single');
     movieDims = NaN;
     nPixels = NaN;
     nFrames = NaN;
@@ -402,7 +405,7 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 					tmpDataset = thisDatasetName;
 				end
 				tmpFrame = readHDF5Subset(thisMoviePath,offsetTmp,blockTmp,'datasetName',tmpDataset,'displayInfo',options.displayInfo);
-			case 'avi'
+			case {'avi','mp4'}
 				xyloObj = VideoReader(thisMoviePath);
 				dims.x(iMovie) = xyloObj.Height;
 				dims.y(iMovie) = xyloObj.Width;
@@ -411,7 +414,14 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 				dims.two(iMovie) = xyloObj.Width;
 				dims.three(iMovie) = xyloObj.NumberOfFrames;
 				tmpFrame = read(xyloObj, 1, 'native');
-				tmpFrame = tmpFrame.cdata;
+				try
+					if isstruct(tmpFrame)==1
+						tmpFrame = tmpFrame.cdata;
+					else
+						% Do nothing
+					end
+				catch
+				end
 				% tmpFrame = readFrame(xyloObj);
 			case 'isxd'
 				inputMovieIsx = isx.Movie.read(thisMoviePath);
@@ -452,6 +462,14 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 		else
 			imgClass = options.loadSpecificImgClass;
 		end
+
+		% Change the default outputMovie to be the right class depending on the input movie's class
+		if any(strcmp(imgClass,{'single','double'}))
+			outputMovie = NaN(imgClass);
+		else
+			outputMovie = zeros([1],imgClass);
+		end
+
 		% change dims.z if user specifies a list of frames
 		if (~isempty(options.frameList)|options.frameList>dims.z(iMovie))&options.treatMoviesAsContinuous==0
 			% Disallow frames that are longer than the length of the movie
@@ -807,7 +825,7 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 					end
 				end
 			% ========================
-			case 'avi'
+			case {'avi','mp4'}
 				xyloObj = VideoReader(thisMoviePath);
 
 				if isempty(thisFrameList)
@@ -829,7 +847,17 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 				nFrames = length(framesToGrab);
 				for iframe = 1:nFrames
 					readFrame = framesToGrab(iframe);
-					tmpAviFrame = read(xyloObj, readFrame);
+					tmpAviFrame = read(xyloObj, readFrame,'native');
+					% Check for data type
+					try
+						if isstruct(tmpAviFrame)
+							tmpAviFrame = tmpAviFrame.cdata;
+						else
+							% Do nothing, frame is already a matrix
+						end
+					catch
+
+					end
 					% check if frame is RGB or grayscale, if RGB only take one channel (since they will be identical for RGB grayscale)
 					if size(tmpAviFrame,3)==3&isempty(options.rgbChannel)
 						tmpAviFrame = squeeze(tmpAviFrame(:,:,1));
@@ -1037,7 +1065,7 @@ function [outputMovie, movieDims, nPixels, nFrames] = loadMovieList(movieList, v
 	% DFOF=single(DFOF);
 	if options.convertToDouble==1
 		subfxnDisplay('converting to double...',options);
-		outputMovie=double(outputMovie);
+		outputMovie = double(outputMovie);
 	end
 
 	if options.displayInfo==1

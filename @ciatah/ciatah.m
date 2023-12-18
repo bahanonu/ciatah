@@ -26,6 +26,7 @@ classdef ciatah < dynamicprops
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2021.10.20 [21:46:52] - Added fontSizeGuiScale.
 		% 2022.02.09 [23:51:18] - Misc code fixes to conform to better Matlab language standards.
+		% 2023.05.08 [22:06:40] - Add guiFoldersSelected, prior user selected folders kept on next call.
 	% TODO
 		%
 
@@ -90,6 +91,8 @@ classdef ciatah < dynamicprops
 		guiEnabled = 1;
 		% indices for folders to analyze, [] = all
 		foldersToAnalyze = [];
+		% Remember folders selected by the user
+		guiFoldersSelected = [];
 		% indices for stimuli to analyze, [] = all
 		discreteStimuliToAnalyze = [];
 		% io settings

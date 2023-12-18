@@ -317,10 +317,15 @@ Copyright (C) 2013-2023 Biafra Ahanonu
 This project is licensed under the terms of the MIT license. See LICENSE file for details.
 
 ## Repository stats
+Statistics on total hits on the main repository and documentation pages. Several badges are present as certain services have gone offline or count page hits differently.
+
 - ![visitors](https://visitor-badge.glitch.me/badge?page_id=bahanonu.calciumImagingAnalysis) (starting 2020.09.22)
 - ![Hits](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https%3A%2F%2Fgithub.com%2Fbahanonu%2FcalciumImagingAnalysis) (starting 2020.09.16)
 - ![visitors](https://page-views.glitch.me/badge?page_id=bahanonu.ciatah) (starting 2022.03.02, backup)
 - ![visitors](https://visitor-badge.deta.dev/badge?page_id=bahanonu.ciatah&left_color=gray&right_color=red) (starting 2022.03.02, backup)
 - ![visitors](https://visitor-badge.glitch.me/badge?page_id=bahanonu.calciumImagingAnalysis)
+- [![Visits Badge](https://badges.pufler.dev/visits/bahanonu/ciatah?cacheSeconds=3600)](https://badges.pufler.dev) (starting 2023.12.17) <!-- Potentially more unique visitors -->
+- ![visitors](https://vbr.wocr.tk/badge?page_id=bahanonu_ciatah&cache=on) (starting 2023.12.17) <!-- Potentially more unique visitors -->
+- ![visitors](https://vbr.wocr.tk/badge?page_id=bahanonu.ciatah)
 
 <!-- - [![HitCount](http://hits.dwyl.com/bahanonu/calciumImagingAnalysis.svg)](http://hits.dwyl.com/bahanonu/calciumImagingAnalysis) (starting 2020.08.16), frozen til `dwyl` migrates to new server. -->

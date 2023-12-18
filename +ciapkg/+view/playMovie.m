@@ -13,12 +13,12 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 	% 		Path: full file path to a movie containing a [x y t] or [x y C t] matrix.
 	% 		Path (MAT-file): full path to a MAT-file with a variable containing a [x y t] or [x y C t] matrix.
 	% options
-		% fps -
-		% extraMovie - extra movie to play, [X Y Z] matrix of X,Y height/width and Z frames
-		% extraLinePlot - add a line-plot that is synced with the movie, [S Z] with S signals and Z frames
-		% windowLength - length of the window over which to show the line-plot
-		% recordMovie - whether to record the current movie or not
-		% nFrames - number of frames to analyze
+	% 	fps - frame rate to display movie.
+	% 	extraMovie - extra movie to play, [X Y Z] matrix of X,Y height/width and Z frames
+	% 	extraLinePlot - add a line-plot that is synced with the movie, [S Z] with S signals and Z frames
+	% 	windowLength - length of the window over which to show the line-plot
+	% 	recordMovie - whether to record the current movie or not
+	% 	nFrames - number of frames to analyze
 	%
 	% changelog
 		% 2013.11.13 [21:30:53] can now pre-maturely exit the movie, 21st century stuff
@@ -46,6 +46,12 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		% 2022.03.15 [01:33:56] - By default use 'painters' renderer as that can produce smoother rendering than opengl.
 		% 2022.07.26 [09:43:59] - Sub-sampling now has option to downsample instead of just taking every X pixel, slower but better quality.
 		% 2022.09.14 [08:55:37] - Add renderer option to allow users to choose painters or opengl.
+		% 2022.10.24 [10:38:49] - Add support for mp4 files.
+		% 2022.11.03 [17:42:42] - Add support for overlaying DeepLabCut markers on the movie (including with confidence measure). Users can change size of overlay markers.
+		% 2022.12.02 [09:46:10] - Change default colormap to gray.
+		% 2023.02.22 [18:24:46] - Added downsample (both type) support for extra movie, mirrors what happens in the 1st movie. Also improved downsampling when just subsampling by removing unnecessary calls to imresize. Improved tracking point handling to ensure in the correct axes and can turn off prior frame tracking. Better handling of quiver plots with tracking.
+		% 2023.04.06 [19:29:42] - Convert all nanmin/nanmax to 'omitnan' and (:) to [1 2 3 4] to ensure compatible with 3- and 4-d tensors.
+		% 2023.10.23 [17:46:25] - Additional Bio-Formats support.
 
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
@@ -102,8 +108,11 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 	options.primaryPointsOverlayThreshold = 0.3;
 	% Vector: [xpos ypos-] add a point to the secondary movie.
 	options.secondaryPointsOverlay = [];
-	% Matrix: columns = [xpos ypos angle(degrees) magnitude], rows = frames. Both angle and magnitude are optional.
+	% Matrix: columns = [xpos ypos angle(degrees) magnitude], rows = frames. Both angle and magnitude are optional. 
+	% Str: Alternatively, input path to DeepLabCut or similar table (CSV file preferred). This will be automatically loaded by playMovie.
 	options.primaryTrackingPoint = [];
+	% Vector: [1 nFrames] of confidence or liklihood 
+	options.primaryTrackingPointsConfidence = [];
 	% Int: number of frames back to indicate smaller tracking points.
 	options.primaryTrackingPointNback = 20;
 	% Str: color of primary pointer tracker
@@ -142,6 +151,12 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 	options.menuBkgdColor = [0 0 0]+0.2;
 	% Str: 'painters' or 'opengl'
 	options.renderer = 'opengl';
+	% Int: Bio-Formats series number to load.
+	options.bfSeriesNo = 0;
+	% Int: Bio-Formats channel number to load.
+	options.bfChannelNo = 1;
+	% Int: Bio-Formats z dimension to load.
+	options.bfZdimNo = 1;
 	% get options
 	options = getOptions(options,varargin);
 	% options
@@ -189,7 +204,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 			inputMovieDims = size(matObj,options.matfileVarname);
 		else
 			% inputMovieName = inputMovie;
-			inputMovieDims = loadMovieList(inputMovie,'inputDatasetName',options.inputDatasetName,'displayInfo',1,'getMovieDims',1,'displayWarnings',0);
+			inputMovieDims = loadMovieList(inputMovie,'inputDatasetName',options.inputDatasetName,'displayInfo',1,'getMovieDims',1,'displayWarnings',0,'bfSeriesNo',options.bfSeriesNo,'bfChannelNo',options.bfChannelNo,'bfZdimNo',options.bfZdimNo);
 			inputMovieDims = [inputMovieDims.one inputMovieDims.two inputMovieDims.three];
 			
 			% If NWB, change dataset name to NWB default
@@ -198,10 +213,10 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 			end
 
 			% Setup connection to file to reduce I/O for file types that need it.
-			[~,movieFileID,~] = ciapkg.io.readFrame(inputMovie,1,'inputDatasetName',options.inputDatasetName);
+			[~,movieFileID,~] = ciapkg.io.readFrame(inputMovie,1,'inputDatasetName',options.inputDatasetName,'bfSeriesNo',options.bfSeriesNo,'bfChannelNo',options.bfChannelNo,'bfZdimNo',options.bfZdimNo);
 
 			if ~isempty(options.extraMovie)
-				[~,movieFileIDExtra,inputMovieDimsExtra] = ciapkg.io.readFrame(options.extraMovie,1,'inputDatasetName',options.inputDatasetName);
+				[~,movieFileIDExtra,inputMovieDimsExtra] = ciapkg.io.readFrame(options.extraMovie,1,'inputDatasetName',options.inputDatasetName,'bfSeriesNo',options.bfSeriesNo,'bfChannelNo',options.bfChannelNo,'bfZdimNo',options.bfZdimNo);
 			end
 		end
 		options.nFrames = inputMovieDims(3);
@@ -227,6 +242,19 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 	if length(inputMovieDims)==4
 		rgbMovieFlag = 1;
 	end
+
+	% ==========================================
+
+	% Matrix: columns = [xpos ypos angle(degrees) magnitude], rows = frames. Both angle and magnitude are optional. Alternatively, input path to DeepLabCut or similar table (CSV file preferred).
+	% options.primaryTrackingPoint = [];
+	% Vector: [1 nFrames] of confidence or liklihood 
+	% options.primaryTrackingPointsConfidence = [];
+
+	% if ischar(options.primaryTrackingPoint)
+	% 	inputTable = ciapkg.behavior.importDeepLabCutData(options.primaryTrackingPoint);
+		
+	% 	options.primaryTrackingPoint
+	% end
 
 	% ==========================================
 	% COLORMAP SETUP
@@ -280,7 +308,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		subplotNum = 2;
 		if ischar(options.extraMovie)==1
 			% extraMovieFrame = subfxn_readMovieDisk(options.extraMovie,1,movieTypeExtra,1);
-			[extraMovieFrame] = ciapkg.io.readFrame(options.extraMovie,1,'movieFileID',movieFileIDExtra,'inputMovieDims',inputMovieDimsExtra,'inputDatasetName',options.inputDatasetName);
+			[extraMovieFrame] = ciapkg.io.readFrame(options.extraMovie,1,'movieFileID',movieFileIDExtra,'inputMovieDims',inputMovieDimsExtra,'inputDatasetName',options.inputDatasetName,'bfSeriesNo',options.bfSeriesNo,'bfChannelNo',options.bfChannelNo,'bfZdimNo',options.bfZdimNo);
 			% tmpFrame = loadMovieList(inputMovie,'inputDatasetName',options.inputDatasetName,'displayInfo',0,'displayDiagnosticInfo',0,'displayWarnings',0,'frameList',1);
 		else
 			extraMovieFrame = squeeze(options.extraMovie(:,:,1));
@@ -311,7 +339,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		xval = 0;
 		x=[xval,xval];
 		% y=[-0.05 max(max(options.extraLinePlot))];
-		y=[nanmin(options.extraLinePlot(:)) nanmax(options.extraLinePlot(:))];
+		y = [min(options.extraLinePlot,[],[1 2 3 4],'omitnan') max(options.extraLinePlot,[],[1 2 3 4],'omitnan')];
 		h1 = plot(x,y,'r','LineWidth',2);
 		% uistack(h1,'bottom');
 
@@ -319,7 +347,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		plotHandle = plot(options.extraLinePlot');
 		box off;
 		xAxisHandleLine = xlabel('frame');
-		ylim([nanmin(options.extraLinePlot(:)) nanmax(options.extraLinePlot(:))]);
+		ylim([min(options.extraLinePlot,[],[1 2 3 4],'omitnan') max(options.extraLinePlot,[],[1 2 3 4],'omitnan')]);
 	end
 
 	if ~isempty(options.extraMovie)
@@ -338,7 +366,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		if strcmp(movieType,'mat')==1
 			[tmpFrame] = matObj.(options.matfileVarname)(:,:,1);
 		else
-			[tmpFrame] = ciapkg.io.readFrame(inputMovie,1,'movieFileID',movieFileID,'inputMovieDims',inputMovieDims,'inputDatasetName',options.inputDatasetName);
+			[tmpFrame] = ciapkg.io.readFrame(inputMovie,1,'movieFileID',movieFileID,'inputMovieDims',inputMovieDims,'inputDatasetName',options.inputDatasetName,'bfSeriesNo',options.bfSeriesNo,'bfChannelNo',options.bfChannelNo,'bfZdimNo',options.bfZdimNo);
 		end
 		% tmpFrame = subfxn_readMovieDisk(inputMovie,1,movieType);
 		% tmpFrame = loadMovieList(inputMovie,'inputDatasetName',options.inputDatasetName,'displayInfo',0,'displayDiagnosticInfo',0,'displayWarnings',0,'frameList',1);
@@ -478,24 +506,24 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 				if strcmp(movieType,'mat')==1
 					[inputMovieFrame] = matObj.(options.matfileVarname)(:,:,1);
 				else
-					[inputMovieFrame] = ciapkg.io.readFrame(inputMovie,1,'movieFileID',movieFileID,'inputMovieDims',inputMovieDims,'inputDatasetName',options.inputDatasetName);
+					[inputMovieFrame] = ciapkg.io.readFrame(inputMovie,1,'movieFileID',movieFileID,'inputMovieDims',inputMovieDims,'inputDatasetName',options.inputDatasetName,'bfSeriesNo',options.bfSeriesNo,'bfChannelNo',options.bfChannelNo,'bfZdimNo',options.bfZdimNo);
 				end
 				if ~isempty(options.extraMovie)
-					extraMovieFrame = ciapkg.io.readFrame(options.extraMovie,1,'movieFileID',movieFileIDExtra,'inputMovieDims',inputMovieDimsExtra,'inputDatasetName',options.inputDatasetName);
+					extraMovieFrame = ciapkg.io.readFrame(options.extraMovie,1,'movieFileID',movieFileIDExtra,'inputMovieDims',inputMovieDimsExtra,'inputDatasetName',options.inputDatasetName,'bfSeriesNo',options.bfSeriesNo,'bfChannelNo',options.bfChannelNo,'bfZdimNo',options.bfZdimNo);
 				end
 			else
-				inputMovieFrame = inputMovie(:);
+				inputMovieFrame = inputMovie;
 				if ~isempty(options.extraMovie)
-					extraMovieFrame = options.extraMovie(:);
+					extraMovieFrame = options.extraMovie;
 				end
 			end
 		end
 
-		maxMovie(1) = double(nanmax(inputMovieFrame(:)));
-		minMovie(1) = double(nanmin(inputMovieFrame(:)));
+		maxMovie(1) = double(max(inputMovieFrame,[],[1 2 3 4],'omitnan'));
+		minMovie(1) = double(min(inputMovieFrame,[],[1 2 3 4],'omitnan'));
 		if ~isempty(options.extraMovie)
-			maxMovie(2) = double(nanmax(extraMovieFrame(:)));
-			minMovie(2) = double(nanmin(extraMovieFrame(:)));
+			maxMovie(2) = double(max(extraMovieFrame,[],[1 2 3 4],'omitnan'));
+			minMovie(2) = double(min(extraMovieFrame,[],[1 2 3 4],'omitnan'));
 		end
 		clear inputMovieFrame extraMovieFrame;
 		options.movieMinMax = [minMovie(1) maxMovie(1)];
@@ -575,6 +603,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 			% set(frameSlider,'Value',frame)
 			% set(frameText,'string',['Frame ' num2str(frame) '/' num2str(nFrames)])
 
+			ostruct.frame = frame;
 			% =====================
 			if options.runImageJ==1&&~ischar(inputMovie)
 				subfxn_imageJ(inputMovie);
@@ -594,7 +623,10 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 					[thisFrame] = matObj.(options.matfileVarname)(:,:,frame);
 				else
 					% thisFrame = subfxn_readMovieDisk(inputMovie,frame,movieType);
-					[thisFrame] = ciapkg.io.readFrame(inputMovie,frame,'movieFileID',movieFileID,'inputMovieDims',inputMovieDims,'inputDatasetName',options.inputDatasetName);
+					[thisFrame] = ciapkg.io.readFrame(inputMovie,frame,'movieFileID',movieFileID,'inputMovieDims',inputMovieDims,'inputDatasetName',options.inputDatasetName,'bfSeriesNo',options.bfSeriesNo,'bfChannelNo',options.bfChannelNo,'bfZdimNo',options.bfZdimNo);
+					if ~isempty(options.extraMovie)
+						extraMovieFrame = ciapkg.io.readFrame(options.extraMovie,frame,'movieFileID',movieFileIDExtra,'inputMovieDims',inputMovieDimsExtra,'inputDatasetName',options.inputDatasetName,'bfSeriesNo',options.bfSeriesNo,'bfChannelNo',options.bfChannelNo,'bfZdimNo',options.bfZdimNo);
+					end
 				end
 			else
 				if length(size(inputMovie))==4
@@ -602,7 +634,11 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 				else
 					thisFrame = squeeze(inputMovie(:,:,frame));	
 				end
+				if ~isempty(options.extraMovie)
+					extraMovieFrame = squeeze(options.extraMovie(:,:,frame));
+				end
 			end
+
 			if sparseInputMovie==1
 				thisFrame = full(thisFrame);
 			end
@@ -645,12 +681,12 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 				% extraMovieFrame = squeeze(options.extraMovie(:,:,frame));
 
 				% Display an image from the movie
-				if readMovieChunks==1
-					% extraMovieFrame = subfxn_readMovieDisk(options.extraMovie,frame,movieTypeExtra,1);
-					extraMovieFrame = ciapkg.io.readFrame(options.extraMovie,frame,'movieFileID',movieFileIDExtra,'inputMovieDims',inputMovieDimsExtra,'inputDatasetName',options.inputDatasetName);
-				else
-					extraMovieFrame = squeeze(options.extraMovie(:,:,frame));
-				end
+				% if readMovieChunks==1
+				% 	% extraMovieFrame = subfxn_readMovieDisk(options.extraMovie,frame,movieTypeExtra,1);
+				% 	extraMovieFrame = ciapkg.io.readFrame(options.extraMovie,frame,'movieFileID',movieFileIDExtra,'inputMovieDims',inputMovieDimsExtra,'inputDatasetName',options.inputDatasetName);
+				% else
+				% 	extraMovieFrame = squeeze(options.extraMovie(:,:,frame));
+				% end
 				if sparseInputMovie==1
 					extraMovieFrame = full(extraMovieFrame);
 				end
@@ -674,12 +710,12 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 				ssm = options.subSampleMovie;
 
 				% Spatially downsample movie, slower but improved quality
-				thisFrame2 = thisFrame;
-				thisFrame2(isnan(thisFrame2)) = 0;
-				thisFrame2 = imresize(thisFrame,1/ssm,'bilinear');
-				% imAlpha2 = imresize(imAlpha,ssm,'bilinear');
 				switch options.subSampleMovieType
 					case 'downsample'
+						thisFrame2 = thisFrame;
+						thisFrame2(isnan(thisFrame2)) = 0;
+						thisFrame2 = imresize(thisFrame,1/ssm,'bilinear');
+						% imAlpha2 = imresize(imAlpha,ssm,'bilinear');
 						set(montageHandle,'Cdata',thisFrame2,'AlphaData',imAlpha(1:ssm:end,1:ssm:end));
 					case 'subsample'
 						set(montageHandle,'Cdata',thisFrame(1:ssm:end,1:ssm:end),'AlphaData',imAlpha(1:ssm:end,1:ssm:end));
@@ -688,6 +724,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 			else
 				if length(size(thisFrame))==3
 					% set(montageHandle,'Cdata',squeeze(thisFrame(:,:,1)),'AlphaData',imAlpha);
+					% size(thisFrame)
 					set(montageHandle,'Cdata',thisFrame);
 				else
 					set(montageHandle,'Cdata',thisFrame,'AlphaData',imAlpha);
@@ -704,7 +741,31 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 			if ~isempty(options.extraMovie)
 				montageHandle2 = findobj(axHandle2,'Type','image');
 				set(montageHandle2,'Cdata',extraMovieFrame,'AlphaData',imAlphaExtra);
-				set(axHandle2,'color',[0 0 0]);
+
+				if options.subSampleMovie>1
+					ssm = options.subSampleMovie;
+
+					% Spatially downsample movie, slower but improved quality
+					switch options.subSampleMovieType
+						case 'downsample'
+							extraMovieFrame2 = extraMovieFrame;
+							extraMovieFrame2(isnan(extraMovieFrame2)) = 0;
+							extraMovieFrame2 = imresize(extraMovieFrame,1/ssm,'bilinear');
+							% imAlpha2 = imresize(imAlpha,ssm,'bilinear');
+							set(montageHandle2,'Cdata',extraMovieFrame2,'AlphaData',imAlphaExtra(1:ssm:end,1:ssm:end));
+						case 'subsample'
+							set(montageHandle2,'Cdata',extraMovieFrame(1:ssm:end,1:ssm:end),'AlphaData',imAlphaExtra(1:ssm:end,1:ssm:end));
+						otherwise
+					end
+				else
+					if length(size(extraMovieFrame))==3
+						% set(montageHandle,'Cdata',squeeze(thisFrame(:,:,1)),'AlphaData',imAlpha);
+						set(montageHandle2,'Cdata',extraMovieFrame);
+					else
+						set(montageHandle2,'Cdata',extraMovieFrame,'AlphaData',imAlphaExtra);
+					end
+				end
+				set(axHandle2,'color',[0 0 0]);				
 			end
 
 			if frame==1&&rgbMovieFlag==0
@@ -760,20 +821,31 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 					plot(options.primaryPoint(:,1), options.primaryPoint(:,2), 'k.', 'Markersize', 10)
 				end
 			end
+
 			if ~isempty(options.primaryTrackingPoint)
+				hold(axHandle,'on');
 				if exist('plotHandle','var')==1
 					delete(plotHandle)
+				end
+				if exist('plotHandle2','var')==1
 					delete(plotHandle2)
 				end
-				plotHandle = plot(options.primaryTrackingPoint(frame,1), options.primaryTrackingPoint(frame,2), [options.primaryTrackingPointColor '+'], 'Markersize', 17, 'LineWidth',3);
+				if exist('plotHandle3','var')==1
+					delete(plotHandle3)
+				end
+				plotHandle = plot(axHandle,options.primaryTrackingPoint(frame,1), options.primaryTrackingPoint(frame,2), [options.primaryTrackingPointColor '+'], 'Markersize', 17, 'LineWidth',3);
 
 				nBack = options.primaryTrackingPointNback;
-				if frame>nBack
-					nBackVec = [-nBack:-1]+frame;
+				if nBack==0
+					nBackVec = frame;
 				else
-					nBackVec = [1:frame];
+					if frame>nBack
+						nBackVec = [-nBack:-1]+frame;
+					else
+						nBackVec = [1:frame];
+					end
+					plotHandle2 = plot(axHandle,options.primaryTrackingPoint(nBackVec,1), options.primaryTrackingPoint(nBackVec,2), [options.primaryTrackingPointColor '+'], 'Markersize', 5, 'LineWidth',1);
 				end
-				plotHandle2 = plot(options.primaryTrackingPoint(nBackVec,1), options.primaryTrackingPoint(nBackVec,2), [options.primaryTrackingPointColor '+'], 'Markersize', 5, 'LineWidth',1);
 
 				if size(options.primaryTrackingPoint,2)>2
 					if size(options.primaryTrackingPoint,2)>3
@@ -784,21 +856,32 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 					u = -r*cos(options.primaryTrackingPoint(frame,3)*(pi/180));
 					v = r*sin(options.primaryTrackingPoint(frame,3)*(pi/180));
 
-					quiver(options.primaryTrackingPoint(frame,1), options.primaryTrackingPoint(frame,2), u, v,'MaxHeadSize',10,'AutoScaleFactor',1,'AutoScale','off','color',options.primaryTrackingPointColor,'linewidth',2)
+					plotHandle3 = quiver(axHandle,options.primaryTrackingPoint(frame,1), options.primaryTrackingPoint(frame,2), u, v,'MaxHeadSize',10,'AutoScaleFactor',1,'AutoScale','off','color',options.primaryTrackingPointColor,'linewidth',2)
 				end
+				hold(axHandle,'off');
 			end
 			if ~isempty(options.secondaryTrackingPoint)
-				plot(options.secondaryTrackingPoint(frame,1), options.secondaryTrackingPoint(frame,2), [options.secondaryTrackingPointColor '+'], 'Markersize', 17)
-
-				if size(options.secondaryTrackingPoint,2)>3
-					r = options.secondaryTrackingPoint(frame,4);
-				else
-					r = 30; % magnitude (length) of arrow to plot
+				if exist('plotHandleExtra1','var')==1
+					delete(plotHandleExtra1)
 				end
-				u = -r*cos(options.secondaryTrackingPoint(frame,3)*(pi/180));
-				v = r*sin(options.secondaryTrackingPoint(frame,3)*(pi/180));
+				if exist('plotHandleExtra3','var')==1
+					delete(plotHandleExtra3)
+				end
+				hold(axHandle2,'on');
+				plotHandleExtra1 = plot(axHandle2,options.secondaryTrackingPoint(frame,1), options.secondaryTrackingPoint(frame,2), [options.secondaryTrackingPointColor '+'], 'Markersize', 17);
 
-				quiver(options.secondaryTrackingPoint(frame,1), options.secondaryTrackingPoint(frame,2), u, v,'MaxHeadSize',10,'AutoScaleFactor',1,'AutoScale','off','color',options.secondaryTrackingPointColor,'linewidth',2)
+				if size(options.secondaryTrackingPoint,2)>2
+					if size(options.secondaryTrackingPoint,2)>3
+						r = options.secondaryTrackingPoint(frame,4);
+					else
+						r = 30; % magnitude (length) of arrow to plot
+					end
+					u = -r*cos(options.secondaryTrackingPoint(frame,3)*(pi/180));
+					v = r*sin(options.secondaryTrackingPoint(frame,3)*(pi/180));
+
+					plotHandleExtra3 = quiver(axHandle2,options.secondaryTrackingPoint(frame,1), options.secondaryTrackingPoint(frame,2), u, v,'MaxHeadSize',10,'AutoScaleFactor',1,'AutoScale','off','color',options.secondaryTrackingPointColor,'linewidth',2)
+				end
+				hold(axHandle2,'off');
 			end
 			if ~isempty(options.primaryPoint)||~isempty(options.primaryTrackingPoint)||~isempty(options.secondaryTrackingPoint)
 				hold off
@@ -1126,7 +1209,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 				catch
 				end
 				warning on;
-			case 'avi'
+			case {'avi','mp4'}
 				if extraMovieSwitch==1
 					thisFrame = read(xyloObjExtra, frameNo, 'native');
 				else
@@ -1409,12 +1492,12 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 					switch usrIdxChoice
 						case 1
 							inputMovie = dfofMovie(inputMovie);
-							maxMovie(1) = max(inputMovie(:),'omitnan');
-							minMovie(1) = min(inputMovie(:),'omitnan');
+							maxMovie(1) = max(inputMovie,[],[1 2 3 4],'omitnan');
+							minMovie(1) = min(inputMovie,[],[1 2 3 4],'omitnan');
 						case 2
 							options.extraMovie = dfofMovie(options.extraMovie);
-							maxMovie(2) = max(options.extraMovie(:),'omitnan');
-							minMovie(2) = min(options.extraMovie(:),'omitnan');
+							maxMovie(2) = max(options.extraMovie,[],[1 2 3 4],'omitnan');
+							minMovie(2) = min(options.extraMovie,[],[1 2 3 4],'omitnan');
 						otherwise
 							% nothing
 					end
@@ -1443,8 +1526,8 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 						case 1
 							if usrExtraChoice==2
 								options.extraMovie = normalizeMovie(inputMovie,'options',ioptions);
-								maxMovie(2) = max(inputMovie(:),'omitnan');
-								minMovie(2) = min(inputMovie(:),'omitnan');
+								maxMovie(2) = max(inputMovie,[],[1 2 3 4],'omitnan');
+								minMovie(2) = min(inputMovie,[],[1 2 3 4],'omitnan');
 							else
 								inputMovie = normalizeMovie(inputMovie,'options',ioptions);
 							end
@@ -1504,11 +1587,11 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 				end
 				switch movieChoice
 					case 1
-						maxMovie(1) = max(inputMovie(:),'omitnan');
-						minMovie(1) = min(inputMovie(:),'omitnan');
+						maxMovie(1) = max(inputMovie,[],[1 2 3 4],'omitnan');
+						minMovie(1) = min(inputMovie,[],[1 2 3 4],'omitnan');
 					case 2
-						maxMovie(2) = max(options.extraMovie(:),'omitnan');
-						minMovie(2) = min(options.extraMovie(:),'omitnan');
+						maxMovie(2) = max(options.extraMovie,[],[1 2 3 4],'omitnan');
+						minMovie(2) = min(options.extraMovie,[],[1 2 3 4],'omitnan');
 					otherwise
 				end
 				figure(42);
@@ -1734,6 +1817,7 @@ function colormapColorList = subfxn_colormapCreate(options)
 	% grayRed = customColormap({[0 0 0],[0.5 0.5 0.5],[1 1 1],[0.7 0.4 0.4],[0.7 0.3 0.3],[0.7 0.2 0.2],[0.7 0.1 0.1],[0.7 0 0],[1 0 0]});
 	grayRed = customColormap({[0 0 0],[0.5 0.5 0.5],[1 1 1],[0.7 0.2 0.2],[1 0 0]});
 	colormapColorList = [...
+		{'gray'},...
 		options.colormapColor,...
 		outputColormap2,...
 		{'gray'},...
