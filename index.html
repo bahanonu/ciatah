@@ -47,12 +47,6 @@
                     <li class="toctree-l1 current"><a class="reference internal current" href=".">Home</a>
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#guides">Guides</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#webinar">Webinar</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#workshop-tutorial">Workshop tutorial</a>
-    </li>
-        </ul>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#navigation">Navigation</a>
     </li>
@@ -60,12 +54,16 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#questions">Questions?</a>
     </li>
+    <li class="toctree-l2"><a class="reference internal" href="#repository-stats">Repository stats</a>
+    </li>
     </ul>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">End-to-end</span></p>
                 <ul>
                     <li class="toctree-l1"><a class="reference internal" href="all_docs/">One-page readme</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="all_docs/">One-page readme (auto)</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Setup</span></p>
@@ -94,6 +92,8 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="pipeline_detailed_all/">One-page step-by-step</a>
                     </li>
+                    <li class="toctree-l1"><a class="reference internal" href="pipeline_detailed/">One-page step-by-step (auto)</a>
+                    </li>
                     <li class="toctree-l1"><a class="reference internal" href="pipeline_detailed_downsample_raw/">1| Downsample raw movies</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="pipeline_detailed_preprocess_check/">2| Check pre-process settings</a>
@@ -113,6 +113,11 @@
                     <li class="toctree-l1"><a class="reference internal" href="pipeline_detailed_signal_region_analysis/">9| Region-specific analysis</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="pipeline_detailed_cross_session/">10| <u><strong>Cross-session alignment</strong></u></a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Spinal cord motion correction</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="pipeline_detailed_spinal/">Spinal cord motion correction</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Animal tracking</span></p>
@@ -216,8 +221,7 @@
 <a href="https://github.com/bahanonu/calciumImagingAnalysis/releases/latest?style=flat-square&amp;logo=appveyor"><img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/bahanonu/calciumImagingAnalysis?style=flat-square&amp;logo=appveyor" /></a>
 <img alt="GitHub code size in bytes" src="https://img.shields.io/github/languages/code-size/bahanonu/calciumImagingAnalysis?style=flat-square&amp;logo=appveyor" />
 <a href="https://github.com/bahanonu/calciumImagingAnalysis/graphs/commit-activity?style=flat-square&amp;logo=appveyor"><img alt="Maintenance" src="https://img.shields.io/badge/Maintained%3F-yes-green.svg?style=flat-square" /></a>
-<img alt="visitors" src="https://visitor-badge.glitch.me/badge?page_id=bahanonu.calciumImagingAnalysis" />
-<img alt="Hits" src="https://hitcounter.pythonanywhere.com/count/tag.svg?url=https%3A%2F%2Fgithub.com%2Fbahanonu%2FcalciumImagingAnalysis" /></p>
+<img alt="visitors" src="https://vbr.wocr.tk/badge?page_id=bahanonu.ciatah" /></p>
 <p><img src="https://user-images.githubusercontent.com/5241605/51068051-78c27680-15cd-11e9-9434-9d181b00ef8e.png" align="center"></p>
 <hr>
 
@@ -234,14 +238,45 @@
 <li>Note: <code>CIAtah</code> is a class (<code>ciatah</code> within MATLAB) with various GUIs to allow processing of calcium imaging data. In addition, users can access the underlying <code>CIAtah</code> functions to make custom workflows. See <a href="api_example_pipeline/">Custom command-line pipelines</a>.</li>
 </ul>
 <h2 id="guides">Guides<a class="headerlink" href="#guides" title="Permanent link">&para;</a></h2>
-<p>Below are recordings for users who want to learn more about calcium imaging analysis.</p>
+<!-- Below are recordings for users who want to learn more about calcium imaging analysis.
+
+- Read my overview of calcium imaging analysis methods at [Calcium imaging cell identification and fluorescence activity trace reconstruction, part 1](https://bahanonu.com/brain/#c20181209).
+
+### Webinar
+This webinar gives an overview of calcium imaging analysis (with a focus on CIAtah) along with tips for improving experiments and analysis: https://info.inscopix.com/inscopix-inspire-view-webinarbiafra-ahanonu-signal-in-the-noise-distinguishing-relevant-neural-activity-in-calcium-imaging.
+
+### Workshop tutorial
+This recording gives an overview of setting up and using CIAtah: https://www.youtube.com/watch?v=I6abW3uuJJw. -->
+
+<p>Below are recordings and additional documents for users who want to learn more about calcium imaging analysis/experiments and the CIAtah pipeline.</p>
+<p><ins> <strong>Book chapter</strong> </ins> — We have a book chapter that goes over all steps of miniscope imaging: viral injections, GRIN lens probe implant, pain experimental design, data processing and neural/behavioral analysis, and more.</p>
 <ul>
-<li>Read my overview of calcium imaging analysis methods at <a href="https://bahanonu.com/brain/#c20181209">Calcium imaging cell identification and fluorescence activity trace reconstruction, part 1</a>.</li>
+<li>See <a href="https://doi.org/10.1007/978-1-0716-2039-7_13">Ahanonu, B., Corder, G. (2022). <em>Recording Pain-Related Brain Activity in Behaving Animals Using Calcium Imaging and Miniature Microscopes</em></a> (<a href="https://doi.org/10.1007/978-1-0716-2039-7_13">https://doi.org/10.1007/978-1-0716-2039-7_13</a>).</li>
 </ul>
-<h3 id="webinar">Webinar<a class="headerlink" href="#webinar" title="Permanent link">&para;</a></h3>
-<p>This webinar gives an overview of calcium imaging analysis (with a focus on CIAtah) along with tips for improving experiments and analysis: <a href="https://info.inscopix.com/inscopix-inspire-view-webinarbiafra-ahanonu-signal-in-the-noise-distinguishing-relevant-neural-activity-in-calcium-imaging">https://info.inscopix.com/inscopix-inspire-view-webinarbiafra-ahanonu-signal-in-the-noise-distinguishing-relevant-neural-activity-in-calcium-imaging</a>.</p>
-<h3 id="workshop-tutorial">Workshop tutorial<a class="headerlink" href="#workshop-tutorial" title="Permanent link">&para;</a></h3>
-<p>This recording gives an overview of setting up and using CIAtah: <a href="https://www.youtube.com/watch?v=I6abW3uuJJw">https://www.youtube.com/watch?v=I6abW3uuJJw</a>.</p>
+<p><ins><strong>Spinal cord motion correction methods</strong></ins> — Methods for motion correction of spinal imaging data using feature identification (e.g. with DeepLabCut), control point registration, and other methods. Additional updates will be integrated into CIAtah in the future.</p>
+<ul>
+<li>Preprint: Ahanonu and Crowther, <em>et al</em>. (2023). <em>Long-term optical imaging of the spinal cord in awake, behaving animals</em>. bioRxiv (<a href="https://www.biorxiv.org/content/10.1101/2023.05.22.541477v1.full">https://www.biorxiv.org/content/10.1101/2023.05.22.541477v1.full</a>).</li>
+</ul>
+<p><ins><strong>Webinars</strong></ins></p>
+<ul>
+<li>
+<p>My INSCOPIX INSPIRE webinar gives an overview of calcium imaging analysis (with a focus on CIAtah) along with tips for improving experiments and analysis: "Signal in the noise: Distinguishing relevant neural activity in calcium imaging".</p>
+<ul>
+<li><a href="https://info.inscopix.com/inscopix-inspire-view-webinarbiafra-ahanonu-signal-in-the-noise-distinguishing-relevant-neural-activity-in-calcium-imaging">https://info.inscopix.com/inscopix-inspire-view-webinarbiafra-ahanonu-signal-in-the-noise-distinguishing-relevant-neural-activity-in-calcium-imaging</a>.</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>
+<p>Our INSCOPIX INSIGHTS seminar describing awake and freely moving spinal cord imaging: "Long-term, multicolor spinal cord neural imaging in freely moving animals".</p>
+<ul>
+<li><a href="https://info.inscopix.com/insights-webinar-view-biafra-ahanonu-andrew-crowther_long-term-multicolor-spinal-cord-neural-imaging-in-freely-moving-animals">https://info.inscopix.com/insights-webinar-view-biafra-ahanonu-andrew-crowther_long-term-multicolor-spinal-cord-neural-imaging-in-freely-moving-animals</a>.</li>
+</ul>
+</li>
+</ul>
+<p><ins><strong>Workshop tutorial</strong></ins> — This recording gives an overview of setting up and using CIAtah: <a href="https://www.youtube.com/watch?v=I6abW3uuJJw">https://www.youtube.com/watch?v=I6abW3uuJJw</a>.</p>
+<p><ins><strong>Imaging analysis tools</strong></ins> My table with many current imaging analysis tools: <a href="https://github.com/bahanonu/imaging_tools">https://github.com/bahanonu/imaging_tools</a>.</p>
+<p><ins><strong>GRINjector</strong></ins> — A surgical device to help with implanting gradient-refractive index (GRIN) lens probes into the brain or other regions: <a href="https://github.com/bahanonu/GRINjector">https://github.com/bahanonu/GRINjector</a>.</p>
 <!-- <img src="https://user-images.githubusercontent.com/5241605/94530890-9c3db280-01f0-11eb-99f0-e977f5edb304.gif" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="75%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
  -->
 
@@ -308,9 +343,13 @@
 <p>Please <a href="https://github.com/bahanonu/calciumImagingAnalysis/issues">open an issue on GitHub</a> or email any additional questions not covered in the repository to <code>bahanonu [at] alum.mit.edu</code>.</p>
 <p>Made in USA.<br>
 <img src="https://user-images.githubusercontent.com/5241605/71493809-322a5400-27ff-11ea-9b2d-52ff20b5f332.png" align="center" title="USA" alt="USA" width="100px"></p>
+<h2 id="repository-stats">Repository stats<a class="headerlink" href="#repository-stats" title="Permanent link">&para;</a></h2>
 <ul>
 <li><img alt="Hits" src="https://hitcounter.pythonanywhere.com/count/tag.svg?url=https%3A%2F%2Fgithub.com%2Fbahanonu%2FcalciumImagingAnalysis" /> (starting 2020.09.16)</li>
 <li><img alt="visitors" src="https://visitor-badge.glitch.me/badge?page_id=bahanonu.calciumImagingAnalysis" /> (starting 2020.09.22)</li>
+<li><img alt="visitors" src="https://visitor-badge.glitch.me/badge?page_id=bahanonu.calciumImagingAnalysis" /></li>
+<li><img alt="Hits" src="https://hitcounter.pythonanywhere.com/count/tag.svg?url=https%3A%2F%2Fgithub.com%2Fbahanonu%2FcalciumImagingAnalysis" /></li>
+<li><img alt="visitors" src="https://vbr.wocr.tk/badge?page_id=bahanonu.ciatah.docs" /> (starting 2023.06.12, specific to docs homepage)</li>
 </ul>
 <!-- - [![HitCount](http://hits.dwyl.com/bahanonu/calciumImagingAnalysis.svg)](http://hits.dwyl.com/bahanonu/calciumImagingAnalysis) (starting 2020.08.16), frozen til `dwyl` migrates to new server. -->
               
@@ -365,5 +404,5 @@
 
 <!--
 MkDocs version : 1.1.2
-Build Date UTC : 2022-03-06 19:58:08.254981+00:00
+Build Date UTC : 2024-03-13 02:54:58.076751+00:00
 -->

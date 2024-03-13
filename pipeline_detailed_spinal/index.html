@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <meta name="author" content="Biafra Ahanonu">
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+<title>Motion correction of the *spinal cord* in awake, behaving animals</title>
+
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
+  <link href="../css/extra.css" rel="stylesheet" />
+  <link href="../css/pygments.css" rel="stylesheet" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Spinal cord motion correction";
+    var mkdocs_page_input_path = "pipeline_detailed_spinal.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> CIAtah</a>
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">End-to-end</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../all_docs/">One-page readme</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../all_docs/">One-page readme (auto)</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Setup</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../install/">Quick Start</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../install_alt/">Install</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../example_data/">Example data</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../dependencies/">Dependencies</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Repository</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../data/">Data formats</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../notes/">Notes</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../organization/">Organization</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Processing imaging data</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_overview/">Overview</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_all/">One-page step-by-step</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed/">One-page step-by-step (auto)</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_downsample_raw/">1| Downsample raw movies</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_preprocess_check/">2| Check pre-process settings</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_preprocess/">3| <u><strong>Processing imaging movies</strong></u></a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_modify_movies/">4| Movie clean-up</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_signal_extraction/">5| <u><strong>Cell extraction</strong></u></a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_signal_extraction_load/">6| Loading cell extraction outputs</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_signal_extraction_validation/">7| <u><strong>Cell extraction validation</strong></u></a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_signal_sorting_manual/">8| <u><strong>Manual cell sorting</strong></u></a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_signal_region_analysis/">9| Region-specific analysis</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_cross_session/">10| <u><strong>Cross-session alignment</strong></u></a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Spinal cord motion correction</span></p>
+                <ul class="current">
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Spinal cord motion correction</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#ld-mcm-large-displacement-motion-correction-method">LD-MCM (large-displacement motion correction method)</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#ld-mcm-feature-selection">LD-MCM: feature selection</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#ld-mcm-installing-deep-learning-methods">LD-MCM: installing deep learning methods</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#deeplabcut">DeepLabCut</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#ld-mcm-deep-learning-feature-identification">LD-MCM: deep-learning feature identification</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#ld-mcm-control-point-registration-of-features-and-rigid-alignment">LD-MCM: control point registration of features and rigid alignment</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#diffeomorphic-transformations-to-handle-non-rigid-spinal-cord-motion">Diffeomorphic transformations to handle non-rigid spinal cord motion</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#displacement-fields-demo">Displacement fields demo</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#cross-session-alignment-of-cell-extraction-outputs">Cross-session alignment of cell extraction outputs</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#cross-session-motion-correction-cs-mcm">Cross-session motion correction (CS-MCM)</a>
+    </li>
+    </ul>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Animal tracking</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_animal_tracking/">Animal tracking (ImageJ+MATLAB)</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">API</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../api_example_pipeline/">Custom pipelines</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../api_ciapkg/">ciapkg</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Help</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_issues/">Issues and fixes</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../blank/"><div class='subsection1'>Data</div></a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_inscopix/">Inscopix</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_nwb/">Neurodata Without Borders</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../blank/"><div class='subsection1'>Interface</div></a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_contrast/">Movie display and noise</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../blank/"><div class='subsection1'>Analysis</div></a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_analysis_methods/">Analysis methods</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_large_movie_analysis/">Large movie analysis</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_stripe_removal/">Stripe removal</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_snr/">Improving signal-to-noise</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_spatial_filtering/">Spatial filtering</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_temporal_downsampling/">Temporal downsampling</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_motion_correction/">Motion correction</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_cell_extraction/">Cell extraction</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_manual_cell_sorting/">Manual cell sorting</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_cross_session_alignment/">Cross-session alignemnt</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../help_animal_tracking/">Animal tracking</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Misc</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../acknowledgments/">Acknowledgments</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../references/">Cite</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../questions/">Questions</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../license/">License</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">CIAtah</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Spinal cord motion correction &raquo;</li>
+        
+      
+    
+    <li>Spinal cord motion correction</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="motion-correction-of-the-spinal-cord-in-awake-behaving-animals">Motion correction of the <em>spinal cord</em> in awake, behaving animals<a class="headerlink" href="#motion-correction-of-the-spinal-cord-in-awake-behaving-animals" title="Permanent link">&para;</a></h1>
+<!-- ![image](https://github.com/bahanonu/ciatah/assets/5241605/07f1d172-814e-416c-8806-a74e890a18ef) -->
+
+<p><img alt="image" src="https://github.com/basbaumlab/spinal_cord_imaging/assets/5241605/3d33431a-a530-4b34-8533-0cd3fd81d1ae" /></p>
+<div style="font-size: 0.8em;">Imaging a large spinal cord field is subject to several types of motion artifacts.</div>
+<p><br></p>
+<p>Awake state spinal cord recordings have significant challenges compared to recordings in the brain: locomotion-related spinal cord movement results in rapid, large rostro-caudal shifts (&gt;400 μm in certain animals within and across sessions), non-rigid deformations of the field of view can occur, and the presence of obstacles—such as neovascularization, bubbles, etc.—that cover part of the field of view and move differently from the primary tissue of interest (see diagram above).</p>
+<p><img alt="image" src="https://github.com/basbaumlab/spinal_cord_imaging/assets/5241605/c1ab9d49-dd8e-4df5-a5da-696ae014cf63" /></p>
+<div style="font-size: 0.8em;">Modular motion correction pipeline that addresses each of the issues outlined in a: features identified using deep learning followed by control point and rigid registration (large displacement motion correction method, LD-MCM), deformation correction using displacement fields followed by rigid registration, and manual or automated cross-session motion correction (CS-MCM).</div>
+<p><br></p>
+<p>To address these, we developed and validated a multi-step, hierarchical workflow that allows users to determine which algorithm is best suited to handle their imaging data (see <strong>a</strong> above). The pipeline consists of a large-displacement motion correction method (LD-MCM), an inclusion of an existing non-rigid motion correction method within the CIAtah pre-processing pipeline, and a semi- or fully-automated cross-session motion correction method (CS-MCM). We briefly discuss each technique below and how to run them within CIAtah. See our preprint for detailed methods:</p>
+<ul>
+<li>Ahanonu<em>, Crowther</em>, <em>et al</em>. (2023). <em>Long-term optical imaging of the spinal cord in awake, behaving animals</em>. bioRxiv.</li>
+<li><a href="https://www.biorxiv.org/content/10.1101/2023.05.22.541477v1.full">https://www.biorxiv.org/content/10.1101/2023.05.22.541477v1.full</a></li>
+</ul>
+<h2 id="ld-mcm-large-displacement-motion-correction-method">LD-MCM (large-displacement motion correction method)<a class="headerlink" href="#ld-mcm-large-displacement-motion-correction-method" title="Permanent link">&para;</a></h2>
+<p><img alt="image" src="https://github.com/bahanonu/ciatah/assets/5241605/8c6c4c49-5b37-4ebf-b2ac-c9900b2f9e4f" /></p>
+<p>To automate the correction of large rostrocaudal shifts, LD-MCM uses deep learning (e.g. <a href="https://www.nature.com/articles/s41593-018-0209-y.">DeepLabCut</a> [DLC]) to track features followed by control point and rigid registration (see above figure). Although image alignment can be done using feature detectors—such as MSER, FAST, SIFT, and others—spinal cord imaging movies contain a variety of features across multiple focal planes. As a result, these methods can identify non-relevant features. Here, we tracked consistent vasculature, as a proxy for spinal cord motion, which improved registration. To achieve this, we used deep learning methods in which features are manually annotated on a subset of frames and a model is trained to identify them in novel video frames.</p>
+<h3 id="ld-mcm-feature-selection">LD-MCM: feature selection<a class="headerlink" href="#ld-mcm-feature-selection" title="Permanent link">&para;</a></h3>
+<p>Below is an example frame from a spinal cord imaging animal (expressing the calcium indicator GCaMP6s) with vascular features selected along both the dorsal vein and dorsal ascending venules (dAVs). We found that selecting at least 7-10 features enables robust motion correction and can increase the likelihood that when tracking features on new sessions there will be adequate features available for registration.</p>
+<p><img alt="image" src="../img/LD-MCM_DeepLabCut_Annotation01.png" /></p>
+<p>We used several criteria to select features for LD-MCM. Animals with prominent dorsal veins and dorsal ascending venules (dAV) made possible the most robust motion correction owing to the existence of distinct, stable landmarks. We then selected features based on a series of criteria:</p>
+<ul>
+<li>The feature is stable within individual and across most of the imaging sessions of an animal as determined visually (by rapid scrolling through the field of view).</li>
+<li>The feature is “distinct”, e.g. a blood vessel with a branch is easier to consistently annotate the correct position compared to an unbranched vessel.<ul>
+<li>See in the above image where annotations along the dorsal vein are at points at which there is branching. The dorsal vein is a good feature to select as it is unlikely to become so small, e.g. due to vasoconstriction, as to disappear within or across imaging sessions.</li>
+</ul>
+</li>
+<li>The feature's motion is concordant with the motion of the biological features of interest, e.g. spinal cord vasculature motion matches those of dorsal horn neurons or microglia of interest.</li>
+<li>Note that features that disappear from the FOV can still be annotated, but depending on the motion correction transformation type used, we discard them from specific frames and only use commonly found, high-confidence features between the reference and the to-be-corrected frames.</li>
+</ul>
+<h3 id="ld-mcm-installing-deep-learning-methods">LD-MCM: installing deep learning methods<a class="headerlink" href="#ld-mcm-installing-deep-learning-methods" title="Permanent link">&para;</a></h3>
+<p>A variety of deep learning method are available. Currently LD-MCM uses DeepLabCut with support for additional methods in the future.</p>
+<h4 id="deeplabcut">DeepLabCut<a class="headerlink" href="#deeplabcut" title="Permanent link">&para;</a></h4>
+<p>Feature tracking can be performed in python using DeepLabCut (support for other deep learning methods forthcoming). Information on installation and usage of DeepLabCut can be found on their GitHub repository and associated web pages.</p>
+<ul>
+<li><a href="https://github.com/DeepLabCut/DeepLabCut">https://github.com/DeepLabCut/DeepLabCut</a></li>
+<li><a href="https://deeplabcut.github.io/DeepLabCut/docs/installation.html#conda-the-installation-process-is-as-easy-as-this-figure">https://deeplabcut.github.io/DeepLabCut/docs/installation.html#conda-the-installation-process-is-as-easy-as-this-figure</a></li>
+</ul>
+<p>We recommend running within Anaconda (<a href="https://www.anaconda.com/">https://www.anaconda.com/</a>) as the ability to use environments and the access to the ecosystem makes transitioning to DeepLabCut live and other tools easier in the future. Clone the repository and run the following commands:</p>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span><span class="c1"># Change directory to DeepLabCut Github</span>
+<span class="lineno" data-linenos=" 2 "></span><span class="nb">cd</span> PATH_TO_DEEPLABCUT_GITHUB_REPO
+<span class="lineno" data-linenos=" 3 "></span><span class="nb">cd</span> conda-environments
+<span class="lineno" data-linenos=" 4 "></span>
+<span class="lineno" data-linenos=" 5 "></span><span class="c1"># Windows/Linux/MacBook Intel chip</span>
+<span class="lineno" data-linenos=" 6 "></span>conda env create -f DEEPLABCUT.yaml
+<span class="lineno" data-linenos=" 7 "></span>
+<span class="lineno" data-linenos=" 8 "></span><span class="c1"># Apple M1 / M2 chips</span>
+<span class="lineno" data-linenos=" 9 "></span>conda env create -f DEEPLABCUT_M1.yaml
+<span class="lineno" data-linenos="10 "></span>
+<span class="lineno" data-linenos="11 "></span><span class="c1"># Activate the DeepLabCut environment</span>
+<span class="lineno" data-linenos="12 "></span>conda activate DEEPLABCUT
+<span class="lineno" data-linenos="13 "></span>
+<span class="lineno" data-linenos="14 "></span><span class="c1"># Change directory back to DeepLabCut</span>
+<span class="lineno" data-linenos="15 "></span><span class="nb">cd</span> ..
+<span class="lineno" data-linenos="16 "></span>
+<span class="lineno" data-linenos="17 "></span><span class="c1"># Run DeepLabCut GUI</span>
+<span class="lineno" data-linenos="18 "></span>python -m deeplabcut
+</code></pre></div>
+<p>Using a GPU can drastically improve speed of training models and analyzing data, see the below preprint characterizing DeepLabCut performance in different scenarios:</p>
+<ul>
+<li>On the inference speed and video-compression robustness of DeepLabCut<ul>
+<li><a href="https://www.biorxiv.org/content/10.1101/457242v1.full">https://www.biorxiv.org/content/10.1101/457242v1.full</a></li>
+</ul>
+</li>
+</ul>
+<p>We recommend checking CPU and GPU usage during initial runs to ensure that the GPU is being used, e.g. on Windows see <a href="https://michaelceber.medium.com/gpu-monitoring-on-windows-10-for-machine-learning-cuda-41088de86d65">https://michaelceber.medium.com/gpu-monitoring-on-windows-10-for-machine-learning-cuda-41088de86d65</a>. At times the default DeepLabCut installation will not lead to GPU support to be enabled/used by default due to incomplete installation of CUDA libraries and TensorFlow. Check the below URLs for addressing these issues:</p>
+<ul>
+<li><a href="https://deeplabcut.github.io/DeepLabCut/docs/installation.html#gpu-support">https://deeplabcut.github.io/DeepLabCut/docs/installation.html#gpu-support</a></li>
+<li><a href="https://developer.nvidia.com/cuda-downloads">https://developer.nvidia.com/cuda-downloads</a></li>
+<li><a href="https://www.tensorflow.org/install/pip">https://www.tensorflow.org/install/pip</a></li>
+</ul>
+<p>We recommend running the below commands in the terminal to make sure CUDA toolkit and cuDNN are installed correctly in the environment. We found this worked on Windows 10 on with DeepLabCut version <code>2.3.9</code> (<a href="https://github.com/DeepLabCut/DeepLabCut/tree/82f47b3233aecc962cb262f29ea2235f3523a4f1">https://github.com/DeepLabCut/DeepLabCut/tree/82f47b3233aecc962cb262f29ea2235f3523a4f1</a>).
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="c1"># Install cuDNN runtime libraries</span>
+<span class="lineno" data-linenos="2 "></span>pip install nvidia-cudnn-cu11
+<span class="lineno" data-linenos="3 "></span>
+<span class="lineno" data-linenos="4 "></span><span class="c1"># Install CUDA Deep Neural Network and CUDA toolkit</span>
+<span class="lineno" data-linenos="5 "></span>conda install -y -c conda-forge cudnn <span class="nv">cudatoolkit</span><span class="o">=</span><span class="m">11</span>.8.0 
+</code></pre></div></p>
+<p>If the installation works well, running the below command from the command line.
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span>python -c <span class="s2">&quot;import tensorflow as tf; print(tf.config.list_physical_devices(&#39;GPU&#39;))&quot;</span>
+</code></pre></div></p>
+<p>This should produce a result similar to that below GPU-related items and TensorFlow are properly installed:
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="o">[</span>PhysicalDevice<span class="o">(</span><span class="nv">name</span><span class="o">=</span><span class="s1">&#39;/physical_device:GPU:0&#39;</span>, <span class="nv">device_type</span><span class="o">=</span><span class="s1">&#39;GPU&#39;</span><span class="o">)]</span>
+</code></pre></div></p>
+<p>An error might occur (e.g. on Windows) in which <code>zlibwapi.dll</code> is not found. If that is the case, follow the instructions at the below URL to download <code>zlibwapi.dll</code> and place it within the CUDA <code>bin</code> directory so it can be found.</p>
+<ul>
+<li><a href="https://forums.developer.nvidia.com/t/could-not-load-library-cudnn-cnn-infer64-8-dll-error-code-193/218437/16">https://forums.developer.nvidia.com/t/could-not-load-library-cudnn-cnn-infer64-8-dll-error-code-193/218437/16</a></li>
+</ul>
+<h3 id="ld-mcm-deep-learning-feature-identification">LD-MCM: deep-learning feature identification<a class="headerlink" href="#ld-mcm-deep-learning-feature-identification" title="Permanent link">&para;</a></h3>
+<p>Annotate at least 20 frames; more frames are preferred to improve the model's performance. Using the automated selection of frames can work, but we also recommend selecting several frames manually during times when you have the maximum rostral and caudal extent of movement to ensure consistent annotation across all types of motion present. We recommend starting with the following parameters: </p>
+<ul>
+<li>500,000 iterations (see below)<ul>
+<li>The number of iterations can in part be determined by the time at which reductions in model error asymptote, see below image (left panel).</li>
+</ul>
+</li>
+<li><code>net_type</code>: <code>resnet50</code> or <code>resnet101</code> (start with resnet50)</li>
+<li><code>dataset_type</code> (dataset augmentation): <code>imgaug</code></li>
+<li><code>global_scale</code>: <code>0.8</code></li>
+<li><code>batch_size</code> (in <code>pose_cfg.yaml</code>): 1 or 4</li>
+<li>Fully connected parts.</li>
+<li>We initially performed analysis using DeepLabCut version <code>2.2.3</code>.</li>
+</ul>
+<p><img alt="image" src="../img/LD-MCM_DLCtrain_featureExclude.png" /></p>
+<p>After running, check the model training and test errors to ensure that the model is accurate. We will often then scroll through the movie annotated with the tracking to identify frames where the tracking is sub-optimal then retrain the model including those frames in the labeled dataset. One can import the <em>x, y</em> tracking and calculate the correlation of the movement with all other features then exclude those that are not concordant (see above image, right panel). However, this should only be done if using rigid control point registration and that area of the FOV does not actually move differently.</p>
+<h3 id="ld-mcm-control-point-registration-of-features-and-rigid-alignment">LD-MCM: control point registration of features and rigid alignment<a class="headerlink" href="#ld-mcm-control-point-registration-of-features-and-rigid-alignment" title="Permanent link">&para;</a></h3>
+<p>Once features have been successfully tracked, we use control point registration to perform the initial alignment followed by rigid registration for the final motion correction. For example code to run these steps, see the demo script in <code>ciapkg.demo.ldmcm.m</code> that can be accessed with CIAtah loaded by running the below in the MATLAB command line:</p>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">edit</span> <span class="s">ciapkg.demo.ldmcm</span>
+</code></pre></div>
+<p>The LD-MCM function can be called directly as below, assuming <code>dlcTensor</code> is a tensor containing DLC data loaded with <code>ciapkg.behavior.importDeepLabCutData</code>.</p>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">inputMovie</span> <span class="p">=</span> <span class="n">ciapkg</span><span class="p">.</span><span class="n">motion_correction</span><span class="p">.</span><span class="n">ldmcm</span><span class="p">(</span><span class="n">inputMovie</span><span class="p">,</span><span class="n">dlcTensor</span><span class="p">,</span><span class="c">...</span>
+<span class="lineno" data-linenos="2 "></span>  <span class="s">&#39;cropCoordsInSession&#39;</span><span class="p">,</span><span class="n">cropCoordsInSession</span><span class="p">,</span><span class="c">... % Crop for rigid registration.</span>
+<span class="lineno" data-linenos="3 "></span>  <span class="s">&#39;maxDist&#39;</span><span class="p">,</span><span class="mi">50</span><span class="p">,</span><span class="c">... % Max distance in pixels to allow for control point registration.</span>
+<span class="lineno" data-linenos="4 "></span>  <span class="s">&#39;refFrame&#39;</span><span class="p">,</span><span class="n">refFrameNo</span><span class="p">,</span><span class="c">... % Frame to use as reference.</span>
+<span class="lineno" data-linenos="5 "></span>  <span class="s">&#39;rotateImg&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="c">... % Whether to rotate the image.</span>
+<span class="lineno" data-linenos="6 "></span>  <span class="s">&#39;dsSpace&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="c">... % If the inputMovie is X times larger than coordinates in dlcTensor</span>
+<span class="lineno" data-linenos="7 "></span>  <span class="s">&#39;runPostReg&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="c">... % Run rigid registration after control point registration.</span>
+<span class="lineno" data-linenos="8 "></span>  <span class="s">&#39;inputMovie2&#39;</span><span class="p">,</span><span class="n">inputMovieNorm</span><span class="p">,</span><span class="c">... % Input a normalized movie, else input an empty vector.</span>
+<span class="lineno" data-linenos="9 "></span>  <span class="s">&#39;dimToFix&#39;</span><span class="p">,[]);</span>
+</code></pre></div>
+<h2 id="diffeomorphic-transformations-to-handle-non-rigid-spinal-cord-motion">Diffeomorphic transformations to handle non-rigid spinal cord motion<a class="headerlink" href="#diffeomorphic-transformations-to-handle-non-rigid-spinal-cord-motion" title="Permanent link">&para;</a></h2>
+<p><img alt="image" src="https://github.com/bahanonu/ciatah/assets/5241605/bfbf0dfc-cc35-4eac-8687-794fdf4ec835" /></p>
+<p>To handle non-rigid motion, we adapted displacement field-based registration based on Maxwell’s Demons (Thirion 1998; Vercauteren et al. 2009) into CIAtah. These techniques can lead to registration of images containing a mix of deformations and spatial shifts of features in the imaging field of view (Fig. 2g-h) and have been used previously for cross-session and other motion correction in brain Ca2+ imaging.</p>
+<p>Diffeomorphic transformations are directly integrated into CIAtah's <code>modelPreprocessMovie</code> module that is used for existing preprocessing workflows. Under the preprocessing option <code>mcMethod</code> you can select <code>imregdemons</code>. We recommend first running this motion correction on a subset of imaging planes, as even with parallel processing this algorithm can take significantly longer than using TurboReg or similar methods.</p>
+<p><img alt="image" src="../img/modelPreprocessMovie_mcMethod_imregdemons01.png" /></p>
+<p>Displacement field motion correction can be directly called using the below CIAtah function:</p>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="p">[</span><span class="n">inputMovie</span><span class="p">,</span><span class="n">ResultsOutOriginal</span><span class="p">]</span> <span class="p">=</span> <span class="n">ciapkg</span><span class="p">.</span><span class="n">motion_correction</span><span class="p">.</span><span class="n">turboregMovie</span><span class="p">(</span><span class="n">inputMovie</span><span class="p">,</span><span class="c">...</span>
+<span class="lineno" data-linenos="2 "></span>  <span class="s">&#39;mcMethod&#39;</span><span class="p">,</span><span class="s">&#39;imregdemons&#39;</span><span class="p">,</span><span class="c">...</span>
+<span class="lineno" data-linenos="3 "></span>  <span class="s">&#39;refFrame&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="c">...</span>
+<span class="lineno" data-linenos="4 "></span>  <span class="s">&#39;df_AccumulatedFieldSmoothing&#39;</span><span class="p">,</span><span class="mf">0.54</span><span class="p">,</span><span class="c">...</span>
+<span class="lineno" data-linenos="5 "></span>  <span class="s">&#39;df_Niter&#39;</span><span class="p">,[</span><span class="mi">500</span> <span class="mi">400</span> <span class="mi">200</span><span class="p">],</span><span class="c">...</span>
+<span class="lineno" data-linenos="6 "></span>  <span class="s">&#39;df_PyramidLevels&#39;</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="c">...</span>
+<span class="lineno" data-linenos="7 "></span>  <span class="s">&#39;df_DisplayWaitbar&#39;</span><span class="p">,</span><span class="n">false</span><span class="p">);</span>
+</code></pre></div>
+<h3 id="displacement-fields-demo">Displacement fields demo<a class="headerlink" href="#displacement-fields-demo" title="Permanent link">&para;</a></h3>
+<p>To run an example of the displacement fields and see that it works on your system, run the below. It uses data in <code>data\displacementFields</code> to conduct motion correction.
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">ciapkg</span><span class="p">.</span><span class="n">demo</span><span class="p">.</span><span class="n">displacementFields</span><span class="p">;</span>
+</code></pre></div>
+The script will produce several figures that should appear as below. You can type <code>edit ciapkg.demo.displacementFields</code> to open the script and see how the displacement fields' function is called and run if users desire to adapt that code into their own scripts outside the CIAtah GUI (or see above).</p>
+<p><strong>Reference dot image</strong>
+Demonstrates accurate motion correction when only a single reference object is warped along a single dimension.
+<img alt="image" src="https://github.com/bahanonu/ciatah/assets/5241605/7308675b-572c-466f-9f50-ac04ec64bc0b" /></p>
+<p><strong>Spinal cord imaging data</strong>
+This image shows two frames from a spinal cord imaging movie where there is more motion in certain areas and not others. Notice the bottom left dorsal ascending venule, where the branch closest to the dorsal vein has movement but more lateral parts of the venule do not. This is properly corrected.
+<img alt="image" src="https://github.com/bahanonu/ciatah/assets/5241605/52a48c22-1b52-4189-a969-8ecec24d3613" /></p>
+<p><strong>Smiley face</strong>
+Demonstrates accurate motion correction when multiple objects are warped and shifted in multiple independent directions and magnitudes.
+<img alt="image" src="https://github.com/bahanonu/ciatah/assets/5241605/2c211ddd-c543-457b-8fc3-7e8055616229" /></p>
+<h2 id="cross-session-alignment-of-cell-extraction-outputs">Cross-session alignment of cell extraction outputs<a class="headerlink" href="#cross-session-alignment-of-cell-extraction-outputs" title="Permanent link">&para;</a></h2>
+<p>Use of displacement fields for motion correction of cell extraction outputs (see <a href="../pipeline_detailed_cross_session/">Cross session cell alignment page</a>) improves results substantially, especially in cases where there is tissue warping across days. </p>
+<p>Often times there is significant displacement session-to-session that needs to be corrected. This can be done automatically using rigid motion correction (with translation and rotation enabled) or if issues are encountered, within <code>computeMatchObjBtwnTrials</code> options users can enable the manual motion correction GUI, that will display a reference (purple) and test (green) session in a GUI that allows users to rotate and translate the images until they are aligned on features users consider relevant. See below for an example.</p>
+<p><img alt="image" src="../img/displacementFields_2p_manualGUI.png" /></p>
+<p>See below for an example GIF switching back and forth between two imaging sessions from a two-photon microscopy dataset. It also demonstrates the difference in performance between manual, <code>displacement fields</code>, TurboReg (affine,  rotation, no skew), and TurboReg (projective, rotation, no skew). Displacement fields shows a significant improvement.</p>
+<p><img alt="image" src="../img/displacementFields_2p_data01.gif" /></p>
+<p>The below image is displacement fields vs. TurboReg (affine, rotation, no skew) with session #1 (purple), session #2 (green), and overlap (white). The white arrows indicate example cells that have greatly improved alignment with displacement fields.</p>
+<p><img alt="image" src="../img/displacementFields_2p_data02.png" /></p>
+<h2 id="cross-session-motion-correction-cs-mcm">Cross-session motion correction (CS-MCM)<a class="headerlink" href="#cross-session-motion-correction-cs-mcm" title="Permanent link">&para;</a></h2>
+<p><img alt="image" src="https://github.com/bahanonu/ciatah/assets/5241605/0907acab-fea1-4d6b-ac57-73c12cc3a103" /></p>
+<p>To compare expression across imaging sessions of spinal cord axons (Thy1-GFP mice), dorsal horn neurons and primary sensory axons (AAV-mediated GFP and tdTomato expression), and microglia (CX3CR1-EGFP mice), we developed a multi-step motion correction protocol. This protocol involved manual correction for large shifts, rotations, and other FOV changes (e.g. horizontal or vertical mirroring) followed by multiple rounds of rigid registration, which led to significantly improved alignment (above figure, right panel). After running this procedure, we also employed a modified LD-MCM protocol to track individual features, including vasculature and axons, across months to over a year (see below video).</p>
+<video height="400" controls>
+  <source src="../vid/thy1-gfp_day1-479.mp4" type="video/mp4">
+</video>
+
+<p>The demo for cross-session motion correction can be viewed below. We recommend the folders containing each session's data include <code>day</code> in the name, e.g. <code>_day01</code> and <code>_day04</code> for days 1 and 4, respectively.</p>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">edit</span> <span class="s">ciapkg.demo.cross_session_motion_correction</span>
+</code></pre></div>
+<p>The resulting MAT or TIFF file that is saved out can be used for downstream cross-session analysis.</p>
+<!-- ****************************************** -->
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../pipeline_animal_tracking/" class="btn btn-neutral float-right" title="Animal tracking (ImageJ+MATLAB)">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../pipeline_detailed_cross_session/" class="btn btn-neutral" title="10| <u><strong>Cross-session alignment</strong></u>"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../pipeline_detailed_cross_session/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../pipeline_animal_tracking/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

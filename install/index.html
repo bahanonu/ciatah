@@ -51,12 +51,16 @@
                 <ul>
                     <li class="toctree-l1"><a class="reference internal" href="../all_docs/">One-page readme</a>
                     </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../all_docs/">One-page readme (auto)</a>
+                    </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Setup</span></p>
                 <ul class="current">
                     <li class="toctree-l1 current"><a class="reference internal current" href="./">Quick Start</a>
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#install">Install</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#check-required-toolboxes-installed">Check required toolboxes installed</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#setup-ciatah">Setup CIAtah</a>
     </li>
@@ -88,6 +92,8 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_all/">One-page step-by-step</a>
                     </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed/">One-page step-by-step (auto)</a>
+                    </li>
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_downsample_raw/">1| Downsample raw movies</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_preprocess_check/">2| Check pre-process settings</a>
@@ -107,6 +113,11 @@
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_signal_region_analysis/">9| Region-specific analysis</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_cross_session/">10| <u><strong>Cross-session alignment</strong></u></a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Spinal cord motion correction</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_spinal/">Spinal cord motion correction</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Animal tracking</span></p>
@@ -227,6 +238,10 @@
 <span class="lineno" data-linenos="7 "></span><span class="c">% Make CIAtah the working folder</span>
 <span class="lineno" data-linenos="8 "></span><span class="n">cd</span><span class="p">(</span><span class="s">&#39;ciatah-master&#39;</span><span class="p">)</span>
 </code></pre></div>
+<h2 id="check-required-toolboxes-installed">Check required toolboxes installed<a class="headerlink" href="#check-required-toolboxes-installed" title="Permanent link">&para;</a></h2>
+<p><code>CIAtah</code> depends on several MATLAB toolboxes to run properly. Run the below command to have <code>CIAtah</code> check whether dependencies have been installed properly. If not use the <code>Add-Ons</code> (<a href="https://www.mathworks.com/help/matlab/matlab_env/get-add-ons.html">https://www.mathworks.com/help/matlab/matlab_env/get-add-ons.html</a>) explorer to install each toolbox.</p>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">ciapkg</span><span class="p">.</span><span class="n">io</span><span class="p">.</span><span class="n">matlabToolboxCheck</span><span class="p">;</span>`
+</code></pre></div>
 <h2 id="setup-ciatah">Setup <code>CIAtah</code><a class="headerlink" href="#setup-ciatah" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Run <code>CIAtah</code> using the below MATLAB commands. Call <code>obj;</code> in the MATLAB command window each time you want to go back to the main GUI. <strong>Note: <code>calciumImagingAnalysis</code> class is now called <code>ciatah</code>, all functionality is the same.</strong></li>
@@ -318,7 +333,7 @@
         <a href="../install_alt/" class="btn btn-neutral float-right" title="Install">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
-        <a href="../all_docs/" class="btn btn-neutral" title="One-page readme"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../all_docs/" class="btn btn-neutral" title="One-page readme (auto)"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   

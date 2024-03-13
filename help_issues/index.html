@@ -51,6 +51,8 @@
                 <ul>
                     <li class="toctree-l1"><a class="reference internal" href="../all_docs/">One-page readme</a>
                     </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../all_docs/">One-page readme (auto)</a>
+                    </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Setup</span></p>
                 <ul>
@@ -78,6 +80,8 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_all/">One-page step-by-step</a>
                     </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed/">One-page step-by-step (auto)</a>
+                    </li>
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_downsample_raw/">1| Downsample raw movies</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_preprocess_check/">2| Check pre-process settings</a>
@@ -99,6 +103,11 @@
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_cross_session/">10| <u><strong>Cross-session alignment</strong></u></a>
                     </li>
                 </ul>
+                <p class="caption"><span class="caption-text">Spinal cord motion correction</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_spinal/">Spinal cord motion correction</a>
+                    </li>
+                </ul>
                 <p class="caption"><span class="caption-text">Animal tracking</span></p>
                 <ul>
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_animal_tracking/">Animal tracking (ImageJ+MATLAB)</a>
@@ -116,6 +125,8 @@
                     <li class="toctree-l1 current"><a class="reference internal current" href="./">Issues and fixes</a>
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#contents">Contents</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#error-opening-avi-or-other-files-due-to-codec-issues">Error opening AVI or other files due to codec issues</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#pca-ica-cnmf-e-or-other-cell-extraction-algorithms-dont-produce-sensible-output">PCA-ICA, CNMF-E, or other cell extraction algorithm's don't produce sensible output.</a>
     </li>
@@ -257,6 +268,18 @@
 <li><a href="#file-or-folder-dialog-box-with-no-instructions">File or folder dialog box with no instructions</a></li>
 </ul>
 <hr />
+<h2 id="error-opening-avi-or-other-files-due-to-codec-issues">Error opening AVI or other files due to codec issues<a class="headerlink" href="#error-opening-avi-or-other-files-due-to-codec-issues" title="Permanent link">&para;</a></h2>
+<p>If run into issues opening certain AVI files (e.g. due to codec issues) with CIAtah/MATLAB:</p>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">Error</span> <span class="s">using</span> <span class="s">VideoReader/initReader</span> <span class="s">(line</span> <span class="s">734)</span>
+<span class="lineno" data-linenos="2 "></span><span class="n">Unable</span> <span class="s">to</span> <span class="s">determine</span> <span class="s">the</span> <span class="s">required</span> <span class="s">codec.</span>
+<span class="lineno" data-linenos="3 "></span>
+<span class="lineno" data-linenos="4 "></span><span class="n">Error</span> <span class="s">in</span> <span class="s">audiovideo.internal.IVideoReader</span> <span class="s">(line</span> <span class="s">136)</span>
+<span class="lineno" data-linenos="5 "></span>            <span class="n">initReader</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">fileName</span><span class="p">,</span> <span class="n">currentTime</span><span class="p">);</span>
+<span class="lineno" data-linenos="6 "></span>
+<span class="lineno" data-linenos="7 "></span><span class="n">Error</span> <span class="s">in</span> <span class="s">VideoReader</span> <span class="s">(line</span> <span class="s">104)</span>
+<span class="lineno" data-linenos="8 "></span>            <span class="n">obj</span><span class="p">@</span><span class="n">audiovideo</span><span class="p">.</span><span class="n">internal</span><span class="p">.</span><span class="n">IVideoReader</span><span class="p">(</span><span class="n">varargin</span><span class="p">{:});</span>
+</code></pre></div>
+<p>, install <code>K-Lite Codec Pack</code> (<a href="https://codecguide.com/download_kl.htm">https://codecguide.com/download_kl.htm</a>) or similar for added support.</p>
 <h2 id="pca-ica-cnmf-e-or-other-cell-extraction-algorithms-dont-produce-sensible-output">PCA-ICA, CNMF-E, or other cell extraction algorithm's don't produce sensible output.<a class="headerlink" href="#pca-ica-cnmf-e-or-other-cell-extraction-algorithms-dont-produce-sensible-output" title="Permanent link">&para;</a></h2>
 <ul>
 <li>When running <code>modelPreprocessMovie</code> a dialog box appears showing the available analysis steps. Certain combinations of these steps make sense while others should be avoided.</li>

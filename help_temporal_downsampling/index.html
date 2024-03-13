@@ -51,6 +51,8 @@
                 <ul>
                     <li class="toctree-l1"><a class="reference internal" href="../all_docs/">One-page readme</a>
                     </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../all_docs/">One-page readme (auto)</a>
+                    </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Setup</span></p>
                 <ul>
@@ -78,6 +80,8 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_all/">One-page step-by-step</a>
                     </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed/">One-page step-by-step (auto)</a>
+                    </li>
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_downsample_raw/">1| Downsample raw movies</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_preprocess_check/">2| Check pre-process settings</a>
@@ -97,6 +101,11 @@
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_signal_region_analysis/">9| Region-specific analysis</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_cross_session/">10| <u><strong>Cross-session alignment</strong></u></a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Spinal cord motion correction</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../pipeline_detailed_spinal/">Spinal cord motion correction</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">Animal tracking</span></p>
@@ -200,6 +209,7 @@
             <div class="section">
               
                 <h1 id="preprocessing-temporal-downsampling">Preprocessing: Temporal downsampling<a class="headerlink" href="#preprocessing-temporal-downsampling" title="Permanent link">&para;</a></h1>
+<p>Next, temporally smooth each movie by downsampling from the original 20 or 30 Hz to 5 Hz</p>
 <p>Example code to run the downsample test function with the following commands:
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">loadRepoFunctions</span><span class="p">;</span>
 <span class="lineno" data-linenos="2 "></span><span class="n">testMovie</span> <span class="p">=</span> <span class="n">loadMovieList</span><span class="p">(</span><span class="s">&#39;pathToMovieFile&#39;</span><span class="p">);</span>
@@ -212,6 +222,8 @@
 <li>The number next to each name is the vector's variance.
 <img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/13099409/b85b119c-d4e6-11e5-91d4-f6f7c74fed18.png" /></li>
 </ul>
+<p><img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/13099409/b85b119c-d4e6-11e5-91d4-f6f7c74fed18.png" />
+img</p>
               
             </div>
           </div>
