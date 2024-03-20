@@ -5,8 +5,7 @@
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/bahanonu/calciumImagingAnalysis?style=flat-square&logo=appveyor)](https://github.com/bahanonu/calciumImagingAnalysis/releases/latest?style=flat-square&logo=appveyor)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/bahanonu/calciumImagingAnalysis?style=flat-square&logo=appveyor)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg?style=flat-square)](https://github.com/bahanonu/calciumImagingAnalysis/graphs/commit-activity?style=flat-square&logo=appveyor)
-![visitors](https://visitor-badge.glitch.me/badge?page_id=bahanonu.calciumImagingAnalysis)
-![Hits](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https%3A%2F%2Fgithub.com%2Fbahanonu%2FcalciumImagingAnalysis)
+![visitors](https://vbr.wocr.tk/badge?page_id=bahanonu.ciatah)
 
 <img src="https://user-images.githubusercontent.com/5241605/51068051-78c27680-15cd-11e9-9434-9d181b00ef8e.png" align="center">
 
@@ -29,7 +28,7 @@ __Download the software at [https://github.com/bahanonu/ciatah](https://github.c
 
 ## Guides
 
-Below are recordings for users who want to learn more about calcium imaging analysis.
+<!-- Below are recordings for users who want to learn more about calcium imaging analysis.
 
 - Read my overview of calcium imaging analysis methods at [Calcium imaging cell identification and fluorescence activity trace reconstruction, part 1](https://bahanonu.com/brain/#c20181209).
 
@@ -37,7 +36,33 @@ Below are recordings for users who want to learn more about calcium imaging anal
 This webinar gives an overview of calcium imaging analysis (with a focus on CIAtah) along with tips for improving experiments and analysis: https://info.inscopix.com/inscopix-inspire-view-webinarbiafra-ahanonu-signal-in-the-noise-distinguishing-relevant-neural-activity-in-calcium-imaging.
 
 ### Workshop tutorial
-This recording gives an overview of setting up and using CIAtah: https://www.youtube.com/watch?v=I6abW3uuJJw.
+This recording gives an overview of setting up and using CIAtah: https://www.youtube.com/watch?v=I6abW3uuJJw. -->
+
+Below are recordings and additional documents for users who want to learn more about calcium imaging analysis/experiments and the CIAtah pipeline.
+
+<ins> __Book chapter__ </ins> — We have a book chapter that goes over all steps of miniscope imaging: viral injections, GRIN lens probe implant, pain experimental design, data processing and neural/behavioral analysis, and more.
+
+- See [Ahanonu, B., Corder, G. (2022). _Recording Pain-Related Brain Activity in Behaving Animals Using Calcium Imaging and Miniature Microscopes_](https://doi.org/10.1007/978-1-0716-2039-7_13) (https://doi.org/10.1007/978-1-0716-2039-7_13).
+
+<ins>__Spinal cord motion correction methods__</ins> — Methods for motion correction of spinal imaging data using feature identification (e.g. with DeepLabCut), control point registration, and other methods. Additional updates will be integrated into CIAtah in the future.
+
+- Preprint: Ahanonu and Crowther, _et al_. (2023). _Long-term optical imaging of the spinal cord in awake, behaving animals_. bioRxiv (https://www.biorxiv.org/content/10.1101/2023.05.22.541477v1.full).
+
+<ins>__Webinars__</ins>
+
+- My INSCOPIX INSPIRE webinar gives an overview of calcium imaging analysis (with a focus on CIAtah) along with tips for improving experiments and analysis: "Signal in the noise: Distinguishing relevant neural activity in calcium imaging".
+
+  - https://info.inscopix.com/inscopix-inspire-view-webinarbiafra-ahanonu-signal-in-the-noise-distinguishing-relevant-neural-activity-in-calcium-imaging.
+
+- Our INSCOPIX INSIGHTS seminar describing awake and freely moving spinal cord imaging: "Long-term, multicolor spinal cord neural imaging in freely moving animals".
+
+  - https://info.inscopix.com/insights-webinar-view-biafra-ahanonu-andrew-crowther_long-term-multicolor-spinal-cord-neural-imaging-in-freely-moving-animals.
+
+<ins>__Workshop tutorial__</ins> — This recording gives an overview of setting up and using CIAtah: https://www.youtube.com/watch?v=I6abW3uuJJw.
+
+<ins>__Imaging analysis tools__</ins> My table with many current imaging analysis tools: https://github.com/bahanonu/imaging_tools.
+
+<ins>__GRINjector__</ins> — A surgical device to help with implanting gradient-refractive index (GRIN) lens probes into the brain or other regions: https://github.com/bahanonu/GRINjector.
 
 <!-- <img src="https://user-images.githubusercontent.com/5241605/94530890-9c3db280-01f0-11eb-99f0-e977f5edb304.gif" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="75%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
  -->
@@ -110,6 +135,10 @@ Please [open an issue on GitHub](https://github.com/bahanonu/calciumImagingAnaly
 Made in USA.<br>
 <img src="https://user-images.githubusercontent.com/5241605/71493809-322a5400-27ff-11ea-9b2d-52ff20b5f332.png" align="center" title="USA" alt="USA" width="100px">
 
+## Repository stats
 - ![Hits](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https%3A%2F%2Fgithub.com%2Fbahanonu%2FcalciumImagingAnalysis) (starting 2020.09.16)
 - ![visitors](https://visitor-badge.glitch.me/badge?page_id=bahanonu.calciumImagingAnalysis) (starting 2020.09.22)
+- ![visitors](https://visitor-badge.glitch.me/badge?page_id=bahanonu.calciumImagingAnalysis)
+- ![Hits](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https%3A%2F%2Fgithub.com%2Fbahanonu%2FcalciumImagingAnalysis)
+- ![visitors](https://vbr.wocr.tk/badge?page_id=bahanonu.ciatah.docs) (starting 2023.06.12, specific to docs homepage)
 <!-- - [![HitCount](http://hits.dwyl.com/bahanonu/calciumImagingAnalysis.svg)](http://hits.dwyl.com/bahanonu/calciumImagingAnalysis) (starting 2020.08.16), frozen til `dwyl` migrates to new server. -->
