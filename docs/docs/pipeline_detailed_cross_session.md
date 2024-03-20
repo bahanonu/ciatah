@@ -34,7 +34,7 @@ Below is an example of what that `globalIDs` matrix looks like when visualized. 
 ## Notes on `computeMatchObjBtwnTrials` options
 
 After starting `computeMatchObjBtwnTrials`, the below options screen will appear:   
-<a href="https://user-images.githubusercontent.com/5241605/126746771-c0486ab8-aec1-429d-b982-88f638a400a8.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/126746771-c0486ab8-aec1-429d-b982-88f638a400a8.png" alt="Cross session options screen" width="50%"/></a>
+<a href="https://user-images.githubusercontent.com/5241605/126746771-c0486ab8-aec1-429d-b982-88f638a400a8.png" target="_blank"><img src="https://user-images.githubusercontent.com/5241605/126746771-c0486ab8-aec1-429d-b982-88f638a400a8.png" alt="Cross session options screen" width="100%"/></a>
 
 An explanation of each option is as follows:
 

@@ -23,6 +23,8 @@
 
 ## Full documentation at https://bahanonu.github.io/ciatah/.
 
+- Documentation for spinal cord motion correction can be found at https://bahanonu.github.io/ciatah/pipeline_detailed_spinal.
+
 Below are recordings and additional documents for users who want to learn more about calcium imaging analysis/experiments and the CIAtah pipeline.
 
 <ins> __Book chapter__ </ins> — We have a book chapter that goes over all steps of miniscope imaging: viral injections, GRIN lens probe implant, pain experimental design, data processing and neural/behavioral analysis, and more.
@@ -285,6 +287,19 @@ Please cite the [Ahanonu and Corder, 2022](https://doi.org/10.1007/978-1-0716-20
   pages={217--276},
   year={2022},
   publisher={Springer}
+}
+```
+
+Please cite the [Ahanonu*, Crowther*, 2023](https://doi.org/10.1101/2023.05.22.541477) preprint on spinal cord imaging if you use related methods or procedures.
+
+```bibtex
+@article{ahanonu2023long,
+  title={Long-term optical imaging of the spinal cord in awake, behaving animals},
+  author={Ahanonu, Biafra and Crowther, Andrew and Kania, Artur and Casillas, Mariela Rosa and Basbaum, Allan},
+  journal={bioRxiv},
+  pages={2023--05},
+  year={2023},
+  publisher={Cold Spring Harbor Laboratory}
 }
 ```
 
