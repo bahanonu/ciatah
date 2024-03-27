@@ -130,6 +130,14 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#sorting-cell-extraction-outputs-with-computemanualsortsignals">Sorting cell extraction outputs with computeManualSortSignals</a>
         <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#resources-on-manual-identification">Resources on manual identification</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#ciatah-manual-sorting-gui">CIAtah manual sorting GUI</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#loading-in-prior-manually-sorted-data">Loading in prior manually sorted data</a>
+    </li>
+        </ul>
+    </li>
     <li class="toctree-l3"><a class="reference internal" href="#gui-usage-on-large-imaging-datasets">GUI usage on large imaging datasets</a>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#cell-sorting-from-the-command-line-with-signalsorter">Cell sorting from the command line with signalSorter</a>
@@ -501,15 +509,50 @@
 
   <a href="https://user-images.githubusercontent.com/5241605/100851700-64dec280-343a-11eb-974c-d6d29faf9eb2.gif">
 
-    <img src="https://user-images.githubusercontent.com/5241605/100851700-64dec280-343a-11eb-974c-d6d29faf9eb2.gif" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="75%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
+    <img src="https://user-images.githubusercontent.com/5241605/100851700-64dec280-343a-11eb-974c-d6d29faf9eb2.gif" align="center" title="ciapkgMovie" alt="ciapkgMovie" width="100%" style="margin-left:auto;margin-right:auto;display:block;margin-bottom: 1%;">
 
   </a>
 
 </p>
 
 <p>Outputs from most common cell-extraction algorithms like PCA-ICA, CNMF, etc. contain signal sources that are not cells and thus must be manually removed from the output. The repository contains a GUI for sorting cells from not cells. GUI also contains a shortcut menu that users can access by right-clicking or selecting the top-left menu.</p>
+<h3 id="resources-on-manual-identification">Resources on manual identification<a class="headerlink" href="#resources-on-manual-identification" title="Permanent link">&para;</a></h3>
+<p><img alt="image" src="../img/Ahanonu_Kitch_manualSort01.png" /></p>
+<p>The above figure gives an overview of the CIAtah manual sorting GUI along with examples of candidate cells that are accepted or rejected based on a variety of criteria from several cell extraction algorithms (CELLMax, PCA-ICA, and CNMF). We have discussed manual sorting previously, see the below resources:</p>
+<ul>
+<li><code>3.15.1 Manual Neuron Identification</code> in our miniature microscope book chapter contains a guide on manual sorting: <a href="https://link.springer.com/protocol/10.1007/978-1-0716-2039-7_13#Sec20">https://link.springer.com/protocol/10.1007/978-1-0716-2039-7_13#Sec20</a>.</li>
+</ul>
+<ul>
+<li><code>Fig. 7: Calcium imaging analysis of nociceptive ensemble.</code> contains example accepted and rejected cells: <a href="https://link.springer.com/protocol/10.1007/978-1-0716-2039-7_13/figures/7">https://link.springer.com/protocol/10.1007/978-1-0716-2039-7_13/figures/7</a>.</li>
+</ul>
+<p>Below are several potential criteria to use for accepting or rejecting candidate cells output by a cell extraction algorithm:</p>
+<ul>
+<li>Filter shape—e.g., cell-like depending on if using one- or two-photon imaging).</li>
+</ul>
+<ul>
+<li>The event triggered movie activity—e.g., whether it conformed to prior expectation of one-photon neuron morphology and fluorescent indicator activity. <strong>Note</strong> This criteria is critical, as some methods output candidate cells whose cell shape and activity trace look like a cell, but when the movie is checked can see that it is not a cell.</li>
+</ul>
+<ul>
+<li>Location within the imaging field of view—e.g., not within a blood vessel.</li>
+</ul>
+<ul>
+<li>The shape of the transient having characteristic fluorescent indicator dynamics, this will depending on the indicator being used, e.g. GCaMP will have a different expected waveform than other indicators.</li>
+</ul>
+<ul>
+<li>Whether cell is a duplicate cell, e.g. some algorithms will "split" a cell into multiple candidate cells. This can be handled by re-running the algorithm with improved parameters, rejected the lower SNR (or otherwise poorer quality) cell, or accepting both cells then conducting a merging operation later (and re-running the cell trace extraction portion of the algorithm if that feature is available).</li>
+</ul>
+<h3 id="ciatah-manual-sorting-gui">CIAtah manual sorting GUI<a class="headerlink" href="#ciatah-manual-sorting-gui" title="Permanent link">&para;</a></h3>
 <p>Below users can see a list of options that are given before running the code, those highlighted in green</p>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/49845107-43322f80-fd7a-11e8-96b9-3f870d4b9009.png" /></p>
+<h4 id="loading-in-prior-manually-sorted-data">Loading in prior manually sorted data<a class="headerlink" href="#loading-in-prior-manually-sorted-data" title="Permanent link">&para;</a></h4>
+<p>Decisions during manual sorting are stored in the <code>private/tmp</code> folder within the root CIAtah directory (find with <code>ciapkg.getDir</code>). Alternatively, previously manually sorted outputs can be re-sorted if new selection criteria are desired. When loading the <code>computeManualSortSignals</code> GUI, select one of the two options below in the <code>Use CIAtah auto classifications?</code> setting.</p>
+<ul>
+<li><code>Start with TEMP manually chosen classifications (e.g. backups)</code> - this option will open up a GUI into <code>private/tmp</code> and request users select a MAT-file containing the most recent decisions that were being manually sorted.</li>
+</ul>
+<ul>
+<li><code>Start with FINISHED manually chosen classifications</code> - will automatically load already saved manual decisions located in the same folder as the cell extraction outputs.</li>
+</ul>
+<p><img alt="image" src="../img/manualSort_reload01.png" /></p>
 <h3 id="gui-usage-on-large-imaging-datasets">GUI usage on large imaging datasets<a class="headerlink" href="#gui-usage-on-large-imaging-datasets" title="Permanent link">&para;</a></h3>
 <ul>
 <li>To manually sort on large movies that will not fit into RAM, select the below options (highlighted in green). This will load only chunks of the movie asynchronously into the GUI as you sort cell extraction outputs.</li>
