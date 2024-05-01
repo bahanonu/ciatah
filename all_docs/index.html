@@ -351,9 +351,9 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#movie-filtering">Movie Filtering</a>
 <ul>
-<li class="toctree-l3"><a class="reference internal" href="#filtering-movies-with-normalizemovie">Filtering movies with normalizeMovie</a>
-</li>
 <li class="toctree-l3"><a class="reference internal" href="#why-conduct-spatial-filtering">Why conduct spatial filtering?</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#filtering-movies-with-normalizemovie">Filtering movies with normalizeMovie</a>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#images-from-unit-test">Images from unit test</a>
 <ul>
@@ -372,6 +372,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#common-issues">Common Issues</a>
 <ul>
 <li class="toctree-l4"><a class="reference internal" href="#dark-halos-around-cells">Dark halos around cells</a>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#comparison-of-matlab-and-imagej-fft-based-spatial-filtering">Comparison of MATLAB and ImageJ FFT-based spatial filtering</a>
 </li>
 </ul>
 </li>
@@ -2761,6 +2763,12 @@
 <h2 id="movie-filtering">Movie Filtering<a class="headerlink" href="#movie-filtering" title="Permanent link">¶</a></h2>
 <p>This page documents different features and functions in the CIAtah repository variable for filtering (spatial high/low/bandpass) movies to remove neuropil, cells, or other features.</p>
 <p><img alt="2014_04_01_p203_m19_check01_spatialFilter" src="https://user-images.githubusercontent.com/5241605/111711340-af792480-8808-11eb-85d1-8c76479995bb.gif"/></p>
+<h3 id="why-conduct-spatial-filtering">Why conduct spatial filtering?<a class="headerlink" href="#why-conduct-spatial-filtering" title="Permanent link">¶</a></h3>
+<p>Spatial filtering can have a large impact on the resulting cell activity traces extracted from the movies and can lead to erroneous conclusions if not properly applied during pre-processing.</p>
+<p>For example, below are the correlations  between all cell-extraction outputs from PCA-ICA, ROI back-application of ICA filters, and CNMF-e on a miniature microscope one-photon movie. As can be seen, especially in the case of ROI analysis, the correlation between the activity traces is rendered artificially high due to the correlated background noise. This is greatly reduced in many instances after proper spatial filtering.</p>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/111710928-e864c980-8807-11eb-9d29-81341290d108.png"/></p>
+<!-- (Chebychev clustering, n = 5 clusters) -->
+<!-- <hr> -->
 <h3 id="filtering-movies-with-normalizemovie">Filtering movies with <code>normalizeMovie</code><a class="headerlink" href="#filtering-movies-with-normalizemovie" title="Permanent link">¶</a></h3>
 <p>Users can quickly filter movies using the <code>normalizeMovie</code> function. See below for usage.</p>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span><span class="c">% Load the movie (be in TIF, HDF5, AVI, etc.). Change HDF5 input dataset name as needed.</span>
@@ -2809,34 +2817,32 @@
 </code></pre></div>
 <p>If users set <code>options.showImages = 0;</code>, then <code>normalizeMovie</code> will update a figure containing both real and frequency space before and after the filter has been applied along with an example of the filter in frequency space. This allows users to get a sense of what their filter is doing.</p>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/111677991-049f4100-87dd-11eb-9bb6-1ba46894ea70.png"/></p>
-<h3 id="why-conduct-spatial-filtering">Why conduct spatial filtering?<a class="headerlink" href="#why-conduct-spatial-filtering" title="Permanent link">¶</a></h3>
-<p>Spatial filtering can have a large impact on the resulting cell activity traces extracted from the movies. </p>
-<p>For example, below are the correlations  between all cell-extraction outputs from PCA-ICA, ROI back-application of ICA filters, and CNMF-e on a miniature microscope one-photon movie. As can be seen, especially in the case of ROI analysis, the correlation between the activity traces is rendered artificially high due to the correlated background noise. This is greatly reduced in many instances after proper spatial filtering.</p>
-<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/111710928-e864c980-8807-11eb-9d29-81341290d108.png"/></p>
-<!-- (Chebychev clustering, n = 5 clusters) -->
-<!-- <hr> -->
 <h3 id="images-from-unit-test">Images from unit test<a class="headerlink" href="#images-from-unit-test" title="Permanent link">¶</a></h3>
 <h4 id="main-filtering-functions">Main filtering functions.<a class="headerlink" href="#main-filtering-functions" title="Permanent link">¶</a></h4>
 <p>Below is a screen grab from a random frame using all the filtering functions. A nice way to quickly see the many differences between each functions filtering.</p>
-<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/32477562-18b7d9d4-c334-11e7-988f-accdf99a22f2.png"/></p>
+<!-- ![image](https://user-images.githubusercontent.com/5241605/32477562-18b7d9d4-c334-11e7-988f-accdf99a22f2.png) -->
+<p><img alt="image" src="https://github.com/bahanonu/ciatah/assets/5241605/51356dea-deb6-4bbe-904b-2a79577ffcdf"/></p>
 <h4 id="test-function-filtering">Test function filtering<a class="headerlink" href="#test-function-filtering" title="Permanent link">¶</a></h4>
-<p>This function will take a movie and This is currently only for the Matlab fft, but I'll see about expanding to others.</p>
-<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">unitNormalizeMovie</span><span class="p">;</span>
+<p>This function will take a movie and conduct multiple spatial filtering operations on it then display for the user. </p>
+<!-- This is currently only for the Matlab fft, but I'll see about expanding to others. -->
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">ciapkg</span><span class="p">.</span><span class="n">unit</span><span class="p">.</span><span class="n">unitNormalizeMovie</span><span class="p">;</span>
 </code></pre></div>
-<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/32477571-26620546-c334-11e7-8ce0-aa5269fcb5f3.png"/></p>
+<p>After running that function, below is an example movie from a prefrontal cortex animal (miniature microscope, GCaMP) showing the difference in results with different spatial filtering.</p>
+<p><img alt="image" src="https://github.com/bahanonu/ciatah/assets/5241605/a09e959e-da75-49c3-8c89-7ee1e42ac004"/></p>
 <h4 id="matlab-test-function">Matlab test function<a class="headerlink" href="#matlab-test-function" title="Permanent link">¶</a></h4>
-<ul>
-<li>I've also added the ability to test the parameter space of the Matlab fft, use the below command.</li>
-</ul>
+<p>I've also added the ability to test the parameter space of the Matlab fft, use the below command.</p>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">testMovieFFT</span> <span class="p">=</span> <span class="n">normalizeMovie</span><span class="p">(</span><span class="n">testMovie</span><span class="p">,</span><span class="s">'normalizationType'</span><span class="p">,</span><span class="s">'matlabFFT_test'</span><span class="p">,</span><span class="s">'secondaryNormalizationType'</span><span class="p">,</span><span class="s">'lowpassFFTDivisive'</span><span class="p">,</span><span class="s">'bandpassMask'</span><span class="p">,</span><span class="s">'gaussian'</span><span class="p">,</span><span class="s">'bandpassType'</span><span class="p">,</span><span class="s">'lowpass'</span><span class="p">);</span>
 </code></pre></div>
-<ul>
-<li>Should get a movie output similar to the below, where there is the original movie, the FFT movie, the original/FFT movie, and the dfof of original/FFT movie.</li>
-</ul>
+<p>Should get a movie output similar to the below, where there is the original movie, the FFT movie, the original/FFT movie, and the dfof of original/FFT movie.</p>
 <p><img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/11490967/559152e2-9792-11e5-839b-a93811df70ce.png"/></p>
+<p>This can also be expanded to look at the effects of different spatial frequency filters on the resulting output, as indicated below.</p>
+<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/32477571-26620546-c334-11e7-8ce0-aa5269fcb5f3.png"/></p>
 <h4 id="matlab-test-function-movie-output">Matlab test function movie output<a class="headerlink" href="#matlab-test-function-movie-output" title="Permanent link">¶</a></h4>
 <p>Similar to above, showing results when using <code>lowpassFFTDivisive</code> normalization (using the <code>matlab divide by lowpass before registering</code> option in <code>modelPreprocessMovie</code> and <code>viewMovieRegistrationTest</code> functions) with <code>freqLow = 0</code> and <code>freqHigh</code> set to <code>1</code>, <code>4</code>, and <code>20</code>. This corresponds to removing increasingly smaller features from the movie.</p>
-<p><img alt="2014_04_01_p203_m19_check01_fft_example-3" src="https://user-images.githubusercontent.com/5241605/71422606-aec30400-2640-11ea-8ffb-41cdeea771c1.gif"/></p>
+<!-- 2014_04_01_p203_m19_check01_fft_example-3 -->
+<!-- ![image](https://user-images.githubusercontent.com/5241605/71422606-aec30400-2640-11ea-8ffb-41cdeea771c1.gif) -->
+<!-- ![image](https://github.com/bahanonu/ciatah/assets/5241605/c6ffeb2b-db03-413c-8a58-e35e3543e5db) -->
+<p><img alt="image" src="https://github.com/bahanonu/ciatah/assets/5241605/2534544b-7519-4d17-b4f5-088ee5582a87"/></p>
 <h4 id="imagej-test-function">ImageJ test function<a class="headerlink" href="#imagej-test-function" title="Permanent link">¶</a></h4>
 <p>To test the ImageJ FFT and determine the best parameters for a given set of movies, run the following function on a test movie matrix:</p>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">inputMovieTest</span> <span class="p">=</span> <span class="n">normalizeMovie</span><span class="p">(</span><span class="n">inputMovie</span><span class="p">,</span><span class="s">'normalizationType'</span><span class="p">,</span><span class="s">'imagejFFT_test'</span><span class="p">);</span>
@@ -2849,10 +2855,11 @@
 <h4 id="dark-halos-around-cells">Dark halos around cells<a class="headerlink" href="#dark-halos-around-cells" title="Permanent link">¶</a></h4>
 <p>If the spatial filter is not properly configured then dark halos will appear around high SNR cells, potentially obscuring nearby, low SNR cells.</p>
 <p><img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/11329062/1232a886-914b-11e5-9cca-85ec6162319b.png"/></p>
-<p><a href="https://github.com/schnitzer-lab/miniscope_analysis/pull/30">https://github.com/schnitzer-lab/miniscope_analysis/pull/30</a></p>
+<!-- https://github.com/schnitzer-lab/miniscope_analysis/pull/30 -->
 <ul>
 <li>FYI, for 4x downsampled movies, <code>highFreq</code> parameter of 4 (which corresponds to a <code>fspecial</code> gaussian with std of 4) produces the closest results to ImageJ <code>Process-&gt;FFT-&gt;Bandpass Filter...</code> with inputs of <code>filter_large=10000 filter_small=80 suppress=None tolerance=5</code> (the current default in <code>normalizeMovie</code>).</li>
 </ul>
+<h4 id="comparison-of-matlab-and-imagej-fft-based-spatial-filtering">Comparison of MATLAB and ImageJ FFT-based spatial filtering<a class="headerlink" href="#comparison-of-matlab-and-imagej-fft-based-spatial-filtering" title="Permanent link">¶</a></h4>
 <ul>
 <li>Example frame from ImageJ and Matlab FFTs.</li>
 </ul>
@@ -2865,7 +2872,8 @@
 <li>This matches the filter that ImageJ says it uses, which is fairly close to the Matlab filter.</li>
 </ul>
 <p><img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/11519329/22b3af8e-984e-11e5-9379-5b5d4092cee0.png"/></p>
-<p><strong>Example video: 2015_11_25_p384_m610_openfield01</strong></p>
+<p><strong>Example video: Basolateral amygdala miniature microscope imaging in open field</strong></p>
+<!-- 2015_11_25_p384_m610_openfield01 -->
 <ul>
 <li>Below is an example comparison using the following Matlab commands to produce the filtered inputs:</li>
 </ul>
