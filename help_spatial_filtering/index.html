@@ -149,6 +149,12 @@
     <li class="toctree-l2"><a class="reference internal" href="#why-conduct-spatial-filtering">Why conduct spatial filtering?</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#filtering-movies-with-normalizemovie">Filtering movies with normalizeMovie</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#fft-bandpass-filtering">FFT bandpass filtering</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#divide-by-lowpass-filtering">Divide by lowpass filtering</a>
+    </li>
+        </ul>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#images-from-unit-test">Images from unit test</a>
         <ul>
@@ -241,8 +247,7 @@
 <p>Spatial filtering can have a large impact on the resulting cell activity traces extracted from the movies and can lead to erroneous conclusions if not properly applied during pre-processing.</p>
 <p>For example, below are the correlations  between all cell-extraction outputs from PCA-ICA, ROI back-application of ICA filters, and CNMF-e on a miniature microscope one-photon movie. As can be seen, especially in the case of ROI analysis, the correlation between the activity traces is rendered artificially high due to the correlated background noise. This is greatly reduced in many instances after proper spatial filtering.</p>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/111710928-e864c980-8807-11eb-9d29-81341290d108.png" /></p>
-<!-- (Chebychev clustering, n = 5 clusters) -->
-
+<p>(Chebychev clustering, n = 5 clusters)</p>
 <!-- <hr> -->
 
 <h2 id="filtering-movies-with-normalizemovie">Filtering movies with <code>normalizeMovie</code><a class="headerlink" href="#filtering-movies-with-normalizemovie" title="Permanent link">&para;</a></h2>
@@ -270,8 +275,15 @@
 <span class="lineno" data-linenos="21 "></span><span class="c">% Run analysis</span>
 <span class="lineno" data-linenos="22 "></span><span class="n">inputMovie</span> <span class="p">=</span> <span class="n">normalizeMovie</span><span class="p">(</span><span class="n">single</span><span class="p">(</span><span class="n">inputMovie</span><span class="p">),</span><span class="s">&#39;options&#39;</span><span class="p">,</span><span class="n">options</span><span class="p">);</span>
 </code></pre></div>
-<p>If users set <code>options.showImages = 0;</code>, then <code>normalizeMovie</code> will update a figure containing both real and frequency space before and after the filter has been applied along with an example of the filter in frequency space. This allows users to get a sense of what their filter is doing.</p>
-<p><img alt="image" src="https://user-images.githubusercontent.com/5241605/111677991-049f4100-87dd-11eb-9bb6-1ba46894ea70.png" /></p>
+<p>If users set <code>options.showImages = 0;</code>, then <code>normalizeMovie</code> will update a figure containing both real and frequency space before and after the filter has been applied along with an example of the filter in frequency space. This allows users to get a sense of what their filter is doing. See below for examples.</p>
+<!-- ![image](https://user-images.githubusercontent.com/5241605/111677991-049f4100-87dd-11eb-9bb6-1ba46894ea70.png) -->
+
+<h3 id="fft-bandpass-filtering">FFT bandpass filtering<a class="headerlink" href="#fft-bandpass-filtering" title="Permanent link">&para;</a></h3>
+<p>Bandpass filtering where only <code>red</code> frequencies in <code>filter</code> image (FFT of bottom left input image) are kept producing an image as in <code>fft image</code>.
+<img alt="image" src="https://github.com/bahanonu/ciatah/assets/5241605/78fda2d7-a041-4622-a9b6-3b667f24bc49" /></p>
+<h3 id="divide-by-lowpass-filtering">Divide by lowpass filtering<a class="headerlink" href="#divide-by-lowpass-filtering" title="Permanent link">&para;</a></h3>
+<p>Another method is <code>lowpassFFTDivisive</code>, which involves dividing the image by a lowpass version of itself. In the below example, the <code>filter</code> image shows that only low frequencies will be kept. This will produce an image as in <code>fft image</code> that when divided or subtracted from the <code>input image</code> will produce <code>difference</code> image.
+<img alt="image" src="https://github.com/bahanonu/ciatah/assets/5241605/cde8556b-e009-4e92-b28f-b277f331a9a5" /></p>
 <h2 id="images-from-unit-test">Images from unit test<a class="headerlink" href="#images-from-unit-test" title="Permanent link">&para;</a></h2>
 <h3 id="main-filtering-functions">Main filtering functions.<a class="headerlink" href="#main-filtering-functions" title="Permanent link">&para;</a></h3>
 <p>Below is a screen grab from a random frame using all the filtering functions. A nice way to quickly see the many differences between each functions filtering.</p>
