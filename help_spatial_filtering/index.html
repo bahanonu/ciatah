@@ -148,7 +148,7 @@
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#why-conduct-spatial-filtering">Why conduct spatial filtering?</a>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#filtering-movies-with-normalizemovie">Filtering movies with normalizeMovie</a>
+    <li class="toctree-l2"><a class="reference internal" href="#filtering-movies-with-ciapkgmovie_processingnormalizemovie">Filtering movies with ciapkg.movie_processing.normalizeMovie</a>
         <ul>
     <li class="toctree-l3"><a class="reference internal" href="#fft-bandpass-filtering">FFT bandpass filtering</a>
     </li>
@@ -247,14 +247,14 @@
 <p>Spatial filtering can have a large impact on the resulting cell activity traces extracted from the movies and can lead to erroneous conclusions if not properly applied during pre-processing.</p>
 <p>For example, below are the correlations  between all cell-extraction outputs from PCA-ICA, ROI back-application of ICA filters, and CNMF-e on a miniature microscope one-photon movie. As can be seen, especially in the case of ROI analysis, the correlation between the activity traces is rendered artificially high due to the correlated background noise. This is greatly reduced in many instances after proper spatial filtering.</p>
 <p><img alt="image" src="https://user-images.githubusercontent.com/5241605/111710928-e864c980-8807-11eb-9d29-81341290d108.png" /></p>
-<!-- (Chebychev clustering, n = 5 clusters) -->
+<!-- (Chebyshev clustering, n = 5 clusters) -->
 
 <!-- <hr> -->
 
-<h2 id="filtering-movies-with-normalizemovie">Filtering movies with <code>normalizeMovie</code><a class="headerlink" href="#filtering-movies-with-normalizemovie" title="Permanent link">&para;</a></h2>
-<p>Users can quickly filter movies using the <code>normalizeMovie</code> function. See below for usage.</p>
+<h2 id="filtering-movies-with-ciapkgmovie_processingnormalizemovie">Filtering movies with <code>ciapkg.movie_processing.normalizeMovie</code><a class="headerlink" href="#filtering-movies-with-ciapkgmovie_processingnormalizemovie" title="Permanent link">&para;</a></h2>
+<p>Users can quickly filter movies using the <code>ciapkg.movie_processing.normalizeMovie</code> function. See below for usage.</p>
 <div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos=" 1 "></span><span class="c">% Load the movie (be in TIF, HDF5, AVI, etc.). Change HDF5 input dataset name as needed.</span>
-<span class="lineno" data-linenos=" 2 "></span><span class="n">inputMovie</span> <span class="p">=</span> <span class="n">loadMovieList</span><span class="p">(</span><span class="s">&#39;pathToMovie&#39;</span><span class="p">,</span><span class="s">&#39;inputDatasetName&#39;</span><span class="p">,</span><span class="s">&#39;/1&#39;</span><span class="p">);</span> 
+<span class="lineno" data-linenos=" 2 "></span><span class="n">inputMovie</span> <span class="p">=</span> <span class="n">ciapkg</span><span class="p">.</span><span class="n">io</span><span class="p">.</span><span class="n">loadMovieList</span><span class="p">(</span><span class="s">&#39;pathToMovie&#39;</span><span class="p">,</span><span class="s">&#39;inputDatasetName&#39;</span><span class="p">,</span><span class="s">&#39;/1&#39;</span><span class="p">);</span> 
 <span class="lineno" data-linenos=" 3 "></span>
 <span class="lineno" data-linenos=" 4 "></span><span class="c">% Set options for dividing movie by lowpass version of the movie</span>
 <span class="lineno" data-linenos=" 5 "></span><span class="n">options</span><span class="p">.</span><span class="n">freqLow</span> <span class="p">=</span> <span class="mi">1</span><span class="p">;</span>
@@ -274,7 +274,7 @@
 <span class="lineno" data-linenos="19 "></span><span class="n">options</span><span class="p">.</span><span class="n">showImages</span> <span class="p">=</span> <span class="mi">0</span><span class="p">;</span> <span class="c">% Set to 1 if you want to view</span>
 <span class="lineno" data-linenos="20 "></span>
 <span class="lineno" data-linenos="21 "></span><span class="c">% Run analysis</span>
-<span class="lineno" data-linenos="22 "></span><span class="n">inputMovie</span> <span class="p">=</span> <span class="n">normalizeMovie</span><span class="p">(</span><span class="n">single</span><span class="p">(</span><span class="n">inputMovie</span><span class="p">),</span><span class="s">&#39;options&#39;</span><span class="p">,</span><span class="n">options</span><span class="p">);</span>
+<span class="lineno" data-linenos="22 "></span><span class="n">inputMovie</span> <span class="p">=</span> <span class="n">ciapkg</span><span class="p">.</span><span class="n">movie_processing</span><span class="p">.</span><span class="n">normalizeMovie</span><span class="p">(</span><span class="n">single</span><span class="p">(</span><span class="n">inputMovie</span><span class="p">),</span><span class="s">&#39;options&#39;</span><span class="p">,</span><span class="n">options</span><span class="p">);</span>
 </code></pre></div>
 <p>If users set <code>options.showImages = 0;</code>, then <code>normalizeMovie</code> will update a figure containing both real and frequency space before and after the filter has been applied along with an example of the filter in frequency space. This allows users to get a sense of what their filter is doing. See below for examples.</p>
 <!-- ![image](https://user-images.githubusercontent.com/5241605/111677991-049f4100-87dd-11eb-9bb6-1ba46894ea70.png) -->
@@ -301,7 +301,7 @@
 <p><img alt="image" src="https://github.com/bahanonu/ciatah/assets/5241605/a09e959e-da75-49c3-8c89-7ee1e42ac004" /></p>
 <h3 id="matlab-test-function">Matlab test function<a class="headerlink" href="#matlab-test-function" title="Permanent link">&para;</a></h3>
 <p>I've also added the ability to test the parameter space of the Matlab fft, use the below command.</p>
-<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">testMovieFFT</span> <span class="p">=</span> <span class="n">normalizeMovie</span><span class="p">(</span><span class="n">testMovie</span><span class="p">,</span><span class="s">&#39;normalizationType&#39;</span><span class="p">,</span><span class="s">&#39;matlabFFT_test&#39;</span><span class="p">,</span><span class="s">&#39;secondaryNormalizationType&#39;</span><span class="p">,</span><span class="s">&#39;lowpassFFTDivisive&#39;</span><span class="p">,</span><span class="s">&#39;bandpassMask&#39;</span><span class="p">,</span><span class="s">&#39;gaussian&#39;</span><span class="p">,</span><span class="s">&#39;bandpassType&#39;</span><span class="p">,</span><span class="s">&#39;lowpass&#39;</span><span class="p">);</span>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">testMovieFFT</span> <span class="p">=</span> <span class="n">ciapkg</span><span class="p">.</span><span class="n">movie_processing</span><span class="p">.</span><span class="n">normalizeMovie</span><span class="p">(</span><span class="n">testMovie</span><span class="p">,</span><span class="s">&#39;normalizationType&#39;</span><span class="p">,</span><span class="s">&#39;matlabFFT_test&#39;</span><span class="p">,</span><span class="s">&#39;secondaryNormalizationType&#39;</span><span class="p">,</span><span class="s">&#39;lowpassFFTDivisive&#39;</span><span class="p">,</span><span class="s">&#39;bandpassMask&#39;</span><span class="p">,</span><span class="s">&#39;gaussian&#39;</span><span class="p">,</span><span class="s">&#39;bandpassType&#39;</span><span class="p">,</span><span class="s">&#39;lowpass&#39;</span><span class="p">);</span>
 </code></pre></div>
 <p>Should get a movie output similar to the below, where there is the original movie, the FFT movie, the original/FFT movie, and the dfof of original/FFT movie.</p>
 <p><img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/11490967/559152e2-9792-11e5-839b-a93811df70ce.png" /></p>
@@ -317,7 +317,7 @@
 <p><img alt="image" src="https://github.com/bahanonu/ciatah/assets/5241605/2534544b-7519-4d17-b4f5-088ee5582a87" /></p>
 <h3 id="imagej-test-function">ImageJ test function<a class="headerlink" href="#imagej-test-function" title="Permanent link">&para;</a></h3>
 <p>To test the ImageJ FFT and determine the best parameters for a given set of movies, run the following function on a test movie matrix:
-<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">inputMovieTest</span> <span class="p">=</span> <span class="n">normalizeMovie</span><span class="p">(</span><span class="n">inputMovie</span><span class="p">,</span><span class="s">&#39;normalizationType&#39;</span><span class="p">,</span><span class="s">&#39;imagejFFT_test&#39;</span><span class="p">);</span>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">inputMovieTest</span> <span class="p">=</span> <span class="n">ciapkg</span><span class="p">.</span><span class="n">movie_processing</span><span class="p">.</span><span class="n">normalizeMovie</span><span class="p">(</span><span class="n">inputMovie</span><span class="p">,</span><span class="s">&#39;normalizationType&#39;</span><span class="p">,</span><span class="s">&#39;imagejFFT_test&#39;</span><span class="p">);</span>
 </code></pre></div></p>
 <p>The output should look like the below:
 <img alt="image" src="https://cloud.githubusercontent.com/assets/5241605/11154743/14dd385a-89f6-11e5-8d56-c349e8c4f3f8.png" /></p>
@@ -331,7 +331,7 @@
 <!-- https://github.com/schnitzer-lab/miniscope_analysis/pull/30 -->
 
 <ul>
-<li>FYI, for 4x downsampled movies, <code>highFreq</code> parameter of 4 (which corresponds to a <code>fspecial</code> gaussian with std of 4) produces the closest results to ImageJ <code>Process-&gt;FFT-&gt;Bandpass Filter...</code> with inputs of <code>filter_large=10000 filter_small=80 suppress=None tolerance=5</code> (the current default in <code>normalizeMovie</code>).</li>
+<li>FYI, for 4x downsampled movies, <code>highFreq</code> parameter of 4 (which corresponds to a <code>fspecial</code> gaussian with std of 4) produces the closest results to ImageJ <code>Process-&gt;FFT-&gt;Bandpass Filter...</code> with inputs of <code>filter_large=10000 filter_small=80 suppress=None tolerance=5</code> (the current default in <code>ciapkg.movie_processing.normalizeMovie</code>).</li>
 </ul>
 <h3 id="comparison-of-matlab-and-imagej-fft-based-spatial-filtering">Comparison of MATLAB and ImageJ FFT-based spatial filtering<a class="headerlink" href="#comparison-of-matlab-and-imagej-fft-based-spatial-filtering" title="Permanent link">&para;</a></h3>
 <ul>
@@ -352,8 +352,8 @@
 <ul>
 <li>Below is an example comparison using the following Matlab commands to produce the filtered inputs:</li>
 </ul>
-<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">testMovieFFT</span> <span class="p">=</span> <span class="n">normalizeMovie</span><span class="p">(</span><span class="n">testMovie</span><span class="p">,</span><span class="s">&#39;normalizationType&#39;</span><span class="p">,</span><span class="s">&#39;lowpassFFTDivisive&#39;</span><span class="p">,</span><span class="s">&#39;freqHigh&#39;</span><span class="p">,</span><span class="mi">7</span><span class="p">);</span>
-<span class="lineno" data-linenos="2 "></span><span class="n">testMovieFFTImageJ</span> <span class="p">=</span> <span class="n">normalizeMovie</span><span class="p">(</span><span class="n">testMovie</span><span class="p">,</span><span class="s">&#39;normalizationType&#39;</span><span class="p">,</span><span class="s">&#39;imagejFFT&#39;</span><span class="p">);</span>
+<div class="codehilite"><pre><span></span><code><span class="lineno" data-linenos="1 "></span><span class="n">testMovieFFT</span> <span class="p">=</span> <span class="n">ciapkg</span><span class="p">.</span><span class="n">movie_processing</span><span class="p">.</span><span class="n">normalizeMovie</span><span class="p">(</span><span class="n">testMovie</span><span class="p">,</span><span class="s">&#39;normalizationType&#39;</span><span class="p">,</span><span class="s">&#39;lowpassFFTDivisive&#39;</span><span class="p">,</span><span class="s">&#39;freqHigh&#39;</span><span class="p">,</span><span class="mi">7</span><span class="p">);</span>
+<span class="lineno" data-linenos="2 "></span><span class="n">testMovieFFTImageJ</span> <span class="p">=</span> <span class="n">ciapkg</span><span class="p">.</span><span class="n">movie_processing</span><span class="p">.</span><span class="n">normalizeMovie</span><span class="p">(</span><span class="n">testMovie</span><span class="p">,</span><span class="s">&#39;normalizationType&#39;</span><span class="p">,</span><span class="s">&#39;imagejFFT&#39;</span><span class="p">);</span>
 <span class="lineno" data-linenos="3 "></span><span class="n">diffMovie</span> <span class="p">=</span> <span class="n">testMovieFFT</span><span class="o">-</span><span class="n">testMovieFFTImageJ</span> <span class="p">;</span>
 </code></pre></div>
 <ul>
