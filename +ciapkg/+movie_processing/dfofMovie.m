@@ -10,6 +10,7 @@ function [dfofMatrix, inputMovieF0, inputMovieStd] = dfofMovie(inputMovie, varar
 		% 2013.11.22 [17:49:34]
 		% 2021.06.29 [12:11:43] - Add support for minimum and soft minimum dF/F calculation.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2024.04.3 [12:40:35] - Updated to allow users to adjust movies with negative values.
 	% TODO
 		%
 
@@ -26,6 +27,8 @@ function [dfofMatrix, inputMovieF0, inputMovieStd] = dfofMovie(inputMovie, varar
 	options.minSoftPct = 0.1/100;
 	% Binary: 1 = waitbar on
 	options.waitbarOn = 1;
+	% Float: Number >1.0 indicating how much to adjust
+	options.minAdjust = 1.1;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -51,6 +54,14 @@ function [dfofMatrix, inputMovieF0, inputMovieStd] = dfofMovie(inputMovie, varar
 		eval([fn{i} '=options.' fn{i} ';']);
 	end
 	%========================
+
+	% Adjust for problems with movies that have negative pixel values before dfof.
+	if isempty(options.minAdjust)
+		minMovie = min(inputMovie,[],[1 2 3],'omitnan');
+		if minMovie<0
+			inputMovie = inputMovie + options.minAdjust*abs(minMovie);
+		end
+	end
 
 	stdList = {'slidingZscore','binnedZscore','dfstd'};
 

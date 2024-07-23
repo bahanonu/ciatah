@@ -33,6 +33,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		% 2022.06.29 [11:25:57] - CELLMax support for loading prior settings.
 		% 2022.07.05 [20:12:34] - Update to EXTRACT support: added additional options, do not automatically eliminate summary section, and more.
 		% 2022.09.14 [10:52:43] - Switch order of mergeStructs and supplying cell radius to EXTRACT, else empty vector can be passed depending on user input.
+		% 2022.11.01 [13:01:18] - Allow input of images from one cell extraction method to CELLMax and EXTRACT, e.g. run PCA-ICA quickly then use as input. Update ROI method of calling other algorithm images.
 	% TODO
 		%
 
@@ -807,6 +808,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 					options.CELLMax.saveChunksToRam = '1';
 					options.CELLMax.eccentricityThreshold = '0.99';
 					options.CELLMax.numObjThreshold = '3';
+					options.CELLMax.nPCnIC = '';
+
 
 					optsDefault = options.CELLMax;
 					try
@@ -859,6 +862,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 						mOpt.saveChunksToRam = ' (0 = no, 1 = yes)?';
 						mOpt.eccentricityThreshold = 'Float: value 0 to 1, eccentricity (0 = more circular). By default is 0.99 so that dendrites are not excluded, lower if interested more in cells.';
 						mOpt.numObjThreshold = 'Int: Filter kept if number of objects is <= numObjThreshold. This generally filters for noise that does not produce a single object containing the signal.';
+						mOpt.nPCnIC = 'Int: [nPCs nICs] vector giving integer values to use for number of PCs and ICs to ask in quick PCA-ICA run initialization';
 					% };
 
 					% optsTmp = cellfun(@num2str,struct2cell(optsDefault),'UniformOutput',false);
@@ -920,6 +924,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 					options.CELLMax.saveChunksToRam = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.CELLMax.eccentricityThreshold = str2num(movieSettings{setNo});setNo = setNo+1;
 					options.CELLMax.numObjThreshold = str2num(movieSettings{setNo});setNo = setNo+1;
+					options.CELLMax.nPCnIC = str2num(movieSettings{setNo});setNo = setNo+1;
 
 					obj.functionSettings.modelExtractSignalsFromMovie.options.CELLMax = options.CELLMax;
 
@@ -1193,13 +1198,8 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 			end
 		end
 	end
-	function runROISignalFinder()
-		% Use other algorithms to get an extracted ROI trace
-
-		import ciapkg.api.* % import CIAtah functions in ciapkg package API.
-
-		movieList = getFileList(obj.inputFolders{obj.fileNum}, fileFilterRegexp);
-		[inputMovie thisMovieSize Npixels Ntime] = loadMovieList(movieList,'convertToDouble',0,'inputDatasetName',obj.inputDatasetName,'treatMoviesAsContinuous',1);
+	function [inputSignals, inputImages] = getImagesSignalsOtherMethod()
+		signalExtractionMethodPrior = obj.signalExtractionMethod;
 		obj.signalExtractionMethod = options.ROI.signalExtractionMethod;
 
 		% Make sure only run modelVarsFromFiles for the current movie and not all movies.
@@ -1210,7 +1210,20 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 		obj.guiEnabled = 0;
 		obj.foldersToAnalyze = tmpAnalysisList;
 
-		[inputSignals inputImages signalPeaks signalPeaksArray] = modelGetSignalsImages(obj,'returnType','raw');
+		[inputSignals, inputImages, signalPeaks, signalPeaksArray] = modelGetSignalsImages(obj,'returnType','raw');
+
+		obj.signalExtractionMethod = signalExtractionMethodPrior;
+	end
+	function runROISignalFinder()
+		% Use other algorithms to get an extracted ROI trace
+
+		import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
+		movieList = getFileList(obj.inputFolders{obj.fileNum}, fileFilterRegexp);
+		[inputMovie thisMovieSize Npixels Ntime] = loadMovieList(movieList,'convertToDouble',0,'inputDatasetName',obj.inputDatasetName,'treatMoviesAsContinuous',1);
+		
+		[inputSignals, inputImages] = getImagesSignalsOtherMethod();
+
 		obj.signalExtractionMethod = 'ROI';
 		options.ROI.threshold
 		[ROItraces,inputImages] = applyImagesToMovie(inputImages,inputMovie,'threshold',options.ROI.threshold);
@@ -1426,6 +1439,7 @@ function obj = modelExtractSignalsFromMovie(obj,varargin)
 
 		emOptions.CELLMaxoptions.eccentricityThreshold = options.CELLMax.eccentricityThreshold;
 		emOptions.CELLMaxoptions.numObjThreshold = options.CELLMax.numObjThreshold;
+		emOptions.CELLMaxoptions.nPCnIC = options.CELLMax.nPCnIC;
 
 		if options.defaultOptions==0
 			emOptions.CELLMaxoptions.localICimgs = [];

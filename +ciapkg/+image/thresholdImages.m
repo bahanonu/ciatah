@@ -25,6 +25,7 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
 		% 2021.07.06 [18:57:02] - Fast border calculation using convn for options.fastThresholding==1, less precise than bwboundaries or bwareafilt but works for fast display purposes.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2022.06.27 [19:41:34] - manageParallelWorkers now passed options.waitbarOn value to reduce command line clutter if user request in thresholdImages.
+		% 2023.02.22 [19:47:27] - fastThresholding respects normalization=0, so threshold functions as absolute value. Also make sure remove unconnected works with fastThresholding at all times.
 	% TODO
 		%
 
@@ -132,10 +133,18 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
 
 	if options.fastThresholding==1
 		if options_binary==1
-			inputImages = inputImages>max(inputImages,[],[1 2])*options_threshold;
+			if options_normalize==1
+				inputImages = inputImages>max(inputImages,[],[1 2])*options_threshold;
+			else
+				inputImages = inputImages>options_threshold;
+			end
 			imgFiltHere = options_imageFilterBinary;
 		else
-			rmIdx = inputImages<max(inputImages,[],[1 2])*options_threshold;
+			if options_normalize==1
+				rmIdx = inputImages<max(inputImages,[],[1 2])*options_threshold;
+			else
+				rmIdx = inputImages<options_threshold;
+			end
 			inputImages(rmIdx) = 0;
 			imgFiltHere = options_imageFilter;
 		end
@@ -155,10 +164,13 @@ function [inputImages, boundaryIndices, numObjects] = thresholdImages(inputImage
 				% body
 		end
 		
-		if options.removeUnconnectedBinary==1
-			parfor(imageNo=1:nImages,nWorkers)
-				thisFilt = inputImages(:,:,imageNo);
-				[~,numObjects(imageNo)] = bwlabel(thisFilt);
+		if options_binary==1
+			if options.removeUnconnectedBinary==1
+				parfor(imageNo=1:nImages,nWorkers)
+					thisFilt = inputImages(:,:,imageNo);
+					[~,numObjects(imageNo)] = bwlabel(thisFilt);
+					inputImages(:,:,imageNo) = bwareafilt(thisFilt,1,'largest');
+				end
 			end
 		end
 		

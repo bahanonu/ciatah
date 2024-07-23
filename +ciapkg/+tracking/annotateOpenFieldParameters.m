@@ -19,6 +19,9 @@ function [mainTbl] = annotateOpenFieldParameters(inputFilePath,varargin)
 	% Changelog
 		% 2022.12.13 [09:41:48] - add FPS override for cases in which camera metadata is incorrect.
 		% 2023.04.29 [18:47:02] - Arena size automatically calculated from reference distance size. Add GUI font size option.
+	% TODO
+		% Clean up code to make into more nested and sub functions
+		% Extend to elevated plus maze
 
 	% ========================
 	% Str: regular expression of files to find if inputFilePath is a folder.

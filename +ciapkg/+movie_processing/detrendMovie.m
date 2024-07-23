@@ -8,13 +8,13 @@ function [inputMovie] = detrendMovie(inputMovie,varargin)
 		%
 
 	% changelog
-		%
+		% 2023.04.04 [19:36:21] - Fix detrendDegree passing.
 	% TODO
 		%
 
 	% ========================
 	% Int: 1 = linear detrend, >1 = nth-degree polynomial detrend
-	option.detrendDegree = 1;
+	options.detrendDegree = 1;
 	% Int: maximum frame to normalize.
 	options.maxFrame = size(inputMovie,3);
 	% get options
@@ -30,7 +30,7 @@ function [inputMovie] = detrendMovie(inputMovie,varargin)
 	try
 		inputMovie = ciapkg.movie_processing.normalizeMovie(inputMovie,...
 			'normalizationType','detrend',...
-			'detrendDegree',option.detrendDegree,...
+			'detrendDegree',options.detrendDegree,...
 			'maxFrame',options.maxFrame);
 	catch err
 		disp(repmat('@',1,7))

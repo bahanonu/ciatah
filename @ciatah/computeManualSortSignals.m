@@ -16,6 +16,7 @@ function obj = computeManualSortSignals(obj)
 		% 2021.06.18 [21:41:07] - added modelVarsFromFilesCheck() to check and load signals if user hasn't already.
 		% 2021.06.21 [21:03:25] - Fix check to make sure variables are loaded.
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2024.03.27 [15:41:31] - Update display of information.
 	% ADDED
 		% ADD PERSONS NAME TO THE FILE - DONE.
 	% TODO
@@ -501,18 +502,19 @@ function [settingStruct] = subfxnGetSettings(inputTitleStr,fileFilterRegexp,inpu
 	uiTextHandles = {};
 	uiXIncrement = 0.03;
 	uiYOffset = 0.90;
+	uiXOffset = 0.02;
 	uiTxtSize = 0.3;
 	uiBoxSize = 0.65;
 	[figHandle figNo] = openFigure(1337, '');
 	clf
-	uicontrol('Style','Text','String',inputTitleStr,'Units','normalized','Position',[0.0 uiYOffset-uiXIncrement*(0) 0.3 0.05],'BackgroundColor','white','HorizontalAlignment','Left');
+	uicontrol('Style','Text','String',inputTitleStr,'Units','normalized','Position',[uiXOffset uiYOffset-uiXIncrement*(0) 0.3 0.05],'BackgroundColor','white','HorizontalAlignment','Left');
 	for propertyNo = 1:nPropertiesToChange
 		property = char(propertyList(propertyNo));
-		uiTextHandles{propertyNo} = uicontrol('Style','text','String',[regSettingTitles.(property) '' 10],'Units','normalized','Position',[0.0 uiYOffset-uiXIncrement*propertyNo+0.03 uiTxtSize 0.02],'BackgroundColor',[0.9 0.9 0.9],'ForegroundColor','black','HorizontalAlignment','Left');
+		uiTextHandles{propertyNo} = uicontrol('Style','text','String',[regSettingTitles.(property) '' 10],'Units','normalized','Position',[uiXOffset uiYOffset-uiXIncrement*propertyNo+0.03 uiTxtSize 0.02],'BackgroundColor',[0.9 0.9 0.9],'ForegroundColor','black','HorizontalAlignment','Left');
 		% uiTextHandles{propertyNo}.Enable = 'Inactive';
-		uiListHandles{propertyNo} = uicontrol('Style', 'popup','String', propertySettingsStr.(property),'Units','normalized','Position', [uiTxtSize uiYOffset-uiXIncrement*propertyNo uiBoxSize 0.05],'Callback',@subfxnSettingsCallback,'Tag',property);
+		uiListHandles{propertyNo} = uicontrol('Style', 'popup','String', propertySettingsStr.(property),'Units','normalized','Position', [uiTxtSize+uiXOffset uiYOffset-uiXIncrement*propertyNo uiBoxSize 0.05],'Callback',@subfxnSettingsCallback,'Tag',property);
 	end
-	uicontrol('Style','Text','String','press enter to continue','Units','normalized','Position',[0.0 uiYOffset-uiXIncrement*(nPropertiesToChange+2) 0.3 0.05],'BackgroundColor','white','HorizontalAlignment','Left');
+	uicontrol('Style','Text','String','press enter to continue','Units','normalized','Position',[uiXOffset uiYOffset-uiXIncrement*(nPropertiesToChange+2) 0.3 0.05],'BackgroundColor','white','HorizontalAlignment','Left');
 	% uicontrol('Style','Text','String',inputTitleStr,'Units','normalized','Position',[0.0 uiYOffset 0.15 0.05],'BackgroundColor','white','HorizontalAlignment','Left');
 	pause
 

@@ -16,6 +16,7 @@ function obj = viewMovie(obj)
 		% 2021.06.20 [00:14:59] - Added support for simple and advanced settings.
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2021.12.31 [18:59:24] - Updated suptitle to ciapkg.overloaded.suptitle.
+		% 2023.06.10 [15:48:01] - Fix readHDF5Subset function unable to be found in certain cases.
 	% TODO
 		%
 
@@ -897,7 +898,7 @@ function [cropCoords noCrop] = getCropMovieCoords(movieList)
 			xDim = hReadInfo.Dims(1);
 			yDim = hReadInfo.Dims(2);
 			% select the first frame from the dataset
-			thisFrame = readHDF5Subset(inputFilePath,[0 0 options.refCropFrame],[xDim yDim 1],'datasetName',options.datasetName);
+			thisFrame = ciapkg.hdf5.readHDF5Subset(inputFilePath,[0 0 options.refCropFrame],[xDim yDim 1],'datasetName',options.datasetName);
 		elseif strcmp(ext,'.tif')|strcmp(ext,'.tiff')
 			TifLink = Tiff(inputFilePath, 'r'); %Create the Tiff object
 			thisFrame = TifLink.read();%Read in one picture to get the image size and data type

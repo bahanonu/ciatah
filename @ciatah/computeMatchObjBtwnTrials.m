@@ -12,6 +12,8 @@ function obj = computeMatchObjBtwnTrials(obj,varargin)
 		% 2021.06.18 [21:41:07] - added modelVarsFromFilesCheck() to check and load signals if user hasn't already.
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2021.11.05 [14:13:36] - Added manual alignment option before automated for cases in which there are large shifts or rotations along with changes in bulk cells identified that might be hard for automated to align.
+		% 2023.05.08 [18:55:36] - Added the option to only keep cells within a specific region of the FOV, useful for when want to register cells in a single region and don't want other cells affecting alignment.
+		% 2023.05.09 [11:52:23] - Add support for normcorre and imregdemons for registration.
 	% TODO
 		%
 
@@ -56,7 +58,55 @@ function obj = computeMatchObjBtwnTrials(obj,varargin)
 	% 	usrIdxChoice = userDefaults;
 	% end
 	scnsize = get(0,'ScreenSize');
-	userDefaults = {'1','5','0.4','','2','1','corr2','0.6','0.3','1e-6','0','1','filtered','0'};
+
+	% Check for prior user inputs
+	if isfield(obj.functionSettings,'computeMatchObjBtwnTrials')
+		uOpts = obj.functionSettings.computeMatchObjBtwnTrials;
+		userDefaults = {
+			uOpts.nCorrections;
+			uOpts.maxDistance;
+			uOpts.imageThreshold;
+			uOpts.trialToAlignUserOption;
+			uOpts.RegisTypeFinal;
+			uOpts.runImageCorr;
+			uOpts.imageCorrType;
+			uOpts.imageCorr;
+			uOpts.imageCorrThres;
+			uOpts.checkImageCorr;
+			uOpts.turboregZeroThres;
+			uOpts.runViewMatchObjBtwnSessions;
+			uOpts.imagesType;
+			uOpts.runManualAlign;
+			uOpts.runRemoveRegion;
+			uOpts.sizeThresMax;
+			uOpts.mcMethod;
+			uOpts.registrationFxn;
+		};
+		userDefaults = cellfun(@num2str,userDefaults,'UniformOutput',false);
+	else
+		% userDefaults = {'1','5','0.4','','2','1','corr2','0.6','0.3','1e-6','0','1','filtered','0','0','','turboreg','transfturboreg'};
+		userDefaults = {
+			'1';
+			'5';
+			'0.4';
+			'';
+			'2';
+			'1';
+			'corr2';
+			'0.6';
+			'0.3';
+			'1e-6';
+			'0';
+			'1';
+			'filtered';
+			'0';
+			'0';
+			'';
+			'turboreg';
+			'transfturboreg';
+		};
+	end
+
 	usrIdxChoice = inputdlg({...
 		'Number of rounds to register images (integer)',...
 		'Distance threshold to match cells cross-session (in pixels)',...
@@ -72,28 +122,44 @@ function obj = computeMatchObjBtwnTrials(obj,varargin)
 		'View full results after [viewMatchObjBtwnSessions] (1 = yes, 0 = no)',...
 		'Type of image to use for cross-session alignment? (filtered, raw)',...
 		'Manual cross-session alignment? (1 = yes, 0 = no)'...
+		'Only keep cells in user defined region of FOV? (1 = yes, 0 = no)',...
+		'Int: Maximum size of cell? (leave blank to skip)'...
+		'Registration method? "turboreg", normcorre", or "imregdemons"'...
+		'Registration function? "imtransform", "imwarp", "transfturboreg"'...
 		},'Cross-session cell alignment options',1,...
 		userDefaults);
 
 	% options.frameList = [1:500];
 	s1 = 1;
 	uOpts = struct;
-	nCorrections = str2num(usrIdxChoice{s1});s1=s1+1;
-	maxDistance = str2num(usrIdxChoice{s1});s1=s1+1;
-	imageThreshold = str2num(usrIdxChoice{s1});s1=s1+1;
-	trialToAlignUserOption = str2num(usrIdxChoice{s1});s1=s1+1;
-	RegisTypeFinal = str2num(usrIdxChoice{s1});s1=s1+1;
-	runImageCorr = str2num(usrIdxChoice{s1});s1=s1+1;
-	imageCorrType = usrIdxChoice{s1};s1=s1+1;
-	imageCorr = str2num(usrIdxChoice{s1});s1=s1+1;
-	imageCorrThres = str2num(usrIdxChoice{s1});s1=s1+1;
-	checkImageCorr = str2num(usrIdxChoice{s1});s1=s1+1;
-	turboregZeroThres = str2num(usrIdxChoice{s1});s1=s1+1;
-	runViewMatchObjBtwnSessions = str2num(usrIdxChoice{s1});s1=s1+1;
-	imagesType = usrIdxChoice{s1};s1=s1+1;
+	uOpts.nCorrections = str2num(usrIdxChoice{s1});s1=s1+1;
+	uOpts.maxDistance = str2num(usrIdxChoice{s1});s1=s1+1;
+	uOpts.imageThreshold = str2num(usrIdxChoice{s1});s1=s1+1;
+	uOpts.trialToAlignUserOption = str2num(usrIdxChoice{s1});s1=s1+1;
+	uOpts.RegisTypeFinal = str2num(usrIdxChoice{s1});s1=s1+1;
+	uOpts.runImageCorr = str2num(usrIdxChoice{s1});s1=s1+1;
+	uOpts.imageCorrType = usrIdxChoice{s1};s1=s1+1;
+	uOpts.imageCorr = str2num(usrIdxChoice{s1});s1=s1+1;
+	uOpts.imageCorrThres = str2num(usrIdxChoice{s1});s1=s1+1;
+	uOpts.checkImageCorr = str2num(usrIdxChoice{s1});s1=s1+1;
+	uOpts.turboregZeroThres = str2num(usrIdxChoice{s1});s1=s1+1;
+	uOpts.runViewMatchObjBtwnSessions = str2num(usrIdxChoice{s1});s1=s1+1;
+	uOpts.imagesType = usrIdxChoice{s1};s1=s1+1;
 	uOpts.runManualAlign = str2num(usrIdxChoice{s1});s1=s1+1;
+	uOpts.runRemoveRegion = str2num(usrIdxChoice{s1});s1=s1+1;
+	uOpts.sizeThresMax = str2num(usrIdxChoice{s1});s1=s1+1;
+	uOpts.mcMethod = usrIdxChoice{s1};s1=s1+1;
+	uOpts.registrationFxn = usrIdxChoice{s1};s1=s1+1;
 
-	for thisSubjectStr=subjectList
+	% Save user settings to object
+	if isfield(obj.functionSettings,'computeMatchObjBtwnTrials')
+		% Do nothing
+	else
+		obj.functionSettings.computeMatchObjBtwnTrials = struct;
+	end
+	obj.functionSettings.computeMatchObjBtwnTrials = uOpts;
+
+	for thisSubjectStr = subjectList
 		try
 			display(repmat('=',1,21))
 			thisSubjectStr = thisSubjectStr{1};
@@ -117,7 +183,7 @@ function obj = computeMatchObjBtwnTrials(obj,varargin)
 
 				% obj.folderBaseSaveStr{obj.fileNum}
 				% [rawSignalsTmp rawImagesTmp signalPeaks signalPeaksArray] = modelGetSignalsImages(obj,'returnType','raw');
-				[rawSignalsTmp, rawImagesTmp, signalPeaks, signalPeaksArray] = modelGetSignalsImages(obj,'returnType',imagesType);
+				[rawSignalsTmp, rawImagesTmp, signalPeaks, signalPeaksArray] = modelGetSignalsImages(obj,'returnType',uOpts.imagesType);
 				if ~isempty(rawSignalsTmp)
 					display('adding to alignment...')
 					rawSignals{end+1} = rawSignalsTmp;
@@ -166,15 +232,94 @@ function obj = computeMatchObjBtwnTrials(obj,varargin)
 			display(['rawSignals: ' num2str(size(rawSignals))])
 			display(['rawImages: ' num2str(size(rawImages))])
 
-			if isempty(trialToAlignUserOption)
+			if isempty(uOpts.trialToAlignUserOption)
 				trialToAlign = floor(quantile(1:length(validFoldersIdx),0.5));
 			else
-				trialToAlign = trialToAlignUserOption;
+				trialToAlign = uOpts.trialToAlignUserOption;
+			end
+
+			% Automatically remove 
+			if ~isempty(uOpts.sizeThresMax)
+				disp('Filtering cell inputs')
+				filterImageOptions = struct(...
+					'minNumPixels', 10,...
+					'maxNumPixels', 100,...
+					'SNRthreshold', 1.45,...
+					'minPerimeter', 5,...
+					'maxPerimeter', 50,...
+					'minSolidity', 0.8,...
+					'maxSolidity', 1.0,...
+					'minEquivDiameter', 3,...
+					'maxEquivDiameter', 30,...
+					'slopeRatioThreshold', 0.04...
+				);
+				nSessions = length(rawImages);
+				for sessionNo = 1:nSessions
+					disp('===')
+					disp(sessionNo)
+					[~, ~, validAuto, imageSizes, imgFeatures] = ciapkg.image.filterImages(rawImages{sessionNo}, [],'featureList',{'Eccentricity','EquivDiameter','Area','Orientation','Perimeter','Solidity'},'options',filterImageOptions);
+					signalsToKeep = imageSizes<uOpts.sizeThresMax & imgFeatures(:,1)<0.95;
+					rawImages{sessionNo} = rawImages{sessionNo}(:,:,signalsToKeep);
+					rawSignals{sessionNo} = rawSignals{sessionNo}(signalsToKeep,:);
+				end
 			end
 
 			% Align manually if user requests.
 			if uOpts.runManualAlign==1
 				[rawImages, outputStruct] = computeManualMotionCorrection(rawImages,'registerUseOutlines',0,'cellCombineType','max','gammaCorrection',1.6,'refFrame',trialToAlign);
+			end
+
+			% GUI for user to select a region to keep
+			if uOpts.runRemoveRegion
+				figure;
+				% if exist('inputMovieFrame','var')
+				% 	subplot(2,2,2)
+				% 	imagesc(inputMovieFrame)
+				% 	axis image
+				% 	box off;
+				% end
+				nSessions = length(rawImages);
+				[xplot,yplot] = ciapkg.view.getSubplotDimensions(nSessions+1);
+
+				subplot(xplot,yplot,1)
+				try
+					% imagesc(max(rawImages{trialToAlign},[],3))
+					% Show all cells, since aligned session might not cover location of all cells
+					rawImagesAll = cat(3,rawImages{:});
+					imagesc(max(rawImagesAll,[],3))
+				catch
+					imagesc(max(rawImages{trialToAlign},[],3))
+				end
+					axis image
+					box off;
+				rightSignals = [];
+				leftSignals = [];
+				inputImagesROI = cell([2 1]);
+				for iz2 = 1
+					[inputImagesROI{iz2}, xpoly, ypoly] = roipoly;
+					
+					for sessionNo = 1:nSessions
+						disp('===')
+						disp(sessionNo)
+						inputImagesTmp = rawImages{sessionNo};
+						inputImagesThres = ciapkg.image.thresholdImages(inputImagesTmp,'waitbarOn',1,'binary',1,'fastThresholding',1);
+						disp('Finding ROIs inside region...')
+						signalInROI = squeeze(sum(logical(inputImagesThres).*inputImagesROI{iz2},[1 2],'omitnan'));
+
+						signalsToKeep = signalInROI~=0;
+						maxTmp = @(x) max(x,[],3);
+						% subplot(2,2,3+(iz2-1))
+						subplot(xplot,yplot,1+sessionNo)
+							imagesc(maxTmp(inputImagesTmp(:,:,signalsToKeep)))
+							axis image
+							box off
+
+						rawImages{sessionNo} = rawImages{sessionNo}(:,:,signalsToKeep);
+						rawSignals{sessionNo} = rawSignals{sessionNo}(signalsToKeep,:);
+						drawnow
+						disp('Done!')
+					end
+				end
 			end
 
 			
@@ -185,21 +330,27 @@ function obj = computeMatchObjBtwnTrials(obj,varargin)
 			mOpts.inputSignals = rawSignals;
 			mOpts.trialToAlign = trialToAlign;
 			mOpts.additionalAlignmentImages = [];
-			mOpts.nCorrections = nCorrections;
-			mOpts.maxDistance = maxDistance;
-			mOpts.threshold = imageThreshold;
-			mOpts.RegisTypeFinal = RegisTypeFinal;
-			mOpts.imageCorr = imageCorr;
-			mOpts.runImageCorr = runImageCorr;
-			mOpts.checkImageCorr = checkImageCorr;
-			mOpts.turboregZeroThres = turboregZeroThres;
-			mOpts.imageCorrType = imageCorrType;
-			mOpts.imageCorrThres = imageCorrThres;
+			mOpts.nCorrections = uOpts.nCorrections;
+			mOpts.maxDistance = uOpts.maxDistance;
+			mOpts.threshold = uOpts.imageThreshold;
+			mOpts.RegisTypeFinal = uOpts.RegisTypeFinal;
+			mOpts.imageCorr = uOpts.imageCorr;
+			mOpts.runImageCorr = uOpts.runImageCorr;
+			mOpts.checkImageCorr = uOpts.checkImageCorr;
+			mOpts.turboregZeroThres = uOpts.turboregZeroThres;
+			mOpts.imageCorrType = uOpts.imageCorrType;
+			mOpts.imageCorrThres = uOpts.imageCorrThres;
 
-			% alignmentStruct = matchObjBtwnTrials(rawImages,'inputSignals',rawSignals,'trialToAlign',trialToAlign,'additionalAlignmentImages',[],'nCorrections',nCorrections,'maxDistance',maxDistance,'threshold',imageThreshold,'RegisTypeFinal',RegisTypeFinal);
+			mOpts.mcMethod = uOpts.mcMethod;
+			mOpts.registrationFxn = uOpts.registrationFxn;
+
+
+			% alignmentStruct = matchObjBtwnTrials(rawImages,'inputSignals',rawSignals,'trialToAlign',trialToAlign,'additionalAlignmentImages',[],'nCorrections',uOpts.nCorrections,'maxDistance',uOpts.maxDistance,'threshold',uOpts.imageThreshold,'RegisTypeFinal',uOpts.RegisTypeFinal);
 			alignmentStruct = matchObjBtwnTrials(rawImages,'options',mOpts);
 
 			obj.globalIDStruct.(thisSubjectStr) = alignmentStruct;
+			obj.globalIDStruct.(thisSubjectStr).inputOptions = mOpts;
+
 			obj.globalIDs.(thisSubjectStr) = alignmentStruct.globalIDs;
 			obj.globalIDs.alignmentStruct.(thisSubjectStr) = alignmentStruct;
 			obj.globalIDCoords.(thisSubjectStr).localCoords = alignmentStruct.coords;
@@ -218,7 +369,8 @@ function obj = computeMatchObjBtwnTrials(obj,varargin)
 			% close all;
 			saveDirPath = [obj.videoSaveDir filesep 'matchObjsGlobal\'];
 			mkdir(saveDirPath);
-			[output] = writeHDF5Data(obj.globalObjectMapTurboreg.(thisSubjectStr).turboreg,[saveDirPath thisSubjectStr '_cellmap_turboreg.h5']);
+			currentDateTimeStr = datestr(now,'yyyy-mm-dd-HHMMSS','local');
+			[output] = writeHDF5Data(obj.globalObjectMapTurboreg.(thisSubjectStr).turboreg,[saveDirPath thisSubjectStr '_' currentDateTimeStr '_cellmap_turboreg.h5']);
 			% options.comp = 'no';
 			% saveastiff(obj.globalObjectMapTurboreg.(thisSubjectStr).turboreg, [saveDirPath thisSubjectStr '_cellmap_turboreg.tif'], options);
 		catch err
@@ -228,7 +380,7 @@ function obj = computeMatchObjBtwnTrials(obj,varargin)
 		end
 	end
 
-	if runViewMatchObjBtwnSessions==1
+	if uOpts.runViewMatchObjBtwnSessions==1
 		for thisSubjectStr=subjectList
 			try
 				display(repmat('=',1,21))

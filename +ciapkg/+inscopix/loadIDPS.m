@@ -1,7 +1,7 @@
 function loadIDPS(varargin)
 	% % Test that Inscopix MATLAB API ISX package installed.
 	% Biafra Ahanonu
-	% started: INSERT_DATE
+	% started: 2020.09.01 [14:37:07]
 	% inputs
 		%
 	% outputs

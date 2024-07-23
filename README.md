@@ -23,7 +23,7 @@
 
 ## Full documentation at https://bahanonu.github.io/ciatah/.
 
-- Documentation for spinal cord motion correction can be found at https://bahanonu.github.io/ciatah/pipeline_detailed_spinal.
+
 
 Below are recordings and additional documents for users who want to learn more about calcium imaging analysis/experiments and the CIAtah pipeline.
 
@@ -38,8 +38,11 @@ Below are recordings and additional documents for users who want to learn more a
 
 <ins>__GRINjector__</ins> — A surgical device to help with implanting gradient-refractive index (GRIN) lens probes into the brain or other regions: https://github.com/bahanonu/GRINjector.
 
-<ins>__Upcoming motion correction methods__</ins> — Methods for motion correction of spinal imaging data using feature identification (e.g. with DeepLabCut), control point registration, and other methods. Additional updates on integration into CIAtah in the future.
+### Spinal cord imaging
+<ins>__New motion correction methods__</ins> — Methods for motion correction of spinal imaging data using feature identification (e.g. with DeepLabCut), control point registration, and other methods. Additional updates on integration into CIAtah in the future. 
 - Preprint: Ahanonu and Crowther, _et al_. (2023). _Long-term optical imaging of the spinal cord in awake, behaving animals_. bioRxiv (https://www.biorxiv.org/content/10.1101/2023.05.22.541477v1.full).
+- Documentation for spinal cord motion correction can be found at https://bahanonu.github.io/ciatah/pipeline_detailed_spinal.
+- Other documentation for spinal cord imaging at https://github.com/basbaumlab/spinal_cord_imaging.
 <!-- <hr> -->
 
 <!-- <img src="https://user-images.githubusercontent.com/5241605/81605697-b9c7c800-9386-11ea-9e9f-569c743b24b9.png" width="42%" align="right" alt="calciumImagingAnalysis_logo"> -->
@@ -55,7 +58,7 @@ Below are recordings and additional documents for users who want to learn more a
 - [CIAtah features](#ciatah-features)
 - [CIAtah example features](#ciatah-example-features)
 - [Quick start guide](#quick-start-guide)
-- [Quick start (command-line)](#quick-start-command-line)
+- [Quick start (command-line)](#quick-start-command-line-or-gui-less-batch-analysis)
 - [`CIAtah` main GUI notes](#ciatah-main-gui-notes)
 - [Acknowledgments](#acknowledgments)
 - [References](#references)
@@ -215,13 +218,14 @@ obj % then hit enter, no semicolon!
 
 ### Visualize movies quickly using read from disk
 
+#### Method #1: CIAtah `playMovie`
 Users can quickly visualize movies in any of the supported formats (HDF5, NWB, AVI, TIFF, ISXD, etc.) using the `playMovie` function. This will read directly from disk, allowing users to scroll through frames to visually check movies before or after processing. 
 
 Users can run via the command-line:
 
 ```MATLAB
 % Use the absolute path to the movie file or a valid relative path.
-ciapkg.api.playMovie('ABSOLUTE\PATH\TO\MOVIE');
+ciapkg.api.playMovie('ABSOLUTE_PATH_TO_MOVIE\MOVIE_NAME.EXTENSION');
 ```
 
 When using HDF5 files, check the dataset name containing movie with `h5disp` then input the full dataset name (e.g. below is for a standard NWB-formatted HDF5 file):
@@ -229,7 +233,8 @@ When using HDF5 files, check the dataset name containing movie with `h5disp` the
 ciapkg.api.playMovie('ABSOLUTE\PATH\TO\MOVIE','inputDatasetName','/acquisition/TwoPhotonSeries/data');
 ```
 
-Alternatively, using the `ciatah` GUI class, users can select loaded folders and change the regular expression to match the name of the files in the movie, both for the raw data and for any processed movies in the folder. See below:
+#### Method #2: CIAtah GUI
+Using the `ciatah` GUI class, users can select loaded folders and change the regular expression to match the name of the files in the movie, both for the raw data and for any processed movies in the folder. See below:
 
 <p align="center">
   <a href="https://user-images.githubusercontent.com/5241605/140582378-d7c797e8-9099-43a7-b1cd-29ae04a36056.png">
@@ -238,6 +243,13 @@ Alternatively, using the `ciatah` GUI class, users can select loaded folders and
 </p>
 <!-- https://user-images.githubusercontent.com/5241605/124651957-6a790c80-de50-11eb-8a6d-0197a9f484c1.png -->
 
+#### Method #3: Fiji + N5
+Install N5 library to enable N5 viewer in Fiji: go to `Help->Update...` then under `Manage Update Sites` scroll down to select `N5` (https://sites.imagej.net/N5/) then `Apply and Close`). View a large HDF5 movie by running `File->Import->"HDF5/N5/Zarr/OME-NGFF"`. In the resulting dialog box, select `Browse` along with `Open as virtual` on the bottom left. After a moment different a tree should appear listing different datasets
+
+- https://imagej.net/libs/n5
+- https://github.com/saalfeldlab/n5
+- https://github.com/saalfeldlab/n5-ij
+- https://github.com/saalfeldlab/n5-viewer
 
 ## Quick start (command line or GUI-less batch analysis)
 
@@ -251,6 +263,10 @@ Users can import the CIAtah `ciapkg` that contains the command-line functions us
 import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 ```
+
+## `CIAtah` main GUI notes
+
+See more about the CIAtah GUI at https://bahanonu.github.io/ciatah/install/#ciatah-main-gui-notes.
 
 ***
 
@@ -327,7 +343,7 @@ Users with versions of MATLAB earlier than R2019b can download `CIAtah` version 
 
 ## License
 
-Copyright (C) 2013-2023 Biafra Ahanonu
+Copyright (C) 2013-2024 Biafra Ahanonu
 
 This project is licensed under the terms of the MIT license. See LICENSE file for details.
 

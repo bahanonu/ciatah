@@ -1,7 +1,7 @@
 function [status] = updatePathCleanup(inputDirectory,varargin)
 	% Cleans up the specified directory and sub-directories from MATLAB path along with the Java path. Used to allow updating of directories.
 	% Biafra Ahanonu
-	% started: 2020.06.28 [‏‎13:35:52]
+	% started: 2020.06.28 [13:35:52]
 	% inputs
 		%
 	% outputs

@@ -32,6 +32,7 @@ function [inputImagesTranslated, outputStruct] = computeManualMotionCorrection(i
 		% 2022.03.16 [08:54:11] - By default use 'painters' renderer as that can produce smoother rendering than opengl.
 		% 2022.04.25 [11:16:24] - Update to make sure titles update correctly for test images.
 		% 2022.09.14 [08:55:37] - Add renderer option to allow users to choose painters or opengl.
+		% 2023.05.04 [13:07:07] - Better support for adding custom fill values for both translation and rotation.
 	% TODO
 		% Add ability to auto-crop if inputs are not of the right size them convert back to correct size after manual correction
 		% inputRegisterImage - [x y nCells] - Image to register to.
@@ -67,6 +68,8 @@ function [inputImagesTranslated, outputStruct] = computeManualMotionCorrection(i
 	options.includeImgsOutputStruct = 1;
 	% Str: 'painters' or 'opengl'
 	options.renderer = 'opengl';
+	% Float/Int: Any fill value (e.g. NaN or 0) compatible with input data type
+	options.fillValue = NaN;
 	% get options
 	options = getOptions(options,varargin);
 	% display(options)
@@ -79,6 +82,11 @@ function [inputImagesTranslated, outputStruct] = computeManualMotionCorrection(i
 
 	try
 		outputStruct.success = 0;
+		% Close any existing figure GUIs to avoid issues
+		try
+			close(options.translationFigNo);
+		catch
+		end
 
 		% If user inputs a cell, convert to matrix where each z-dimension represents max projection of each cell
 		if iscell(inputImages)
@@ -188,9 +196,17 @@ function [inputImagesTranslated, outputStruct] = computeManualMotionCorrection(i
 				end
 
 				fprintf('Translating/rotating/flipping Input images...\n')
-				inputImagesTranslated(:,:,frameNo) = imtranslate(inputImages(:,:,frameNo),outputStruct.translationVector{frameNo});
-				inputImagesTranslated(:,:,frameNo) = imrotate(inputImagesTranslated(:,:,frameNo),outputStruct.rotationVector{frameNo},'nearest','crop');
-				inputImagesTranslated(:,:,frameNo) = subfxn_flipImage(inputImagesTranslated(:,:,frameNo),outputStruct.flipDimVector{frameNo});
+				tmpFrame = squeeze(inputImages(:,:,frameNo));
+				% TRANSLATE IMAGE
+				tmpFrame = imtranslate(tmpFrame,outputStruct.translationVector{frameNo},'FillValues',options.fillValue);
+				% Create a mask that can be used to add a custom fill value
+				maskR = true(size(tmpFrame));
+				% ROTATE IMAGE
+				maskR = imrotate(maskR,outputStruct.rotationVector{frameNo},'nearest','crop');
+				tmpFrame = imrotate(tmpFrame,outputStruct.rotationVector{frameNo},'nearest','crop');
+				tmpFrame(~maskR) = options.fillValue;
+				% FLIP IMAGE
+				inputImagesTranslated(:,:,frameNo) = subfxn_flipImage(tmpFrame,outputStruct.flipDimVector{frameNo});
 				disp(toc);tic
 
 				fprintf('Translating/rotating/flipping alt input images...\n')
@@ -204,14 +220,19 @@ function [inputImagesTranslated, outputStruct] = computeManualMotionCorrection(i
 					% 		imagesc(imtranslate(options.altInputImages{frameNo}(:,:,imgNo),outputStruct.translationVector{frameNo})); axis equal tight
 					% 	pause
 
+					tmpFrame = squeeze(options.altInputImages{frameNo}(:,:,imgNo));
 					% TRANSLATE
-					tmpAltInputImages(:,:,imgNo) = imtranslate(options.altInputImages{frameNo}(:,:,imgNo),outputStruct.translationVector{frameNo});
+					tmpFrame = imtranslate(tmpFrame,outputStruct.translationVector{frameNo},'FillValues',options.fillValue);
 
 					% ROTATION
-					tmpAltInputImages(:,:,imgNo) = imrotate(tmpAltInputImages(:,:,imgNo),outputStruct.rotationVector{frameNo},'nearest','crop');
+					% Create a mask that can be used to add a custom fill value
+					maskR = true(size(tmpFrame));
+					maskR = imrotate(maskR,outputStruct.rotationVector{frameNo},'nearest','crop');
+					tmpFrame = imrotate(tmpFrame,outputStruct.rotationVector{frameNo},'nearest','crop');
+					tmpFrame(~maskR) = options.fillValue;
 					
 					% FLIP IMAGE
-					tmpAltInputImages(:,:,imgNo) = subfxn_flipImage(tmpAltInputImages(:,:,imgNo),outputStruct.flipDimVector{frameNo});
+					tmpAltInputImages(:,:,imgNo) = subfxn_flipImage(tmpFrame,outputStruct.flipDimVector{frameNo});
 				end
 				outputStruct.altInputImages{frameNo} = tmpAltInputImages;
 				clear tmpAltInputImages;
@@ -234,10 +255,16 @@ function [inputImagesTranslated, outputStruct] = computeManualMotionCorrection(i
 
 
 				inputImagesTranslated = NaN(size(inputImages));
-				inputImagesTranslated(:,:,frameNo) = imtranslate(inputImages(:,:,frameNo),outputStruct.translationVector{frameNo});
+				inputImagesTranslated(:,:,frameNo) = imtranslate(inputImages(:,:,frameNo),outputStruct.translationVector{frameNo},'FillValues',options.fillValue);
 				if outputStruct.rotationVector{frameNo}==0
 				else
-					inputImagesTranslated(:,:,frameNo) = imrotate(inputImagesTranslated(:,:,frameNo),outputStruct.rotationVector{frameNo},'nearest','crop');
+					tmpFrame = inputImagesTranslated(:,:,frameNo);
+					% Create a mask that can be used to add a custom fill value
+					maskR = true(size(tmpFrame));
+					maskR = imrotate(maskR,outputStruct.rotationVector{frameNo},'nearest','crop');
+					tmpFrame = imrotate(tmpFrame,outputStruct.rotationVector{frameNo},'nearest','crop');
+					tmpFrame(~maskR) = options.fillValue;
+					inputImagesTranslated(:,:,frameNo) = tmpFrame;
 				end
 				if ~isempty(outputStruct.flipDimVector{frameNo})
 					inputImages = subfxn_flipImage(inputImages,outputStruct.flipDimVector{frameNo});
@@ -408,7 +435,7 @@ function [outputStructTmp, imgStruct] = subfxnRegisterImage(inputImages,inputReg
 
 	disp('Allocating output structure')
 	outputStructTmp = struct;
-	outputStructTmp.registeredMarkerImage = imtranslate(inputImagesOriginal,translationVector);
+	outputStructTmp.registeredMarkerImage = imtranslate(inputImagesOriginal,translationVector,'FillValues',options.fillValue);
 	outputStructTmp.translationVector = translationVector;
 	outputStructTmp.rotationVector = rotationVector;
 	outputStructTmp.flipDimVector = flipDimVector;
@@ -467,8 +494,8 @@ function [outputStructTmp, imgStruct] = subfxnRegisterImage(inputImages,inputReg
 		gammaCorrection = subfxnGammaUpdate(gammaCorrection,gDelta);
 		% gDeltaRef
 		gammaCorrectionRef = subfxnGammaUpdate(gammaCorrectionRef,gDeltaRef);
-
-		inputImages = imtranslate(inputImagesOriginal,translationVector);
+	
+		inputImages = imtranslate(inputImagesOriginal,translationVector,'FillValues',options.fillValue);
 		inputImages = imrotate(inputImages,rotationVector,'nearest','crop');
 		% if rDelta~=0
 		% end

@@ -28,11 +28,13 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		% 2021.12.01 [19:21:00] - Handle "User selects specific value" going into infinite loop. Allow cancel option to prevent loop.
 		% 2022.06.28 [15:28:13] - Add additional black background support.
 		% 2022.07.10 [17:21:21] - Added largeMovieLoad setting.
+		% 2022.12.05 [18:35:05] - Add support for gradient-based filtering for motion correction input.
+		% 2022.11.15 [14:16:40] - Add displacement field-based motion correction. (Updated 2024.02.29 [18:17:06])
 	% TODO
 		% DONE: Allow user to input prior settings, indicate those changed from default by orange or similar color.
 
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
-	
+
 	%========================
 	% Struct: Empty = no previous settings, else a structure of preprocessingSettingsAll from previous run.
 	options.inputSettings = [];
@@ -57,7 +59,7 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 	userSelectVal = 0;
 	defaultTooltips = 'NO TIPS FOR YOU';
 	
-	vectorAllowList = {'motionCorrectionRefFrame'};
+	vectorAllowList = {'motionCorrectionRefFrame','df_Niter'};
 
 	% Options that allow users to manually set the value
 	userOptionsAllowManualSelect = {...
@@ -65,6 +67,9 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 	'turboregNumFramesSubset',...
 	'pxToCrop',...
 	'motionCorrectionRefFrame',...
+	'df_AccumulatedFieldSmoothing',...
+	'df_Niter',...
+	'df_PyramidLevels',...
 	'SmoothX',...
 	'SmoothY',...
 	'filterBeforeRegFreqLow',...
@@ -113,8 +118,8 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		tS.REGISTRATION______________.str = {{'====================='}};
 		tS.REGISTRATION______________.tooltip =  {{'====================='}};
 	tS.mcMethod = [];
-		tS.mcMethod.val = {{'turboreg','normcorre'}};
-		tS.mcMethod.str = {{'Turboreg motion correction','NoRMCorre (non-rigid) motion correction'}};
+		tS.mcMethod.val = {{'turboreg','normcorre','imregdemons'}};
+		tS.mcMethod.str = {{'Turboreg motion correction','NoRMCorre (non-rigid) motion correction','Displacement field alignment based on imregdemons (select imwarp for registrationFxn)'}};
 		tS.mcMethod.tooltip =  {{'Method to use for motion correction.'}};
 	tS.parallel = [];
 		tS.parallel.val = {{1,0}};
@@ -153,6 +158,18 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		tS.regRegionUseBtwnSessions.val = {{1,2,3,4}};
 		tS.regRegionUseBtwnSessions.str = {{'NO | do not duplicate area coords across multiple folders','YES | duplicate area coords across multiple folders','YES | duplicate area coords if subject (animal) the same','YES | duplicate area coords across ALL folders'}};
 		tS.regRegionUseBtwnSessions.tooltip =  {{['Between session motion correction area coordinates (area used to get registration translation coordinates).']}};
+	tS.df_AccumulatedFieldSmoothing = [];
+		tS.df_AccumulatedFieldSmoothing.val = {{0.54,userSelectVal,1.3}};
+		tS.df_AccumulatedFieldSmoothing.str = {{0.5,userSelectStr,1.3}};
+		tS.df_AccumulatedFieldSmoothing.tooltip =  {{['Smoothing applied at each displacement field iteration. Range typically 0.5 to 3.0']}};
+	tS.df_Niter = [];
+		tS.df_Niter.val = {{[500 400 200],userSelectVal,[5000 500 400 200],[125 50 20]}};
+		tS.df_Niter.str = {{'500 400 200',userSelectStr,'5000 500 400 200','125 50 20'}};
+		tS.df_Niter.tooltip =  {{['Number of iterations to use at each pyramidal level, e.g. [500 400 200] would be 500 lowest resolution level, then 400 at the next level, and 200 at the last iteration level.']}};
+	tS.df_PyramidLevels = [];
+		tS.df_PyramidLevels.val = {{3,userSelectVal,1,2,4,5}};
+		tS.df_PyramidLevels.str = {{3,userSelectStr,1,2,4,5}};
+		tS.df_PyramidLevels.tooltip =  {{['Number of multi-resolution image pyramid levels to use. Should match Niter.']}};
 
 	% ===================================
 	tS.REGISTRATION_NORMALIZATION______________ = [];
@@ -172,8 +189,8 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		tS.normalizeComplementMatrix.str = {{'invert movie before turboreg','DO NOT invert movie before turboreg'}};
 		tS.normalizeComplementMatrix.tooltip = {{'Inverts all movie values to give more weight to dark features (e.g. blood vessels).'}};
 	tS.normalizeType = [];
-		tS.normalizeType.val = {{'bandpass','divideByLowpass','imagejFFT','highpass','matlabDisk'}};
-		tS.normalizeType.str = {{'bandpass','divideByLowpass','imagejFFT','highpass','matlabDisk'}};
+		tS.normalizeType.val = {{'bandpass','divideByLowpass','imagejFFT','highpass','matlabDisk','gradient'}};
+		tS.normalizeType.str = {{'bandpass','divideByLowpass','imagejFFT','highpass','matlabDisk','gradient'}};
 		tS.normalizeType.tooltip = {{['Spatial filtering applied before getting spatial translation coordinates.' 10 'Try "matlabDisk" if default does not work.']}};
 	tS.normalizeFreqLow = [];
 		tS.normalizeFreqLow.val = {{70,10,20,30,40,50,60,70,80,90}};
@@ -258,12 +275,12 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 		tS.MOVIE_DOWNSAMPLING______________.str = {{'====================='}};
 		tS.MOVIE_DOWNSAMPLING______________.tooltip =  {{'====================='}};
 	tS.downsampleFactorTime = [];
-		tS.downsampleFactorTime.val = {{4,userSelectVal,1,2,4,6,8,10,20}};
-		tS.downsampleFactorTime.str = {{4,userSelectStr,1,2,4,6,8,10,20}};
+		tS.downsampleFactorTime.val = {{4,userSelectVal,1,2,4,5,6,8,10,20}};
+		tS.downsampleFactorTime.str = {{4,userSelectStr,1,2,4,5,6,8,10,20}};
 		tS.downsampleFactorTime.tooltip = {{'By what factor to downsample movie in time.'}};
 	tS.downsampleFactorSpace = [];
-		tS.downsampleFactorSpace.val = {{2,userSelectVal,1,2,4,6,8,10,20}};
-		tS.downsampleFactorSpace.str = {{2,userSelectStr,1,2,4,6,8,10,20}};
+		tS.downsampleFactorSpace.val = {{2,userSelectVal,1,2,4,5,6,8,10,20}};
+		tS.downsampleFactorSpace.str = {{2,userSelectStr,1,2,4,5,6,8,10,20}};
 		tS.downsampleFactorSpace.tooltip = {{'By what factor to downsample movie in space.'}};
 		
 	% ===================================
@@ -405,7 +422,7 @@ function [preprocessSettingStruct, preprocessingSettingsAll] = getRegistrationSe
 	nGuiSubsets = 3;
 	% subsetList = round(linspace(1,nPropertiesToChange,nGuiSubsets));
 	subsetList = [1 35 nPropertiesToChange];
-	propNoSwitch = 36;
+	propNoSwitch = 32;
 	% subsetList
 	% for subsetNo = 1:nGuiSubsets
 	nGuiSubsetsTrue = (nGuiSubsets-1);

@@ -12,6 +12,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 	% 		RGB: [x y C t] matrix of x,y height/width, t frames, and C color channel (3 as RGB)
 	% 		Path: full file path to a movie containing a [x y t] or [x y C t] matrix.
 	% 		Path (MAT-file): full path to a MAT-file with a variable containing a [x y t] or [x y C t] matrix.
+	% 		Cell array: cell array of [x y t] matrix or path to movies movies.
 	% options
 	% 	fps - frame rate to display movie.
 	% 	extraMovie - extra movie to play, [X Y Z] matrix of X,Y height/width and Z frames
@@ -52,6 +53,12 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 		% 2023.02.22 [18:24:46] - Added downsample (both type) support for extra movie, mirrors what happens in the 1st movie. Also improved downsampling when just subsampling by removing unnecessary calls to imresize. Improved tracking point handling to ensure in the correct axes and can turn off prior frame tracking. Better handling of quiver plots with tracking.
 		% 2023.04.06 [19:29:42] - Convert all nanmin/nanmax to 'omitnan' and (:) to [1 2 3 4] to ensure compatible with 3- and 4-d tensors.
 		% 2023.10.23 [17:46:25] - Additional Bio-Formats support.
+		% 2024.02.19 [11:07:30] - Users can now input a cell array of movies to have the extra movie play instead of the 'extraMovie' option.
+		% 2024.03.29 [09:45:20] - Added support for additional NWB series.
+	% TODO
+		% Add support for user clicking the movie to add marker points for reference (e.g. to help with visualizing motion correction accuracy).
+		% Generalize extra movie so users can input 3, 4, etc. movies.
+		% Add contrast bar for extra movie.
 
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
@@ -130,7 +137,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 	% Str: hierarchy name in hdf5 where movie data is located.
 	options.inputDatasetName = '/1';
 	% Str: default NWB hierarchy names in HDF5 file where movie data is located, will look in the order indicates
-	options.defaultNwbDatasetName = {'/acquisition/TwoPhotonSeries/data'};
+	options.defaultNwbDatasetName = {'/acquisition/TwoPhotonSeries/data','/acquisition/OnePhotonSeries/data'};
 	% Int: [] = do nothing, 1-3 indicates R,G,B channels to take from multicolor RGB AVI
 	options.rgbChannel = [];
 	% Int vector: list of specific frames to load.
@@ -172,6 +179,12 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 	% end
 
 	rgbMovieFlag = 0;
+
+	% If a cell array is input, convert to format playMovie will use.
+	if iscell(inputMovie)==1
+		options.extraMovie = inputMovie{2};
+		inputMovie = inputMovie{1};
+	end
 
 	% Obtain movie information and connect to file if user gives a path to a movie.
 	if ischar(inputMovie)==1
@@ -388,7 +401,7 @@ function [exitSignal, ostruct] = playMovie(inputMovie, varargin)
 	% axHandle.Toolbar.Visible = 'off';
 	box off;
 	if ~isempty(options.extraLinePlot)
-		axis equal tight
+		axis equal tight;
 	else
 		axis equal tight
 	end

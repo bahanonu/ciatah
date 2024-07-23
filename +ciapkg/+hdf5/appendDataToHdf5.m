@@ -17,12 +17,30 @@ function appendDataToHdf5(filename, datasetName, inputData, varargin)
 		% 2014.07.22
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2022.03.13 [23:49:04] - Update comments.
+		% 2023.09.24 [19:29:43] - Flag to silence command line output.
 	% TODO
 		%
 
+	% ========================
+	% Binary: 1 = whether to display info on command line. 2 = short output.
+	options.displayInfo = 1;
+	% get options
+	options = ciapkg.io.getOptions(options,varargin);
+	% disp(options)
+	% unpack options into current workspace
+	% fn=fieldnames(options);
+	% for i=1:length(fn)
+	% 	eval([fn{i} '=options.' fn{i} ';']);
+	% end
+	% ========================
+
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
-	display(['appending data to: ' filename])
+	if options.displayInfo==1
+		display(['appending data to: ' filename])
+	elseif options.displayInfo==2
+		fprintf('+');
+	end
 	% open the dataset and append data to the unlimited dimension which in this case is the second dimension as seen from matlab.
 	fid = H5F.open(filename, 'H5F_ACC_RDWR', 'H5P_DEFAULT');
 	dset_id = H5D.open(fid, datasetName);
@@ -70,5 +88,9 @@ function appendDataToHdf5(filename, datasetName, inputData, varargin)
 	H5S.close(space_id);
 	H5D.close(dset_id);
 	H5F.close(fid);
-	display('done appending.')
+	if options.displayInfo==1
+		display('done appending.')
+	elseif options.displayInfo==2
+		fprintf('1|');
+	end
 end

@@ -130,6 +130,7 @@ function [inputMovies] = createMontageMovie(inputMovies,varargin)
 		inputMovieNo = 1;
 		for xNo = 1:xPlot
 			for yNo = 1:yPlot
+				disp('---')
 				if inputMovieNo>length(inputMovies)
 					[behaviorMovie{xNo}] = createSideBySide(behaviorMovie{xNo},NaN(size(inputMovies{1})),'pxToCrop',[],'makeTimeEqualUsingNans',1,'normalizeMovies',0,'displayInfo',options.displayInfo,'increaseToLargestMovie',options.increaseToLargestMovie);
 				elseif yNo==1
@@ -154,13 +155,13 @@ function [inputMovies] = createMontageMovie(inputMovies,varargin)
 		% behaviorMovie = cat(behaviorMovie{:},3)
 		% do something
 	catch err
-		display(repmat('@',1,7))
+		disp(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));
-		display(repmat('@',1,7))
+		disp(repmat('@',1,7))
 	end
 	function subfxnDisp(txt)
 		if options.displayInfo==1
-			display(txt);
+			disp(txt);
 		end
 	end
 end

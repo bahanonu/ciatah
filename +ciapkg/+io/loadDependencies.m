@@ -30,6 +30,7 @@ function [success] = loadDependencies(varargin)
 		% 2022.09.14 [09:47:20] - Ensure bfmatlab_readers directory exists, else websave errors occur.
 		% 2022.11.06 [12:47:17] - Ensure display location of SlideBook6Reader.jar saving.
 		% 2022.12.05 [11:14:36] - Add success output.
+		% 2024.04.30 [22:39:32] - Update Bio-Formats to 7.3.0.
 	% TODO
 		% Verify all dependencies download and if not ask user to download again.
 
@@ -214,7 +215,8 @@ function [success] = loadDependencies(varargin)
 				% obj.loadBatchFunctionFolders;
 			case 'downloadBioFormats'
 				optionsH.gitNameDisp = {'bfmatlab'};
-				optionsH.gitRepos = {'https://downloads.openmicroscopy.org/bio-formats/6.10.0/artifacts/bfmatlab.zip'};
+				% optionsH.gitRepos = {'https://downloads.openmicroscopy.org/bio-formats/6.10.0/artifacts/bfmatlab.zip'};
+				optionsH.gitRepos = {'https://downloads.openmicroscopy.org/bio-formats/7.3.0/artifacts/bfmatlab.zip'};
 				optionsH.outputDir = optionsH.gitNameDisp;
 				% optionsH.gitName = cellfun(@(x) [x '-master'],optionsH.gitNameDisp,'UniformOutput',false);
 				optionsH.gitName = {'bfmatlab'};

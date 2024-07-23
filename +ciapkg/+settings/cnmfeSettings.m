@@ -2,6 +2,8 @@
 % 2019.04.04 [10:35:15]
 % Settings to run CNMF-E, used in conjunction with modelExtractSignalsFromMovie.m or
 % as input to "computeCnmfeSignalExtraction" using "computeCnmfeSignalExtraction(inputMovie,'options',cnmfeOpts)" after running "cnmfeSettings"
+% changelog
+	% 2024.03.29 [19:02:12] - Updated merge settings to reduce duplicates in output.
 
 % ========================
 % OVERALL
@@ -22,7 +24,7 @@ cnmfeOpts.patch_dims = [64, 64]; % [64, 64]
 cnmfeOpts.batch_frames = [];
 % ===SPATIAL
 % Int: pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
-cnmfeOpts.gSig = 3;
+cnmfeOpts.gSig = 7;
 % Int: pixel, neuron diameter
 cnmfeOpts.gSiz = 13;
 % Int: spatial downsampling factor
@@ -55,15 +57,15 @@ cnmfeOpts.ring_radius = 18;
 cnmfeOpts.bg_ssub = 2;
 % ===MERGING
 % Float: 0 to 1, thresholds for merging neurons; [spatial overlap ratio, temporal correlation of calcium traces, spike correlation]
-cnmfeOpts.merge_thr = 0.65;
+cnmfeOpts.merge_thr = 0.2;
 % Char: method for computing neuron distances {'mean', 'max'}
-cnmfeOpts.method_dist = 'max';
+cnmfeOpts.method_dist = 'mean';
 % Int: minimum distances between two neurons. it is used together with merge_thr
-cnmfeOpts.dmin = 5;
+cnmfeOpts.dmin = 10;
 % Int: merge neurons if their distances are smaller than dmin_only.
-cnmfeOpts.dmin_only = 2;
+cnmfeOpts.dmin_only = 10;
 % Float vector: merge components with highly correlated spatial shapes (corr=0.8) and small temporal correlations (corr=0.1)
-cnmfeOpts.merge_thr_spatial = [0.8, 0.4, -inf];
+cnmfeOpts.merge_thr_spatial = [0.3, 0.1, -inf];
 % ===INITIALIZATION
 % Int: maximum number of neurons per patch. when K=[], take as many as possible.
 cnmfeOpts.K = [];

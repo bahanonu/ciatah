@@ -10,6 +10,7 @@ function [success] = downloadGithubRepositories(varargin)
 		% 2021.02.01 [15:19:40] - Update `_external_programs` to call ciapkg.getDirExternalPrograms() to standardize call across all functions.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2022.01.27 [08:49:09] - If multiple repos requested but one already downloaded, previously exited before downloading the other repos.
+		% 2023.05.29 [16:15:18] - Automatically convert string inputs to character arrays.
 
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
@@ -40,6 +41,13 @@ function [success] = downloadGithubRepositories(varargin)
 		gitRepos = options.gitRepos;
 		outputDir = options.outputDir;
 		gitName = options.gitName;
+		
+		% Convert to cell character array if user only inputs a string
+		if ~iscell(gitNameDisp); gitNameDisp = {gitNameDisp}; end
+		if ~iscell(gitRepos); gitRepos = {gitRepos}; end
+		if ~iscell(outputDir); outputDir = {outputDir}; end
+		if ~iscell(gitName); gitName = {gitName}; end
+		
 		nRepos = length(outputDir);
 
 		% If forcing an update, make sure to remove all external programs from the path

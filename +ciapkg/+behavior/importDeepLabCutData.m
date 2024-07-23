@@ -1,4 +1,4 @@
-function [mainTbl] = importDeepLabCutData(inputPath,varargin)
+function [mainTbl, mainTensor, mainCell] = importDeepLabCutData(inputPath,varargin)
 	% [outputTable] = importDeepLabCutData(inputPath,varargin)
 	% 
 	% Loads DeepLabCut processed CSV files and loads into a table or structure for use by other functions.
@@ -10,7 +10,9 @@ function [mainTbl] = importDeepLabCutData(inputPath,varargin)
 	% 	inputPath - Str: path to DLC file.
 	% 
 	% Outputs
-	% 	mainTbl - Struct with fields named after body parts. Each field is [likelihood x y] matrix with rows equal to frames of the movie. 	
+	% 	mainTbl - Struct: with fields named after body parts. Each field is [likelihood x y] matrix with rows equal to frames of the movie. 	
+	% 	mainTensor - Tensor: format [nFeatures nDlcOutputs nFrames]. 
+	%	mainCell - Cell: format {1 nFeatures} with each cell containing a [likelihood x y] matrix with rows equal to frames of the movie. 
 	% 
 	% Options (input as Name-Value with Name = options.(Name))
 	% 	% DESCRIPTION
@@ -18,6 +20,7 @@ function [mainTbl] = importDeepLabCutData(inputPath,varargin)
 
 	% Changelog
 		% 2022.03.14 [01:47:04] - Added nested and local functions to the example function.
+		% 2024.02.19 [09:25:58] - Added conversion to tensor and cell to the import function from other functions.
 	% TODO
 		%
 
@@ -47,18 +50,22 @@ function [mainTbl] = importDeepLabCutData(inputPath,varargin)
 		% dlcTablePath = fullfile(rootAnalysisPath,dlcFileCSV{vidNo});
 		t1 = readtable(inputPath);
 		t2 = readlines(inputPath);
-		bodyPartListMain = strsplit(t2{2},',');
-		bodyPartList = unique(bodyPartListMain);
-		nBodyParts = length(bodyPartList)-1;
+		featuresListMain = strsplit(t2{2},',');
+		featuresList = unique(featuresListMain);
+		nfeaturess = length(featuresList)-1;
 
 		if options.dispPlots==1
 			figure;
 			set(gcf,'Color','k')
 		end
 
-		for partX = 1:nBodyParts
-			partName = bodyPartListMain{(partX-1)*3+4};
-			if partX==nBodyParts
+		mainCell = {};
+		nFrames = length(t1{:,(1-1)*3+2});
+		mainTensor = NaN([nfeaturess 3 nFrames]);
+
+		for partX = 1:nfeaturess
+			partName = featuresListMain{(partX-1)*3+4};
+			if partX==nfeaturess
 				fprintf('%s.\n',partName)				
 			else
 				fprintf('%s | ',partName)
@@ -66,7 +73,14 @@ function [mainTbl] = importDeepLabCutData(inputPath,varargin)
 			conf1 = t1{:,(partX-1)*3+4};
 			dlcX = t1{:,(partX-1)*3+2};
 			dlcY = t1{:,(partX-1)*3+3};
-			mainTbl.(partName) = [conf1(:) dlcX(:) dlcY(:)];
+
+			mainMatrix = [conf1(:) dlcX(:) dlcY(:)];
+
+			mainTbl.(partName) = mainMatrix;
+
+			mainCell{partX} = mainMatrix;
+
+			mainTensor(partX,:,:) = mainMatrix';
 
 			if options.dispPlots==1
 				subplot(3,3,partX)
@@ -92,7 +106,25 @@ function [mainTbl] = importDeepLabCutData(inputPath,varargin)
 		% outputs = ;
 	end	
 end
-function [outputs] = localfxn_exampleFxn(arg)
-	% Always start local functions with "localfxn_" prefix.
-	% outputs = ;
-end	
+% function [outputs] = localfxn_exampleFxn(arg)
+% 	opts.nFrames = size(inputMovie,3);
+% 	featurePts = cell([1 opts.nFrames]);
+% 	opts.nFields = fieldnames(dlcData);
+% 	featurePtsTensor = NaN([length(opts.nFields) 3 opts.nFrames]);
+
+% 	for i = 1:opts.nFrames
+% 		conf1 = [];
+% 		dlcX = [];
+% 		dlcY = [];
+% 		for partX = 1:length(opts.nFields)
+% 			thisField = opts.nFields{partX};
+% 			dlcDataNew.(thisField) = vertcat(dlcData.(thisField));
+% 			conf1(partX) = dlcDataNew.(thisField)(i,1);
+% 			dlcX(partX) = dlcDataNew.(thisField)(i,2);
+% 			dlcY(partX) = dlcDataNew.(thisField)(i,3);
+% 		end
+% 		featurePts{i} = [conf1(:) dlcX(:) dlcY(:)];
+% 		featurePtsTensor(:,:,i) = featurePts{i};
+% 	end
+% 	disp('Done!')
+% end	

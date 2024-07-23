@@ -16,6 +16,8 @@ function [success] = changeFont(FontSize,varargin)
         % 2022.01.14 [05:53:37] - Updated so doesn't change Axes backgroundcolor when changing font color, only Axes text.
         % 2022.03.14 [04:06:10] - Also check for matlab.ui.control.UIControl when conducting font color changes and ignore to not cause errors.
 		% 2022.12.03 [21:51:44] - Update to handle legend, since use TextColor property instead of Color for text. Users can also put in a blank fontSize to avoid changing that property, can skip UI that would normally appear.
+	% TODO
+		% Add support for changing other font aspects, e.g. figure Font family, command window font, etc.
 
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 

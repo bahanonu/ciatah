@@ -14,6 +14,7 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 		% 2020.12.08 [00:53:20] - Take out parfor in one loop that calls obj functions to eliminate serialization issues. Also change color mapping of cross session maps so that it covers the full range using the actual global IDs matched across sessions rather than diluting the range by including global IDs that don't meet the criteria. Makes the maps more colorful.
 		% 2021.08.24 [14:10:02] - Convert all suptitle to ciapkg.overloaded.suptitle.
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2023.05.09 [13:23:05] - Additional options for choosing which cells to display and additional cellmaps saved out as TIFF files.
 	% TODO
 		%
 
@@ -56,7 +57,8 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 				'subject alignment set # (e.g. if need multiple separate alignments): ',...
 				'Sort global IDs in GUI (1 = yes, 0 = no): ',...
 				'Display mismatched pairs? (1 = yes, 0 = no): ',...
-				'Which percent overlap cross-session maps (1 = 100%, 2 = 70%, 3 = 50%)? (int vector): '
+				'Which percent overlap cross-session maps (1 = 100%, 2 = 70%, 3 = 50%, 4 = 10%, 5 = 0%)? (int vector): ',...
+				'Which percent overlap cross-session maps (fraction)'...
 			},...
 			'view movie settings',1,...
 			{...
@@ -64,7 +66,8 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 				'1',...
 				'0',...
 				'0',...
-				'[3]'
+				'[3]',...
+				''...
 			}...
 		);
 		obj.picsSavePath = movieSettings{1};
@@ -72,6 +75,7 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 		sortGlobalIDs = str2num(movieSettings{3});
 		dispMisMatchPairs = str2num(movieSettings{4});
 		pctSessionMatchChoices = str2num(movieSettings{5});
+		pctSessionMatch = str2num(movieSettings{5});
 
 		scnsize = get(0,'ScreenSize');
 		viewMatchSessionsStr = {'view cross session matches','make cross session color cellmaps'};
@@ -501,11 +505,21 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 			% for matchingNumbers = [1 2 3]
 			for matchingNumbers = pctSessionMatchChoices
 				folderSaveName = {'matchObjColorMapAllMatched','matchObjColorMap70percentMatched','matchObjColorMap50percentMatched'};
-				fractionShow = [1 0.7 0.5];
+				fractionShow = [1 0.7 0.5 0.1 0];
+				% if isempty(pctSessionMatch)
+				% 	globalMatchFilter = nMatchGlobalIDs>=round(nSessions*fractionShow(matchingNumbers));
+				% else
+				% 	fractionShow = pctSessionMatch;
+				% 	globalMatchFilter = nMatchGlobalIDs>=round(nSessions*fractionShow);
+				% end
+
 				globalMatchFilter = nMatchGlobalIDs>=round(nSessions*fractionShow(matchingNumbers));
+
 				nGlobalIDsMatch = sum(globalMatchFilter);
 				% globalIdxMax = max(globalIDs(globalMatchFilter,:),[],'all');
 				globalIdxMax = max(find(globalMatchFilter));
+
+				outputthisCellmap = [];
 				for sessionNo = 1:nSessions
 					try
 						obj.fileNum = validFoldersIdx(sessionNo);
@@ -514,6 +528,7 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 						% get
 						% figure;plot(nMatchGlobalIDs==nSessions);
 						keepIDIdx = globalIDs(globalMatchFilter,sessionNo);
+						maxNumGlobalIDs = size(globalIDs,1);
 						% if matchingNumbers==1
 						% 	keepIDIdx = globalIDs(nMatchGlobalIDs==nSessions,sessionNo);
 						% else
@@ -531,14 +546,21 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 						% globalToSessionIDs{sessionNo}(keepIDIdx)
 						globalToSessionIDsTmp(setdiff(1:length(globalToSessionIDsTmp),keepIDIdx)) = 1;
 						globalToSessionIDsTmp(keepIDIdx) = globalToSessionIDsTmp(keepIDIdx)+10;
-						[groupedImagesRates] = groupImagesByColor(inputImages{sessionNo},globalToSessionIDsTmp);
+						[groupedImagesRates] = groupImagesByColor(inputImages{sessionNo},globalToSessionIDsTmp,'threshold',0.3);
 						% [groupedImagesRates] = groupImagesByColor(inputImages{sessionNo}(keepIDIdx,:,:),globalToSessionIDs{sessionNo}(keepIDIdx));
 						% [groupedImagesRates] = groupImagesByColor(inputImages{sessionNo},globalToSessionIDs{sessionNo});
 						% size(inputImages{sessionNo}(,:,:))
 						% size(globalToSessionIDs{sessionNo}(nMatchGlobalIDs==nSessions))
 						thisCellmap = createObjMap(groupedImagesRates);
 						thisCellmap(1,1) = 1;
-						thisCellmap(1,2) = globalIdxMax;
+						% thisCellmap(1,2) = globalIdxMax;
+						thisCellmap(1,2) = maxNumGlobalIDs+12;
+
+						if isempty(outputthisCellmap)
+							outputthisCellmap = thisCellmap;
+						else
+							outputthisCellmap = cat(3,outputthisCellmap,thisCellmap);
+						end
 						setCmapHere = @(nGlobalIDs) colormap([0 0 0; [1 1 1]*0.3; hsv(nGlobalIDs)]);
 						[~, ~] = openFigure(sessionNo, '');
 							clf
@@ -570,6 +592,12 @@ function obj = viewMatchObjBtwnSessions(obj,varargin)
 						display(repmat('@',1,7))
 					end
 				end
+
+				saveDirPath = [obj.videoSaveDir filesep 'matchObjsGlobal\'];
+				mkdir(saveDirPath);
+				currentDateTimeStr = datestr(now,'yyyy-mm-dd-HHMMSS','local');
+				% [output] = writeHDF5Data(single(outputthisCellmap),[saveDirPath thisSubjectStr '_cellmap_turboreg_main.tif']);
+				[output] = ciapkg.io.saveMatrixToFile(single(outputthisCellmap),[saveDirPath thisSubjectStr '_cellmap_turboreg_main_' currentDateTimeStr '.tif']);
 
 				saveVideoFile = [obj.picsSavePath filesep folderSaveName{matchingNumbers} 'Session' filesep thisSubjectStr '_matchedCells.avi'];
 				display(['save video: ' saveVideoFile])
