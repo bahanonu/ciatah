@@ -31,6 +31,7 @@ function [success] = loadDependencies(varargin)
 		% 2022.11.06 [12:47:17] - Ensure display location of SlideBook6Reader.jar saving.
 		% 2022.12.05 [11:14:36] - Add success output.
 		% 2024.04.30 [22:39:32] - Update Bio-Formats to 7.3.0.
+		% 2024.07.23 [15:11:00] - Upgraded ImageJ download site.
 	% TODO
 		% Verify all dependencies download and if not ask user to download again.
 
@@ -239,8 +240,8 @@ function [success] = loadDependencies(varargin)
 				
 			case 'downloadImageJ'
 				% Download mij.jar and ij.ar with Box backup in case mij.jar site offline.
-				downloadFiles = {'http://bigwww.epfl.ch/sage/soft/mij/mij.jar','http://rsb.info.nih.gov/ij/upgrade/ij.jar','http://tiny.ucsf.edu/3wFyol'};
-				downloadFileNames = {'mij.jar','ij.jar','mij.jar'};
+				downloadFiles = {'http://bigwww.epfl.ch/sage/soft/mij/mij.jar','http://rsb.info.nih.gov/ij/upgrade/ij.jar','http://tiny.ucsf.edu/3wFyol','http://wsr.imagej.net/jars/ij.jar'};
+				downloadFileNames = {'mij.jar','ij.jar','mij.jar','ij.jar'};
 				imagejPath = [options.externalProgramsDir filesep 'imagej'];
 				ciapkg.io.mkdir(imagejPath);
 				nFiles = length(downloadFiles);
