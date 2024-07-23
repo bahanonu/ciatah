@@ -12,6 +12,7 @@ function obj = modelVarsFromFiles(obj)
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2022.04.08 [16:41:27] - Enforce that NWB loading only looks for .nwb files and ensure that manual or automatic classifications are loaded when loading NWB files.
 		% 2022.04.09 [20:30:52] - Ensure when loading cell extraction CIAtah-style that only MAT files are loaded.
+		% 2023.09.12 [10:46:43] - CELLMax by default uses the estimated dF/F
 	% TODO
 		% ADD SUPPORT FOR EM ANALYSIS - Done.
 
@@ -243,7 +244,10 @@ function obj = modelVarsFromFiles(obj)
 					end
 					% signalImages = permute(emAnalysisOutput.cellImages,[3 1 2]);
 					signalImages = emAnalysisOutput.cellImages;
-					if isfield(emAnalysisOutput,'scaledProbability')
+					if isfield(emAnalysisOutput,'scaledProbabilityDff')
+						disp('Using estimated dF/F (movie units) from scaled probability')
+						signalTraces = emAnalysisOutput.scaledProbabilityDff;
+					elseif isfield(emAnalysisOutput,'scaledProbability')
 						% signalTraces = emAnalysisOutput.scaledProbabilityAlt;
 						signalTraces = emAnalysisOutput.scaledProbability;
 					elseif isfield(emAnalysisOutput,'dsCellTraces')

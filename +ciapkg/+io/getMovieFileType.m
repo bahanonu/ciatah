@@ -23,6 +23,7 @@ function [movieType, supported, movieType2] = getMovieFileType(thisMoviePath,var
 		% 2022.03.01 [08:56:21] - Added support for checking if a cell was accidentally input instead of a string path along with verifying that input was a string. Added support for oir and czi/lsm Olympus and Zeiss file formats that already was in loadMovieList.
 		% 2022.03.14 [02:17:28] - Added MAT-file support.
 		% 2022.07.05 [21:21:35] - Add SlideBook Bio-Formats support.
+		% 2022.10.24 [10:32:09] - Added mp4 support to output.
 	% TODO
 		%
 
@@ -79,6 +80,8 @@ function [movieType, supported, movieType2] = getMovieFileType(thisMoviePath,var
 		movieType = 'tiff';
 	elseif endsWith(ext,'.avi','IgnoreCase',true)
 		movieType = 'avi';
+	elseif endsWith(ext,'.mp4','IgnoreCase',true)
+		movieType = 'mp4';
 	elseif endsWith(ext,'.mat','IgnoreCase',true)
 		movieType = 'mat';
 	elseif endsWith(ext,'.isxd','IgnoreCase',true) % Inscopix file format

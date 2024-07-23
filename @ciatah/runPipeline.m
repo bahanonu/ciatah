@@ -11,6 +11,7 @@ function obj = runPipeline(obj,varargin)
 		% 2020.05.09 [18:36:01] - Added a check to make sure certain directories are unloaded after running a module if they are not needed.
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2022.02.25 [09:54:56] - Eliminate the close all figure when initializing the main GUI. Unexpected for some users and undesirable in certain cases. Instead close all figures if a method is selected, this avoids user not getting feedback if figures are re-used and focus is not shifted.
+		% 2023.05.08 [22:05:26] - Use guiFoldersSelected to remember prior user selected folders on next call of CIAtah GUI.
 	% TODO
 		%
 
@@ -84,6 +85,7 @@ function obj = runPipeline(obj,varargin)
 
 	[idNumIdxArray, fileIdxArray, ok] = obj.ciatahMainGui(fxnsToRun,['"Sir! I have a plan!" Hover over ' ciapkg.pkgName ' methods for tooltips.'],currentIdx);
 	obj.foldersToAnalyze = fileIdxArray;
+	obj.guiFoldersSelected = fileIdxArray;
 	bypassUI = 1;
 
 	% [idNumIdxArray, ok] = obj.pipelineListBox(fxnsToRun,['"Sir! I have a plan!" Select a calciumImagingAnalysis method or procedure to run. Hover over items for tooltip descriptions.'],currentIdx);

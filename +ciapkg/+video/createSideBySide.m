@@ -235,14 +235,14 @@ function [outputMovie] = createSideBySide(primaryMovie,secondaryMovie,varargin)
 			close(writerObj);
 		end
 	catch err
-		display(repmat('@',1,7))
+		disp(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));
-		display(repmat('@',1,7))
+		disp(repmat('@',1,7))
 	end
 	% subfxnDisp: function description
 	function subfxnDisp(txt)
 		if options.displayInfo==1
-			display(txt)
+			disp(txt)
 		end
 	end
 end

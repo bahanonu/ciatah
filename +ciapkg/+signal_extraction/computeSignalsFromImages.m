@@ -15,7 +15,7 @@ function [outputSignal, inputImages] = computeSignalsFromImages(inputImages,inpu
 	% TODO
 		%
 
-	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+	% import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 
 	% ========================
 	% DESCRIPTION
@@ -32,7 +32,7 @@ function [outputSignal, inputImages] = computeSignalsFromImages(inputImages,inpu
 	% ========================
 
 	try
-		[outputSignal, inputImages] = applyImagesToMovie(inputImages,inputMovie, 'passArgs',varargin);
+		[outputSignal, inputImages] = ciapkg.signal_processing.applyImagesToMovie(inputImages,inputMovie, 'passArgs',varargin);
 	catch err
 		disp(repmat('@',1,7))
 		disp(getReport(err,'extended','hyperlinks','on'));

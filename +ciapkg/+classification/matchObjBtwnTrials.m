@@ -26,6 +26,7 @@ function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
 		% 2019.10.29 [13:07:18] - Added support for sparse (ndSparse) array inputs.
 		% 2019.12.05 [10:37:17] - Fix for cases in which cells are lost when cropping all movies to the same size before starting cross-session alignment.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2023.05.09 [12:33:23] - Made ability to switch between different motion correction and image alignment methods user visible.
 	% notes
 		% the cell array of traces allows us to have arbitrary numbers of trials to align automatically,
 	% TODO
@@ -70,6 +71,14 @@ function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
 	options.turboregZeroThres = 1e-6;
 	% Binary: 1 = check correlation matches visually
 	options.checkImageCorr = 0;
+	% Str: Register images using 'imtransform' or 'imwarp' (Matlab) or 'transfturboreg' (C)
+	options.registrationFxn = 'transfturboreg';
+	% Str: motion correction algorithm.
+		% 'turboreg' - TurboReg as developed by Philippe Thevenaz.
+		% 'normcorre' - NoRMCorre as developed by several authors at Flatiron Institute.
+		% 'imregdemons' - Displacement field alignment based on imregdemons.
+	options.mcMethod = 'turboreg';
+
 	options = getOptions(options,varargin);
 	%========================
 	% obtain trial stats
@@ -124,6 +133,10 @@ function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
 		% =======
 		RegisTypeFinal = options.RegisTypeFinal;
 		% turboreg options.
+		ioptions.mcMethod = options.mcMethod;
+		% ioptions.registrationFxn = 'imtransform';
+		ioptions.registrationFxn = options.registrationFxn;
+
 		ioptions.meanSubtract = 0;
 		ioptions.complementMatrix = 0;
 		ioptions.normalizeType = [];
@@ -141,8 +154,6 @@ function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
 		ioptions.cropCoords = [];
 		ioptions.closeMatlabPool = 0;
 		ioptions.removeEdges = 0;
-		% ioptions.registrationFxn = 'imtransform';
-		ioptions.registrationFxn = 'transfturboreg';
 		% =======
 		% turboreg all object maps to particular trial's map
 		if issparse(objectMap{options.trialToAlign})
@@ -211,9 +222,12 @@ function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
 					ioptions.closeMatlabPool = 0;
 					ioptions.meanSubtract =  0;
 					ioptions.normalizeType = 'divideByLowpass';
-					ioptions.registrationFxn = 'transfturboreg';
+					% ioptions.registrationFxn = 'transfturboreg';
 					ioptions.removeEdges = 0;
 					ioptions.cropCoords = [];
+
+					ioptions.mcMethod = options.mcMethod;
+					ioptions.registrationFxn = options.registrationFxn;
 
 					for switchNo = 1:length(switchStrArray)
 						switch switchStrArray{switchNo}
@@ -352,6 +366,7 @@ function [OutStruct] = matchObjBtwnTrials(inputImages,varargin)
 		OutStruct.registrationCoords = registrationCoords;
 		OutStruct.coords = coords;
 		OutStruct.inputImages = inputImages;
+		% OutStruct.inputOptions = options;
 		if ~isempty(options.inputSignals)
 			OutStruct.inputSignals = options.inputSignals;
 		end

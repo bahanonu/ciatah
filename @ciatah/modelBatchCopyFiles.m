@@ -10,6 +10,7 @@ function obj = modelBatchCopyFiles(obj)
 
 	% changelog
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2023.05.08 [20:23:58] - Easier user switching between copying or moving files.
 	% TODO
 		%
 
@@ -17,27 +18,29 @@ function obj = modelBatchCopyFiles(obj)
 	
 	% get user input
 	movieSettings = inputdlg({...
-			'start:end frames (leave blank for all)',...
-			'file regexp:',...
-			'copy to specific folder (leave blank to copy to same folder)',...
-			'input HDF5 dataset name',...
-			'output HDF5 dataset name',...
-			'analyzing movie files (1 = yes, 0 = no):',...
-			'back-up directory name (if copying into same folder)',...
-			'name of new extension for movie (include leading dot, leave blank if keep the same)',...
-			'append folder base string (blank if no)'...
+			'start:end frames (leave blank for all)';
+			'file regexp:';
+			'copy to specific folder (leave blank to copy to same folder)';
+			'input HDF5 dataset name';
+			'output HDF5 dataset name';
+			'analyzing movie files (1 = yes, 0 = no):';
+			'back-up directory name (if copying into same folder)';
+			'name of new extension for movie (include leading dot, leave blank if keep the same)';
+			'append folder base string (blank if no)';
+			'"move" or "copy" files?';
 		},...
 		'copy files to /archive/ folder',1,...
 		{...
-			'1:4000',...
-			obj.fileFilterRegexp,...
-			'',...
-			obj.inputDatasetName,...
-			obj.inputDatasetName,...
-			'1',...
-			'archive',...
-			'',...
-			''...
+			'1:4000';
+			obj.fileFilterRegexp;
+			'';
+			obj.inputDatasetName;
+			obj.inputDatasetName;
+			'1';
+			'archive';
+			'';
+			'';
+			'move';
 		}...
 	);
 	setNo = 1;
@@ -50,6 +53,7 @@ function obj = modelBatchCopyFiles(obj)
 	backupDirName =  movieSettings{setNo};setNo = setNo+1;
 	newExtensionName =  movieSettings{setNo};setNo = setNo+1;
 	useBaseFolderName =  movieSettings{setNo};setNo = setNo+1;
+	fileOperationStr = movieSettings{setNo};setNo = setNo+1;
 
 	[fileIdxArray idNumIdxArray nFilesToAnalyze nFiles] = obj.getAnalysisSubsetsToAnalyze();
 
@@ -130,12 +134,27 @@ function obj = modelBatchCopyFiles(obj)
 							mkdir(archivePath);
 							[PATHSTR,NAME,EXT] = fileparts(filePath);
 							archivePathFile = [archivePath filesep NAME EXT];
-							display(['moving' num2str(fileNo) '/' num2str(nFiles) ': ' filePath ' TO ' archivePathFile]);
+							
 							% movefile(filePath,archivePathFile);
-							if ispc
-								dos(['move ' filePath ' ' archivePathFile]);
-							elseif isunix
-								unix(['mv ' filePath ' ' archivePathFile]);
+
+							% Add option to copy
+							switch fileOperationStr
+								case 'move'
+									display(['Moving | ' num2str(fileNo) '/' num2str(nFiles) ': ' filePath ' TO ' archivePathFile]);
+									if ispc
+										dos(['move ' filePath ' ' archivePathFile]);
+									elseif isunix
+										unix(['mv ' filePath ' ' archivePathFile]);
+									end
+								case 'copy'
+									display(['Copying | ' num2str(fileNo) '/' num2str(nFiles) ': ' filePath ' TO ' archivePathFile]);
+									if ispc
+										dos(['copy ' filePath ' ' archivePathFile]);
+									elseif isunix
+										unix(['cp ' filePath ' ' archivePathFile]);
+									end
+								otherwise
+									% Do nothing
 							end
 							newPathFile = filePath;
 							filePath = archivePathFile;

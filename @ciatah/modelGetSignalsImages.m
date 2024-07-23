@@ -15,6 +15,7 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 		% 2021.06.30 [14:52:23] - Updated to allow loading raw files without calling modelVarsFromFiles.
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2022.04.09 [20:30:52] - Ensure when loading cell extraction CIAtah-style that only MAT files are loaded.
+		% 2023.05.09 [11:52:23] - Added support for registering images (e.g. after cross-day registration) using multiple methods instead of just turboreg.
 	% TODO
 		% Give a user a warning() output if there are no or empty cell-extraction outputs
 
@@ -727,12 +728,20 @@ function [inputSignals, inputImages, signalPeaks, signalPeaksArray, valid, valid
 						% Translation
 						% Rotation
 						% Skew
+
+						% Get settings for this one
+					 	mcMethod = obj.globalIDStruct.(obj.subjectStr{thisFileNum}).inputOptions.mcMethod;
+						registrationFxn = obj.globalIDStruct.(obj.subjectStr{thisFileNum}).inputOptions.registrationFxn;
+
 						for iterationNo = 1:length(globalRegCoords)
 							fn=fieldnames(globalRegCoords{iterationNo});
 							for i=1:length(fn)
 								localCoords = globalRegCoords{iterationNo}.(fn{i});
 								% playMovie(inputImages);
-								[inputImages, localCoords] = turboregMovie(inputImages,'precomputedRegistrationCooords',localCoords);
+								[inputImages, localCoords] = ciapkg.motion_correction.turboregMovie(inputImages,...
+									'precomputedRegistrationCooords',localCoords,...
+									'mcMethod',mcMethod,...
+									'registrationFxn',registrationFxn);
 							end
 						end
 						% inputImages = permute(inputImages,[3 1 2]);

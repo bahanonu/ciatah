@@ -12,6 +12,7 @@ function obj = viewObjmaps(obj,varargin)
 		% 2020.05.07 [14:54:27] - Fix to deal with empty valid folders.
 		% 2021.06.18 [21:41:07] - added modelVarsFromFilesCheck() to check and load signals if user hasn't already.
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
+		% 2024.03.30 [14:13:35] - Update display of cell overlap
 	% TODO
 		%
 
@@ -355,7 +356,7 @@ function obj = viewObjmaps(obj,varargin)
 				imagesc(thisCellmap)
 				axis equal tight
 				zoom on
-				colormap([0 0 0;customColormap([])])
+				colormap([0 0 0;0 1 0;customColormap([],'nPoints',max(thisCellmap(:),[],'omitnan')-1)]);
 				cbh = colorbar;
 				ylabel(cbh,'# cells at that pixel location','FontSize',10);
 				titleStr = sprintf('Cell overlap | %d/%d: %s | %s | %s\n %s | %d cells, %d total | Zoom enabled',thisFileNumIdx,nFilesToAnalyze,obj.folderBaseDisplayStr{obj.fileNum},strrep(foldername,'_','\_'),validType,obj.signalExtractionMethod,sum(valid==1),length(valid));

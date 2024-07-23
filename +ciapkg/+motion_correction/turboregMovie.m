@@ -1,19 +1,19 @@
 function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	% [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
-	% 
-	% Motion corrects (using turboreg or NoRMCorre) a movie. 
-	% 	- Both turboreg (to get 2D translation coordinates) and registering images (transfturboreg, imwarp, imtransform) have been parallelized. 
-	% 	- Can also turboreg to one set of images and apply the registration to another set (e.g. for cross-day alignment). 
+	%
+	% Motion corrects (using turboreg, NoRMCorre, displacement fields, etc.) a movie.
+	% 	- Both turboreg (to get 2D translation coordinates) and registering images (transfturboreg, imwarp, imtransform) have been parallelized.
+	% 	- Can also turboreg to one set of images and apply the registration to another set (e.g. for cross-day alignment).
 	% 	- Spatial filtering is applied after obtaining registration coordinates but before transformation, this reduced chance that 0s or NaNs at edge after transformation mess with proper spatial filtering.
-	% 
+	%
 	% Biafra Ahanonu
 	% started 2013.11.09 [11:04:18]
-	% 
+	%
 	% Parts of code based on that from Jerome Lecoq (2011) and parallel code update by Biafra Ahanonu (2013).
-	% 
+	%
 	% Input
 	% 	inputMovie - 3D matrix: [x y frames] matrix containing data to be motion corrected across frames.
-	% 
+	%
 	% Output
 	% 	inputMovie - 3D matrix: [x y frames] matrix containing data after motion correction across frames.
 	% 	ResultsOutOriginal
@@ -46,6 +46,14 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		% 2022.03.09 [17:32:42] - Use custom bahanonu NoRMCorre that is within a package and update to use reference picture instead of template.
 		% 2022.04.23 [18:40:22] - Updated to which('normcorre.normcorre') from which('normcorre') since normcorre now inside a package.
 		% 2022.09.12 [20:46:04] - Additional NoRMCorre support and getNoRMCorreParams checking before running NoRMCorre.
+		% 2022.09.24 [18:32:04] - Changes to GUI display.
+		% 2022.10.03 [18:20:34] - Correct user options input to normcorre.apply_shifts.
+		% 2022.11.15 [14:16:40] - Add displacement field-based motion correction.
+		% 2022.11.22 [15:34:27] - Add back in ability to remove NaNs from each frame before calculating shifts or displacements.
+		% 2022.12.05 [18:35:05] - Add support for gradient-based filtering for motion correction input.
+		% 2023.08.04 [07:34:45] - Support loading of prior coordinates from MAT-file in standard of modelPreprocessMovieFunction.
+		% 2024.02.18 [18:46:34] - Added additional options for displacement field-based motion correction.
+		% 2024.03.11 [20:53:19] - Update to row assignment for removeInputMovieEdges.
 	% TO-DO
 		% Add support for "imregtform" based registration.
 
@@ -63,7 +71,6 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	% ========================
 
 	% Check that input is not empty
-	disp('Starting motion correction (turboreg)...');
 	if isempty(inputMovie)
 		disp('Empty movie matrix, exiting motion correction...')
 		return;
@@ -75,6 +82,7 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	% Str: motion correction algorithm.
 		% 'turboreg' - TurboReg as developed by Philippe Thevenaz.
 		% 'normcorre' - NoRMCorre as developed by several authors at Flatiron Institute.
+		% 'imregdemons' - Displacement field alignment based on imregdemons.
 	options.mcMethod = 'turboreg';
 	% options.mcMethod = 'normcorre';
 	% Str: dataset name in HDF5 file where data is stored, if inputMovie is a path to a movie.
@@ -85,8 +93,12 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	options.refFrame = 1;
 	% Matrix: same type as the inputMovie, this will be appended to the end of the movie and used as the reference frame. This is for cases in which the reference frame is not contained in the movie.
 	options.refFrameMatrix = [];
-	% whether to use 'imtransform' or 'imwarp' (Matlab) or 'transfturboreg' (C)
+	% Str: Register images using 'imtransform' or 'imwarp' (Matlab) or 'transfturboreg' (C)
 	options.registrationFxn = 'transfturboreg';
+	% Binary: 1 = remove NaNs before computing transform/displacement matrix, 0 = do not alter NaN state.
+	options.removeNan = 0;
+	% Float: any numeric value to replace NaNs with if options.removeNan==1.
+	options.nanReplaceVal = 0;
 	% display options for verification of input
 	options.displayOptions = 0;
 	% character string, path to save turboreg coordinates
@@ -188,7 +200,7 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	% =======
 	% 1 = show figures during processing
 	options.showFigs = 1;
-	% cmd line waitbar on?
+	% Binary: 1 = cmd line waitbar on. 0 = waitbar off.
 	options.waitbarOn = 1;
 	% =======
 	% Binary: 1 = return the movie after normalizing, mean subtract, etc.
@@ -199,6 +211,19 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	% NoRMCorre
 	% Struct: NoRMCorre settings
 	options.optsNoRMCorre = ciapkg.motion_correction.getNoRMCorreParams([1 1 1],'guiDisplay',0);
+	% =======
+	% Displacement fields options (imregdemons)
+	% Int: Indicate which displacement fields to remove.
+		% [] = include all displacement fields
+		% 1 = exclude Y displacement fields
+		% 2 = exclude X displacement fields
+	options.dfExclude = [];
+	% Options for displacement fields
+	options.df_AccumulatedFieldSmoothing = 0.54;
+	options.df_Niter = [500 400 200];
+	options.df_PyramidLevels = 3;
+	options.df_DisplayWaitbar = false;
+	% =======
 	% 
 	% get options
 	options = getOptions(options,varargin);
@@ -211,6 +236,9 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	if options.displayOptions==1
 		fn_structdisp(options)
 	end
+	% ========================
+
+	fprintf('Starting motion correction (%s)...\n',options.mcMethod);
 
 	% ========================
 	% Verify that turboreg MEX function is in the path.
@@ -225,6 +253,9 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		case 'turboreg'
 
 		case 'normcorre'
+			% NoRMCorre is to be run on the entire input matrix.
+			options.cropCoords = [];
+		case 'imregdemons'
 			% NoRMCorre is to be run on the entire input matrix.
 			options.cropCoords = [];
 		otherwise
@@ -266,6 +297,7 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	options.maxFrame = size(inputMovie,3);
 	movieDim = size(inputMovie);
 	options.Levels=nestFxnCalculatePyramidDepth(min(movieDim(1),movieDim(2)));
+
 	% inputMovie(isnan(inputMovie)) = 0;
 	% ========================
 	% add turboreg options to turboRegOptions structure
@@ -279,18 +311,18 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	turboRegOptions.zapMean = options.zapMean;
 	turboRegOptions.Interp = options.Interp;
 	if any(turboRegOptions.RegisType==[1 2 4])
-		TransformationType='affine';
+		TransformationType = 'affine';
 	else
-		% 3 5
-		TransformationType='projective';
+		% RegisType = [3 5]
+		TransformationType = 'projective';
 	end
 	% ========================
-	% register movie and return without using the rest of the function
+	% Register movie and return without using the rest of the function
 	if ~isempty(options.precomputedRegistrationCooords)
 		disp('Input pre-computed registration coordinates...')
 		ResultsOut = options.precomputedRegistrationCooords;
 		ResultsOutOriginal = ResultsOut;
-		for resultNo=1:size(inputMovie,3)
+		for resultNo = 1:size(inputMovie,3)
 			ResultsOutTemp{resultNo} = ResultsOut{options.altMovieRegisterNum};
 		end
 		ResultsOut = ResultsOutTemp;
@@ -310,10 +342,19 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		ResultsOutOriginal = ResultsOut;
 		return;
 	end
+
 	% ========================
-	% register movie and return without using the rest of the function
+	% Register movie and return without using the rest of the function
 	if ~isempty(options.precomputedRegistrationCooordsFullMovie)
 		disp('Input pre-computed registration coordinates for full movie...')
+
+		% Check if MAT-file is input, load into memory
+		if ischar(options.precomputedRegistrationCooordsFullMovie)
+			disp(['Loading: ' options.precomputedRegistrationCooordsFullMovie])
+			loadTmp = load(options.precomputedRegistrationCooordsFullMovie);
+			options.precomputedRegistrationCooordsFullMovie = loadTmp.ResultsOutOriginal{1}{1};
+		end
+
 		ResultsOut = options.precomputedRegistrationCooordsFullMovie;
 		% ResultsOutOriginal = ResultsOut;
 		% for resultNo=1:size(inputMovie,3)
@@ -459,9 +500,9 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	% inputMovie = cat(3,inputMovie{:});
 
 	inputMovie = single(inputMovie);
-
-	subfxn_dispMovieFrames(inputMovie,'Registration==1',2);
-
+	if options.showFigs==1
+		subfxn_dispMovieFrames(inputMovie,'Registration==1',2);
+	end
 	% ========================
 	if options.removeEdges==1
 		removeInputMovieEdges();
@@ -551,6 +592,8 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 				startTurboRegTime = tic;
 				%
 				nFramesToTurboreg = options.maxFrame;
+				options_removeNan = options.removeNan;
+				options_nanReplaceVal = options.nanReplaceVal;
 				if options.parallel==1; nWorkers=Inf;else;nWorkers=0;end
 				parfor (frameNo=1:nFramesToTurboreg,nWorkers)
 					% get current frames
@@ -560,6 +603,11 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 
 					thisFrameToAlign=single(thisFrame);
 					% thisFrameToAlign=thisFrame;
+
+					if options_removeNan==1
+						thisFrame(isnan(thisFrame)) = options_nanReplaceVal;
+						thisFrameToAlign(isnan(thisFrameToAlign)) = options_nanReplaceVal;
+					end
 
 					if ismac
 						% Code to run on Mac platform
@@ -594,6 +642,7 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 				
 				bound = 0;
 				refPic = single(squeeze(inputMovieCropped(:,:,options.refFrame)));
+				% refPic = refPic(bound/2+1:end-bound/2,bound/2+1:end-bound/2,:);
 				inputMovieCroppedTmp = inputMovieCropped(bound/2+1:end-bound/2,bound/2+1:end-bound/2,:);
 
 				optsNoRMCorre = options.optsNoRMCorre;
@@ -605,14 +654,51 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 				% Ensure NoRMCorre gets the correct inputs
 				optsNoRMCorre.d1 = size(inputMovieCropped,1);
 				optsNoRMCorre.d2 = size(inputMovieCropped,2);
+				disp('===')
+				fn_structdisp(optsNoRMCorre)
+				optsNoRMCorre.method
 				% fn_structdisp(optsNoRMCorre)
-				% [optsNoRMCorre] = subfxn_getNoRMCorreParams(inputMovieCropped);
+				% [optsNoRMCorre2] = subfxn_getNoRMCorreParams(inputMovieCropped);
+				% disp('===')
+				% fn_structdisp(optsNoRMCorre2)
+				% optsNoRMCorre2.method
+				disp('===')
 				[~,ResultsOut,template2] = normcorre.normcorre_batch(...
 					inputMovieCroppedTmp,...
 					optsNoRMCorre,...
 					refPic);
 				clear inputMovieCroppedTmp
-				toc(startTurboRegTime);				
+				toc(startTurboRegTime);	
+			case 'imregdemons'
+				disp('Demon-based displacement field registration...')
+				nFramesToTurboreg = options.maxFrame;
+
+				fixed = single(squeeze(inputMovieCropped(:,:,options.refFrame)));
+				if options.parallel==1; nWorkers=Inf;else;nWorkers=0;end
+
+				df_AccumulatedFieldSmoothing = options.df_AccumulatedFieldSmoothing;
+				df_Niter = options.df_Niter;
+				df_PyramidLevels = options.df_PyramidLevels;
+				df_DisplayWaitbar = options.df_DisplayWaitbar;
+
+				parfor (frameNo=1:nFramesToTurboreg,nWorkers)
+					thisFrame = inputMovieCropped(:,:,frameNo);
+					moving = single(thisFrame);
+					% Niter = df_Niter;
+					% AccumulatedFieldSmoothing = df_AccumulatedFieldSmoothing;
+
+					[ResultsOut{frameNo},movingReg] = imregdemons(moving,fixed,...
+						df_Niter,...
+						'PyramidLevels',df_PyramidLevels,...
+						'DisplayWaitbar',df_DisplayWaitbar,...
+						'AccumulatedFieldSmoothing',df_AccumulatedFieldSmoothing);
+
+				    if ~verLessThan('matlab', '9.2')
+				    	send(D, frameNo); % Update
+				    end
+				end
+				% [Dxy,movingReg] = imregdemons(moving,fixed,Niter,...
+				% 'AccumulatedFieldSmoothing',1.3,'DisplayWaitbar',false);
 			otherwise
 		end
 			
@@ -621,7 +707,7 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	function [optsNC] = subfxn_getNoRMCorreParams(inputMovieHere)
 		[d1,d2,T] = size(inputMovieHere);
 		bound = 0;
-		sizeCorFactor = 2;
+		sizeCorFactor = 1;
 		% sizeCorFactor = 1;
 		optsNC = normcorre.NoRMCorreSetParms(...
 			'd1', d1-bound,...
@@ -649,12 +735,90 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 		disp('');
 
 		switch options.mcMethod
+			case 'imregdemons'
+				subsetSize = options.subsetSizeFrames;
+				nFramesHere = size(inputMovie,3);
+				% numSubsets = ceil(length(inputMovie)/subsetSize)+1;
+				numSubsets = ceil(nFramesHere/subsetSize)+1;
+				% subsetList = round(linspace(1,length(inputMovie),numSubsets));
+				subsetList = round(linspace(1,nFramesHere,numSubsets));
+				display(['registering sublists: ' num2str(subsetList)]);
+				if options.turboregRotation==1
+					disp('Using rotation in registration')
+				end
+				fprintf('Performing %s registration and %s transformation.\n',options.registrationFxn,TransformationType);
+				% ResultsOut{1}.Rotation
+				nSubsets = (length(subsetList)-1);
+				for thisSet=1:nSubsets
+					subsetStartIdx = subsetList(thisSet);
+					subsetEndIdx = subsetList(thisSet+1);
+					if thisSet==nSubsets
+						movieSubset = subsetStartIdx:subsetEndIdx;
+						display([num2str(subsetStartIdx) '-' num2str(subsetEndIdx) ' ' num2str(thisSet) '/' num2str(nSubsets)])
+					else
+						movieSubset = subsetStartIdx:(subsetEndIdx-1);
+						display([num2str(subsetStartIdx) '-' num2str(subsetEndIdx-1) ' ' num2str(thisSet) '/' num2str(nSubsets)])
+					end
+
+					% Get a slice of the data.
+					% movieDataTemp(movieSubset) = inputMovie(movieSubset);
+					
+					% movieDataTemp = inputMovie(:,:,movieSubset);
+
+					% loop over and register each frame
+					if options.parallel==1; nWorkers=Inf;else;nWorkers=0;end
+
+					nMovieSubsets = length(movieSubset);				
+
+					parfor (i = movieSubset,nWorkers)
+						rOutTmp = ResultsOut{i};
+
+						thisFrameT = inputMovie(:,:,i);
+
+						D_restrict = rOutTmp;
+						if ~isempty(options.dfExclude)
+							D_restrict(:,:,options.dfExclude) = 0;
+						end
+
+						% Warp frame based on estimated displacement field
+						thisFrameT = imwarp(thisFrameT,D_restrict,'linear','FillValues',NaN);
+
+						inputMovie(:,:,i) = thisFrameT;
+					end
+					dispstat('Finished.','keepprev');
+				end
+
 			case 'normcorre'
 				startTurboRegTime = tic;
-				[optsNC] = subfxn_getNoRMCorreParams(inputMovie);
+				% [optsNC] = subfxn_getNoRMCorreParams(inputMovie);
 				bound = 0;
-				inputMovie = normcorre.apply_shifts(inputMovie,ResultsOut,optsNC,bound/2,bound/2); % apply the shifts to the removed percentile
+
+				optsNoRMCorre = options.optsNoRMCorre;
+				if isempty(fieldnames(optsNoRMCorre))
+					disp('Getting NoRMCorre params...')
+					optsNoRMCorre = ciapkg.motion_correction.getNoRMCorreParams(size(inputMovie),'guiDisplay',0);
+				end
+
+				% Ensure NoRMCorre gets the correct inputs
+				optsNoRMCorre.d1 = size(inputMovie,1);
+				optsNoRMCorre.d2 = size(inputMovie,2);
+				disp('===')
+				fn_structdisp(optsNoRMCorre)
+				optsNoRMCorre.method
+				% fn_structdisp(optsNoRMCorre)
+				% [optsNoRMCorre2] = subfxn_getNoRMCorreParams(inputMovieCropped);
+				% disp('===')
+				% fn_structdisp(optsNoRMCorre2)
+				% optsNoRMCorre2.method
+				disp('===')
+
+				% apply the shifts to the removed percentile
+				inputMovie = normcorre.apply_shifts(...
+					inputMovie,...
+					ResultsOut,...
+					optsNoRMCorre,bound/2,bound/2); 
 				toc(startTurboRegTime);
+				
 			case 'turboreg'
 				% Need to register subsets of the movie so parfor won't crash due to serialization errors.
 				% TODO: make this subset based on the size of the movie, e.g. only send 1GB chunks to workers.
@@ -797,7 +961,8 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 			case 'imtransform'
 				reverseStr = '';
 				for row=1:size(inputMovie,1)
-					thisMovieMinMask(row,:) = logical(max(isnan(squeeze(inputMovie(3,:,:))),[],2,'omitnan'));
+					% thisMovieMinMask(row,:) = logical(max(isnan(squeeze(inputMovie(3,:,:))),[],2,'omitnan'));
+					thisMovieMinMask(row,:) = logical(max(isnan(squeeze(inputMovie(row,:,:))),[],2,'omitnan'));
 					reverseStr = cmdWaitbar(row,size(inputMovie,1),reverseStr,'inputStr','getting crop amount','waitbarOn',1,'displayEvery',5);
 				end
 			case 'transfturboreg'
@@ -1045,6 +1210,21 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 			switch options.normalizeType
 				case 'imagejFFT'
 					imagefFftOnInputMovie('inputMovieCropped');
+				case 'gradient'
+					disp('Creating gradient image')
+					nImages = size(inputMovieCropped,3);
+					if options.parallel==1; nWorkers=Inf;else;nWorkers=0;end
+					parfor (imageNo = 1:nImages,nWorkers)
+						% imageNow = squeeze(inputMovieCropped{imageNo});
+						% inputMovieCropped{imageNo} = transform(imageNow);
+
+						imageNow = squeeze(inputMovieCropped(:,:,imageNo));
+						inputMovieCropped(:,:,imageNo) = gradient(imageNow);
+
+						% if (mod(imageNo,20)==0|imageNo==nImages)
+						%     reverseStr = cmdWaitbar(imageNo,nImages,reverseStr,'inputStr','fspecial normalizing');
+						% end
+					end
 				case 'matlabDisk'
 					% single(inputMovieCropped)
 					disp('Matlab fspecial disk background removal')
@@ -1132,21 +1312,25 @@ function [inputMovie, ResultsOutOriginal] = turboregMovie(inputMovie, varargin)
 	disp('=======')
 end
 function subfxn_dispMovieFrames(inputMovieCropped,titleStr,inputMod)
-	ciapkg.api.openFigure(9019+inputMod, '');
+	ciapkg.api.openFigure(9019, '');
 	colormap gray;
-	subplot(2,2,1)
+	rowN = 2;
+	colN = 3;
+	spOffset = (inputMod-1)*colN;
+	subplot(rowN,colN,1+spOffset)
 		imagesc(squeeze(inputMovieCropped(:,:,1)));
 		axis image; box off;
 		title('Images to use to get registration coordinates');
-	subplot(2,2,2)
+		ylabel(titleStr)
+	subplot(rowN,colN,2+spOffset)
 		imagesc(squeeze(inputMovieCropped(:,:,end)));
 		axis image; box off;
 		title('Last frame in movie')
-	subplot(2,2,3)
+	subplot(rowN,colN,3+spOffset)
 		imagesc(squeeze(inputMovieCropped(:,:,1))-squeeze(inputMovieCropped(:,:,end)));
 		axis image; box off;
 		title('Diff image #1 and #2')
-	ciapkg.overloaded.suptitle(titleStr)
+	% ciapkg.overloaded.suptitle(titleStr)
 	drawnow
 end
 function cropCoords = getCropSelection(thisFrame)

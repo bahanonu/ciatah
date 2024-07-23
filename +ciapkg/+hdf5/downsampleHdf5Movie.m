@@ -10,7 +10,7 @@ function [success] = downsampleHdf5Movie(inputFilePath, varargin)
 	% note: checked between this implementation and imageJ's scale, they are nearly identical (subtracted histogram mean is 1 vs each image mean of ~1860, so assuming precision error).
 	% 
 	% inputs
-	%	inputFilePath - Str: path to movie to downsample into HDF5.
+	%	inputFilePath - Str: path to movie to downsample into HDF5. Supported formats are HDF5, TIFF, and formats loadable by Bio-Formats.
 	% outputs
 	% 	success - Binary: 1 = completed successfully, 0 = did not complete successfully.
 	% options
@@ -22,6 +22,8 @@ function [success] = downsampleHdf5Movie(inputFilePath, varargin)
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2022.07.10 [19:24:29] - Added Bio-Formats support.
 		% 2022.07.15 [13:34:28] - Switch chunking to automatic by default, generally improved reading from data later than small chunks.
+		% 2023.09.28 [17:50:26] - Integrated TIFF support from other functions.
+		% 2023.09.29 [11:01:40] - options.newFilenameTwo is sufficient to initiate secondary movie downsampling. Option to convert data type during downsampling
 	% TODO
 		% Use handles to reduce memory load when doing computations.
 
@@ -72,6 +74,8 @@ function [success] = downsampleHdf5Movie(inputFilePath, varargin)
 	options.displayInfo = 1;
 	% Binary: 1 = waitbar/progress bar is shown, 0 = no progress shown.
 	options.waitbarOn = 1;
+	% Str: convert movie to new type. 'single','uint16','uint8','double'
+	options.convertType = '';
 	% get options
 	options = getOptions(options,varargin);
 	% unpack options into current workspace
@@ -107,6 +111,8 @@ function [success] = downsampleHdf5Movie(inputFilePath, varargin)
 		case 'hdf5'
 			% movie dimensions and subsets to analyze
 			[subsets, dataDim] = getSubsetOfDataToAnalyze(inputFilePath, options, varargin);
+		case 'tiff'
+			[subsets dataDim] = getSubsetOfDataToAnalyzeTIFF(inputFilePath, options, varargin);
 		case 'bioformats'
 			disp(['Opening connection to Bio-Formats file:' inputFilePath])
 			startReadTime = tic;
@@ -203,27 +209,36 @@ function [success] = downsampleHdf5Movie(inputFilePath, varargin)
 			% get current subset location and size
 			currentSubsetLocation = subsets(currentSubset);
 			lengthSubset = subsetsDiff(currentSubset);
-			% convert offset to C-style offset for low-level HDF5 functions
-			offset = [0 0 currentSubsetLocation-1];
-			block = [dataDim.x dataDim.y lengthSubset];
 			display('---')
-			% display(sprintf(['current location: ' num2str(round(currentSubsetLocation/dataDim.z*100)) '% | ' num2str(currentSubsetLocation) '/' num2str(dataDim.z) '\noffset: ' num2str(offset) '\nblock: ' num2str(block)]));
-			fprintf('current location: %d%% | %d/%d \noffset: %s \nblock: %s\n',round(currentSubsetLocation/dataDim.z*100),currentSubsetLocation,dataDim.z,mat2str(offset),mat2str(block));
 
 			switch options.movieType
 				case 'hdf5'
+					% convert offset to C-style offset for low-level HDF5 functions
+					offset = [0 0 currentSubsetLocation-1];
+					block = [dataDim.x dataDim.y lengthSubset];
+					% display(sprintf(['current location: ' num2str(round(currentSubsetLocation/dataDim.z*100)) '% | ' num2str(currentSubsetLocation) '/' num2str(dataDim.z) '\noffset: ' num2str(offset) '\nblock: ' num2str(block)]));
+					fprintf('current location: %d%% | %d/%d \noffset: %s \nblock: %s\n',round(currentSubsetLocation/dataDim.z*100),currentSubsetLocation,dataDim.z,mat2str(offset),mat2str(block));
 					% load subset of HDF5 file into memory
 					inputMovie = readHDF5Subset(inputFilePath,offset,block,'datasetName',options.inputDatasetName);
+				case 'tiff'
+					thisFrameList = currentSubsetLocation:(currentSubsetLocation+lengthSubset-1);
+					disp(['Frames ' num2str(thisFrameList(1)) ' to ' num2str(thisFrameList(end))])
+
+					inputMovie = ciapkg.io.loadMovieList(inputFilePath,'frameList',thisFrameList);
 				case 'bioformats'
 					thisFrameList = currentSubsetLocation:(currentSubsetLocation+lengthSubset-1);
 					disp(['Frames ' num2str(thisFrameList(1)) ' to ' num2str(thisFrameList(end))])
-					[inputMovie] = local_readBioformats(inputFilePath,thisFrameList,fileIdOpen,options);
+					inputMovie = local_readBioformats(inputFilePath,thisFrameList,fileIdOpen,options);
 				otherwise
 			end
 
+			if ~isempty(options.convertType)
+				disp(['Converting from "' class(inputMovie) '"" to "' options.convertType '"']);
+				inputMovie = cast(inputMovie,options.convertType);
+			end
 
 			% split into second movie if need be
-			if ~isempty(options.saveFolderTwo)
+			if ~isempty(options.saveFolderTwo)|~isempty(options.newFilenameTwo)
 				inputMovieTwo = inputMovie;
 			end
 
@@ -249,7 +264,7 @@ function [success] = downsampleHdf5Movie(inputFilePath, varargin)
 			toc(loopStartTime);
 			display(sprintf(['downsample dims: ' num2str(size(inputMovie)) '\n-------']));
 
-			if ~isempty(options.saveFolderTwo)
+			if ~isempty(options.saveFolderTwo)|~isempty(options.newFilenameTwo)
 				display('secondary downsample in progress...')
 				inputMovie = inputMovieTwo;
 				% downsample section of the movie, keep in memory
@@ -482,6 +497,22 @@ function [subsets dataDim] = getSubsetOfDataToAnalyze(inputFilePath, options, va
 	% get the subsets of the 3D matrix to analyze
 	subsets = floor(linspace(1,dataDim.z,numSubsets));
 end
+
+function [subsets dataDim] = getSubsetOfDataToAnalyzeTIFF(inputFilePath, options, varargin)
+	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
+
+	dataDim = ciapkg.io.getMovieInfo(inputFilePath);
+	testFrame = ciapkg.io.readFrame(inputFilePath,1);
+	
+	% estimate size of movie in Mbytes
+	testFrameInfo = whos('testFrame');
+	estSizeMovie = (testFrameInfo.bytes/options.bytesToMB)*dataDim.z;
+
+	% get the subsets of the 3D matrix to analyze
+	numSubsets = ceil(estSizeMovie/options.maxChunkSize)+1;
+	subsets = floor(linspace(1,dataDim.z,numSubsets));
+end
+
 function hReadInfo = getHdf5Info(hinfo,options)
 	import ciapkg.api.* % import CIAtah functions in ciapkg package API.
 	

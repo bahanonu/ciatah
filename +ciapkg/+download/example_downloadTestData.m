@@ -13,6 +13,7 @@ function [success] = example_downloadTestData(varargin)
 		% 2021.02.02 [11:25:34] - Function now calls data directory via standardized ciapkg.getDirPkg('data') to avoid placing data in incorrect folder.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2022.11.07 [19:09:38] - Update links from Stanford to UCSF box (Stanford migrating away from Box, links are dead).
+		% 2022.11.14 [17:29:56] - Added additional link.
 	% TODO
 		% Switch Box downloads to Google Drive due to Stanford phase out.
 
@@ -48,6 +49,7 @@ function [success] = example_downloadTestData(varargin)
 		downloadList{end}.fileName = 'concat_recording_20140401_180333.h5';
 			% downloadList{end}.fileUrl = 'https://stanford.box.com/shared/static/jmld9o9s0oemvn6oionr3lf9lwobqk9l.h5';
 		downloadList{end}.fileUrl = 'https://ucsf.box.com/shared/static/dtdwpr4xjs1u67dv30qnhu7arf889ysr.h5';
+			% 'http://tiny.ucsf.edu/KATTBh'
 
 		if options.downloadExtraFiles==1
 			[downloadList] = localfxn_downloadExtra(downloadList);

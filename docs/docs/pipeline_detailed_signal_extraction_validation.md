@@ -10,4 +10,7 @@ Below is an example, with black outlines indicating location of cell extraction 
 
 ![2014_04_01_p203_m19_check01_raw_viewCellExtractionOnMovie_ezgif-4-57913bcfdf3f_2](https://user-images.githubusercontent.com/5241605/59560798-50033a80-8fcc-11e9-8228-f9a3d83ca591.gif)
 
+![2014_04_01_p203_m19_check01_overlay2-2](https://github.com/bahanonu/ciatah/assets/5241605/ee5c104a-7b4c-4fe5-b2da-63ddac8955fb)
+
+
 <!-- ****************************************** -->

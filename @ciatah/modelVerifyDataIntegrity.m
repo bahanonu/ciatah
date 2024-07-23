@@ -10,6 +10,7 @@ function obj = modelVerifyDataIntegrity(obj)
 	% changelog
 		% 2021.08.10 [09:57:36] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2021.12.31 [18:59:24] - Updated suptitle to ciapkg.overloaded.suptitle.
+		% 2023.11.08 [14:16:37] - Updated movieInformation to have additional movie information.
 	% TODO
 		%
 
@@ -880,12 +881,16 @@ function obj = modelVerifyDataIntegrity(obj)
 
 		movieStatsTable = table(...
 			{'tmp'},...
+			{'tmp'},...
+			{'tmp'},...
 			0,...
 			0,...
 			0,...
 			0,...
 			'VariableNames',{...
 			'folder',...
+			'file',...
+			'filePath',...
 			'rowLength',...
 			'columnLength',...
 			'frames',...
@@ -899,31 +904,38 @@ function obj = modelVerifyDataIntegrity(obj)
 			display([num2str(thisFileNumIdx) '/' num2str(nFilesToAnalyze) ': ' obj.fileIDNameArray{obj.fileNum}]);
 			filesToLoad = getFileList(obj.inputFolders{obj.fileNum},obj.fileFilterRegexp);
 			if ~isempty(filesToLoad)
-				movieDims = loadMovieList(filesToLoad{1},'getMovieDims',1);
-				% [success] = saveMatrixToFile(inputMovie,savePath,varargin);
-				movieStatsTable.folder{end+1,1} = obj.fileIDNameArray{obj.fileNum};
-				movieStatsTable.frames(end,1) = movieDims.z;
-				movieStatsTable.rowLength(end,1) = movieDims.x;
-				movieStatsTable.columnLength(end,1) = movieDims.y;
-
-				logFilename = getFileList(obj.inputFolders{obj.fileNum},'.xml');
-				if ~isempty(logFilename)
-					logInfoTmp = getLogInfo(logFilename{1});
-					led_power = str2num(logInfoTmp.led_power);
-				else
-					logFilename = getFileList(obj.inputFolders{obj.fileNum},'.txt');
+				nFilesH = length(filesToLoad);
+				for fileNo = 1:nFilesH
+					thisFilePath = filesToLoad{fileNo};
+					movieDims = loadMovieList(thisFilePath,'getMovieDims',1);
+					% [success] = saveMatrixToFile(inputMovie,savePath,varargin);
+					[~,fileNameH,extH] = fileparts(thisFilePath);
+					movieStatsTable.folder{end+1,1} = obj.fileIDNameArray{obj.fileNum};
+					movieStatsTable.file{end,1} = [fileNameH extH];
+					movieStatsTable.filePath{end,1} = thisFilePath;
+					movieStatsTable.frames(end,1) = movieDims.z;
+					movieStatsTable.rowLength(end,1) = movieDims.x;
+					movieStatsTable.columnLength(end,1) = movieDims.y;
+	
+					logFilename = getFileList(obj.inputFolders{obj.fileNum},'.xml');
 					if ~isempty(logFilename)
 						logInfoTmp = getLogInfo(logFilename{1});
-						led_power = logInfoTmp.LED_POWER;
+						led_power = str2num(logInfoTmp.led_power);
 					else
-						led_power = NaN;
+						logFilename = getFileList(obj.inputFolders{obj.fileNum},'.txt');
+						if ~isempty(logFilename)
+							logInfoTmp = getLogInfo(logFilename{1});
+							led_power = logInfoTmp.LED_POWER;
+						else
+							led_power = NaN;
+						end
 					end
+					movieStatsTable.led_power(end,1) = led_power;
 				end
-				movieStatsTable.led_power(end,1) = led_power;
 			end
 
 		end
-		runtimeTablePath = [obj.dataSavePath filesep 'modelVerifyDataIntegrity_movieStats.csv']
+		runtimeTablePath = [obj.dataSavePath filesep 'modelVerifyDataIntegrity_movieStats_' currentDateTimeStr '.csv'];
 		fprintf('Saving to: %s',runtimeTablePath)
 		writetable(movieStatsTable,runtimeTablePath,'FileType','text','Delimiter',',');
 	end

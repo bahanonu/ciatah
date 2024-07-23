@@ -16,6 +16,8 @@ function hout=suptitle(str,varargin)
 
     % Warning: If the figure or axis units are non-default, this
     % will break.
+	% changelog
+		% 2023.08.08 [05:27:57] - Added font name option
 
     %========================
     % Amount of the figure window devoted to subplots
@@ -28,6 +30,8 @@ function hout=suptitle(str,varargin)
     options.Color = 'k';
 	% Str: interpreter, latex or tex
 	options.Interpreter = 'latex';
+	% Str: Name of font family, e.g. Consolas.
+	options.fontName = [];
     % get options
     options = ciapkg.io.getOptions(options,varargin);
     % display(options)
@@ -122,7 +126,11 @@ function hout=suptitle(str,varargin)
     warning on
     ht = text('position',[.5 titleypos-1],'Interpreter',options.Interpreter,'String',str);
 	set(ht,'horizontalalignment','center','fontsize',fs,'Color',options.Color);
-	set(ht,'FontName',get(0,'DefaultAxesFontName'));
+	if ~isempty(options.fontName)
+		set(ht,'FontName',options.fontName);
+	else
+		set(ht,'FontName',get(0,'DefaultAxesFontName'));
+	end
     set(gcf,'nextplot',np);
     % focus stealing occurs here, turn off
     set(gcf, 'CurrentAxes', haold)

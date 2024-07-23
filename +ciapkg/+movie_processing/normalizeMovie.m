@@ -16,6 +16,12 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		% 2021.06.02 [20:04:49] - Detrend movie now uses nanmean to get around issues in motion corrected videos.
 		% 2021.08.08 [19:30:20] - Updated to handle CIAtah v4.0 switch to all functions inside ciapkg package.
 		% 2022.05.16 [16:39:45] - Switch away from using nanmean to mean('omitnan'). Detrend flight code refactor.
+		% 2022.11.15 [15:14:14] - matlabdisk no longer converts to cell array, bad memory usage. Improve other memory usage in function.
+		% 2022.12.05 [14:15:48] - Change how NaN check before filtering is run. Remove on a per-frame basis so that the NaNs can be added back in at the correct pixel locations.
+		% 2022.12.05 [14:22:03] - Further eliminate nanmean/nanmin/nanmax usage, use dims instead of (:) [waste memory], and general refactoring.
+		% 2022.12.06 [17:19:16] - Added movie subset support to reduce memory usage with parfor.
+		% 2023.04.04 [19:36:21] - Fix detrendDegree passing.
+		% 2023.06.08 [09:17:06] - Added subfxnFft movie subset support to reduce memory usage with parfor.
 	% TODO
 		%
 
@@ -39,6 +45,8 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 	options.maxFrame = size(inputMovie,3);
 	% Binary: 1 = use parallel registration (using matlab pool).
 	options.parallel = 1;
+	% Int: number of frames to use for subsetting when using parfor, to reduce memory usage.
+	options.subsetSize = 300;
 	% ===
 	% options for fft
 	% Int: for bandpass, low freq to pass
@@ -83,7 +91,7 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 	% Binary: 1 = yes, normalize Matlab FFT test movies
 	options.normalizeMatlabFftTestMovies = 0;
 	% Int: 1 = linear detrend, >1 = nth-degree polynomial detrend
-	option.detrendDegree = 1;
+	options.detrendDegree = 1;
 	% ===
 	% Str: hierarchy name in hdf5 where movie data is located
 	options.inputDatasetName = '/1';
@@ -163,19 +171,19 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 			subfxnDetrend();
 		case 'meanSubtraction'
 			disp('mean subtracting movie');
-			inputMean = nanmean(nanmean(inputMovie,1),2);
+			inputMean = mean(inputMovie,[1 2],'omitnan');
 			inputMean = cast(inputMean,class(inputMovie));
 			inputMovie = bsxfun(@minus,inputMovie,inputMean);
 		case 'meanDivision'
 			disp('mean dividing movie');
-			inputMean = nanmean(nanmean(inputMovie,1),2);
+			inputMean = mean(inputMovie,[1 2],'omitnan');
 			inputMean = cast(inputMean,class(inputMovie));
 			inputMovie = bsxfun(@rdivide,inputMovie,inputMean);
 			% inputMean = nansum(nansum(inputMovie,1),2);
 			% inputMean = cast(inputMean,class(inputMovie))
 		case 'negativeRemoval'
 			disp('Switching movie negative values to positive (abs)');
-			inputMin = abs(nanmin(inputMovie(:)));
+			inputMin = abs(min(inputMovie,[],[1 2 3],'omitnan'));
 			inputMin = cast(inputMin,class(inputMovie));
 			inputMovie = bsxfun(@plus,inputMovie,inputMin);
 		case 'zeroToOne'
@@ -184,9 +192,8 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 			% reverseStr = '';
 			for frameNo2 = 1:nFrames
 				thisFrame = squeeze(inputMovie(:,:,frameNo2));
-				maxVec = nanmax(thisFrame(:));
-				minVec = nanmin(thisFrame(:));
-				% meanVec = nanmean(thisFrame(:));
+				maxVec = max(thisFrame,[],[1 2],'omitnan');
+				minVec = min(thisFrame,[],[1 2],'omitnan');
 				inputMovie(:,:,frameNo2) = (thisFrame-minVec)./(maxVec-minVec);
 				if ~verLessThan('matlab', '9.2')
 					send(D, frameNo2); % Update
@@ -233,21 +240,20 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 	end
 	function [movieTmp] = addText(movieTmp,inputText,fontSize)
 		nFrames = size(movieTmp,3);
-		maxVal = nanmax(movieTmp(:));
-		minVal = nanmin(movieTmp(:));
+		maxVal = max(movieTmp,[],[1 2 3],'omitnan');
+		minVal = min(movieTmp,[],[1 2 3],'omitnan');
 		reverseStr = '';
 		for frameNo = 1:nFrames
-			movieTmp(:,:,frameNo) = squeeze(nanmean(...
-				insertText(movieTmp(:,:,frameNo),[0 0],num2str(inputText(frameNo)),...
+			tmpFrame = insertText(movieTmp(:,:,frameNo),[0 0],num2str(inputText(frameNo)),...
 				'BoxColor',[maxVal maxVal maxVal],...
 				'TextColor',[minVal minVal minVal],...
 				'AnchorPoint','LeftTop',...
 				'FontSize',fontSize,...
-				'BoxOpacity',1)...
-			,3));
+				'BoxOpacity',1);
+			movieTmp(:,:,frameNo) = squeeze(mean(tmpFrame,3,'omitnan'));
 			reverseStr = cmdWaitbar(frameNo,nFrames,reverseStr,'inputStr','adding text to movie','waitbarOn',1,'displayEvery',10);
 		end
-		% maxVal = nanmax(movieTmp(:))
+		% maxVal = max(movieTmp,[],[1 2 3],'omitnan')
 		% movieTmp(movieTmp==maxVal) = 1;
 		% 'BoxColor','white'
 	end
@@ -455,9 +461,6 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 	end
 	function subfxnFft()
 		disp('Running Matlab FFT')
-		if options.runNanCheck==1
-			inputMovie(isnan(inputMovie)) = 0;
-		end
 		% bandpassMatrix = zeros(size(inputMovie));
 		% get options
 		ioptions.showImages = options.showImages;
@@ -512,12 +515,15 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 			d = [];
 		end
 
-		if isempty(gcp)
-			opts2.Value = ioptions;
-		else
-			opts2 = parallel.pool.Constant(ioptions);
-		end
+		%if isempty(gcp)
+		%	opts2.Value = ioptions;
+		%else
+		%	opts2 = parallel.pool.Constant(ioptions);
+        %end
+        opts2 = parallel.pool.Constant(ioptions);
 		% startState = ticBytes(gcp);
+		options_runNanCheck = options.runNanCheck;
+
 		parfor frame = 1:nFramesToNormalize
 			% [percent progress] = parfor_progress;if mod(progress,dispStepSize) == 0;dispstat(sprintf('progress %0.1f %',percent));else;end
 			% thisFrame = squeeze(inputMovie(:,:,frame));
@@ -532,6 +538,11 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 			thisFrame = inputMovie(:,:,frame);
 			thisFrame = squeeze(thisFrame);
 
+			if options_runNanCheck==1
+				nanMask = isnan(thisFrame);
+				thisFrame(nanMask) = mean(thisFrame,[1 2 3],'omitnan');
+			end
+
 			if isempty(secondaryNormalizationType)
 				if isempty(coords)
 					thisFrame = fftImage(thisFrame,'options',opts2.Value);
@@ -545,11 +556,15 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 					tmpFrame = thisFrame;
 					tmpFrame(c:d, a:b) = fftImage(thisFrame(c:d, a:b),'options',opts2.Value);
 				end
-				tmpFrameMin = nanmin(tmpFrame(:));
+				tmpFrameMin = min(tmpFrame,[],[1 2],'omitnan');
 				if tmpFrameMin<0
 					tmpFrame = tmpFrame + abs(tmpFrameMin);
 				end
 				thisFrame = thisFrame./tmpFrame;
+			end
+
+			if options_runNanCheck==1
+				thisFrame(nanMask) = NaN;
 			end
 
 			inputMovie(:,:,frame) = thisFrame;
@@ -636,7 +651,7 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 			% FFT each image
 			reverseStr = '';
 			% options.secondaryNormalizationType
-			% nanmean(inputMovieFFT(:))
+			% mean(inputMovieFFT,[1 2 3],'omitnan')
 			if options.runNanCheck==1
 				inputMovieFFT(isnan(inputMovieFFT)) = 0;
 			end
@@ -657,27 +672,41 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 			% end
 			% inputMovie = cat(3,inputMovie{:});
 
+			options_runNanCheck = options.runNanCheck;
+
 			for frame=1:options.maxFrame
 				thisFrame = squeeze(inputMovieFFT(:,:,frame));
-				if isempty(options.secondaryNormalizationType)
-					inputMovieFFT(:,:,frame) = fftImage(thisFrame,'options',ioptions);
-				else
-					% tmpFrame = fftImage(thisFrame,'options',ioptions);
-					% inputMovieFFT(:,:,frame) = thisFrame./tmpFrame;
-					inputMovieFFT(:,:,frame) = fftImage(thisFrame,'options',ioptions);
+
+				if options_runNanCheck==1
+					nanMask = isnan(thisFrame);
+					thisFrame(nanMask) = mean(thisFrame,[1 2 3],'omitnan');
 				end
+
+				thisFrame = fftImage(thisFrame,'options',ioptions);
+				% if isempty(options.secondaryNormalizationType)
+				% else
+				% 	% tmpFrame = fftImage(thisFrame,'options',ioptions);
+				% 	% inputMovieFFT(:,:,frame) = thisFrame./tmpFrame;
+				% 	thisFrame = fftImage(thisFrame,'options',ioptions);
+				% end
+
+				if options_runNanCheck==1
+					thisFrame(nanMask) = NaN;
+				end
+
+				inputMovieFFT(:,:,frame) = thisFrame;
 				% bandpassMatrix(:,:,frame) = fftImage(thisFrame,'options',ioptions);
 				% bandpassMatrix(:,:,frame) = imcomplement(bandpassMatrix(:,:,frame));
 				reverseStr = cmdWaitbar(frame,options.maxFrame,reverseStr,'inputStr','normalizing movie','waitbarOn',options.waitbarOn,'displayEvery',5);
 				% = bsxfun(@ldivide,squeeze(movie20hz(:,:,1)),filteredFrame
 			end
 			% inputImageTest(:,:,freqNo) = inputMovieFFT;
-			inputMovieFFTMin = nanmin(inputMovieFFT(:));
+			inputMovieFFTMin = min(inputMovieFFT,[],[1 2 3],'omitnan');
 			inputImageTest{freqNo} = inputMovieFFT - inputMovieFFTMin+1;
 			inputMovieDuplicate{freqNo} = cast(inputMovie,outputClass);
 			% divide lowpass from image
 			if options.testDuplicateDfof == 1
-				minMovie = min(inputMovieDuplicate{freqNo}(:));
+				minMovie = min(inputMovieDuplicate{freqNo},[],[1 2 3],'omitnan');
 				if minMovie<0
 					inputMovieDuplicate{freqNo} = inputMovieDuplicate{freqNo} + 1.1*abs(minMovie);
 				end
@@ -688,8 +717,8 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 				% else
 				% 	inputMovieDivide{freqNo} = inputImageTest{freqNo};
 				% end
-				% nanmean(inputMovieDuplicate{freqNo}(:))
-				% nanmean(inputImageTest{freqNo}(:))
+				% mean(inputMovieDuplicate{freqNo}(:),[],'omitnan')
+				% mean(inputImageTest{freqNo}(:),[],'omitnan')
 				% inputMovieDivide{freqNo} = bsxfun(@minus,inputMovieDuplicate{freqNo},inputImageTest{freqNo});
 				inputMovieDfof{freqNo} = dfofMovie(inputMovieDivide{freqNo});
 			else
@@ -724,10 +753,10 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 
 		frameMeanInputMovie = squeeze(mean(inputMovie,[1 2],'omitnan'));
 
-		trendVals = frameMeanInputMovie - detrend(frameMeanInputMovie,option.detrendDegree);
+		trendVals = frameMeanInputMovie - detrend(frameMeanInputMovie,options.detrendDegree);
 
 		% meanInputMovie = detrend(frameMeanInputMovie,0);
-		meanInputMovie = nanmean(frameMeanInputMovie);
+		meanInputMovie = squeeze(mean(frameMeanInputMovie,[1 2 3],'omitnan'));
 
 		nFramesToNormalize = options.maxFrame;
 		nFrames = nFramesToNormalize;
@@ -740,61 +769,106 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		% 	opts2 = parallel.pool.Constant(ioptions);
 		% end
 
-		parfor frame = 1:nFramesToNormalize
-			inputMovie(:,:,frame) = inputMovie(:,:,frame) - trendVals(frame) + meanInputMovie;
+		% parfor frame = 1:nFramesToNormalize
+		% 	inputMovie(:,:,frame) = inputMovie(:,:,frame) - trendVals(frame) + meanInputMovie;
 
-			% thisFrame = inputMovie(:,:,frame);
-			% thisFrame = squeeze(thisFrame);
-			% thisFrame = thisFrame - trendVals(frame);
-			% thisFrame = thisFrame + meanInputMovie;
+		% 	% thisFrame = inputMovie(:,:,frame);
+		% 	% thisFrame = squeeze(thisFrame);
+		% 	% thisFrame = thisFrame - trendVals(frame);
+		% 	% thisFrame = thisFrame + meanInputMovie;
 
-			% inputMovie(:,:,frame) = thisFrame;
+		% 	% inputMovie(:,:,frame) = thisFrame;
 
-			if ~verLessThan('matlab', '9.2')
-				send(D, frame); % Update
+		% 	if ~verLessThan('matlab', '9.2')
+		% 		send(D, frame); % Update
+		% 	end
+		% end
+
+		% Detrend each frame only using subset to reduce memory usage
+		subsetSize = options.subsetSize;
+		movieLength = size(inputMovie,3);
+		numSubsets = ceil(movieLength/subsetSize)+1;
+		subsetList = round(linspace(1,movieLength,numSubsets));
+		disp(['Detrending sublists: ' num2str(subsetList)]);
+		nSubsets = (length(subsetList)-1);
+
+		for thisSet = 1:nSubsets
+			subsetStartIdx = subsetList(thisSet);
+			subsetEndIdx = subsetList(thisSet+1);
+			display(repmat('$',1,7))
+			if thisSet==nSubsets
+				movieSubset = subsetStartIdx:subsetEndIdx;
+			else
+				movieSubset = subsetStartIdx:(subsetEndIdx-1);
+		    end
+		    disp([num2str(movieSubset(1)) '-' num2str(movieSubset(end)) ' ' num2str(thisSet) '/' num2str(nSubsets)])
+			disp(repmat('$',1,7))
+
+			inputMovieTmp = inputMovie(:,:,movieSubset);
+			trendValsTmp = trendVals(movieSubset);
+			nFramesTmp = size(inputMovieTmp,3);
+			% movieSubset2 = 1:nFramesTmp;
+
+			parfor frameNo = 1:nFramesTmp
+			    % if frameNo==startFrame||mod(frameNo,50)==0
+				%     fprintf('%d | ',frameNo);
+				% end
+				inputMovieTmp(:,:,frameNo) = inputMovieTmp(:,:,frameNo) - trendValsTmp(frameNo) + meanInputMovie;
 			end
+		    disp('===');
+			inputMovie(:,:,movieSubset) = inputMovieTmp;
+		    fprintf('\n');
 		end
 	end
 	function subfxnMatlabDisk()
 		disp('Matlab fspecial disk background removal')
 
 		%Get dimension information about 3D movie matrix
-		[inputMovieX, inputMovieY, inputMovieZ] = size(inputMovie);
+		% [inputMovieX, inputMovieY, inputMovieZ] = size(inputMovie);
 		% reshapeValue = size(inputMovie);
 		%Convert array to cell array, allows slicing (not contiguous memory block)
-		inputMovie = squeeze(mat2cell(inputMovie,inputMovieX,inputMovieY,ones(1,inputMovieZ)));
+		%inputMovie = squeeze(mat2cell(inputMovie,inputMovieX,inputMovieY,ones(1,inputMovieZ)));
 
-		imageNow = squeeze(inputMovie{1});
+		%imageNow = squeeze(inputMovie{1});
+		imageNow = squeeze(inputMovie(:,:,1));
 		[rows,cols] = size(imageNow);
 		r1 = min(rows,cols)/10;
 		r2 = 3;
 		hDisk  = fspecial('disk', r1);
 		hDisk2 = fspecial('disk', r2);
+
+        C_hDisk = parallel.pool.Constant(hDisk);
+        C_hDisk2 = parallel.pool.Constant(hDisk2);
+
 		transform = @(A) transform_2(A,hDisk,hDisk2);
-		reverseStr = '';
+		%reverseStr = '';
 		% nImages = size(inputMovieCropped,3);
-		nImages = length(inputMovie);
+		nImages = size(inputMovie,3);
+        nFrames = nImages;
 
 		% [percent progress] = parfor_progress(nImages); dispStepSize = round(nImages/20); dispstat('','init');
-		parfor imageNo = 1:nImages
+		parfor frame = 1:nImages
 			% [percent progress] = parfor_progress;if mod(progress,dispStepSize) == 0;dispstat(sprintf('progress %0.1f %',percent));else;end
-			imageNow = squeeze(inputMovie{imageNo});
-			inputMovie{imageNo} = transform(imageNow);
+			% imageNow = squeeze(inputMovie{imageNo});
+		    thisFrame = inputMovie(:,:,frame);
+			thisFrame = squeeze(thisFrame);
+            thisFrame = transform_2(thisFrame,C_hDisk.Value,C_hDisk2.Value);
+            % imageNow = transform(imageNow);
+			% inputMovie{imageNo} = transform(imageNow);
+			inputMovie(:,:,frame) = thisFrame;
 			% if (mod(imageNo,20)==0|imageNo==nImages)
 			%     reverseStr = cmdWaitbar(imageNo,nImages,reverseStr,'inputStr','fspecial normalizing');
 			% end
+
+            if ~verLessThan('matlab', '9.2')
+				send(D, frame); % Update
+			end
 		end
-		parfor_progress(0);dispstat('Finished.','keepprev');
+		%parfor_progress(0);
+        %dispstat('Finished.','keepprev');
 
-		inputMovie = cat(3,inputMovie{:});
-	end
-	function A_tr = transform_2(A, ssm_filter, asm_filter)
-
-		A_tr = A - imfilter(A, ssm_filter, 'replicate');
-
-		A_tr = imfilter(A_tr, asm_filter);
-
-	end
+		% inputMovie = cat(3,inputMovie{:});
+    end
 	function subfxnMatlabFFTTemporal()
 		sigma = 1.5;
 		fsize = 10;
@@ -846,14 +920,23 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		% reshapeValue = size(inputMovie);
 		%Convert array to cell array, allows slicing (not contiguous memory block)
 		% inputMovie = squeeze(mat2cell(inputMovie,inputMovieX,inputMovieY,ones(1,inputMovieZ)));
-		runNanCheck = options.runNanCheck;
+		options_runNanCheck = options.runNanCheck;
 		parfor frame=1:nFrames
 			thisFrame = squeeze(inputMovie(:,:,frame));
 			% thisFrame = inputMovie{frame};
-			if runNanCheck==1
-				thisFrame(isnan(thisFrame)) = nanmean(thisFrame(:));
+
+			if options_runNanCheck==1
+				nanMask = isnan(thisFrame);
+				thisFrame(nanMask) = mean(thisFrame,[1 2 3],'omitnan');
 			end
-			inputMovie(:,:,frame) = imfilter(thisFrame, movieFilter,options_boundaryType);
+
+			thisFrame = imfilter(thisFrame, movieFilter,options_boundaryType);
+
+			if options_runNanCheck==1
+				thisFrame(nanMask) = NaN;
+			end
+
+			inputMovie(:,:,frame) = thisFrame
 			% inputMovie{frame} = imfilter(thisFrame, movieFilter,options_boundaryType);
 			% reverseStr = cmdWaitbar(frame,nFrames,reverseStr,'inputStr','imfilter normalizing movie','waitbarOn',options.waitbarOn,'displayEvery',5);
 			if ~verLessThan('matlab', '9.2')
@@ -877,13 +960,23 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 		nFrames = size(inputMovie,3);
 		inputMovieFiltered = zeros(size(inputMovie),class(inputMovie));
 		reverseStr = '';
-		runNanCheck = options.runNanCheck;
+		options_runNanCheck = options.runNanCheck;
 		for frame=1:nFrames
 			thisFrame = squeeze(inputMovie(:,:,frame));
-			if runNanCheck==1
-				thisFrame(isnan(thisFrame))=nanmean(thisFrame(:));
+
+			if options_runNanCheck==1
+				nanMask = isnan(thisFrame);
+				thisFrame(nanMask) = mean(thisFrame,[1 2 3],'omitnan');
 			end
-			inputMovieFiltered(:,:,frame) = imfilter(thisFrame, movieFilter,options.boundaryType);
+
+		 	thisFrame = imfilter(thisFrame, movieFilter,options.boundaryType);
+
+			if options_runNanCheck==1
+				thisFrame(nanMask) = NaN;
+			end
+
+		 	inputMovieFiltered(:,:,frame) = thisFrame;
+
 			reverseStr = cmdWaitbar(frame,nFrames,reverseStr,'inputStr','normalizing movie','waitbarOn',options.waitbarOn,'displayEvery',5);
 		end
 		% divide each frame by the filtered movie to remove 'background'
@@ -908,4 +1001,11 @@ function [inputMovie] = normalizeMovie(inputMovie, varargin)
 	%         end
 	%     end
 	% end
+end
+function A_tr = transform_2(A, ssm_filter, asm_filter)
+
+	A_tr = A - imfilter(A, ssm_filter, 'replicate');
+
+	A_tr = imfilter(A_tr, asm_filter);
+
 end

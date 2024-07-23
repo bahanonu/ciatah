@@ -53,6 +53,14 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% 2022.07.10 [17:21:21] - Added largeMovieLoad setting support, improve memory allocation for select movies.
 		% 2022.07.27 [12:45:08] - Make sure readFrame is compatible with all HDF5 dataset names.
 		% 2022.07.18 [10:30:01] - NormCorre integrated into the pipeline for end users.
+		% 2022.09.19 [18:14:05] - Updated NormCorre parameter window to estimate window size from the first frame.
+		% 2022.10.04 [08:12:19] - Make correlation calculation parallel.
+		% 2022.10.04 [16:45:56] - Allow detrend movie to use movie subsets to reduce memory overhead.
+		% 2022.12.03 [21:48:51] - Reduce double calling of mean() for calculation and plotting when conducting detrending.
+		% 2022.12.05 [14:22:03] - Further eliminate nanmean/nanmin/nanmax usage, use dims instead of (:) [waste memory], and general refactoring.
+		% 2023.01.11 [14:05:51] - Fix thisMovieMinMask(row,:) = logical(max(isnan(squeeze(thisMovie(row,:,:))),[],2,'omitnan')); as was 3 instead of row.
+		% 2023.08.04 [07:29:02] - Add support for input of prior motion correction coordinates to be user facing.
+		% 2023.12.26 [21:23:22] - Empty imagesc() call leading to face appearing. For the curious, see https://blogs.mathworks.com/steve/2006/10/17/the-story-behind-the-matlab-default-image/.
 	% TODO
 		% Allow users to save out analysis options order and load it back in.
 		% Insert NaNs or mean of the movie into dropped frame location, see line 260
@@ -125,6 +133,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	options.minType = 'soft';
 	% Float: Calculates the X percentile for minimum F0.
 	options.minSoftPct = 0.1/100;
+	% Binary: 1 = cmd line waitbar on. 0 = waitbar off.
+	options.waitbarOn = 1;
 	% ====
 	% OLD OPTIONS
 	% should the movie be saved?
@@ -148,6 +158,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	options.saveFileSuffix = '';
 	% Str: suffix to add to all saved files.
 	options.videoPlayer = 'matlab';
+	% Str: path to MAT-file with prior motion correction coordinates
+	options.precomputedRegistrationCooordsFullMovie = '';
 	% ====
 	% get options
 	options = getOptions(options,varargin);
@@ -494,7 +506,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			'[optional] Prefix to add to all processed movies (e.g. "concat_", "experiment_"): ',...
 			'[optional] Suffix to add to all processed movies (e.g. "concat_", "experiment_"): '...
 			'[optional] Default video player (imagej or matlab): ',...
-			'[optional] MAT-file path if processing large movie (e.g. getting Out of Memory errors), SSD drive preferred for speed: '...
+			'[optional] Path to MAT-file with Turboreg registration coordinates to use: '...
+			'[optional IGNORE] MAT-file path if processing large movie (e.g. getting Out of Memory errors), SSD drive preferred for speed: ',...
 		},...
 		'Preprocessing settings',[1 100],...
 		{...
@@ -507,7 +520,8 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			'',...
 			'',...
 			options.videoPlayer,...
-			options.matfilePath...
+			'',...
+			options.matfilePath,...
 		}...
 	);
 	disp(movieSettings)
@@ -525,6 +539,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	options.saveFileSuffix = movieSettings{8};
 	options.videoPlayer = movieSettings{9};
 	options.matfilePath = movieSettings{10};
+	options.precomputedRegistrationCooordsFullMovie = movieSettings{11};
 
 	obj.functionSettings.modelPreprocessMovieFunction.options.videoPlayer = options.videoPlayer;
 
@@ -595,7 +610,10 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	% Get additional NormCorre settings
 	switch options.turboreg.mcMethod
 		case 'normcorre'
-			optsNoRMCorre = ciapkg.motion_correction.getNoRMCorreParams([400 400 1],'guiDisplay',1);
+			movieList = getFileList(folderList{1}, options.fileFilterRegexp);
+			[movieList] = localfxn_removeUnsupportedFiles(movieList,options);
+			thisFrame = ciapkg.io.readFrame(movieList{1},1,'inputDatasetName',options.datasetName);
+			optsNoRMCorre = ciapkg.motion_correction.getNoRMCorreParams([size(thisFrame,1) size(thisFrame,2) 1],'guiDisplay',1);
 		otherwise
 			optsNoRMCorre = [];
 	end
@@ -604,7 +622,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		obj.preprocessSettings = preprocessingSettingsAll;
 		try
 			fprintf('Saving settings to: %s.\n',settingsSaveStr)
-			save(settingsSaveStr,'preprocessingSettingsAll','-v7.3');
+			save(settingsSaveStr,'preprocessingSettingsAll','optsNoRMCorre','-v7.3');
 		catch err
 			disp(repmat('@',1,7))
 			disp(getReport(err,'extended','hyperlinks','on'));
@@ -829,9 +847,11 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				end
 
 				if options.processMoviesSeparately==1
+					% Change name if processed separate.
 					resaveCropFileName = '';
 				else
 					resaveCropFileName = '';
+					resaveCropFileNameTmp = '';
 				end
 
 				[~, ~] = openFigure(4242, '');
@@ -840,7 +860,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 					else
 						tmpFrameHere = squeeze(thisMovie(:,:,1));
 					end
-					imagesc()
+					imagesc(tmpFrameHere)
 					box off;
 					dispStr = [num2str(fileNumToRun) '/' num2str(nFilesToRun) ': ' 10 thisDirDispStr];
 					axis image; colormap gray;
@@ -868,7 +888,15 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 						saveStr = [saveStr '_' 'spFltBfReg'];
 					end
 					try
-						saveStr = [saveStr '_' analysisOptsInfo.(optionName).save];
+						if strcmp(optionName,'turboreg')
+							if strcmp(options.turboreg.mcMethod,'normcorre')
+								saveStr = [saveStr '_normcorre'];
+							else
+								saveStr = [saveStr '_' analysisOptsInfo.(optionName).save];
+							end
+						else
+							saveStr = [saveStr '_' analysisOptsInfo.(optionName).save];			
+						end
 					catch
 						saveStr = [saveStr '_' optionName];
 					end
@@ -1500,7 +1528,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 				% Only use non-dropped frames to get mean since by default 0s.
 				% framesToUse = setdiff(1:size(thisMovie,3),droppedFrames);
 				% for rowNo=
-				% 	inputMovieDroppedF0(rowNo,:) = nanmean(squeeze(thisMovie(rowNo,:,framesToUse)),2);
+				% 	inputMovieDroppedF0(rowNo,:) = mean(squeeze(thisMovie(rowNo,:,framesToUse)),2,'omitnan');
 				% 	if mod(rowNo,5)==0;reverseStr = cmdWaitbar(rowNo,nRows,reverseStr,'inputStr','calculating mean...','waitbarOn',1,'displayEvery',5);end
 				% end
 			otherwise
@@ -1510,7 +1538,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			inputMovieDroppedF0(rowNo,:) = mean(squeeze(thisMovie(rowNo,:,:)),2,'omitnan');
 			if mod(rowNo,5)==0;reverseStr = cmdWaitbar(rowNo,nRows,reverseStr,'inputStr','calculating mean...','waitbarOn',1,'displayEvery',5);end
 		end
-		% movieMean = nanmean(inputMovieTmp(:));
+		% movieMean = mean(inputMovieTmp,[1 2 3],'omitnan');
 		display([num2str(length(droppedFrames)) ' dropped frames: ' num2str(droppedFrames(:)')])
 
 		switch dropType
@@ -1547,7 +1575,6 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 
 	function subfxn_downsampleTimeInputMovie()
 		options.downsampleZ = [];
-		options.waitbarOn = 1;
 		% thisMovie = single(thisMovie);
 		options.downsampleFactor = options.turboreg.downsampleFactorTime;
 		disp(['Temporal downsample factor: ' num2str(options.downsampleFactor)]);
@@ -1651,13 +1678,13 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 
 	function subfxn_dfofInputMovie()
 		% dfof must have positive values
-		% thisMovieMin = nanmin(thisMovie(:));
+		% thisMovieMin = min(thisMovie,[1 2 3],'omitnan');
 		if strcmp(options.turboreg.filterBeforeRegister,'bandpass')
 			thisMovie = thisMovie+1;
 		end
 
 		% adjust for problems with movies that have negative pixel values before dfof
-		minMovie = min(thisMovie(:));
+		minMovie = min(thisMovie,[],[1 2 3],'omitnan');
 		if minMovie<0
 			thisMovie = thisMovie + 1.1*abs(minMovie);
 		end
@@ -1665,7 +1692,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% thisMovie = dfofMovie(thisMovie,'dfofType',options.dfofType);
 		% figure(1970+fileNum)
 		% 	subplot(2,1,1)
-		% 	plot(squeeze(nanmean(nanmean(thisMovie,1),2)))
+			% plot(squeeze(mean(thisMovie,[1 2],'omitnan')))
 		% 	% title(['mean | ' ]);
 		% 	ylabel('mean');box off;
 		% 	subplot(2,1,2)
@@ -1705,9 +1732,9 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		end
 
 		for rowNo=1:nRows
-			% inputMovieF0 = nanmean(inputMovie,3);
+			% inputMovieF0 = mean(inputMovie,3,'omitnan');
 			rowFrame = single(squeeze(thisMovie(rowNo,:,:)));
-			% inputMovieF0(rowNo,:) = nanmean(rowFrame,2);
+			% inputMovieF0(rowNo,:) = mean(rowFrame,2,'omitnan');
 			inputMovieF0(rowNo,:) = F0fxn(rowFrame,2);
 			if strcmp(options.dfofType,'dfstd')
 				inputMovieStd(rowNo,:) = std(rowFrame,[],2,'omitnan');
@@ -1721,7 +1748,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		savePathStr = [thisProcessingDirFileInfoStr '_inputMovieF0' '.h5'];
 		movieSaved = writeHDF5Data(inputMovieF0,savePathStr,'deflateLevel',options.deflateLevel,'datasetname',options.outputDatasetName);
 
-		thisMovieMean = mean(inputMovieF0(:),'omitnan');
+		thisMovieMean = mean(inputMovieF0,[1 2],'omitnan');
 		% bsxfun for fast matrix divide
 		switch options.dfofType
 			case 'divide'
@@ -1793,11 +1820,13 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			meanG_cc = meanG(cc(2):cc(4),cc(1):cc(3));
 			fprintf('Calculating correlation metric: ')
 			nFramesThis = size(thisMovie,3);
-			for i = 1:nFramesThis
+
+			thisMovieTmp2 = thisMovie(cc(2):cc(4),cc(1):cc(3),:);
+			parfor i = 1:nFramesThis
 				if mod(i,500)==0
 					fprintf('%d | ',round((i/nFramesThis)*100));
 				end
-				thisFrame_cc = thisMovie(cc(2):cc(4),cc(1):cc(3),i);
+				thisFrame_cc = thisMovieTmp2(:,:,i);
 				corrMetric(i) = corr2(meanG_cc,thisFrame_cc);
 				corrMetric2(i) = corr(meanG_cc(:),thisFrame_cc(:),'Type','Spearman');
 			end
@@ -1866,7 +1895,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 		% get reference frame before subsetting, so won't change
 		% thisMovieRefFrame = squeeze(thisMovie(:,:,options.refCropFrame));
 		% Take the mean of the reference frame or frames (if a single frame will produce the same output)
-		thisMovieRefFrame = squeeze(nanmean(thisMovie(:,:,options.refCropFrame),3));
+		thisMovieRefFrame = squeeze(mean(thisMovie(:,:,options.refCropFrame),3,'omitnan'));
 		nSubsets = (length(subsetList)-1);
 		% turboregThisMovie = single(zeros([size(thisMovie,1) size(thisMovie,2) 1]));
 
@@ -1895,6 +1924,9 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 
 			% Set the motion correction algorithm
 			ioptions.mcMethod = options.turboreg.mcMethod;
+
+			% Load in prior motion correction coordinates if input by the user.
+			ioptions.precomputedRegistrationCooordsFullMovie = options.precomputedRegistrationCooordsFullMovie;
 
 			ioptions.turboregRotation = options.turboreg.turboregRotation;
 			ioptions.RegisType = options.turboreg.RegisType;
@@ -1939,6 +1971,12 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			ioptions.refFrameMatrix = thisMovieRefFrame;
 
 			ioptions.optsNoRMCorre = optsNoRMCorre;
+
+			% Displacement fields
+			ioptions.df_AccumulatedFieldSmoothing = options.turboreg.df_AccumulatedFieldSmoothing;
+			ioptions.df_Niter = options.turboreg.df_Niter;
+			ioptions.df_PyramidLevels = options.turboreg.df_PyramidLevels;
+
 			ioptions.displayOptions = 1;
 			ioptions
 			% for frameDftNo = movieSubset
@@ -2055,7 +2093,7 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			case 'imtransform'
 				reverseStr = '';
 				for row=1:size(thisMovie,1)
-					thisMovieMinMask(row,:) = logical(max(isnan(squeeze(thisMovie(3,:,:))),[],2,'omitnan'));
+					thisMovieMinMask(row,:) = logical(max(isnan(squeeze(thisMovie(row,:,:))),[],2,'omitnan'));
 					reverseStr = cmdWaitbar(row,size(thisMovie,1),reverseStr,'inputStr','getting crop amount','waitbarOn',1,'displayEvery',5);
 				end
 			case 'transfturboreg'
@@ -2209,11 +2247,15 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 	end
 	function subfxn_detrendInputMovie()
 		% Plot trend before and after
+		localfxn_dispMovieSize(thisMovie);
 
-		openFigure(figNoList.detrend);
+		disp('Calculating per-frame mean...')
+		frameMeanInputMovie = squeeze(mean(thisMovie,[1 2],'omitnan'));
+
 		try
+			openFigure(figNoList.detrend);
 			subplot(1,nMovies,1)
-			plot(squeeze(nanmean(thisMovie,[1 2])),'r-')
+			plot(frameMeanInputMovie,'r-')
 			box off;
 			xlabel('Frames'); ylabel('Mean frame pixel intensity');
 		catch err
@@ -2222,30 +2264,95 @@ function [ostruct] = modelPreprocessMovieFunction(obj,varargin)
 			disp(repmat('@',1,7))
 		end
 
-		frameMeanInputMovie = squeeze(mean(thisMovie,[1 2],'omitnan'));
+		nFramesToNormalize = size(thisMovie,3);
 
+		disp('Calculating detrend values...')
 		trendVals = frameMeanInputMovie - detrend(frameMeanInputMovie,options.turboreg.detrendDegree);
+
+		subplot(1,nMovies,1)
+			hold on
+			plot(squeeze(trendVals),'k--')
+			drawnow;
 
 		% meanInputMovie = detrend(frameMeanInputMovie,0);
 		meanInputMovie = mean(frameMeanInputMovie,'omitnan');
 
-		nFramesToNormalize = size(thisMovie,3);
+		disp('Detrending movie start...')
+		% reverseStr = '';
+		% options_waitbarOn = options.waitbarOn;
 
-		parfor frame = 1:nFramesToNormalize
-			thisFrame = thisMovie(:,:,frame);
-			thisMovie(:,:,frame) = thisFrame - trendVals(frame) + meanInputMovie;
+		% number of frames to subset
+		subsetSize = options.turboregNumFramesSubset;
+		movieLength = size(thisMovie,3);
+		numSubsets = ceil(movieLength/subsetSize)+1;
+		subsetList = round(linspace(1,movieLength,numSubsets));
+		disp(['Detrending sublists: ' num2str(subsetList)]);
+		% get reference frame before subsetting, so won't change
+		% thisMovieRefFrame = squeeze(thisMovie(:,:,options.refCropFrame));
+		% Take the mean of the reference frame or frames (if a single frame will produce the same output)
+		thisMovieRefFrame = squeeze(mean(thisMovie(:,:,options.refCropFrame),3,'omitnan'));
+		nSubsets = (length(subsetList)-1);
+		% turboregThisMovie = single(zeros([size(thisMovie,1) size(thisMovie,2) 1]));
+
+		frameListAll = 1:nFramesToNormalize;
+
+		for thisSet = 1:nSubsets
+			subsetStartTime = tic;
+			subsetStartIdx = subsetList(thisSet);
+			subsetEndIdx = subsetList(thisSet+1);
+			display(repmat('$',1,7))
+			if thisSet==nSubsets
+				movieSubset = subsetStartIdx:subsetEndIdx;
+				% display([num2str(subsetStartIdx) '-' num2str(subsetEndIdx) ' ' num2str(thisSet) '/' num2str(nSubsets)])
+			else
+				movieSubset = subsetStartIdx:(subsetEndIdx-1);
+				% display([num2str(subsetStartIdx) '-' num2str(subsetEndIdx-1) ' ' num2str(thisSet) '/' num2str(nSubsets)])
+			end
+			disp([num2str(movieSubset(1)) '-' num2str(movieSubset(end)) ' ' num2str(thisSet) '/' num2str(nSubsets)])
+			disp(repmat('$',1,7))
+
+			% Create temporary subset variables.
+			frameListTmp = frameListAll(movieSubset);
+			trendValsTmp = trendVals(movieSubset);
+			thisMovieTmp = thisMovie(:,:,movieSubset);
+			nFramesDetrend = length(movieSubset);
+
+			% parfor frame = 1:nFramesToNormalize
+			parfor frame = 1:nFramesDetrend
+				% thisMovie(:,:,frame) = thisMovie(:,:,frame) - trendVals(frame) + meanInputMovie;
+				thisFrame = thisMovieTmp(:,:,frame) - trendValsTmp(frame) + meanInputMovie;
+				thisMovieTmp(:,:,frame) = thisFrame;
+				% inputMovieDownsampled(1:downX,1:downY,frame) = downsampledFrame;
+
+				% if mod(frame,50)==0&&options_waitbarOn==1||frame==nFramesToNormalize
+				% 	reverseStr = cmdWaitbar(frame,nFramesToNormalize,reverseStr,'inputStr',['Detrending movie...']);
+				% end
+			end
+			thisMovie(:,:,movieSubset) = thisMovieTmp;
+			toc(subsetStartTime)
 		end
+		disp('Detrending movie end...')
+
+		localfxn_dispMovieSize(thisMovie);
 
 		% Takes an input movie and removes an underlying change in mean frame fluorescence.
 		% thisMovie = normalizeMovie(thisMovie,'normalizationType','detrend','detrendDegree',options.turboreg.detrendDegree);
 
 		openFigure(figNoList.detrend);
 			try
+				disp('Calculating per-frame mean...')
+				frameMeanInputMovie = squeeze(mean(thisMovie,[1 2],'omitnan'));
+				disp('Calculating detrend values...')
+				trendVals = frameMeanInputMovie - detrend(frameMeanInputMovie,options.turboreg.detrendDegree);
+
 				subplot(1,nMovies,1)
 				hold on;
-				plot(squeeze(nanmean(thisMovie,[1 2])),'b-')
-				legend({'Raw movie signal','Detrended movie signal'})
+				plot(frameMeanInputMovie,'b-')
+
+				plot(squeeze(trendVals),'m--')
 				title(sprintf('%s | %d-degree fit detrend',fileInfoSaveStr,options.turboreg.detrendDegree))
+
+				legend({'Raw movie signal','Trend line','Detrended movie signal','Trend line post-detrended'})
 				drawnow
 			catch err
 				disp(repmat('@',1,7))
