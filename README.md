@@ -40,7 +40,8 @@ Below are recordings and additional documents for users who want to learn more a
 
 ### Spinal cord imaging
 <ins>__New motion correction methods__</ins> — Methods for motion correction of spinal imaging data using feature identification (e.g. with DeepLabCut), control point registration, and other methods. Additional updates on integration into CIAtah in the future. 
-- Preprint: Ahanonu and Crowther, _et al_. (2023). _Long-term optical imaging of the spinal cord in awake, behaving animals_. bioRxiv (https://www.biorxiv.org/content/10.1101/2023.05.22.541477v1.full).
+- __Publication__: B. Ahanonu*, A. Crowther*, A. Kania, M. Rosa-Casillas, A.I. Basbaum. (2024). Long-term optical imaging of the spinal cord in awake behaving mice. _Nature Methods_. https://doi.org/10.1038/s41592-024-02476-3 (https://www.nature.com/articles/s41592-024-02476-3)
+  - Preprint: Ahanonu and Crowther, _et al_. (2023). _Long-term optical imaging of the spinal cord in awake, behaving animals_. bioRxiv (https://www.biorxiv.org/content/10.1101/2023.05.22.541477v1.full).
 - Documentation for spinal cord motion correction can be found at https://bahanonu.github.io/ciatah/pipeline_detailed_spinal.
 - Other documentation for spinal cord imaging at https://github.com/basbaumlab/spinal_cord_imaging.
 <!-- <hr> -->
@@ -306,7 +307,25 @@ Please cite the [Ahanonu and Corder, 2022](https://doi.org/10.1007/978-1-0716-20
 }
 ```
 
-Please cite the [Ahanonu*, Crowther*, 2023](https://doi.org/10.1101/2023.05.22.541477) preprint on spinal cord imaging if you use related methods or procedures.
+Please cite the [Ahanonu*, Crowther*, 2024](https://doi.org/10.1038/s41592-024-02476-3) _Nature Methods_ paper on spinal cord imaging if you use related methods or procedures.
+
+```bibtex
+@article{Ahanonu2024-wq,
+  title     = "Long-term optical imaging of the spinal cord in awake behaving
+               mice",
+  author    = "Ahanonu, Biafra and Crowther, Andrew and Kania, Artur and
+               Rosa-Casillas, Mariela and Basbaum, Allan I",
+  journal   = "Nat. Methods",
+  publisher = "Springer Science and Business Media LLC",
+  pages     = "1--13",
+  month     =  nov,
+  year      =  2024,
+  language  = "en"
+}
+
+```
+
+<!-- Please cite the [Ahanonu*, Crowther*, 2023](https://doi.org/10.1101/2023.05.22.541477) preprint on spinal cord imaging if you use related methods or procedures.
 
 ```bibtex
 @article{ahanonu2023long,
@@ -317,7 +336,7 @@ Please cite the [Ahanonu*, Crowther*, 2023](https://doi.org/10.1101/2023.05.22.5
   year={2023},
   publisher={Cold Spring Harbor Laboratory}
 }
-```
+``` -->
 
 Please see https://bahanonu.github.io/ciatah/references/ for additional references depending on processing steps undertaken.
 
